@@ -1,5 +1,6 @@
 import { computed, signal, type Signal } from '@angular/core';
 
+import type { NodeApi } from '../types/node.type';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -52,11 +53,10 @@ export const field = <TValue>(
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
   const fieldSelfDisabled = signal(options?.disabled ?? false);
-  const fieldParentDisabled = signal(false);
-  const fieldDisabled = computed(() => fieldSelfDisabled() || fieldParentDisabled());
+  const fieldParent = signal<NodeApi | null>(null);
+  const fieldDisabled = computed(() => fieldSelfDisabled() || fieldParent()?.disabled() === true);
   const fieldSelfReadonly = signal(options?.readonly ?? false);
-  const fieldParentReadonly = signal(false);
-  const fieldReadonly = computed(() => fieldSelfReadonly() || fieldParentReadonly());
+  const fieldReadonly = computed(() => fieldSelfReadonly() || fieldParent()?.readonly() === true);
   const fieldNonInteractive = computed(() => fieldDisabled() || fieldReadonly());
   const fieldErrors = computed(() => fieldNonInteractive()
     ? null
@@ -100,8 +100,7 @@ export const field = <TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
-    setParentDisabled: (disabled: boolean) => fieldParentDisabled.set(disabled),
-    setParentReadonly: (readonly: boolean) => fieldParentReadonly.set(readonly),
+    setParent: (parent: NodeApi | null) => fieldParent.set(parent),
   };
   return Object.assign(() => fieldValue(), members, { api: internalApi }) as unknown as Field<TValue>;
 };
