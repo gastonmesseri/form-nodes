@@ -100,7 +100,7 @@ export const field = <TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
-    setParent: (parent: NodeApi | null) => fieldParent.set(parent),
+    _setParent: (parent: NodeApi | null) => fieldParent.set(parent),
   };
   return Object.assign(() => fieldValue(), members, { api: internalApi }) as unknown as Field<TValue>;
 };
