@@ -1,11 +1,11 @@
-export { control } from './lib/core/form-control';
-export type { Control, ControlApi } from './lib/core/form-control';
-export { form } from './lib/core/form-group';
+export { field } from './lib/core/field';
+export type { Field, FieldApi } from './lib/core/field';
+export { form } from './lib/core/form';
 export type {
   Form,
   FormApi,
   FormPatch,
   FormSet,
   FormValue,
-} from './lib/core/form-group';
+} from './lib/core/form';
 export type { ValidationErrors, Validator, Validators } from './lib/core/validation';

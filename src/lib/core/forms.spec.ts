@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { control } from './form-control';
-import { form } from './form-group';
+import { field } from './field';
+import { form } from './form';
 
 describe('signal form primitives', () => {
   it('creates and updates a typed form tree', () => {
     const profile = form({
-      name: control('Ada'),
-      address: form({ city: control('London') }),
+      name: field('Ada'),
+      address: form({ city: field('London') }),
     });
 
     profile.name.set('Grace');
@@ -17,7 +17,7 @@ describe('signal form primitives', () => {
   });
 
   it('collects validator errors and skips them while disabled', () => {
-    const name = control('', [(value) => value ? null : { required: true }]);
+    const name = field('', [(value) => value ? null : { required: true }]);
 
     expect(name.errors()).toEqual({ required: true });
     expect(name.invalid()).toBe(true);
@@ -28,7 +28,7 @@ describe('signal form primitives', () => {
   });
 
   it('sets, patches, and resets values', () => {
-    const profile = form({ name: control('Ada'), age: control(30) });
+    const profile = form({ name: field('Ada'), age: field(30) });
 
     profile.api.patch({ age: 31 });
     expect(profile()).toEqual({ name: 'Ada', age: 31 });

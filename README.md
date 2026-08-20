@@ -11,11 +11,11 @@ npm install @gem/ng-forms
 ## Usage
 
 ```ts
-import { control, form } from '@gem/ng-forms';
+import { field, form } from '@gem/ng-forms';
 
 const profile = form({
-  name: control('', [(value) => value ? null : { required: true }]),
-  address: form({ city: control('') }),
+  name: field('', [(value) => value ? null : { required: true }]),
+  address: form({ city: field('') }),
 });
 
 profile.name.set('Ada');
@@ -30,8 +30,8 @@ src/
 ├── public-api.ts
 └── lib/
     └── core/
-        ├── form-control.ts
-        ├── form-group.ts
+        ├── field.ts
+        ├── form.ts
         ├── hidden-function-members.ts
         ├── node.ts
         └── validation.ts
