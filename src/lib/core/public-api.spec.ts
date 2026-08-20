@@ -137,4 +137,13 @@ describe('types', () => {
       { readonly: true },
     );
   });
+
+  it('accepts initial hidden options', () => {
+    expectTypeOf(field).toBeCallableWith('David', undefined, { hidden: true });
+    form(
+      { name: field('David') },
+      undefined,
+      { hidden: true },
+    );
+  });
 });

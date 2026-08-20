@@ -7,6 +7,7 @@ import type { ValidationErrors, Validators } from '../validation/validation.type
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 
 export type FieldOptions = {
+  readonly hidden?: boolean;
   readonly disabled?: boolean;
   readonly readonly?: boolean;
 };
@@ -37,6 +38,10 @@ export type FieldApi<TValue> = {
   writable: Signal<boolean>;
   markAsReadonly: () => void;
   markAsWritable: () => void;
+  hidden: Signal<boolean>;
+  visible: Signal<boolean>;
+  hide: () => void;
+  show: () => void;
 };
 
 export type Field<TValue> =
@@ -58,7 +63,9 @@ export const field = <TValue>(
   const fieldDisabled = computed(() => fieldSelfDisabled() || fieldParent()?.disabled() === true);
   const fieldSelfReadonly = signal(options?.readonly ?? false);
   const fieldReadonly = computed(() => fieldSelfReadonly() || fieldParent()?.readonly() === true);
-  const fieldNonInteractive = computed(() => fieldDisabled() || fieldReadonly());
+  const fieldSelfHidden = signal(options?.hidden ?? false);
+  const fieldHidden = computed(() => fieldSelfHidden() || fieldParent()?.hidden() === true);
+  const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   const fieldErrors = computed(() => fieldNonInteractive()
     ? null
     : runValidators(fieldValue(), fieldValidators()));
@@ -97,6 +104,10 @@ export const field = <TValue>(
     writable: computed(() => !fieldReadonly()),
     markAsReadonly: () => fieldSelfReadonly.set(true),
     markAsWritable: () => fieldSelfReadonly.set(false),
+    hidden: fieldHidden,
+    visible: computed(() => !fieldHidden()),
+    hide: () => fieldSelfHidden.set(true),
+    show: () => fieldSelfHidden.set(false),
   };
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {

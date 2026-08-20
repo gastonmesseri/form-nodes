@@ -797,4 +797,55 @@ describe('form', () => {
     expect(formGroup.name.touched()).toBe(true);
     expect(formGroup.address.city.dirty()).toBe(true);
   });
+
+  it('starts visible and can be hidden and shown', () => {
+    const formGroup = form({ name: field('David') });
+    expect(formGroup.api.hidden()).toBe(false);
+    expect(formGroup.api.visible()).toBe(true);
+    formGroup.api.hide();
+    expect(formGroup.api.hidden()).toBe(true);
+    expect(formGroup.name.hidden()).toBe(true);
+    formGroup.api.show();
+    expect(formGroup.api.hidden()).toBe(false);
+    expect(formGroup.name.hidden()).toBe(false);
+  });
+
+  it('propagates initial hidden state to every descendant', () => {
+    const formGroup = form(
+      { name: field('David'), address: { city: field('Moscow') } },
+      undefined,
+      { hidden: true },
+    );
+    expect(formGroup.api.hidden()).toBe(true);
+    expect(formGroup.name.hidden()).toBe(true);
+    expect(formGroup.address.api.hidden()).toBe(true);
+    expect(formGroup.address.city.hidden()).toBe(true);
+  });
+
+  it('preserves child-owned hidden state after its parent is shown', () => {
+    const formGroup = form({
+      name: field('David', undefined, { hidden: true }),
+      address: { city: field('Moscow') },
+    });
+    formGroup.api.hide();
+    formGroup.api.show();
+    expect(formGroup.api.hidden()).toBe(false);
+    expect(formGroup.name.hidden()).toBe(true);
+    expect(formGroup.address.api.hidden()).toBe(false);
+    expect(formGroup.address.city.hidden()).toBe(false);
+  });
+
+  it('ignores hidden descendants when aggregating state', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const formGroup = form({ name: field('', [required]), age: field(23) });
+    formGroup.name.markAsTouched();
+    formGroup.name.markAsDirty();
+    expect(formGroup.api.valid()).toBe(false);
+    expect(formGroup.api.touched()).toBe(true);
+    expect(formGroup.api.dirty()).toBe(true);
+    formGroup.name.hide();
+    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.api.touched()).toBe(false);
+    expect(formGroup.api.dirty()).toBe(false);
+  });
 });
