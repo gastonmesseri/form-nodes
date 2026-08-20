@@ -30,10 +30,9 @@ src/
 ├── public-api.ts
 └── lib/
     └── core/
-        ├── field/
+        ├── primitives/
         │   ├── field.spec.ts
-        │   └── field.ts
-        ├── form/
+        │   ├── field.ts
         │   ├── form.spec.ts
         │   └── form.ts
         ├── types/
@@ -41,6 +40,7 @@ src/
         │   ├── node.ts
         │   └── public-api.spec.ts
         └── validation/
+            ├── run-validators.ts
             └── validation.ts
 ```
 

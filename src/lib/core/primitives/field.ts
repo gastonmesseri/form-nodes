@@ -1,10 +1,7 @@
 import { computed, signal, type Signal } from '@angular/core';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members';
-import {
-  runValidators,
-  type ValidationErrors,
-  type Validators,
-} from '../validation/validation';
+import { runValidators } from '../validation/run-validators';
+import type { ValidationErrors, Validators } from '../validation/validation';
 
 export type FieldApi<TValue> = {
   value: Signal<TValue>;
