@@ -22,6 +22,10 @@ export type NodeApi = {
 
 export type Node = (() => any) & { api: NodeApi };
 export type Nodes = Record<string, Node>;
+export type NodeDefinition = Node | NodeDefinitions;
+export interface NodeDefinitions {
+  [key: string]: NodeDefinition;
+}
 export type NodeValue<TNode> = TNode extends () => infer TValue ? TValue : never;
 export type NodeSet<TNode> =
   TNode extends { api: { set: (value: infer TValue) => void } } ? TValue : never;

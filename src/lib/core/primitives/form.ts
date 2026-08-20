@@ -1,9 +1,10 @@
 import { computed, signal, type Signal } from '@angular/core';
 
+import { isNode, markAsNode } from '../utils/node-marker';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { NodeApi, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
+import type { Node, NodeApi, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 
 export type FormOptions = {
   readonly disabled?: boolean;
@@ -20,6 +21,14 @@ export type FormSet<TNodes extends Nodes> = {
 
 export type FormPatch<TNodes extends Nodes> = {
   [K in keyof TNodes]?: NodePatch<TNodes[K]>;
+};
+
+export type NormalizedNode<TNode extends NodeDefinition> =
+  TNode extends Node ? TNode :
+  TNode extends NodeDefinitions ? Form<NormalizedNodes<TNode>> : Node;
+
+export type NormalizedNodes<TNodes extends NodeDefinitions> = {
+  [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
 };
 
 export type FormApi<TNodes extends Nodes> = {
@@ -55,11 +64,18 @@ export type Form<TNodes extends Nodes> =
   & TNodes
   & HiddenFunctionMembers<keyof TNodes>;
 
-export const form = <TNodes extends Nodes & { api?: never }>(
-  controls: TNodes,
-  validators?: Validators<NoInfer<FormValue<TNodes>>>,
+export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
+  definitions: TDefinitions,
+  validators?: Validators<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
   options?: FormOptions,
-): Form<TNodes> => {
+): Form<NormalizedNodes<TDefinitions>> => {
+  type TNodes = NormalizedNodes<TDefinitions>;
+  const controls = Object.fromEntries(
+    Object.entries(definitions).map(([key, definition]) => [
+      key,
+      isNode(definition) ? definition : form(definition),
+    ]),
+  ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfDisabled = signal(options?.disabled ?? false);
   const formParent = signal<NodeApi | null>(null);
@@ -99,7 +115,7 @@ export const form = <TNodes extends Nodes & { api?: never }>(
   };
   const patch = (value: FormPatch<TNodes>) => {
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
-      const control = controls[key];
+      const control = controls[key] as Node | undefined;
       if (control === undefined) {
         console.warn(`form: unknown key "${String(key)}" ignored on patch`);
         return;
@@ -146,9 +162,10 @@ export const form = <TNodes extends Nodes & { api?: never }>(
     ...api,
     _setParent: (parent: NodeApi | null) => formParent.set(parent),
   };
-  controlKeys().forEach((key) => controls[key]!.api._setParent?.(internalApi));
-  return Object.defineProperties(
+  controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(internalApi));
+  const formNode = Object.defineProperties(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
-  ) as Form<TNodes>;
+  );
+  return markAsNode(formNode) as Form<TNodes>;
 };

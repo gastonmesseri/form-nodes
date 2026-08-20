@@ -21,6 +21,27 @@ describe('types', () => {
     }>();
   });
 
+  it('infers shorthand nested forms', () => {
+    const formGroup = form({
+      name: field('David'),
+      address: {
+        city: field('Moscow'),
+        location: {
+          latitude: field(55.7558),
+        },
+      },
+    });
+    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string>();
+    expectTypeOf(formGroup.address.location.latitude()).toEqualTypeOf<number>();
+    expectTypeOf(formGroup.api.value()).toEqualTypeOf<{
+      name: string;
+      address: { city: string; location: { latitude: number } };
+    }>();
+    expectTypeOf(formGroup.api.patch).toBeCallableWith({
+      address: { location: { latitude: 47.3769 } },
+    });
+  });
+
   it('types errors as a wide error object', () => {
     const required = (value: string) => (value === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
