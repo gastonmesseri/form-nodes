@@ -1,8 +1,8 @@
 import { computed, signal, type Signal } from '@angular/core';
-import type { HiddenFunctionMembers } from '../types/hidden-function-members';
-import type { NodePatch, NodeSet, Nodes, NodeValue } from '../types/node';
+import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+import type { NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 import { runValidators } from '../validation/run-validators';
-import type { ValidationErrors, Validators } from '../validation/validation';
+import type { ValidationErrors, Validators } from '../validation/validation.type';
 
 export type FormValue<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeValue<TNodes[K]>;

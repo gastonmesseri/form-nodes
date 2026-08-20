@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from 'vitest';
-import { field } from '../primitives/field';
-import { form } from '../primitives/form';
-import type { ValidationErrors } from '../validation/validation';
+import { field } from './primitives/field';
+import { form } from './primitives/form';
+import type { ValidationErrors } from './validation/validation.type';
 
 describe('types', () => {
   it('infers the value of each field', () => {
