@@ -17,7 +17,7 @@ export type NodeApi = {
   readonly: Signal<boolean>;
   markAsReadonly: () => void;
   markAsWritable: () => void;
-  setParent?: (parent: NodeApi | null) => void;
+  _setParent?: (parent: NodeApi | null) => void;
 };
 
 export type Node = (() => any) & { api: NodeApi };

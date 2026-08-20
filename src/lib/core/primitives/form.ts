@@ -144,9 +144,9 @@ export const form = <TNodes extends Nodes & { api?: never }>(
   };
   const internalApi = {
     ...api,
-    setParent: (parent: NodeApi | null) => formParent.set(parent),
+    _setParent: (parent: NodeApi | null) => formParent.set(parent),
   };
-  controlKeys().forEach((key) => controls[key]!.api.setParent?.(internalApi));
+  controlKeys().forEach((key) => controls[key]!.api._setParent?.(internalApi));
   return Object.defineProperties(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),

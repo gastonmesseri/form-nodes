@@ -14,6 +14,7 @@
 - Identify the exact Angular implementation paths and tests governing the requested behavior, then derive this library's expected state transitions, propagation rules, validation effects, and edge cases from that evidence.
 - Do not rely on memory or documentation alone for behavioral work when the Angular 22 source can be inspected.
 - The library may use different signatures, terminology, and API semantics. When its internal state behavior intentionally differs from Angular 22 Signal Forms, document the difference clearly and cover it with tests.
+- Prefix runtime properties and methods that are intentionally omitted from the public API types with `_`.
 
 ## Import style
 
