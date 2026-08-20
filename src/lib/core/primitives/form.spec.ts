@@ -42,6 +42,45 @@ describe('form', () => {
     });
   });
 
+  it('creates nested forms from plain objects', () => {
+    const formGroup = form({
+      name: field('David'),
+      address: {
+        city: field('Moscow'),
+        country: field('Russia'),
+      },
+    });
+    expect(formGroup.api.value()).toEqual({
+      name: 'David',
+      address: { city: 'Moscow', country: 'Russia' },
+    });
+    expect(formGroup.address.city()).toBe('Moscow');
+    expect(formGroup.address.api.value()).toEqual({ city: 'Moscow', country: 'Russia' });
+  });
+
+  it('supports shorthand objects at multiple nesting levels', () => {
+    const formGroup = form({
+      profile: {
+        address: {
+          city: field('Moscow'),
+        },
+      },
+    });
+    formGroup.profile.address.city.set('Zurich');
+    expect(formGroup()).toEqual({ profile: { address: { city: 'Zurich' } } });
+  });
+
+  it('propagates parent state through shorthand nested forms', () => {
+    const formGroup = form({ address: { city: field('Moscow') } });
+    formGroup.api.disable();
+    expect(formGroup.address.api.disabled()).toBe(true);
+    expect(formGroup.address.city.disabled()).toBe(true);
+    formGroup.api.enable();
+    formGroup.api.markAsReadonly();
+    expect(formGroup.address.api.readonly()).toBe(true);
+    expect(formGroup.address.city.readonly()).toBe(true);
+  });
+
   it('gives access to nested fields', () => {
     const formGroup = form({
       address: form({ city: field('Zurich') }),

@@ -1,6 +1,7 @@
 import { computed, signal, type Signal } from '@angular/core';
 
 import type { NodeApi } from '../types/node.type';
+import { markAsNode } from '../utils/node-marker';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -102,5 +103,6 @@ export const field = <TValue>(
     ...api,
     _setParent: (parent: NodeApi | null) => fieldParent.set(parent),
   };
-  return Object.assign(() => fieldValue(), members, { api: internalApi }) as unknown as Field<TValue>;
+  const fieldNode = Object.assign(() => fieldValue(), members, { api: internalApi });
+  return markAsNode(fieldNode) as unknown as Field<TValue>;
 };
