@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
 import { form } from './primitives/form';
@@ -145,5 +146,24 @@ describe('types', () => {
       undefined,
       { hidden: true },
     );
+  });
+
+  it('accepts signals and functions as state sources', () => {
+    const state = signal(false);
+    expectTypeOf(field).toBeCallableWith('David', undefined, {
+      disabled: state,
+      readonly: () => state(),
+      hidden: () => false,
+    });
+  });
+
+  it('allows typed state functions to reference their containing form', () => {
+    const formGroup = form({
+      age: field(17),
+      guardian: field('', undefined, {
+        hidden: (): boolean => formGroup.age() >= 18,
+      }),
+    });
+    expectTypeOf(formGroup.guardian.hidden()).toEqualTypeOf<boolean>();
   });
 });

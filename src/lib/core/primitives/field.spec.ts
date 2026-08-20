@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
 import { field } from './field';
@@ -245,6 +246,48 @@ describe('field', () => {
     fieldNode.markAsTouched();
     fieldNode.show();
     expect(fieldNode.touched()).toBe(false);
+  });
+
+  it('reacts to signal state sources', () => {
+    const disabled = signal(false);
+    const readonly = signal(false);
+    const hidden = signal(false);
+    const fieldNode = field('David', undefined, { disabled, readonly, hidden });
+    disabled.set(true);
+    expect(fieldNode.disabled()).toBe(true);
+    disabled.set(false);
+    readonly.set(true);
+    expect(fieldNode.readonly()).toBe(true);
+    readonly.set(false);
+    hidden.set(true);
+    expect(fieldNode.hidden()).toBe(true);
+  });
+
+  it('tracks signals read by state source functions', () => {
+    const age = signal(17);
+    const fieldNode = field('', undefined, { hidden: () => age() >= 18 });
+    expect(fieldNode.hidden()).toBe(false);
+    age.set(18);
+    expect(fieldNode.hidden()).toBe(true);
+  });
+
+  it('does not let actions override an active reactive source', () => {
+    const locked = signal(true);
+    const fieldNode = field('David', undefined, {
+      disabled: locked,
+      readonly: locked,
+      hidden: locked,
+    });
+    fieldNode.enable();
+    fieldNode.markAsWritable();
+    fieldNode.show();
+    expect(fieldNode.disabled()).toBe(true);
+    expect(fieldNode.readonly()).toBe(true);
+    expect(fieldNode.hidden()).toBe(true);
+    locked.set(false);
+    expect(fieldNode.disabled()).toBe(false);
+    expect(fieldNode.readonly()).toBe(false);
+    expect(fieldNode.hidden()).toBe(false);
   });
 
   it('stays pristine when only the validators change', () => {
