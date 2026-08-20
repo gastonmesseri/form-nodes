@@ -22,3 +22,8 @@
 - Keep third-party imports in the first group and project imports in the second group.
 - Sort imports within each group by ascending length of the complete import line, from shortest to longest.
 - Keep every import on a single line. Do not use multiline imports, including imports with several named symbols.
+
+## Type API style
+
+- Declare signals and other stateful values as properties in public object types.
+- Declare actions and operations with method syntax in public object types so editors distinguish state from behavior in IntelliSense.

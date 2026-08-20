@@ -34,34 +34,34 @@ export type NormalizedNodes<TNodes extends NodeDefinitions> = {
 
 export type FormApi<TNodes extends Nodes> = {
   value: Signal<FormValue<TNodes>>;
-  set: (value: FormSet<TNodes>) => void;
-  patch: (value: FormPatch<TNodes>) => void;
-  reset: (...args: [] | [value: FormSet<TNodes>]) => void;
+  set(value: FormSet<TNodes>): void;
+  patch(value: FormPatch<TNodes>): void;
+  reset(...args: [] | [value: FormSet<TNodes>]): void;
   validators: Signal<Validators<FormValue<TNodes>>>;
-  setValidators: (validators: Validators<FormValue<TNodes>>) => void;
+  setValidators(validators: Validators<FormValue<TNodes>>): void;
   errors: Signal<ValidationErrors | null>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched: () => void;
-  markAsUntouched: () => void;
+  markAsTouched(): void;
+  markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;
-  markAsDirty: () => void;
-  markAsPristine: () => void;
+  markAsDirty(): void;
+  markAsPristine(): void;
   disabled: Signal<boolean>;
   enabled: Signal<boolean>;
-  disable: () => void;
-  enable: () => void;
+  disable(): void;
+  enable(): void;
   readonly: Signal<boolean>;
   writable: Signal<boolean>;
-  markAsReadonly: () => void;
-  markAsWritable: () => void;
+  markAsReadonly(): void;
+  markAsWritable(): void;
   hidden: Signal<boolean>;
   visible: Signal<boolean>;
-  hide: () => void;
-  show: () => void;
+  hide(): void;
+  show(): void;
 };
 
 export type Form<TNodes extends Nodes> =

@@ -14,34 +14,34 @@ export type FieldOptions = {
 
 export type FieldApi<TValue> = {
   value: Signal<TValue>;
-  set: (value: TValue) => void;
-  patch: (value: TValue) => void;
-  reset: (...args: [] | [value: TValue]) => void;
+  set(value: TValue): void;
+  patch(value: TValue): void;
+  reset(...args: [] | [value: TValue]): void;
   validators: Signal<Validators<TValue>>;
-  setValidators: (validators: Validators<TValue>) => void;
+  setValidators(validators: Validators<TValue>): void;
   errors: Signal<ValidationErrors | null>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched: () => void;
-  markAsUntouched: () => void;
+  markAsTouched(): void;
+  markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;
-  markAsDirty: () => void;
-  markAsPristine: () => void;
+  markAsDirty(): void;
+  markAsPristine(): void;
   disabled: Signal<boolean>;
   enabled: Signal<boolean>;
-  disable: () => void;
-  enable: () => void;
+  disable(): void;
+  enable(): void;
   readonly: Signal<boolean>;
   writable: Signal<boolean>;
-  markAsReadonly: () => void;
-  markAsWritable: () => void;
+  markAsReadonly(): void;
+  markAsWritable(): void;
   hidden: Signal<boolean>;
   visible: Signal<boolean>;
-  hide: () => void;
-  show: () => void;
+  hide(): void;
+  show(): void;
 };
 
 export type Field<TValue> =
