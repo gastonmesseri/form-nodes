@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { field } from '../field/field';
+import { field } from './field';
 import { form } from './form';
 
 describe('form', () => {

@@ -1,13 +1,13 @@
-export { field } from './lib/core/field/field';
-export type { Field, FieldApi } from './lib/core/field/field';
-export { form } from './lib/core/form/form';
+export { field } from './lib/core/primitives/field';
+export type { Field, FieldApi } from './lib/core/primitives/field';
+export { form } from './lib/core/primitives/form';
 export type {
   Form,
   FormApi,
   FormPatch,
   FormSet,
   FormValue,
-} from './lib/core/form/form';
+} from './lib/core/primitives/form';
 export type {
   ValidationErrors,
   Validator,
