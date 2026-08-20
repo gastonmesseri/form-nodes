@@ -107,4 +107,13 @@ describe('types', () => {
       { disabled: true },
     );
   });
+
+  it('accepts initial readonly options', () => {
+    expectTypeOf(field).toBeCallableWith('David', undefined, { readonly: true });
+    form(
+      { name: field('David') },
+      undefined,
+      { readonly: true },
+    );
+  });
 });
