@@ -2,12 +2,15 @@ import { computed, signal, type Signal } from '@angular/core';
 
 import type { NodeApi } from '../types/node.type';
 import { markAsNode } from '../utils/node-marker';
+import { isValidators } from '../validation/is-validators';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 
-export type FieldOptions = {
+export type FieldOptions<TValue = any> = {
+  /** Synchronous validators applied to the field value. */
+  readonly validators?: Validators<TValue>;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
@@ -53,27 +56,42 @@ export type Field<TValue> =
   & Omit<FieldApi<TValue>, 'patch'>
   & HiddenFunctionMembers;
 
-export const field = <TValue>(
+export function field<TValue>(
+  value?: TValue,
+  options?: FieldOptions<NoInfer<TValue>>,
+): Field<TValue>;
+export function field<TValue>(
   value?: TValue,
   validators?: Validators<NoInfer<TValue>>,
-  options?: FieldOptions,
-): Field<TValue> => {
+  options?: FieldOptions<NoInfer<TValue>>,
+): Field<TValue>;
+export function field<TValue>(
+  value?: TValue,
+  validatorsOrOptions?: Validators<NoInfer<TValue>> | FieldOptions<NoInfer<TValue>>,
+  separateOptions?: FieldOptions<NoInfer<TValue>>,
+): Field<TValue> {
+  const resolvedOptions = isValidators<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
+    ? separateOptions
+    : validatorsOrOptions;
+  const validators = isValidators<TValue>(validatorsOrOptions)
+    ? validatorsOrOptions
+    : resolvedOptions?.validators ?? [];
   const fieldValue = signal<TValue>(value!);
-  const fieldValidators = signal<Validators<TValue>>(validators ?? []);
+  const fieldValidators = signal<Validators<TValue>>(validators);
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
-  const fieldSelfDisabled = signal(getInitialMutableState(options?.disabled));
+  const fieldSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const fieldParent = signal<NodeApi | null>(null);
   const fieldDisabled = computed(() =>
-    fieldSelfDisabled() || readStateSource(options?.disabled) || fieldParent()?.disabled() === true,
+    fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.disabled() === true,
   );
-  const fieldSelfReadonly = signal(getInitialMutableState(options?.readonly));
+  const fieldSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const fieldReadonly = computed(() =>
-    fieldSelfReadonly() || readStateSource(options?.readonly) || fieldParent()?.readonly() === true,
+    fieldSelfReadonly() || readStateSource(resolvedOptions?.readonly) || fieldParent()?.readonly() === true,
   );
-  const fieldSelfHidden = signal(getInitialMutableState(options?.hidden));
+  const fieldSelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const fieldHidden = computed(() =>
-    fieldSelfHidden() || readStateSource(options?.hidden) || fieldParent()?.hidden() === true,
+    fieldSelfHidden() || readStateSource(resolvedOptions?.hidden) || fieldParent()?.hidden() === true,
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   const fieldErrors = computed(() => fieldNonInteractive()
@@ -126,4 +144,4 @@ export const field = <TValue>(
   };
   const fieldNode = Object.assign(() => fieldValue(), members, { api: internalApi });
   return markAsNode(fieldNode) as unknown as Field<TValue>;
-};
+}

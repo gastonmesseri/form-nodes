@@ -1,13 +1,16 @@
 import { computed, signal, type Signal } from '@angular/core';
 
 import { isNode, markAsNode } from '../utils/node-marker';
+import { isValidators } from '../validation/is-validators';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import type { Node, NodeApi, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 
-export type FormOptions = {
+export type FormOptions<TValue = any> = {
+  /** Synchronous validators applied to the aggregated form value. */
+  readonly validators?: Validators<TValue>;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
@@ -73,12 +76,28 @@ export type Form<TNodes extends Nodes> =
   & TNodes
   & HiddenFunctionMembers<keyof TNodes>;
 
-export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
+export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
+  definitions: TDefinitions,
+  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+): Form<NormalizedNodes<TDefinitions>>;
+export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   definitions: TDefinitions,
   validators?: Validators<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
-  options?: FormOptions,
-): Form<NormalizedNodes<TDefinitions>> => {
+  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+): Form<NormalizedNodes<TDefinitions>>;
+export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
+  definitions: TDefinitions,
+  validatorsOrOptions?: Validators<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+  separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+): Form<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
+  type TValue = FormValue<TNodes>;
+  const resolvedOptions = isValidators<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
+    ? separateOptions
+    : validatorsOrOptions;
+  const validators = isValidators<TValue>(validatorsOrOptions)
+    ? validatorsOrOptions
+    : resolvedOptions?.validators ?? [];
   const controls = Object.fromEntries(
     Object.entries(definitions).map(([key, definition]) => [
       key,
@@ -86,18 +105,18 @@ export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
     ]),
   ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
-  const formSelfDisabled = signal(getInitialMutableState(options?.disabled));
+  const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<NodeApi | null>(null);
   const formDisabled = computed(() =>
-    formSelfDisabled() || readStateSource(options?.disabled) || formParent()?.disabled() === true,
+    formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.disabled() === true,
   );
-  const formSelfReadonly = signal(getInitialMutableState(options?.readonly));
+  const formSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const formReadonly = computed(() =>
-    formSelfReadonly() || readStateSource(options?.readonly) || formParent()?.readonly() === true,
+    formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.readonly() === true,
   );
-  const formSelfHidden = signal(getInitialMutableState(options?.hidden));
+  const formSelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const formHidden = computed(() =>
-    formSelfHidden() || readStateSource(options?.hidden) || formParent()?.hidden() === true,
+    formSelfHidden() || readStateSource(resolvedOptions?.hidden) || formParent()?.hidden() === true,
   );
   const formNonInteractive = computed(() => formHidden() || formDisabled() || formReadonly());
   const formValue = computed(() => {
@@ -105,7 +124,7 @@ export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
     controlKeys().forEach((key) => { value[key] = controls[key]!(); });
     return value;
   });
-  const formValidators = signal<Validators<FormValue<TNodes>>>(validators ?? []);
+  const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   const formErrors = computed(() => formNonInteractive()
     ? null
     : runValidators(formValue(), formValidators()));
@@ -189,4 +208,4 @@ export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
   );
   return markAsNode(formNode) as Form<TNodes>;
-};
+}

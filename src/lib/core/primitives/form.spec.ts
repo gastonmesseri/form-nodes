@@ -241,6 +241,32 @@ describe('form', () => {
     expect(formGroup.api.valid()).toBe(false);
   });
 
+  it('accepts validators and state in a second-argument options object', () => {
+    const sameCity = (value: { city: string; billingCity: string }) =>
+      value.city === value.billingCity ? null : { sameCity: true };
+    const formGroup = form(
+      {
+        city: field('Moscow'),
+        billingCity: field('Zurich'),
+      },
+      {
+        validators: [sameCity],
+        hidden: true,
+      },
+    );
+    expect(formGroup.api.validators()).toEqual([sameCity]);
+    expect(formGroup.api.hidden()).toBe(true);
+    expect(formGroup.api.errors()).toBeNull();
+    formGroup.api.show();
+    expect(formGroup.api.errors()).toEqual({ sameCity: true });
+  });
+
+  it('accepts second-argument options without validators', () => {
+    const formGroup = form({ name: field('David') }, { disabled: true });
+    expect(formGroup.api.validators()).toEqual([]);
+    expect(formGroup.api.disabled()).toBe(true);
+  });
+
   it('starts untouched', () => {
     const formGroup = form({
       name: field('David'),

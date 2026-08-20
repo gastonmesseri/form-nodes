@@ -60,6 +60,16 @@ describe('types', () => {
     expectTypeOf(fieldNode.setValidators).toBeCallableWith([required]);
   });
 
+  it('types validators inside field options', () => {
+    field('David', {
+      validators: [value => {
+        expectTypeOf(value).toEqualTypeOf<string>();
+        return null;
+      }],
+      disabled: false,
+    });
+  });
+
   it('types the value a form validator receives', () => {
     const formGroup = form({
       city: field('Zurich'),
@@ -71,6 +81,26 @@ describe('types', () => {
         return null;
       },
     ]);
+  });
+
+  it('types validators inside form options', () => {
+    form(
+      { city: field('Moscow'), age: field(23) },
+      {
+        validators: [value => {
+          expectTypeOf(value).toEqualTypeOf<{ city: string; age: number }>();
+          return null;
+        }],
+        readonly: false,
+      },
+    );
+  });
+
+  it('rejects a third argument after second-argument options', () => {
+    // @ts-expect-error options must be passed either as the second or third argument
+    field('David', { disabled: true }, { hidden: true });
+    // @ts-expect-error options must be passed either as the second or third argument
+    form({ name: field('David') }, { disabled: true }, { hidden: true });
   });
 
   it('requires every key on set but not on patch', () => {
