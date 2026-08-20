@@ -30,18 +30,18 @@ src/
 ├── public-api.ts
 └── lib/
     └── core/
+        ├── public-api.spec.ts
         ├── primitives/
         │   ├── field.spec.ts
         │   ├── field.ts
         │   ├── form.spec.ts
         │   └── form.ts
         ├── types/
-        │   ├── hidden-function-members.ts
-        │   ├── node.ts
-        │   └── public-api.spec.ts
+        │   ├── hidden-function-members.type.ts
+        │   └── node.type.ts
         └── validation/
             ├── run-validators.ts
-            └── validation.ts
+            └── validation.type.ts
 ```
 
 ## Development

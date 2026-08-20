@@ -1,4 +1,4 @@
-import type { ValidationErrors, Validators } from './validation';
+import type { ValidationErrors, Validators } from './validation.type';
 
 export const runValidators = <TValue>(
   value: TValue,

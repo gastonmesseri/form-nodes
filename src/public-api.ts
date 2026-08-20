@@ -12,4 +12,4 @@ export type {
   ValidationErrors,
   Validator,
   Validators,
-} from './lib/core/validation/validation';
+} from './lib/core/validation/validation.type';
