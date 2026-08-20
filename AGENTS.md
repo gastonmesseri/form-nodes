@@ -7,6 +7,12 @@
 - Do not introduce `inject()`, injection-context-dependent effects, or any implicit dependency on Angular dependency injection into these functions or their required execution paths.
 - Use Angular 22 Signal Forms as the primary reference for the library's internal behavior, not for its public API design or naming.
 - State rules and propagation should behave comparably to Angular 22 Signal Forms whenever applicable. This includes what `disabled` depends on, how validity is aggregated, when fields are considered dirty or touched, and which descendants are affected by operations such as `disable()`, `markAsTouched()`, and `reset()`.
+- Treat the latest Angular 22 Signal Forms source code and its tests as the primary authority for determining exact internal behavior. Prefer evidence from the implementation over assumptions based only on the documentation.
+- Use Angular documentation as a secondary reference. When the documentation is ambiguous, incomplete, or differs from the implementation, follow the latest Angular 22 source and tests for behavioral decisions.
+- For every request that adds, changes, fixes, or evaluates form behavior, inspect the latest available Angular 22 Signal Forms source code and relevant tests before proposing or implementing the change.
+- Resolve and use the latest Angular 22 maintenance branch or release tag rather than relying on Angular's `main` branch. Record the inspected branch, tag, or commit when reporting implementation work.
+- Identify the exact Angular implementation paths and tests governing the requested behavior, then derive this library's expected state transitions, propagation rules, validation effects, and edge cases from that evidence.
+- Do not rely on memory or documentation alone for behavioral work when the Angular 22 source can be inspected.
 - The library may use different signatures, terminology, and API semantics. When its internal state behavior intentionally differs from Angular 22 Signal Forms, document the difference clearly and cover it with tests.
 
 ## Import style
