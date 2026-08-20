@@ -1,9 +1,9 @@
 import { computed, signal, type Signal } from '@angular/core';
 
 import { runValidators } from '../validation/run-validators';
-import type { NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+import type { NodeApi, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 
 export type FormOptions = {
   readonly disabled?: boolean;
@@ -62,20 +62,11 @@ export const form = <TNodes extends Nodes & { api?: never }>(
 ): Form<TNodes> => {
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfDisabled = signal(options?.disabled ?? false);
-  const formParentDisabled = signal(false);
-  const formDisabled = computed(() => formSelfDisabled() || formParentDisabled());
+  const formParent = signal<NodeApi | null>(null);
+  const formDisabled = computed(() => formSelfDisabled() || formParent()?.disabled() === true);
   const formSelfReadonly = signal(options?.readonly ?? false);
-  const formParentReadonly = signal(false);
-  const formReadonly = computed(() => formSelfReadonly() || formParentReadonly());
+  const formReadonly = computed(() => formSelfReadonly() || formParent()?.readonly() === true);
   const formNonInteractive = computed(() => formDisabled() || formReadonly());
-  const setChildrenParentDisabled = (disabled: boolean) => {
-    controlKeys().forEach((key) => controls[key]!.api.setParentDisabled?.(disabled));
-  };
-  const setChildrenParentReadonly = (readonly: boolean) => {
-    controlKeys().forEach((key) => controls[key]!.api.setParentReadonly?.(readonly));
-  };
-  setChildrenParentDisabled(formDisabled());
-  setChildrenParentReadonly(formReadonly());
   const formValue = computed(() => {
     const value = {} as FormValue<TNodes>;
     controlKeys().forEach((key) => { value[key] = controls[key]!(); });
@@ -144,36 +135,18 @@ export const form = <TNodes extends Nodes & { api?: never }>(
     markAsPristine: () => controlKeys().forEach((key) => controls[key]!.api.markAsPristine()),
     disabled: formDisabled,
     enabled: computed(() => !formDisabled()),
-    disable: () => {
-      formSelfDisabled.set(true);
-      setChildrenParentDisabled(true);
-    },
-    enable: () => {
-      formSelfDisabled.set(false);
-      setChildrenParentDisabled(formParentDisabled());
-    },
+    disable: () => formSelfDisabled.set(true),
+    enable: () => formSelfDisabled.set(false),
     readonly: formReadonly,
     writable: computed(() => !formReadonly()),
-    markAsReadonly: () => {
-      formSelfReadonly.set(true);
-      setChildrenParentReadonly(true);
-    },
-    markAsWritable: () => {
-      formSelfReadonly.set(false);
-      setChildrenParentReadonly(formParentReadonly());
-    },
+    markAsReadonly: () => formSelfReadonly.set(true),
+    markAsWritable: () => formSelfReadonly.set(false),
   };
   const internalApi = {
     ...api,
-    setParentDisabled: (disabled: boolean) => {
-      formParentDisabled.set(disabled);
-      setChildrenParentDisabled(formDisabled());
-    },
-    setParentReadonly: (readonly: boolean) => {
-      formParentReadonly.set(readonly);
-      setChildrenParentReadonly(formReadonly());
-    },
+    setParent: (parent: NodeApi | null) => formParent.set(parent),
   };
+  controlKeys().forEach((key) => controls[key]!.api.setParent?.(internalApi));
   return Object.defineProperties(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
