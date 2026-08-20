@@ -70,7 +70,7 @@ export const form = <TNodes extends Nodes & { api?: never }>(
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = controls[key];
       if (control === undefined) {
-        console.warn(`form: unknown control "${String(key)}" ignored on set`);
+        console.warn(`form: unknown key "${String(key)}" ignored on set`);
         return;
       }
       control.api.set(value[key]);
@@ -80,7 +80,7 @@ export const form = <TNodes extends Nodes & { api?: never }>(
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = controls[key];
       if (control === undefined) {
-        console.warn(`form: unknown control "${String(key)}" ignored on patch`);
+        console.warn(`form: unknown key "${String(key)}" ignored on patch`);
         return;
       }
       control.api.patch(value[key]);
