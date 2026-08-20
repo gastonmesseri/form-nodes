@@ -680,4 +680,82 @@ describe('form', () => {
     expect(formGroup.api.disabled()).toBe(false);
     expect(formGroup.api.enabled()).toBe(true);
   });
+
+  it('starts writable', () => {
+    const formGroup = form({ name: field('David') });
+    expect(formGroup.api.readonly()).toBe(false);
+    expect(formGroup.api.writable()).toBe(true);
+  });
+
+  it('propagates initial readonly state to every descendant', () => {
+    const formGroup = form(
+      {
+        name: field('David'),
+        address: form({ city: field('Zurich') }),
+      },
+      undefined,
+      { readonly: true },
+    );
+
+    expect(formGroup.api.readonly()).toBe(true);
+    expect(formGroup.name.readonly()).toBe(true);
+    expect(formGroup.address.api.readonly()).toBe(true);
+    expect(formGroup.address.city.readonly()).toBe(true);
+  });
+
+  it('skips its own validators while readonly', () => {
+    const validator = vi.fn(() => ({ unavailable: true }));
+    const formGroup = form({ name: field('David') }, [validator], { readonly: true });
+
+    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.valid()).toBe(true);
+    expect(validator).not.toHaveBeenCalled();
+
+    formGroup.api.markAsWritable();
+    expect(formGroup.api.errors()).toEqual({ unavailable: true });
+    expect(validator).toHaveBeenCalledOnce();
+  });
+
+  it('does not become readonly when every child is readonly', () => {
+    const formGroup = form({ name: field('David'), age: field(23) });
+    formGroup.name.markAsReadonly();
+    formGroup.age.markAsReadonly();
+    expect(formGroup.api.readonly()).toBe(false);
+  });
+
+  it('preserves child-owned readonly state after its parent becomes writable', () => {
+    const formGroup = form({
+      name: field('David', undefined, { readonly: true }),
+      address: form({ city: field('Zurich') }),
+    });
+
+    formGroup.api.markAsReadonly();
+    formGroup.api.markAsWritable();
+
+    expect(formGroup.api.readonly()).toBe(false);
+    expect(formGroup.name.readonly()).toBe(true);
+    expect(formGroup.address.api.readonly()).toBe(false);
+    expect(formGroup.address.city.readonly()).toBe(false);
+  });
+
+  it('hides descendant interaction state while readonly and restores it when writable', () => {
+    const formGroup = form({
+      name: field('David'),
+      address: form({ city: field('Zurich') }),
+    });
+
+    formGroup.name.markAsTouched();
+    formGroup.address.city.markAsDirty();
+    formGroup.api.markAsReadonly();
+    expect(formGroup.api.touched()).toBe(false);
+    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.name.touched()).toBe(false);
+    expect(formGroup.address.city.dirty()).toBe(false);
+
+    formGroup.api.markAsWritable();
+    expect(formGroup.api.touched()).toBe(true);
+    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.name.touched()).toBe(true);
+    expect(formGroup.address.city.dirty()).toBe(true);
+  });
 });

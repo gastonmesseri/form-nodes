@@ -369,4 +369,61 @@ describe('field', () => {
     fieldNode.disable();
     expect(fieldNode.validators()).toEqual([required]);
   });
+
+  it('starts writable', () => {
+    const fieldNode = field('David');
+    expect(fieldNode.readonly()).toBe(false);
+    expect(fieldNode.writable()).toBe(true);
+  });
+
+  it('can start readonly through options', () => {
+    const fieldNode = field('David', undefined, { readonly: true });
+    expect(fieldNode.readonly()).toBe(true);
+    expect(fieldNode.writable()).toBe(false);
+  });
+
+  it('toggles between readonly and writable', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsReadonly();
+    expect(fieldNode.readonly()).toBe(true);
+    fieldNode.markAsWritable();
+    expect(fieldNode.readonly()).toBe(false);
+  });
+
+  it('preserves its value and underlying dirty state while readonly', () => {
+    const fieldNode = field('David', undefined, { readonly: true });
+    fieldNode.set('Ana');
+    expect(fieldNode()).toBe('Ana');
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.pristine()).toBe(true);
+    fieldNode.markAsWritable();
+    expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('does not become touched while readonly', () => {
+    const fieldNode = field('David', undefined, { readonly: true });
+    fieldNode.markAsTouched();
+    expect(fieldNode.touched()).toBe(false);
+    fieldNode.markAsWritable();
+    expect(fieldNode.touched()).toBe(false);
+  });
+
+  it('hides touched state while readonly and restores it when writable', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsTouched();
+    fieldNode.markAsReadonly();
+    expect(fieldNode.touched()).toBe(false);
+    fieldNode.markAsWritable();
+    expect(fieldNode.touched()).toBe(true);
+  });
+
+  it('skips validation while readonly and validates again when writable', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required], { readonly: true });
+    expect(fieldNode.errors()).toBeNull();
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.markAsWritable();
+    expect(fieldNode.errors()).toEqual({ required: true });
+    expect(fieldNode.valid()).toBe(false);
+  });
 });

@@ -6,6 +6,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 
 export type FieldOptions = {
   readonly disabled?: boolean;
+  readonly readonly?: boolean;
 };
 
 export type FieldApi<TValue> = {
@@ -30,6 +31,10 @@ export type FieldApi<TValue> = {
   enabled: Signal<boolean>;
   disable: () => void;
   enable: () => void;
+  readonly: Signal<boolean>;
+  writable: Signal<boolean>;
+  markAsReadonly: () => void;
+  markAsWritable: () => void;
 };
 
 export type Field<TValue> =
@@ -49,7 +54,11 @@ export const field = <TValue>(
   const fieldSelfDisabled = signal(options?.disabled ?? false);
   const fieldParentDisabled = signal(false);
   const fieldDisabled = computed(() => fieldSelfDisabled() || fieldParentDisabled());
-  const fieldErrors = computed(() => fieldDisabled()
+  const fieldSelfReadonly = signal(options?.readonly ?? false);
+  const fieldParentReadonly = signal(false);
+  const fieldReadonly = computed(() => fieldSelfReadonly() || fieldParentReadonly());
+  const fieldNonInteractive = computed(() => fieldDisabled() || fieldReadonly());
+  const fieldErrors = computed(() => fieldNonInteractive()
     ? null
     : runValidators(fieldValue(), fieldValidators()));
   const fieldValid = computed(() => fieldErrors() === null);
@@ -71,23 +80,28 @@ export const field = <TValue>(
     errors: fieldErrors,
     valid: fieldValid,
     invalid: computed(() => !fieldValid()),
-    touched: computed(() => !fieldDisabled() && fieldTouched()),
-    untouched: computed(() => fieldDisabled() || !fieldTouched()),
-    markAsTouched: () => { if (!fieldDisabled()) fieldTouched.set(true); },
+    touched: computed(() => !fieldNonInteractive() && fieldTouched()),
+    untouched: computed(() => fieldNonInteractive() || !fieldTouched()),
+    markAsTouched: () => { if (!fieldNonInteractive()) fieldTouched.set(true); },
     markAsUntouched: () => fieldTouched.set(false),
-    dirty: computed(() => !fieldDisabled() && fieldDirty()),
-    pristine: computed(() => fieldDisabled() || !fieldDirty()),
+    dirty: computed(() => !fieldNonInteractive() && fieldDirty()),
+    pristine: computed(() => fieldNonInteractive() || !fieldDirty()),
     markAsDirty: () => fieldDirty.set(true),
     markAsPristine: () => fieldDirty.set(false),
     disabled: fieldDisabled,
     enabled: computed(() => !fieldDisabled()),
     disable: () => fieldSelfDisabled.set(true),
     enable: () => fieldSelfDisabled.set(false),
+    readonly: fieldReadonly,
+    writable: computed(() => !fieldReadonly()),
+    markAsReadonly: () => fieldSelfReadonly.set(true),
+    markAsWritable: () => fieldSelfReadonly.set(false),
   };
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
     setParentDisabled: (disabled: boolean) => fieldParentDisabled.set(disabled),
+    setParentReadonly: (readonly: boolean) => fieldParentReadonly.set(readonly),
   };
   return Object.assign(() => fieldValue(), members, { api: internalApi }) as unknown as Field<TValue>;
 };
