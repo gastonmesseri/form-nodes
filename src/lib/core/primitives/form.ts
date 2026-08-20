@@ -4,6 +4,10 @@ import type { NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 
+export type FormOptions = {
+  readonly disabled?: boolean;
+};
+
 export type FormValue<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeValue<TNodes[K]>;
 };
@@ -46,8 +50,12 @@ export type Form<TNodes extends Nodes> =
 export const form = <TNodes extends Nodes & { api?: never }>(
   controls: TNodes,
   validators?: Validators<NoInfer<FormValue<TNodes>>>,
+  options?: FormOptions,
 ): Form<TNodes> => {
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
+  if (options?.disabled) {
+    controlKeys().forEach((key) => controls[key]!.api.disable());
+  }
   const formValue = computed(() => {
     const value = {} as FormValue<TNodes>;
     controlKeys().forEach((key) => { value[key] = controls[key]!(); });

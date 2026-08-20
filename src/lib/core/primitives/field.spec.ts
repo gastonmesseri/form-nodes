@@ -274,6 +274,12 @@ describe('field', () => {
     expect(fieldNode.enabled()).toBe(true);
   });
 
+  it('can start disabled through options', () => {
+    const fieldNode = field('David', undefined, { disabled: true });
+    expect(fieldNode.disabled()).toBe(true);
+    expect(fieldNode.enabled()).toBe(false);
+  });
+
   it('toggles between disable and enable', () => {
     const fieldNode = field('David');
     fieldNode.disable();

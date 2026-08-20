@@ -97,4 +97,13 @@ describe('types', () => {
     // @ts-expect-error the field holds a number
     expectTypeOf(fieldNode.reset).toBeCallableWith('30');
   });
+
+  it('accepts initial disabled options', () => {
+    expectTypeOf(field).toBeCallableWith('David', undefined, { disabled: true });
+    form(
+      { name: field('David') },
+      undefined,
+      { disabled: true },
+    );
+  });
 });

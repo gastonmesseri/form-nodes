@@ -3,6 +3,10 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 
+export type FieldOptions = {
+  readonly disabled?: boolean;
+};
+
 export type FieldApi<TValue> = {
   value: Signal<TValue>;
   set: (value: TValue) => void;
@@ -35,12 +39,13 @@ export type Field<TValue> =
 export const field = <TValue>(
   value?: TValue,
   validators?: Validators<NoInfer<TValue>>,
+  options?: FieldOptions,
 ): Field<TValue> => {
   const fieldValue = signal<TValue>(value!);
   const fieldValidators = signal<Validators<TValue>>(validators ?? []);
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
-  const fieldDisabled = signal(false);
+  const fieldDisabled = signal(options?.disabled ?? false);
   const fieldErrors = computed(() => fieldDisabled()
     ? null
     : runValidators(fieldValue(), fieldValidators()));
