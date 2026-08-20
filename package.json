@@ -1,0 +1,35 @@
+{
+  "name": "@gem/ng-forms",
+  "version": "0.1.0",
+  "description": "Small, typed, signal-based form primitives for Angular.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.spec.json --noEmit"
+  },
+  "peerDependencies": {
+    "@angular/core": "^22.0.0"
+  },
+  "devDependencies": {
+    "@angular/compiler": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "ng-packagr": "^22.1.0",
+    "typescript": "~6.0.0",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "angular",
+    "forms",
+    "signals",
+    "typescript"
+  ]
+}
