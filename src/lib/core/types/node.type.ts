@@ -14,6 +14,7 @@ export type NodeApi = {
   disabled: Signal<boolean>;
   disable: () => void;
   enable: () => void;
+  setParentDisabled?: (disabled: boolean) => void;
 };
 
 export type Node = (() => any) & { api: NodeApi };

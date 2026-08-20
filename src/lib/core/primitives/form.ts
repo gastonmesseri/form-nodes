@@ -1,7 +1,8 @@
 import { computed, signal, type Signal } from '@angular/core';
-import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
+
 import { runValidators } from '../validation/run-validators';
+import type { NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
+import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 
 export type FormOptions = {
@@ -53,27 +54,32 @@ export const form = <TNodes extends Nodes & { api?: never }>(
   options?: FormOptions,
 ): Form<TNodes> => {
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
-  if (options?.disabled) {
-    controlKeys().forEach((key) => controls[key]!.api.disable());
-  }
+  const formSelfDisabled = signal(options?.disabled ?? false);
+  const formParentDisabled = signal(false);
+  const formDisabled = computed(() => formSelfDisabled() || formParentDisabled());
+  const setChildrenParentDisabled = (disabled: boolean) => {
+    controlKeys().forEach((key) => controls[key]!.api.setParentDisabled?.(disabled));
+  };
+  setChildrenParentDisabled(formDisabled());
   const formValue = computed(() => {
     const value = {} as FormValue<TNodes>;
     controlKeys().forEach((key) => { value[key] = controls[key]!(); });
     return value;
   });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators ?? []);
-  const formErrors = computed(() => runValidators(formValue(), formValidators()));
+  const formErrors = computed(() => formDisabled()
+    ? null
+    : runValidators(formValue(), formValidators()));
   const formValid = computed(() =>
-    formErrors() === null && controlKeys().every((key) => controls[key]!.api.valid()),
+    formDisabled() || (
+      formErrors() === null && controlKeys().every((key) => controls[key]!.api.valid())
+    ),
   );
   const formTouched = computed(() =>
-    controlKeys().some((key) => controls[key]!.api.touched()),
+    !formDisabled() && controlKeys().some((key) => controls[key]!.api.touched()),
   );
   const formDirty = computed(() =>
-    controlKeys().some((key) => !controls[key]!.api.disabled() && controls[key]!.api.dirty()),
-  );
-  const formDisabled = computed(() =>
-    controlKeys().every((key) => controls[key]!.api.disabled()),
+    !formDisabled() && controlKeys().some((key) => controls[key]!.api.dirty()),
   );
   const set = (value: FormSet<TNodes>) => {
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
@@ -123,11 +129,24 @@ export const form = <TNodes extends Nodes & { api?: never }>(
     markAsPristine: () => controlKeys().forEach((key) => controls[key]!.api.markAsPristine()),
     disabled: formDisabled,
     enabled: computed(() => !formDisabled()),
-    disable: () => controlKeys().forEach((key) => controls[key]!.api.disable()),
-    enable: () => controlKeys().forEach((key) => controls[key]!.api.enable()),
+    disable: () => {
+      formSelfDisabled.set(true);
+      setChildrenParentDisabled(true);
+    },
+    enable: () => {
+      formSelfDisabled.set(false);
+      setChildrenParentDisabled(formParentDisabled());
+    },
+  };
+  const internalApi = {
+    ...api,
+    setParentDisabled: (disabled: boolean) => {
+      formParentDisabled.set(disabled);
+      setChildrenParentDisabled(formDisabled());
+    },
   };
   return Object.defineProperties(
     () => formValue(),
-    Object.getOwnPropertyDescriptors({ ...controls, api }),
+    Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
   ) as Form<TNodes>;
 };

@@ -1,7 +1,8 @@
 import { computed, signal, type Signal } from '@angular/core';
-import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
+import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 
 export type FieldOptions = {
   readonly disabled?: boolean;
@@ -45,7 +46,9 @@ export const field = <TValue>(
   const fieldValidators = signal<Validators<TValue>>(validators ?? []);
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
-  const fieldDisabled = signal(options?.disabled ?? false);
+  const fieldSelfDisabled = signal(options?.disabled ?? false);
+  const fieldParentDisabled = signal(false);
+  const fieldDisabled = computed(() => fieldSelfDisabled() || fieldParentDisabled());
   const fieldErrors = computed(() => fieldDisabled()
     ? null
     : runValidators(fieldValue(), fieldValidators()));
@@ -68,19 +71,23 @@ export const field = <TValue>(
     errors: fieldErrors,
     valid: fieldValid,
     invalid: computed(() => !fieldValid()),
-    touched: fieldTouched.asReadonly(),
-    untouched: computed(() => !fieldTouched()),
+    touched: computed(() => !fieldDisabled() && fieldTouched()),
+    untouched: computed(() => fieldDisabled() || !fieldTouched()),
     markAsTouched: () => { if (!fieldDisabled()) fieldTouched.set(true); },
     markAsUntouched: () => fieldTouched.set(false),
-    dirty: fieldDirty.asReadonly(),
-    pristine: computed(() => !fieldDirty()),
+    dirty: computed(() => !fieldDisabled() && fieldDirty()),
+    pristine: computed(() => fieldDisabled() || !fieldDirty()),
     markAsDirty: () => fieldDirty.set(true),
     markAsPristine: () => fieldDirty.set(false),
-    disabled: fieldDisabled.asReadonly(),
+    disabled: fieldDisabled,
     enabled: computed(() => !fieldDisabled()),
-    disable: () => fieldDisabled.set(true),
-    enable: () => fieldDisabled.set(false),
+    disable: () => fieldSelfDisabled.set(true),
+    enable: () => fieldSelfDisabled.set(false),
   };
   const api: FieldApi<TValue> = { ...members, patch: set };
-  return Object.assign(() => fieldValue(), members, { api }) as Field<TValue>;
+  const internalApi = {
+    ...api,
+    setParentDisabled: (disabled: boolean) => fieldParentDisabled.set(disabled),
+  };
+  return Object.assign(() => fieldValue(), members, { api: internalApi }) as unknown as Field<TValue>;
 };

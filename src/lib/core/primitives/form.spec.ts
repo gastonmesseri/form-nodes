@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { field } from './field';
+import { describe, expect, it, vi } from 'vitest';
+
 import { form } from './form';
+import { field } from './field';
 
 describe('form', () => {
   it('exposes each field under its own key', () => {
@@ -530,6 +531,19 @@ describe('form', () => {
     expect(formGroup.address.city.disabled()).toBe(true);
   });
 
+  it('skips its own validators while disabled', () => {
+    const validator = vi.fn(() => ({ unavailable: true }));
+    const formGroup = form({ name: field('David') }, [validator], { disabled: true });
+
+    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.valid()).toBe(true);
+    expect(validator).not.toHaveBeenCalled();
+
+    formGroup.api.enable();
+    expect(formGroup.api.errors()).toEqual({ unavailable: true });
+    expect(validator).toHaveBeenCalledOnce();
+  });
+
   it('ignores a disabled child when computing validity', () => {
     const required = (value: string) => (value === '' ? { required: true } : null);
     const formGroup = form({
@@ -553,9 +567,12 @@ describe('form', () => {
     formGroup.name.markAsTouched();
     formGroup.name.markAsDirty();
     expect(formGroup.name.touched()).toBe(false);
-    expect(formGroup.name.dirty()).toBe(true);
+    expect(formGroup.name.dirty()).toBe(false);
     expect(formGroup.api.touched()).toBe(false);
     expect(formGroup.api.dirty()).toBe(false);
+    formGroup.name.enable();
+    expect(formGroup.name.dirty()).toBe(true);
+    expect(formGroup.api.dirty()).toBe(true);
     formGroup.age.markAsTouched();
     expect(formGroup.api.touched()).toBe(true);
   });
@@ -588,6 +605,45 @@ describe('form', () => {
     expect(formGroup.api.disabled()).toBe(false);
   });
 
+  it('preserves a child own disabled state after its parent is re-enabled', () => {
+    const formGroup = form({
+      name: field('David', undefined, { disabled: true }),
+      address: form({ city: field('Zurich') }),
+    });
+
+    formGroup.api.disable();
+    formGroup.api.enable();
+
+    expect(formGroup.api.disabled()).toBe(false);
+    expect(formGroup.name.disabled()).toBe(true);
+    expect(formGroup.address.api.disabled()).toBe(false);
+    expect(formGroup.address.city.disabled()).toBe(false);
+  });
+
+  it('hides descendant interaction state while disabled and restores it when enabled', () => {
+    const formGroup = form({
+      name: field('David'),
+      address: form({ city: field('Zurich') }),
+    });
+
+    formGroup.name.markAsTouched();
+    formGroup.address.city.markAsDirty();
+    expect(formGroup.api.touched()).toBe(true);
+    expect(formGroup.api.dirty()).toBe(true);
+
+    formGroup.api.disable();
+    expect(formGroup.name.touched()).toBe(false);
+    expect(formGroup.address.city.dirty()).toBe(false);
+    expect(formGroup.api.touched()).toBe(false);
+    expect(formGroup.api.dirty()).toBe(false);
+
+    formGroup.api.enable();
+    expect(formGroup.name.touched()).toBe(true);
+    expect(formGroup.address.city.dirty()).toBe(true);
+    expect(formGroup.api.touched()).toBe(true);
+    expect(formGroup.api.dirty()).toBe(true);
+  });
+
   it('keeps every value after disabling the form', () => {
     const formGroup = form({
       name: field('David'),
@@ -597,7 +653,7 @@ describe('form', () => {
     expect(formGroup.api.value()).toEqual({ name: 'David', address: { city: 'Zurich' } });
   });
 
-  it('is only disabled when every child is disabled', () => {
+  it('does not become disabled when every child is disabled', () => {
     const formGroup = form({
       name: field('David'),
       age: field(23),
@@ -605,7 +661,7 @@ describe('form', () => {
     formGroup.name.disable();
     expect(formGroup.api.disabled()).toBe(false);
     formGroup.age.disable();
-    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.api.disabled()).toBe(false);
   });
 
   it('only disables its own subtree', () => {
@@ -619,8 +675,9 @@ describe('form', () => {
     expect(formGroup.api.disabled()).toBe(false);
   });
 
-  it('reports an empty form as disabled', () => {
+  it('reports an empty form as enabled', () => {
     const formGroup = form({});
-    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.api.disabled()).toBe(false);
+    expect(formGroup.api.enabled()).toBe(true);
   });
 });
