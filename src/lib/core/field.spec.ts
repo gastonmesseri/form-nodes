@@ -1,0 +1,352 @@
+import { describe, expect, it } from 'vitest';
+import { field } from './field';
+
+describe('field', () => {
+  it('exposes the initial value when called and through value()', () => {
+    const fieldNode = field('David');
+    expect(fieldNode()).toBe('David');
+    expect(fieldNode.value()).toBe('David');
+  });
+
+  it('starts as undefined when no initial value is given', () => {
+    const fieldNode = field<string>();
+    expect(fieldNode()).toBeUndefined();
+  });
+
+  it('updates the value through set', () => {
+    const fieldNode = field(23);
+    fieldNode.set(30);
+    expect(fieldNode()).toBe(30);
+    expect(fieldNode.value()).toBe(30);
+  });
+
+  it('is valid with null errors when it has no validators', () => {
+    const fieldNode = field('David');
+    expect(fieldNode.errors()).toBeNull();
+    expect(fieldNode.valid()).toBe(true);
+    expect(fieldNode.invalid()).toBe(false);
+  });
+
+  it('reports the error of a failing validator', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.errors()).toEqual({ required: true });
+    expect(fieldNode.valid()).toBe(false);
+    expect(fieldNode.invalid()).toBe(true);
+  });
+
+  it('merges the errors of several validators', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const minLength = (value: string) =>
+      value.length < 3 ? { minLength: { min: 3, actual: value.length } } : null;
+    const fieldNode = field('', [required, minLength]);
+    expect(fieldNode.errors()).toEqual({
+      required: true,
+      minLength: { min: 3, actual: 0 },
+    });
+  });
+
+  it('leaves out the keys of validators that pass', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const minLength = (value: string) => (value.length < 3 ? { minLength: true } : null);
+    const fieldNode = field('ab', [required, minLength]);
+    expect(fieldNode.errors()).toEqual({ minLength: true });
+  });
+
+  it('recomputes errors when the value changes', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.valid()).toBe(false);
+    fieldNode.set('David');
+    expect(fieldNode.errors()).toBeNull();
+    expect(fieldNode.valid()).toBe(true);
+  });
+
+  it('exposes the current validators through validators()', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.validators()).toEqual([required]);
+  });
+
+  it('recomputes errors after setValidators', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.valid()).toBe(false);
+    fieldNode.setValidators([]);
+    expect(fieldNode.errors()).toBeNull();
+    expect(fieldNode.valid()).toBe(true);
+  });
+
+  it('adds validators to a field declared without them', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('');
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.setValidators([required]);
+    expect(fieldNode.errors()).toEqual({ required: true });
+    expect(fieldNode.valid()).toBe(false);
+  });
+
+  it('applies a newly set validator to the current value', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('David', [required]);
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.setValidators([(value: string) => (value === 'David' ? { required: true } : null)]);
+    expect(fieldNode.errors()).toEqual({ required: true });
+  });
+
+  it('exposes the same state through the root and through api', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.api.value()).toBe(fieldNode.value());
+    expect(fieldNode.api.valid()).toBe(fieldNode.valid());
+    expect(fieldNode.api.errors()).toEqual(fieldNode.errors());
+    fieldNode.api.set('David');
+    expect(fieldNode()).toBe('David');
+    expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('patches like it sets, through api', () => {
+    const fieldNode = field('David');
+    fieldNode.api.patch('Ana');
+    expect(fieldNode()).toBe('Ana');
+    expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('starts untouched', () => {
+    const fieldNode = field('David');
+    expect(fieldNode.touched()).toBe(false);
+    expect(fieldNode.untouched()).toBe(true);
+  });
+
+  it('becomes touched through markAsTouched', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsTouched();
+    expect(fieldNode.touched()).toBe(true);
+    expect(fieldNode.untouched()).toBe(false);
+  });
+
+  it('goes back to untouched through markAsUntouched', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsTouched();
+    fieldNode.markAsUntouched();
+    expect(fieldNode.touched()).toBe(false);
+    expect(fieldNode.untouched()).toBe(true);
+  });
+
+  it('stays untouched when the value changes', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    expect(fieldNode.touched()).toBe(false);
+  });
+
+  it('keeps touched independent from validity', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.valid()).toBe(false);
+    expect(fieldNode.touched()).toBe(false);
+  });
+
+  it('starts pristine', () => {
+    const fieldNode = field('David');
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.pristine()).toBe(true);
+  });
+
+  it('becomes dirty when the value is set', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    expect(fieldNode.dirty()).toBe(true);
+    expect(fieldNode.pristine()).toBe(false);
+  });
+
+  it('becomes dirty even when set to the same value', () => {
+    const fieldNode = field('David');
+    fieldNode.set('David');
+    expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('becomes dirty through markAsDirty', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsDirty();
+    expect(fieldNode.dirty()).toBe(true);
+    expect(fieldNode.pristine()).toBe(false);
+  });
+
+  it('goes back to pristine through markAsPristine', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    fieldNode.markAsPristine();
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.pristine()).toBe(true);
+  });
+
+  it('keeps the value after markAsPristine', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    fieldNode.markAsPristine();
+    expect(fieldNode()).toBe('Ana');
+  });
+
+  it('keeps dirty and touched independent', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    expect(fieldNode.dirty()).toBe(true);
+    expect(fieldNode.touched()).toBe(false);
+    fieldNode.markAsPristine();
+    fieldNode.markAsTouched();
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.touched()).toBe(true);
+  });
+
+  it('stays pristine when only the validators change', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('David');
+    fieldNode.setValidators([required]);
+    expect(fieldNode.dirty()).toBe(false);
+  });
+
+  it('keeps the value on reset with no argument', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    fieldNode.reset();
+    expect(fieldNode()).toBe('Ana');
+  });
+
+  it('clears dirty and touched on reset', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    fieldNode.markAsTouched();
+    fieldNode.reset();
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.pristine()).toBe(true);
+    expect(fieldNode.touched()).toBe(false);
+    expect(fieldNode.untouched()).toBe(true);
+  });
+
+  it('assigns the value passed to reset', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    fieldNode.reset('Leo');
+    expect(fieldNode()).toBe('Leo');
+  });
+
+  it('stays pristine and untouched after reset with a value', () => {
+    const fieldNode = field('David');
+    fieldNode.set('Ana');
+    fieldNode.markAsTouched();
+    fieldNode.reset('Leo');
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.touched()).toBe(false);
+  });
+
+  it('resets to an empty string', () => {
+    const fieldNode = field('David');
+    fieldNode.reset('');
+    expect(fieldNode()).toBe('');
+  });
+
+  it('resets to zero', () => {
+    const fieldNode = field(23);
+    fieldNode.reset(0);
+    expect(fieldNode()).toBe(0);
+  });
+
+  it('revalidates after reset with a value', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('David', [required]);
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.reset('');
+    expect(fieldNode.errors()).toEqual({ required: true });
+    expect(fieldNode.valid()).toBe(false);
+  });
+
+  it('keeps the validators after reset', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    fieldNode.reset('David');
+    expect(fieldNode.validators()).toEqual([required]);
+    expect(fieldNode.valid()).toBe(true);
+  });
+
+  it('starts enabled', () => {
+    const fieldNode = field('David');
+    expect(fieldNode.disabled()).toBe(false);
+    expect(fieldNode.enabled()).toBe(true);
+  });
+
+  it('toggles between disable and enable', () => {
+    const fieldNode = field('David');
+    fieldNode.disable();
+    expect(fieldNode.disabled()).toBe(true);
+    expect(fieldNode.enabled()).toBe(false);
+    fieldNode.enable();
+    expect(fieldNode.disabled()).toBe(false);
+    expect(fieldNode.enabled()).toBe(true);
+  });
+
+  it('keeps its value when disabled', () => {
+    const fieldNode = field('David');
+    fieldNode.disable();
+    expect(fieldNode()).toBe('David');
+    expect(fieldNode.value()).toBe('David');
+  });
+
+  it('still writes the value when disabled', () => {
+    const fieldNode = field('David');
+    fieldNode.disable();
+    fieldNode.set('Ana');
+    expect(fieldNode()).toBe('Ana');
+  });
+
+  it('still becomes dirty while disabled', () => {
+    const fieldNode = field('David');
+    fieldNode.disable();
+    fieldNode.set('Ana');
+    expect(fieldNode.dirty()).toBe(true);
+    fieldNode.markAsPristine();
+    fieldNode.markAsDirty();
+    expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('does not become touched while disabled', () => {
+    const fieldNode = field('David');
+    fieldNode.disable();
+    fieldNode.markAsTouched();
+    expect(fieldNode.touched()).toBe(false);
+  });
+
+  it('becomes touched again once enabled', () => {
+    const fieldNode = field('David');
+    fieldNode.disable();
+    fieldNode.markAsTouched();
+    fieldNode.enable();
+    fieldNode.markAsTouched();
+    expect(fieldNode.touched()).toBe(true);
+  });
+
+  it('skips validation while disabled', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.errors()).toEqual({ required: true });
+    fieldNode.disable();
+    expect(fieldNode.errors()).toBeNull();
+    expect(fieldNode.valid()).toBe(true);
+    expect(fieldNode.invalid()).toBe(false);
+  });
+
+  it('validates again once enabled', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    fieldNode.disable();
+    fieldNode.enable();
+    expect(fieldNode.errors()).toEqual({ required: true });
+    expect(fieldNode.valid()).toBe(false);
+  });
+
+  it('keeps its validators while disabled', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    fieldNode.disable();
+    expect(fieldNode.validators()).toEqual([required]);
+  });
+});
