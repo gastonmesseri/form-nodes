@@ -199,6 +199,54 @@ describe('field', () => {
     expect(fieldNode.touched()).toBe(true);
   });
 
+  it('starts visible and can be hidden and shown', () => {
+    const fieldNode = field('David');
+    expect(fieldNode.hidden()).toBe(false);
+    expect(fieldNode.visible()).toBe(true);
+    fieldNode.hide();
+    expect(fieldNode.hidden()).toBe(true);
+    expect(fieldNode.visible()).toBe(false);
+    fieldNode.show();
+    expect(fieldNode.hidden()).toBe(false);
+    expect(fieldNode.visible()).toBe(true);
+  });
+
+  it('can start hidden through options', () => {
+    const fieldNode = field('David', undefined, { hidden: true });
+    expect(fieldNode.hidden()).toBe(true);
+    expect(fieldNode.visible()).toBe(false);
+  });
+
+  it('skips validation while hidden', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', [required]);
+    expect(fieldNode.valid()).toBe(false);
+    fieldNode.hide();
+    expect(fieldNode.errors()).toBeNull();
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.show();
+    expect(fieldNode.valid()).toBe(false);
+  });
+
+  it('hides interaction state and restores it when shown', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsTouched();
+    fieldNode.markAsDirty();
+    fieldNode.hide();
+    expect(fieldNode.touched()).toBe(false);
+    expect(fieldNode.dirty()).toBe(false);
+    fieldNode.show();
+    expect(fieldNode.touched()).toBe(true);
+    expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('does not become touched while hidden', () => {
+    const fieldNode = field('David', undefined, { hidden: true });
+    fieldNode.markAsTouched();
+    fieldNode.show();
+    expect(fieldNode.touched()).toBe(false);
+  });
+
   it('stays pristine when only the validators change', () => {
     const required = (value: string) => (value === '' ? { required: true } : null);
     const fieldNode = field('David');

@@ -7,6 +7,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { Node, NodeApi, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 
 export type FormOptions = {
+  readonly hidden?: boolean;
   readonly disabled?: boolean;
   readonly readonly?: boolean;
 };
@@ -57,6 +58,10 @@ export type FormApi<TNodes extends Nodes> = {
   writable: Signal<boolean>;
   markAsReadonly: () => void;
   markAsWritable: () => void;
+  hidden: Signal<boolean>;
+  visible: Signal<boolean>;
+  hide: () => void;
+  show: () => void;
 };
 
 export type Form<TNodes extends Nodes> =
@@ -82,7 +87,9 @@ export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
   const formDisabled = computed(() => formSelfDisabled() || formParent()?.disabled() === true);
   const formSelfReadonly = signal(options?.readonly ?? false);
   const formReadonly = computed(() => formSelfReadonly() || formParent()?.readonly() === true);
-  const formNonInteractive = computed(() => formDisabled() || formReadonly());
+  const formSelfHidden = signal(options?.hidden ?? false);
+  const formHidden = computed(() => formSelfHidden() || formParent()?.hidden() === true);
+  const formNonInteractive = computed(() => formHidden() || formDisabled() || formReadonly());
   const formValue = computed(() => {
     const value = {} as FormValue<TNodes>;
     controlKeys().forEach((key) => { value[key] = controls[key]!(); });
@@ -157,6 +164,10 @@ export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
     writable: computed(() => !formReadonly()),
     markAsReadonly: () => formSelfReadonly.set(true),
     markAsWritable: () => formSelfReadonly.set(false),
+    hidden: formHidden,
+    visible: computed(() => !formHidden()),
+    hide: () => formSelfHidden.set(true),
+    show: () => formSelfHidden.set(false),
   };
   const internalApi = {
     ...api,
