@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { field } from './field';
 
 describe('field', () => {
@@ -304,14 +305,27 @@ describe('field', () => {
     expect(fieldNode()).toBe('Ana');
   });
 
-  it('still becomes dirty while disabled', () => {
+  it('hides dirty state while disabled and restores it when enabled', () => {
     const fieldNode = field('David');
     fieldNode.disable();
     fieldNode.set('Ana');
-    expect(fieldNode.dirty()).toBe(true);
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.pristine()).toBe(true);
     fieldNode.markAsPristine();
     fieldNode.markAsDirty();
+    expect(fieldNode.dirty()).toBe(false);
+    fieldNode.enable();
     expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('hides touched state while disabled and restores it when enabled', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsTouched();
+    fieldNode.disable();
+    expect(fieldNode.touched()).toBe(false);
+    expect(fieldNode.untouched()).toBe(true);
+    fieldNode.enable();
+    expect(fieldNode.touched()).toBe(true);
   });
 
   it('does not become touched while disabled', () => {

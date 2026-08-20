@@ -1,6 +1,7 @@
 import { describe, expectTypeOf, it } from 'vitest';
-import { field } from './primitives/field';
+
 import { form } from './primitives/form';
+import { field } from './primitives/field';
 import type { ValidationErrors } from './validation/validation.type';
 
 describe('types', () => {
