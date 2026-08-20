@@ -514,6 +514,22 @@ describe('form', () => {
     expect(formGroup.api.enabled()).toBe(true);
   });
 
+  it('can start disabled through options', () => {
+    const formGroup = form(
+      {
+        name: field('David'),
+        address: form({ city: field('Zurich') }),
+      },
+      undefined,
+      { disabled: true },
+    );
+
+    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.name.disabled()).toBe(true);
+    expect(formGroup.address.api.disabled()).toBe(true);
+    expect(formGroup.address.city.disabled()).toBe(true);
+  });
+
   it('ignores a disabled child when computing validity', () => {
     const required = (value: string) => (value === '' ? { required: true } : null);
     const formGroup = form({
