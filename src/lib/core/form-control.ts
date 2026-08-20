@@ -1,40 +1,80 @@
-import { computed, signal } from '@angular/core';
-import type { AbstractControl, Validator } from './types';
+import { computed, signal, type Signal } from '@angular/core';
+import type { HiddenFunctionMembers } from './hidden-function-members';
+import { runValidators, type ValidationErrors, type Validators } from './validation';
 
-export class FormControl<T> implements AbstractControl<T> {
-  readonly #initialValue: T;
-  readonly #value;
+export type ControlApi<TValue> = {
+  value: Signal<TValue>;
+  set: (value: TValue) => void;
+  patch: (value: TValue) => void;
+  reset: (...args: [] | [value: TValue]) => void;
+  validators: Signal<Validators<TValue>>;
+  setValidators: (validators: Validators<TValue>) => void;
+  errors: Signal<ValidationErrors | null>;
+  valid: Signal<boolean>;
+  invalid: Signal<boolean>;
+  touched: Signal<boolean>;
+  untouched: Signal<boolean>;
+  markAsTouched: () => void;
+  markAsUntouched: () => void;
+  dirty: Signal<boolean>;
+  pristine: Signal<boolean>;
+  markAsDirty: () => void;
+  markAsPristine: () => void;
+  disabled: Signal<boolean>;
+  enabled: Signal<boolean>;
+  disable: () => void;
+  enable: () => void;
+};
 
-  readonly value;
-  readonly dirty = signal(false);
-  readonly touched = signal(false);
-  readonly errors;
-  readonly status;
+export type Control<TValue> =
+  & { (): TValue; api: ControlApi<TValue> }
+  & Omit<ControlApi<TValue>, 'patch'>
+  & HiddenFunctionMembers;
 
-  constructor(initialValue: T, validators: readonly Validator<T>[] = []) {
-    this.#initialValue = initialValue;
-    this.#value = signal(initialValue);
-    this.value = this.#value.asReadonly();
-    this.errors = computed(() =>
-      validators
-        .map((validator) => validator(this.#value()))
-        .filter((error): error is string => error !== null),
-    );
-    this.status = computed(() => (this.errors().length === 0 ? 'valid' : 'invalid'));
-  }
-
-  setValue(value: T): void {
-    this.#value.set(value);
-    this.dirty.set(true);
-  }
-
-  reset(value: T = this.#initialValue): void {
-    this.#value.set(value);
-    this.dirty.set(false);
-    this.touched.set(false);
-  }
-
-  markAsTouched(): void {
-    this.touched.set(true);
-  }
-}
+export const control = <TValue>(
+  value?: TValue,
+  validators?: Validators<NoInfer<TValue>>,
+): Control<TValue> => {
+  const controlValue = signal<TValue>(value!);
+  const controlValidators = signal<Validators<TValue>>(validators ?? []);
+  const controlTouched = signal(false);
+  const controlDirty = signal(false);
+  const controlDisabled = signal(false);
+  const controlErrors = computed(() => controlDisabled()
+    ? null
+    : runValidators(controlValue(), controlValidators()));
+  const controlValid = computed(() => controlErrors() === null);
+  const set = (next: TValue) => {
+    controlValue.set(next);
+    controlDirty.set(true);
+  };
+  const reset = (...args: [] | [value: TValue]) => {
+    if (args.length === 1) controlValue.set(args[0]);
+    controlTouched.set(false);
+    controlDirty.set(false);
+  };
+  const members = {
+    value: controlValue.asReadonly(),
+    set,
+    reset,
+    validators: controlValidators.asReadonly(),
+    setValidators: (next: Validators<TValue>) => controlValidators.set(next),
+    errors: controlErrors,
+    valid: controlValid,
+    invalid: computed(() => !controlValid()),
+    touched: controlTouched.asReadonly(),
+    untouched: computed(() => !controlTouched()),
+    markAsTouched: () => { if (!controlDisabled()) controlTouched.set(true); },
+    markAsUntouched: () => controlTouched.set(false),
+    dirty: controlDirty.asReadonly(),
+    pristine: computed(() => !controlDirty()),
+    markAsDirty: () => controlDirty.set(true),
+    markAsPristine: () => controlDirty.set(false),
+    disabled: controlDisabled.asReadonly(),
+    enabled: computed(() => !controlDisabled()),
+    disable: () => controlDisabled.set(true),
+    enable: () => controlDisabled.set(false),
+  };
+  const api: ControlApi<TValue> = { ...members, patch: set };
+  return Object.assign(() => controlValue(), members, { api }) as Control<TValue>;
+};
