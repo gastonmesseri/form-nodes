@@ -1,31 +1,26 @@
-# @acme/ng-forms
+# @gem/ng-forms
 
 A small, typed, signal-based forms library for Angular.
 
 ## Install
 
 ```sh
-npm install @acme/ng-forms
+npm install @gem/ng-forms
 ```
 
 ## Usage
 
 ```ts
-import { Component } from '@angular/core';
-import { FormFieldDirective, array, field, form, group } from '@acme/ng-forms';
+import { control, form } from '@gem/ng-forms';
 
-@Component({
-  standalone: true,
-  imports: [FormFieldDirective],
-  template: `<input [formField]="profile.controls.name" />`,
-})
-export class ProfileComponent {
-  readonly profile = form({
-    name: field('', [(value) => (value ? null : 'Name is required')]),
-    address: group({ city: field('') }),
-    tags: array([field('angular')]),
-  });
-}
+const profile = form({
+  name: control('', [(value) => value ? null : { required: true }]),
+  address: form({ city: control('') }),
+});
+
+profile.name.set('Ada');
+profile.api.patch({ address: { city: 'London' } });
+profile(); // { name: 'Ada', address: { city: 'London' } }
 ```
 
 The package exposes only its public entry point. Internal code is organized by role:
@@ -34,15 +29,12 @@ The package exposes only its public entry point. Internal code is organized by r
 src/
 ├── public-api.ts
 └── lib/
-    ├── core/
-    │   ├── factories.ts
-    │   ├── form-array.ts
-    │   ├── form-control.ts
-    │   ├── form-group.ts
-    │   ├── types.ts
-    │   └── value-types.ts
-    └── directives/
-        └── form-field.directive.ts
+    └── core/
+        ├── form-control.ts
+        ├── form-group.ts
+        ├── hidden-function-members.ts
+        ├── node.ts
+        └── validation.ts
 ```
 
 ## Development

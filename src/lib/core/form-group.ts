@@ -1,47 +1,124 @@
-import { computed, signal } from '@angular/core';
-import type { AbstractControl } from './types';
-import type { Controls, ControlsValue } from './value-types';
+import { computed, signal, type Signal } from '@angular/core';
+import type { HiddenFunctionMembers } from './hidden-function-members';
+import type { NodePatch, NodeSet, Nodes, NodeValue } from './node';
+import { runValidators, type ValidationErrors, type Validators } from './validation';
 
-export class FormGroup<TControls extends Controls>
-  implements AbstractControl<ControlsValue<TControls>>
-{
-  readonly dirty = signal(false);
-  readonly touched = signal(false);
-  readonly value;
-  readonly errors;
-  readonly status;
+export type FormValue<TNodes extends Nodes> = {
+  [K in keyof TNodes]: NodeValue<TNodes[K]>;
+};
+export type FormSet<TNodes extends Nodes> = {
+  [K in keyof TNodes]: NodeSet<TNodes[K]>;
+};
+export type FormPatch<TNodes extends Nodes> = {
+  [K in keyof TNodes]?: NodePatch<TNodes[K]>;
+};
 
-  constructor(readonly controls: TControls) {
-    this.value = computed(() => {
-      const entries = Object.entries(this.controls).map(([key, control]) => [key, control.value()]);
-      return Object.fromEntries(entries) as ControlsValue<TControls>;
+export type FormApi<TNodes extends Nodes> = {
+  value: Signal<FormValue<TNodes>>;
+  set: (value: FormSet<TNodes>) => void;
+  patch: (value: FormPatch<TNodes>) => void;
+  reset: (...args: [] | [value: FormSet<TNodes>]) => void;
+  validators: Signal<Validators<FormValue<TNodes>>>;
+  setValidators: (validators: Validators<FormValue<TNodes>>) => void;
+  errors: Signal<ValidationErrors | null>;
+  valid: Signal<boolean>;
+  invalid: Signal<boolean>;
+  touched: Signal<boolean>;
+  untouched: Signal<boolean>;
+  markAsTouched: () => void;
+  markAsUntouched: () => void;
+  dirty: Signal<boolean>;
+  pristine: Signal<boolean>;
+  markAsDirty: () => void;
+  markAsPristine: () => void;
+  disabled: Signal<boolean>;
+  enabled: Signal<boolean>;
+  disable: () => void;
+  enable: () => void;
+};
+
+export type Form<TNodes extends Nodes> =
+  & { (): FormValue<TNodes>; api: FormApi<TNodes> }
+  & TNodes
+  & HiddenFunctionMembers<keyof TNodes>;
+
+export const form = <TNodes extends Nodes & { api?: never }>(
+  controls: TNodes,
+  validators?: Validators<NoInfer<FormValue<TNodes>>>,
+): Form<TNodes> => {
+  const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
+  const formValue = computed(() => {
+    const value = {} as FormValue<TNodes>;
+    controlKeys().forEach((key) => { value[key] = controls[key]!(); });
+    return value;
+  });
+  const formValidators = signal<Validators<FormValue<TNodes>>>(validators ?? []);
+  const formErrors = computed(() => runValidators(formValue(), formValidators()));
+  const formValid = computed(() =>
+    formErrors() === null && controlKeys().every((key) => controls[key]!.api.valid()),
+  );
+  const formTouched = computed(() =>
+    controlKeys().some((key) => controls[key]!.api.touched()),
+  );
+  const formDirty = computed(() =>
+    controlKeys().some((key) => !controls[key]!.api.disabled() && controls[key]!.api.dirty()),
+  );
+  const formDisabled = computed(() =>
+    controlKeys().every((key) => controls[key]!.api.disabled()),
+  );
+  const set = (value: FormSet<TNodes>) => {
+    (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
+      const control = controls[key];
+      if (control === undefined) {
+        console.warn(`form: unknown control "${String(key)}" ignored on set`);
+        return;
+      }
+      control.api.set(value[key]);
     });
-    this.errors = computed(() =>
-      Object.entries(this.controls).flatMap(([key, control]) =>
-        control.errors().map((error) => `${key}: ${error}`),
-      ),
-    );
-    this.status = computed(() => (this.errors().length === 0 ? 'valid' : 'invalid'));
-  }
-
-  setValue(value: ControlsValue<TControls>): void {
-    for (const key of Object.keys(this.controls) as Array<keyof TControls>) {
-      this.controls[key]!.setValue(value[key] as never);
+  };
+  const patch = (value: FormPatch<TNodes>) => {
+    (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
+      const control = controls[key];
+      if (control === undefined) {
+        console.warn(`form: unknown control "${String(key)}" ignored on patch`);
+        return;
+      }
+      control.api.patch(value[key]);
+    });
+  };
+  const reset = (...args: [] | [value: FormSet<TNodes>]) => {
+    if (args.length === 0) {
+      controlKeys().forEach((key) => controls[key]!.api.reset());
+      return;
     }
-    this.dirty.set(true);
-  }
-
-  reset(value?: ControlsValue<TControls>): void {
-    for (const key of Object.keys(this.controls) as Array<keyof TControls>) {
-      const control = this.controls[key]!;
-      value === undefined ? control.reset() : control.reset(value[key] as never);
-    }
-    this.dirty.set(false);
-    this.touched.set(false);
-  }
-
-  markAsTouched(): void {
-    Object.values(this.controls).forEach((control) => control.markAsTouched());
-    this.touched.set(true);
-  }
-}
+    const value = args[0];
+    controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
+  };
+  const api: FormApi<TNodes> = {
+    value: formValue,
+    set,
+    patch,
+    reset,
+    validators: formValidators.asReadonly(),
+    setValidators: (next) => formValidators.set(next),
+    errors: formErrors,
+    valid: formValid,
+    invalid: computed(() => !formValid()),
+    touched: formTouched,
+    untouched: computed(() => !formTouched()),
+    markAsTouched: () => controlKeys().forEach((key) => controls[key]!.api.markAsTouched()),
+    markAsUntouched: () => controlKeys().forEach((key) => controls[key]!.api.markAsUntouched()),
+    dirty: formDirty,
+    pristine: computed(() => !formDirty()),
+    markAsDirty: () => controlKeys().forEach((key) => controls[key]!.api.markAsDirty()),
+    markAsPristine: () => controlKeys().forEach((key) => controls[key]!.api.markAsPristine()),
+    disabled: formDisabled,
+    enabled: computed(() => !formDisabled()),
+    disable: () => controlKeys().forEach((key) => controls[key]!.api.disable()),
+    enable: () => controlKeys().forEach((key) => controls[key]!.api.enable()),
+  };
+  return Object.defineProperties(
+    () => formValue(),
+    Object.getOwnPropertyDescriptors({ ...controls, api }),
+  ) as Form<TNodes>;
+};
