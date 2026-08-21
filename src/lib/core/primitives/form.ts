@@ -160,7 +160,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   let asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
   const ensureAsyncValidationWatch = () => {
     if (asyncValidationWatchTarget || !formValidators().some(isAsyncValidator)) return;
-    asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel };
+    asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel, destroy: asyncValidation.destroy };
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const formTouched = computed(() =>
