@@ -1,6 +1,6 @@
-import { isEmpty } from './is-empty';
+import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
-import { getLengthOrSize, type ValueWithLengthOrSize } from './get-length-or-size';
+import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /** Requires a non-empty value whose length or size meets a static or reactive minimum. */
 export const minLength = (

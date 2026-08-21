@@ -1,4 +1,4 @@
-import { isEmpty } from './is-empty';
+import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
 
 /** Requires a non-empty string to match a static or reactive regular expression. */

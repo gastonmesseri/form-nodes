@@ -1,4 +1,4 @@
-import { isEmpty } from './is-empty';
+import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../../utils/field-context-marker';
 import type { FieldContext, ValidationErrors, Validator } from '../validation.type';
 
