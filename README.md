@@ -14,7 +14,7 @@ npm install @gem/ng-forms
 import { field, form } from '@gem/ng-forms';
 
 const profile = form({
-  name: field('', [(value) => value ? null : { required: true }]),
+  name: field('', [({ value }) => value() ? null : { required: true }]),
   address: form({ city: field('') }),
 });
 

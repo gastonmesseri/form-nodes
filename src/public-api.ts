@@ -10,6 +10,7 @@ export type {
   FormValue,
 } from './lib/core/primitives/form';
 export type {
+  FieldContext,
   ValidationErrors,
   Validator,
   Validators,

@@ -3,6 +3,7 @@ import { computed, signal, type Signal } from '@angular/core';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
 import { runValidators } from '../validation/run-validators';
+import { markAsFieldContext } from '../utils/field-context-marker';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -124,10 +125,11 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     controlKeys().forEach((key) => { value[key] = controls[key]!(); });
     return value;
   });
+  const formContext = markAsFieldContext({ value: formValue });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   const formErrors = computed(() => formNonInteractive()
     ? null
-    : runValidators(formValue(), formValidators()));
+    : runValidators(formContext, formValidators()));
   const formValid = computed(() =>
     formNonInteractive() || (
       formErrors() === null && controlKeys().every((key) => controls[key]!.api.valid())

@@ -31,4 +31,9 @@ describe('required', () => {
       required: { message: 'Name is required' },
     });
   });
+
+  it('does not confuse object field values with factory options', () => {
+    const fieldNode = field<unknown>({ message: 'Field value' }, [required]);
+    expect(fieldNode.errors()).toBeNull();
+  });
 });

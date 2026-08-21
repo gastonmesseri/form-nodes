@@ -1,8 +1,10 @@
-import { signal } from '@angular/core';
+import { signal, type Signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { form } from './form';
 import { field } from './field';
+
+type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
   it('exposes each field under its own key', () => {
@@ -160,8 +162,8 @@ describe('form', () => {
   });
 
   it('reports its own validator through errors', () => {
-    const sameCity = (value: { city: string | null; billingCity: string | null }) =>
-      value.city === value.billingCity ? null : { sameCity: true };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
+      value().city === value().billingCity ? null : { sameCity: true };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -174,8 +176,8 @@ describe('form', () => {
   });
 
   it('reevaluates a cross-field validator when a field changes', () => {
-    const sameCity = (value: { city: string | null; billingCity: string | null }) =>
-      value.city === value.billingCity ? null : { sameCity: true };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
+      value().city === value().billingCity ? null : { sameCity: true };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -189,7 +191,7 @@ describe('form', () => {
   });
 
   it('is invalid when a child is invalid, even without own errors', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const formGroup = form({ city: field('', [required]) });
     expect(formGroup.api.errors()).toBeNull();
     expect(formGroup.api.valid()).toBe(false);
@@ -197,7 +199,7 @@ describe('form', () => {
   });
 
   it('is invalid when a grandchild is invalid', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const formGroup = form({
       address: form({ city: field('', [required]) }),
     });
@@ -206,15 +208,15 @@ describe('form', () => {
   });
 
   it('becomes valid once the failing child is fixed', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const formGroup = form({ city: field('', [required]) });
     formGroup.city.set('Zurich');
     expect(formGroup.api.valid()).toBe(true);
   });
 
   it('recomputes its errors after setValidators', () => {
-    const sameCity = (value: { city: string | null; billingCity: string | null }) =>
-      value.city === value.billingCity ? null : { sameCity: true };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
+      value().city === value().billingCity ? null : { sameCity: true };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -235,15 +237,15 @@ describe('form', () => {
     });
     expect(formGroup.api.valid()).toBe(true);
     formGroup.api.setValidators([
-      value => (value.city === value.billingCity ? null : { sameCity: true }),
+      ({ value }) => (value().city === value().billingCity ? null : { sameCity: true }),
     ]);
     expect(formGroup.api.errors()).toEqual({ sameCity: true });
     expect(formGroup.api.valid()).toBe(false);
   });
 
   it('accepts validators and state in a second-argument options object', () => {
-    const sameCity = (value: { city: string | null; billingCity: string | null }) =>
-      value.city === value.billingCity ? null : { sameCity: true };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
+      value().city === value().billingCity ? null : { sameCity: true };
     const formGroup = form(
       {
         city: field('Moscow'),
@@ -558,8 +560,8 @@ describe('form', () => {
   });
 
   it('revalidates after reset with a value', () => {
-    const sameCity = (value: { city: string | null; billingCity: string | null }) =>
-      value.city === value.billingCity ? null : { sameCity: true };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
+      value().city === value().billingCity ? null : { sameCity: true };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -611,7 +613,7 @@ describe('form', () => {
   });
 
   it('ignores a disabled child when computing validity', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const formGroup = form({
       name: field('', [required]),
       age: field(23),
@@ -863,7 +865,7 @@ describe('form', () => {
   });
 
   it('ignores hidden descendants when aggregating state', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const formGroup = form({ name: field('', [required]), age: field(23) });
     formGroup.name.markAsTouched();
     formGroup.name.markAsDirty();

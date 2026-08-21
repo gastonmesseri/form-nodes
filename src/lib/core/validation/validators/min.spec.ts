@@ -4,11 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { min } from './min';
 import { field } from '../../primitives/field';
 
+const context = <TValue>(value: TValue) => ({ value: signal(value).asReadonly() });
+
 describe('min', () => {
   it('validates minimum numbers', () => {
-    expect(min(3)(2)).toEqual({ min: { min: 3, actual: 2 } });
-    expect(min(3)(3)).toBeNull();
-    expect(min(3)(null)).toBeNull();
+    expect(min(3)(context(2))).toEqual({ min: { min: 3, actual: 2 } });
+    expect(min(3)(context(3))).toBeNull();
+    expect(min(3)(context(null))).toBeNull();
   });
 
   it('tracks reactive limits', () => {
