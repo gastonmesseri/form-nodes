@@ -1,7 +1,9 @@
-import { signal } from '@angular/core';
+import { signal, type Signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
 import { field } from './field';
+
+type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
   it('exposes the initial value when called and through value()', () => {
@@ -45,8 +47,23 @@ describe('field', () => {
     expect(fieldNode.invalid()).toBe(false);
   });
 
+  it('passes a stable reactive value context to validators', () => {
+    const contexts: Context<string | null>[] = [];
+    const validator = (context: Context<string | null>) => {
+      contexts.push(context);
+      return context.value() === '' ? { required: true } : null;
+    };
+    const fieldNode = field('', [validator]);
+    expect(fieldNode.errors()).toEqual({ required: true });
+    fieldNode.set('David');
+    expect(fieldNode.errors()).toBeNull();
+    expect(contexts).toHaveLength(2);
+    expect(contexts[0]).toBe(contexts[1]);
+    expect(contexts[0]!.value()).toBe('David');
+  });
+
   it('reports the error of a failing validator', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.errors()).toEqual({ required: true });
     expect(fieldNode.valid()).toBe(false);
@@ -54,10 +71,10 @@ describe('field', () => {
   });
 
   it('merges the errors of several validators', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
-    const minLength = (value: string | null) =>
-      value !== null && value.length < 3
-        ? { minLength: { min: 3, actual: value.length } }
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
+    const minLength = ({ value }: Context<string | null>) =>
+      value() !== null && value()!.length < 3
+        ? { minLength: { min: 3, actual: value()!.length } }
         : null;
     const fieldNode = field('', [required, minLength]);
     expect(fieldNode.errors()).toEqual({
@@ -67,15 +84,15 @@ describe('field', () => {
   });
 
   it('leaves out the keys of validators that pass', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
-    const minLength = (value: string | null) =>
-      value !== null && value.length < 3 ? { minLength: true } : null;
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
+    const minLength = ({ value }: Context<string | null>) =>
+      value() !== null && value()!.length < 3 ? { minLength: true } : null;
     const fieldNode = field('ab', [required, minLength]);
     expect(fieldNode.errors()).toEqual({ minLength: true });
   });
 
   it('recomputes errors when the value changes', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.valid()).toBe(false);
     fieldNode.set('David');
@@ -84,13 +101,13 @@ describe('field', () => {
   });
 
   it('exposes the current validators through validators()', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.validators()).toEqual([required]);
   });
 
   it('recomputes errors after setValidators', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.valid()).toBe(false);
     fieldNode.setValidators([]);
@@ -99,7 +116,7 @@ describe('field', () => {
   });
 
   it('adds validators to a field declared without them', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('');
     expect(fieldNode.valid()).toBe(true);
     fieldNode.setValidators([required]);
@@ -108,15 +125,15 @@ describe('field', () => {
   });
 
   it('applies a newly set validator to the current value', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('David', [required]);
     expect(fieldNode.valid()).toBe(true);
-    fieldNode.setValidators([(value: string | null) => (value === 'David' ? { required: true } : null)]);
+    fieldNode.setValidators([({ value }: Context<string | null>) => (value() === 'David' ? { required: true } : null)]);
     expect(fieldNode.errors()).toEqual({ required: true });
   });
 
   it('accepts validators and state in a second-argument options object', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', {
       validators: [required],
       disabled: true,
@@ -135,7 +152,7 @@ describe('field', () => {
   });
 
   it('exposes the same state through the root and through api', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.api.value()).toBe(fieldNode.value());
     expect(fieldNode.api.valid()).toBe(fieldNode.valid());
@@ -180,7 +197,7 @@ describe('field', () => {
   });
 
   it('keeps touched independent from validity', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.valid()).toBe(false);
     expect(fieldNode.touched()).toBe(false);
@@ -257,7 +274,7 @@ describe('field', () => {
   });
 
   it('skips validation while hidden', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.valid()).toBe(false);
     fieldNode.hide();
@@ -329,7 +346,7 @@ describe('field', () => {
   });
 
   it('stays pristine when only the validators change', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('David');
     fieldNode.setValidators([required]);
     expect(fieldNode.dirty()).toBe(false);
@@ -382,7 +399,7 @@ describe('field', () => {
   });
 
   it('revalidates after reset with a value', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('David', [required]);
     expect(fieldNode.valid()).toBe(true);
     fieldNode.reset('');
@@ -391,7 +408,7 @@ describe('field', () => {
   });
 
   it('keeps the validators after reset', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     fieldNode.reset('David');
     expect(fieldNode.validators()).toEqual([required]);
@@ -474,7 +491,7 @@ describe('field', () => {
   });
 
   it('skips validation while disabled', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     expect(fieldNode.errors()).toEqual({ required: true });
     fieldNode.disable();
@@ -484,7 +501,7 @@ describe('field', () => {
   });
 
   it('validates again once enabled', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     fieldNode.disable();
     fieldNode.enable();
@@ -493,7 +510,7 @@ describe('field', () => {
   });
 
   it('keeps its validators while disabled', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
     fieldNode.disable();
     expect(fieldNode.validators()).toEqual([required]);
@@ -547,7 +564,7 @@ describe('field', () => {
   });
 
   it('skips validation while readonly and validates again when writable', () => {
-    const required = (value: string | null) => (value === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
     const fieldNode = field('', [required], { readonly: true });
     expect(fieldNode.errors()).toBeNull();
     expect(fieldNode.valid()).toBe(true);

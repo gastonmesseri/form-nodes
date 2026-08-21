@@ -4,7 +4,7 @@ import { describe, expectTypeOf, it } from 'vitest';
 import { form } from './primitives/form';
 import { field } from './primitives/field';
 import { required } from './validation/validators/required';
-import type { ValidationErrors } from './validation/validation.type';
+import type { FieldContext, ValidationErrors } from './validation/validation.type';
 
 describe('types', () => {
   it('infers the value of each field', () => {
@@ -45,7 +45,8 @@ describe('types', () => {
   });
 
   it('types errors as a wide error object', () => {
-    const required = (value: string) => (value === '' ? { required: true } : null);
+    const required = ({ value }: FieldContext<string>) =>
+      value() === '' ? { required: true } : null;
     const fieldNode = field('', [required], { nullable: false });
     expectTypeOf(fieldNode.errors()).toEqualTypeOf<ValidationErrors | null>();
   });
@@ -56,15 +57,17 @@ describe('types', () => {
   });
 
   it('accepts validators on a field declared without them', () => {
-    const required = (value: string) => (value === '' ? { required: true } : null);
+    const required = ({ value }: FieldContext<string>) =>
+      value() === '' ? { required: true } : null;
     const fieldNode = field('David', { nullable: false });
     expectTypeOf(fieldNode.setValidators).toBeCallableWith([required]);
   });
 
   it('types validators inside field options', () => {
     field('David', {
-      validators: [value => {
-        expectTypeOf(value).toEqualTypeOf<string>();
+      validators: [context => {
+        expectTypeOf(context).toEqualTypeOf<FieldContext<string>>();
+        expectTypeOf(context.value()).toEqualTypeOf<string>();
         return null;
       }],
       nullable: false,
@@ -72,14 +75,17 @@ describe('types', () => {
     });
   });
 
-  it('types the value a form validator receives', () => {
+  it('types the context a form validator receives', () => {
     const formGroup = form({
       city: field('Zurich'),
       age: field(23),
     });
     formGroup.api.setValidators([
-      value => {
-        expectTypeOf(value).toEqualTypeOf<{ city: string | null; age: number | null }>();
+      context => {
+        expectTypeOf(context.value()).toEqualTypeOf<{
+          city: string | null;
+          age: number | null;
+        }>();
         return null;
       },
     ]);
@@ -89,8 +95,8 @@ describe('types', () => {
     form(
       { city: field('Moscow'), age: field(23) },
       {
-        validators: [value => {
-          expectTypeOf(value).toEqualTypeOf<{
+        validators: [context => {
+          expectTypeOf(context.value()).toEqualTypeOf<{
             city: string | null;
             age: number | null;
           }>();
@@ -164,8 +170,10 @@ describe('types', () => {
   });
 
   it('rejects a direct string as required configuration', () => {
-    // @ts-expect-error required messages must use the options object
-    field('David', [required('Name is required')]);
+    if (false) {
+      // @ts-expect-error required messages must use the options object
+      field('David', [required('Name is required')]);
+    }
   });
 
   it('removes null from the field type when nullable is false', () => {

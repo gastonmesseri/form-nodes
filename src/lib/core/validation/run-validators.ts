@@ -1,13 +1,12 @@
-import type { ValidationErrors, Validators } from './validation.type';
-import { getValidatorImplementation } from './validator-implementation';
+import type { FieldContext, ValidationErrors, Validators } from './validation.type';
 
 export const runValidators = <TValue>(
-  value: TValue,
+  context: FieldContext<TValue>,
   validators: Validators<TValue>,
 ): ValidationErrors | null => {
   const errors: ValidationErrors = {};
   validators.forEach((validator) => {
-    Object.assign(errors, getValidatorImplementation(validator)(value) ?? {});
+    Object.assign(errors, validator(context) ?? {});
   });
   return Object.keys(errors).length ? errors : null;
 };

@@ -151,7 +151,7 @@ Changes to any descendant are reflected reactively in every ancestor value.
 - Field value types are inferred from their initial values or explicit generic arguments.
 - Form value types are recursively inferred from their fields and nested forms.
 - Shorthand objects infer the same values and nested field access as explicit forms.
-- Validators receive the inferred value type of their node.
+- Validators receive a `FieldContext` whose `value` signal contains the inferred node value.
 - `set()` and `reset(value)` require complete values at compile time.
 - `patch()` accepts recursive partial form values.
 - Incorrect value types and unknown keys are rejected at compile time.
@@ -215,12 +215,22 @@ Calling reset on a nested form only resets that subtree. State belonging to sibl
 
 ## Validators and errors
 
-A validator receives the current node value and returns an error object or `null`:
+A validator receives a context object and returns an error object or `null`. The initial context intentionally exposes only a readonly `value` signal:
 
 ```ts
-const required = (value: string | null) =>
-  value === '' ? { required: true } : null;
+const required = ({ value }: FieldContext<string | null>) =>
+  value() === '' ? { required: true } : null;
 ```
+
+```ts
+type FieldContext<TValue> = {
+  readonly value: Signal<TValue>;
+};
+```
+
+The same context shape is used for field-level and form-level validators. In a form validator, `value()` returns the current aggregated form value. Reading `value()` participates in Angular's reactive dependency tracking, so validation recomputes when the node value changes. The context object and its signal remain stable between validator executions.
+
+Additional Angular Signal Forms context members such as `state`, `fieldTree`, `valueOf`, `stateOf`, `fieldTreeOf`, and `pathKeys` are not implemented yet. They will be designed separately instead of being included with provisional semantics.
 
 Validators are synchronous and stored as a readonly array. They can be supplied through `options.validators`, through the separate validator-array signature, or replaced later with `setValidators()`.
 
@@ -280,7 +290,7 @@ field('David', [required]);
 field('David', [required({ message: 'Name is required' })]);
 ```
 
-The direct validator produces `{ required: true }`. The options form produces `{ required: { message } }` when validation fails. Passing a string directly is intentionally rejected. The internal validator runner distinguishes the direct validator from its factory call without exposing an internal marker in public types.
+The direct validator produces `{ required: true }`. The options form produces `{ required: { message } }` when validation fails. Passing a string directly is intentionally rejected. Field contexts carry a non-enumerable internal symbol marker, allowing overloaded validators to recognize genuine contexts without relying on their structural shape or exposing the marker in the public `FieldContext` type.
 
 Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
 

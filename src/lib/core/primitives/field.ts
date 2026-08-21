@@ -4,6 +4,7 @@ import type { NodeApi } from '../types/node.type';
 import { markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
 import { runValidators } from '../validation/run-validators';
+import { markAsFieldContext } from '../utils/field-context-marker';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -91,6 +92,7 @@ export function field<TValue>(
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
   const fieldValue = signal<TValue>(value!);
+  const fieldContext = markAsFieldContext({ value: fieldValue.asReadonly() });
   const fieldValidators = signal<Validators<TValue>>(validators);
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
@@ -110,7 +112,7 @@ export function field<TValue>(
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   const fieldErrors = computed(() => fieldNonInteractive()
     ? null
-    : runValidators(fieldValue(), fieldValidators()));
+    : runValidators(fieldContext, fieldValidators()));
   const fieldValid = computed(() => fieldErrors() === null);
   const set = (next: TValue) => {
     fieldValue.set(next);
