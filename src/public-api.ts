@@ -1,6 +1,8 @@
 export { field } from './lib/core/primitives/field';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export { form } from './lib/core/primitives/form';
+export { asyncValidator } from './lib/core/validation/async-validator';
+export type { AsyncValidatorOptions } from './lib/core/validation/async-validator';
 export type {
   Form,
   FormApi,
@@ -11,11 +13,15 @@ export type {
 } from './lib/core/primitives/form';
 export type {
   FieldContext,
+  AsyncValidationResult,
+  AsyncValidator,
+  AsyncValidatorContext,
   ValidationError,
   ValidationResult,
   ValidationSuccess,
   Validator,
   Validators,
+  ValidationStatus,
 } from './lib/core/validation/validation.type';
 export { max } from './lib/core/validation/validators/max';
 export { min } from './lib/core/validation/validators/min';

@@ -2,6 +2,7 @@ import { signal, type Signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
 import { field } from './field';
+import { asyncValidator } from '../validation/async-validator';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -68,6 +69,37 @@ describe('field', () => {
     expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     expect(fieldNode.valid()).toBe(false);
     expect(fieldNode.invalid()).toBe(true);
+  });
+
+  it('derives validationStatus from synchronous validation', () => {
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
+    const fieldNode = field('', [required]);
+
+    expect(fieldNode.validationStatus()).toBe('invalid');
+    expect(fieldNode.valid()).toBe(false);
+    expect(fieldNode.invalid()).toBe(true);
+
+    fieldNode.set('David');
+
+    expect(fieldNode.validationStatus()).toBe('valid');
+    expect(fieldNode.valid()).toBe(true);
+    expect(fieldNode.invalid()).toBe(false);
+  });
+
+  it('runs an asynchronous validator and exposes its validation state', async () => {
+    const fieldNode = field('David', [
+      asyncValidator(async ({ value }) => value() === 'David' ? { kind: 'nameTaken' } : null),
+    ]);
+
+    expect(fieldNode.pending()).toBe(true);
+    expect(fieldNode.validationStatus()).toBe('unknown');
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fieldNode.pending()).toBe(false);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'nameTaken' }]);
+    expect(fieldNode.validationStatus()).toBe('invalid');
   });
 
   it('collects the errors of several validators in order', () => {

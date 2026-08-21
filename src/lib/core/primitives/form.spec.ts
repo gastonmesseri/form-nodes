@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { form } from './form';
 import { field } from './field';
+import { asyncValidator } from '../validation/async-validator';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -197,6 +198,45 @@ describe('form', () => {
     expect(formGroup.api.errors()).toEqual([]);
     expect(formGroup.api.valid()).toBe(false);
     expect(formGroup.api.invalid()).toBe(true);
+  });
+
+  it('derives validationStatus from synchronous child validation', () => {
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
+    const formGroup = form({ city: field('', [required]) });
+
+    expect(formGroup.api.validationStatus()).toBe('invalid');
+    expect(formGroup.api.valid()).toBe(false);
+    expect(formGroup.api.invalid()).toBe(true);
+
+    formGroup.city.set('Zurich');
+
+    expect(formGroup.api.validationStatus()).toBe('valid');
+    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.api.invalid()).toBe(false);
+  });
+
+  it('runs its own asynchronous validator and exposes its validation state', async () => {
+    const formGroup = form(
+      {
+        city: field('Zurich'),
+        billingCity: field('Madrid'),
+      },
+      [
+        asyncValidator(async ({ value }) =>
+          value().city === value().billingCity ? null : { kind: 'citiesDoNotMatch' },
+        ),
+      ],
+    );
+
+    expect(formGroup.api.pending()).toBe(true);
+    expect(formGroup.api.validationStatus()).toBe('unknown');
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(formGroup.api.pending()).toBe(false);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'citiesDoNotMatch' }]);
+    expect(formGroup.api.validationStatus()).toBe('invalid');
   });
 
   it('is invalid when a grandchild is invalid', () => {

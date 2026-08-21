@@ -5,6 +5,8 @@ export type NodeApi = {
   patch(value: any): void;
   reset(...args: [] | [value: any]): void;
   valid: Signal<boolean>;
+  invalid: Signal<boolean>;
+  pending: Signal<boolean>;
   touched: Signal<boolean>;
   markAsTouched(): void;
   markAsUntouched(): void;
@@ -21,6 +23,8 @@ export type NodeApi = {
   hide(): void;
   show(): void;
   _setParent?(parent: NodeApi | null): void;
+  _revalidateAsyncValidators?(): void;
+  _notifyValueChange?(): void;
 };
 
 export type Node = (() => any) & { api: NodeApi };

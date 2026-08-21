@@ -40,7 +40,7 @@ src/
         │   ├── hidden-function-members.type.ts
         │   └── node.type.ts
         └── validation/
-            ├── run-validators.ts
+            ├── run-sync-validators.ts
             └── validation.type.ts
 ```
 
