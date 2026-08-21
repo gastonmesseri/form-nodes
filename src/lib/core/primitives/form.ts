@@ -11,7 +11,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import type { Field } from './field';
 import type { ValidationError, ValidationStatus, Validators } from '../validation/validation.type';
-import type { InternalNodeApi, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
+import type { InternalNode, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
@@ -46,7 +46,12 @@ export type NormalizedNodes<TNodes extends NodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
 };
 
+export type FormRoot<TNodes extends Nodes, TParent extends Node> = Node extends TParent
+  ? Form<TNodes, TParent>
+  : RootNode<TParent>;
+
 export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
+  form: Signal<FormRoot<TNodes, TParent>>;
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
   value: Signal<FormValue<TNodes>>;
@@ -86,13 +91,13 @@ export type NodeWithParent<TNode extends Node, TParent extends Node> =
   TNode extends Field<infer TValue, Node> ? Field<TValue, TParent> :
   TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent> : TNode;
 
-export type FormChildren<TNodes extends Nodes> = {
-  [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes>>;
+export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
+  [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes, TParent>>;
 };
 
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =
   & { (): FormValue<TNodes>; api: FormApi<TNodes, TParent> }
-  & FormChildren<TNodes>
+  & FormChildren<TNodes, TParent>
   & HiddenFunctionMembers<keyof TNodes>;
 
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
@@ -152,6 +157,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formContext = markAsFieldContext({ value: formValue });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   let formNode!: Form<TNodes>;
+  const rootForm = computed(() => formParent()?.api.form() ?? formNode) as Signal<Form<TNodes>>;
   const formSyncErrors = computed(() => formNonInteractive()
     ? []
     : runSyncValidators(formContext, formValidators(), formNode));
@@ -215,6 +221,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
   };
   const api: FormApi<TNodes> = {
+    form: rootForm,
     parent: formParent.asReadonly(),
     path: formPath,
     value: formValue,
@@ -263,7 +270,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
   ) as Form<TNodes>;
-  controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(formNode, String(key)));
+  controlKeys().forEach((key) => (controls[key] as InternalNode).api._setParent(formNode, String(key)));
   markAsNode(formNode);
   ensureAsyncValidationWatch();
   return formNode;

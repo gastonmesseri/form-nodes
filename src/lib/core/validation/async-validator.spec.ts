@@ -216,14 +216,17 @@ describe('asyncValidator', () => {
 
   it('provides the validated node path through its API', async () => {
     let path: readonly string[] = [];
-    form({ profile: { age: field(23, [asyncValidator(async ({ api }) => {
+    let receivedForm: unknown;
+    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ api }) => {
       path = api.path();
+      receivedForm = api.form();
       return null;
     })]) } });
 
     await settle();
 
     expect(path).toEqual(['profile', 'age']);
+    expect(receivedForm).toBe(rootForm);
   });
 
   it('accepts an explicit exact field API type', async () => {

@@ -12,6 +12,7 @@ describe('field', () => {
 
     expect(name.api.path()).toEqual([]);
     expect(name.api.parent()).toBeNull();
+    expect(name.api.form()).toBeNull();
   });
 
   it('exposes the initial value when called and through value()', () => {

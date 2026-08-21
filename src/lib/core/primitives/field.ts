@@ -2,7 +2,7 @@ import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import { markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
-import type { Node } from '../types/node.type';
+import type { Node, RootNode } from '../types/node.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
@@ -28,6 +28,7 @@ export type FieldOptions<TValue = any> = {
 };
 
 export type FieldApi<TValue, TParent extends Node = Node> = {
+  form: Signal<RootNode<TParent> | null>;
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
   value: Signal<TValue>;
@@ -125,6 +126,7 @@ export function field<TValue>(
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   let fieldNode!: Field<TValue>;
+  const fieldForm = computed(() => fieldParent()?.api.form() ?? null);
   const fieldSyncErrors = computed(() => fieldNonInteractive()
     ? []
     : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
@@ -158,6 +160,7 @@ export function field<TValue>(
     fieldDirty.set(false);
   };
   const members = {
+    form: fieldForm,
     parent: fieldParent.asReadonly(),
     path: fieldPath,
     value: fieldValue.asReadonly(),

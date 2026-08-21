@@ -24,6 +24,10 @@ describe('form', () => {
     expect(profile.name.api.parent()).toBe(profile);
     expect(profile.address.api.parent()).toBe(profile);
     expect(profile.address.city.api.parent()).toBe(profile.address);
+    expect(profile.api.form()).toBe(profile);
+    expect(profile.name.api.form()).toBe(profile);
+    expect(profile.address.api.form()).toBe(profile);
+    expect(profile.address.city.api.form()).toBe(profile);
   });
 
   it('exposes each field under its own key', () => {

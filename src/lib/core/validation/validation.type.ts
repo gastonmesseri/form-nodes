@@ -58,6 +58,7 @@ export type AsyncValidatorState = {
 
 /** Common node API exposed to asynchronous validators when no exact owner API is specified. */
 export type AsyncValidatorApi<TValue> = AsyncValidatorState & {
+  readonly form: Signal<Node | null>;
   readonly parent: Signal<Node | null>;
   readonly path: Signal<readonly string[]>;
   readonly value: Signal<TValue>;
