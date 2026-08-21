@@ -1,12 +1,13 @@
-import type { FieldContext, ValidationErrors, Validators } from './validation.type';
+import { normalizeValidationResult } from '../utils/normalize-validation-result';
+import type { FieldContext, ValidationError, Validators } from './validation.type';
 
 export const runValidators = <TValue>(
   context: FieldContext<TValue>,
   validators: Validators<TValue>,
-): ValidationErrors | null => {
-  const errors: ValidationErrors = {};
+): readonly ValidationError[] => {
+  const errors: ValidationError[] = [];
   validators.forEach((validator) => {
-    Object.assign(errors, validator(context) ?? {});
+    errors.push(...normalizeValidationResult(validator(context)));
   });
-  return Object.keys(errors).length ? errors : null;
+  return errors;
 };

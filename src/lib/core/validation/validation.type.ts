@@ -1,6 +1,18 @@
 import type { Signal } from '@angular/core';
 
-export type ValidationErrors = Record<string, any>;
+/** A validation error associated with the node being validated. */
+export type ValidationError = {
+  /** Identifies the error category. */
+  readonly kind: string;
+  /** Optional human-readable description of the error. */
+  readonly message?: string;
+};
+
+/** Indicates that validation completed without errors. */
+export type ValidationSuccess = null | undefined | void;
+
+/** A successful result, one validation error, or several validation errors. */
+export type ValidationResult = ValidationSuccess | ValidationError | readonly ValidationError[];
 
 /** Reactive context available to validation functions for the current field. */
 export type FieldContext<TValue> = {
@@ -8,5 +20,5 @@ export type FieldContext<TValue> = {
   readonly value: Signal<TValue>;
 };
 
-export type Validator<TValue> = (context: FieldContext<TValue>) => ValidationErrors | null;
+export type Validator<TValue> = (context: FieldContext<TValue>) => ValidationResult;
 export type Validators<TValue> = readonly Validator<TValue>[];

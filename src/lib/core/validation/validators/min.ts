@@ -8,6 +8,6 @@ export const min = (minimum: number | (() => number | undefined)): Validator<num
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     return currentValue < resolvedMinimum
-      ? { min: { min: resolvedMinimum, actual: currentValue } }
+      ? { kind: 'min', min: resolvedMinimum }
       : null;
   };

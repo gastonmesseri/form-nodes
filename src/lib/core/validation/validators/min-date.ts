@@ -9,6 +9,6 @@ export const minDate = (
   const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
   if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum.getTime())) return null;
   return currentValue < resolvedMinimum
-    ? { minDate: { minDate: resolvedMinimum, actual: currentValue } }
+    ? { kind: 'minDate', minDate: resolvedMinimum }
     : null;
 };

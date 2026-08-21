@@ -9,7 +9,8 @@ describe('pattern', () => {
   it('validates regular expression patterns', () => {
     expect(pattern(/^[a-z]+$/)(context('abc'))).toBeNull();
     expect(pattern(/^[a-z]+$/)(context('123'))).toEqual({
-      pattern: { pattern: /^[a-z]+$/, actual: '123' },
+      kind: 'pattern',
+      pattern: /^[a-z]+$/,
     });
     expect(pattern(/^[a-z]+$/)(context(''))).toBeNull();
     expect(pattern(/^[a-z]+$/)(context(null))).toBeNull();

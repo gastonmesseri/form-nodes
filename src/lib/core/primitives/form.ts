@@ -4,7 +4,7 @@ import { isNode, markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
 import { runValidators } from '../validation/run-validators';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import type { ValidationErrors, Validators } from '../validation/validation.type';
+import type { ValidationError, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import type { Node, NodeApi, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
@@ -47,7 +47,7 @@ export type FormApi<TNodes extends Nodes> = {
   reset(...args: [] | [value: FormSet<TNodes>]): void;
   validators: Signal<Validators<FormValue<TNodes>>>;
   setValidators(validators: Validators<FormValue<TNodes>>): void;
-  errors: Signal<ValidationErrors | null>;
+  errors: Signal<readonly ValidationError[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   touched: Signal<boolean>;
@@ -128,11 +128,11 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formContext = markAsFieldContext({ value: formValue });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   const formErrors = computed(() => formNonInteractive()
-    ? null
+    ? []
     : runValidators(formContext, formValidators()));
   const formValid = computed(() =>
     formNonInteractive() || (
-      formErrors() === null && controlKeys().every((key) => controls[key]!.api.valid())
+      formErrors().length === 0 && controlKeys().every((key) => controls[key]!.api.valid())
     ),
   );
   const formTouched = computed(() =>

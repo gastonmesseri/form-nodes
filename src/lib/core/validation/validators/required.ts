@@ -1,6 +1,6 @@
 import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../../utils/field-context-marker';
-import type { FieldContext, ValidationErrors, Validator } from '../validation.type';
+import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
 
 export type RequiredOptions = {
   readonly message: string;
@@ -9,18 +9,18 @@ export type RequiredOptions = {
 const validateRequired = (
   context: FieldContext<unknown>,
   message?: string,
-): ValidationErrors | null => {
+): ValidationError | null => {
   if (!isEmpty(context.value())) return null;
-  return message === undefined ? { required: true } : { required: { message } };
+  return message === undefined ? { kind: 'required' } : { kind: 'required', message };
 };
 
 /** Creates a required validator with custom options. */
 export function required(options: RequiredOptions): Validator<unknown>;
 /** Validates a value when the function is passed directly in a validators array. */
-export function required(context: FieldContext<unknown>): ValidationErrors | null;
+export function required(context: FieldContext<unknown>): ValidationResult;
 export function required(
   contextOrOptions: FieldContext<unknown> | RequiredOptions,
-): Validator<unknown> | ValidationErrors | null {
+): Validator<unknown> | ValidationResult {
   if (isFieldContext(contextOrOptions)) {
     return validateRequired(contextOrOptions);
   }

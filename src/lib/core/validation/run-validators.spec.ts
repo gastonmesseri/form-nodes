@@ -7,12 +7,23 @@ import { minLength } from './validators/min-length';
 describe('runValidators', () => {
   it('combines validators in fields', () => {
     const fieldNode = field('', [required, minLength(3)]);
-    expect(fieldNode.errors()).toEqual({ required: true });
+    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
     fieldNode.set('ab');
-    expect(fieldNode.errors()).toEqual({
-      minLength: { minLength: 3, actualLength: 2 },
-    });
+    expect(fieldNode.errors()).toEqual([{ kind: 'minLength', minLength: 3 }]);
     fieldNode.set('David');
-    expect(fieldNode.errors()).toBeNull();
+    expect(fieldNode.errors()).toEqual([]);
+  });
+
+  it('flattens validator results while preserving order and duplicate kinds', () => {
+    const fieldNode = field('David', [
+      () => [{ kind: 'name' }, { kind: 'name', message: 'Second error' }],
+      () => undefined,
+      () => ({ kind: 'name', message: 'Third error' }),
+    ]);
+    expect(fieldNode.errors()).toEqual([
+      { kind: 'name' },
+      { kind: 'name', message: 'Second error' },
+      { kind: 'name', message: 'Third error' },
+    ]);
   });
 });
