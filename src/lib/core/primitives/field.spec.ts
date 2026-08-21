@@ -1,5 +1,5 @@
 import { signal, type Signal } from '@angular/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { field } from './field';
 import { asyncValidator } from '../validation/async-validator';
@@ -100,6 +100,27 @@ describe('field', () => {
     expect(fieldNode.pending()).toBe(false);
     expect(fieldNode.errors()).toMatchObject([{ kind: 'nameTaken' }]);
     expect(fieldNode.validationStatus()).toBe('invalid');
+  });
+
+  it('reruns an asynchronous validator when a signal read by it changes', async () => {
+    const available = signal(true);
+    const validate = vi.fn(async ({ value }: Context<string | null>) =>
+      available() || value() === null ? null : { kind: 'unavailable' },
+    );
+    const fieldNode = field('David', [asyncValidator(validate)]);
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(fieldNode.errors()).toEqual([]);
+
+    available.set(false);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'unavailable' }]);
   });
 
   it('collects the errors of several validators in order', () => {

@@ -3,8 +3,9 @@
 - Use English throughout the entire project.
 - Write all source code, identifiers, comments, documentation, tests, commit-facing text, warnings, errors, and generated user-facing copy in English.
 - Keep new and updated files in English even when the conversation with the user is in another language.
-- `form()` and `field()` must never require an Angular injection context to work correctly. They must remain safe to declare and use anywhere, including outside components, directives, services, constructors, and `runInInjectionContext()`.
-- Do not introduce `inject()`, injection-context-dependent effects, or any implicit dependency on Angular dependency injection into these functions or their required execution paths.
+- `form()` and `field()` must remain safe to declare and use outside an Angular injection context. Their synchronous behavior and explicitly triggered asynchronous validation must always work without dependency injection.
+- Reactive dependency tracking for asynchronous validators must work both inside and outside an Angular injection context.
+- When an explicit or current injector exists, its `DestroyRef` must own and clean up the asynchronous validation watcher. Outside dependency injection, use weak ownership so an unreachable node and its watcher can be garbage-collected without keeping the form tree alive.
 - Use Angular 22 Signal Forms as the primary reference for the library's internal behavior, not for its public API design or naming.
 - State rules and propagation should behave comparably to Angular 22 Signal Forms whenever applicable. This includes what `disabled` depends on, how validity is aggregated, when fields are considered dirty or touched, and which descendants are affected by operations such as `disable()`, `markAsTouched()`, and `reset()`.
 - Treat the latest Angular 22 Signal Forms source code and its tests as the primary authority for determining exact internal behavior. Prefer evidence from the implementation over assumptions based only on the documentation.
@@ -28,3 +29,13 @@
 
 - Declare signals and other stateful values as properties in public object types.
 - Declare actions and operations with method syntax in public object types so editors distinguish state from behavior in IntelliSense.
+
+## Public API testing
+
+- Treat `field()` and `form()` as the library's primary public API and maintain comprehensive behavioral coverage in `field.spec.ts` and `form.spec.ts`.
+- Test public behavior through these primitives even when the underlying utility, validator runner, marker, watcher, or state helper already has focused unit tests of its own.
+- Cover complete observable state transitions rather than isolated implementation details. This includes values, errors, validation status, pending state, interaction state, inherited state, cancellation, reset behavior, and parent-child propagation.
+- For reactive and asynchronous behavior, verify the trigger as well as the result. Assert when validators execute, how many times they execute, which signal changes cause re-execution, whether stale work is cancelled, and what consumers observe before, during, and after completion.
+- Add corresponding field-level and form-level tests whenever behavior applies to both leaf nodes and aggregate nodes. Include nested-form coverage when propagation or aggregation could behave differently at greater depth.
+- Keep lower-level unit tests for edge cases and implementation contracts, but never use them as a substitute for public `field()` and `form()` integration coverage.
+- Prefer assertions against the public API. Only inspect internal members when the behavior cannot be verified meaningfully through public state and actions.

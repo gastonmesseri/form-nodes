@@ -51,7 +51,7 @@ export const createAsyncValidation = <TValue, TNode>(
       const controller = new AbortController();
       controllers.push(controller);
       const options = getAsyncValidatorOptions(validator);
-      await wait(options.debounce ?? 0, controller.signal);
+      if ((options.debounce ?? 0) > 0) await wait(options.debounce!, controller.signal);
       if (controller.signal.aborted || currentExecution !== execution) return;
       let result: ValidationResult;
       try {
