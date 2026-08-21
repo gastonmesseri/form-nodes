@@ -12,13 +12,13 @@ describe('types', () => {
       age: field(23),
       address: form({ city: field('Zurich') }),
     });
-    expectTypeOf(formGroup.age()).toEqualTypeOf<number>();
-    expectTypeOf(formGroup.name.value()).toEqualTypeOf<string>();
-    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string>();
+    expectTypeOf(formGroup.age()).toEqualTypeOf<number | null>();
+    expectTypeOf(formGroup.name.value()).toEqualTypeOf<string | null>();
+    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string | null>();
     expectTypeOf(formGroup.api.value()).toEqualTypeOf<{
-      name: string;
-      age: number;
-      address: { city: string };
+      name: string | null;
+      age: number | null;
+      address: { city: string | null };
     }>();
   });
 
@@ -32,11 +32,11 @@ describe('types', () => {
         },
       },
     });
-    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string>();
-    expectTypeOf(formGroup.address.location.latitude()).toEqualTypeOf<number>();
+    expectTypeOf(formGroup.address.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(formGroup.address.location.latitude()).toEqualTypeOf<number | null>();
     expectTypeOf(formGroup.api.value()).toEqualTypeOf<{
-      name: string;
-      address: { city: string; location: { latitude: number } };
+      name: string | null;
+      address: { city: string | null; location: { latitude: number | null } };
     }>();
     expectTypeOf(formGroup.api.patch).toBeCallableWith({
       address: { location: { latitude: 47.3769 } },
@@ -45,7 +45,7 @@ describe('types', () => {
 
   it('types errors as a wide error object', () => {
     const required = (value: string) => (value === '' ? { required: true } : null);
-    const fieldNode = field('', [required]);
+    const fieldNode = field('', [required], { nullable: false });
     expectTypeOf(fieldNode.errors()).toEqualTypeOf<ValidationErrors | null>();
   });
 
@@ -56,7 +56,7 @@ describe('types', () => {
 
   it('accepts validators on a field declared without them', () => {
     const required = (value: string) => (value === '' ? { required: true } : null);
-    const fieldNode = field('David');
+    const fieldNode = field('David', { nullable: false });
     expectTypeOf(fieldNode.setValidators).toBeCallableWith([required]);
   });
 
@@ -66,6 +66,7 @@ describe('types', () => {
         expectTypeOf(value).toEqualTypeOf<string>();
         return null;
       }],
+      nullable: false,
       disabled: false,
     });
   });
@@ -77,7 +78,7 @@ describe('types', () => {
     });
     formGroup.api.setValidators([
       value => {
-        expectTypeOf(value).toEqualTypeOf<{ city: string; age: number }>();
+        expectTypeOf(value).toEqualTypeOf<{ city: string | null; age: number | null }>();
         return null;
       },
     ]);
@@ -88,7 +89,10 @@ describe('types', () => {
       { city: field('Moscow'), age: field(23) },
       {
         validators: [value => {
-          expectTypeOf(value).toEqualTypeOf<{ city: string; age: number }>();
+          expectTypeOf(value).toEqualTypeOf<{
+            city: string | null;
+            age: number | null;
+          }>();
           return null;
         }],
         readonly: false,
@@ -151,6 +155,23 @@ describe('types', () => {
     expectTypeOf(fieldNode.reset).toBeCallableWith('30');
   });
 
+  it('includes null in field values by default', () => {
+    const fieldNode = field<string>(null, []);
+    expectTypeOf(fieldNode()).toEqualTypeOf<string | null>();
+    expectTypeOf(fieldNode.set).toBeCallableWith(null);
+    expectTypeOf(fieldNode.reset).toBeCallableWith(null);
+  });
+
+  it('removes null from the field type when nullable is false', () => {
+    const fieldNode = field('David', { nullable: false });
+    expectTypeOf(fieldNode()).toEqualTypeOf<string>();
+    expectTypeOf(fieldNode.set).toBeCallableWith('Ana');
+    // @ts-expect-error a non-nullable field cannot be set to null
+    expectTypeOf(fieldNode.set).toBeCallableWith(null);
+    // @ts-expect-error a non-nullable field cannot be initialized with null
+    field<string>(null, { nullable: false });
+  });
+
   it('accepts initial disabled options', () => {
     expectTypeOf(field).toBeCallableWith('David', undefined, { disabled: true });
     form(
@@ -189,7 +210,7 @@ describe('types', () => {
 
   it('allows typed state functions to reference their containing form', () => {
     const formGroup = form({
-      age: field(17),
+      age: field(17, { nullable: false }),
       guardian: field('', undefined, {
         hidden: (): boolean => formGroup.age() >= 18,
       }),
