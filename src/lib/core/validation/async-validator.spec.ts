@@ -1,11 +1,11 @@
-import { Observable, of } from 'rxjs';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Injector, signal } from '@angular/core';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { asyncValidator } from './async-validator';
 import { required } from './validators/required';
+import type { ObservableLike } from './validation.type';
 
 const settle = async () => {
   await Promise.resolve();
@@ -37,7 +37,13 @@ describe('asyncValidator', () => {
   });
 
   it('accepts the first result emitted by an Observable validator', async () => {
-    const name = field('David', [asyncValidator(() => of({ kind: 'observableError' }))]);
+    const result: ObservableLike<{ kind: string }> = {
+      subscribe: (observer) => {
+        observer.next({ kind: 'observableError' });
+        return { unsubscribe: () => undefined };
+      },
+    };
+    const name = field('David', [asyncValidator(() => result)]);
 
     await settle();
 
@@ -49,7 +55,9 @@ describe('asyncValidator', () => {
     const unsubscribe = vi.fn();
     const validate = vi.fn(({ value }) => {
       value();
-      return new Observable<never>(() => unsubscribe);
+      return {
+        subscribe: () => ({ unsubscribe }),
+      } satisfies ObservableLike<never>;
     });
     const name = field('first', [asyncValidator(validate)]);
 
@@ -58,6 +66,19 @@ describe('asyncValidator', () => {
     await Promise.resolve();
 
     expect(unsubscribe).toHaveBeenCalledOnce();
+  });
+
+  it('routes an invalid ObservableLike subscription through onError', async () => {
+    const invalidObservable = { subscribe: () => ({}) } as unknown as ObservableLike<never>;
+    const name = field('David', [
+      asyncValidator(() => invalidObservable, {
+        onError: () => ({ kind: 'invalidObservable' }),
+      }),
+    ]);
+
+    await settle();
+
+    expect(name.errors()).toMatchObject([{ kind: 'invalidObservable' }]);
   });
 
   it('does not run asynchronous validators while synchronous validation fails', async () => {

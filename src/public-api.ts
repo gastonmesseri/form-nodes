@@ -14,6 +14,9 @@ export type {
 export type {
   FieldContext,
   AsyncValidationResult,
+  ObservableLike,
+  ObserverLike,
+  SubscriptionLike,
   AsyncValidator,
   AsyncValidatorContext,
   ValidationError,
