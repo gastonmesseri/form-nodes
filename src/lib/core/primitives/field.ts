@@ -2,7 +2,7 @@ import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import { markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
-import type { InternalNodeApi } from '../types/node.type';
+import type { Node } from '../types/node.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
@@ -27,7 +27,8 @@ export type FieldOptions<TValue = any> = {
   readonly readonly?: boolean | (() => boolean);
 };
 
-export type FieldApi<TValue> = {
+export type FieldApi<TValue, TParent extends Node = Node> = {
+  parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
   value: Signal<TValue>;
   set(value: TValue): void;
@@ -35,7 +36,7 @@ export type FieldApi<TValue> = {
   reset(...args: [] | [value: TValue]): void;
   validators: Signal<Validators<TValue>>;
   setValidators(validators: Validators<TValue>): void;
-  errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue>>[]>;
+  errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   pending: Signal<boolean>;
@@ -62,9 +63,9 @@ export type FieldApi<TValue> = {
   show(): void;
 };
 
-export type Field<TValue> =
-  & { (): TValue; api: FieldApi<TValue> }
-  & Omit<FieldApi<TValue>, 'patch'>
+export type Field<TValue, TParent extends Node = Node> =
+  & { (): TValue; api: FieldApi<TValue, TParent> }
+  & Omit<FieldApi<TValue, TParent>, 'patch'>
   & HiddenFunctionMembers;
 
 type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { readonly nullable?: true };
@@ -104,23 +105,23 @@ export function field<TValue>(
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
   const fieldSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
-  const fieldParent = signal<InternalNodeApi | null>(null);
+  const fieldParent = signal<Node | null>(null);
   const fieldKeyInParent = signal<string | null>(null);
   const fieldPath = computed<readonly string[]>(() => {
     const parent = fieldParent();
     const key = fieldKeyInParent();
-    return parent && key !== null ? [...parent.path(), key] : [];
+    return parent && key !== null ? [...parent.api.path(), key] : [];
   });
   const fieldDisabled = computed(() =>
-    fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.disabled() === true,
+    fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.api.disabled() === true,
   );
   const fieldSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const fieldReadonly = computed(() =>
-    fieldSelfReadonly() || readStateSource(resolvedOptions?.readonly) || fieldParent()?.readonly() === true,
+    fieldSelfReadonly() || readStateSource(resolvedOptions?.readonly) || fieldParent()?.api.readonly() === true,
   );
   const fieldSelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const fieldHidden = computed(() =>
-    fieldSelfHidden() || readStateSource(resolvedOptions?.hidden) || fieldParent()?.hidden() === true,
+    fieldSelfHidden() || readStateSource(resolvedOptions?.hidden) || fieldParent()?.api.hidden() === true,
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   let fieldNode!: Field<TValue>;
@@ -157,6 +158,7 @@ export function field<TValue>(
     fieldDirty.set(false);
   };
   const members = {
+    parent: fieldParent.asReadonly(),
     path: fieldPath,
     value: fieldValue.asReadonly(),
     set,
@@ -195,7 +197,7 @@ export function field<TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
-    _setParent: (parent: InternalNodeApi | null, key?: string) => {
+    _setParent: (parent: Node | null, key?: string) => {
       fieldParent.set(parent);
       fieldKeyInParent.set(parent ? key ?? null : null);
     },

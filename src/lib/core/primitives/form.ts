@@ -9,6 +9,7 @@ import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-r
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import type { Field } from './field';
 import type { ValidationError, ValidationStatus, Validators } from '../validation/validation.type';
 import type { InternalNodeApi, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 
@@ -45,7 +46,8 @@ export type NormalizedNodes<TNodes extends NodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
 };
 
-export type FormApi<TNodes extends Nodes> = {
+export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
+  parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
   value: Signal<FormValue<TNodes>>;
   set(value: FormSet<TNodes>): void;
@@ -53,7 +55,7 @@ export type FormApi<TNodes extends Nodes> = {
   reset(...args: [] | [value: FormSet<TNodes>]): void;
   validators: Signal<Validators<FormValue<TNodes>>>;
   setValidators(validators: Validators<FormValue<TNodes>>): void;
-  errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes>>[]>;
+  errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   pending: Signal<boolean>;
@@ -80,9 +82,17 @@ export type FormApi<TNodes extends Nodes> = {
   show(): void;
 };
 
-export type Form<TNodes extends Nodes> =
-  & { (): FormValue<TNodes>; api: FormApi<TNodes> }
-  & TNodes
+export type NodeWithParent<TNode extends Node, TParent extends Node> =
+  TNode extends Field<infer TValue, Node> ? Field<TValue, TParent> :
+  TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent> : TNode;
+
+export type FormChildren<TNodes extends Nodes> = {
+  [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes>>;
+};
+
+export type Form<TNodes extends Nodes, TParent extends Node = Node> =
+  & { (): FormValue<TNodes>; api: FormApi<TNodes, TParent> }
+  & FormChildren<TNodes>
   & HiddenFunctionMembers<keyof TNodes>;
 
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
@@ -115,23 +125,23 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
-  const formParent = signal<InternalNodeApi | null>(null);
+  const formParent = signal<Node | null>(null);
   const formKeyInParent = signal<string | null>(null);
   const formPath = computed<readonly string[]>(() => {
     const parent = formParent();
     const key = formKeyInParent();
-    return parent && key !== null ? [...parent.path(), key] : [];
+    return parent && key !== null ? [...parent.api.path(), key] : [];
   });
   const formDisabled = computed(() =>
-    formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.disabled() === true,
+    formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.api.disabled() === true,
   );
   const formSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const formReadonly = computed(() =>
-    formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.readonly() === true,
+    formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.api.readonly() === true,
   );
   const formSelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const formHidden = computed(() =>
-    formSelfHidden() || readStateSource(resolvedOptions?.hidden) || formParent()?.hidden() === true,
+    formSelfHidden() || readStateSource(resolvedOptions?.hidden) || formParent()?.api.hidden() === true,
   );
   const formNonInteractive = computed(() => formHidden() || formDisabled() || formReadonly());
   const formValue = computed(() => {
@@ -205,6 +215,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
   };
   const api: FormApi<TNodes> = {
+    parent: formParent.asReadonly(),
     path: formPath,
     value: formValue,
     set,
@@ -243,16 +254,16 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   const internalApi = {
     ...api,
-    _setParent: (parent: InternalNodeApi | null, key?: string) => {
+    _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);
       formKeyInParent.set(parent ? key ?? null : null);
     },
   };
-  controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(internalApi, String(key)));
   formNode = Object.defineProperties(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
   ) as Form<TNodes>;
+  controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(formNode, String(key)));
   markAsNode(formNode);
   ensureAsyncValidationWatch();
   return formNode;

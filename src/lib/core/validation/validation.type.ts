@@ -1,5 +1,7 @@
 import type { Signal } from '@angular/core';
 
+import type { Node } from '../types/node.type';
+
 /** A validation error produced by a validator. */
 export interface ValidationError {
   /** Identifies the error category. */
@@ -56,6 +58,7 @@ export type AsyncValidatorState = {
 
 /** Common node API exposed to asynchronous validators when no exact owner API is specified. */
 export type AsyncValidatorApi<TValue> = AsyncValidatorState & {
+  readonly parent: Signal<Node | null>;
   readonly path: Signal<readonly string[]>;
   readonly value: Signal<TValue>;
   readonly errors: Signal<readonly ValidationError[]>;
