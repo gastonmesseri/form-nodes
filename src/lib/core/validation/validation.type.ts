@@ -42,7 +42,7 @@ export type FieldContext<TValue> = {
   readonly value: Signal<TValue>;
 };
 
-/** Non-validation state exposed to asynchronous validator callbacks. */
+/** Non-validation state exposed to validator callbacks. */
 export type AsyncValidatorState = {
   readonly touched: Signal<boolean>;
   readonly untouched: Signal<boolean>;
@@ -56,8 +56,8 @@ export type AsyncValidatorState = {
   readonly visible: Signal<boolean>;
 };
 
-/** Common node API exposed to asynchronous validators when no exact owner API is specified. */
-export type AsyncValidatorApi<TValue> = AsyncValidatorState & {
+/** Common node API exposed to validators when no exact owner API is specified. */
+export type ValidatorApi<TValue> = AsyncValidatorState & {
   readonly form: Signal<Node | null>;
   readonly parent: Signal<Node | null>;
   readonly path: Signal<readonly string[]>;
@@ -81,11 +81,15 @@ export type AsyncValidatorApi<TValue> = AsyncValidatorState & {
   show(): void;
 };
 
-/** Reactive context shared by asynchronous validator conditions, params, and handlers. */
-export type AsyncValidatorBaseContext<TValue, TApi = AsyncValidatorApi<TValue>> = FieldContext<TValue> & {
-  /** Complete API of the field or form being validated when explicitly typed. */
+export type AsyncValidatorApi<TValue> = ValidatorApi<TValue>;
+
+/** Reactive context provided to synchronous validators. */
+export type ValidatorContext<TValue, TApi = ValidatorApi<TValue>> = FieldContext<TValue> & {
   readonly api: TApi;
 };
+
+/** Reactive context shared by asynchronous validator conditions, params, and handlers. */
+export type AsyncValidatorBaseContext<TValue, TApi = AsyncValidatorApi<TValue>> = ValidatorContext<TValue, TApi>;
 
 export type ValidationStatus = 'valid' | 'invalid' | 'unknown';
 
@@ -118,4 +122,4 @@ export type Validator<TValue> = (context: FieldContext<TValue>) => ValidationRes
 
 export type AsyncValidator<TValue> = Validator<TValue>;
 
-export type Validators<TValue> = readonly Validator<TValue>[];
+export type Validators<TValue> = readonly ((context: ValidatorContext<TValue>) => ValidationResult)[];

@@ -30,6 +30,38 @@ describe('form', () => {
     expect(profile.address.city.api.form()).toBe(profile);
   });
 
+  it('exposes tree navigation through a field synchronous validator api', () => {
+    let validatorApi: unknown;
+    const profile = form({
+      address: {
+        city: field('Zurich', [context => {
+          validatorApi = context.api;
+          return null;
+        }]),
+      },
+    });
+
+    expect(profile.address.city.errors()).toEqual([]);
+    expect(validatorApi).toBe(profile.address.city.api);
+    expect(profile.address.city.api.path()).toEqual(['address', 'city']);
+    expect(profile.address.city.api.parent()).toBe(profile.address);
+    expect(profile.address.city.api.form()).toBe(profile);
+  });
+
+  it('exposes the root form api to synchronous form validators', () => {
+    let validatorApi: unknown;
+    const profile = form({ name: field('David') }, [context => {
+      validatorApi = context.api;
+      return null;
+    }]);
+
+    expect(profile.api.errors()).toEqual([]);
+    expect(validatorApi).toBe(profile.api);
+    expect(profile.api.path()).toEqual([]);
+    expect(profile.api.parent()).toBeNull();
+    expect(profile.api.form()).toBe(profile);
+  });
+
   it('exposes each field under its own key', () => {
     const formGroup = form({
       age: field(23),

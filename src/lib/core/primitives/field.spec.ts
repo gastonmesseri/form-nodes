@@ -71,6 +71,20 @@ describe('field', () => {
     expect(contexts[0]!.value()).toBe('David');
   });
 
+  it('exposes the complete field api to synchronous validators', () => {
+    let validatorApi: unknown;
+    const fieldNode = field('David', [context => {
+      validatorApi = context.api;
+      return null;
+    }]);
+
+    expect(fieldNode.errors()).toEqual([]);
+    expect(validatorApi).toBe(fieldNode.api);
+    expect(fieldNode.api.path()).toEqual([]);
+    expect(fieldNode.api.parent()).toBeNull();
+    expect(fieldNode.api.form()).toBeNull();
+  });
+
   it('reports the error of a failing validator', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const fieldNode = field('', [required]);
