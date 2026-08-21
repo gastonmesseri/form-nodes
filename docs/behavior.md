@@ -30,7 +30,24 @@ const age = field<number>(23);
 const optionalName = field<string>();
 ```
 
-Its arguments are an optional initial value, an optional readonly array of synchronous validators, and optional state configuration. When no initial value is passed, the runtime value starts as `undefined`. Consumers should include `undefined` in the generic type when they want the static type to describe that possibility precisely.
+The preferred signature accepts an optional initial value followed by an options object:
+
+```ts
+const name = field('', {
+  validators: [required],
+  disabled: false,
+  readonly: false,
+  hidden: false,
+});
+```
+
+All options are optional, so state can be configured without supplying validators. Validators and state options can alternatively be passed as separate arguments:
+
+```ts
+field('', [required], { disabled: false });
+```
+
+In the separate-argument form, the validator array is the second argument and state options are the third argument. When no initial value is passed, the runtime value starts as `undefined`. Consumers should include `undefined` in the generic type when they want the static type to describe that possibility precisely.
 
 A field is callable and returns its current value:
 
@@ -53,7 +70,30 @@ const profile = form({
 });
 ```
 
-Its arguments are a node definition, an optional readonly array of synchronous form validators, and optional state configuration. A definition can contain fields, explicit nested forms, or shorthand nested objects.
+The preferred signature accepts a node definition followed by an options object:
+
+```ts
+const profile = form(
+  {
+    city: field('Moscow'),
+    billingCity: field('Zurich'),
+  },
+  {
+    validators: [sameCity],
+    disabled: false,
+    readonly: false,
+    hidden: false,
+  },
+);
+```
+
+All options are optional, so form state can be configured without supplying validators. Validators and state options can alternatively be passed as separate arguments:
+
+```ts
+form({ name: field('David') }, [validator], { hidden: false });
+```
+
+A definition can contain fields, explicit nested forms, or shorthand nested objects.
 
 A form is callable and returns its aggregated value:
 
@@ -148,7 +188,7 @@ const required = (value: string) =>
   value === '' ? { required: true } : null;
 ```
 
-Validators are synchronous and stored as a readonly array. They can be supplied during construction or replaced later with `setValidators()`.
+Validators are synchronous and stored as a readonly array. They can be supplied through `options.validators`, through the separate validator-array signature, or replaced later with `setValidators()`.
 
 Validation behavior:
 

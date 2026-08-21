@@ -96,6 +96,25 @@ describe('field', () => {
     expect(fieldNode.errors()).toEqual({ required: true });
   });
 
+  it('accepts validators and state in a second-argument options object', () => {
+    const required = (value: string) => (value === '' ? { required: true } : null);
+    const fieldNode = field('', {
+      validators: [required],
+      disabled: true,
+    });
+    expect(fieldNode.validators()).toEqual([required]);
+    expect(fieldNode.disabled()).toBe(true);
+    expect(fieldNode.errors()).toBeNull();
+    fieldNode.enable();
+    expect(fieldNode.errors()).toEqual({ required: true });
+  });
+
+  it('accepts second-argument options without validators', () => {
+    const fieldNode = field('David', { readonly: true });
+    expect(fieldNode.validators()).toEqual([]);
+    expect(fieldNode.readonly()).toBe(true);
+  });
+
   it('exposes the same state through the root and through api', () => {
     const required = (value: string) => (value === '' ? { required: true } : null);
     const fieldNode = field('', [required]);
