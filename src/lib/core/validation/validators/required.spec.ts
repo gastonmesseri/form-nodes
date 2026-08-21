@@ -6,15 +6,15 @@ import { field } from '../../primitives/field';
 describe('required', () => {
   it('requires non-empty values', () => {
     const fieldNode = field<unknown>(null, [required]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set(undefined);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set('');
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set(false);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set(Number.NaN);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set('David');
     expect(fieldNode.errors()).toEqual([]);
     fieldNode.set(0);
@@ -26,10 +26,12 @@ describe('required', () => {
     const optionsField = field('David', [required({ message: 'Name is required' })]);
     directField.set(null);
     optionsField.set(null);
-    expect(directField.errors()).toEqual([{ kind: 'required' }]);
-    expect(optionsField.errors()).toEqual([
+    expect(directField.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(optionsField.errors()).toMatchObject([
       { kind: 'required', message: 'Name is required' },
     ]);
+    expect(directField.errors()[0]!.targetNode).toBe(directField);
+    expect(optionsField.errors()[0]!.targetNode).toBe(optionsField);
   });
 
   it('does not confuse object field values with factory options', () => {

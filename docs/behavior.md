@@ -155,7 +155,7 @@ Changes to any descendant are reflected reactively in every ancestor value.
 - `set()` and `reset(value)` require complete values at compile time.
 - `patch()` accepts recursive partial form values.
 - Incorrect value types and unknown keys are rejected at compile time.
-- Field and form errors use the `readonly ValidationError[]` type.
+- Field and form errors use readonly arrays of `ValidationError.WithTargetNode`.
 
 ## Field nullability
 
@@ -232,7 +232,29 @@ The same context shape is used for field-level and form-level validators. In a f
 
 Additional Angular Signal Forms context members such as `state`, `fieldTree`, `valueOf`, `stateOf`, `fieldTreeOf`, and `pathKeys` are not implemented yet. They will be designed separately instead of being included with provisional semantics.
 
-Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a single `ValidationError`, or a readonly array of `ValidationError` objects.
+Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a single `ValidationError.WithoutTargetNode`, or a readonly array of such errors.
+
+Validators do not assign their own target. When their results are exposed through `errors()`, the validator runner associates every error with the node being validated through `targetNode`:
+
+```ts
+const name = field('', [required]);
+const error = name.errors()[0];
+
+error.kind === 'required';
+error.targetNode === name;
+```
+
+The public error variants are:
+
+```ts
+ValidationError.WithTargetNode<TNode>
+ValidationError.WithOptionalTargetNode<TNode>
+ValidationError.WithoutTargetNode
+```
+
+Field errors use their `Field<TValue>` as the target type. Form errors use their complete `Form<TNodes>` as the target type. The internal defaulting operation preserves a target that is already present, preparing the error model for future tree validators that can direct an error to a different node.
+
+This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but is named `targetNode` to match this library's field-and-form node model. Angular's optional `formField` reference is not implemented: it identifies a concrete `[formField]` directive binding and will only make sense once this library has an equivalent binding layer.
 
 Validators are synchronous and stored as a readonly array. They can be supplied through `options.validators`, through the separate validator-array signature, or replaced later with `setValidators()`.
 

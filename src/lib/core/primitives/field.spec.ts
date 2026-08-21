@@ -54,7 +54,7 @@ describe('field', () => {
       return context.value() === '' ? { kind: 'required' } : null;
     };
     const fieldNode = field('', [validator]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set('David');
     expect(fieldNode.errors()).toEqual([]);
     expect(contexts).toHaveLength(2);
@@ -65,7 +65,7 @@ describe('field', () => {
   it('reports the error of a failing validator', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const fieldNode = field('', [required]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     expect(fieldNode.valid()).toBe(false);
     expect(fieldNode.invalid()).toBe(true);
   });
@@ -77,10 +77,11 @@ describe('field', () => {
         ? { kind: 'minLength', minLength: 3, actualLength: value()!.length }
         : null;
     const fieldNode = field('', [required, minLength]);
-    expect(fieldNode.errors()).toEqual([
+    expect(fieldNode.errors()).toMatchObject([
       { kind: 'required' },
       { kind: 'minLength', minLength: 3, actualLength: 0 },
     ]);
+    expect(fieldNode.errors().every((error) => error.targetNode === fieldNode)).toBe(true);
   });
 
   it('leaves out the keys of validators that pass', () => {
@@ -88,7 +89,7 @@ describe('field', () => {
     const minLength = ({ value }: Context<string | null>) =>
       value() !== null && value()!.length < 3 ? { kind: 'minLength' } : null;
     const fieldNode = field('ab', [required, minLength]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'minLength' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'minLength' }]);
   });
 
   it('recomputes errors when the value changes', () => {
@@ -120,7 +121,7 @@ describe('field', () => {
     const fieldNode = field('');
     expect(fieldNode.valid()).toBe(true);
     fieldNode.setValidators([required]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     expect(fieldNode.valid()).toBe(false);
   });
 
@@ -129,7 +130,7 @@ describe('field', () => {
     const fieldNode = field('David', [required]);
     expect(fieldNode.valid()).toBe(true);
     fieldNode.setValidators([({ value }: Context<string | null>) => (value() === 'David' ? { kind: 'required' } : null)]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
   });
 
   it('accepts validators and state in a second-argument options object', () => {
@@ -142,7 +143,7 @@ describe('field', () => {
     expect(fieldNode.disabled()).toBe(true);
     expect(fieldNode.errors()).toEqual([]);
     fieldNode.enable();
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
   });
 
   it('accepts second-argument options without validators', () => {
@@ -403,7 +404,7 @@ describe('field', () => {
     const fieldNode = field('David', [required]);
     expect(fieldNode.valid()).toBe(true);
     fieldNode.reset('');
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     expect(fieldNode.valid()).toBe(false);
   });
 
@@ -493,7 +494,7 @@ describe('field', () => {
   it('skips validation while disabled', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const fieldNode = field('', [required]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.disable();
     expect(fieldNode.errors()).toEqual([]);
     expect(fieldNode.valid()).toBe(true);
@@ -505,7 +506,7 @@ describe('field', () => {
     const fieldNode = field('', [required]);
     fieldNode.disable();
     fieldNode.enable();
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     expect(fieldNode.valid()).toBe(false);
   });
 
@@ -569,7 +570,7 @@ describe('field', () => {
     expect(fieldNode.errors()).toEqual([]);
     expect(fieldNode.valid()).toBe(true);
     fieldNode.markAsWritable();
-    expect(fieldNode.errors()).toEqual([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     expect(fieldNode.valid()).toBe(false);
   });
 });

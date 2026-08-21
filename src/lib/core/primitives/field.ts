@@ -29,7 +29,7 @@ export type FieldApi<TValue> = {
   reset(...args: [] | [value: TValue]): void;
   validators: Signal<Validators<TValue>>;
   setValidators(validators: Validators<TValue>): void;
-  errors: Signal<readonly ValidationError[]>;
+  errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   touched: Signal<boolean>;
@@ -110,9 +110,10 @@ export function field<TValue>(
     fieldSelfHidden() || readStateSource(resolvedOptions?.hidden) || fieldParent()?.hidden() === true,
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
+  let fieldNode!: Field<TValue>;
   const fieldErrors = computed(() => fieldNonInteractive()
     ? []
-    : runValidators(fieldContext, fieldValidators()));
+    : runValidators(fieldContext, fieldValidators(), fieldNode));
   const fieldValid = computed(() => fieldErrors().length === 0);
   const set = (next: TValue) => {
     fieldValue.set(next);
@@ -158,6 +159,10 @@ export function field<TValue>(
     ...api,
     _setParent: (parent: NodeApi | null) => fieldParent.set(parent),
   };
-  const fieldNode = Object.assign(() => fieldValue(), members, { api: internalApi });
+  fieldNode = Object.assign(
+    () => fieldValue(),
+    members,
+    { api: internalApi },
+  ) as unknown as Field<TValue>;
   return markAsNode(fieldNode) as unknown as Field<TValue>;
 }

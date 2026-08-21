@@ -47,7 +47,7 @@ export type FormApi<TNodes extends Nodes> = {
   reset(...args: [] | [value: FormSet<TNodes>]): void;
   validators: Signal<Validators<FormValue<TNodes>>>;
   setValidators(validators: Validators<FormValue<TNodes>>): void;
-  errors: Signal<readonly ValidationError[]>;
+  errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   touched: Signal<boolean>;
@@ -127,9 +127,10 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   });
   const formContext = markAsFieldContext({ value: formValue });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
+  let formNode!: Form<TNodes>;
   const formErrors = computed(() => formNonInteractive()
     ? []
-    : runValidators(formContext, formValidators()));
+    : runValidators(formContext, formValidators(), formNode));
   const formValid = computed(() =>
     formNonInteractive() || (
       formErrors().length === 0 && controlKeys().every((key) => controls[key]!.api.valid())
@@ -205,9 +206,9 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     _setParent: (parent: NodeApi | null) => formParent.set(parent),
   };
   controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(internalApi));
-  const formNode = Object.defineProperties(
+  formNode = Object.defineProperties(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
-  );
+  ) as Form<TNodes>;
   return markAsNode(formNode) as Form<TNodes>;
 }

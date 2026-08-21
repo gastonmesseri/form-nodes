@@ -171,7 +171,8 @@ describe('form', () => {
       },
       [sameCity],
     );
-    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
+    expect(formGroup.api.errors()[0]!.targetNode).toBe(formGroup);
     expect(formGroup.api.valid()).toBe(false);
   });
 
@@ -239,7 +240,7 @@ describe('form', () => {
     formGroup.api.setValidators([
       ({ value }) => (value().city === value().billingCity ? null : { kind: 'sameCity' }),
     ]);
-    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
     expect(formGroup.api.valid()).toBe(false);
   });
 
@@ -260,7 +261,7 @@ describe('form', () => {
     expect(formGroup.api.hidden()).toBe(true);
     expect(formGroup.api.errors()).toEqual([]);
     formGroup.api.show();
-    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
   });
 
   it('accepts second-argument options without validators', () => {
@@ -571,7 +572,7 @@ describe('form', () => {
     );
     expect(formGroup.api.valid()).toBe(true);
     formGroup.api.reset({ city: 'Zurich', billingCity: 'Madrid' });
-    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
   });
 
   it('starts enabled', () => {
@@ -608,7 +609,7 @@ describe('form', () => {
     expect(validator).not.toHaveBeenCalled();
 
     formGroup.api.enable();
-    expect(formGroup.api.errors()).toEqual([{ kind: 'unavailable' }]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'unavailable' }]);
     expect(validator).toHaveBeenCalledOnce();
   });
 
@@ -780,7 +781,7 @@ describe('form', () => {
     expect(validator).not.toHaveBeenCalled();
 
     formGroup.api.markAsWritable();
-    expect(formGroup.api.errors()).toEqual([{ kind: 'unavailable' }]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'unavailable' }]);
     expect(validator).toHaveBeenCalledOnce();
   });
 
