@@ -345,6 +345,7 @@ describe('asyncValidator', () => {
     const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
     const name = field('David', [asyncValidator(validate, { debounce: 100 })]);
 
+    await Promise.resolve();
     expect(validate).toHaveBeenCalledOnce();
 
     dependency.set('unavailable');
@@ -459,7 +460,7 @@ describe('asyncValidator', () => {
 
     expect(vi.getTimerCount()).toBe(0);
     await vi.advanceTimersByTimeAsync(100);
-    expect(validate).toHaveBeenCalledOnce();
+    expect(validate).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
 });

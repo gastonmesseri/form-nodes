@@ -29,6 +29,7 @@ export const createAsyncValidation = <TValue, TNode extends { api: AsyncValidato
   const errors = signal<readonly ValidationError.WithTargetNode<TNode>[]>([]);
   const pending = signal(false);
   let execution = 0;
+  let firstValidation = true;
   const controllers = new Set<AbortController>();
   const trackedValidators = new Map<AsyncValidator<TValue>, {
     paramsReader?: () => unknown;
@@ -84,6 +85,8 @@ export const createAsyncValidation = <TValue, TNode extends { api: AsyncValidato
   };
 
   const validate = () => {
+    const deferInitialInvocation = firstValidation;
+    firstValidation = false;
     cancel();
     const validators = getValidators().filter(isAsyncValidator) as AsyncValidator<TValue>[];
     trackedValidators.forEach(({ runner }, validator) => {
@@ -120,6 +123,7 @@ export const createAsyncValidation = <TValue, TNode extends { api: AsyncValidato
         ? wait(debounce, controller.signal)
         : null;
       if (!discoversDependencies && debounce > 0) await wait(debounce, controller.signal);
+      else if (deferInitialInvocation) await Promise.resolve();
       if (controller.signal.aborted || currentExecution !== execution) {
         controllers.delete(controller);
         return;
