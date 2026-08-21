@@ -3,6 +3,7 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import { form } from './primitives/form';
 import { field } from './primitives/field';
+import { required } from './validation/validators/required';
 import type { ValidationErrors } from './validation/validation.type';
 
 describe('types', () => {
@@ -160,6 +161,11 @@ describe('types', () => {
     expectTypeOf(fieldNode()).toEqualTypeOf<string | null>();
     expectTypeOf(fieldNode.set).toBeCallableWith(null);
     expectTypeOf(fieldNode.reset).toBeCallableWith(null);
+  });
+
+  it('rejects a direct string as required configuration', () => {
+    // @ts-expect-error required messages must use the options object
+    field('David', [required('Name is required')]);
   });
 
   it('removes null from the field type when nullable is false', () => {
