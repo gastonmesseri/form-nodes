@@ -8,7 +8,7 @@ import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import type { ValidationError, ValidationStatus, Validators } from '../validation/validation.type';
-import type { Node, NodeApi, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
+import type { InternalNodeApi, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 
 export type FormOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
@@ -110,7 +110,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
-  const formParent = signal<NodeApi | null>(null);
+  const formParent = signal<InternalNodeApi | null>(null);
   const formDisabled = computed(() =>
     formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.disabled() === true,
   );
@@ -227,7 +227,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   const internalApi = {
     ...api,
-    _setParent: (parent: NodeApi | null) => { formParent.set(parent); revalidateAsyncValidators(); },
+    _setParent: (parent: InternalNodeApi | null) => { formParent.set(parent); revalidateAsyncValidators(); },
     _revalidateAsyncValidators: revalidateAsyncValidators,
     _notifyValueChange: notifyValueChange,
   };
