@@ -12,6 +12,6 @@ export const maxLength = (
   if (resolvedMaximum === undefined) return null;
   const actualLength = getLengthOrSize(currentValue!);
   return actualLength > resolvedMaximum
-    ? { maxLength: { maxLength: resolvedMaximum, actualLength } }
+    ? { kind: 'maxLength', maxLength: resolvedMaximum }
     : null;
 };

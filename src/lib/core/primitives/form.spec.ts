@@ -156,14 +156,14 @@ describe('form', () => {
 
   it('is valid with no validators and no invalid children', () => {
     const formGroup = form({ age: field(23) });
-    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.errors()).toEqual([]);
     expect(formGroup.api.valid()).toBe(true);
     expect(formGroup.api.invalid()).toBe(false);
   });
 
   it('reports its own validator through errors', () => {
     const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { sameCity: true };
+      value().city === value().billingCity ? null : { kind: 'sameCity' };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -171,13 +171,13 @@ describe('form', () => {
       },
       [sameCity],
     );
-    expect(formGroup.api.errors()).toEqual({ sameCity: true });
+    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
     expect(formGroup.api.valid()).toBe(false);
   });
 
   it('reevaluates a cross-field validator when a field changes', () => {
     const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { sameCity: true };
+      value().city === value().billingCity ? null : { kind: 'sameCity' };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -186,20 +186,20 @@ describe('form', () => {
       [sameCity],
     );
     formGroup.billingCity.set('Zurich');
-    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.errors()).toEqual([]);
     expect(formGroup.api.valid()).toBe(true);
   });
 
   it('is invalid when a child is invalid, even without own errors', () => {
-    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
-    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.errors()).toEqual([]);
     expect(formGroup.api.valid()).toBe(false);
     expect(formGroup.api.invalid()).toBe(true);
   });
 
   it('is invalid when a grandchild is invalid', () => {
-    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({
       address: form({ city: field('', [required]) }),
     });
@@ -208,7 +208,7 @@ describe('form', () => {
   });
 
   it('becomes valid once the failing child is fixed', () => {
-    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
     formGroup.city.set('Zurich');
     expect(formGroup.api.valid()).toBe(true);
@@ -216,7 +216,7 @@ describe('form', () => {
 
   it('recomputes its errors after setValidators', () => {
     const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { sameCity: true };
+      value().city === value().billingCity ? null : { kind: 'sameCity' };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -226,7 +226,7 @@ describe('form', () => {
     );
     expect(formGroup.api.valid()).toBe(false);
     formGroup.api.setValidators([]);
-    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.errors()).toEqual([]);
     expect(formGroup.api.valid()).toBe(true);
   });
 
@@ -237,15 +237,15 @@ describe('form', () => {
     });
     expect(formGroup.api.valid()).toBe(true);
     formGroup.api.setValidators([
-      ({ value }) => (value().city === value().billingCity ? null : { sameCity: true }),
+      ({ value }) => (value().city === value().billingCity ? null : { kind: 'sameCity' }),
     ]);
-    expect(formGroup.api.errors()).toEqual({ sameCity: true });
+    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
     expect(formGroup.api.valid()).toBe(false);
   });
 
   it('accepts validators and state in a second-argument options object', () => {
     const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { sameCity: true };
+      value().city === value().billingCity ? null : { kind: 'sameCity' };
     const formGroup = form(
       {
         city: field('Moscow'),
@@ -258,9 +258,9 @@ describe('form', () => {
     );
     expect(formGroup.api.validators()).toEqual([sameCity]);
     expect(formGroup.api.hidden()).toBe(true);
-    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.errors()).toEqual([]);
     formGroup.api.show();
-    expect(formGroup.api.errors()).toEqual({ sameCity: true });
+    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
   });
 
   it('accepts second-argument options without validators', () => {
@@ -561,7 +561,7 @@ describe('form', () => {
 
   it('revalidates after reset with a value', () => {
     const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { sameCity: true };
+      value().city === value().billingCity ? null : { kind: 'sameCity' };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -571,7 +571,7 @@ describe('form', () => {
     );
     expect(formGroup.api.valid()).toBe(true);
     formGroup.api.reset({ city: 'Zurich', billingCity: 'Madrid' });
-    expect(formGroup.api.errors()).toEqual({ sameCity: true });
+    expect(formGroup.api.errors()).toEqual([{ kind: 'sameCity' }]);
   });
 
   it('starts enabled', () => {
@@ -600,20 +600,20 @@ describe('form', () => {
   });
 
   it('skips its own validators while disabled', () => {
-    const validator = vi.fn(() => ({ unavailable: true }));
+    const validator = vi.fn(() => ({ kind: 'unavailable' }));
     const formGroup = form({ name: field('David') }, [validator], { disabled: true });
 
-    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.errors()).toEqual([]);
     expect(formGroup.api.valid()).toBe(true);
     expect(validator).not.toHaveBeenCalled();
 
     formGroup.api.enable();
-    expect(formGroup.api.errors()).toEqual({ unavailable: true });
+    expect(formGroup.api.errors()).toEqual([{ kind: 'unavailable' }]);
     expect(validator).toHaveBeenCalledOnce();
   });
 
   it('ignores a disabled child when computing validity', () => {
-    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({
       name: field('', [required]),
       age: field(23),
@@ -772,15 +772,15 @@ describe('form', () => {
   });
 
   it('skips its own validators while readonly', () => {
-    const validator = vi.fn(() => ({ unavailable: true }));
+    const validator = vi.fn(() => ({ kind: 'unavailable' }));
     const formGroup = form({ name: field('David') }, [validator], { readonly: true });
 
-    expect(formGroup.api.errors()).toBeNull();
+    expect(formGroup.api.errors()).toEqual([]);
     expect(formGroup.api.valid()).toBe(true);
     expect(validator).not.toHaveBeenCalled();
 
     formGroup.api.markAsWritable();
-    expect(formGroup.api.errors()).toEqual({ unavailable: true });
+    expect(formGroup.api.errors()).toEqual([{ kind: 'unavailable' }]);
     expect(validator).toHaveBeenCalledOnce();
   });
 
@@ -865,7 +865,7 @@ describe('form', () => {
   });
 
   it('ignores hidden descendants when aggregating state', () => {
-    const required = ({ value }: Context<string | null>) => (value() === '' ? { required: true } : null);
+    const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ name: field('', [required]), age: field(23) });
     formGroup.name.markAsTouched();
     formGroup.name.markAsDirty();

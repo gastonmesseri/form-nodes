@@ -11,7 +11,9 @@ export type {
 } from './lib/core/primitives/form';
 export type {
   FieldContext,
-  ValidationErrors,
+  ValidationError,
+  ValidationResult,
+  ValidationSuccess,
   Validator,
   Validators,
 } from './lib/core/validation/validation.type';

@@ -10,7 +10,8 @@ describe('maxDate', () => {
     const middle = new Date('2026-06-01');
     const maximum = new Date('2026-05-01');
     expect(maxDate(maximum)(context(middle))).toEqual({
-      maxDate: { maxDate: maximum, actual: middle },
+      kind: 'maxDate',
+      maxDate: maximum,
     });
     expect(maxDate(maximum)(context(maximum))).toBeNull();
     expect(maxDate(maximum)(context(new Date(Number.NaN)))).toBeNull();

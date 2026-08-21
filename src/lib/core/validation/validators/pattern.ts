@@ -12,5 +12,5 @@ export const pattern = (
   resolvedExpression.lastIndex = 0;
   return resolvedExpression.test(currentValue!)
     ? null
-    : { pattern: { pattern: resolvedExpression, actual: currentValue } };
+    : { kind: 'pattern', pattern: resolvedExpression };
 };

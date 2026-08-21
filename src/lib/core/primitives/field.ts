@@ -5,7 +5,7 @@ import { markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
 import { runValidators } from '../validation/run-validators';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import type { ValidationErrors, Validators } from '../validation/validation.type';
+import type { ValidationError, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 
@@ -29,7 +29,7 @@ export type FieldApi<TValue> = {
   reset(...args: [] | [value: TValue]): void;
   validators: Signal<Validators<TValue>>;
   setValidators(validators: Validators<TValue>): void;
-  errors: Signal<ValidationErrors | null>;
+  errors: Signal<readonly ValidationError[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   touched: Signal<boolean>;
@@ -111,9 +111,9 @@ export function field<TValue>(
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   const fieldErrors = computed(() => fieldNonInteractive()
-    ? null
+    ? []
     : runValidators(fieldContext, fieldValidators()));
-  const fieldValid = computed(() => fieldErrors() === null);
+  const fieldValid = computed(() => fieldErrors().length === 0);
   const set = (next: TValue) => {
     fieldValue.set(next);
     fieldDirty.set(true);

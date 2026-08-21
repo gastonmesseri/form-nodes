@@ -4,7 +4,7 @@ import { describe, expectTypeOf, it } from 'vitest';
 import { form } from './primitives/form';
 import { field } from './primitives/field';
 import { required } from './validation/validators/required';
-import type { FieldContext, ValidationErrors } from './validation/validation.type';
+import type { FieldContext, ValidationError } from './validation/validation.type';
 
 describe('types', () => {
   it('infers the value of each field', () => {
@@ -44,21 +44,21 @@ describe('types', () => {
     });
   });
 
-  it('types errors as a wide error object', () => {
+  it('types field errors as a readonly error array', () => {
     const required = ({ value }: FieldContext<string>) =>
-      value() === '' ? { required: true } : null;
+      value() === '' ? { kind: 'required' } : null;
     const fieldNode = field('', [required], { nullable: false });
-    expectTypeOf(fieldNode.errors()).toEqualTypeOf<ValidationErrors | null>();
+    expectTypeOf(fieldNode.errors()).toEqualTypeOf<readonly ValidationError[]>();
   });
 
-  it('types form errors as a wide error object', () => {
+  it('types form errors as a readonly error array', () => {
     const formGroup = form({ age: field(23) });
-    expectTypeOf(formGroup.api.errors()).toEqualTypeOf<ValidationErrors | null>();
+    expectTypeOf(formGroup.api.errors()).toEqualTypeOf<readonly ValidationError[]>();
   });
 
   it('accepts validators on a field declared without them', () => {
     const required = ({ value }: FieldContext<string>) =>
-      value() === '' ? { required: true } : null;
+      value() === '' ? { kind: 'required' } : null;
     const fieldNode = field('David', { nullable: false });
     expectTypeOf(fieldNode.setValidators).toBeCallableWith([required]);
   });

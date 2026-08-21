@@ -12,6 +12,6 @@ export const minLength = (
   if (resolvedMinimum === undefined) return null;
   const actualLength = getLengthOrSize(currentValue!);
   return actualLength < resolvedMinimum
-    ? { minLength: { minLength: resolvedMinimum, actualLength } }
+    ? { kind: 'minLength', minLength: resolvedMinimum }
     : null;
 };

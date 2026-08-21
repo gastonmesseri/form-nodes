@@ -10,7 +10,8 @@ describe('minDate', () => {
     const middle = new Date('2026-06-01');
     const minimum = new Date('2026-07-01');
     expect(minDate(minimum)(context(middle))).toEqual({
-      minDate: { minDate: minimum, actual: middle },
+      kind: 'minDate',
+      minDate: minimum,
     });
     expect(minDate(minimum)(context(minimum))).toBeNull();
     expect(minDate(minimum)(context(null))).toBeNull();

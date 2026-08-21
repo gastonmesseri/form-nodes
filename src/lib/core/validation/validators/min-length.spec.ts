@@ -7,13 +7,9 @@ const context = <TValue>(value: TValue) => ({ value: signal(value).asReadonly() 
 
 describe('minLength', () => {
   it('validates minimum length or size', () => {
-    expect(minLength(3)(context('ab'))).toEqual({
-      minLength: { minLength: 3, actualLength: 2 },
-    });
+    expect(minLength(3)(context('ab'))).toEqual({ kind: 'minLength', minLength: 3 });
     expect(minLength(3)(context('abc'))).toBeNull();
-    expect(minLength(1)(context(new Set()))).toEqual({
-      minLength: { minLength: 1, actualLength: 0 },
-    });
+    expect(minLength(1)(context(new Set()))).toEqual({ kind: 'minLength', minLength: 1 });
     expect(minLength(3)(context(''))).toBeNull();
   });
 });

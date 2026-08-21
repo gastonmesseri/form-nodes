@@ -9,6 +9,6 @@ export const maxDate = (
   const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
   if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum.getTime())) return null;
   return currentValue > resolvedMaximum
-    ? { maxDate: { maxDate: resolvedMaximum, actual: currentValue } }
+    ? { kind: 'maxDate', maxDate: resolvedMaximum }
     : null;
 };

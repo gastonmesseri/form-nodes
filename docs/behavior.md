@@ -18,7 +18,7 @@ The package exports:
 
 - `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
-- The `ValidationErrors`, `Validator`, and `Validators` types.
+- The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `Validator`, and `Validators` types.
 - Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
@@ -155,7 +155,7 @@ Changes to any descendant are reflected reactively in every ancestor value.
 - `set()` and `reset(value)` require complete values at compile time.
 - `patch()` accepts recursive partial form values.
 - Incorrect value types and unknown keys are rejected at compile time.
-- Field and form errors use the wide `ValidationErrors | null` type.
+- Field and form errors use the `readonly ValidationError[]` type.
 
 ## Field nullability
 
@@ -215,11 +215,11 @@ Calling reset on a nested form only resets that subtree. State belonging to sibl
 
 ## Validators and errors
 
-A validator receives a context object and returns an error object or `null`. The initial context intentionally exposes only a readonly `value` signal:
+A validator receives a context object and returns no error, one error, or a readonly array of errors. The initial context intentionally exposes only a readonly `value` signal:
 
 ```ts
 const required = ({ value }: FieldContext<string | null>) =>
-  value() === '' ? { required: true } : null;
+  value() === '' ? { kind: 'required' } : null;
 ```
 
 ```ts
@@ -232,15 +232,18 @@ The same context shape is used for field-level and form-level validators. In a f
 
 Additional Angular Signal Forms context members such as `state`, `fieldTree`, `valueOf`, `stateOf`, `fieldTreeOf`, and `pathKeys` are not implemented yet. They will be designed separately instead of being included with provisional semantics.
 
+Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a single `ValidationError`, or a readonly array of `ValidationError` objects.
+
 Validators are synchronous and stored as a readonly array. They can be supplied through `options.validators`, through the separate validator-array signature, or replaced later with `setValidators()`.
 
 Validation behavior:
 
-- A node with no failing validators has `errors() === null`.
+- A node with no failing validators has `errors()` equal to `[]`.
 - All validators run against the current value.
-- Error objects from failing validators are shallowly merged.
-- If validators return the same error key, the later validator's value wins.
-- Validators returning `null` do not add keys to the error object.
+- A validator that returns several errors has its result flattened into the node error array.
+- Errors preserve validator order and their order within each validator result.
+- Multiple errors with the same `kind` are preserved rather than overwritten.
+- Validators returning `null`, `undefined`, or no value add no errors.
 - Changing a field value recomputes its validation.
 - Changing a descendant recomputes ancestor form validators against the aggregated value.
 - `setValidators()` applies the new validators to the current value without marking the node dirty.
@@ -249,11 +252,11 @@ Validation behavior:
 For an interactive field:
 
 ```ts
-valid() === (errors() === null)
+valid() === (errors().length === 0)
 invalid() === !valid()
 ```
 
-A form is valid when its own validators produce no errors and every interactive child is valid. `form.api.errors()` contains only errors produced by validators attached directly to that form. A form can therefore be invalid because of a descendant while its own `errors()` remains `null`.
+A form is valid when its own validators produce no errors and every interactive child is valid. `form.api.errors()` contains only errors produced by validators attached directly to that form. A form can therefore be invalid because of a descendant while its own `errors()` remains empty.
 
 Invalidity propagates upward through any number of nested forms. Fixing the failing descendant updates every ancestor.
 
@@ -273,15 +276,15 @@ const age = field<number>(null, {
 
 | Validator | Accepted value | Empty value behavior | Error shape |
 | --- | --- | --- | --- |
-| `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ required: true }` |
-| `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ min: { min, actual } }` |
-| `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ max: { max, actual } }` |
-| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ minLength: { minLength, actualLength } }` |
-| `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ maxLength: { maxLength, actualLength } }` |
-| `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ pattern: { pattern, actual } }` |
-| `email` | `string | null` | Passes for `null` and `''` | `{ email: true }` |
-| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ minDate: { minDate, actual } }` |
-| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ maxDate: { maxDate, actual } }` |
+| `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ kind: 'required' }` |
+| `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min }` |
+| `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max }` |
+| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength }` |
+| `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength }` |
+| `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern }` |
+| `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email' }` |
+| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate }` |
+| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate }` |
 
 `required` supports direct use and an options object with a message:
 
@@ -290,7 +293,7 @@ field('David', [required]);
 field('David', [required({ message: 'Name is required' })]);
 ```
 
-The direct validator produces `{ required: true }`. The options form produces `{ required: { message } }` when validation fails. Passing a string directly is intentionally rejected. Field contexts carry a non-enumerable internal symbol marker, allowing overloaded validators to recognize genuine contexts without relying on their structural shape or exposing the marker in the public `FieldContext` type.
+The direct validator produces `{ kind: 'required' }`. The options form adds the message as `{ kind: 'required', message }`. Passing a string directly is intentionally rejected. Field contexts carry a non-enumerable internal symbol marker, allowing overloaded validators to recognize genuine contexts without relying on their structural shape or exposing the marker in the public `FieldContext` type.
 
 Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
 
@@ -435,7 +438,7 @@ hidden() || disabled() || readonly()
 
 While a node is non-interactive:
 
-- Its validators are skipped, its own `errors()` is `null`, and it is considered valid.
+- Its validators are skipped, its own `errors()` is empty, and it is considered valid.
 - Its invalid state does not make an ancestor invalid.
 - Its public touched and dirty state is reported as false and does not affect ancestors.
 - `markAsTouched()` is ignored.
