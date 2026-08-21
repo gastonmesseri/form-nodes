@@ -11,6 +11,8 @@ import { readStateSource, getInitialMutableState } from '../utils/read-state-sou
 export type FieldOptions<TValue = any> = {
   /** Synchronous validators applied to the field value. */
   readonly validators?: Validators<TValue>;
+  /** Whether the field value includes null. Defaults to true and affects the public value type. */
+  readonly nullable?: boolean;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
@@ -56,17 +58,29 @@ export type Field<TValue> =
   & Omit<FieldApi<TValue>, 'patch'>
   & HiddenFunctionMembers;
 
-export function field<TValue>(
-  value?: TValue,
-  options?: FieldOptions<NoInfer<TValue>>,
+type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { readonly nullable?: true };
+type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { readonly nullable: false };
+
+export function field<TValue extends {}>(
+  value: TValue,
+  options: NonNullableFieldOptions<NoInfer<TValue>>,
+): Field<TValue>;
+export function field<TValue extends {}>(
+  value: TValue,
+  validators: Validators<NoInfer<TValue>>,
+  options: NonNullableFieldOptions<NoInfer<TValue>>,
 ): Field<TValue>;
 export function field<TValue>(
-  value?: TValue,
-  validators?: Validators<NoInfer<TValue>>,
-  options?: FieldOptions<NoInfer<TValue>>,
-): Field<TValue>;
+  value?: TValue | null,
+  options?: NullableFieldOptions<NoInfer<TValue>>,
+): Field<TValue | null>;
 export function field<TValue>(
-  value?: TValue,
+  value?: TValue | null,
+  validators?: Validators<NoInfer<TValue | null>>,
+  options?: NullableFieldOptions<NoInfer<TValue>>,
+): Field<TValue | null>;
+export function field<TValue>(
+  value: TValue = null as TValue,
   validatorsOrOptions?: Validators<NoInfer<TValue>> | FieldOptions<NoInfer<TValue>>,
   separateOptions?: FieldOptions<NoInfer<TValue>>,
 ): Field<TValue> {

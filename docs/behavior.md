@@ -30,11 +30,14 @@ const age = field<number>(23);
 const optionalName = field<string>();
 ```
 
+Fields are nullable by default. The examples above have types `Field<string | null>`, `Field<number | null>`, and `Field<string | null>`. A field created without a value starts at `null`.
+
 The preferred signature accepts an optional initial value followed by an options object:
 
 ```ts
 const name = field('', {
   validators: [required],
+  nullable: true,
   disabled: false,
   readonly: false,
   hidden: false,
@@ -47,7 +50,7 @@ All options are optional, so state can be configured without supplying validator
 field('', [required], { disabled: false });
 ```
 
-In the separate-argument form, the validator array is the second argument and state options are the third argument. When no initial value is passed, the runtime value starts as `undefined`. Consumers should include `undefined` in the generic type when they want the static type to describe that possibility precisely.
+In the separate-argument form, the validator array is the second argument and state options are the third argument. When no initial value is passed, the runtime value starts as `null`.
 
 A field is callable and returns its current value:
 
@@ -153,6 +156,36 @@ Changes to any descendant are reflected reactively in every ancestor value.
 - Incorrect value types and unknown keys are rejected at compile time.
 - Field and form errors use the wide `ValidationErrors | null` type.
 
+## Field nullability
+
+Fields include `null` in their value type by default, independently of whether their initial value is null:
+
+```ts
+const name = field('David');
+// Field<string | null>
+
+const emptyName = field<string>(null, []);
+// Field<string | null>
+```
+
+The nullable type affects the complete field API. `value`, `set`, `patch`, `reset`, and validators all use `TValue | null`.
+
+Pass `nullable: false` to remove null from the field type:
+
+```ts
+const name = field('David', { nullable: false });
+// Field<string>
+
+name.set('Ana');
+// name.set(null); // TypeScript error
+```
+
+A non-nullable field requires a non-null initial value. `field<string>(null, { nullable: false })` is rejected by TypeScript.
+
+Nullability intentionally does not change reset behavior. In line with this library's Signal Forms-inspired reset model, `reset()` without a value preserves the current value and clears interaction state. It does not reset nullable fields to null or non-nullable fields to their initial value. `reset(value)` always uses the supplied value.
+
+This differs from Angular Reactive Forms, where `nonNullable` also controls whether a no-argument reset returns to null or to the initial value. Angular Signal Forms instead derives nullability from the model type and does not provide a nullability option.
+
 ## Value operations
 
 ### Field values
@@ -184,7 +217,7 @@ Calling reset on a nested form only resets that subtree. State belonging to sibl
 A validator receives the current node value and returns an error object or `null`:
 
 ```ts
-const required = (value: string) =>
+const required = (value: string | null) =>
   value === '' ? { required: true } : null;
 ```
 
