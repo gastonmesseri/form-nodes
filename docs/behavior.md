@@ -18,7 +18,8 @@ The package exports:
 
 - `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
-- The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `Validator`, and `Validators` types.
+- The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
+- `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorContext`, and `AsyncValidatorOptions` types.
 - Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
@@ -256,7 +257,33 @@ Field errors use their `Field<TValue>` as the target type. Form errors use their
 
 This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but is named `targetNode` to match this library's field-and-form node model. Angular's optional `formField` reference is not implemented: it identifies a concrete `[formField]` directive binding and will only make sense once this library has an equivalent binding layer.
 
-Validators are synchronous and stored as a readonly array. They can be supplied through `options.validators`, through the separate validator-array signature, or replaced later with `setValidators()`.
+Synchronous and asynchronous validators share one readonly validator array. Asynchronous validators must be explicitly wrapped with `asyncValidator()`; the library does not invoke a validator merely to detect whether it returns a Promise or Observable.
+
+```ts
+const username = field('', [
+  required,
+  asyncValidator(async ({ value, abortSignal }) => {
+    const available = await checkUsername(value(), abortSignal);
+    return available ? null : { kind: 'usernameTaken' };
+  }, { debounce: 300 }),
+]);
+```
+
+`AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context adds an `abortSignal` to the normal field context. Validators can pass it to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
+
+Asynchronous validation behavior follows Angular 22 Signal Forms where applicable, but uses an internal Promise runner rather than Angular Resource so creation never requires an injection context:
+
+- Asynchronous validators run only while the node is interactive and synchronous validation has no errors.
+- Starting a new run aborts the previous run and immediately clears its asynchronous errors.
+- `pending()` is true during debounce and execution.
+- While pending with no errors, `validationStatus()` is `unknown`, and both `valid()` and `invalid()` are false.
+- A completed error makes the validation status `invalid`; successful completion makes it `valid`.
+- Child pending and invalid states propagate to ancestor forms.
+- Disabling, hiding, or marking a node readonly cancels its active asynchronous validation. Returning it to an interactive state starts validation again.
+- Rejected Promises produce no validation error unless `onError` maps the rejection to a validation result.
+- Asynchronous results preserve validator-array order, not completion order.
+
+Asynchronous validators accept Promise-like or RxJS Observable results. An Observable represents one validation operation: its first emitted result is used and the subscription is then closed. Completing without emitting is treated as successful validation. A stale or cancelled validation unsubscribes immediately. Observable errors use the same `onError` mapping as rejected Promises.
 
 Validation behavior:
 
@@ -271,12 +298,14 @@ Validation behavior:
 - `setValidators()` applies the new validators to the current value without marking the node dirty.
 - Reset preserves validators and revalidates an assigned value.
 
-For an interactive field:
+For an interactive field without pending asynchronous validation:
 
 ```ts
 valid() === (errors().length === 0)
 invalid() === !valid()
 ```
+
+During pending asynchronous validation, `valid()` and `invalid()` are both false.
 
 A form is valid when its own validators produce no errors and every interactive child is valid. `form.api.errors()` contains only errors produced by validators attached directly to that form. A form can therefore be invalid because of a descendant while its own `errors()` remains empty.
 

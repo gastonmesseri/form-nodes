@@ -4,7 +4,7 @@ import { field } from '../primitives/field';
 import { required } from './validators/required';
 import { minLength } from './validators/min-length';
 
-describe('runValidators', () => {
+describe('runSyncValidators', () => {
   it('combines validators in fields', () => {
     const fieldNode = field('', [required, minLength(3)]);
     expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);

@@ -3,14 +3,15 @@ import { computed, signal, type Signal } from '@angular/core';
 import type { NodeApi } from '../types/node.type';
 import { markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
-import { runValidators } from '../validation/run-validators';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import type { ValidationError, Validators } from '../validation/validation.type';
+import { runSyncValidators } from '../validation/run-sync-validators';
+import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import type { ValidationError, ValidationStatus, Validators } from '../validation/validation.type';
 
 export type FieldOptions<TValue = any> = {
-  /** Synchronous validators applied to the field value. */
+  /** Synchronous and explicitly marked asynchronous validators applied to the field value. */
   readonly validators?: Validators<TValue>;
   /** Whether the field value includes null. Defaults to true and affects the public value type. */
   readonly nullable?: boolean;
@@ -32,6 +33,8 @@ export type FieldApi<TValue> = {
   errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  pending: Signal<boolean>;
+  validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
   markAsTouched(): void;
@@ -111,28 +114,50 @@ export function field<TValue>(
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   let fieldNode!: Field<TValue>;
-  const fieldErrors = computed(() => fieldNonInteractive()
+  const fieldSyncErrors = computed(() => fieldNonInteractive()
     ? []
-    : runValidators(fieldContext, fieldValidators(), fieldNode));
-  const fieldValid = computed(() => fieldErrors().length === 0);
+    : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
+  const asyncValidation = createAsyncValidation(
+    fieldContext,
+    fieldValidators,
+    fieldSyncErrors,
+    () => fieldNode,
+    () => !fieldNonInteractive(),
+  );
+  const fieldErrors = computed(() => [...fieldSyncErrors(), ...asyncValidation.errors()]);
+  const fieldValidationStatus = computed<ValidationStatus>(() => {
+    if (fieldNonInteractive()) return 'valid';
+    if (fieldErrors().length > 0) return 'invalid';
+    if (asyncValidation.pending()) return 'unknown';
+    return 'valid';
+  });
+  const revalidateAsyncValidators = () => asyncValidation.validate();
+  const notifyValueChange = () => {
+    revalidateAsyncValidators();
+    fieldParent()?._notifyValueChange?.();
+  };
   const set = (next: TValue) => {
     fieldValue.set(next);
     fieldDirty.set(true);
+    notifyValueChange();
   };
   const reset = (...args: [] | [value: TValue]) => {
     if (args.length === 1) fieldValue.set(args[0]);
     fieldTouched.set(false);
     fieldDirty.set(false);
+    notifyValueChange();
   };
   const members = {
     value: fieldValue.asReadonly(),
     set,
     reset,
     validators: fieldValidators.asReadonly(),
-    setValidators: (next: Validators<TValue>) => fieldValidators.set(next),
+    setValidators: (next: Validators<TValue>) => { fieldValidators.set(next); revalidateAsyncValidators(); },
     errors: fieldErrors,
-    valid: fieldValid,
-    invalid: computed(() => !fieldValid()),
+    valid: computed(() => fieldValidationStatus() === 'valid'),
+    invalid: computed(() => fieldValidationStatus() === 'invalid'),
+    pending: asyncValidation.pending,
+    validationStatus: fieldValidationStatus,
     touched: computed(() => !fieldNonInteractive() && fieldTouched()),
     untouched: computed(() => fieldNonInteractive() || !fieldTouched()),
     markAsTouched: () => { if (!fieldNonInteractive()) fieldTouched.set(true); },
@@ -143,26 +168,30 @@ export function field<TValue>(
     markAsPristine: () => fieldDirty.set(false),
     disabled: fieldDisabled,
     enabled: computed(() => !fieldDisabled()),
-    disable: () => fieldSelfDisabled.set(true),
-    enable: () => fieldSelfDisabled.set(false),
+    disable: () => { fieldSelfDisabled.set(true); revalidateAsyncValidators(); },
+    enable: () => { fieldSelfDisabled.set(false); revalidateAsyncValidators(); },
     readonly: fieldReadonly,
     writable: computed(() => !fieldReadonly()),
-    markAsReadonly: () => fieldSelfReadonly.set(true),
-    markAsWritable: () => fieldSelfReadonly.set(false),
+    markAsReadonly: () => { fieldSelfReadonly.set(true); revalidateAsyncValidators(); },
+    markAsWritable: () => { fieldSelfReadonly.set(false); revalidateAsyncValidators(); },
     hidden: fieldHidden,
     visible: computed(() => !fieldHidden()),
-    hide: () => fieldSelfHidden.set(true),
-    show: () => fieldSelfHidden.set(false),
+    hide: () => { fieldSelfHidden.set(true); revalidateAsyncValidators(); },
+    show: () => { fieldSelfHidden.set(false); revalidateAsyncValidators(); },
   };
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
-    _setParent: (parent: NodeApi | null) => fieldParent.set(parent),
+    _setParent: (parent: NodeApi | null) => { fieldParent.set(parent); revalidateAsyncValidators(); },
+    _revalidateAsyncValidators: revalidateAsyncValidators,
+    _notifyValueChange: notifyValueChange,
   };
   fieldNode = Object.assign(
     () => fieldValue(),
     members,
     { api: internalApi },
   ) as unknown as Field<TValue>;
-  return markAsNode(fieldNode) as unknown as Field<TValue>;
+  markAsNode(fieldNode);
+  revalidateAsyncValidators();
+  return fieldNode;
 }
