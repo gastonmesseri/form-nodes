@@ -1,11 +1,11 @@
 import { Injector, signal } from '@angular/core';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import { form } from '../primitives/form';
-import { field } from '../primitives/field';
+import { form, type FormApi } from '../primitives/form';
+import { field, type FieldApi } from '../primitives/field';
 import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
-import type { FieldContext, ObservableLike } from './validation.type';
+import type { AsyncValidatorApi, FieldContext, ObservableLike } from './validation.type';
 
 const settle = async () => {
   await Promise.resolve();
@@ -198,24 +198,92 @@ describe('asyncValidator', () => {
     expect(profile.api.valid()).toBe(true);
   });
 
-  it('provides a typed value and abort signal', () => {
-    asyncValidator<string>(async ({ value, abortSignal }) => {
-      expectTypeOf(value()).toEqualTypeOf<string>();
+  it('provides a value-typed API and abort signal by default', () => {
+    asyncValidator<number | null>(async ({ api, value, abortSignal }) => {
+      expectTypeOf(api).toEqualTypeOf<AsyncValidatorApi<number | null>>();
+      expectTypeOf(api.value()).toEqualTypeOf<number | null>();
+      expectTypeOf(api.set).toBeCallableWith(42);
+      expectTypeOf(api.set).toBeCallableWith(null);
+      expectTypeOf(value()).toEqualTypeOf<number | null>();
+      expectTypeOf(api.disabled()).toEqualTypeOf<boolean>();
+      expectTypeOf(api.readonly()).toEqualTypeOf<boolean>();
+      expectTypeOf(api.touched()).toEqualTypeOf<boolean>();
       expectTypeOf(abortSignal).toEqualTypeOf<AbortSignal>();
       return null;
     });
   });
 
+  it('accepts an explicit exact field API type', async () => {
+    let receivedApi: FieldApi<string | null> | undefined;
+    const name = field('David', [asyncValidator<string | null, FieldApi<string | null>>(async ({ api }) => {
+      expectTypeOf(api).toEqualTypeOf<FieldApi<string | null>>();
+      receivedApi = api;
+      return null;
+    })]);
+
+    await settle();
+
+    expect(receivedApi).toBe(name.api);
+  });
+
+  it('accepts an explicit exact form API type', async () => {
+    const country = field('CH');
+    type CountryFormApi = FormApi<{ country: typeof country }>;
+    let receivedApi: CountryFormApi | undefined;
+    const profile = form({ country }, [asyncValidator<{ country: string | null }, CountryFormApi>(async ({ api }) => {
+      expectTypeOf(api).toEqualTypeOf<CountryFormApi>();
+      receivedApi = api;
+      return null;
+    })]);
+
+    await settle();
+
+    expect(receivedApi).toBe(profile.api);
+  });
+
   it('provides typed explicit params to a parameterized validator', () => {
     asyncValidator({
       params: ({ value }: FieldContext<string>) => ({ country: 'CH', username: value() }),
-      validate: async ({ abortSignal, params, value }) => {
+      validate: async ({ abortSignal, params, api, value }) => {
         expectTypeOf(value()).toEqualTypeOf<string>();
         expectTypeOf(params).toEqualTypeOf<{ country: string; username: string }>();
+        expectTypeOf(api.dirty()).toEqualTypeOf<boolean>();
         expectTypeOf(abortSignal).toEqualTypeOf<AbortSignal>();
         return null;
       },
     });
+  });
+
+  it('reacts to interaction state read by an automatic validator', async () => {
+    const validate = vi.fn(async ({ api }) => api.touched() ? { kind: 'alreadyTouched' } : null);
+    const name = field('David', [asyncValidator(validate)]);
+
+    await settle();
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.errors()).toEqual([]);
+
+    name.markAsTouched();
+    await settle();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(name.errors()).toEqual([{ kind: 'alreadyTouched', targetNode: name }]);
+  });
+
+  it('allows explicit params to derive from asynchronous validator state', async () => {
+    const validate = vi.fn(async ({ params }) => params.dirty ? { kind: 'changed' } : null);
+    const name = field('David', [asyncValidator({
+      params: ({ api }) => ({ dirty: api.dirty() }),
+      validate,
+    })]);
+
+    await settle();
+    expect(name.errors()).toEqual([]);
+
+    name.markAsDirty();
+    await settle();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(name.errors()).toEqual([{ kind: 'changed', targetNode: name }]);
   });
 
   it('reacts to signals read by a validator outside an injection context', async () => {

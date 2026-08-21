@@ -1,18 +1,18 @@
-import type { AsyncValidator, FieldContext, ValidationResult } from '../validation/validation.type';
+import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult } from '../validation/validation.type';
 
-export type AsyncValidatorOptions<TValue> = {
+export type AsyncValidatorOptions<TValue, TApi = AsyncValidatorApi<TValue>> = {
   readonly debounce?: number;
-  readonly when?: (context: FieldContext<TValue>) => boolean;
-  readonly onError?: (error: unknown, context: FieldContext<TValue>) => ValidationResult;
+  readonly when?: (context: AsyncValidatorBaseContext<TValue, TApi>) => boolean;
+  readonly onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi>) => ValidationResult;
 };
 
-export type ParameterizedAsyncValidatorOptions<TValue, TParams> = AsyncValidatorOptions<TValue> & {
+export type ParameterizedAsyncValidatorOptions<TValue, TParams, TApi = AsyncValidatorApi<TValue>> = AsyncValidatorOptions<TValue, TApi> & {
   /** Reactively derives the explicit dependency snapshot passed to the validator. */
-  readonly params: (context: FieldContext<TValue>) => TParams;
+  readonly params: (context: AsyncValidatorBaseContext<TValue, TApi>) => TParams;
 };
 
 type StoredAsyncValidatorOptions<TValue> = AsyncValidatorOptions<TValue> & {
-  readonly params?: (context: FieldContext<TValue>) => unknown;
+  readonly params?: (context: AsyncValidatorBaseContext<TValue>) => unknown;
 };
 
 const asyncValidators = new WeakMap<Function, StoredAsyncValidatorOptions<any>>();

@@ -329,6 +329,26 @@ describe('form', () => {
     expect(formGroup.api.valid()).toBe(true);
   });
 
+  it('exposes its aggregate interaction state to an asynchronous validator', async () => {
+    const states: Array<{ dirty: boolean; touched: boolean }> = [];
+    const formGroup = form({ country: field('Switzerland') }, [asyncValidator(async ({ api }) => {
+      states.push({ dirty: api.dirty(), touched: api.touched() });
+      return null;
+    })]);
+
+    await Promise.resolve();
+    await Promise.resolve();
+    formGroup.country.markAsDirty();
+    formGroup.country.markAsTouched();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(states).toEqual([
+      { dirty: false, touched: false },
+      { dirty: true, touched: true },
+    ]);
+  });
+
   it('is invalid when a grandchild is invalid', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({
