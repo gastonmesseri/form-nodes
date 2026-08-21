@@ -16,7 +16,7 @@ describe('min', () => {
   it('tracks reactive limits', () => {
     const minimum = signal(3);
     const fieldNode = field(2, [min(minimum)]);
-    expect(fieldNode.errors()).toEqual([{ kind: 'min', min: 3 }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'min', min: 3 }]);
     minimum.set(2);
     expect(fieldNode.errors()).toEqual([]);
   });

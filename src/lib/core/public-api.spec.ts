@@ -48,12 +48,16 @@ describe('types', () => {
     const required = ({ value }: FieldContext<string>) =>
       value() === '' ? { kind: 'required' } : null;
     const fieldNode = field('', [required], { nullable: false });
-    expectTypeOf(fieldNode.errors()).toEqualTypeOf<readonly ValidationError[]>();
+    expectTypeOf(fieldNode.errors()).toEqualTypeOf<
+      readonly ValidationError.WithTargetNode<typeof fieldNode>[]
+    >();
   });
 
   it('types form errors as a readonly error array', () => {
     const formGroup = form({ age: field(23) });
-    expectTypeOf(formGroup.api.errors()).toEqualTypeOf<readonly ValidationError[]>();
+    expectTypeOf(formGroup.api.errors()).toEqualTypeOf<
+      readonly ValidationError.WithTargetNode<typeof formGroup>[]
+    >();
   });
 
   it('accepts validators on a field declared without them', () => {
