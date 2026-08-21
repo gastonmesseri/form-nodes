@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { form } from './form';
@@ -847,5 +848,29 @@ describe('form', () => {
     expect(formGroup.api.valid()).toBe(true);
     expect(formGroup.api.touched()).toBe(false);
     expect(formGroup.api.dirty()).toBe(false);
+  });
+
+  it('reacts to form state source functions', () => {
+    const locked = signal(false);
+    const readonly = signal(false);
+    const hidden = signal(false);
+    const formGroup = form(
+      { address: { city: field('Moscow') } },
+      undefined,
+      {
+        disabled: () => locked(),
+        readonly,
+        hidden,
+      },
+    );
+    locked.set(true);
+    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.address.city.disabled()).toBe(true);
+    locked.set(false);
+    readonly.set(true);
+    expect(formGroup.address.city.readonly()).toBe(true);
+    readonly.set(false);
+    hidden.set(true);
+    expect(formGroup.address.city.hidden()).toBe(true);
   });
 });

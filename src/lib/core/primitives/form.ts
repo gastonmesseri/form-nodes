@@ -4,12 +4,16 @@ import { isNode, markAsNode } from '../utils/node-marker';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import type { Node, NodeApi, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue } from '../types/node.type';
 
 export type FormOptions = {
-  readonly hidden?: boolean;
-  readonly disabled?: boolean;
-  readonly readonly?: boolean;
+  /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
+  readonly hidden?: boolean | (() => boolean);
+  /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
+  readonly disabled?: boolean | (() => boolean);
+  /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
+  readonly readonly?: boolean | (() => boolean);
 };
 
 export type FormValue<TNodes extends Nodes> = {
@@ -82,13 +86,19 @@ export const form = <TDefinitions extends NodeDefinitions & { api?: never }>(
     ]),
   ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
-  const formSelfDisabled = signal(options?.disabled ?? false);
+  const formSelfDisabled = signal(getInitialMutableState(options?.disabled));
   const formParent = signal<NodeApi | null>(null);
-  const formDisabled = computed(() => formSelfDisabled() || formParent()?.disabled() === true);
-  const formSelfReadonly = signal(options?.readonly ?? false);
-  const formReadonly = computed(() => formSelfReadonly() || formParent()?.readonly() === true);
-  const formSelfHidden = signal(options?.hidden ?? false);
-  const formHidden = computed(() => formSelfHidden() || formParent()?.hidden() === true);
+  const formDisabled = computed(() =>
+    formSelfDisabled() || readStateSource(options?.disabled) || formParent()?.disabled() === true,
+  );
+  const formSelfReadonly = signal(getInitialMutableState(options?.readonly));
+  const formReadonly = computed(() =>
+    formSelfReadonly() || readStateSource(options?.readonly) || formParent()?.readonly() === true,
+  );
+  const formSelfHidden = signal(getInitialMutableState(options?.hidden));
+  const formHidden = computed(() =>
+    formSelfHidden() || readStateSource(options?.hidden) || formParent()?.hidden() === true,
+  );
   const formNonInteractive = computed(() => formHidden() || formDisabled() || formReadonly());
   const formValue = computed(() => {
     const value = {} as FormValue<TNodes>;

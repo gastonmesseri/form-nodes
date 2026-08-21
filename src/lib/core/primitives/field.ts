@@ -5,11 +5,15 @@ import { markAsNode } from '../utils/node-marker';
 import { runValidators } from '../validation/run-validators';
 import type { ValidationErrors, Validators } from '../validation/validation.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 
 export type FieldOptions = {
-  readonly hidden?: boolean;
-  readonly disabled?: boolean;
-  readonly readonly?: boolean;
+  /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
+  readonly hidden?: boolean | (() => boolean);
+  /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
+  readonly disabled?: boolean | (() => boolean);
+  /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
+  readonly readonly?: boolean | (() => boolean);
 };
 
 export type FieldApi<TValue> = {
@@ -58,13 +62,19 @@ export const field = <TValue>(
   const fieldValidators = signal<Validators<TValue>>(validators ?? []);
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
-  const fieldSelfDisabled = signal(options?.disabled ?? false);
+  const fieldSelfDisabled = signal(getInitialMutableState(options?.disabled));
   const fieldParent = signal<NodeApi | null>(null);
-  const fieldDisabled = computed(() => fieldSelfDisabled() || fieldParent()?.disabled() === true);
-  const fieldSelfReadonly = signal(options?.readonly ?? false);
-  const fieldReadonly = computed(() => fieldSelfReadonly() || fieldParent()?.readonly() === true);
-  const fieldSelfHidden = signal(options?.hidden ?? false);
-  const fieldHidden = computed(() => fieldSelfHidden() || fieldParent()?.hidden() === true);
+  const fieldDisabled = computed(() =>
+    fieldSelfDisabled() || readStateSource(options?.disabled) || fieldParent()?.disabled() === true,
+  );
+  const fieldSelfReadonly = signal(getInitialMutableState(options?.readonly));
+  const fieldReadonly = computed(() =>
+    fieldSelfReadonly() || readStateSource(options?.readonly) || fieldParent()?.readonly() === true,
+  );
+  const fieldSelfHidden = signal(getInitialMutableState(options?.hidden));
+  const fieldHidden = computed(() =>
+    fieldSelfHidden() || readStateSource(options?.hidden) || fieldParent()?.hidden() === true,
+  );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   const fieldErrors = computed(() => fieldNonInteractive()
     ? null
