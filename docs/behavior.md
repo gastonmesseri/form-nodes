@@ -19,6 +19,7 @@ The package exports:
 - `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationErrors`, `Validator`, and `Validators` types.
+- Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
 
@@ -245,6 +246,59 @@ invalid() === !valid()
 A form is valid when its own validators produce no errors and every interactive child is valid. `form.api.errors()` contains only errors produced by validators attached directly to that form. A form can therefore be invalid because of a descendant while its own `errors()` remains `null`.
 
 Invalidity propagates upward through any number of nested forms. Fixing the failing descendant updates every ancestor.
+
+### Built-in validators
+
+Built-in validators can be passed anywhere a custom validator is accepted:
+
+```ts
+const username = field('', {
+  validators: [required, minLength(3), maxLength(30)],
+});
+
+const age = field<number>(null, {
+  validators: [required, min(18), max(120)],
+});
+```
+
+| Validator | Accepted value | Empty value behavior | Error shape |
+| --- | --- | --- | --- |
+| `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ required: true }` |
+| `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ min: { min, actual } }` |
+| `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ max: { max, actual } }` |
+| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ minLength: { minLength, actualLength } }` |
+| `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ maxLength: { maxLength, actualLength } }` |
+| `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ pattern: { pattern, actual } }` |
+| `email` | `string | null` | Passes for `null` and `''` | `{ email: true }` |
+| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ minDate: { minDate, actual } }` |
+| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ maxDate: { maxDate, actual } }` |
+
+`required` supports direct use and an options object with a message:
+
+```ts
+field('David', [required]);
+field('David', [required({ message: 'Name is required' })]);
+```
+
+The direct validator produces `{ required: true }`. The options form produces `{ required: { message } }` when validation fails. Passing a string directly is intentionally rejected. The internal validator runner distinguishes the direct validator from its factory call without exposing an internal marker in public types.
+
+Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
+
+The required emptiness rules follow Angular 22 Signal Forms. Empty arrays, empty sets, and empty objects are not considered empty by `required`. Length validators inspect `length` or `size`, so `minLength(1)` can reject an empty array or set.
+
+Numeric, length, date, and pattern constraints can be static values or zero-argument functions:
+
+```ts
+const minimumAge = signal(18);
+
+const age = field<number>(null, {
+  validators: [min(minimumAge)],
+});
+```
+
+Constraint functions execute during computed validation, so Angular signals read by them are tracked. Returning `undefined` temporarily disables that constraint. `pattern()` accepts a `RegExp` or a function returning a `RegExp | undefined`.
+
+The email expression matches Angular's Signal Forms implementation, including its local-part, domain-label, and total-length restrictions.
 
 ## Touched state
 
