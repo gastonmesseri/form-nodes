@@ -260,6 +260,26 @@ describe('form', () => {
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
   });
 
+  it('restarts its debounced asynchronous validation when a descendant changes', async () => {
+    vi.useFakeTimers();
+    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) =>
+      value().country === 'Germany' ? { kind: 'countryNotAllowed' } : null,
+    );
+    const formGroup = form(
+      { country: field('Switzerland') },
+      [asyncValidator(validate, { debounce: 100 })],
+    );
+
+    formGroup.country.set('Germany');
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(formGroup.api.pending()).toBe(false);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
+    vi.useRealTimers();
+  });
+
   it('is invalid when a grandchild is invalid', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({

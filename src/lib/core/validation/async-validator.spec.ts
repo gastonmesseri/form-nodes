@@ -146,6 +146,44 @@ describe('asyncValidator', () => {
     expect(name.errors()).toEqual([{ kind: 'unavailable', targetNode: name }]);
   });
 
+  it('debounces node value changes without losing reactive tracking', async () => {
+    vi.useFakeTimers();
+    const validate = vi.fn(async ({ value }) => value() === 'final' ? { kind: 'taken' } : null);
+    const name = field('initial', [asyncValidator(validate, { debounce: 100 })]);
+
+    name.set('intermediate');
+    await Promise.resolve();
+    name.set('final');
+    await Promise.resolve();
+
+    expect(validate).not.toHaveBeenCalled();
+    expect(name.pending()).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.errors()).toEqual([{ kind: 'taken', targetNode: name }]);
+    vi.useRealTimers();
+  });
+
+  it('reacts to signals discovered when a debounced validator runs', async () => {
+    vi.useFakeTimers();
+    const dependency = signal('available');
+    const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
+    const name = field('David', [asyncValidator(validate, { debounce: 100 })]);
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(validate).toHaveBeenCalledOnce();
+
+    dependency.set('unavailable');
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(name.errors()).toEqual([{ kind: 'unavailable', targetNode: name }]);
+    vi.useRealTimers();
+  });
+
   it('stops reactive validation when its explicit injector is destroyed', async () => {
     const dependency = signal('available');
     const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
@@ -167,5 +205,20 @@ describe('asyncValidator', () => {
     await settle();
 
     expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('clears a debounce timer when its explicit injector is destroyed', async () => {
+    vi.useFakeTimers();
+    const validate = vi.fn(async () => null);
+    const injector = Injector.create({ providers: [] });
+    field('David', [asyncValidator(validate, { debounce: 100 })], { injector });
+
+    expect(vi.getTimerCount()).toBe(1);
+    injector.destroy();
+
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(validate).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });

@@ -4,6 +4,17 @@ import { DestroyRef, Injector, assertInInjectionContext, inject } from '@angular
 export type ReactiveWatchTarget = {
   run(): void;
   cleanup(): void;
+  destroy?(): void;
+};
+
+export type TrackedRunner = {
+  run<T>(callback: () => T): T;
+  destroy(): void;
+};
+
+type TrackedRunnerTarget = {
+  callback: (() => unknown) | null;
+  notify(): void;
 };
 
 const finalizationRegistry = new FinalizationRegistry<Watch>((watch) => watch.destroy());
@@ -44,8 +55,34 @@ export const createReactiveWatch = (
   finalizationRegistry.register(target, watch, watch);
   getDestroyRef(injector)?.onDestroy(() => {
     finalizationRegistry.unregister(watch);
+    targetRef.deref()?.destroy?.();
     watch.destroy();
   });
   watch.run();
   return watch;
+};
+
+export const createTrackedRunner = (target: TrackedRunnerTarget): TrackedRunner => {
+  const targetRef = new WeakRef(target);
+  const watch = createWatch(
+    () => targetRef.deref()?.callback?.(),
+    () => targetRef.deref()?.notify(),
+    true,
+  );
+  finalizationRegistry.register(target, watch, watch);
+  return {
+    run: <T>(callback: () => T): T => {
+      const currentTarget = targetRef.deref();
+      if (!currentTarget) return callback();
+      let result!: T;
+      currentTarget.callback = () => { result = callback(); };
+      watch.run();
+      currentTarget.callback = null;
+      return result;
+    },
+    destroy: () => {
+      finalizationRegistry.unregister(watch);
+      watch.destroy();
+    },
+  };
 };

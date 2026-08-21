@@ -123,6 +123,23 @@ describe('field', () => {
     expect(fieldNode.errors()).toMatchObject([{ kind: 'unavailable' }]);
   });
 
+  it('restarts debounced asynchronous validation when its value changes', async () => {
+    vi.useFakeTimers();
+    const validate = vi.fn(async ({ value }: Context<string | null>) =>
+      value() === 'David' ? { kind: 'nameTaken' } : null,
+    );
+    const fieldNode = field('Daniel', [asyncValidator(validate, { debounce: 100 })]);
+
+    fieldNode.set('David');
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(fieldNode.pending()).toBe(false);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'nameTaken' }]);
+    vi.useRealTimers();
+  });
+
   it('collects the errors of several validators in order', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const minLength = ({ value }: Context<string | null>) =>

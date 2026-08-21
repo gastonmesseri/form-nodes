@@ -138,7 +138,7 @@ export function field<TValue>(
   let asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
   const ensureAsyncValidationWatch = () => {
     if (asyncValidationWatchTarget || !fieldValidators().some(isAsyncValidator)) return;
-    asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel };
+    asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel, destroy: asyncValidation.destroy };
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const set = (next: TValue) => {
