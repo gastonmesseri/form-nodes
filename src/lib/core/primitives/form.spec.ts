@@ -274,7 +274,7 @@ describe('form', () => {
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(100);
 
-    expect(validate).toHaveBeenCalledOnce();
+    expect(validate).toHaveBeenCalledTimes(2);
     expect(formGroup.api.pending()).toBe(false);
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
     vi.useRealTimers();

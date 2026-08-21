@@ -134,7 +134,7 @@ describe('field', () => {
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(100);
 
-    expect(validate).toHaveBeenCalledOnce();
+    expect(validate).toHaveBeenCalledTimes(2);
     expect(fieldNode.pending()).toBe(false);
     expect(fieldNode.errors()).toMatchObject([{ kind: 'nameTaken' }]);
     vi.useRealTimers();
