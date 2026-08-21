@@ -46,6 +46,11 @@ export type AsyncValidatorContext<TValue> = FieldContext<TValue> & {
   readonly abortSignal: AbortSignal;
 };
 
+export type ParameterizedAsyncValidatorContext<TValue, TParams> = AsyncValidatorContext<TValue> & {
+  /** Snapshot returned by the validator's reactive `params` function. */
+  readonly params: TParams;
+};
+
 export type SubscriptionLike = {
   unsubscribe(): void;
 };

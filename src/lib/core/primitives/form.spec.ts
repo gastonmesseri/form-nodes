@@ -255,6 +255,8 @@ describe('form', () => {
     allowedCountry.set('Germany');
     await Promise.resolve();
     await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(validate).toHaveBeenCalledTimes(2);
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
@@ -278,6 +280,30 @@ describe('form', () => {
     expect(formGroup.api.pending()).toBe(false);
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
     vi.useRealTimers();
+  });
+
+  it('passes an explicit reactive params snapshot to its asynchronous validator', async () => {
+    const allowedCountry = signal('Switzerland');
+    const validate = vi.fn(async ({ params }: { params: { allowed: string; country: string | null } }) =>
+      params.country === params.allowed ? null : { kind: 'countryNotAllowed' },
+    );
+    const formGroup = form({ country: field('Switzerland') }, [asyncValidator({
+      params: ({ value }) => ({ allowed: allowedCountry(), country: value().country }),
+      validate,
+    })]);
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(formGroup.api.errors()).toEqual([]);
+
+    allowedCountry.set('Germany');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenLastCalledWith(expect.objectContaining({
+      params: { allowed: 'Germany', country: 'Switzerland' },
+    }));
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
   });
 
   it('is invalid when a grandchild is invalid', () => {

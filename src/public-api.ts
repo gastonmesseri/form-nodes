@@ -2,7 +2,7 @@ export { field } from './lib/core/primitives/field';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export { form } from './lib/core/primitives/form';
 export { asyncValidator } from './lib/core/validation/async-validator';
-export type { AsyncValidatorOptions } from './lib/core/validation/async-validator';
+export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/core/validation/async-validator';
 export type {
   Form,
   FormApi,
@@ -19,6 +19,7 @@ export type {
   SubscriptionLike,
   AsyncValidator,
   AsyncValidatorContext,
+  ParameterizedAsyncValidatorContext,
   ValidationError,
   ValidationResult,
   ValidationSuccess,

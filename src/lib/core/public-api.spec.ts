@@ -3,6 +3,7 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import { form } from './primitives/form';
 import { field } from './primitives/field';
+import { asyncValidator } from './validation/async-validator';
 import { required } from './validation/validators/required';
 import type { FieldContext, ValidationError } from './validation/validation.type';
 
@@ -77,6 +78,17 @@ describe('types', () => {
       nullable: false,
       disabled: false,
     });
+  });
+
+  it('infers explicit asynchronous validator params', () => {
+    const country = signal('Switzerland');
+    field('David', [asyncValidator({
+      params: ({ value }) => ({ country: country(), name: value() }),
+      validate: async ({ params }) => {
+        expectTypeOf(params).toEqualTypeOf<{ country: string; name: string | null }>();
+        return null;
+      },
+    })]);
   });
 
   it('types the context a form validator receives', () => {

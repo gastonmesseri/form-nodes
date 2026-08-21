@@ -140,6 +140,46 @@ describe('field', () => {
     vi.useRealTimers();
   });
 
+  it('passes an explicit reactive params snapshot to an asynchronous validator', async () => {
+    const country = signal('Switzerland');
+    const validate = vi.fn(async ({ params }: { params: { country: string; name: string | null } }) =>
+      params.country === 'Switzerland' && params.name === 'David' ? { kind: 'nameTaken' } : null,
+    );
+    const fieldNode = field('David', [asyncValidator({
+      params: ({ value }) => ({ country: country(), name: value() }),
+      validate,
+    })]);
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledWith(expect.objectContaining({
+      params: { country: 'Switzerland', name: 'David' },
+    }));
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'nameTaken' }]);
+  });
+
+  it('only reruns a parameterized asynchronous validator when its shallow params change', async () => {
+    const person = signal({ firstName: 'David', lastName: 'Smith' });
+    const validate = vi.fn(async () => null);
+    field('profile', [asyncValidator({
+      params: () => ({ username: person().firstName }),
+      validate,
+    })]);
+
+    await Promise.resolve();
+    await Promise.resolve();
+    person.set({ firstName: 'David', lastName: 'Jones' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    person.set({ firstName: 'Daniel', lastName: 'Jones' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
   it('collects the errors of several validators in order', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const minLength = ({ value }: Context<string | null>) =>
