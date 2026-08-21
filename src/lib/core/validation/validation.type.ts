@@ -1,4 +1,3 @@
-import type { Observable } from 'rxjs';
 import type { Signal } from '@angular/core';
 
 /** A validation error produced by a validator. */
@@ -47,7 +46,21 @@ export type AsyncValidatorContext<TValue> = FieldContext<TValue> & {
   readonly abortSignal: AbortSignal;
 };
 
-export type AsyncValidationResult = PromiseLike<ValidationResult> | Observable<ValidationResult>;
+export type SubscriptionLike = {
+  unsubscribe(): void;
+};
+
+export type ObserverLike<TValue> = {
+  next(value: TValue): void;
+  error(error: unknown): void;
+  complete(): void;
+};
+
+export type ObservableLike<TValue> = {
+  subscribe(observer: ObserverLike<TValue>): SubscriptionLike;
+};
+
+export type AsyncValidationResult = PromiseLike<ValidationResult> | ObservableLike<ValidationResult>;
 
 export type Validator<TValue> = (context: FieldContext<TValue>) => ValidationResult;
 

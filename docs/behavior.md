@@ -296,7 +296,7 @@ The watcher does not require dependency injection. When an explicit or current i
 
 Debounced validators execute after the effect's synchronous tracking window. Signals read only inside a debounced validator cannot therefore be discovered automatically. Changes made through the form tree still trigger them explicitly. This limitation preserves real pre-execution debounce and avoids invoking validators twice merely to discover dependencies.
 
-Asynchronous validators accept Promise-like or RxJS Observable results. An Observable represents one validation operation: its first emitted result is used and the subscription is then closed. Completing without emitting is treated as successful validation. A stale or cancelled validation unsubscribes immediately. Observable errors use the same `onError` mapping as rejected Promises.
+Asynchronous validators accept Promise-like or structurally typed `ObservableLike` results. RxJS Observables satisfy this interface without making RxJS a dependency of the library. An observable-like result represents one validation operation: its first emitted result is used and the subscription is then closed. Completing without emitting is treated as successful validation. A stale or cancelled validation unsubscribes immediately. Observable errors use the same `onError` mapping as rejected Promises.
 
 Validation behavior:
 

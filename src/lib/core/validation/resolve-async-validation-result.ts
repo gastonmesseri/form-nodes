@@ -1,34 +1,58 @@
-import { isObservable, type Observable } from 'rxjs';
+import { isObservableLike } from '../utils/is-observable-like';
+import { isSubscriptionLike } from '../utils/is-subscription-like';
+import type { AsyncValidationResult, ObservableLike, SubscriptionLike, ValidationResult } from './validation.type';
 
-import type { AsyncValidationResult, ValidationResult } from './validation.type';
+type ObservableEvent =
+  | { readonly type: 'next'; readonly value: ValidationResult }
+  | { readonly type: 'error'; readonly error: unknown }
+  | { readonly type: 'complete' };
 
 const resolveObservable = (
-  observable: Observable<ValidationResult>,
+  observable: ObservableLike<ValidationResult>,
   abortSignal: AbortSignal,
 ): Promise<ValidationResult> => new Promise((resolve, reject) => {
   let settled = false;
-  let subscription: ReturnType<Observable<ValidationResult>['subscribe']> | undefined;
-  const settle = (result: ValidationResult) => {
+  let subscribing = true;
+  let subscription: SubscriptionLike | undefined;
+  let synchronousEvent: ObservableEvent | undefined;
+  const settle = (event: ObservableEvent) => {
     if (settled) return;
+    if (subscribing) {
+      synchronousEvent ??= event;
+      return;
+    }
     settled = true;
-    resolve(result);
+    if (event.type === 'error') reject(event.error);
+    else resolve(event.type === 'next' ? event.value : undefined);
     subscription?.unsubscribe();
   };
-  subscription = observable.subscribe({
-    next: settle,
-    error: reject,
-    complete: () => settle(undefined),
-  });
-  if (settled) subscription.unsubscribe();
+  let subscriptionCandidate: unknown;
+  try {
+    subscriptionCandidate = observable.subscribe({
+      next: (value) => settle({ type: 'next', value }),
+      error: (error) => settle({ type: 'error', error }),
+      complete: () => settle({ type: 'complete' }),
+    });
+  } catch (error) {
+    subscribing = false;
+    settle({ type: 'error', error });
+    return;
+  }
+  subscribing = false;
+  if (!isSubscriptionLike(subscriptionCandidate)) {
+    settle({ type: 'error', error: new TypeError('ObservableLike.subscribe() must return a SubscriptionLike') });
+    return;
+  }
+  subscription = subscriptionCandidate;
+  if (synchronousEvent) settle(synchronousEvent);
   abortSignal.addEventListener('abort', () => {
-    subscription?.unsubscribe();
-    settle(undefined);
+    settle({ type: 'complete' });
   }, { once: true });
 });
 
 export const resolveAsyncValidationResult = (
   result: AsyncValidationResult,
   abortSignal: AbortSignal,
-): PromiseLike<ValidationResult> => isObservable(result)
+): PromiseLike<ValidationResult> => isObservableLike<ValidationResult>(result)
   ? resolveObservable(result, abortSignal)
   : result;
