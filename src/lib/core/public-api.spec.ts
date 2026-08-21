@@ -15,6 +15,25 @@ describe('types', () => {
     expectTypeOf<ExposesSetParent>().toEqualTypeOf<false>();
   });
 
+  it('hides native function members from validator tree nodes', () => {
+    field('David', {
+      validators: [({ api }) => {
+        const parent = api.parent();
+        const rootForm = api.form();
+        if (parent && rootForm) {
+          expectTypeOf(parent).toBeCallableWith();
+          expectTypeOf(rootForm).toBeCallableWith();
+          // @ts-expect-error native function members are intentionally hidden
+          parent.apply(null);
+          // @ts-expect-error native function members are intentionally hidden
+          rootForm.bind(null);
+        }
+        return null;
+      }],
+      nullable: false,
+    });
+  });
+
   it('types each parent through the form that owns the node', () => {
     const profile = form({
       name: field('David'),
