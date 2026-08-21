@@ -306,6 +306,29 @@ describe('form', () => {
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
   });
 
+  it('reactively includes or excludes its asynchronous validator through when', async () => {
+    const enabled = signal(false);
+    const validate = vi.fn(async () => ({ kind: 'countryNotAllowed' }));
+    const formGroup = form({ country: field('Switzerland') }, [asyncValidator(validate, {
+      when: () => enabled(),
+    })]);
+
+    expect(formGroup.api.valid()).toBe(true);
+    expect(validate).not.toHaveBeenCalled();
+
+    enabled.set(true);
+    await Promise.resolve();
+    expect(formGroup.api.pending()).toBe(true);
+    await Promise.resolve();
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
+
+    enabled.set(false);
+    await Promise.resolve();
+    expect(formGroup.api.pending()).toBe(false);
+    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.api.valid()).toBe(true);
+  });
+
   it('is invalid when a grandchild is invalid', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({

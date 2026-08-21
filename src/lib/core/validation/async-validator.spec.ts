@@ -92,6 +92,82 @@ describe('asyncValidator', () => {
     expect(name.invalid()).toBe(true);
   });
 
+  it('only runs while its reactive when condition is true', async () => {
+    const enabled = signal(false);
+    const validate = vi.fn(async () => ({ kind: 'taken' }));
+    const name = field('David', [asyncValidator(validate, {
+      when: () => enabled(),
+    })]);
+
+    expect(validate).not.toHaveBeenCalled();
+    expect(name.pending()).toBe(false);
+    expect(name.errors()).toEqual([]);
+
+    enabled.set(true);
+    await settle();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.errors()).toEqual([{ kind: 'taken', targetNode: name }]);
+
+    enabled.set(false);
+    await settle();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.pending()).toBe(false);
+    expect(name.errors()).toEqual([]);
+  });
+
+  it('aborts in-flight validation when its when condition becomes false', async () => {
+    const enabled = signal(true);
+    const signals: AbortSignal[] = [];
+    const validate = vi.fn(({ abortSignal }) => {
+      signals.push(abortSignal);
+      return new Promise<null>(() => undefined);
+    });
+    const name = field('David', [asyncValidator(validate, {
+      when: () => enabled(),
+    })]);
+
+    expect(name.pending()).toBe(true);
+    enabled.set(false);
+    await settle();
+
+    expect(signals[0]?.aborted).toBe(true);
+    expect(name.pending()).toBe(false);
+    expect(name.errors()).toEqual([]);
+  });
+
+  it('does not evaluate params or finish debounce while when is false', async () => {
+    vi.useFakeTimers();
+    const enabled = signal(false);
+    const params = vi.fn(({ value }) => ({ username: value() }));
+    const validate = vi.fn(async () => null);
+    const name = field('David', [asyncValidator({
+      debounce: 100,
+      params,
+      validate,
+      when: () => enabled(),
+    })]);
+
+    expect(params).not.toHaveBeenCalled();
+    expect(validate).not.toHaveBeenCalled();
+    expect(name.pending()).toBe(false);
+
+    enabled.set(true);
+    await Promise.resolve();
+    expect(params).toHaveBeenCalledOnce();
+    expect(name.pending()).toBe(true);
+
+    enabled.set(false);
+    await Promise.resolve();
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(validate).not.toHaveBeenCalled();
+    expect(name.pending()).toBe(false);
+    vi.useRealTimers();
+  });
+
   it('aborts stale validation and ignores its result', async () => {
     const signals: AbortSignal[] = [];
     const name = field('first', [asyncValidator(({ value, abortSignal }) => {
