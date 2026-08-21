@@ -1,8 +1,8 @@
 import { computed, signal, type Signal } from '@angular/core';
 
-import type { NodeApi } from '../types/node.type';
 import { markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
+import type { InternalNodeApi } from '../types/node.type';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createAsyncValidation } from '../validation/create-async-validation';
@@ -100,7 +100,7 @@ export function field<TValue>(
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
   const fieldSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
-  const fieldParent = signal<NodeApi | null>(null);
+  const fieldParent = signal<InternalNodeApi | null>(null);
   const fieldDisabled = computed(() =>
     fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.disabled() === true,
   );
@@ -182,7 +182,7 @@ export function field<TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
-    _setParent: (parent: NodeApi | null) => { fieldParent.set(parent); revalidateAsyncValidators(); },
+    _setParent: (parent: InternalNodeApi | null) => { fieldParent.set(parent); revalidateAsyncValidators(); },
     _revalidateAsyncValidators: revalidateAsyncValidators,
     _notifyValueChange: notifyValueChange,
   };

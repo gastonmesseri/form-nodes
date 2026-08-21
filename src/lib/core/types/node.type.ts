@@ -1,6 +1,6 @@
 import type { Signal } from '@angular/core';
 
-export type NodeApi = {
+export type InternalNodeApi = {
   set(value: any): void;
   patch(value: any): void;
   reset(...args: [] | [value: any]): void;
@@ -22,12 +22,12 @@ export type NodeApi = {
   hidden: Signal<boolean>;
   hide(): void;
   show(): void;
-  _setParent?(parent: NodeApi | null): void;
+  _setParent?(parent: InternalNodeApi | null): void;
   _revalidateAsyncValidators?(): void;
   _notifyValueChange?(): void;
 };
 
-export type Node = (() => any) & { api: NodeApi };
+export type Node = (() => any) & { api: InternalNodeApi };
 export type Nodes = Record<string, Node>;
 export type NodeDefinition = Node | NodeDefinitions;
 export interface NodeDefinitions {
