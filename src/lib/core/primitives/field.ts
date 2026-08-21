@@ -1,9 +1,11 @@
-import { computed, signal, type Signal } from '@angular/core';
+import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import { markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
 import type { InternalNodeApi } from '../types/node.type';
+import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
+import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -15,6 +17,8 @@ export type FieldOptions<TValue = any> = {
   readonly validators?: Validators<TValue>;
   /** Whether the field value includes null. Defaults to true and affects the public value type. */
   readonly nullable?: boolean;
+  /** Optional injector that owns the asynchronous validation watcher lifecycle. */
+  readonly injector?: Injector;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
@@ -131,28 +135,30 @@ export function field<TValue>(
     if (asyncValidation.pending()) return 'unknown';
     return 'valid';
   });
-  const revalidateAsyncValidators = () => asyncValidation.validate();
-  const notifyValueChange = () => {
-    revalidateAsyncValidators();
-    fieldParent()?._notifyValueChange?.();
+  let asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
+  const ensureAsyncValidationWatch = () => {
+    if (asyncValidationWatchTarget || !fieldValidators().some(isAsyncValidator)) return;
+    asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel };
+    createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const set = (next: TValue) => {
     fieldValue.set(next);
     fieldDirty.set(true);
-    notifyValueChange();
   };
   const reset = (...args: [] | [value: TValue]) => {
     if (args.length === 1) fieldValue.set(args[0]);
     fieldTouched.set(false);
     fieldDirty.set(false);
-    notifyValueChange();
   };
   const members = {
     value: fieldValue.asReadonly(),
     set,
     reset,
     validators: fieldValidators.asReadonly(),
-    setValidators: (next: Validators<TValue>) => { fieldValidators.set(next); revalidateAsyncValidators(); },
+    setValidators: (next: Validators<TValue>) => {
+      fieldValidators.set(next);
+      ensureAsyncValidationWatch();
+    },
     errors: fieldErrors,
     valid: computed(() => fieldValidationStatus() === 'valid'),
     invalid: computed(() => fieldValidationStatus() === 'invalid'),
@@ -168,23 +174,21 @@ export function field<TValue>(
     markAsPristine: () => fieldDirty.set(false),
     disabled: fieldDisabled,
     enabled: computed(() => !fieldDisabled()),
-    disable: () => { fieldSelfDisabled.set(true); revalidateAsyncValidators(); },
-    enable: () => { fieldSelfDisabled.set(false); revalidateAsyncValidators(); },
+    disable: () => fieldSelfDisabled.set(true),
+    enable: () => fieldSelfDisabled.set(false),
     readonly: fieldReadonly,
     writable: computed(() => !fieldReadonly()),
-    markAsReadonly: () => { fieldSelfReadonly.set(true); revalidateAsyncValidators(); },
-    markAsWritable: () => { fieldSelfReadonly.set(false); revalidateAsyncValidators(); },
+    markAsReadonly: () => fieldSelfReadonly.set(true),
+    markAsWritable: () => fieldSelfReadonly.set(false),
     hidden: fieldHidden,
     visible: computed(() => !fieldHidden()),
-    hide: () => { fieldSelfHidden.set(true); revalidateAsyncValidators(); },
-    show: () => { fieldSelfHidden.set(false); revalidateAsyncValidators(); },
+    hide: () => fieldSelfHidden.set(true),
+    show: () => fieldSelfHidden.set(false),
   };
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
-    _setParent: (parent: InternalNodeApi | null) => { fieldParent.set(parent); revalidateAsyncValidators(); },
-    _revalidateAsyncValidators: revalidateAsyncValidators,
-    _notifyValueChange: notifyValueChange,
+    _setParent: (parent: InternalNodeApi | null) => fieldParent.set(parent),
   };
   fieldNode = Object.assign(
     () => fieldValue(),
@@ -192,6 +196,6 @@ export function field<TValue>(
     { api: internalApi },
   ) as unknown as Field<TValue>;
   markAsNode(fieldNode);
-  revalidateAsyncValidators();
+  ensureAsyncValidationWatch();
   return fieldNode;
 }

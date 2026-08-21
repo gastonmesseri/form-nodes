@@ -8,7 +8,8 @@ The internal state model is inspired by Angular 22 Signal Forms. The current ref
 
 - The library provides small, typed, signal-based `field()` and `form()` primitives.
 - `field()` and `form()` can be created and used anywhere without an Angular injection context.
-- Their required execution paths do not use `inject()` or injection-context-dependent effects.
+- Synchronous behavior and node-driven asynchronous validation do not require dependency injection.
+- Asynchronous validators always use an Angular reactive watcher, including outside an injection context.
 - Signals expose reactive state while actions are declared as methods in public types, allowing editors to distinguish state from behavior in IntelliSense.
 - Values remain programmatically readable and writable regardless of disabled, readonly, or hidden state.
 
@@ -39,6 +40,7 @@ The preferred signature accepts an optional initial value followed by an options
 ```ts
 const name = field('', {
   validators: [required],
+  injector,
   nullable: true,
   disabled: false,
   readonly: false,
@@ -51,6 +53,8 @@ All options are optional, so state can be configured without supplying validator
 ```ts
 field('', [required], { disabled: false });
 ```
+
+`injector` is optional. When supplied, its `DestroyRef` deterministically owns the asynchronous validation watcher.
 
 In the separate-argument form, the validator array is the second argument and state options are the third argument. When no initial value is passed, the runtime value starts as `null`.
 
@@ -84,7 +88,8 @@ const profile = form(
     billingCity: field('Zurich'),
   },
   {
-    validators: [sameCity],
+      validators: [sameCity],
+      injector,
     disabled: false,
     readonly: false,
     hidden: false,
@@ -97,6 +102,8 @@ All options are optional, so form state can be configured without supplying vali
 ```ts
 form({ name: field('David') }, [validator], { hidden: false });
 ```
+
+`injector` has the same optional asynchronous-validation role as it does for fields.
 
 A definition can contain fields, explicit nested forms, or shorthand nested objects.
 
@@ -271,7 +278,7 @@ const username = field('', [
 
 `AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context adds an `abortSignal` to the normal field context. Validators can pass it to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
 
-Asynchronous validation behavior follows Angular 22 Signal Forms where applicable, but uses an internal Promise runner rather than Angular Resource so creation never requires an injection context:
+Asynchronous validation behavior follows Angular 22 Signal Forms where applicable, but uses an internal Promise-and-Observable runner rather than Angular Resource so creation never requires an injection context:
 
 - Asynchronous validators run only while the node is interactive and synchronous validation has no errors.
 - Starting a new run aborts the previous run and immediately clears its asynchronous errors.
@@ -282,6 +289,12 @@ Asynchronous validation behavior follows Angular 22 Signal Forms where applicabl
 - Disabling, hiding, or marking a node readonly cancels its active asynchronous validation. Returning it to an interactive state starts validation again.
 - Rejected Promises produce no validation error unless `onError` maps the rejection to a validation result.
 - Asynchronous results preserve validator-array order, not completion order.
+
+Asynchronous validation is coordinated by a watcher built on Angular's public signals primitives. A validator without debounce is invoked synchronously during the watcher run, so signals read before the validator's first asynchronous boundary become dependencies and automatically trigger a new validation. This includes sibling fields or external signals captured by the validator.
+
+The watcher does not require dependency injection. When an explicit or current injector exists, its `DestroyRef` owns the watcher; destroying it stops future reactive executions and cancels the current Promise or Observable operation. Outside an injection context, the watcher weakly references its node-owned target, and a `FinalizationRegistry` disconnects it if that target becomes unreachable. Garbage-collection cleanup is necessarily nondeterministic, while injector cleanup is immediate.
+
+Debounced validators execute after the effect's synchronous tracking window. Signals read only inside a debounced validator cannot therefore be discovered automatically. Changes made through the form tree still trigger them explicitly. This limitation preserves real pre-execution debounce and avoids invoking validators twice merely to discover dependencies.
 
 Asynchronous validators accept Promise-like or RxJS Observable results. An Observable represents one validation operation: its first emitted result is used and the subscription is then closed. Completing without emitting is treated as successful validation. A stale or cancelled validation unsubscribes immediately. Observable errors use the same `onError` mapping as rejected Promises.
 

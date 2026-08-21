@@ -1,9 +1,11 @@
-import { computed, signal, type Signal } from '@angular/core';
+import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import { isNode, markAsNode } from '../utils/node-marker';
 import { isValidators } from '../validation/is-validators';
+import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -13,6 +15,8 @@ import type { InternalNodeApi, Node, NodeDefinition, NodeDefinitions, NodePatch,
 export type FormOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
   readonly validators?: Validators<TValue>;
+  /** Optional injector that owns the asynchronous validation watcher lifecycle. */
+  readonly injector?: Injector;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
@@ -153,10 +157,11 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     if (formPending()) return 'unknown';
     return 'valid';
   });
-  const revalidateAsyncValidators = () => asyncValidation.validate();
-  const notifyValueChange = () => {
-    revalidateAsyncValidators();
-    formParent()?._notifyValueChange?.();
+  let asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
+  const ensureAsyncValidationWatch = () => {
+    if (asyncValidationWatchTarget || !formValidators().some(isAsyncValidator)) return;
+    asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel };
+    createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const formTouched = computed(() =>
     !formNonInteractive() && controlKeys().some((key) => controls[key]!.api.touched()),
@@ -198,7 +203,10 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     patch,
     reset,
     validators: formValidators.asReadonly(),
-    setValidators: (next) => { formValidators.set(next); revalidateAsyncValidators(); },
+    setValidators: (next) => {
+      formValidators.set(next);
+      ensureAsyncValidationWatch();
+    },
     errors: formErrors,
     valid: computed(() => formValidationStatus() === 'valid'),
     invalid: computed(() => formValidationStatus() === 'invalid'),
@@ -214,22 +222,20 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     markAsPristine: () => controlKeys().forEach((key) => controls[key]!.api.markAsPristine()),
     disabled: formDisabled,
     enabled: computed(() => !formDisabled()),
-    disable: () => { formSelfDisabled.set(true); revalidateAsyncValidators(); controlKeys().forEach((key) => (controls[key] as Node).api._revalidateAsyncValidators?.()); },
-    enable: () => { formSelfDisabled.set(false); revalidateAsyncValidators(); controlKeys().forEach((key) => (controls[key] as Node).api._revalidateAsyncValidators?.()); },
+    disable: () => formSelfDisabled.set(true),
+    enable: () => formSelfDisabled.set(false),
     readonly: formReadonly,
     writable: computed(() => !formReadonly()),
-    markAsReadonly: () => { formSelfReadonly.set(true); revalidateAsyncValidators(); controlKeys().forEach((key) => (controls[key] as Node).api._revalidateAsyncValidators?.()); },
-    markAsWritable: () => { formSelfReadonly.set(false); revalidateAsyncValidators(); controlKeys().forEach((key) => (controls[key] as Node).api._revalidateAsyncValidators?.()); },
+    markAsReadonly: () => formSelfReadonly.set(true),
+    markAsWritable: () => formSelfReadonly.set(false),
     hidden: formHidden,
     visible: computed(() => !formHidden()),
-    hide: () => { formSelfHidden.set(true); revalidateAsyncValidators(); controlKeys().forEach((key) => (controls[key] as Node).api._revalidateAsyncValidators?.()); },
-    show: () => { formSelfHidden.set(false); revalidateAsyncValidators(); controlKeys().forEach((key) => (controls[key] as Node).api._revalidateAsyncValidators?.()); },
+    hide: () => formSelfHidden.set(true),
+    show: () => formSelfHidden.set(false),
   };
   const internalApi = {
     ...api,
-    _setParent: (parent: InternalNodeApi | null) => { formParent.set(parent); revalidateAsyncValidators(); },
-    _revalidateAsyncValidators: revalidateAsyncValidators,
-    _notifyValueChange: notifyValueChange,
+    _setParent: (parent: InternalNodeApi | null) => formParent.set(parent),
   };
   controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(internalApi));
   formNode = Object.defineProperties(
@@ -237,6 +243,6 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
   ) as Form<TNodes>;
   markAsNode(formNode);
-  revalidateAsyncValidators();
+  ensureAsyncValidationWatch();
   return formNode;
 }

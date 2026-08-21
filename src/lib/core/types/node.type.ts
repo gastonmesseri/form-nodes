@@ -23,8 +23,6 @@ export type InternalNodeApi = {
   hide(): void;
   show(): void;
   _setParent?(parent: InternalNodeApi | null): void;
-  _revalidateAsyncValidators?(): void;
-  _notifyValueChange?(): void;
 };
 
 export type Node = (() => any) & { api: InternalNodeApi };

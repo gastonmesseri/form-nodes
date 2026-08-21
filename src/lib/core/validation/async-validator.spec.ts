@@ -1,5 +1,6 @@
 import { Observable, of } from 'rxjs';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { Injector, signal } from '@angular/core';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
@@ -46,11 +47,15 @@ describe('asyncValidator', () => {
 
   it('unsubscribes an Observable validator when validation becomes stale', async () => {
     const unsubscribe = vi.fn();
-    const validate = vi.fn(() => new Observable<never>(() => unsubscribe));
+    const validate = vi.fn(({ value }) => {
+      value();
+      return new Observable<never>(() => unsubscribe);
+    });
     const name = field('first', [asyncValidator(validate)]);
 
     await Promise.resolve();
     name.set('second');
+    await Promise.resolve();
 
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
@@ -102,5 +107,44 @@ describe('asyncValidator', () => {
       expectTypeOf(abortSignal).toEqualTypeOf<AbortSignal>();
       return null;
     });
+  });
+
+  it('reacts to signals read by a validator outside an injection context', async () => {
+    const dependency = signal('available');
+    const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
+    const name = field('David', [asyncValidator(validate)]);
+
+    await settle();
+    expect(name.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledOnce();
+
+    dependency.set('unavailable');
+    await settle();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(name.errors()).toEqual([{ kind: 'unavailable', targetNode: name }]);
+  });
+
+  it('stops reactive validation when its explicit injector is destroyed', async () => {
+    const dependency = signal('available');
+    const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
+    const injector = Injector.create({ providers: [] });
+    const name = field('David', [asyncValidator(validate)], { injector });
+
+    await settle();
+    expect(name.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledOnce();
+
+    dependency.set('unavailable');
+    await settle();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(name.errors()).toEqual([{ kind: 'unavailable', targetNode: name }]);
+
+    injector.destroy();
+    dependency.set('available');
+    await settle();
+
+    expect(validate).toHaveBeenCalledTimes(2);
   });
 });
