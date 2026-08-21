@@ -7,6 +7,12 @@ import { asyncValidator } from '../validation/async-validator';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('exposes an empty path when it is a root node', () => {
+    const name = field('David');
+
+    expect(name.api.path()).toEqual([]);
+  });
+
   it('exposes the initial value when called and through value()', () => {
     const fieldNode = field('David');
     expect(fieldNode()).toBe('David');

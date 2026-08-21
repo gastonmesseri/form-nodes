@@ -28,6 +28,7 @@ export type FieldOptions<TValue = any> = {
 };
 
 export type FieldApi<TValue> = {
+  path: Signal<readonly string[]>;
   value: Signal<TValue>;
   set(value: TValue): void;
   patch(value: TValue): void;
@@ -104,6 +105,12 @@ export function field<TValue>(
   const fieldDirty = signal(false);
   const fieldSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const fieldParent = signal<InternalNodeApi | null>(null);
+  const fieldKeyInParent = signal<string | null>(null);
+  const fieldPath = computed<readonly string[]>(() => {
+    const parent = fieldParent();
+    const key = fieldKeyInParent();
+    return parent && key !== null ? [...parent.path(), key] : [];
+  });
   const fieldDisabled = computed(() =>
     fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.disabled() === true,
   );
@@ -150,6 +157,7 @@ export function field<TValue>(
     fieldDirty.set(false);
   };
   const members = {
+    path: fieldPath,
     value: fieldValue.asReadonly(),
     set,
     reset,
@@ -187,7 +195,10 @@ export function field<TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
-    _setParent: (parent: InternalNodeApi | null) => fieldParent.set(parent),
+    _setParent: (parent: InternalNodeApi | null, key?: string) => {
+      fieldParent.set(parent);
+      fieldKeyInParent.set(parent ? key ?? null : null);
+    },
   };
   fieldNode = Object.assign(
     () => fieldValue(),

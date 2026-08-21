@@ -8,6 +8,20 @@ import { asyncValidator } from '../validation/async-validator';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('exposes paths from the root to nested nodes', () => {
+    const profile = form({
+      name: field('David'),
+      address: {
+        city: field('Zurich'),
+      },
+    });
+
+    expect(profile.api.path()).toEqual([]);
+    expect(profile.name.api.path()).toEqual(['name']);
+    expect(profile.address.api.path()).toEqual(['address']);
+    expect(profile.address.city.api.path()).toEqual(['address', 'city']);
+  });
+
   it('exposes each field under its own key', () => {
     const formGroup = form({
       age: field(23),
