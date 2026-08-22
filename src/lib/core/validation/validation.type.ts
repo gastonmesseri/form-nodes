@@ -131,6 +131,8 @@ export type AsyncValidator<TValue> = Validator<TValue>;
 
 export type ComposableValidator<TValue> = (context: ValidatorContext<TValue>) => ComposableValidationResult<TValue>;
 
-export type ComposableValidationResult<TValue> = ValidationResult | Validator<TValue> | ComposableValidator<TValue>;
+export type ComposableValidationResult<TValue> = ValidationResult | Validator<TValue> | ComposableValidator<TValue> | Validators<TValue>;
 
 export type Validators<TValue> = readonly ComposableValidator<TValue>[];
+
+export type ValidatorSource<TValue> = ComposableValidator<TValue> | Validators<TValue>;

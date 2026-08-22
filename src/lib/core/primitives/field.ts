@@ -1,20 +1,20 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import { markAsNode } from '../utils/node-marker';
-import { isValidators } from '../validation/is-validators';
 import type { Node, RootNode } from '../types/node.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
-import type { ValidationError, ValidationStatus, Validators } from '../validation/validation.type';
+import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
+import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
+import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
 export type FieldOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the field value. */
-  readonly validators?: Validators<TValue>;
+  readonly validators?: ValidatorSource<TValue>;
   /** Whether the field value includes null. Defaults to true and affects the public value type. */
   readonly nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
@@ -36,7 +36,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   patch(value: TValue): void;
   reset(...args: [] | [value: TValue]): void;
   validators: Signal<Validators<TValue>>;
-  setValidators(validators: Validators<TValue>): void;
+  setValidators(validators: ValidatorSource<TValue>): void;
   errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
@@ -77,7 +77,7 @@ export function field<TValue extends {}>(
 ): Field<TValue>;
 export function field<TValue extends {}>(
   value: TValue,
-  validators: Validators<NoInfer<TValue>>,
+  validators: ValidatorSource<NoInfer<TValue>>,
   options: NonNullableFieldOptions<NoInfer<TValue>>,
 ): Field<TValue>;
 export function field<TValue>(
@@ -86,20 +86,21 @@ export function field<TValue>(
 ): Field<TValue | null>;
 export function field<TValue>(
   value?: TValue | null,
-  validators?: Validators<NoInfer<TValue | null>>,
+  validators?: ValidatorSource<NoInfer<TValue | null>>,
   options?: NullableFieldOptions<NoInfer<TValue>>,
 ): Field<TValue | null>;
 export function field<TValue>(
   value: TValue = null as TValue,
-  validatorsOrOptions?: Validators<NoInfer<TValue>> | FieldOptions<NoInfer<TValue>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<TValue>> | FieldOptions<NoInfer<TValue>>,
   separateOptions?: FieldOptions<NoInfer<TValue>>,
 ): Field<TValue> {
-  const resolvedOptions = isValidators<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
+  const resolvedOptions = isValidatorSource<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
     ? separateOptions
     : validatorsOrOptions;
-  const validators = isValidators<TValue>(validatorsOrOptions)
+  const validatorSource = isValidatorSource<TValue>(validatorsOrOptions)
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
+  const validators = normalizeValidatorSource(validatorSource);
   const fieldValue = signal<TValue>(value!);
   const fieldContext = markAsFieldContext({ value: fieldValue.asReadonly() });
   const fieldValidators = signal<Validators<TValue>>(validators);
@@ -167,8 +168,8 @@ export function field<TValue>(
     set,
     reset,
     validators: fieldValidators.asReadonly(),
-    setValidators: (next: Validators<TValue>) => {
-      fieldValidators.set(next);
+    setValidators: (next: ValidatorSource<TValue>) => {
+      fieldValidators.set(normalizeValidatorSource(next));
       ensureAsyncValidationWatch();
     },
     errors: fieldErrors,

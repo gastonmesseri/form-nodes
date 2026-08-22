@@ -6,7 +6,7 @@ import { field } from './primitives/field';
 import type { Node } from './types/node.type';
 import { asyncValidator } from './validation/async-validator';
 import { required } from './validation/validators/required';
-import type { FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
+import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
   it('does not expose internal parent mutation through Node', () => {
@@ -158,6 +158,15 @@ describe('types', () => {
       value() === '' ? { kind: 'required' } : null;
     const fieldNode = field('David', { nullable: false });
     expectTypeOf(fieldNode.setValidators).toBeCallableWith([required]);
+    expectTypeOf(fieldNode.setValidators).toBeCallableWith(required);
+  });
+
+  it('accepts one validator or a validator returning an array', () => {
+    const required = ({ value }: FieldContext<string>) => value() === '' ? { kind: 'required' } : null;
+    const fieldNode = field('', { validators: required, nullable: false });
+
+    fieldNode.setValidators(() => [required, () => ({ kind: 'second' })]);
+    expectTypeOf(fieldNode.validators()).toEqualTypeOf<readonly ComposableValidator<string>[]>();
   });
 
   it('types validators inside field options', () => {

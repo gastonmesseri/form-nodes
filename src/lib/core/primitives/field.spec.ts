@@ -323,6 +323,35 @@ describe('field', () => {
     expect(validate).toHaveBeenCalledTimes(3);
   });
 
+  it('accepts one validator and normalizes it through validators()', () => {
+    const fieldNode = field('', required);
+
+    expect(fieldNode.validators()).toEqual([required]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
+
+    fieldNode.setValidators(() => ({ kind: 'replacement' }));
+
+    expect(fieldNode.validators()).toHaveLength(1);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'replacement' }]);
+  });
+
+  it('conditionally applies an array of synchronous validators returned by one validator', () => {
+    const enabled = signal(false);
+    const tooShort = ({ value }: Context<string | null>) => value() === 'a' ? { kind: 'tooShort' } : null;
+    const name = field('', { validators: () => enabled() ? [required, tooShort] : null });
+
+    expect(name.errors()).toEqual([]);
+
+    enabled.set(true);
+    expect(name.errors()).toMatchObject([{ kind: 'required' }]);
+
+    name.set('a');
+    expect(name.errors()).toMatchObject([{ kind: 'tooShort' }]);
+
+    enabled.set(false);
+    expect(name.errors()).toEqual([]);
+  });
+
   it('exposes the current validators through validators()', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const fieldNode = field('', [required]);

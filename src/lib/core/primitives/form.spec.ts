@@ -356,6 +356,24 @@ describe('form', () => {
     expect(sameCity).toHaveBeenCalledOnce();
   });
 
+  it('accepts one form validator and conditionally resolves a returned validator array', () => {
+    const enabled = signal(false);
+    const first = () => ({ kind: 'first' });
+    const second = () => ({ kind: 'second' });
+    const validate = () => enabled() ? [first, second] : null;
+    const formGroup = form({ name: field('David') }, validate);
+
+    expect(formGroup.api.validators()).toEqual([validate]);
+    expect(formGroup.api.errors()).toEqual([]);
+
+    enabled.set(true);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
+
+    formGroup.api.setValidators(first);
+    expect(formGroup.api.validators()).toEqual([first]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'first' }]);
+  });
+
   it('is invalid when a child is invalid, even without own errors', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
