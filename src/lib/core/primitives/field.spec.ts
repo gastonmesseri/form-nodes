@@ -307,6 +307,22 @@ describe('field', () => {
     expect(fieldNode.required()).toBe(true);
   });
 
+  it('returns the first active error of a requested kind', () => {
+    const fieldNode = field('', [
+      () => ({ kind: 'duplicate', message: 'First' }),
+      () => ({ kind: 'duplicate', message: 'Second' }),
+      required,
+    ]);
+
+    expect(fieldNode.getError('duplicate')).toMatchObject({ kind: 'duplicate', message: 'First' });
+    expect(fieldNode.getError('duplicate')?.targetNode).toBe(fieldNode);
+    expect(fieldNode.api.getError('required')).toMatchObject({ kind: 'required' });
+    expect(fieldNode.getError('missing')).toBeUndefined();
+
+    fieldNode.set('David');
+    expect(fieldNode.getError('required')).toBeUndefined();
+  });
+
   it('derives required from the error kind rather than validator identity', () => {
     const fieldNode = field('David', [() => ({ kind: 'required' })]);
 

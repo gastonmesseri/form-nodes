@@ -65,6 +65,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
   validationStatus: Signal<ValidationStatus>;
@@ -175,6 +176,8 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     () => !formNonInteractive(),
   );
   const formErrors = computed(() => [...formSyncErrors(), ...asyncValidation.errors()]);
+  const getError = <TKind extends string>(kind: TKind) =>
+    formErrors().find((error): error is typeof error & { readonly kind: TKind } => error.kind === kind);
   const formPending = computed(() =>
     !formNonInteractive() && (
       asyncValidation.pending() || controlKeys().some((key) => controls[key]!.api.pending())
@@ -243,6 +246,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     errors: formErrors,
     valid: computed(() => formValidationStatus() === 'valid'),
     invalid: computed(() => formValidationStatus() === 'invalid'),
+    getError,
     required: computed(() =>
       formValidators().some(isRequiredValidator)
       || formSyncValidation().required

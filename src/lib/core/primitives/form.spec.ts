@@ -508,6 +508,29 @@ describe('form', () => {
     expect(childRequired.required()).toBe(false);
   });
 
+  it('returns only the first matching own form error', () => {
+    const formGroup = form({
+      name: field('', [required]),
+    }, [
+      () => ({ kind: 'formError', message: 'First' }),
+      () => ({ kind: 'formError', message: 'Second' }),
+    ]);
+
+    expect(formGroup.getError('formError')).toMatchObject({ kind: 'formError', message: 'First' });
+    expect(formGroup.getError('formError')?.targetNode).toBe(formGroup);
+    expect(formGroup.api.getError('formError')).toBe(formGroup.getError('formError'));
+    expect(formGroup.getError('required')).toBeUndefined();
+  });
+
+  it('gives a child named getError precedence over the form method', () => {
+    const getErrorField = field('child');
+    const formGroup = form({ getError: getErrorField }, [() => ({ kind: 'formError' })]);
+
+    expect(formGroup.getError).toBe(getErrorField);
+    expect(formGroup.getError()).toBe('child');
+    expect(formGroup.api.getError('formError')).toMatchObject({ kind: 'formError' });
+  });
+
   it('gives a child named required precedence over the form required signal', () => {
     const requiredField = field('child');
     const formGroup = form({ required: requiredField }, [() => ({ kind: 'required' })]);

@@ -10,6 +10,7 @@ export type NodeApi = {
   reset(...args: [] | [value: any]): void;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: Node }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
   touched: Signal<boolean>;
