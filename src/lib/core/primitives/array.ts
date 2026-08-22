@@ -16,6 +16,7 @@ import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { InternalNode, Node, NodeDefinition, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
@@ -91,6 +92,7 @@ export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
   & HiddenFunctionMembers<keyof ArrayApi<TItem, TParent>>;
 
 type ArrayFactory<TDefinition extends NodeDefinition> = () => TDefinition;
+type ArraySource<TDefinition extends NodeDefinition> = TDefinition | ArrayFactory<TDefinition>;
 
 export function array<TDefinition extends NodeDefinition>(
   initialCount: number,
@@ -103,8 +105,18 @@ export function array<TDefinition extends NodeDefinition>(
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
+  initialCount: number,
+  template: TDefinition,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
+  initialValues: ArraySet<NormalizedNode<TDefinition>>,
+  template: TDefinition,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
   initial: number | ArraySet<NormalizedNode<TDefinition>>,
-  factory: ArrayFactory<TDefinition>,
+  source: ArraySource<TDefinition>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>> {
   type TItem = NormalizedNode<TDefinition>;
@@ -114,6 +126,16 @@ export function array<TDefinition extends NodeDefinition>(
     throw new RangeError('array: initial count must be a non-negative safe integer');
   }
 
+  const factory = typeof source === 'function' && !isNode(source)
+    ? source as ArrayFactory<TDefinition>
+    : createNodeDefinitionFactory(source as TDefinition);
+  const cloneOptions = options === undefined ? undefined : { ...options };
+  const cloneInitial = typeof initial === 'number' ? initial : [...initial] as TSet;
+  const recreateArray = array as unknown as (
+    initialValue: number | TSet,
+    initialFactory: ArrayFactory<TDefinition>,
+    initialOptions?: ArrayOptions<TValue>,
+  ) => ArrayNode<TItem>;
   const createdDefinitions = new WeakSet<object>();
   const trackDefinition = (definition: NodeDefinition): void => {
     if (createdDefinitions.has(definition)) {
@@ -338,6 +360,7 @@ export function array<TDefinition extends NodeDefinition>(
   };
   const internalApi = {
     ...api,
+    _clone: () => recreateArray(cloneInitial, factory, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);
       arrayKeyInParent.set(parent ? key ?? null : null);

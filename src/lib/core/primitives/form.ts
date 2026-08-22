@@ -1,7 +1,7 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
-import type { ArrayNode } from './array';
 import type { Field } from './field';
+import type { ArrayNode } from './array';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
@@ -14,6 +14,7 @@ import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -134,6 +135,8 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
   const validators = normalizeValidatorSource(validatorSource);
+  const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
+  const createDefinitions = createNodeDefinitionFactory(definitions);
   const controls = Object.fromEntries(
     Object.entries(definitions).map(([key, definition]) => [
       key,
@@ -286,6 +289,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   const internalApi = {
     ...api,
+    _clone: () => form(createDefinitions(), validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);
       formKeyInParent.set(parent ? key ?? null : null);

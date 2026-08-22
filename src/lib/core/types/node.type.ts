@@ -45,6 +45,7 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
       : TNode
     : Node;
 export type InternalNodeApi = NodeApi & {
+  _clone(): Node;
   _setParent(parent: Node | null, key?: string): void;
 };
 export type InternalNode = (() => any) & { api: InternalNodeApi };

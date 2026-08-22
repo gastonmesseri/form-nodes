@@ -832,7 +832,7 @@ An empty form has value `{}` and is valid, enabled, writable, visible, untouched
 
 ## Dynamic arrays
 
-`array()` creates a dynamic node whose items all have the same node shape. Its first argument is either an initial item count or an array of initial values. Its second argument is a factory that must return a fresh node definition for every item:
+`array()` creates a dynamic node whose items all have the same node shape. Its first argument is either an initial item count or an array of initial values. Its second argument can be a factory or a shorthand node template:
 
 ```ts
 const profile = form({
@@ -844,10 +844,23 @@ const profile = form({
 });
 ```
 
-A plain object returned by the factory is normalized to a `form()` node. The factory may also return a `field()`, an explicit `form()`, or another `array()`:
+The equivalent shorthand template omits the factory:
+
+```ts
+const profile = form({
+  name: field('Marco'),
+  sons: array(2, {
+    name: field(''),
+    age: field(23),
+  }),
+});
+```
+
+A plain object returned by a factory or used as a template is normalized to a `form()` node. Both forms may also define a `field()`, an explicit `form()`, or another `array()`:
 
 ```ts
 const tags = array(['angular', 'signals'], () => field(''));
+const shorthandTags = array(['angular', 'signals'], field(''));
 ```
 
 When initial values are provided, the framework creates each node from the factory and resets it to the corresponding value. Initial items therefore remain pristine and untouched:
@@ -855,11 +868,35 @@ When initial values are provided, the framework creates each node from the facto
 ```ts
 const sons = array(
   [{ name: 'Mono', age: 11 }],
-  () => ({ name: field(''), age: field(23) }),
+  { name: field(''), age: field(23) },
 );
 ```
 
-The factory contract deliberately prevents node reuse. Returning the same live `field()`, `form()`, or `array()` instance more than once throws because items must not share values, parents, interaction state, validation state, or asynchronous watchers.
+The explicit factory contract deliberately prevents node reuse. Returning the same live `field()`, `form()`, or `array()` instance more than once throws because items must not share values, parents, interaction state, validation state, or asynchronous watchers.
+
+### Template cloning
+
+A shorthand template is compiled once into an internal factory. Cloning recreates declarative configuration only:
+
+- Declared initial values.
+- Synchronous and asynchronous validators.
+- Disabled, readonly, and hidden state sources.
+- Field debounce configuration and injector ownership.
+- Nested field, form, and array definition recipes.
+
+Each clone receives fresh signals and fresh descendant nodes. Cloning never copies or shares runtime state:
+
+- Current values written after declaration.
+- Parent references or paths.
+- Dirty or touched flags.
+- Active errors or pending state.
+- Debounce timers, abort controllers, subscriptions, or reactive watchers.
+
+The compiled factory retains clone closures and property keys rather than the original template tree. Consequently an inline template can be garbage-collected after `array()` compiles it. If application code keeps a reference to the original template, that template remains an independent live node and later changes to it do not affect current or future array items.
+
+The template is already a live node before `array()` receives it. Compiling it neither mutates nor destroys it, so a separately retained template keeps its own reactive lifecycle. For templates whose construction itself must not start independent asynchronous work, use the explicit factory form.
+
+Leaf field values are not deep-cloned. A clone gets a fresh signal initialized with the originally declared value reference. As elsewhere in this signal-based API, application values should be updated immutably when their internal object identity matters.
 
 ### Reading items
 
@@ -901,7 +938,7 @@ An array behaves like an aggregate form node:
 - Touch, pristine, reset, and state operations apply to its descendants.
 - Nested item errors affect the array and its ancestor validity, but `errors()` contains only errors targeted at the array itself.
 
-This public factory-based API differs intentionally from Angular 22 Signal Forms. Angular derives array field trees from array-valued models and maintains tracked item identities. This library constructs its tree from node definitions, so a factory is required to create independent dynamic nodes. Both approaches preserve node identity and interaction state when existing items are reordered.
+This API differs intentionally from Angular 22 Signal Forms. Angular derives array field trees from array-valued models and maintains tracked item identities. This library constructs its tree from node definitions, using either an explicit factory or a compiled template recipe to create independent dynamic nodes. Both approaches preserve node identity and interaction state when existing items are reordered.
 
 ## Internal structural behavior
 

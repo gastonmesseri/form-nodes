@@ -24,6 +24,18 @@ describe('types', () => {
     expectTypeOf(profile.sons.push()).toEqualTypeOf<typeof son>();
   });
 
+  it('infers dynamic arrays declared from a shorthand template', () => {
+    const profile = form({
+      sons: array(2, { name: field(''), age: field(23) }),
+    });
+    const son = profile.sons.at(0)!;
+
+    expectTypeOf(profile.sons()).toEqualTypeOf<readonly { name: string | null; age: number | null }[]>();
+    expectTypeOf(son.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
+    expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
+  });
+
   it('infers primitive and nested dynamic arrays', () => {
     const matrix = array(2, () => array(2, () => field(0)));
 
@@ -33,8 +45,10 @@ describe('types', () => {
 
   it('does not expose internal parent mutation through Node', () => {
     type ExposesSetParent = '_setParent' extends keyof Node['api'] ? true : false;
+    type ExposesClone = '_clone' extends keyof Node['api'] ? true : false;
 
     expectTypeOf<ExposesSetParent>().toEqualTypeOf<false>();
+    expectTypeOf<ExposesClone>().toEqualTypeOf<false>();
   });
 
   it('hides native function members from validator tree nodes', () => {
