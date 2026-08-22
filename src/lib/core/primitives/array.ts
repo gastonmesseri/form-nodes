@@ -28,7 +28,10 @@ export type ArrayItemWithParent<TItem extends Node, TParent extends Node> =
   TItem extends Form<infer TNodes, Node> ? Form<TNodes, TParent> :
   TItem extends ArrayNode<infer TNestedItem, Node> ? ArrayNode<TNestedItem, TParent> : TItem;
 
-export type ArrayValue<TItem extends Node> = readonly NodeValue<TItem>[];
+export type ArrayValue<TItem extends Node> =
+  TItem extends Form<infer TNodes, Node>
+    ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
+    : NodeValue<TItem>[];
 export type ArraySet<TItem extends Node> = readonly NodeSet<TItem>[];
 export type ArrayPatch<TItem extends Node> = readonly NodePatch<TItem>[];
 
@@ -45,7 +48,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   form: Signal<ArrayRoot<TItem, TParent>>;
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
-  value: Signal<ArrayValue<TItem>>;
+  value: Signal<TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]>;
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
   push(...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
   insert(index: number, ...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
@@ -87,7 +90,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
 };
 
 export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
-  & { (): ArrayValue<TItem>; api: ArrayApi<TItem, TParent> }
+  & { (): TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]; api: ArrayApi<TItem, TParent> }
   & ArrayApi<TItem, TParent>
   & HiddenFunctionMembers<keyof ArrayApi<TItem, TParent>>;
 
