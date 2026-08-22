@@ -42,6 +42,10 @@ export type ArrayRoot<TItem extends Node, TParent extends Node> = Node extends T
 export type ArrayItems<TItem extends Node, TParent extends Node> =
   readonly ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>[];
 
+export type ArrayIndexes<TItem extends Node, TParent extends Node> = {
+  readonly [index: number]: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
+};
+
 export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   items: Signal<ArrayItems<TItem, TParent>>;
   length: Signal<number>;
@@ -91,6 +95,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
 
 export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
   & { (): TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]; api: ArrayApi<TItem, TParent> }
+  & ArrayIndexes<TItem, TParent>
   & ArrayApi<TItem, TParent>
   & HiddenFunctionMembers<keyof ArrayApi<TItem, TParent>>;
 
@@ -410,10 +415,29 @@ export function array<TDefinition extends NodeDefinition>(
       arrayKeyInParent.set(parent ? key ?? null : null);
     },
   };
-  arrayNode = Object.defineProperties(
+  const callableNode = Object.defineProperties(
     () => arrayValue(),
     Object.getOwnPropertyDescriptors({ ...api, api: internalApi }),
-  ) as ArrayNode<TItem>;
+  );
+  const readIndex = (property: PropertyKey): number | null => {
+    if (typeof property !== 'string' || !/^(0|[1-9]\d*)$/.test(property)) return null;
+    const index = Number(property);
+    return Number.isSafeInteger(index) ? index : null;
+  };
+  arrayNode = new Proxy(callableNode, {
+    get: (target, property, receiver) => {
+      const index = readIndex(property);
+      return index === null ? Reflect.get(target, property, receiver) : arrayItems()[index];
+    },
+    has: (target, property) => {
+      const index = readIndex(property);
+      return index === null ? Reflect.has(target, property) : index < arrayItems().length;
+    },
+    set: (target, property, value, receiver) =>
+      readIndex(property) === null && Reflect.set(target, property, value, receiver),
+    deleteProperty: (target, property) =>
+      readIndex(property) === null && Reflect.deleteProperty(target, property),
+  }) as ArrayNode<TItem>;
   reparentItems();
   markAsNode(arrayNode);
   ensureAsyncValidationWatch();

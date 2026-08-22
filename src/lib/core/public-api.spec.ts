@@ -34,6 +34,11 @@ describe('types', () => {
     expectTypeOf(son.name()).toEqualTypeOf<string | null>();
     expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
     expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
+    expectTypeOf(profile.sons[0]?.name()).toEqualTypeOf<string | null | undefined>();
+    if (false) {
+      // @ts-expect-error numeric item access is readonly
+      profile.sons[0] = son;
+    }
   });
 
   it('types dynamic array initial values, validator shorthand, and options', () => {

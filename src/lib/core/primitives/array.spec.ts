@@ -24,6 +24,24 @@ describe('array', () => {
     expect(template.name.parent()).toBeNull();
   });
 
+  it('exposes current items through readonly numeric properties while remaining callable', () => {
+    const sons = array({ name: field('') }, [{ name: 'Mono' }, { name: 'Lia' }]);
+    const mono = sons[0]!;
+
+    expect(sons()).toEqual([{ name: 'Mono' }, { name: 'Lia' }]);
+    expect(sons[0]).toBe(sons.at(0));
+    expect(sons[1]).toBe(sons.at(1));
+    expect(sons[2]).toBeUndefined();
+    expect(0 in sons).toBe(true);
+    expect(2 in sons).toBe(false);
+
+    sons.move(0, 1);
+
+    expect(sons[1]).toBe(mono);
+    expect(() => { (sons as any)[0] = mono; }).toThrow(TypeError);
+    expect(() => { delete (sons as any)[0]; }).toThrow(TypeError);
+  });
+
   it('applies initial values to items cloned from a shorthand template', () => {
     const sons = array(
       { name: field(''), age: field(23) },

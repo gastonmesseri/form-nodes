@@ -935,6 +935,8 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 - Calling the array node or `value()` returns the aggregated value array with its concrete item-value type.
 - `items()` returns the current readonly node array.
 - `at(index)` returns one typed item or `undefined`.
+- Numeric property access such as `sons[0]` returns the same typed node as `sons.at(0)` while the array node remains callable.
+- Numeric properties are readonly. Structure must be changed through `push()`, `insert()`, `removeAt()`, `move()`, `clear()`, `set()`, or `reset()`.
 - `length()` returns the current item count.
 - Item paths use decimal index segments such as `['sons', '0', 'name']`.
 - Items inherit `form()` from the root form containing the array.
