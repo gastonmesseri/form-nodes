@@ -13,7 +13,7 @@ describe('form', () => {
   it('aggregates a dynamic array child through the public form api', () => {
     const profile = form({
       name: field('Marco'),
-      sons: array([{ name: 'Mono', age: 11 }], () => ({ name: field(''), age: field(23) })),
+      sons: array(() => ({ name: field(''), age: field(23) }), [{ name: 'Mono', age: 11 }]),
     });
 
     expect(profile()).toEqual({ name: 'Marco', sons: [{ name: 'Mono', age: 11 }] });

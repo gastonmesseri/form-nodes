@@ -93,35 +93,75 @@ export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
 
 type ArrayFactory<TDefinition extends NodeDefinition> = () => TDefinition;
 type ArraySource<TDefinition extends NodeDefinition> = TDefinition | ArrayFactory<TDefinition>;
+type ArrayInitial<TDefinition extends NodeDefinition> = number | ArraySet<NormalizedNode<TDefinition>>;
+const looksLikeValidatorSource = (value: unknown): boolean =>
+  typeof value === 'function'
+  || (Array.isArray(value)
+    && value.some((entry) => typeof entry === 'function')
+    && value.every((entry) => entry == null || typeof entry === 'function'));
 
 export function array<TDefinition extends NodeDefinition>(
-  initialCount: number,
-  factory: ArrayFactory<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-export function array<TDefinition extends NodeDefinition>(
-  initialValues: ArraySet<NormalizedNode<TDefinition>>,
-  factory: ArrayFactory<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-export function array<TDefinition extends NodeDefinition>(
-  initialCount: number,
   template: TDefinition,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
-  initialValues: ArraySet<NormalizedNode<TDefinition>>,
   template: TDefinition,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
-  initial: number | ArraySet<NormalizedNode<TDefinition>>,
+  template: TDefinition,
+  initial: ArrayInitial<TDefinition>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
+  template: TDefinition,
+  initial: ArrayInitial<TDefinition>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
+  factory: ArrayFactory<TDefinition>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
+  factory: ArrayFactory<TDefinition>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
+  factory: ArrayFactory<TDefinition>,
+  initial: ArrayInitial<TDefinition>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
+  factory: ArrayFactory<TDefinition>,
+  initial: ArrayInitial<TDefinition>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
   source: ArraySource<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  initialOrValidatorsOrOptions?: ArrayInitial<TDefinition> | ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  separateOptions?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>> {
   type TItem = NormalizedNode<TDefinition>;
   type TValue = ArrayValue<TItem>;
   type TSet = ArraySet<TItem>;
+  const secondIsValidators = looksLikeValidatorSource(initialOrValidatorsOrOptions);
+  const thirdIsValidators = looksLikeValidatorSource(validatorsOrOptions);
+  const hasInitial = typeof initialOrValidatorsOrOptions === 'number'
+    || (Array.isArray(initialOrValidatorsOrOptions) && (
+      !secondIsValidators || thirdIsValidators || separateOptions !== undefined
+    ));
+  const initial = hasInitial ? initialOrValidatorsOrOptions as number | TSet : [] as TSet;
+  const resolvedOptions = hasInitial
+    ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue> | undefined
+    : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue> | undefined;
+  const validatorSource = hasInitial
+    ? thirdIsValidators ? validatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? []
+    : secondIsValidators ? initialOrValidatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? [];
   if (typeof initial === 'number' && (!Number.isSafeInteger(initial) || initial < 0)) {
     throw new RangeError('array: initial count must be a non-negative safe integer');
   }
@@ -129,11 +169,12 @@ export function array<TDefinition extends NodeDefinition>(
   const factory = typeof source === 'function' && !isNode(source)
     ? source as ArrayFactory<TDefinition>
     : createNodeDefinitionFactory(source as TDefinition);
-  const cloneOptions = options === undefined ? undefined : { ...options };
+  const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
   const cloneInitial = typeof initial === 'number' ? initial : [...initial] as TSet;
   const recreateArray = array as unknown as (
+    initialSource: ArrayFactory<TDefinition>,
     initialValue: number | TSet,
-    initialFactory: ArrayFactory<TDefinition>,
+    initialValidators: ValidatorSource<TValue>,
     initialOptions?: ArrayOptions<TValue>,
   ) => ArrayNode<TItem>;
   const createdDefinitions = new WeakSet<object>();
@@ -158,7 +199,7 @@ export function array<TDefinition extends NodeDefinition>(
   });
   const arrayItems = signal<readonly TItem[]>(initialItems);
   const arraySelfDirty = signal(false);
-  const arraySelfDisabled = signal(getInitialMutableState(options?.disabled));
+  const arraySelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const arrayParent = signal<Node | null>(null);
   const arrayKeyInParent = signal<string | null>(null);
   const arrayPath = computed<readonly string[]>(() => {
@@ -167,20 +208,20 @@ export function array<TDefinition extends NodeDefinition>(
     return parent && key !== null ? [...parent.api.path(), key] : [];
   });
   const arrayDisabled = computed(() =>
-    arraySelfDisabled() || readStateSource(options?.disabled) || arrayParent()?.api.disabled() === true,
+    arraySelfDisabled() || readStateSource(resolvedOptions?.disabled) || arrayParent()?.api.disabled() === true,
   );
-  const arraySelfReadonly = signal(getInitialMutableState(options?.readonly));
+  const arraySelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const arrayReadonly = computed(() =>
-    arraySelfReadonly() || readStateSource(options?.readonly) || arrayParent()?.api.readonly() === true,
+    arraySelfReadonly() || readStateSource(resolvedOptions?.readonly) || arrayParent()?.api.readonly() === true,
   );
-  const arraySelfHidden = signal(getInitialMutableState(options?.hidden));
+  const arraySelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const arrayHidden = computed(() =>
-    arraySelfHidden() || readStateSource(options?.hidden) || arrayParent()?.api.hidden() === true,
+    arraySelfHidden() || readStateSource(resolvedOptions?.hidden) || arrayParent()?.api.hidden() === true,
   );
   const arrayNonInteractive = computed(() => arrayHidden() || arrayDisabled() || arrayReadonly());
   const arrayValue = computed<TValue>(() => arrayItems().map((item) => item()) as TValue);
   const arrayContext = markAsFieldContext({ value: arrayValue });
-  const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource(options?.validators ?? []));
+  const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource(validatorSource));
   const emptySyncMetadata = new Map();
   let arrayNode!: ArrayNode<TItem>;
   const rootForm = computed(() => arrayParent()?.api.form() ?? arrayNode) as Signal<ArrayNode<TItem>>;
@@ -216,7 +257,7 @@ export function array<TDefinition extends NodeDefinition>(
   const ensureAsyncValidationWatch = () => {
     if (asyncValidationWatchTarget || !arrayValidators().some(isAsyncValidator)) return;
     asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel, destroy: asyncValidation.destroy };
-    createReactiveWatch(asyncValidationWatchTarget, options?.injector);
+    createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const arrayTouched = computed(() =>
     !arrayNonInteractive() && arrayItems().some((item) => item.api.touched()),
@@ -360,7 +401,7 @@ export function array<TDefinition extends NodeDefinition>(
   };
   const internalApi = {
     ...api,
-    _clone: () => recreateArray(cloneInitial, factory, cloneOptions),
+    _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);
       arrayKeyInParent.set(parent ? key ?? null : null);
