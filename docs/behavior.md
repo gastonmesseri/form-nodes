@@ -307,7 +307,9 @@ const profile = form(
 );
 ```
 
-Under this possible design, `name` would inherit 300 ms, while `address.city` would override it with 100 ms. A nested form could similarly establish a default for its own subtree. The nearest configured ancestor would win. A form would not aggregate pending descendant `controlValue()` values into a form-level `controlValue()`, and its committed `value()` would continue to aggregate only committed child values. This section records a design direction for future consideration and is not part of the current public contract.
+Under this possible design, `name` would inherit 300 ms, while `address.city` would override it with 100 ms. A nested form could similarly establish a default for its own subtree. The nearest configured ancestor would win. A form would not aggregate pending descendant `controlValue()` values into a form-level `controlValue()`, and its committed `value()` would continue to aggregate only committed child values.
+
+A future `form.flush()` operation would recursively flush every pending control-value debounce in that form's subtree. Calling it on the root form would commit every pending descendant, while calling it on a nested form would affect only that branch and leave siblings and ancestors untouched. This would make it suitable for submission or explicit save boundaries without requiring consumers to find and flush individual fields. This section records a design direction for future consideration and is not part of the current public contract.
 
 ### Form values
 
