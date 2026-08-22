@@ -25,6 +25,78 @@ describe('form', () => {
     expect(profile.dirty()).toBe(true);
   });
 
+  it('grows an array child through form.set and propagates the complete value', () => {
+    const factory = vi.fn(() => ({ name: field(''), age: field(0) }));
+    const profile = form({
+      owner: field('Marco'),
+      sons: array(factory, [{ name: 'son1', age: 11 }]),
+    });
+    const first = profile.sons[0]!;
+
+    profile.set({
+      owner: 'Marcos',
+      sons: [{ name: 'son1 updated', age: 12 }, { name: 'son2', age: 15 }],
+    });
+
+    expect(profile()).toEqual({
+      owner: 'Marcos',
+      sons: [{ name: 'son1 updated', age: 12 }, { name: 'son2', age: 15 }],
+    });
+    expect(profile.value()).toEqual(profile());
+    expect(profile.sons.length()).toBe(2);
+    expect(profile.sons[0]).toBe(first);
+    expect(profile.sons[1]!.parent()).toBe(profile.sons);
+    expect(profile.sons[1]!.path()).toEqual(['sons', '1']);
+    expect(profile.sons[1]!.name.path()).toEqual(['sons', '1', 'name']);
+    expect(profile.sons[1]!.form()).toBe(profile);
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(profile.dirty()).toBe(true);
+  });
+
+  it('shrinks and empties an array child through form.set while detaching removed nodes', () => {
+    const profile = form({
+      sons: array(
+        { name: field(''), age: field(0) },
+        [{ name: 'son1', age: 11 }, { name: 'son2', age: 15 }, { name: 'son3', age: 18 }],
+      ),
+    });
+    const first = profile.sons[0]!;
+    const second = profile.sons[1]!;
+    const third = profile.sons[2]!;
+
+    profile.set({ sons: [{ name: 'only son', age: 12 }] });
+
+    expect(profile()).toEqual({ sons: [{ name: 'only son', age: 12 }] });
+    expect(profile.sons.length()).toBe(1);
+    expect(profile.sons[0]).toBe(first);
+    expect(second.parent()).toBeNull();
+    expect(second.path()).toEqual([]);
+    expect(third.parent()).toBeNull();
+    expect(third.path()).toEqual([]);
+
+    profile.set({ sons: [] });
+
+    expect(profile()).toEqual({ sons: [] });
+    expect(profile.sons.length()).toBe(0);
+    expect(profile.sons[0]).toBeUndefined();
+    expect(first.parent()).toBeNull();
+    expect(first.path()).toEqual([]);
+  });
+
+  it('can regrow an array child through form.set after it was emptied', () => {
+    const profile = form({ sons: array({ name: field(''), age: field(0) }) });
+
+    profile.set({ sons: [] });
+    profile.set({ sons: [{ name: 'son1', age: 11 }, { name: 'son2', age: 15 }] });
+
+    expect(profile()).toEqual({
+      sons: [{ name: 'son1', age: 11 }, { name: 'son2', age: 15 }],
+    });
+    expect(profile.sons[0]!.path()).toEqual(['sons', '0']);
+    expect(profile.sons[1]!.path()).toEqual(['sons', '1']);
+    expect(profile.sons.every((son) => son.parent() === profile.sons)).toBe(true);
+  });
+
   it('exposes its public api directly on the form', () => {
     const profile = form({ age: field(23) });
 

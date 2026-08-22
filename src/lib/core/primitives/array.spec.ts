@@ -284,6 +284,67 @@ describe('array', () => {
     expect(sons.dirty()).toBe(true);
   });
 
+  it('creates new nodes and propagates their structure when set grows the array', () => {
+    const factory = vi.fn(() => ({ name: field(''), age: field(0) }));
+    const sons = array(factory, [{ name: 'son1', age: 11 }]);
+    const first = sons[0]!;
+
+    sons.set([{ name: 'son1 updated', age: 12 }, { name: 'son2', age: 15 }]);
+
+    expect(sons()).toEqual([{ name: 'son1 updated', age: 12 }, { name: 'son2', age: 15 }]);
+    expect(sons.value()).toEqual(sons());
+    expect(sons.length()).toBe(2);
+    expect(sons[0]).toBe(first);
+    expect(sons[1]!.parent()).toBe(sons);
+    expect(sons[1]!.path()).toEqual(['1']);
+    expect(sons[1]!.name.path()).toEqual(['1', 'name']);
+    expect(sons[1]!.form()).toBe(sons);
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(sons.dirty()).toBe(true);
+  });
+
+  it('removes and detaches surplus nodes when set shrinks the array', () => {
+    const sons = array(
+      { name: field(''), age: field(0) },
+      [{ name: 'son1', age: 11 }, { name: 'son2', age: 15 }, { name: 'son3', age: 18 }],
+    );
+    const first = sons[0]!;
+    const second = sons[1]!;
+    const third = sons[2]!;
+
+    sons.set([{ name: 'only son', age: 12 }]);
+
+    expect(sons()).toEqual([{ name: 'only son', age: 12 }]);
+    expect(sons.length()).toBe(1);
+    expect(sons[0]).toBe(first);
+    expect(first.path()).toEqual(['0']);
+    expect(second.parent()).toBeNull();
+    expect(second.path()).toEqual([]);
+    expect(third.parent()).toBeNull();
+    expect(third.path()).toEqual([]);
+  });
+
+  it('empties and later recreates nodes through set using the same definition', () => {
+    const sons = array({ name: field(''), age: field(0) }, [{ name: 'son1', age: 11 }]);
+    const removed = sons[0]!;
+
+    sons.set([]);
+
+    expect(sons()).toEqual([]);
+    expect(sons.length()).toBe(0);
+    expect(sons[0]).toBeUndefined();
+    expect(removed.parent()).toBeNull();
+    expect(removed.path()).toEqual([]);
+
+    sons.set([{ name: 'son2', age: 15 }, { name: 'son3', age: 18 }]);
+
+    expect(sons()).toEqual([{ name: 'son2', age: 15 }, { name: 'son3', age: 18 }]);
+    expect(sons[0]).not.toBe(removed);
+    expect(sons[0]!.parent()).toBe(sons);
+    expect(sons[0]!.path()).toEqual(['0']);
+    expect(sons[1]!.path()).toEqual(['1']);
+  });
+
   it('resets values and interaction state while reconciling length', () => {
     const sons = array(() => ({ name: field('') }), [{ name: 'Mono' }]);
     sons.push({ name: 'Lia' });
