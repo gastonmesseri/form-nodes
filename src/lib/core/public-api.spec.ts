@@ -3,12 +3,34 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import { form } from './primitives/form';
 import { field } from './primitives/field';
+import { array } from './primitives/array';
 import type { Node } from './types/node.type';
 import { required } from './validation/validators/required';
 import { asyncValidator } from './validation/async-validator';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
+  it('infers dynamic array values, items, parents, and root form', () => {
+    const profile = form({
+      sons: array([{ name: 'Mono', age: 11 }], () => ({ name: field(''), age: field(23) })),
+    });
+    const son = profile.sons.at(0)!;
+
+    expectTypeOf(profile.sons()).toEqualTypeOf<readonly { name: string | null; age: number | null }[]>();
+    expectTypeOf(son.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
+    expectTypeOf(son.name.form()).toEqualTypeOf<typeof profile | null>();
+    expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
+    expectTypeOf(profile.sons.push()).toEqualTypeOf<typeof son>();
+  });
+
+  it('infers primitive and nested dynamic arrays', () => {
+    const matrix = array(2, () => array(2, () => field(0)));
+
+    expectTypeOf(matrix()).toEqualTypeOf<readonly (readonly (number | null)[])[]>();
+    expectTypeOf(matrix.at(0)!.at(0)!()).toEqualTypeOf<number | null>();
+  });
+
   it('does not expose internal parent mutation through Node', () => {
     type ExposesSetParent = '_setParent' extends keyof Node['api'] ? true : false;
 

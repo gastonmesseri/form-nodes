@@ -830,6 +830,79 @@ When the node becomes interactive again:
 
 An empty form has value `{}` and is valid, enabled, writable, visible, untouched, and pristine by default, provided it has no failing form validator.
 
+## Dynamic arrays
+
+`array()` creates a dynamic node whose items all have the same node shape. Its first argument is either an initial item count or an array of initial values. Its second argument is a factory that must return a fresh node definition for every item:
+
+```ts
+const profile = form({
+  name: field('Marco'),
+  sons: array(2, () => ({
+    name: field(''),
+    age: field(23),
+  })),
+});
+```
+
+A plain object returned by the factory is normalized to a `form()` node. The factory may also return a `field()`, an explicit `form()`, or another `array()`:
+
+```ts
+const tags = array(['angular', 'signals'], () => field(''));
+```
+
+When initial values are provided, the framework creates each node from the factory and resets it to the corresponding value. Initial items therefore remain pristine and untouched:
+
+```ts
+const sons = array(
+  [{ name: 'Mono', age: 11 }],
+  () => ({ name: field(''), age: field(23) }),
+);
+```
+
+The factory contract deliberately prevents node reuse. Returning the same live `field()`, `form()`, or `array()` instance more than once throws because items must not share values, parents, interaction state, validation state, or asynchronous watchers.
+
+### Reading items
+
+- Calling the array node or `value()` returns the aggregated readonly value array.
+- `items()` returns the current readonly node array.
+- `at(index)` returns one typed item or `undefined`.
+- `length()` returns the current item count.
+- Item paths use decimal index segments such as `['sons', '0', 'name']`.
+- Items inherit `form()` from the root form containing the array.
+
+### Structural operations
+
+```ts
+sons.push();
+sons.push({ name: 'Lia', age: 7 });
+sons.insert(1, { name: 'Noa', age: 4 });
+sons.removeAt(0);
+sons.move(1, 0);
+sons.clear();
+```
+
+- `push()` and `insert()` without a value preserve the defaults created by the factory.
+- Passing a value initializes the fresh item through reset, so the item itself starts pristine and untouched.
+- Every successful structural mutation marks the array dirty.
+- `move()` preserves the exact node instance and all of its state; it only changes item order and paths.
+- `removeAt()` and `clear()` detach removed nodes from the tree. A removed node retained by application code remains usable as a root node.
+- Invalid insertion and movement indexes throw `RangeError`. `removeAt()` returns `undefined` for a missing index.
+
+`set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and marks the array dirty. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
+
+### Aggregated state and validation
+
+An array behaves like an aggregate form node:
+
+- Its value, validity, pending, touched, and dirty signals react to its current items.
+- Synchronous and asynchronous validators configured in the third-argument options validate the complete array value.
+- Disabled, readonly, and hidden state propagates to current and future items.
+- Non-interactive behavior follows the same rules as forms and fields.
+- Touch, pristine, reset, and state operations apply to its descendants.
+- Nested item errors affect the array and its ancestor validity, but `errors()` contains only errors targeted at the array itself.
+
+This public factory-based API differs intentionally from Angular 22 Signal Forms. Angular derives array field trees from array-valued models and maintains tracked item identities. This library constructs its tree from node definitions, so a factory is required to create independent dynamic nodes. Both approaches preserve node identity and interaction state when existing items are reordered.
+
 ## Internal structural behavior
 
 These details are not public API, but explain current propagation behavior:
@@ -845,11 +918,9 @@ These details are not public API, but explain current propagation behavior:
 
 The current implementation does not yet provide:
 
-- Asynchronous validators or pending state.
 - Submission state.
 - Control-value-accessor or template directives.
-- Dynamic array primitives.
-- Runtime addition or removal of form nodes.
+- Runtime addition or removal of named object children after a `form()` is created.
 - Schema-driven form generation from JSON definitions.
 
 These boundaries describe the current codebase and are not commitments to a particular future API.
