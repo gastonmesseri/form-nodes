@@ -2,11 +2,12 @@ import { Injector, signal } from '@angular/core';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type { Node } from '../types/node.type';
-import { form, type FormApi } from '../primitives/form';
-import { field, type FieldApi } from '../primitives/field';
 import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
-import type { AsyncValidatorApi, FieldContext, ObservableLike } from './validation.type';
+import { form, type FormApi } from '../primitives/form';
+import { field, type FieldApi } from '../primitives/field';
+import type { ObservableLike } from '../types/observable-like.type';
+import type { AsyncValidatorApi, FieldContext } from './validation.type';
 
 const settle = async () => {
   await Promise.resolve();

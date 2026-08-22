@@ -1,6 +1,7 @@
 import type { Signal } from '@angular/core';
 
 import type { Node, PublicNode } from '../types/node.type';
+import type { ObservableLike } from '../types/observable-like.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -109,20 +110,6 @@ export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TVal
 export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = AsyncValidatorContext<TValue, TApi, TField> & {
   /** Snapshot returned by the validator's reactive `params` function. */
   readonly params: TParams;
-};
-
-export type SubscriptionLike = {
-  unsubscribe(): void;
-};
-
-export type ObserverLike<TValue> = {
-  next(value: TValue): void;
-  error(error: unknown): void;
-  complete(): void;
-};
-
-export type ObservableLike<TValue> = {
-  subscribe(observer: ObserverLike<TValue>): SubscriptionLike;
 };
 
 export type AsyncValidationResult = PromiseLike<ValidationResult> | ObservableLike<ValidationResult>;

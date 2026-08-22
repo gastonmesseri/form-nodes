@@ -1,6 +1,7 @@
 import { isObservableLike } from '../utils/is-observable-like';
 import { isSubscriptionLike } from '../utils/is-subscription-like';
-import type { AsyncValidationResult, ObservableLike, SubscriptionLike, ValidationResult } from './validation.type';
+import type { AsyncValidationResult, ValidationResult } from './validation.type';
+import type { ObservableLike, SubscriptionLike } from '../types/observable-like.type';
 
 type ObservableEvent =
   | { readonly type: 'next'; readonly value: ValidationResult }
