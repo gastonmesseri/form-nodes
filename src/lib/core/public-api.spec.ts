@@ -116,6 +116,35 @@ describe('types', () => {
     }>();
   });
 
+  it('exposes form api members directly while child types win on collisions', () => {
+    const formGroup = form({
+      age: field(23),
+      readonly: field(false),
+      disabled: field('child'),
+      reset: field('reset child'),
+    });
+
+    expectTypeOf(formGroup.value()).toEqualTypeOf<{
+      age: number | null;
+      readonly: boolean | null;
+      disabled: string | null;
+      reset: string | null;
+    }>();
+    expectTypeOf(formGroup.disabled()).toEqualTypeOf<string | null>();
+    expectTypeOf(formGroup.readonly()).toEqualTypeOf<boolean | null>();
+    expectTypeOf(formGroup.reset()).toEqualTypeOf<string | null>();
+    expectTypeOf(formGroup.api.disabled()).toEqualTypeOf<boolean>();
+    expectTypeOf(formGroup.api.readonly()).toEqualTypeOf<boolean>();
+    expectTypeOf(formGroup.api.reset).toBeCallableWith({
+      age: 30,
+      readonly: true,
+      disabled: 'updated',
+      reset: 'updated reset',
+    });
+    expectTypeOf(form({ age: field(23) }).disabled()).toEqualTypeOf<boolean>();
+    expectTypeOf(form({ age: field(23) }).patch).toBeCallableWith({ age: 30 });
+  });
+
   it('infers shorthand nested forms', () => {
     const formGroup = form({
       name: field('David'),

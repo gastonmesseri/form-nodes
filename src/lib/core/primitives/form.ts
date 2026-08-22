@@ -98,7 +98,8 @@ export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =
   & { (): FormValue<TNodes>; api: FormApi<TNodes, TParent> }
   & FormChildren<TNodes, TParent>
-  & HiddenFunctionMembers<keyof TNodes>;
+  & Omit<FormApi<TNodes, TParent>, keyof TNodes>
+  & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;
 
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   definitions: TDefinitions,
@@ -269,7 +270,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   formNode = Object.defineProperties(
     () => formValue(),
-    Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),
+    Object.getOwnPropertyDescriptors({ ...api, ...controls, api: internalApi }),
   ) as Form<TNodes>;
   controlKeys().forEach((key) => (controls[key] as InternalNode).api._setParent(formNode, String(key)));
   markAsNode(formNode);
