@@ -1,7 +1,9 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import { markAsNode } from '../utils/node-marker';
+import { shallowEqual } from '../utils/shallow-equal';
 import type { Node, RootNode } from '../types/node.type';
+import { computedFunction } from '../utils/computed-function';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -143,8 +145,10 @@ export function field<TValue>(
     () => !fieldNonInteractive(),
   );
   const fieldErrors = computed(() => [...fieldSyncErrors(), ...asyncValidation.errors()]);
-  const getError = <TKind extends string>(kind: TKind) =>
-    fieldErrors().find((error): error is typeof error & { readonly kind: TKind } => error.kind === kind);
+  const getError = computedFunction(
+    (kind: string) => fieldErrors().find((error) => error.kind === kind),
+    { equal: shallowEqual, max: 20 },
+  ) as FieldApi<TValue>['getError'];
   const fieldValidationStatus = computed<ValidationStatus>(() => {
     if (fieldNonInteractive()) return 'valid';
     if (fieldErrors().length > 0) return 'invalid';

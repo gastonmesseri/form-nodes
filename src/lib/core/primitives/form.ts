@@ -1,7 +1,9 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import type { Field } from './field';
+import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
+import { computedFunction } from '../utils/computed-function';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -176,8 +178,10 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     () => !formNonInteractive(),
   );
   const formErrors = computed(() => [...formSyncErrors(), ...asyncValidation.errors()]);
-  const getError = <TKind extends string>(kind: TKind) =>
-    formErrors().find((error): error is typeof error & { readonly kind: TKind } => error.kind === kind);
+  const getError = computedFunction(
+    (kind: string) => formErrors().find((error) => error.kind === kind),
+    { equal: shallowEqual, max: 20 },
+  ) as FormApi<TNodes>['getError'];
   const formPending = computed(() =>
     !formNonInteractive() && (
       asyncValidation.pending() || controlKeys().some((key) => controls[key]!.api.pending())
