@@ -1,7 +1,13 @@
 import { isEmpty } from '../../utils/is-empty';
+import { createMetadataKey } from '../../metadata/metadata';
+import { markValidatorMetadata } from '../validator-metadata';
 import { isFieldContext } from '../../utils/field-context-marker';
-import { markAsRequiredValidator } from '../../utils/required-validator-marker';
 import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
+
+export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
+  getInitial: () => false,
+  reduce: (current, contribution) => current || contribution,
+});
 
 export type RequiredOptions = {
   readonly message: string;
@@ -25,7 +31,11 @@ export function required(
   if (isFieldContext(contextOrOptions)) {
     return validateRequired(contextOrOptions);
   }
-  return markAsRequiredValidator((context) => validateRequired(context, contextOrOptions.message));
+  return markValidatorMetadata(
+    (context) => validateRequired(context, contextOrOptions.message),
+    REQUIRED_METADATA,
+    true,
+  );
 }
 
-markAsRequiredValidator(required as Validator<unknown>);
+markValidatorMetadata(required as Validator<unknown>, REQUIRED_METADATA, true);

@@ -1,5 +1,5 @@
-import { signal, type Signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
+import { signal, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
@@ -506,6 +506,15 @@ describe('form', () => {
     expect(configuredRequired.required()).toBe(true);
     expect(childRequired.name.required()).toBe(true);
     expect(childRequired.required()).toBe(false);
+  });
+
+  it('is not required without an own required validator or required error', () => {
+    const withoutValidators = form({ name: field('David') });
+    const unrelatedValidator = form({ name: field('David') }, [() => ({ kind: 'unrelated' })]);
+
+    expect(withoutValidators.required()).toBe(false);
+    expect(withoutValidators.api.required()).toBe(false);
+    expect(unrelatedValidator.required()).toBe(false);
   });
 
   it('returns only the first matching own form error', () => {

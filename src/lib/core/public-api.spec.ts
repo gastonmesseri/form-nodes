@@ -4,8 +4,8 @@ import { describe, expectTypeOf, it } from 'vitest';
 import { form } from './primitives/form';
 import { field } from './primitives/field';
 import type { Node } from './types/node.type';
-import { asyncValidator } from './validation/async-validator';
 import { required } from './validation/validators/required';
+import { asyncValidator } from './validation/async-validator';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {

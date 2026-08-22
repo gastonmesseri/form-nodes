@@ -1,5 +1,5 @@
-import { computed, signal, type Signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
+import { computed, signal, type Signal } from '@angular/core';
 
 import { field } from './field';
 import { required } from '../validation/validators/required';
@@ -305,6 +305,15 @@ describe('field', () => {
 
     fieldNode.enable();
     expect(fieldNode.required()).toBe(true);
+  });
+
+  it('is not required without a required validator or required error', () => {
+    const withoutValidators = field('David');
+    const unrelatedValidator = field('David', [() => ({ kind: 'unrelated' })]);
+
+    expect(withoutValidators.required()).toBe(false);
+    expect(withoutValidators.api.required()).toBe(false);
+    expect(unrelatedValidator.required()).toBe(false);
   });
 
   it('returns the first active error of a requested kind', () => {
