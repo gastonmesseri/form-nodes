@@ -300,14 +300,25 @@ Like every Angular `computed()`, synchronous validation is lazy: a dependency ch
 
 ### Validator sources and conditional synchronous validators
 
-`validators` accepts either one synchronous validator or a readonly array of validators. The positional validator argument and `setValidators()` accept the same two forms. Internally, the source is normalized, so `validators()` always returns a readonly array:
+`validators` accepts either one synchronous validator or a readonly array of validators. `null` and `undefined` entries in that array are ignored, enabling expressions such as `[required, condition() ? minLength(2) : null]`. The positional validator argument and `setValidators()` accept the same forms. Internally, the source is normalized, so `validators()` always returns a readonly array containing only effective validators:
 
 ```ts
 const name = field('', { validators: required });
 
 name.validators(); // [required]
-name.setValidators([required, minLength(2)]);
+name.setValidators([required, null, minLength(2)]);
 ```
+
+This makes a normal boolean condition convenient when constructing a field:
+
+```ts
+const myField = field('Marco', [
+  required,
+  someCondition ? minLength(2) : null,
+]);
+```
+
+Here, `someCondition` is evaluated when `field()` is called. If the condition must react to a signal changing later, read that signal inside a validator source instead, as in the following example.
 
 A synchronous validator may return another synchronous validator or an array of synchronous validators. The runner invokes every returned validator with the same stable context and continues resolving returned validators until it reaches normal validation results. This provides reactive conditional composition without replacing the configured validator source:
 
@@ -334,7 +345,7 @@ field('', {
 });
 ```
 
-Signals read by either the outer or returned validators are dependencies of the same synchronous validation `computed()`. Nested composition is supported, and every level receives the same context object. A returned array must contain either only validators or only validation errors; mixing validators and errors in one returned array throws because its intended evaluation order would be ambiguous. Circular composition throws an English runtime error, and resolution is limited to 100 returned-validator levels to protect against chains that continually allocate new functions.
+Signals read by either the outer or returned validators are dependencies of the same synchronous validation `computed()`. Nested composition is supported, and every level receives the same context object. `null` and `undefined` entries in a returned validator array are ignored, which allows concise conditional entries such as `() => [required, enabled() ? minLength(2) : null]`. After empty entries are removed, an array must contain either only validators or only validation errors; mixing validators and errors in one returned array throws because its intended evaluation order would be ambiguous. Circular composition throws an English runtime error, and resolution is limited to 100 returned-validator levels to protect against chains that continually allocate new functions.
 
 An `asyncValidator()` cannot be returned by a synchronous validator. Asynchronous validators must be placed directly in the validators array so their watcher lifecycle, debounce, cancellation, pending state, and dependency discovery can be established without executing arbitrary synchronous validators for classification:
 

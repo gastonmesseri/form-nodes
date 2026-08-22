@@ -374,6 +374,21 @@ describe('form', () => {
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'first' }]);
   });
 
+  it('filters empty entries from the configured form-validator array', () => {
+    const invalid = () => ({ kind: 'invalid' });
+    const formGroup = form({ name: field('David') }, [invalid, null, undefined]);
+
+    expect(formGroup.api.validators()).toEqual([invalid]);
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'invalid' }]);
+  });
+
+  it('filters empty entries from a returned form-validator array', () => {
+    const invalid = () => ({ kind: 'invalid' });
+    const formGroup = form({ name: field('David') }, () => [invalid, null, undefined]);
+
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'invalid' }]);
+  });
+
   it('is invalid when a child is invalid, even without own errors', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
