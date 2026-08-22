@@ -27,6 +27,28 @@ profile.readonly(); // value of the nested field
 profile.api.readonly(); // readonly state of the form
 ```
 
+Every form also exposes a stable, readonly `children` map for explicit tree navigation. Its entries are the same node instances exposed directly on the form, and nested forms provide their own `children` map:
+
+```ts
+const profile = form({
+  name: field('Marco'),
+  address: { city: field('Madrid') },
+});
+
+profile.children.name === profile.name; // true
+profile.children.address.children.city === profile.address.city; // true
+profile.api.children === profile.children; // true
+```
+
+As with every direct form API member, a child named `children` takes precedence at the top level. The explicit map always remains available through `form.api.children`:
+
+```ts
+const profile = form({ children: field('value') });
+
+profile.children(); // value of the child field
+profile.api.children.children(); // value of the same child field
+```
+
 ## Design guarantees
 
 - The library provides small, typed, signal-based `field()` and `form()` primitives.
