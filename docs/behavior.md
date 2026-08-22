@@ -937,9 +937,50 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 - `at(index)` returns one typed item or `undefined`.
 - Numeric property access such as `sons[0]` returns the same typed node as `sons.at(0)` while the array node remains callable.
 - Numeric properties are readonly. Structure must be changed through `push()`, `insert()`, `removeAt()`, `move()`, `clear()`, `set()`, or `reset()`.
+- `forEach()` iterates item nodes and receives `(item, index, arrayNode)` like the native array method.
+- Array nodes are iterable, so `for...of`, spread, and `Array.from()` also produce item nodes rather than item values.
+- `map()` transforms nodes into a normal result array, while `filter()` returns a normal array containing the matching nodes and supports TypeScript type predicates.
+- `find()` returns the first matching node and supports TypeScript type predicates.
+- `findIndex()` returns the index of the first matching node or `-1`.
+- `some()` and `every()` test nodes with native short-circuit behavior.
+- `includes()` and `indexOf()` compare node identity and accept the native optional `fromIndex` argument.
+- `forEach()`, `map()`, `filter()`, `find()`, `findIndex()`, `some()`, `every()`, `includes()`, `indexOf()`, and each iterator use the item snapshot captured when the operation begins; structural mutations during an active operation do not alter that traversal.
 - `length()` returns the current item count.
 - Item paths use decimal index segments such as `['sons', '0', 'name']`.
 - Items inherit `form()` from the root form containing the array.
+
+The array-style read methods are convenience shortcuts, not separate collection state. Their purpose is to make common node queries less verbose. Except for the callback's third argument, these calls are behaviorally equivalent to reading `items()` and invoking the corresponding native array method:
+
+```ts
+sons.forEach(callback);        // convenience form
+sons.items().forEach(callback);
+
+sons.map(callback);            // convenience form
+sons.items().map(callback);
+
+sons.filter(predicate);        // convenience form
+sons.items().filter(predicate);
+
+sons.find(predicate);          // convenience form
+sons.items().find(predicate);
+
+sons.findIndex(predicate);     // convenience form
+sons.items().findIndex(predicate);
+
+sons.some(predicate);          // convenience form
+sons.items().some(predicate);
+
+sons.every(predicate);         // convenience form
+sons.items().every(predicate);
+
+sons.includes(node);           // convenience form
+sons.items().includes(node);
+
+sons.indexOf(node);            // convenience form
+sons.items().indexOf(node);
+```
+
+The shortcut callbacks receive `(item, index, arrayNode)`, whereas callbacks invoked directly on `items()` receive the readonly item-array snapshot as their third argument. All shortcuts read `items()` internally, so they participate in reactive tracking exactly as a direct `items()` read does. Consumers may always use `items()` when they prefer the native readonly-array API or need a method that is not exposed as a shortcut.
 
 ### Structural operations
 

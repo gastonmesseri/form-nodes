@@ -42,6 +42,100 @@ describe('array', () => {
     expect(() => { delete (sons as any)[0]; }).toThrow(TypeError);
   });
 
+  it('iterates node snapshots through forEach, for-of, spread, and Array.from', () => {
+    const sons = array({ name: field('') }, [{ name: 'Mono' }, { name: 'Lia' }]);
+    const visited: Array<{ node: typeof sons[0]; index: number; owner: typeof sons }> = [];
+
+    sons.forEach((node, index, owner) => {
+      visited.push({ node, index, owner });
+      if (index === 0) sons.push({ name: 'Noa' });
+    });
+
+    expect(visited.map(({ node }) => node!.name())).toEqual(['Mono', 'Lia']);
+    expect(visited.map(({ index }) => index)).toEqual([0, 1]);
+    expect(visited.every(({ owner }) => owner === sons)).toBe(true);
+    expect([...sons]).toEqual(sons.items());
+    expect(Array.from(sons)).toEqual(sons.items());
+
+    const iteratedNames: string[] = [];
+    for (const son of sons) iteratedNames.push(son.name()!);
+    expect(iteratedNames).toEqual(['Mono', 'Lia', 'Noa']);
+  });
+
+  it('creates node snapshots through map and filter', () => {
+    const sons = array(
+      { name: field(''), age: field(0) },
+      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
+    );
+
+    const names = sons.map((son, index, owner) => {
+      expect(owner).toBe(sons);
+      return `${index}:${son.name()}`;
+    });
+    const older = sons.filter((son, index, owner) => {
+      expect(owner).toBe(sons);
+      return index === 0 && son.age()! > 10;
+    });
+
+    expect(names).toEqual(['0:Mono', '1:Lia']);
+    expect(older).toEqual([sons[0]]);
+  });
+
+  it('short-circuits node snapshots through find, some, and every', () => {
+    const sons = array(
+      { name: field(''), age: field(0) },
+      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }, { name: 'Noa', age: 4 }],
+    );
+    const findVisits: string[] = [];
+    const someVisits: string[] = [];
+    const everyVisits: string[] = [];
+
+    const found = sons.find((son, index, owner) => {
+      expect(owner).toBe(sons);
+      findVisits.push(`${index}:${son.name()}`);
+      return son.name() === 'Lia';
+    });
+    const hasYoungChild = sons.some((son) => {
+      someVisits.push(son.name()!);
+      return son.age()! < 10;
+    });
+    const allNamed = sons.every((son) => {
+      everyVisits.push(son.name()!);
+      return son.name() !== '';
+    });
+
+    expect(found).toBe(sons[1]);
+    expect(findVisits).toEqual(['0:Mono', '1:Lia']);
+    expect(hasYoungChild).toBe(true);
+    expect(someVisits).toEqual(['Mono', 'Lia']);
+    expect(allNamed).toBe(true);
+    expect(everyVisits).toEqual(['Mono', 'Lia', 'Noa']);
+  });
+
+  it('finds node indexes and compares nodes by identity', () => {
+    const sons = array(
+      { name: field('') },
+      [{ name: 'Mono' }, { name: 'Lia' }, { name: 'Noa' }],
+    );
+    const lia = sons[1]!;
+    const visits: string[] = [];
+
+    const index = sons.findIndex((son, itemIndex, owner) => {
+      expect(owner).toBe(sons);
+      visits.push(`${itemIndex}:${son.name()}`);
+      return son.name() === 'Lia';
+    });
+
+    expect(index).toBe(1);
+    expect(visits).toEqual(['0:Mono', '1:Lia']);
+    expect(sons.findIndex((son) => son.name() === 'Missing')).toBe(-1);
+    expect(sons.includes(lia)).toBe(true);
+    expect(sons.includes(lia, 2)).toBe(false);
+    expect(sons.indexOf(lia)).toBe(1);
+    expect(sons.indexOf(lia, 2)).toBe(-1);
+    expect(sons.includes({} as typeof lia)).toBe(false);
+  });
+
   it('applies initial values to items cloned from a shorthand template', () => {
     const sons = array(
       { name: field(''), age: field(23) },
