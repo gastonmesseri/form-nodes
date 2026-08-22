@@ -1,12 +1,14 @@
 import { signal, untracked } from '@angular/core';
 
+import type { Node } from '../types/node.type';
 import { addDefaultTargetNode } from '../utils/add-default-target-node';
 import { normalizeValidationResult } from '../utils/normalize-validation-result';
 import { getAsyncValidatorOptions, isAsyncValidator } from '../utils/async-validator-marker';
 import { createTrackedRunner, type TrackedRunner } from '../utils/create-reactive-watch';
 import { shallowEqual } from '../utils/shallow-equal';
+import { createValidatorContext } from './create-validator-context';
 import { resolveAsyncValidationResult } from './resolve-async-validation-result';
-import type { AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorContext, AsyncValidatorState, FieldContext, ParameterizedAsyncValidatorContext, ValidationError, ValidationResult, Validators } from './validation.type';
+import type { AsyncValidationResult, AsyncValidator, AsyncValidatorContext, AsyncValidatorState, FieldContext, ParameterizedAsyncValidatorContext, ValidationError, ValidationResult, Validators } from './validation.type';
 
 const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => new Promise((resolve) => {
   if (milliseconds <= 0 || signal.aborted) return resolve();
@@ -19,7 +21,7 @@ const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => new P
   signal.addEventListener('abort', finish, { once: true });
 });
 
-export const createAsyncValidation = <TValue, TNode extends { api: AsyncValidatorState }>(
+export const createAsyncValidation = <TValue, TNode extends Node & { api: AsyncValidatorState }>(
   context: FieldContext<TValue>,
   getValidators: () => Validators<TValue>,
   getSyncErrors: () => readonly ValidationError[],
@@ -97,8 +99,7 @@ export const createAsyncValidation = <TValue, TNode extends { api: AsyncValidato
     });
     if (validators.length === 0) return;
     if (!isActive() || getSyncErrors().length > 0) return;
-    const api = getTargetNode().api as AsyncValidatorApi<TValue>;
-    const baseContext = { ...context, api };
+    const baseContext = createValidatorContext(context, getTargetNode());
     if (validators.some((validator) => getAsyncValidatorOptions(validator).params === undefined)) context.value();
     const activeValidators = validators.flatMap((validator) => {
       const options = getAsyncValidatorOptions(validator);

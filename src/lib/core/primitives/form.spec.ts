@@ -89,10 +89,18 @@ describe('form', () => {
 
   it('exposes tree navigation through a field synchronous validator api', () => {
     let validatorApi: unknown;
+    let validatorField: unknown;
+    let validatorForm: unknown;
+    let validatorParent: unknown;
+    let validatorPath: readonly string[] = [];
     const profile = form({
       address: {
         city: field('Zurich', [context => {
           validatorApi = context.api;
+          validatorField = context.field;
+          validatorForm = context.form();
+          validatorParent = context.parent();
+          validatorPath = context.path();
           return null;
         }]),
       },
@@ -100,6 +108,10 @@ describe('form', () => {
 
     expect(profile.address.city.errors()).toEqual([]);
     expect(validatorApi).toBe(profile.address.city.api);
+    expect(validatorField).toBe(profile.address.city);
+    expect(validatorForm).toBe(profile);
+    expect(validatorParent).toBe(profile.address);
+    expect(validatorPath).toEqual(['address', 'city']);
     expect(profile.address.city.api.path()).toEqual(['address', 'city']);
     expect(profile.address.city.api.parent()).toBe(profile.address);
     expect(profile.address.city.api.form()).toBe(profile);
@@ -107,13 +119,16 @@ describe('form', () => {
 
   it('exposes the root form api to synchronous form validators', () => {
     let validatorApi: unknown;
+    let validatorField: unknown;
     const profile = form({ name: field('David') }, [context => {
       validatorApi = context.api;
+      validatorField = context.field;
       return null;
     }]);
 
     expect(profile.api.errors()).toEqual([]);
     expect(validatorApi).toBe(profile.api);
+    expect(validatorField).toBe(profile);
     expect(profile.api.path()).toEqual([]);
     expect(profile.api.parent()).toBeNull();
     expect(profile.api.form()).toBe(profile);

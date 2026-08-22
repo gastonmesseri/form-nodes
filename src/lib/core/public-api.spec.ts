@@ -168,6 +168,10 @@ describe('types', () => {
         expectTypeOf(context.api).toEqualTypeOf<ValidatorApi<string>>();
         expectTypeOf(context.api.value()).toEqualTypeOf<string>();
         expectTypeOf(context.api.path()).toEqualTypeOf<readonly string[]>();
+        expectTypeOf(context.field).toEqualTypeOf<Node>();
+        expectTypeOf(context.form()).toEqualTypeOf<ReturnType<ValidatorApi<string>['form']>>();
+        expectTypeOf(context.path()).toEqualTypeOf<readonly string[]>();
+        expectTypeOf(context.disabled()).toEqualTypeOf<boolean>();
         return null;
       }],
       nullable: false,
