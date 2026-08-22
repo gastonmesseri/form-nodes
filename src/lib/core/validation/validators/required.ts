@@ -1,5 +1,6 @@
 import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../../utils/field-context-marker';
+import { markAsRequiredValidator } from '../../utils/required-validator-marker';
 import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
 
 export type RequiredOptions = {
@@ -24,5 +25,7 @@ export function required(
   if (isFieldContext(contextOrOptions)) {
     return validateRequired(contextOrOptions);
   }
-  return (context) => validateRequired(context, contextOrOptions.message);
+  return markAsRequiredValidator((context) => validateRequired(context, contextOrOptions.message));
 }
+
+markAsRequiredValidator(required as Validator<unknown>);

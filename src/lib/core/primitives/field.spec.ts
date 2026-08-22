@@ -290,6 +290,45 @@ describe('field', () => {
     expect(fieldNode.valid()).toBe(true);
   });
 
+  it('reports whether a required validator is configured or its error is active', () => {
+    const fieldNode = field('', [required]);
+
+    expect(fieldNode.required()).toBe(true);
+    expect(fieldNode.api.required()).toBe(true);
+
+    fieldNode.set('David');
+    expect(fieldNode.required()).toBe(true);
+
+    fieldNode.set('');
+    fieldNode.disable();
+    expect(fieldNode.required()).toBe(true);
+
+    fieldNode.enable();
+    expect(fieldNode.required()).toBe(true);
+  });
+
+  it('derives required from the error kind rather than validator identity', () => {
+    const fieldNode = field('David', [() => ({ kind: 'required' })]);
+
+    expect(fieldNode.required()).toBe(true);
+  });
+
+  it('recognizes configured and conditionally composed required validators', () => {
+    const enabled = signal(false);
+    const configured = field('David', [required({ message: 'Name is required' })]);
+    const conditional = field('David', [() => enabled() ? required : null]);
+
+    expect(configured.errors()).toEqual([]);
+    expect(configured.required()).toBe(true);
+    expect(conditional.required()).toBe(false);
+
+    enabled.set(true);
+    expect(conditional.required()).toBe(true);
+
+    enabled.set(false);
+    expect(conditional.required()).toBe(false);
+  });
+
   it('reacts to external signals read by a synchronous validator', () => {
     const blocked = signal(false);
     const validate = vi.fn(() => blocked() ? { kind: 'blocked' } : null);

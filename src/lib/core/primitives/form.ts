@@ -5,6 +5,7 @@ import { isNode, markAsNode } from '../utils/node-marker';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { isRequiredValidator } from '../utils/required-validator-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -64,6 +65,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  required: Signal<boolean>;
   pending: Signal<boolean>;
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
@@ -161,9 +163,10 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   let formNode!: Form<TNodes>;
   const rootForm = computed(() => formParent()?.api.form() ?? formNode) as Signal<Form<TNodes>>;
-  const formSyncErrors = computed(() => formNonInteractive()
-    ? []
+  const formSyncValidation = computed(() => formNonInteractive()
+    ? { errors: [], required: false }
     : runSyncValidators(formContext, formValidators(), formNode));
+  const formSyncErrors = computed(() => formSyncValidation().errors);
   const asyncValidation = createAsyncValidation(
     formContext,
     formValidators,
@@ -240,6 +243,11 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     errors: formErrors,
     valid: computed(() => formValidationStatus() === 'valid'),
     invalid: computed(() => formValidationStatus() === 'invalid'),
+    required: computed(() =>
+      formValidators().some(isRequiredValidator)
+      || formSyncValidation().required
+      || formErrors().some((error) => error.kind === 'required')
+    ),
     pending: formPending,
     validationStatus: formValidationStatus,
     touched: formTouched,
