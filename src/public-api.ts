@@ -23,6 +23,8 @@ export type {
   AsyncValidatorBaseContext,
   AsyncValidatorContext,
   AsyncValidatorState,
+  ComposableValidationResult,
+  ComposableValidator,
   ParameterizedAsyncValidatorContext,
   ValidationError,
   ValidationResult,

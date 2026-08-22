@@ -179,6 +179,13 @@ describe('types', () => {
     });
   });
 
+  it('accepts a synchronous validator returned by another validator', () => {
+    field('David', {
+      validators: [context => context.dirty() ? required : null],
+      nullable: false,
+    });
+  });
+
   it('infers explicit asynchronous validator params', () => {
     const country = signal('Switzerland');
     field('David', [asyncValidator({
