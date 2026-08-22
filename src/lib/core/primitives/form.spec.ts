@@ -48,6 +48,34 @@ describe('form', () => {
     expect(profile.api.children.age).toBe(profile.age);
   });
 
+  it('gives children precedence over native function members', () => {
+    const controls = {
+      apply: field('apply'),
+      arguments: field('arguments'),
+      bind: field('bind'),
+      call: field('call'),
+      caller: field('caller'),
+      length: field('length'),
+      name: field('name'),
+      prototype: field('prototype'),
+      toString: field('toString'),
+    };
+    const formGroup = form(controls);
+
+    expect(formGroup.apply).toBe(controls.apply);
+    expect(formGroup.arguments).toBe(controls.arguments);
+    expect(formGroup.bind).toBe(controls.bind);
+    expect(formGroup.call).toBe(controls.call);
+    expect(formGroup.caller).toBe(controls.caller);
+    expect(formGroup.length).toBe(controls.length);
+    expect(formGroup.name).toBe(controls.name);
+    expect(formGroup.prototype).toBe(controls.prototype);
+    expect(formGroup.toString).toBe(controls.toString);
+    expect(formGroup.apply()).toBe('apply');
+    expect(formGroup.arguments()).toBe('arguments');
+    expect(formGroup.name()).toBe('name');
+  });
+
   it('gives child nodes precedence over colliding direct api members', () => {
     const readonlyField = field(false);
     const disabledField = field('child');

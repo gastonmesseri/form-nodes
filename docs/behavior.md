@@ -49,6 +49,18 @@ profile.children(); // value of the child field
 profile.api.children.children(); // value of the same child field
 ```
 
+Native function members such as `name`, `apply`, `arguments`, `call`, and `length` are hidden from the public `field()` and `form()` types. If a form declares a child with one of those names, that child is intentionally exposed instead and takes precedence in both TypeScript and runtime behavior:
+
+```ts
+const example = form({
+  name: field('profile'),
+  apply: field('value'),
+});
+
+example.name(); // 'profile'
+example.apply(); // 'value'
+```
+
 ## Design guarantees
 
 - The library provides small, typed, signal-based `field()` and `form()` primitives.
