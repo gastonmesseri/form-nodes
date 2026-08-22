@@ -256,6 +256,42 @@ describe('form', () => {
     expect(formGroup.api.value()).toEqual({ age: 30 });
   });
 
+  it('aggregates only committed values while a nested control update is debouncing', async () => {
+    vi.useFakeTimers();
+    try {
+      const validate = vi.fn(({ value }: Context<{ address: { city: string | null } }>) => {
+        value();
+        return null;
+      });
+      const profile = form(
+        { address: { city: field('Zurich', { debounce: 100 }) } },
+        { validators: [validate] },
+      );
+
+      expect(profile.errors()).toEqual([]);
+      expect(validate).toHaveBeenCalledOnce();
+
+      profile.address.city.setControlValue('Bern');
+
+      expect(profile.address.city.controlValue()).toBe('Bern');
+      expect(profile.address.city.value()).toBe('Zurich');
+      expect(profile.address.value()).toEqual({ city: 'Zurich' });
+      expect(profile.value()).toEqual({ address: { city: 'Zurich' } });
+      expect(validate).toHaveBeenCalledOnce();
+
+      profile.address.city.flush();
+
+      expect(profile.address.value()).toEqual({ city: 'Bern' });
+      expect(profile.value()).toEqual({ address: { city: 'Bern' } });
+      expect(profile.errors()).toEqual([]);
+      expect(validate).toHaveBeenCalledTimes(2);
+      await vi.runAllTimersAsync();
+      expect(profile.value()).toEqual({ address: { city: 'Bern' } });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('includes the value of nested forms', () => {
     const formGroup = form({
       age: field(23),
