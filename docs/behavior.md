@@ -283,6 +283,21 @@ field('David', {
 
 The flat properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` defaults to the common callable `Node` type.
 
+Synchronous validators execute inside the node's internal `computed()`. Any Angular signal read directly by the callback becomes a dependency, including signals external to the form tree. No additional `computed()` wrapper is required:
+
+```ts
+const blocked = signal(false);
+const username = field('David', {
+  validators: [() => blocked() ? { kind: 'blocked' } : null],
+});
+
+username.errors(); // []
+blocked.set(true);
+username.errors(); // [{ kind: 'blocked', targetNode: username }]
+```
+
+Like every Angular `computed()`, synchronous validation is lazy: a dependency change invalidates it, and the validator re-executes when validation state is next consumed. A reactive consumer of `errors()`, `valid()`, `invalid()`, or `validationStatus()` observes the update automatically. This behavior applies equally to field and form validators.
+
 ```ts
 const username = field('', [
   required,
@@ -399,6 +414,7 @@ Validation behavior:
 - Validators returning `null`, `undefined`, or no value add no errors.
 - Changing a field value recomputes its validation.
 - Changing a descendant recomputes ancestor form validators against the aggregated value.
+- Changing an external signal read by a synchronous field or form validator invalidates and recomputes that validation when consumed.
 - `setValidators()` applies the new validators to the current value without marking the node dirty.
 - Reset preserves validators and revalidates an assigned value.
 

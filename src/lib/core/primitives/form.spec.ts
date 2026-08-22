@@ -318,6 +318,20 @@ describe('form', () => {
     expect(formGroup.api.valid()).toBe(true);
   });
 
+  it('reacts to external signals read by a synchronous form validator', () => {
+    const blocked = signal(false);
+    const validate = vi.fn(() => blocked() ? { kind: 'blocked' } : null);
+    const formGroup = form({ name: field('David') }, [validate]);
+
+    expect(formGroup.api.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledOnce();
+
+    blocked.set(true);
+
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'blocked' }]);
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
   it('is invalid when a child is invalid, even without own errors', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
