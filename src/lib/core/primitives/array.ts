@@ -447,14 +447,8 @@ export function array<TDefinition extends NodeDefinition>(
     markAsUntouched: () => arraySelfTouched.set(false),
     dirty: arrayDirty,
     pristine: computed(() => !arrayDirty()),
-    markAsDirty: () => {
-      arraySelfDirty.set(true);
-      arrayItems().forEach((item) => item.api.markAsDirty());
-    },
-    markAsPristine: () => {
-      arraySelfDirty.set(false);
-      arrayItems().forEach((item) => item.api.markAsPristine());
-    },
+    markAsDirty: () => arraySelfDirty.set(true),
+    markAsPristine: () => arraySelfDirty.set(false),
     disabled: arrayDisabled,
     enabled: computed(() => !arrayDisabled()),
     disable: () => arraySelfDisabled.set(true),

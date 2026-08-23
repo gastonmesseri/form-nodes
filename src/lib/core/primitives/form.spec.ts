@@ -1083,7 +1083,7 @@ describe('form', () => {
     expect(formGroup.name.dirty()).toBe(false);
   });
 
-  it('marks every descendant as dirty', () => {
+  it('marks only the form itself as dirty, including when empty', () => {
     const formGroup = form({
       name: field('David'),
       address: form({
@@ -1092,22 +1092,28 @@ describe('form', () => {
       }),
     });
     formGroup.api.markAsDirty();
-    expect(formGroup.name.dirty()).toBe(true);
-    expect(formGroup.address.city.dirty()).toBe(true);
-    expect(formGroup.address.country.dirty()).toBe(true);
-    expect(formGroup.address.api.dirty()).toBe(true);
+    expect(formGroup.dirty()).toBe(true);
+    expect(formGroup.name.dirty()).toBe(false);
+    expect(formGroup.address.city.dirty()).toBe(false);
+    expect(formGroup.address.country.dirty()).toBe(false);
+    expect(formGroup.address.api.dirty()).toBe(false);
+
+    const emptyForm = form({});
+    emptyForm.markAsDirty();
+    expect(emptyForm.dirty()).toBe(true);
   });
 
-  it('marks every descendant as pristine', () => {
+  it('only clears the form own dirty state through markAsPristine', () => {
     const formGroup = form({
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.api.markAsDirty();
+    formGroup.name.markAsDirty();
     formGroup.api.markAsPristine();
-    expect(formGroup.name.dirty()).toBe(false);
+    expect(formGroup.name.dirty()).toBe(true);
     expect(formGroup.address.city.dirty()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.api.dirty()).toBe(true);
   });
 
   it('keeps the values after markAsPristine', () => {
@@ -1116,18 +1122,21 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
     formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.api.markAsDirty();
     formGroup.api.markAsPristine();
     expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Madrid' } });
   });
 
-  it('only marks its own subtree as dirty', () => {
+  it('marks a nested form without dirtying its descendants or siblings', () => {
     const formGroup = form({
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
     formGroup.address.api.markAsDirty();
-    expect(formGroup.address.city.dirty()).toBe(true);
+    expect(formGroup.address.dirty()).toBe(true);
+    expect(formGroup.address.city.dirty()).toBe(false);
     expect(formGroup.name.dirty()).toBe(false);
+    expect(formGroup.dirty()).toBe(true);
   });
 
   it('goes back to pristine when the only dirty child is reset', () => {
@@ -1135,7 +1144,7 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    formGroup.name.set('Ana');
+    formGroup.name.setControlValue('Ana');
     formGroup.name.markAsPristine();
     expect(formGroup.api.dirty()).toBe(false);
   });
