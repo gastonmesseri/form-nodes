@@ -54,6 +54,17 @@ describe('runSyncValidators', () => {
     expect(() => fieldNode.errors()).toThrow('Circular synchronous validator composition detected.');
   });
 
+  it('rejects synchronous validator composition deeper than the safety limit', () => {
+    let nested: ComposableValidator<string | null> = () => null;
+    for (let depth = 0; depth <= 100; depth++) {
+      const child = nested;
+      nested = () => child;
+    }
+    const fieldNode = field('David', [nested]);
+
+    expect(() => fieldNode.errors()).toThrow('Synchronous validator composition exceeded 100 levels.');
+  });
+
   it('rejects an asynchronous validator returned by a synchronous validator', () => {
     const fieldNode = field('David', [() => asyncValidator(async () => null)]);
 

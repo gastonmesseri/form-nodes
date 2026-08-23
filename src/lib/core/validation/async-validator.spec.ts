@@ -433,6 +433,23 @@ describe('asyncValidator', () => {
     expect(validate).toHaveBeenCalledOnce();
   });
 
+  it('stops tracking dependencies after an asynchronous validator is removed', async () => {
+    const dependency = signal('available');
+    const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
+    const name = field('David', [asyncValidator(validate)]);
+
+    await settle();
+    expect(validate).toHaveBeenCalledOnce();
+
+    name.setValidators([]);
+    expect(name.errors()).toEqual([]);
+    dependency.set('unavailable');
+    await settle();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.pending()).toBe(false);
+  });
+
   it('stops reactive validation when its explicit injector is destroyed', async () => {
     const dependency = signal('available');
     const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
