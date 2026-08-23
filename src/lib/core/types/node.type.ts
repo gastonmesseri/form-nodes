@@ -2,6 +2,11 @@ import type { Signal } from '@angular/core';
 
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 
+export type MarkAsTouchedOptions = {
+  /** When true, marks only the current node and leaves its descendants untouched. */
+  skipDescendants?: boolean;
+};
+
 export type NodeApi = {
   form: Signal<Node | null>;
   path: Signal<readonly string[]>;
@@ -14,7 +19,7 @@ export type NodeApi = {
   required: Signal<boolean>;
   pending: Signal<boolean>;
   touched: Signal<boolean>;
-  markAsTouched(): void;
+  markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   markAsDirty(): void;

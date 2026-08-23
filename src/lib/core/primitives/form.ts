@@ -18,7 +18,7 @@ import { createNodeDefinitionFactory } from '../utils/create-node-definition-fac
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { InternalNode, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { InternalNode, MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
@@ -77,7 +77,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched(): void;
+  markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;
@@ -144,6 +144,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     ]),
   ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
+  const formSelfTouched = signal(false);
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
   const formKeyInParent = signal<string | null>(null);
@@ -209,7 +210,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const formTouched = computed(() =>
-    !formNonInteractive() && controlKeys().some((key) => controls[key]!.api.touched()),
+    !formNonInteractive() && (formSelfTouched() || controlKeys().some((key) => controls[key]!.api.touched())),
   );
   const formDirty = computed(() =>
     !formNonInteractive() && controlKeys().some((key) => controls[key]!.api.dirty()),
@@ -235,6 +236,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     });
   };
   const reset = (...args: [] | [value: FormSet<TNodes>]) => {
+    formSelfTouched.set(false);
     if (args.length === 0) {
       controlKeys().forEach((key) => controls[key]!.api.reset());
       return;
@@ -268,8 +270,12 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     validationStatus: formValidationStatus,
     touched: formTouched,
     untouched: computed(() => !formTouched()),
-    markAsTouched: () => controlKeys().forEach((key) => controls[key]!.api.markAsTouched()),
-    markAsUntouched: () => controlKeys().forEach((key) => controls[key]!.api.markAsUntouched()),
+    markAsTouched: (options) => {
+      if (formNonInteractive()) return;
+      formSelfTouched.set(true);
+      if (!options?.skipDescendants) controlKeys().forEach((key) => controls[key]!.api.markAsTouched());
+    },
+    markAsUntouched: () => formSelfTouched.set(false),
     dirty: formDirty,
     pristine: computed(() => !formDirty()),
     markAsDirty: () => controlKeys().forEach((key) => controls[key]!.api.markAsDirty()),

@@ -19,7 +19,7 @@ import { readStateSource, getInitialMutableState } from '../utils/read-state-sou
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { InternalNode, Node, NodeDefinition, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
+import type { InternalNode, MarkAsTouchedOptions, Node, NodeDefinition, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 
 export type ArrayOptions<TValue = any> = FormOptions<TValue>;
 
@@ -91,7 +91,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched(): void;
+  markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;
@@ -224,6 +224,7 @@ export function array<TDefinition extends NodeDefinition>(
     return item;
   });
   const arrayItems = signal<readonly TItem[]>(initialItems);
+  const arraySelfTouched = signal(false);
   const arraySelfDirty = signal(false);
   const arraySelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const arrayParent = signal<Node | null>(null);
@@ -286,7 +287,7 @@ export function array<TDefinition extends NodeDefinition>(
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const arrayTouched = computed(() =>
-    !arrayNonInteractive() && arrayItems().some((item) => item.api.touched()),
+    !arrayNonInteractive() && (arraySelfTouched() || arrayItems().some((item) => item.api.touched())),
   );
   const arrayDirty = computed(() =>
     !arrayNonInteractive() && (arraySelfDirty() || arrayItems().some((item) => item.api.dirty())),
@@ -341,6 +342,7 @@ export function array<TDefinition extends NodeDefinition>(
   const reset = (...args: [] | [value: TSet]) => {
     if (args.length === 0) arrayItems().forEach((item) => item.api.reset());
     else reconcile(args[0], true);
+    arraySelfTouched.set(false);
     arraySelfDirty.set(false);
   };
   const getItemSnapshot = () => [
@@ -442,8 +444,12 @@ export function array<TDefinition extends NodeDefinition>(
     validationStatus: arrayValidationStatus,
     touched: arrayTouched,
     untouched: computed(() => !arrayTouched()),
-    markAsTouched: () => arrayItems().forEach((item) => item.api.markAsTouched()),
-    markAsUntouched: () => arrayItems().forEach((item) => item.api.markAsUntouched()),
+    markAsTouched: (options) => {
+      if (arrayNonInteractive()) return;
+      arraySelfTouched.set(true);
+      if (!options?.skipDescendants) arrayItems().forEach((item) => item.api.markAsTouched());
+    },
+    markAsUntouched: () => arraySelfTouched.set(false),
     dirty: arrayDirty,
     pristine: computed(() => !arrayDirty()),
     markAsDirty: () => {

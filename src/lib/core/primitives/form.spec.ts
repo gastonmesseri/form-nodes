@@ -938,16 +938,40 @@ describe('form', () => {
     expect(formGroup.address.api.touched()).toBe(true);
   });
 
-  it('marks every descendant as untouched', () => {
+  it('can mark an empty form as touched through its own interaction state', () => {
+    const formGroup = form({});
+
+    formGroup.markAsTouched();
+
+    expect(formGroup.touched()).toBe(true);
+    formGroup.markAsUntouched();
+    expect(formGroup.untouched()).toBe(true);
+  });
+
+  it('can mark only the form itself as touched', () => {
+    const formGroup = form({
+      name: field('David'),
+      address: form({ city: field('Zurich') }),
+    });
+
+    formGroup.markAsTouched({ skipDescendants: true });
+
+    expect(formGroup.touched()).toBe(true);
+    expect(formGroup.name.untouched()).toBe(true);
+    expect(formGroup.address.untouched()).toBe(true);
+    expect(formGroup.address.city.untouched()).toBe(true);
+  });
+
+  it('only clears its own touched state through markAsUntouched', () => {
     const formGroup = form({
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
     formGroup.api.markAsTouched();
     formGroup.api.markAsUntouched();
-    expect(formGroup.name.touched()).toBe(false);
-    expect(formGroup.address.city.touched()).toBe(false);
-    expect(formGroup.api.touched()).toBe(false);
+    expect(formGroup.name.touched()).toBe(true);
+    expect(formGroup.address.city.touched()).toBe(true);
+    expect(formGroup.api.touched()).toBe(true);
   });
 
   it('only marks its own subtree as touched', () => {
