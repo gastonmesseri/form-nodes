@@ -3,6 +3,7 @@ export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field'
 export { array } from './lib/core/primitives/array';
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArraySet, ArrayValue } from './lib/core/primitives/array';
 export { form } from './lib/core/primitives/form';
+export { FORM_NODE, FormNodeDirective } from './lib/core/directives/form-node/form-node';
 export { asyncValidator } from './lib/core/validation/async-validator';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/core/validation/async-validator';
 export type {
