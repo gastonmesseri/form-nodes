@@ -14,6 +14,9 @@ describe('maxDate', () => {
       maxDate: maximum,
     });
     expect(maxDate(maximum)(context(maximum))).toBeNull();
+    expect(maxDate(maximum)(context(null))).toBeNull();
     expect(maxDate(maximum)(context(new Date(Number.NaN)))).toBeNull();
+    expect(maxDate(() => undefined)(context(middle))).toBeNull();
+    expect(maxDate(new Date(Number.NaN))(context(middle))).toBeNull();
   });
 });

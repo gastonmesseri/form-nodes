@@ -14,5 +14,11 @@ describe('pattern', () => {
     });
     expect(pattern(/^[a-z]+$/)(context(''))).toBeNull();
     expect(pattern(/^[a-z]+$/)(context(null))).toBeNull();
+    expect(pattern(() => undefined)(context('abc'))).toBeNull();
+
+    const globalExpression = /a/g;
+    globalExpression.lastIndex = 1;
+    expect(pattern(globalExpression)(context('a'))).toBeNull();
+    expect(globalExpression.lastIndex).toBe(1);
   });
 });
