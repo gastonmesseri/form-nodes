@@ -1702,4 +1702,24 @@ describe('form', () => {
     hidden.set(true);
     expect(formGroup.address.city.hidden()).toBe(true);
   });
+
+  it('warns and ignores unknown keys passed to set', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const profile = form({ name: field('David') });
+
+    profile.set({ name: 'Mark', unknown: true } as any);
+
+    expect(profile()).toEqual({ name: 'Mark' });
+    expect(warning).toHaveBeenCalledWith('form: unknown key "unknown" ignored on set');
+    warning.mockRestore();
+  });
+
+  it('ignores markAsTouched while the form is non-interactive', () => {
+    const profile = form({ name: field('David') }, { disabled: true });
+
+    profile.markAsTouched();
+
+    expect(profile.untouched()).toBe(true);
+    expect(profile.name.untouched()).toBe(true);
+  });
 });
