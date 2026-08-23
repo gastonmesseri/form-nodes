@@ -7,7 +7,7 @@
   "scripts": {
     "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json",
     "test": "vitest run",
-    "test:coverage:form-node": "vitest run --coverage --coverage.include='src/lib/core/directives/form-node/*.ts' src/lib/core/directives/form-node/form-node.spec.ts",
+    "test:coverage:form-node": "vitest run --coverage --coverage.include='src/lib/core/directives/form-node/*.ts' src/lib/core/directives/form-node/form-node.directive.spec.ts",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit"
   },

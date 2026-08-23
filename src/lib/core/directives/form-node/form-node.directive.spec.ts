@@ -8,7 +8,7 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
 import { field } from '../../primitives/field';
-import { FormNodeDirective } from './form-node';
+import { FormNodeDirective } from './form-node.directive';
 import type { Field } from '../../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { required } from '../../validation/validators/required';
