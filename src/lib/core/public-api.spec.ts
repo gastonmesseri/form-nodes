@@ -66,6 +66,22 @@ describe('types', () => {
     expectTypeOf(names.disabled()).toEqualTypeOf<boolean>();
   });
 
+  it('contextually types array initial values from the template', () => {
+    const locations = array(
+      { city: field(''), country: field('') },
+      [{ city: 'Zurich', country: 'Switzerland' }],
+    );
+
+    expectTypeOf(locations()).toEqualTypeOf<{ city: string | null; country: string | null }[]>();
+
+    if (false) {
+      // @ts-expect-error every property declared by the template is required
+      array({ city: field(''), country: field('') }, [{ city: 'Zurich' }]);
+      // @ts-expect-error initial values cannot contain properties absent from the template
+      array({ city: field(''), country: field('') }, [{ city: 'Zurich', country: 'Switzerland', zip: 8000 }]);
+    }
+  });
+
   it('infers primitive and nested dynamic arrays', () => {
     const matrix = array(() => array(() => field(0), 2), 2);
     const names = array(field('Marco'), []);
