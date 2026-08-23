@@ -473,6 +473,22 @@ describe('form', () => {
     });
   });
 
+  it('updates programmatically from the complete form value', () => {
+    const formGroup = form({
+      name: field('Marco'),
+      address: form({ city: field('Zurich') }),
+    });
+
+    formGroup.update((value) => ({
+      ...value,
+      name: 'Mark',
+      address: { ...value.address, city: 'Bern' },
+    }));
+
+    expect(formGroup()).toEqual({ name: 'Mark', address: { city: 'Bern' } });
+    expect(formGroup.pristine()).toBe(true);
+  });
+
   it('only touches the given keys on patch', () => {
     const formGroup = form({
       age: field(23),

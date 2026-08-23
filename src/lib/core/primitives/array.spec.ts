@@ -409,6 +409,29 @@ describe('array', () => {
     expect(sons[1]!.name.touched()).toBe(true);
   });
 
+  it('updates programmatically through keyed reconciliation', () => {
+    const people = array(
+      { id: field('', { nullable: false }), name: field('') },
+      [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
+      { trackBy: (value) => value.id },
+    );
+    const alex = people[0]!;
+    const kirill = people[1]!;
+
+    people.update((value) => [
+      { ...value[1]!, name: 'Kirill updated' },
+      { ...value[0]!, name: 'Alex updated' },
+    ]);
+
+    expect(people[0]).toBe(kirill);
+    expect(people[1]).toBe(alex);
+    expect(people()).toEqual([
+      { id: 'kirill', name: 'Kirill updated' },
+      { id: 'alex', name: 'Alex updated' },
+    ]);
+    expect(people.pristine()).toBe(true);
+  });
+
   it('accepts nullable field values as trackBy keys', () => {
     const properties = array(
       { city: field(''), country: field('') },

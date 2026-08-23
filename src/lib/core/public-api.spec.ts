@@ -113,6 +113,25 @@ describe('types', () => {
     expectTypeOf(names.push).toBeCallableWith('Lia');
   });
 
+  it('contextually types node update callbacks', () => {
+    const age = field(23);
+    const profile = form({ name: field('Marco'), age });
+    const names = array(field(''), ['Marco']);
+
+    age.update((value) => {
+      expectTypeOf(value).toEqualTypeOf<number | null>();
+      return (value ?? 0) + 1;
+    });
+    profile.update((value) => {
+      expectTypeOf(value).toEqualTypeOf<{ name: string | null; age: number | null }>();
+      return { ...value, name: 'Mark' };
+    });
+    names.update((value) => {
+      expectTypeOf(value).toEqualTypeOf<(string | null)[]>();
+      return [...value, 'Lia'];
+    });
+  });
+
   it('does not expose internal parent mutation through Node', () => {
     type ExposesSetParent = '_setParent' extends keyof Node['api'] ? true : false;
     type ExposesClone = '_clone' extends keyof Node['api'] ? true : false;

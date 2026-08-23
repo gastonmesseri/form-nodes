@@ -71,6 +71,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   readonly validationStatus: Signal<ValidationStatus>;
   getError<TKind extends string>(kind: TKind): (ValidationError & { readonly kind: TKind }) | undefined;
   set(value: TValue): void;
+  update(updater: (value: TValue) => TValue): void;
   reset(...args: [] | [value: TValue]): void;
   markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
