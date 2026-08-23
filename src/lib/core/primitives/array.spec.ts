@@ -309,7 +309,22 @@ describe('array', () => {
       { name: 'Lia', age: 7 },
       { name: 'Mono', age: 11 },
     ]);
-    expect(sons.dirty()).toBe(true);
+    expect(sons.dirty()).toBe(false);
+  });
+
+  it('keeps structural mutations programmatic and preserves existing dirty state', () => {
+    const names = array(field(''), ['Marco']);
+
+    names.push('Lia');
+    names.insert(1, 'Noa');
+    names.move(2, 0);
+    names.removeAt(1);
+    expect(names.dirty()).toBe(false);
+
+    names.markAsDirty();
+    names.set(['Ana', 'Leo']);
+    names.clear();
+    expect(names.dirty()).toBe(true);
   });
 
   it('preserves node identity and state while moving items and updates paths', () => {
@@ -348,7 +363,7 @@ describe('array', () => {
 
     expect(sons.at(0)).toBe(first);
     expect(sons()).toEqual([{ name: 'Updated' }, { name: 'Lia' }]);
-    expect(sons.dirty()).toBe(true);
+    expect(sons.dirty()).toBe(false);
   });
 
   it('creates new nodes and propagates their structure when set grows the array', () => {
@@ -367,7 +382,7 @@ describe('array', () => {
     expect(sons[1]!.name.path()).toEqual(['1', 'name']);
     expect(sons[1]!.form()).toBe(sons);
     expect(factory).toHaveBeenCalledTimes(2);
-    expect(sons.dirty()).toBe(true);
+    expect(sons.dirty()).toBe(false);
   });
 
   it('removes and detaches surplus nodes when set shrinks the array', () => {
@@ -429,7 +444,7 @@ describe('array', () => {
     const names = array(() => field('', [required]), 1);
 
     expect(names.invalid()).toBe(true);
-    names.at(0)!.set('Mono');
+    names.at(0)!.setControlValue('Mono');
     expect(names.valid()).toBe(true);
     expect(names.dirty()).toBe(true);
     names.at(0)!.markAsTouched();
@@ -535,7 +550,7 @@ describe('array', () => {
 
     expect(names()).toEqual([]);
     expect(item.parent()).toBeNull();
-    expect(names.dirty()).toBe(true);
+    expect(names.dirty()).toBe(false);
   });
 
   it('can be nested inside forms and other arrays', () => {

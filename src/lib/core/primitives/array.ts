@@ -310,7 +310,6 @@ export function array<TDefinition extends NodeDefinition>(
     next.splice(index, 0, item);
     arrayItems.set(next);
     reparentItems();
-    arraySelfDirty.set(true);
     return item as ArrayItemWithParent<TItem, ArrayNode<TItem>>;
   };
   const removeAt = (index: number) => {
@@ -320,7 +319,6 @@ export function array<TDefinition extends NodeDefinition>(
     arrayItems.set(next);
     detachItem(removed!);
     reparentItems();
-    arraySelfDirty.set(true);
     return removed as ArrayItemWithParent<TItem, ArrayNode<TItem>>;
   };
   const reconcile = (values: TSet, reset: boolean) => {
@@ -407,17 +405,14 @@ export function array<TDefinition extends NodeDefinition>(
       next.splice(toIndex, 0, item!);
       arrayItems.set(next);
       reparentItems();
-      arraySelfDirty.set(true);
     },
     clear: () => {
       if (arrayItems().length === 0) return;
       arrayItems().forEach(detachItem);
       arrayItems.set([]);
-      arraySelfDirty.set(true);
     },
     set: (value) => {
       reconcile(value, false);
-      arraySelfDirty.set(true);
     },
     patch: (value) => {
       value.forEach((itemValue, index) => {

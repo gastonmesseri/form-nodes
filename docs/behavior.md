@@ -260,10 +260,10 @@ This differs from Angular Reactive Forms, where `nonNullable` also controls whet
 
 | Operation | Value effect | Dirty effect | Touched effect |
 | --- | --- | --- | --- |
-| `set(value)` | Replaces the value | Marks dirty, even when the value is equal | No change |
+| `set(value)` | Replaces the value | Preserves current state | No change |
 | `setControlValue(value)` | Updates `controlValue()` immediately and commits `value()` after the configured debounce | Marks dirty immediately | No change |
 | `flush()` | Immediately commits a pending `controlValue()` | No additional change | No change |
-| `api.patch(value)` | Same as `set(value)` | Marks dirty | No change |
+| `api.patch(value)` | Same as `set(value)` | Preserves current state | No change |
 | `reset()` | Preserves the current value | Clears dirty | Clears touched |
 | `reset(value)` | Replaces the value | Clears dirty | Clears touched |
 
@@ -722,8 +722,8 @@ dirty() === false
 pristine() === true
 ```
 
-- `set()` and `patch()` mark a field dirty.
-- Setting the existing value still marks the field dirty.
+- `set()` and `patch()` are programmatic updates and preserve the current dirty state.
+- `setControlValue()` represents an update from a bound UI control and marks the field dirty immediately, including when the control reports the existing value.
 - `markAsDirty()` records dirty state without changing the value.
 - `markAsPristine()` clears dirty state without changing the value.
 - Validator changes do not mark a field dirty.
@@ -1009,12 +1009,12 @@ sons.clear();
 
 - `push()` and `insert()` without a value preserve the defaults created by the factory.
 - Passing a value initializes the fresh item through reset, so the item itself starts pristine and untouched.
-- Every successful structural mutation marks the array dirty.
+- Structural mutations are programmatic updates and preserve the array's current dirty state. A future control binding must call `markAsDirty()` when the same operation originates from user interaction.
 - `move()` preserves the exact node instance and all of its state; it only changes item order and paths.
 - `removeAt()` and `clear()` detach removed nodes from the tree. A removed node retained by application code remains usable as a root node.
 - Invalid insertion and movement indexes throw `RangeError`. `removeAt()` returns `undefined` for a missing index.
 
-`set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and marks the array dirty. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
+`set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and preserves existing interaction state. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
 
 Both immutable value updates and structural shortcuts are supported:
 
@@ -1028,7 +1028,7 @@ names.set([...names(), { name: 'Mark' }]);
 names.push({ name: 'Mark' });
 ```
 
-Both forms propagate the resulting value through ancestor forms and preserve the identity of existing nodes. They differ in interaction-state effects: `set()` reapplies every value in the common prefix through each existing node's `set()`, so those existing nodes become dirty. `push()` leaves existing item state unchanged and marks the array dirty because its structure changed. Prefer `set()` when replacing the array value as a whole and `push()` when expressing an append operation.
+Both forms propagate the resulting value through ancestor forms, preserve the identity of existing nodes, and leave dirty state unchanged. Prefer `set()` when replacing the array value as a whole and `push()` when expressing an append operation. If either update represents user interaction rather than application code, the control integration is responsible for calling `markAsDirty()`.
 
 ### Array touched state
 

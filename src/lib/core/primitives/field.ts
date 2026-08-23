@@ -201,7 +201,6 @@ export function field<TValue>(
     controlDebounce.cancel();
     fieldControlValue.set(next);
     fieldValue.set(next);
-    fieldDirty.set(true);
   };
   const setControlValue = (next: TValue) => {
     controlDebounce.cancel();
