@@ -372,6 +372,29 @@ describe('array', () => {
     expect(sons.removeAt(99)).toBeUndefined();
   });
 
+  it('keeps removed items usable without affecting their former array', () => {
+    const names = array(field('', [required]), ['Marco', 'Lia']);
+    names.disable();
+    const removed = names.removeAt(0)!;
+
+    expect(removed.parent()).toBeNull();
+    expect(removed.path()).toEqual([]);
+    expect(removed.enabled()).toBe(true);
+
+    removed.set('');
+    removed.markAsDirty();
+    removed.markAsTouched();
+
+    expect(removed()).toBe('');
+    expect(removed.invalid()).toBe(true);
+    expect(removed.dirty()).toBe(true);
+    expect(removed.touched()).toBe(true);
+    expect(names()).toEqual(['Lia']);
+    expect(names.valid()).toBe(true);
+    expect(names.pristine()).toBe(true);
+    expect(names.untouched()).toBe(true);
+  });
+
   it('sets values while preserving common node identities', () => {
     const sons = array(() => ({ name: field('') }), [{ name: 'Mono' }]);
     const first = sons.at(0)!;

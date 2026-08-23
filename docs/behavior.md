@@ -1021,7 +1021,7 @@ sons.clear();
 - Passing a value initializes the fresh item through reset, so the item itself starts pristine and untouched.
 - Structural mutations are programmatic updates and preserve the array's current dirty state. A future control binding must call `markAsDirty()` when the same operation originates from user interaction.
 - `move()` preserves the exact node instance and all of its state; it only changes item order and paths.
-- `removeAt()` and `clear()` detach removed nodes from the tree. A removed node retained by application code remains usable as a root node.
+- `removeAt()` and `clear()` detach removed nodes from the tree. A removed node retained by application code remains usable independently: its parent and path are cleared, inherited state is removed, and subsequent value, validation, dirty, or touched changes do not affect the former array.
 - Invalid insertion and movement indexes throw `RangeError`. `removeAt()` returns `undefined` for a missing index.
 
 `set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and preserves existing interaction state. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
