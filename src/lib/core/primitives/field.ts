@@ -171,6 +171,7 @@ export function field<TValue>(
       ensureAsyncValidationWatch();
     },
     errors: fieldErrors,
+    allErrors: fieldErrors,
     valid: computed(() => fieldValidationStatus() === 'valid'),
     invalid: computed(() => fieldValidationStatus() === 'invalid'),
     getError,

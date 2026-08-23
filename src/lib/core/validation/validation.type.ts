@@ -65,6 +65,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   readonly path: Signal<readonly string[]>;
   readonly value: Signal<TValue>;
   readonly errors: Signal<readonly ValidationError[]>;
+  readonly allErrors: Signal<readonly ValidationError[]>;
   readonly valid: Signal<boolean>;
   readonly invalid: Signal<boolean>;
   readonly pending: Signal<boolean>;

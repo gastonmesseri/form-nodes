@@ -617,6 +617,22 @@ describe('array', () => {
     expect(names.touched()).toBe(true);
   });
 
+  it('collects own and item errors in current structural order', () => {
+    const names = array(field('', [required]), ['', 'David'], [
+      () => ({ kind: 'arrayError' }),
+    ]);
+
+    expect(names.errors().map((error) => error.kind)).toEqual(['arrayError']);
+    expect(names.allErrors().map((error) => error.kind)).toEqual(['arrayError', 'required']);
+    expect(names.allErrors().map((error) => error.targetNode)).toEqual([names, names[0]]);
+
+    names.move(0, 1);
+
+    expect(names.allErrors().map((error) => error.targetNode)).toEqual([names, names[1]]);
+    names.removeAt(1);
+    expect(names.allErrors().map((error) => error.kind)).toEqual(['arrayError']);
+  });
+
   it('runs reactive validators on the array value', () => {
     const minimum = signal(2);
     const names = array(() => field('Mono'), 1, {

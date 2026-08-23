@@ -70,6 +70,36 @@ example.apply(); // 'value'
 - Signals expose reactive state while actions are declared as methods in public types, allowing editors to distinguish state from behavior in IntelliSense.
 - Values remain programmatically readable and writable regardless of disabled, readonly, or hidden state.
 
+## Public API documentation conventions
+
+Public properties and methods should include concise JSDoc written for IntelliSense, especially
+when a name does not communicate its scope, propagation, ownership, or relationship to another
+API member on its own.
+
+- Emphasize the most important semantic distinction with **bold text**. Bold should identify
+  information that prevents a likely misunderstanding, such as whether errors belong only to the
+  current node or include descendants; it should not be used merely for decoration.
+- Put recommendations and easy-to-miss alternatives in a separate paragraph prefixed with `ℹ️`.
+  Add an empty JSDoc line before the callout so Markdown renderers display it independently.
+- Format referenced API calls as inline code and prefer direct wording such as
+  “use `allErrors()` instead” over referring vaguely to “the other method.”
+- Keep the normal explanation even when a callout is present. The callout highlights the choice;
+  it does not replace the behavioral contract.
+- Do not rely on colors, HTML styling, or editor-specific rendering. JSDoc Markdown, bold text,
+  inline code, and the Unicode information symbol must remain understandable as plain text.
+
+For example:
+
+```ts
+/**
+ * Validation errors that apply **directly to this form node**, **excluding descendant errors**.
+ * Descendant errors still contribute to invalid().
+ *
+ * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
+ */
+errors: Signal<readonly ValidationError[]>;
+```
+
 ## Public exports
 
 The package exports:
@@ -602,6 +632,25 @@ name.required(); // true, even though the current value is valid
 ```
 
 This is comparable to Angular Signal Forms exposing required state for form controls. `required()` does not mean that the node is currently invalid; use `invalid()` or inspect `errors()` for validation status. Conditional validator composition updates the signal reactively when the marked `required` validator becomes active or inactive.
+
+### Own and descendant errors
+
+`errors()` contains only errors that apply directly to the current node. Descendant errors make
+an aggregate node invalid, but do not appear in its `errors()` signal. `allErrors()` provides the
+recursive alternative: it returns own errors first and then every descendant error in structural
+tree order. On a field, which has no descendants, `allErrors()` and `errors()` contain the same
+array.
+
+```ts
+myForm.errors();    // Errors belonging directly to myForm
+myForm.allErrors(); // Errors belonging to myForm and every descendant
+```
+
+Every collected error retains its `targetNode`, so consumers can inspect `targetNode.path()` or
+navigate to the exact failing node. Forms traverse children in declaration order and arrays use
+their current item order. This intentionally follows the recursive behavior of Angular 22 Signal
+Forms `errorSummary()`, while using the more explicit public name `allErrors()` and structural
+ordering until control bindings provide DOM-order information.
 
 ### Looking up an error by kind
 

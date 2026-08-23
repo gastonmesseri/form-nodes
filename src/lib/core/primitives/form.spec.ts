@@ -671,6 +671,38 @@ describe('form', () => {
     expect(formGroup.getError('required')).toBeUndefined();
   });
 
+  it('collects own and descendant errors in structural tree order', () => {
+    const formGroup = form({
+      name: field('', [required]),
+      address: form({
+        city: field('', [() => ({ kind: 'cityError' })]),
+      }, [() => ({ kind: 'addressError' })]),
+    }, [() => ({ kind: 'formError' })]);
+
+    expect(formGroup.errors().map((error) => error.kind)).toEqual(['formError']);
+    expect(formGroup.allErrors().map((error) => error.kind)).toEqual([
+      'formError',
+      'required',
+      'addressError',
+      'cityError',
+    ]);
+    expect(formGroup.allErrors().map((error) => error.targetNode)).toEqual([
+      formGroup,
+      formGroup.name,
+      formGroup.address,
+      formGroup.address.city,
+    ]);
+
+    formGroup.name.set('David');
+
+    expect(formGroup.allErrors().map((error) => error.kind)).toEqual([
+      'formError',
+      'addressError',
+      'cityError',
+    ]);
+    expect(formGroup.api.allErrors()).toBe(formGroup.allErrors());
+  });
+
   it('gives a child named getError precedence over the form method', () => {
     const getErrorField = field('child');
     const formGroup = form({ getError: getErrorField }, [() => ({ kind: 'formError' })]);
@@ -678,6 +710,15 @@ describe('form', () => {
     expect(formGroup.getError).toBe(getErrorField);
     expect(formGroup.getError()).toBe('child');
     expect(formGroup.api.getError('formError')).toMatchObject({ kind: 'formError' });
+  });
+
+  it('gives a child named allErrors precedence over the form signal', () => {
+    const allErrorsField = field('child');
+    const formGroup = form({ allErrors: allErrorsField }, [() => ({ kind: 'formError' })]);
+
+    expect(formGroup.allErrors).toBe(allErrorsField);
+    expect(formGroup.allErrors()).toBe('child');
+    expect(formGroup.api.allErrors().map((error) => error.kind)).toEqual(['formError']);
   });
 
   it('gives a child named required precedence over the form required signal', () => {

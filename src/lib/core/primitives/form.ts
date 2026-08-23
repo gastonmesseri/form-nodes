@@ -97,6 +97,13 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     () => !formNonInteractive(),
   );
   const formErrors = computed(() => [...formSyncErrors(), ...asyncValidation.errors()]);
+  const formAllErrors = computed(
+    () => [
+      ...formErrors(),
+      ...controlKeys().flatMap((key) => controls[key]!.api.allErrors()),
+    ],
+    { equal: shallowEqual },
+  );
   const getError = computedFunction(
     (kind: string) => formErrors().find((error) => error.kind === kind),
     { equal: shallowEqual, max: 20 },
@@ -170,6 +177,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
       ensureAsyncValidationWatch();
     },
     errors: formErrors,
+    allErrors: formAllErrors,
     valid: computed(() => formValidationStatus() === 'valid'),
     invalid: computed(() => formValidationStatus() === 'invalid'),
     getError,
