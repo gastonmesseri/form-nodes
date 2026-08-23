@@ -2,10 +2,10 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, forwardRef, inject } from '@angular/core';
+import { Component, forwardRef, inject, signal } from '@angular/core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { NG_VALUE_ACCESSOR, NgControl, type ControlValueAccessor } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
 import { field } from '../../primitives/field';
 import { FormNodeDirective } from './form-node';
@@ -204,28 +204,40 @@ describe('FormNodeDirective', () => {
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => TestCva),
         multi: true,
+      }, {
+        provide: NG_VALIDATORS,
+        useExisting: forwardRef(() => TestCva),
+        multi: true,
       }],
     })
-    class TestCva implements ControlValueAccessor {
+    class TestCva implements ControlValueAccessor, Validator {
       readonly ngControl = inject(NgControl, { self: true });
       value: unknown;
       disabled = false;
+      rejectValue = false;
       change = (_value: unknown) => {};
       touch = () => {};
+      validatorChange = () => {};
       writeValue(value: unknown): void { this.value = value; }
       registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
       registerOnTouched(callback: () => void): void { this.touch = callback; }
       setDisabledState(disabled: boolean): void { this.disabled = disabled; }
+      validate(_control: AbstractControl): ValidationErrors | null {
+        return this.rejectValue ? { customCva: { rejected: true } } : null;
+      }
+      registerOnValidatorChange(callback: () => void): void { this.validatorChange = callback; }
     }
 
     @Component({
       standalone: true,
       selector: 'cva-form-node-host',
       imports: [FormNodeDirective, TestCva],
-      template: `<test-cva [formNode]="name" />`,
+      template: `<test-cva [formNode]="active()" />`,
     })
     class Host {
       readonly name = field('David', { nullable: false });
+      readonly alternative = field('Lia', { nullable: false });
+      readonly active = signal(this.name);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -242,5 +254,37 @@ describe('FormNodeDirective', () => {
     fixture.detectChanges();
     expect(cva.disabled).toBe(true);
     expect(cva.ngControl).toBe(fixture.debugElement.children[0]!.injector.get(NgControl));
+
+    fixture.componentInstance.name.enable();
+    cva.rejectValue = true;
+    cva.validatorChange();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name.invalid()).toBe(true);
+    expect(fixture.componentInstance.name.getError('customCva')).toMatchObject({
+      kind: 'customCva',
+      context: { rejected: true },
+      targetNode: fixture.componentInstance.name,
+    });
+
+    cva.rejectValue = false;
+    cva.validatorChange();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name.valid()).toBe(true);
+
+    cva.rejectValue = true;
+    cva.validatorChange();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name.invalid()).toBe(true);
+
+    fixture.componentInstance.active.set(fixture.componentInstance.alternative);
+    fixture.detectChanges();
+    expect(fixture.debugElement.children[0]!.injector.get(FormNodeDirective).field)
+      .toBe(fixture.componentInstance.alternative);
+    expect(fixture.componentInstance.name.valid()).toBe(true);
+    expect(fixture.componentInstance.alternative.getError('customCva')?.targetNode)
+      .toBe(fixture.componentInstance.alternative);
+
+    fixture.destroy();
+    expect(fixture.componentInstance.alternative.valid()).toBe(true);
   });
 });
