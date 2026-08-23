@@ -43,19 +43,14 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   validators: Signal<Validators<TValue>>;
   setValidators(validators: ValidatorSource<TValue>): void;
   /**
-   * **Scope: current field only.**
-   *
-   * Validation errors that apply **directly to this field**.
-   * A field has no descendants, so these are also all errors in its subtree.
+   * A signal containing the validation errors of **this field itself**.
    *
    * ℹ️ To work consistently with aggregate nodes, use `allErrors()` instead.
    */
   errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue, TParent>>[]>;
   /**
-   * **Scope: current field and all descendants.**
-   *
-   * Validation errors from **this field and all of its descendants**.
-   * Fields have no descendants, so this contains the same errors as errors().
+   * A signal containing the validation errors of **this field and its descendants**.
+   * Fields have no descendants, so this contains the same errors as `errors()`.
    *
    * ℹ️ To read only errors belonging directly to the current node, use `errors()` instead.
    */

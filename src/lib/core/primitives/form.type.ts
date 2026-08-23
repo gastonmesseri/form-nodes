@@ -57,19 +57,13 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   validators: Signal<Validators<FormValue<TNodes>>>;
   setValidators(validators: ValidatorSource<FormValue<TNodes>>): void;
   /**
-   * **Scope: current form node only.**
-   *
-   * Validation errors that apply **directly to this form node**, **excluding descendant errors**.
-   * Descendant errors still contribute to invalid().
+   * A signal containing the validation errors of **this form node itself, excluding its descendants**.
    *
    * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
    */
   errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes, TParent>>[]>;
   /**
-   * **Scope: current form node and all descendants.**
-   *
-   * Validation errors from **this form node and all descendants**, in structural tree order.
-   * Own errors appear first, followed recursively by each child.
+   * A signal containing the validation errors of **this form node and its descendants**.
    *
    * ℹ️ To read only errors belonging directly to this form node, use `errors()` instead.
    */
