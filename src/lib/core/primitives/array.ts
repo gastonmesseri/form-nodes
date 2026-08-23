@@ -23,8 +23,8 @@ import type { InternalNode, MarkAsTouchedOptions, Node, NodeDefinition, NodePatc
 
 export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
   /**
-   * Returns the stable identity of an item when `set()` or `reset(value)` reconciles
-   * the incoming values with the array's current nodes.
+   * Returns the stable identity of an item when `set()`, `update()`, or `reset(value)`
+   * reconciles incoming values with the array's current nodes.
    *
    * Items with matching keys reuse and, when necessary, move their existing nodes. This
    * preserves node identity and state such as touched, dirty, and pending validation while
