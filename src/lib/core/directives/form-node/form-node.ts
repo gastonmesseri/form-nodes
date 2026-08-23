@@ -24,11 +24,24 @@ const isBuiltInAccessor = (accessor: ControlValueAccessor): boolean =>
 
 const selectValueAccessor = (accessors: readonly ControlValueAccessor[] | null): ControlValueAccessor | null => {
   if (!accessors || accessors.length === 0) return null;
-  const custom = accessors.filter((accessor) => !isBuiltInAccessor(accessor));
-  if (custom.length > 1) throw new Error('formNode: more than one custom ControlValueAccessor matches the host');
-  if (custom.length === 1) return custom[0]!;
-  if (accessors.length > 1) throw new Error('formNode: more than one built-in ControlValueAccessor matches the host');
-  return accessors[0]!;
+  let defaultAccessor: ControlValueAccessor | undefined;
+  let builtInAccessor: ControlValueAccessor | undefined;
+  let customAccessor: ControlValueAccessor | undefined;
+
+  accessors.forEach((accessor) => {
+    if (accessor instanceof DefaultValueAccessor) {
+      if (defaultAccessor) throw new Error('formNode: more than one default ControlValueAccessor matches the host');
+      defaultAccessor = accessor;
+    } else if (isBuiltInAccessor(accessor)) {
+      if (builtInAccessor) throw new Error('formNode: more than one built-in ControlValueAccessor matches the host');
+      builtInAccessor = accessor;
+    } else {
+      if (customAccessor) throw new Error('formNode: more than one custom ControlValueAccessor matches the host');
+      customAccessor = accessor;
+    }
+  });
+
+  return customAccessor ?? builtInAccessor ?? defaultAccessor!;
 };
 
 const isValidatorObject = (validator: ValidatorFn | Validator): validator is Validator =>
