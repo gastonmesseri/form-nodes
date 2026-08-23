@@ -132,6 +132,10 @@ export function array<TDefinition extends NodeDefinition>(
   const arraySelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const arrayParent = signal<Node | null>(null);
   const arrayKeyInParent = signal<string | null>(null);
+  const arrayControlDebounce = computed(() =>
+    resolvedOptions?.debounce
+    ?? (arrayParent() as InternalNode | null)?.api._controlDebounce(),
+  );
   const arrayPath = computed<readonly string[]>(() => {
     const parent = arrayParent();
     const key = arrayKeyInParent();
@@ -201,6 +205,9 @@ export function array<TDefinition extends NodeDefinition>(
   );
   const arrayDirty = computed(() =>
     !arrayNonInteractive() && (arraySelfDirty() || arrayItems().some((item) => item.api.dirty())),
+  );
+  const arrayDebouncing = computed(() =>
+    arrayItems().some((item) => item.api.debouncing()),
   );
   const assertIndex = (index: number, allowEnd = false) => {
     const maximum = arrayItems().length - (allowEnd ? 0 : 1);
@@ -377,6 +384,8 @@ export function array<TDefinition extends NodeDefinition>(
       || arrayErrors().some((error) => error.kind === 'required')
     ),
     pending: arrayPending,
+    debouncing: arrayDebouncing,
+    flush: () => arrayItems().forEach((item) => item.api.flush()),
     validationStatus: arrayValidationStatus,
     touched: arrayTouched,
     untouched: computed(() => !arrayTouched()),
@@ -405,6 +414,7 @@ export function array<TDefinition extends NodeDefinition>(
   };
   const internalApi = {
     ...api,
+    _controlDebounce: arrayControlDebounce,
     _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);

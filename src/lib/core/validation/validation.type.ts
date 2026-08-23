@@ -1,7 +1,7 @@
 import type { Signal } from '@angular/core';
 
-import type { MarkAsTouchedOptions, Node, PublicNode } from '../types/node.type';
 import type { ObservableLike } from '../types/observable-like.type';
+import type { MarkAsTouchedOptions, Node, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -69,10 +69,12 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   readonly valid: Signal<boolean>;
   readonly invalid: Signal<boolean>;
   readonly pending: Signal<boolean>;
+  readonly debouncing: Signal<boolean>;
   readonly validationStatus: Signal<ValidationStatus>;
   getError<TKind extends string>(kind: TKind): (ValidationError & { readonly kind: TKind }) | undefined;
   set(value: TValue): void;
   update(updater: (value: TValue) => TValue): void;
+  flush(): void;
   reset(...args: [] | [value: TValue]): void;
   markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;

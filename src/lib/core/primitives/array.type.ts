@@ -3,8 +3,8 @@ import type { Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { Form, FormOptions } from './form.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { MarkAsTouchedOptions, Node, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
+import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
 export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
   /**
@@ -112,6 +112,10 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
+  /** Whether any current item descendant has a pending control-value debounce. */
+  debouncing: Signal<boolean>;
+  /** Immediately commits every pending control value in this array's current item subtrees. */
+  flush(): void;
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;

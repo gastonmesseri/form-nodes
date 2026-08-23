@@ -7,11 +7,11 @@ import { computedFunction } from '../utils/computed-function';
 import type { Field, FieldApi, FieldOptions } from './field.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import type { MarkAsTouchedOptions, Node } from '../types/node.type';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import type { InternalNode, MarkAsTouchedOptions, Node } from '../types/node.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
@@ -67,6 +67,10 @@ export function field<TValue>(
   const fieldSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const fieldParent = signal<Node | null>(null);
   const fieldKeyInParent = signal<string | null>(null);
+  const fieldControlDebounce = computed(() =>
+    resolvedOptions?.debounce
+    ?? (fieldParent() as InternalNode | null)?.api._controlDebounce(),
+  );
   const fieldPath = computed<readonly string[]>(() => {
     const parent = fieldParent();
     const key = fieldKeyInParent();
@@ -138,7 +142,7 @@ export function field<TValue>(
     controlDebounce.cancel();
     fieldControlValue.set(next);
     fieldDirty.set(true);
-    const debounce = resolvedOptions?.debounce ?? 0;
+    const debounce = fieldControlDebounce() ?? 0;
     if (!Number.isFinite(debounce) || debounce <= 0 || Object.is(next, fieldValue())) {
       fieldValue.set(next);
       return;
@@ -205,6 +209,7 @@ export function field<TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
+    _controlDebounce: fieldControlDebounce,
     _clone: () => recreateField(value, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       fieldParent.set(parent);

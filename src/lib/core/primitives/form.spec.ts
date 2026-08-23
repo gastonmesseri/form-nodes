@@ -380,6 +380,76 @@ describe('form', () => {
     }
   });
 
+  it('inherits control debounce and flushes only the requested form subtree', async () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({
+        name: field('Marco'),
+        address: form({
+          city: field('Zurich'),
+          country: field('Switzerland', { debounce: 0 }),
+        }),
+      }, { debounce: 100 });
+
+      profile.name.setControlValue('Mark');
+      profile.address.city.setControlValue('Bern');
+      profile.address.country.setControlValue('Germany');
+
+      expect(profile()).toEqual({
+        name: 'Marco',
+        address: { city: 'Zurich', country: 'Germany' },
+      });
+      expect(profile.debouncing()).toBe(true);
+      expect(profile.address.debouncing()).toBe(true);
+      expect(profile.address.country.debouncing()).toBe(false);
+
+      profile.address.flush();
+
+      expect(profile()).toEqual({
+        name: 'Marco',
+        address: { city: 'Bern', country: 'Germany' },
+      });
+      expect(profile.address.debouncing()).toBe(false);
+      expect(profile.debouncing()).toBe(true);
+
+      profile.flush();
+
+      expect(profile()).toEqual({
+        name: 'Mark',
+        address: { city: 'Bern', country: 'Germany' },
+      });
+      expect(profile.debouncing()).toBe(false);
+      await vi.runAllTimersAsync();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('uses the nearest configured ancestor control debounce', async () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({
+        name: field('Marco'),
+        address: form({ city: field('Zurich') }, { debounce: 50 }),
+      }, { debounce: 100 });
+
+      profile.name.setControlValue('Mark');
+      profile.address.city.setControlValue('Bern');
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(profile.name()).toBe('Marco');
+      expect(profile.address.city()).toBe('Bern');
+      expect(profile.debouncing()).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(profile.name()).toBe('Mark');
+      expect(profile.debouncing()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('includes the value of nested forms', () => {
     const formGroup = form({
       age: field(23),

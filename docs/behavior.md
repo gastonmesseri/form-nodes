@@ -329,9 +329,11 @@ Synchronous and asynchronous validators observe only committed `value()` changes
 
 This follows the control buffer semantics inspected in Angular Signal Forms 22.1.x at commit `004cf3a27734ae90738a0a745cc0369b52306ca3`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.
 
-#### Possible future form-level debounce
+#### Inherited and aggregate debounce behavior
 
-The current implementation configures control-value debounce only on `field()`. A possible future extension is to allow `debounce` on `form()` as an inherited default for descendant fields, following Angular Signal Forms rather than introducing one aggregated control buffer for the complete form value:
+`form()` and `array()` accept `debounce` as an inherited default for descendant fields. A field's
+own `debounce` takes precedence, and nested aggregate nodes can establish a different default for
+their subtrees. The nearest configured node wins:
 
 ```ts
 const profile = form(
@@ -347,9 +349,31 @@ const profile = form(
 );
 ```
 
-Under this possible design, `name` would inherit 300 ms, while `address.city` would override it with 100 ms. A nested form could similarly establish a default for its own subtree. The nearest configured ancestor would win. A form would not aggregate pending descendant `controlValue()` values into a form-level `controlValue()`, and its committed `value()` would continue to aggregate only committed child values.
+Here, `name` inherits 300 ms and `address.city` overrides it with 100 ms. An explicit zero or
+negative value also overrides an inherited delay and commits control updates immediately. Dynamic
+array items resolve the effective debounce after they are attached, so both current and future
+items inherit from their array and ancestors.
 
-A future `form.flush()` operation would recursively flush every pending control-value debounce in that form's subtree. Calling it on the root form would commit every pending descendant, while calling it on a nested form would affect only that branch and leave siblings and ancestors untouched. This would make it suitable for submission or explicit save boundaries without requiring consumers to find and flush individual fields. This section records a design direction for future consideration and is not part of the current public contract.
+Aggregate nodes do not expose an aggregated `controlValue()`. Pending descendant control values
+remain local to their fields, and a form or array `value()` continues to contain only committed
+descendant values. This follows Angular Signal Forms, whose node-level `controlValue()` explicitly
+does not incorporate child control values.
+
+`form.debouncing()` and `array.debouncing()` are true while any current descendant field has a
+pending control-value debounce. They aggregate only control debounce state and remain independent
+from asynchronous validation `pending()`.
+
+`form.flush()` and `array.flush()` recursively commit every pending control value in their current
+subtrees. Flushing the root commits all branches; flushing a nested form or array affects only that
+branch. Ancestors observe the resulting committed values normally, while siblings retain their
+pending buffers. Removed array nodes are no longer included, and newly inserted items participate
+as soon as they are attached.
+
+Debouncer inheritance was verified against Angular Signal Forms `v22.1.4` at commit
+`898380974d49cf7976e9d89cc74a0801a26ce7b1`, primarily
+`packages/forms/signals/src/field/state.ts`, `packages/forms/signals/src/api/types.ts`, and
+`packages/forms/signals/test/node/api/debounce.spec.ts`. Aggregate `debouncing()` and recursive
+`flush()` are conveniences specific to this library.
 
 ### Form values
 
@@ -358,6 +382,7 @@ A future `form.flush()` operation would recursively flush every pending control-
 | `api.set(value)` | Recursively assigns all supplied branches | Preserves current state | No change |
 | `api.update(updater)` | Computes and recursively assigns a complete value from the current form value | Preserves current state | No change |
 | `api.patch(value)` | Recursively assigns only supplied branches | Preserves current state | No change |
+| `api.flush()` | Recursively commits pending descendant control values | No additional change | No change |
 | `api.reset()` | Preserves every descendant value | Clears dirty throughout the subtree | Clears touched throughout the subtree |
 | `api.reset(value)` | Recursively assigns the complete value | Clears dirty throughout the subtree | Clears touched throughout the subtree |
 
