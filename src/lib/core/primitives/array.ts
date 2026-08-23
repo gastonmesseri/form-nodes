@@ -21,7 +21,33 @@ import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-r
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { InternalNode, MarkAsTouchedOptions, Node, NodeDefinition, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 
-export type ArrayOptions<TValue = any> = FormOptions<TValue>;
+export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
+  /**
+   * Returns the stable identity of an item when `set()` or `reset(value)` reconciles
+   * the incoming values with the array's current nodes.
+   *
+   * Items with matching keys reuse and, when necessary, move their existing nodes. This
+   * preserves node identity and state such as touched, dirty, and pending validation while
+   * updating the node's value and path. New keys create nodes and removed keys detach nodes.
+   *
+   * Use a stable domain identifier such as `value.id` when values may be reordered or replaced
+   * by new objects from a server. Every current and incoming item must return a unique key;
+   * duplicate keys throw before the array is changed.
+   *
+   * When omitted, reconciliation is positional: existing nodes are reused by index. `move()`
+   * can be used instead when the source and destination indexes are already known.
+   *
+   * @example
+   * ```ts
+   * array(personTemplate, initialPeople, {
+   *   trackBy: person => person.id,
+   * });
+   * ```
+   */
+  readonly trackBy?: TValue extends readonly (infer TItemValue)[]
+    ? (value: TItemValue, index: number) => unknown
+    : never;
+};
 
 export type ArrayItemWithParent<TItem extends Node, TParent extends Node> =
   TItem extends Field<infer TValue, Node> ? Field<TValue, TParent> :
@@ -129,12 +155,12 @@ const looksLikeValidatorSource = (value: unknown): boolean =>
 export function array<TDefinition extends NodeDefinition>(
   template: TDefinition,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
   template: TDefinition,
   initial: NoInfer<ArrayInitial<TDefinition>>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
@@ -149,12 +175,12 @@ export function array<TDefinition extends NodeDefinition>(
 export function array<TDefinition extends NodeDefinition>(
   factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
   factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
@@ -321,7 +347,7 @@ export function array<TDefinition extends NodeDefinition>(
     reparentItems();
     return removed as ArrayItemWithParent<TItem, ArrayNode<TItem>>;
   };
-  const reconcile = (values: TSet, reset: boolean) => {
+  const reconcileByIndex = (values: TSet, reset: boolean) => {
     const current = [...arrayItems()];
     const commonLength = Math.min(current.length, values.length);
     for (let index = 0; index < commonLength; index++) {
@@ -337,6 +363,35 @@ export function array<TDefinition extends NodeDefinition>(
     arrayItems.set(current);
     reparentItems();
   };
+  const reconcileByKey = (values: TSet, reset: boolean) => {
+    const trackBy = resolvedOptions!.trackBy! as (value: NodeValue<TItem>, index: number) => unknown;
+    const current = [...arrayItems()];
+    const currentByKey = new Map<unknown, TItem>();
+    current.forEach((item, index) => {
+      const key = trackBy(item() as NodeValue<TItem>, index);
+      if (currentByKey.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in current items`);
+      currentByKey.set(key, item);
+    });
+    const incomingKeys = new Set<unknown>();
+    const keys = values.map((value, index) => {
+      const key = trackBy(value as NodeValue<TItem>, index);
+      if (incomingKeys.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in incoming values`);
+      incomingKeys.add(key);
+      return key;
+    });
+    const next = values.map((value, index) => {
+      const existing = currentByKey.get(keys[index]!);
+      const item = existing ?? createItem();
+      if (existing) currentByKey.delete(keys[index]!);
+      if (reset || !existing) item.api.reset(value);
+      else item.api.set(value);
+      return item;
+    });
+    currentByKey.forEach(detachItem);
+    arrayItems.set(next);
+    reparentItems();
+  };
+  const reconcile = resolvedOptions?.trackBy ? reconcileByKey : reconcileByIndex;
   const reset = (...args: [] | [value: TSet]) => {
     if (args.length === 0) arrayItems().forEach((item) => item.api.reset());
     else reconcile(args[0], true);

@@ -82,6 +82,26 @@ describe('types', () => {
     }
   });
 
+  it('contextually types array trackBy values from the template', () => {
+    array(
+      { id: field('', { nullable: false }), name: field('') },
+      [{ id: 'alex', name: 'Alex' }],
+      {
+        trackBy: (value, index) => {
+          expectTypeOf(value).toEqualTypeOf<{ id: string; name: string | null }>();
+          expectTypeOf(index).toEqualTypeOf<number>();
+          return value.id;
+        },
+      },
+    );
+
+    array(
+      { city: field(''), country: field('') },
+      [],
+      { trackBy: (value) => value.city },
+    );
+  });
+
   it('infers primitive and nested dynamic arrays', () => {
     const matrix = array(() => array(() => field(0), 2), 2);
     const names = array(field('Marco'), []);

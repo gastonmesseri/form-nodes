@@ -1016,6 +1016,39 @@ sons.clear();
 
 `set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and preserves existing interaction state. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
 
+By default, reconciliation is positional. Applications that replace or reorder object values immutably can provide `trackBy` in the array options to preserve each node with its logical entity:
+
+```ts
+const people = array(
+  {
+    id: field('', { nullable: false }),
+    name: field(''),
+  },
+  [
+    { id: 'alex', name: 'Alex' },
+    { id: 'kirill', name: 'Kirill' },
+  ],
+  {
+    trackBy: person => person.id,
+  },
+);
+
+const alexNode = people[0];
+const kirillNode = people[1];
+
+people.set([
+  { id: 'kirill', name: 'Kirill updated' },
+  { id: 'alex', name: 'Alex updated' },
+]);
+
+people[0] === kirillNode; // true
+people[1] === alexNode;   // true
+```
+
+`trackBy` is evaluated for the current item values and the incoming values before reconciliation mutates any node. Matching keys reuse and move the existing node, preserving interaction state, pending validation ownership, and node identity while updating its value and path. Missing keys create fresh nodes, and current keys absent from the incoming values detach their nodes. Duplicate keys are rejected before the array changes because they cannot identify items unambiguously.
+
+This is intentionally explicit rather than storing a hidden identity symbol on value objects. It also works with entirely new objects received from a server, provided their domain keys remain stable. Primitive arrays and arrays without a stable domain identifier should normally keep the default index reconciliation. `move()` remains the direct structural operation when the caller already knows the source and destination indexes.
+
 Both immutable value updates and structural shortcuts are supported:
 
 ```ts

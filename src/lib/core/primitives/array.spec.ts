@@ -383,6 +383,109 @@ describe('array', () => {
     expect(sons.dirty()).toBe(false);
   });
 
+  it('reconciles object item nodes by an explicit trackBy key', () => {
+    const sons = array(
+      { id: field('', { nullable: false }), name: field('') },
+      [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
+      { trackBy: (value) => value.id },
+    );
+    const alex = sons[0]!;
+    const kirill = sons[1]!;
+    alex.name.markAsTouched();
+
+    sons.set([
+      { id: 'kirill', name: 'Kirill updated' },
+      { id: 'alex', name: 'Alex updated' },
+    ]);
+
+    expect(sons[0]).toBe(kirill);
+    expect(sons[1]).toBe(alex);
+    expect(sons()).toEqual([
+      { id: 'kirill', name: 'Kirill updated' },
+      { id: 'alex', name: 'Alex updated' },
+    ]);
+    expect(sons[0]!.path()).toEqual(['0']);
+    expect(sons[1]!.path()).toEqual(['1']);
+    expect(sons[1]!.name.touched()).toBe(true);
+  });
+
+  it('accepts nullable field values as trackBy keys', () => {
+    const properties = array(
+      { city: field(''), country: field('') },
+      [{ city: null, country: 'Unknown' }, { city: 'Zurich', country: 'Switzerland' }],
+      { trackBy: (value) => value.city },
+    );
+    const unknown = properties[0]!;
+    const zurich = properties[1]!;
+
+    properties.set([
+      { city: 'Zurich', country: 'Switzerland' },
+      { city: null, country: 'Updated' },
+    ]);
+
+    expect(properties[0]).toBe(zurich);
+    expect(properties[1]).toBe(unknown);
+    expect(properties[1]!.country()).toBe('Updated');
+  });
+
+  it('creates and detaches item nodes while reconciling by trackBy key', () => {
+    const sons = array(
+      { id: field('', { nullable: false }), name: field('') },
+      [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
+      { trackBy: (value) => value.id },
+    );
+    const alex = sons[0]!;
+    const kirill = sons[1]!;
+
+    sons.set([{ id: 'kirill', name: 'Kirill updated' }, { id: 'lia', name: 'Lia' }]);
+
+    expect(sons[0]).toBe(kirill);
+    expect(sons[1]).not.toBe(alex);
+    expect(sons[1]!.name()).toBe('Lia');
+    expect(alex.parent()).toBeNull();
+  });
+
+  it('preserves keyed node identity while reset clears interaction state', () => {
+    const sons = array(
+      { id: field('', { nullable: false }), name: field('') },
+      [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
+      { trackBy: (value) => value.id },
+    );
+    const alex = sons[0]!;
+    const kirill = sons[1]!;
+    alex.name.markAsDirty();
+    alex.name.markAsTouched();
+
+    sons.reset([
+      { id: 'kirill', name: 'Kirill reset' },
+      { id: 'alex', name: 'Alex reset' },
+    ]);
+
+    expect(sons[0]).toBe(kirill);
+    expect(sons[1]).toBe(alex);
+    expect(sons.pristine()).toBe(true);
+    expect(sons.untouched()).toBe(true);
+  });
+
+  it('rejects duplicate trackBy keys without changing the array', () => {
+    const sons = array(
+      { id: field('', { nullable: false }), name: field('') },
+      [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
+      { trackBy: (value) => value.id },
+    );
+    const first = sons[0];
+    const second = sons[1];
+
+    expect(() => sons.set([
+      { id: 'same', name: 'One' },
+      { id: 'same', name: 'Two' },
+    ])).toThrow('duplicate trackBy key same in incoming values');
+
+    expect(sons()).toEqual([{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }]);
+    expect(sons[0]).toBe(first);
+    expect(sons[1]).toBe(second);
+  });
+
   it('creates new nodes and propagates their structure when set grows the array', () => {
     const factory = vi.fn(() => ({ name: field(''), age: field(0) }));
     const sons = array(factory, [{ name: 'son1', age: 11 }]);
