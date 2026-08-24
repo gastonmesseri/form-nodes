@@ -8,8 +8,9 @@
     "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage --coverage.include='src/lib/**/*.ts' --coverage.exclude='src/**/*.spec.ts' --coverage.exclude='src/**/*.type.ts' --coverage.thresholds.statements=100 --coverage.thresholds.branches=99 --coverage.thresholds.functions=100 --coverage.thresholds.lines=100",
+    "test:types": "tsc -p tsconfig.type-tests.json --noEmit",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.spec.json --noEmit"
+    "typecheck": "tsc -p tsconfig.spec.json --noEmit && npm run test:types"
   },
   "peerDependencies": {
     "@angular/core": "^22.0.0",
