@@ -92,6 +92,7 @@ export class FormNodeDirective<TValue> implements OnInit {
   private readonly nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
   private destroyed = false;
   private composing = false;
+  private writingAccessorValue = false;
   private lastViewValue: unknown = Symbol('unset');
 
   constructor() {
@@ -113,7 +114,7 @@ export class FormNodeDirective<TValue> implements OnInit {
   private connectAccessor(accessor: ControlValueAccessor): void {
     this.ngControl.valueAccessor = accessor;
     accessor.registerOnChange((value: unknown) => {
-      if (this.destroyed) return;
+      if (this.destroyed || this.writingAccessorValue) return;
       this.lastViewValue = value;
       this.field.setControlValue(value as TValue);
     });
@@ -124,7 +125,14 @@ export class FormNodeDirective<TValue> implements OnInit {
       const value = this.node().controlValue();
       if (Object.is(value, this.lastViewValue)) return;
       this.lastViewValue = value;
-      untracked(() => accessor.writeValue(value));
+      untracked(() => {
+        this.writingAccessorValue = true;
+        try {
+          accessor.writeValue(value);
+        } finally {
+          this.writingAccessorValue = false;
+        }
+      });
     }, { injector: this.injector });
     if (accessor.setDisabledState) {
       effect(() => {

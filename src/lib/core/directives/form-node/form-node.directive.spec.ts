@@ -569,6 +569,188 @@ describe('FormNodeDirective', () => {
     expect(fixture.componentInstance.name.touched()).toBe(false);
   });
 
+  it('does not loop or duplicate model writes when writeValue synchronously calls onChange', () => {
+    @Component({
+      standalone: true,
+      selector: 'echoing-cva',
+      template: '',
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => EchoingCva), multi: true }],
+    })
+    class EchoingCva implements ControlValueAccessor {
+      change = (_value: unknown) => {};
+      writes: unknown[] = [];
+      writeValue(value: unknown): void {
+        this.writes.push(value);
+        this.change(value);
+      }
+      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
+      registerOnTouched(): void {}
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'echoing-cva-host',
+      imports: [FormNodeDirective, EchoingCva],
+      template: `<echoing-cva [formNode]="name" />`,
+    })
+    class Host {
+      readonly name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const cva = fixture.debugElement.children[0]!.componentInstance as EchoingCva;
+
+    expect(cva.writes).toEqual(['David']);
+    expect(fixture.componentInstance.name()).toBe('David');
+    expect(fixture.componentInstance.name.dirty()).toBe(false);
+
+    fixture.componentInstance.name.set('Mark');
+    fixture.detectChanges();
+
+    expect(cva.writes).toEqual(['David', 'Mark']);
+    expect(fixture.componentInstance.name()).toBe('Mark');
+  });
+
+  it('supports a signal-based CVA without creating reactive write errors', () => {
+    @Component({
+      standalone: true,
+      selector: 'signal-cva',
+      template: '',
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SignalCva), multi: true }],
+    })
+    class SignalCva implements ControlValueAccessor {
+      readonly value = signal<unknown>(undefined);
+      readonly disabled = signal(false);
+      change = (_value: unknown) => {};
+      writeValue(value: unknown): void { this.value.set(value); }
+      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
+      registerOnTouched(): void {}
+      setDisabledState(disabled: boolean): void { this.disabled.set(disabled); }
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'signal-cva-host',
+      imports: [FormNodeDirective, SignalCva],
+      template: `<signal-cva [formNode]="name" />`,
+    })
+    class Host {
+      readonly name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    const cva = fixture.debugElement.children[0]!.componentInstance as SignalCva;
+
+    expect(cva.value()).toBe('David');
+    fixture.componentInstance.name.disable();
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(cva.disabled()).toBe(true);
+  });
+
+  it('cleans up and reconnects a CVA when its host is destroyed and recreated', () => {
+    const instances: RecreatedCva[] = [];
+
+    @Component({
+      standalone: true,
+      selector: 'recreated-cva',
+      template: '',
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => RecreatedCva), multi: true }],
+    })
+    class RecreatedCva implements ControlValueAccessor {
+      change = (_value: unknown) => {};
+      touch = () => {};
+      writes: unknown[] = [];
+      constructor() { instances.push(this); }
+      writeValue(value: unknown): void { this.writes.push(value); }
+      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
+      registerOnTouched(callback: () => void): void { this.touch = callback; }
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'recreated-cva-host',
+      imports: [FormNodeDirective, RecreatedCva],
+      template: `@if (visible()) { <recreated-cva [formNode]="name" /> }`,
+    })
+    class Host {
+      readonly visible = signal(true);
+      readonly name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const first = instances[0]!;
+
+    fixture.componentInstance.visible.set(false);
+    fixture.detectChanges();
+    first.change('ignored');
+    first.touch();
+    expect(fixture.componentInstance.name()).toBe('David');
+    expect(fixture.componentInstance.name.touched()).toBe(false);
+
+    fixture.componentInstance.name.set('Mark');
+    fixture.componentInstance.visible.set(true);
+    fixture.detectChanges();
+    const second = instances[1]!;
+
+    expect(second).not.toBe(first);
+    expect(second.writes).toEqual(['Mark']);
+    second.change('Lia');
+    second.touch();
+    expect(fixture.componentInstance.name()).toBe('Lia');
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+  });
+
+  it('re-evaluates object legacy validators only after their change callback is invoked', () => {
+    @Component({
+      standalone: true,
+      selector: 'dynamic-validator-cva',
+      template: '',
+      providers: [
+        { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DynamicValidatorCva), multi: true },
+        { provide: NG_VALIDATORS, useExisting: forwardRef(() => DynamicValidatorCva), multi: true },
+      ],
+    })
+    class DynamicValidatorCva implements ControlValueAccessor, Validator {
+      reject = false;
+      validatorChange = () => {};
+      writeValue(): void {}
+      registerOnChange(): void {}
+      registerOnTouched(): void {}
+      validate(): ValidationErrors | null { return this.reject ? { dynamicLegacy: true } : null; }
+      registerOnValidatorChange(callback: () => void): void { this.validatorChange = callback; }
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'dynamic-validator-host',
+      imports: [FormNodeDirective, DynamicValidatorCva],
+      template: `<dynamic-validator-cva [formNode]="name" />`,
+    })
+    class Host {
+      readonly name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const cva = fixture.debugElement.children[0]!.componentInstance as DynamicValidatorCva;
+
+    cva.reject = true;
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name.valid()).toBe(true);
+
+    cva.validatorChange();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name.getError('dynamicLegacy')?.kind).toBe('dynamicLegacy');
+
+    cva.reject = false;
+    cva.validatorChange();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name.valid()).toBe(true);
+  });
+
   it('adapts function-based legacy validators', () => {
     const legacyValidator = (control: AbstractControl): ValidationErrors | null =>
       control.value === 'invalid' ? { legacyFunction: true } : null;
