@@ -8,6 +8,9 @@ import { provideServerRendering, renderApplication } from '@angular/platform-ser
 import { field } from '../../primitives/field';
 import { required } from '../../validation/validators/required';
 import { FormNodeDirective } from './form-node.directive';
+import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
+
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
 
 @Component({
   selector: 'test-control',
