@@ -187,7 +187,7 @@ export function field<TValue>(
       readMetadata(fieldMetadata(), REQUIRED_METADATA) ||
       fieldErrors().some((error) => error.kind === 'required'),
     ),
-    pending: asyncValidation.pending,
+    pending: computed(() => !fieldNonInteractive() && asyncValidation.pending()),
     validationStatus: fieldValidationStatus,
     touched: computed(() => !fieldNonInteractive() && fieldTouched()),
     untouched: computed(() => fieldNonInteractive() || !fieldTouched()),

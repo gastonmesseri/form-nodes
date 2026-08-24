@@ -932,6 +932,7 @@ hidden() || disabled() || readonly()
 While a node is non-interactive:
 
 - Its validators are skipped, its own `errors()` is empty, and it is considered valid.
+- Its public asynchronous-validation `pending()` state is false. Active work is cancelled or made stale and cannot publish a late result.
 - Its invalid state does not make an ancestor invalid.
 - Its public touched and dirty state is reported as false and does not affect ancestors.
 - `markAsTouched()` is ignored.
@@ -940,7 +941,7 @@ While a node is non-interactive:
 
 When the node becomes interactive again:
 
-- Validation resumes against the current value and validators.
+- Validation resumes against the current value and validators, including a fresh asynchronous run when applicable.
 - Previously recorded touched and dirty state becomes observable again.
 - A value write or `markAsDirty()` performed while non-interactive can therefore appear as dirty afterward.
 

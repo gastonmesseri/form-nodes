@@ -839,6 +839,31 @@ describe('form', () => {
     expect(formGroup.api.validationStatus()).toBe('invalid');
   });
 
+  it('suppresses aggregate pending state while non-interactive and restores it afterwards', () => {
+    const formGroup = form({
+      name: field('David', [asyncValidator(() => new Promise<null>(() => {}))]),
+    });
+    expect(formGroup.pending()).toBe(true);
+
+    formGroup.disable();
+    expect(formGroup.pending()).toBe(false);
+    expect(formGroup.valid()).toBe(true);
+    formGroup.enable();
+    expect(formGroup.pending()).toBe(true);
+
+    formGroup.markAsReadonly();
+    expect(formGroup.pending()).toBe(false);
+    expect(formGroup.valid()).toBe(true);
+    formGroup.markAsWritable();
+    expect(formGroup.pending()).toBe(true);
+
+    formGroup.hide();
+    expect(formGroup.pending()).toBe(false);
+    expect(formGroup.valid()).toBe(true);
+    formGroup.show();
+    expect(formGroup.pending()).toBe(true);
+  });
+
   it('remains pending until every form-level asynchronous validator finishes', async () => {
     let resolveFirst!: (result: { kind: string }) => void;
     let resolveSecond!: (result: { kind: string }) => void;

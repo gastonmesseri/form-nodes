@@ -271,6 +271,29 @@ describe('field', () => {
     expect(fieldNode.validationStatus()).toBe('invalid');
   });
 
+  it('suppresses pending validation state while non-interactive and restores it afterwards', () => {
+    const fieldNode = field('David', [asyncValidator(() => new Promise<null>(() => {}))]);
+    expect(fieldNode.pending()).toBe(true);
+
+    fieldNode.disable();
+    expect(fieldNode.pending()).toBe(false);
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.enable();
+    expect(fieldNode.pending()).toBe(true);
+
+    fieldNode.markAsReadonly();
+    expect(fieldNode.pending()).toBe(false);
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.markAsWritable();
+    expect(fieldNode.pending()).toBe(true);
+
+    fieldNode.hide();
+    expect(fieldNode.pending()).toBe(false);
+    expect(fieldNode.valid()).toBe(true);
+    fieldNode.show();
+    expect(fieldNode.pending()).toBe(true);
+  });
+
   it('reruns an asynchronous validator when a signal read by it changes', async () => {
     const available = signal(true);
     const validate = vi.fn(async ({ value }: Context<string | null>) =>
