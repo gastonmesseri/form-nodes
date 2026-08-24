@@ -17,6 +17,7 @@
 - The library may use different signatures, terminology, and API semantics. When its internal state behavior intentionally differs from Angular 22 Signal Forms, document the difference clearly and cover it with tests.
 - Prefix runtime properties and methods that are intentionally omitted from the public API types with `_`.
 - Keep `docs/behavior.md` updated whenever form behavior or a public feature changes, including state dependencies, propagation, interaction effects, validation effects, and important edge cases.
+- Prefer modern Angular APIs in all new and updated code. Use signal-based APIs such as `input()`, `output()`, `model()`, `viewChild()`, and `contentChild()` instead of their decorator-based equivalents when applicable, and declare host bindings and listeners in the directive or component `host` metadata instead of using `@HostBinding` or `@HostListener`.
 
 ## Import style
 

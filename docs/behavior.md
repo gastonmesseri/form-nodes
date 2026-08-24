@@ -1232,6 +1232,54 @@ An array behaves like an aggregate form node:
 
 This API differs intentionally from Angular 22 Signal Forms. Angular derives array field trees from array-valued models and maintains tracked item identities. This library constructs its tree from node definitions, using either an explicit factory or a compiled template recipe to create independent dynamic nodes. Both approaches preserve node identity and interaction state when existing items are reordered.
 
+## Form submission
+
+`form()` accepts an optional `submission` configuration and exposes `submit()` plus the reactive
+`submitting()` state:
+
+```ts
+const profile = form({
+  name: field('', [required]),
+}, {
+  submission: {
+    action: async (_form, value) => saveProfile(value),
+    onInvalid: () => showValidationMessage(),
+  },
+});
+
+const submitted = await profile.submit();
+```
+
+Submission marks the form and its descendants touched before checking validation. Invalid forms do
+not run the action and resolve to `false`; `onInvalid`, when configured, runs instead. Pending
+validation does not block submission by default, matching Angular Signal Forms. Set
+`ignoreValidators: 'none'` to require `valid()`, or `'all'` to run the action despite invalid or
+pending validation. Only one action may run at a time. Concurrent calls resolve to `false`, while
+`submitting()` is `true` on the submitted form and inherited by every descendant. The state is
+cleared in a `finally` block if the action succeeds or rejects.
+
+`FormRootDirective` binds this behavior to a native form while retaining the `[formNode]` binding
+name:
+
+```html
+<form [formNode]="profile">
+  <input [formNode]="profile.name">
+  <button type="submit">Save</button>
+  <button type="reset">Reset</button>
+</form>
+```
+
+The directive applies `novalidate`, always prevents native submit navigation, and calls the
+configured `submit()` operation. Native reset is also prevented and delegated to the form node so
+the complete reactive tree and its bindings reset consistently. `reset()` retains the library's
+existing semantics: without an explicit value it clears interaction state and pending control
+state while retaining current values.
+
+This behavior follows Angular Signal Forms 22.1.4 submission state and `FormRoot` behavior
+(`898380974d49cf7976e9d89cc74a0801a26ce7b1`). The public API differs intentionally: this library's
+submission action receives the exact form node and a typed value snapshot, and currently does not
+interpret returned server-validation errors.
+
 ## Control binding with `[formNode]`
 
 `FormNodeDirective` binds a field node to a native form control or to a component that implements Angular's `ControlValueAccessor` contract:
@@ -1294,7 +1342,7 @@ destroyed. No validity observer or style is installed during server rendering.
 
 This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
 
-The architecture follows Angular 22 Signal Forms `FormField` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), while keeping the public name and node model specific to this library. Native parsing errors, configurable state classes, and a first-class signal-based custom-control protocol remain subsequent layers; they should be implemented as adapters around the same directive rather than by changing field semantics.
+The architecture follows Angular 22 Signal Forms `FormField` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), while keeping the public name and node model specific to this library. Configurable state classes and any future signal-based custom-control interoperability should remain adapter concerns rather than changing field semantics.
 
 ## Internal structural behavior
 
@@ -1311,7 +1359,6 @@ These details are not public API, but explain current propagation behavior:
 
 The current implementation does not yet provide:
 
-- Submission state.
 - Aggregate custom-control binding and a first-class signal-control protocol.
 - Runtime addition or removal of named object children after a `form()` is created.
 - Schema-driven form generation from JSON definitions.

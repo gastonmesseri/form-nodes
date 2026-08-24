@@ -20,6 +20,7 @@ export type NodeApi = {
   getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: Node }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
+  submitting: Signal<boolean>;
   debouncing: Signal<boolean>;
   flush(): void;
   touched: Signal<boolean>;

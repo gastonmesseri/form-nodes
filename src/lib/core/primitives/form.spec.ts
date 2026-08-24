@@ -10,6 +10,75 @@ import { asyncValidator } from '../validation/async-validator';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('submits valid forms, exposes submitting state through the tree, and prevents concurrent submissions', async () => {
+    let resolve!: () => void;
+    const pendingAction = new Promise<void>((done) => { resolve = done; });
+    const action = vi.fn(() => pendingAction);
+    const profile = form({ name: field('Marco') }, { submission: { action } });
+
+    const first = profile.submit();
+
+    expect(profile.submitting()).toBe(true);
+    expect(profile.name.submitting()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    expect(profile.name.touched()).toBe(true);
+    expect(action).toHaveBeenCalledWith(profile, { name: 'Marco' });
+    expect(await profile.submit()).toBe(false);
+    expect(action).toHaveBeenCalledTimes(1);
+
+    resolve();
+    expect(await first).toBe(true);
+    expect(profile.submitting()).toBe(false);
+    expect(profile.name.submitting()).toBe(false);
+  });
+
+  it('blocks invalid submissions by default and supports validation override options', async () => {
+    const action = vi.fn();
+    const onInvalid = vi.fn();
+    const blocked = form({ name: field('', [required]) }, { submission: { action, onInvalid } });
+
+    expect(await blocked.submit()).toBe(false);
+    expect(action).not.toHaveBeenCalled();
+    expect(onInvalid).toHaveBeenCalledWith(blocked);
+    expect(blocked.name.touched()).toBe(true);
+
+    const forced = form({ name: field('', [required]) }, {
+      submission: { action, ignoreValidators: 'all' },
+    });
+    expect(await forced.submit()).toBe(true);
+    expect(action).toHaveBeenCalledWith(forced, { name: '' });
+  });
+
+  it('allows pending validation by default and can require fully valid state', async () => {
+    const action = vi.fn();
+    const unresolved = new Promise<null>(() => {});
+    const allowingPending = form({
+      name: field('Marco', [asyncValidator(() => unresolved)]),
+    }, { submission: { action } });
+    const requiringValid = form({
+      name: field('Marco', [asyncValidator(() => unresolved)]),
+    }, { submission: { action, ignoreValidators: 'none' } });
+
+    expect(allowingPending.pending()).toBe(true);
+    expect(await allowingPending.submit()).toBe(true);
+    expect(await requiringValid.submit()).toBe(false);
+    expect(action).toHaveBeenCalledTimes(1);
+  });
+
+  it('requires a configured action and always clears submitting after rejection', async () => {
+    const withoutSubmission = form({ name: field('Marco') });
+    await expect(withoutSubmission.submit()).rejects.toThrowError(
+      'form: cannot submit without a configured submission action',
+    );
+
+    const failure = new Error('submit failed');
+    const profile = form({ name: field('Marco') }, {
+      submission: { action: () => Promise.reject(failure) },
+    });
+    await expect(profile.submit()).rejects.toBe(failure);
+    expect(profile.submitting()).toBe(false);
+  });
+
   it('aggregates a dynamic array child through the public form api', () => {
     const profile = form({
       name: field('Marco'),

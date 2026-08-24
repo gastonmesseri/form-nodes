@@ -384,6 +384,7 @@ export function array<TDefinition extends NodeDefinition>(
       || arrayErrors().some((error) => error.kind === 'required')
     ),
     pending: arrayPending,
+    submitting: computed(() => arrayParent()?.api.submitting() === true),
     debouncing: arrayDebouncing,
     flush: () => arrayItems().forEach((item) => item.api.flush()),
     validationStatus: arrayValidationStatus,

@@ -60,6 +60,8 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
+  /** Whether an ancestor form is currently running its submission action. */
+  submitting: Signal<boolean>;
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
