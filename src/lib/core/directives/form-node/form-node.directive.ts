@@ -1,4 +1,4 @@
-import { CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
+import { CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit } from '@angular/core';
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
@@ -63,29 +63,18 @@ const toControlErrors = (errors: ValidationErrors | null): readonly ValidationEr
 export class FormNodeDirective<TValue> implements OnInit {
   _fieldInput = input.required<Field<TValue>>({ alias: 'formNode' });
 
-  /** Field node bound to the host native control or ControlValueAccessor. */
-  get field(): Field<TValue> {
-    const field = this._fieldInput();
-    if (typeof field !== 'function' || typeof field.controlValue !== 'function') {
-      throw new Error('formNode: a field node is required');
-    }
-    return field;
-  }
+  private renderer = inject(Renderer2);
 
-  /** Current bound field, exposed as a signal for custom integrations. */
-  node: Signal<Field<TValue>> = computed(() => this.field);
+  private injector = inject(Injector);
+
+  private destroyRef = inject(DestroyRef);
+
+  private cspNonce = inject(CSP_NONCE, { optional: true });
+
+  private element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+
   private _ngControl: FormNodeNgControl | undefined;
 
-  /** Fake `NgControl` exposed for interoperability with existing Angular controls. */
-  get ngControl(): FormNodeNgControl {
-    return (this._ngControl ??= new FormNodeNgControl(() => this.field as Field<unknown>));
-  }
-
-  private renderer = inject(Renderer2);
-  private injector = inject(Injector);
-  private destroyRef = inject(DestroyRef);
-  private cspNonce = inject(CSP_NONCE, { optional: true });
-  private element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
   private legacyValidationOwner = {};
   private nativeParsingOwner = {};
@@ -93,6 +82,9 @@ export class FormNodeDirective<TValue> implements OnInit {
   private composing = false;
   private writingAccessorValue = false;
   private lastViewValue: unknown = Symbol('unset');
+
+  /** Current bound field, exposed as a signal for custom integrations. */
+  node = computed(() => this.field);
 
   constructor() {
     this.destroyRef.onDestroy(() => { this.destroyed = true; });
@@ -106,9 +98,19 @@ export class FormNodeDirective<TValue> implements OnInit {
     this.bindNodeState();
   }
 
-  focus(options?: FocusOptions) { this.element.focus(options); }
-  flush() { this.field.flush(); }
-  reset() { this.field.reset(); }
+  /** Field node bound to the host native control or ControlValueAccessor. */
+  get field(): Field<TValue> {
+    const field = this._fieldInput();
+    if (typeof field !== 'function' || typeof field.controlValue !== 'function') {
+      throw new Error('formNode: a field node is required');
+    }
+    return field;
+  }
+
+  /** Fake `NgControl` exposed for interoperability with existing Angular controls. */
+  get ngControl(): FormNodeNgControl {
+    return (this._ngControl ??= new FormNodeNgControl(() => this.field as Field<unknown>));
+  }
 
   private connectAccessor(accessor: ControlValueAccessor) {
     this.ngControl.valueAccessor = accessor;
@@ -225,5 +227,17 @@ export class FormNodeDirective<TValue> implements OnInit {
       if ('required' in this.element) this.renderer.setProperty(this.element, 'required', field.required());
       this.renderer.setAttribute(this.element, 'aria-invalid', String(field.invalid()));
     }, { injector: this.injector });
+  }
+
+  focus(options?: FocusOptions) {
+    this.element.focus(options);
+  }
+
+  flush() {
+    this.field.flush();
+  }
+
+  reset() {
+    this.field.reset();
   }
 }
