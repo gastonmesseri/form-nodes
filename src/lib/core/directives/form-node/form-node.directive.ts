@@ -61,7 +61,7 @@ const toControlErrors = (errors: ValidationErrors | null): readonly ValidationEr
   ],
 })
 export class FormNodeDirective<TValue> implements OnInit {
-  readonly _fieldInput = input.required<Field<TValue>>({ alias: 'formNode' });
+  _fieldInput = input.required<Field<TValue>>({ alias: 'formNode' });
 
   /** Field node bound to the host native control or ControlValueAccessor. */
   get field(): Field<TValue> {
@@ -73,7 +73,7 @@ export class FormNodeDirective<TValue> implements OnInit {
   }
 
   /** Current bound field, exposed as a signal for custom integrations. */
-  readonly node: Signal<Field<TValue>> = computed(() => this.field);
+  node: Signal<Field<TValue>> = computed(() => this.field);
   private _ngControl: FormNodeNgControl | undefined;
 
   /** Fake `NgControl` exposed for interoperability with existing Angular controls. */
@@ -81,14 +81,14 @@ export class FormNodeDirective<TValue> implements OnInit {
     return (this._ngControl ??= new FormNodeNgControl(() => this.field as Field<unknown>));
   }
 
-  private readonly renderer = inject(Renderer2);
-  private readonly injector = inject(Injector);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly cspNonce = inject(CSP_NONCE, { optional: true });
-  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-  private readonly nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
-  private readonly legacyValidationOwner = {};
-  private readonly nativeParsingOwner = {};
+  private renderer = inject(Renderer2);
+  private injector = inject(Injector);
+  private destroyRef = inject(DestroyRef);
+  private cspNonce = inject(CSP_NONCE, { optional: true });
+  private element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  private nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
+  private legacyValidationOwner = {};
+  private nativeParsingOwner = {};
   private destroyed = false;
   private composing = false;
   private writingAccessorValue = false;
