@@ -9,9 +9,10 @@
     "test": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:coverage": "vitest run --coverage --coverage.include='src/lib/**/*.ts' --coverage.exclude='src/**/*.spec.ts' --coverage.exclude='src/**/*.type.ts' --coverage.thresholds.statements=100 --coverage.thresholds.branches=99 --coverage.thresholds.functions=100 --coverage.thresholds.lines=100",
+    "test:templates": "node scripts/test-template-types.mjs",
     "test:types": "tsc -p tsconfig.type-tests.json --noEmit",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.spec.json --noEmit && npm run test:types"
+    "typecheck": "tsc -p tsconfig.spec.json --noEmit && npm run test:types && npm run test:templates"
   },
   "peerDependencies": {
     "@angular/core": "^22.0.0",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@angular/compiler": "^22.0.0",
+    "@angular/compiler-cli": "^22.1.3",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.1.3",
     "@angular/platform-browser": "^22.1.3",
