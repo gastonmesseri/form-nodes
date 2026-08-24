@@ -1217,6 +1217,8 @@ profile.set({
 
 The complete value propagates immediately to the array and every ancestor. Existing nodes in the common index prefix are updated and retain their identity and runtime state. Additional values create fresh nodes from the configured template or factory, with correct parent, root form, and index-derived paths. Surplus nodes are removed and detached from the tree; retained external references to those removed nodes remain usable as independent roots. Descendants remain attached to that removed root, and their paths are recalculated relative to it. Their values, interaction state, pending validation, and eventual errors no longer contribute to the former array or form ancestors. Setting an empty array removes every item, and a later `form.set()` can create a new collection from the same definition recipe.
 
+A node removed directly through `removeAt()` keeps ownership of its already-running validation as an independent root. A node removed as part of keyed `set()` or `reset(value)` reconciliation has its previous reconciliation-owned asynchronous execution invalidated; late results from that stale execution are ignored. In both cases the former array stops aggregating the removed node immediately.
+
 ### Aggregated state and validation
 
 An array behaves like an aggregate form node:
