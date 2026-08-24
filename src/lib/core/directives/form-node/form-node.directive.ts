@@ -5,7 +5,7 @@ import type { Field } from '../../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
 import type { ValidationError } from '../../validation/validation.type';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
-import { isNativeFormNodeControl, readNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control';
+import { isNativeFormNodeControl, isNativeInput, isNativeSelect, readNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control';
 
 export const FORM_NODE = new InjectionToken<FormNodeDirective<unknown>>('FORM_NODE');
 
@@ -168,7 +168,7 @@ export class FormNodeDirective<TValue> implements OnInit {
   private connectNativeControl(control: NativeFormNodeControl): void {
     const commit = () => {
       if (this.composing || this.destroyed) return;
-      if (control instanceof HTMLInputElement && control.type === 'radio' && !control.checked) return;
+      if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;
       this.field.setControlValue(readNativeControlValue(control, () => this.field.controlValue()) as TValue);
     };
     const unlistenInput = this.renderer.listen(control, 'input', commit);
@@ -187,7 +187,7 @@ export class FormNodeDirective<TValue> implements OnInit {
       unlistenCompositionEnd();
     });
     effect(() => writeNativeControlValue(control, this.node().controlValue()), { injector: this.injector });
-    if (control instanceof HTMLSelectElement) {
+    if (isNativeSelect(control) && typeof MutationObserver === 'function') {
       const observer = new MutationObserver(() => writeNativeControlValue(control, this.field.controlValue()));
       observer.observe(control, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
       this.destroyRef.onDestroy(() => observer.disconnect());
