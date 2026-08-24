@@ -16,7 +16,7 @@ import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './native-control';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());

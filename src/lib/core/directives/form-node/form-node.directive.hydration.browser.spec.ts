@@ -8,7 +8,7 @@ import { required } from '../../validation/validators/required';
 import { FormNodeDirective } from './form-node.directive';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 declare const __FORM_NODE_HYDRATION_HTML__: string;
 
