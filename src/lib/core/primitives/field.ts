@@ -13,10 +13,10 @@ import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { InternalNode, MarkAsTouchedOptions, Node } from '../types/node.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
-import { readExternalValidationErrors } from '../validation/external-validation-errors';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 
 export type { Field, FieldApi, FieldOptions } from './field.type';
 
@@ -160,6 +160,7 @@ export function field<TValue>(
     fieldControlValue.set(fieldValue());
     fieldTouched.set(false);
     fieldDirty.set(false);
+    notifyExternalValidationReset(fieldNode);
   };
   const members = {
     form: fieldForm,

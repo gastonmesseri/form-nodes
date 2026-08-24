@@ -13,10 +13,10 @@ declare const __FORM_NODE_HYDRATION_HTML__: string;
   selector: 'form-node-hydration-app',
   standalone: true,
   imports: [FormNodeDirective],
-  template: '<input data-name [formNode]="name"><span data-value>{{ name() }}</span>',
+  template: '<input data-age type="text" [formNode]="age"><span data-value>{{ age() }}</span>',
 })
 class HydrationApp {
-  readonly name = field('', [required], { nullable: false });
+  readonly age = field(23, [required], { nullable: false });
 }
 
 const installServerDom = (): { host: HTMLElement; nodes: Node[] } => {
@@ -36,10 +36,11 @@ describe('FormNodeDirective hydration in Chromium', () => {
     const error = vi.spyOn(console, 'error');
     const warn = vi.spyOn(console, 'warn');
     const { host, nodes } = installServerDom();
-    const serverInput = host.querySelector('[data-name]') as HTMLInputElement;
+    const serverInput = host.querySelector('[data-age]') as HTMLInputElement;
 
     expect(serverInput.required).toBe(true);
-    expect(serverInput.getAttribute('aria-invalid')).toBe('true');
+    expect(serverInput.value).toBe('23');
+    expect(serverInput.getAttribute('aria-invalid')).toBe('false');
 
     let application: ApplicationRef | undefined;
     try {
@@ -48,21 +49,32 @@ describe('FormNodeDirective hydration in Chromium', () => {
       });
       await application.whenStable();
 
-      const hydratedInput = host.querySelector('[data-name]') as HTMLInputElement;
+      const hydratedInput = host.querySelector('[data-age]') as HTMLInputElement;
       const instance = application.components[0]!.instance as HydrationApp;
 
       expect(hydratedInput).toBe(serverInput);
       expect(error).not.toHaveBeenCalled();
       expect(warn).not.toHaveBeenCalled();
 
-      hydratedInput.value = 'Marco';
+      hydratedInput.value = 'invalid';
       hydratedInput.dispatchEvent(new Event('input', { bubbles: true }));
       await application.whenStable();
 
-      expect(instance.name()).toBe('Marco');
-      expect(instance.name.dirty()).toBe(true);
+      expect(instance.age()).toBe(23);
+      expect(instance.age.getError('parse')?.kind).toBe('parse');
+      expect(hydratedInput.value).toBe('invalid');
+      expect(hydratedInput.getAttribute('aria-invalid')).toBe('true');
+      expect(host.querySelector('[data-value]')?.textContent).toBe('23');
+
+      hydratedInput.value = '42';
+      hydratedInput.dispatchEvent(new Event('input', { bubbles: true }));
+      await application.whenStable();
+
+      expect(instance.age()).toBe(42);
+      expect(instance.age.dirty()).toBe(true);
+      expect(instance.age.getError('parse')).toBeUndefined();
       expect(hydratedInput.getAttribute('aria-invalid')).toBe('false');
-      expect(host.querySelector('[data-value]')?.textContent).toBe('Marco');
+      expect(host.querySelector('[data-value]')?.textContent).toBe('42');
     } finally {
       application?.destroy();
       error.mockRestore();

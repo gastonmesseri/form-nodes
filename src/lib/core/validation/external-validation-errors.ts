@@ -4,7 +4,11 @@ import type { Node } from '../types/node.type';
 import type { ValidationError } from './validation.type';
 
 type ExternalErrorSource<TNode extends Node> = Signal<readonly ValidationError.WithOptionalTargetNode<TNode>[]>;
-type ExternalErrorSources = ReadonlyMap<object, ExternalErrorSource<Node>>;
+type ExternalErrorRegistration = {
+  readonly source: ExternalErrorSource<Node>;
+  readonly onReset?: () => void;
+};
+type ExternalErrorSources = ReadonlyMap<object, ExternalErrorRegistration>;
 
 const registries = new WeakMap<Node, WritableSignal<ExternalErrorSources>>();
 
@@ -21,11 +25,16 @@ const getRegistry = (node: Node): WritableSignal<ExternalErrorSources> => {
 export const readExternalValidationErrors = <TNode extends Node>(
   node: TNode,
 ): readonly ValidationError.WithTargetNode<TNode>[] =>
-  Array.from(getRegistry(node)().values()).flatMap((source) =>
+  Array.from(getRegistry(node)().values()).flatMap(({ source }) =>
     (source() as readonly ValidationError.WithOptionalTargetNode<TNode>[]).map((error) =>
       ({ ...error, targetNode: error.targetNode ?? node }),
     ),
   );
+
+/** Notifies external validation integrations that their node was reset. */
+export const notifyExternalValidationReset = (node: Node): void => {
+  Array.from(untracked(getRegistry(node)).values()).forEach(({ onReset }) => onReset?.());
+};
 
 /**
  * Registers a reactive external error source for a node and returns its idempotent cleanup.
@@ -35,10 +44,15 @@ export const registerExternalValidationErrors = <TNode extends Node>(
   node: TNode,
   owner: object,
   source: ExternalErrorSource<TNode>,
+  options?: { readonly onReset?: () => void },
 ): (() => void) => {
   const registry = getRegistry(node);
   const sources = new Map(untracked(registry));
-  sources.set(owner, source as ExternalErrorSource<Node>);
+  const registration: ExternalErrorRegistration = {
+    source: source as ExternalErrorSource<Node>,
+    ...(options?.onReset ? { onReset: options.onReset } : {}),
+  };
+  sources.set(owner, registration);
   registry.set(sources);
   let registered = true;
 
@@ -46,7 +60,7 @@ export const registerExternalValidationErrors = <TNode extends Node>(
     if (!registered) return;
     registered = false;
     const current = untracked(registry);
-    if (current.get(owner) !== source) return;
+    if (current.get(owner) !== registration) return;
     const remaining = new Map(current);
     remaining.delete(owner);
     registry.set(remaining);

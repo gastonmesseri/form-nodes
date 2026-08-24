@@ -1,11 +1,12 @@
-import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Input, Renderer2, computed, effect, forwardRef, inject, signal, untracked, type OnInit, type Signal } from '@angular/core';
+import { CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Input, Renderer2, computed, effect, forwardRef, inject, signal, untracked, type OnInit, type Signal } from '@angular/core';
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
 import type { ValidationError } from '../../validation/validation.type';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
-import { isNativeFormNodeControl, isNativeInput, isNativeSelect, readNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control';
+import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './native-input-validity';
+import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control';
 
 export const FORM_NODE = new InjectionToken<FormNodeDirective<unknown>>('FORM_NODE');
 
@@ -88,8 +89,11 @@ export class FormNodeDirective<TValue> implements OnInit {
   private readonly renderer = inject(Renderer2);
   private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cspNonce = inject(CSP_NONCE, { optional: true });
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
+  private readonly legacyValidationOwner = {};
+  private readonly nativeParsingOwner = {};
   private destroyed = false;
   private composing = false;
   private writingAccessorValue = false;
@@ -161,15 +165,20 @@ export class FormNodeDirective<TValue> implements OnInit {
     });
     effect((onCleanup) => {
       const field = this.node();
-      onCleanup(registerExternalValidationErrors(field, this, errors));
+      onCleanup(registerExternalValidationErrors(field, this.legacyValidationOwner, errors));
     }, { injector: this.injector });
   }
 
   private connectNativeControl(control: NativeFormNodeControl): void {
+    const parseErrors = signal<readonly ValidationError.WithoutTargetNode[]>([]);
     const commit = () => {
       if (this.composing || this.destroyed) return;
       if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;
-      this.field.setControlValue(readNativeControlValue(control, () => this.field.controlValue()) as TValue);
+      const field = this.field;
+      field.markAsDirty();
+      const result = parseNativeControlValue(control, () => field.controlValue());
+      parseErrors.set(result.error ? [result.error] : []);
+      if ('value' in result) field.setControlValue(result.value as TValue);
     };
     const unlistenInput = this.renderer.listen(control, 'input', commit);
     const unlistenChange = this.renderer.listen(control, 'change', commit);
@@ -186,7 +195,26 @@ export class FormNodeDirective<TValue> implements OnInit {
       unlistenCompositionStart();
       unlistenCompositionEnd();
     });
-    effect(() => writeNativeControlValue(control, this.node().controlValue()), { injector: this.injector });
+    effect((onCleanup) => {
+      const field = this.node();
+      onCleanup(registerExternalValidationErrors(field, this.nativeParsingOwner, parseErrors, {
+        onReset: () => {
+          parseErrors.set([]);
+          writeNativeControlValue(control, field.controlValue());
+        },
+      }));
+    }, { injector: this.injector });
+    effect(() => {
+      const value = this.node().controlValue();
+      untracked(() => {
+        parseErrors.set([]);
+        writeNativeControlValue(control, value);
+      });
+    }, { injector: this.injector });
+    if (isNativeInput(control) && nativeInputRequiresValidityTracking(control)) {
+      const stopWatchingValidity = watchNativeInputValidity(control, commit, this.cspNonce ?? undefined);
+      this.destroyRef.onDestroy(stopWatchingValidity);
+    }
     if (isNativeSelect(control) && typeof MutationObserver === 'function') {
       const observer = new MutationObserver(() => writeNativeControlValue(control, this.field.controlValue()));
       observer.observe(control, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });

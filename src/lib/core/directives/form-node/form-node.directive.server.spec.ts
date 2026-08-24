@@ -67,6 +67,23 @@ describe('FormNodeDirective server rendering', () => {
     expect(html).toContain('aria-invalid="false"');
   });
 
+  it('renders date-like controls without installing browser validity monitoring', async () => {
+    @Component({
+      selector: 'app-root',
+      standalone: true,
+      imports: [FormNodeDirective],
+      template: '<input type="date" [formNode]="date">',
+    })
+    class App {
+      readonly date = field('2026-08-29');
+    }
+
+    const html = await render(App);
+
+    expect(html).toContain('value="2026-08-29"');
+    expect(html).not.toContain('form-node-valid');
+  });
+
   it('renders through a custom ControlValueAccessor', async () => {
     @Component({
       selector: 'app-root',

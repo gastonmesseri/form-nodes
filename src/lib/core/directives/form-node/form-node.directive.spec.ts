@@ -13,7 +13,7 @@ import type { Field } from '../../primitives/field';
 import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { required } from '../../validation/validators/required';
-import { isNativeFormNodeControl, readNativeControlValue, writeNativeControlValue } from './native-control';
+import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './native-control';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -118,6 +118,126 @@ describe('FormNodeDirective', () => {
     profile.patch({ address: { city: 'Geneva' } });
     fixture.detectChanges();
     expect(input.value).toBe('Geneva');
+  });
+
+  it('keeps the last valid numeric model value and contributes parse errors to its form tree', () => {
+    @Component({
+      standalone: true,
+      selector: 'numeric-parse-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input type="text" [formNode]="profile.age">`,
+    })
+    class Host {
+      readonly profile = form({ age: field(23, { nullable: false }) });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const { profile } = fixture.componentInstance;
+
+    input.value = 'not-a-number';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+
+    expect(input.value).toBe('not-a-number');
+    expect(profile.age()).toBe(23);
+    expect(profile.age.controlValue()).toBe(23);
+    expect(profile.age.dirty()).toBe(true);
+    expect(profile.age.getError('parse')).toMatchObject({ kind: 'parse', targetNode: profile.age });
+    expect(profile.invalid()).toBe(true);
+    expect(profile.allErrors()).toContain(profile.age.getError('parse'));
+
+    profile.age.set(30);
+    fixture.detectChanges();
+    expect(input.value).toBe('30');
+    expect(profile.age.getError('parse')).toBeUndefined();
+
+    input.value = '42';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+
+    expect(profile.age()).toBe(42);
+    expect(profile.age.getError('parse')).toBeUndefined();
+    expect(profile.valid()).toBe(true);
+  });
+
+  it('tracks parse errors per binding and clears stale raw input on field reset', () => {
+    @Component({
+      standalone: true,
+      selector: 'multiple-parse-form-node-host',
+      imports: [FormNodeDirective],
+      template: `
+        <input data-first type="text" [formNode]="age">
+        <input data-second type="text" [formNode]="age">
+      `,
+    })
+    class Host {
+      readonly age = field(23, { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const first = fixture.nativeElement.querySelector('[data-first]') as HTMLInputElement;
+    const second = fixture.nativeElement.querySelector('[data-second]') as HTMLInputElement;
+    const { age } = fixture.componentInstance;
+
+    first.value = 'first-invalid';
+    dispatch(first, 'input');
+    second.value = 'second-invalid';
+    dispatch(second, 'input');
+    fixture.detectChanges();
+
+    expect(age()).toBe(23);
+    expect(age.errors().filter((error) => error.kind === 'parse')).toHaveLength(2);
+    expect(first.value).toBe('first-invalid');
+    expect(second.value).toBe('second-invalid');
+
+    age.reset();
+    fixture.detectChanges();
+
+    expect(age.getError('parse')).toBeUndefined();
+    expect(age.pristine()).toBe(true);
+    expect(first.value).toBe('23');
+    expect(second.value).toBe('23');
+  });
+
+  it('moves native parse-error ownership when the bound field changes', () => {
+    @Component({
+      standalone: true,
+      selector: 'dynamic-parse-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input type="text" [formNode]="selected()">`,
+    })
+    class Host {
+      readonly first = field(23, { nullable: false });
+      readonly second = field(42, { nullable: false });
+      readonly selected = signal<Field<number>>(this.first);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const { first, second, selected } = fixture.componentInstance;
+
+    input.value = 'invalid';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+    expect(first.getError('parse')?.kind).toBe('parse');
+
+    selected.set(second);
+    fixture.detectChanges();
+    expect(first.getError('parse')).toBeUndefined();
+    expect(second.getError('parse')).toBeUndefined();
+    expect(input.value).toBe('42');
+
+    input.value = 'still-invalid';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+    expect(second.getError('parse')?.kind).toBe('parse');
+
+    fixture.destroy();
+    expect(second.getError('parse')).toBeUndefined();
   });
 
   it('binds disabled, readonly, required, and aria-invalid state', () => {
@@ -859,6 +979,21 @@ describe('native control conversion', () => {
     expect(readNativeControlValue(input, () => null)).toBeNull();
     input.value = 'invalid';
     expect(readNativeControlValue(input, () => 23)).toBe(23);
+  });
+
+  it('reports numeric text and browser bad-input parse failures', () => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = 'invalid';
+    expect(parseNativeControlValue(input, () => 23)).toEqual({ error: { kind: 'parse' } });
+    input.value = '42';
+    expect(parseNativeControlValue(input, () => 23)).toEqual({ value: 42 });
+
+    Object.defineProperty(input, 'validity', { configurable: true, value: { badInput: true } });
+    expect(parseNativeControlValue(input, () => 23)).toEqual({ error: { kind: 'parse' } });
+    Object.defineProperty(input, 'validity', { configurable: true, value: { badInput: false } });
+    input.value = 'invalid';
+    expect(parseNativeControlValue(input, () => null)).toEqual({ error: { kind: 'parse' } });
   });
 
   it('writes all supported native value representations', () => {
