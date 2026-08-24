@@ -6,5 +6,8 @@
     "inlineSources": true,
     "outDir": "./out-tsc/lib"
   },
+  "angularCompilerOptions": {
+    "compilationMode": "partial"
+  },
   "exclude": ["**/*.spec.ts"]
 }
