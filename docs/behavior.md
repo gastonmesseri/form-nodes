@@ -1268,6 +1268,7 @@ The directive currently provides these behaviors:
 - Exporting the directive as `#binding="formNode"` provides `focus()`, `flush()`, and `reset()` operations and a reactive `node` reference.
 - Destroying the directive removes DOM listeners, disconnects select observation, and destroys its reactive effects through Angular's `DestroyRef` ownership.
 - The directive supports server rendering for native controls and custom `ControlValueAccessor` components. Initial value and node-state bindings are rendered on the server, while browser-only select option observation is installed only in a browser environment. Native value conversion identifies controls structurally instead of depending on browser constructor globals.
+- Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
 
 This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
 
