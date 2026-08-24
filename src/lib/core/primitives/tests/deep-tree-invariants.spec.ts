@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { form } from './form';
-import { array } from './array';
-import { field } from './field';
-import { required } from '../validation/validators/required';
-import { asyncValidator } from '../validation/async-validator';
+import { form } from '../form';
+import { array } from '../array';
+import { field } from '../field';
+import { required } from '../../validation/validators/required';
+import { asyncValidator } from '../../validation/async-validator';
 
 const createDeepTree = () => form({
   teams: array(() => form({

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { form } from './form';
-import { array } from './array';
-import { field } from './field';
-import type { Node } from '../types/node.type';
-import { required } from '../validation/validators/required';
-import { asyncValidator } from '../validation/async-validator';
+import { form } from '../form';
+import { array } from '../array';
+import { field } from '../field';
+import type { Node } from '../../types/node.type';
+import { required } from '../../validation/validators/required';
+import { asyncValidator } from '../../validation/async-validator';
 
 type StateFixture = {
   readonly root: Node;
