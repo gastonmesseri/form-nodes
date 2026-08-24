@@ -32,7 +32,7 @@ export const readExternalValidationErrors = <TNode extends Node>(
   );
 
 /** Notifies external validation integrations that their node was reset. */
-export const notifyExternalValidationReset = (node: Node): void => {
+export const notifyExternalValidationReset = (node: Node) => {
   Array.from(untracked(getRegistry(node)).values()).forEach(({ onReset }) => onReset?.());
 };
 

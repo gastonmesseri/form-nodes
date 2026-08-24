@@ -107,7 +107,7 @@ export function array<TDefinition extends NodeDefinition>(
     initialOptions?: ArrayOptions<TValue>,
   ) => ArrayNode<TItem>;
   const createdDefinitions = new WeakSet<object>();
-  const trackDefinition = (definition: NodeDefinition): void => {
+  const trackDefinition = (definition: NodeDefinition) => {
     if (createdDefinitions.has(definition)) {
       throw new Error('array: factory must return a fresh node definition for every item');
     }

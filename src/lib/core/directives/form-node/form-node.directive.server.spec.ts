@@ -22,10 +22,10 @@ class TestControl implements ControlValueAccessor {
   readonly value = signal('');
   readonly disabled = signal(false);
 
-  writeValue(value: unknown): void { this.value.set(String(value)); }
-  registerOnChange(_onChange: (value: unknown) => void): void {}
-  registerOnTouched(_onTouched: () => void): void {}
-  setDisabledState(disabled: boolean): void { this.disabled.set(disabled); }
+  writeValue(value: unknown) { this.value.set(String(value)); }
+  registerOnChange(_onChange: (value: unknown) => void) {}
+  registerOnTouched(_onTouched: () => void) {}
+  setDisabledState(disabled: boolean) { this.disabled.set(disabled); }
 }
 
 const render = (component: Parameters<typeof bootstrapApplication>[0]): Promise<string> =>

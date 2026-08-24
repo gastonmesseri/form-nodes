@@ -53,7 +53,7 @@ describe('array property-based invariants', () => {
         const names = array(field('', { nullable: false }));
         let model: string[] = [];
 
-        const expectInvariants = (): void => {
+        const expectInvariants = () => {
           const items = names.items();
           expect(names()).toEqual(model);
           expect(names.length()).toBe(model.length);

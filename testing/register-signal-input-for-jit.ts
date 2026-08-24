@@ -15,7 +15,7 @@ export const registerSignalInputForJit = (
   directive: object,
   publicName: string,
   classPropertyName: string,
-): void => {
+) => {
   const definition = (directive as DirectiveType).ɵdir;
   definition.inputs = { ...definition.inputs, [publicName]: [classPropertyName, 1, null] };
   definition.declaredInputs = { ...definition.declaredInputs, [publicName]: classPropertyName };
