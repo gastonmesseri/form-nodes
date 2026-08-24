@@ -6,10 +6,12 @@ import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
 import { form, type FormApi } from '../primitives/form';
 import { field, type FieldApi } from '../primitives/field';
-import type { ObservableLike } from '../types/observable-like.type';
+import type { ObservableLike, ObserverLike } from '../types/observable-like.type';
 import type { AsyncValidatorApi, FieldContext } from './validation.type';
 
 const settle = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
 };
@@ -70,6 +72,35 @@ describe('asyncValidator', () => {
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
+  it('ignores emissions made by an Observable after its validation becomes stale', async () => {
+    const observers: ObserverLike<{ kind: string }>[] = [];
+    const validate = ({ value }: FieldContext<string | null>) => {
+      value();
+      return {
+        subscribe: (observer: ObserverLike<{ kind: string }>) => {
+          observers.push(observer);
+          return { unsubscribe: () => undefined };
+        },
+      } satisfies ObservableLike<{ kind: string }>;
+    };
+    const name = field('first', [asyncValidator(validate)]);
+
+    await Promise.resolve();
+    name.set('second');
+    await settle();
+    expect(observers).toHaveLength(2);
+
+    observers[0]!.next({ kind: 'staleObservableError' });
+    await settle();
+    expect(name.errors()).toEqual([]);
+    expect(name.pending()).toBe(true);
+
+    observers[1]!.complete();
+    await settle();
+    expect(name.errors()).toEqual([]);
+    expect(name.pending()).toBe(false);
+  });
+
   it('routes an invalid ObservableLike subscription through onError', async () => {
     const invalidObservable = { subscribe: () => ({}) } as unknown as ObservableLike<never>;
     const name = field('David', [
@@ -81,6 +112,27 @@ describe('asyncValidator', () => {
     await settle();
 
     expect(name.errors()).toMatchObject([{ kind: 'invalidObservable' }]);
+  });
+
+  it('does not publish an onError fallback after it destroys the owning injector', async () => {
+    let rejectValidation!: (error: unknown) => void;
+    const injector = Injector.create({ providers: [] });
+    const name = field('David', [asyncValidator(
+      () => new Promise<never>((_, reject) => { rejectValidation = reject; }),
+      {
+        onError: () => {
+          injector.destroy();
+          return { kind: 'fallback' };
+        },
+      },
+    )], { injector });
+
+    await Promise.resolve();
+    rejectValidation(new Error('service failed'));
+    await settle();
+
+    expect(name.pending()).toBe(false);
+    expect(name.errors()).toEqual([]);
   });
 
   it('does not run asynchronous validators while synchronous validation fails', async () => {
@@ -156,12 +208,12 @@ describe('asyncValidator', () => {
     expect(name.pending()).toBe(false);
 
     enabled.set(true);
-    await Promise.resolve();
+    await settle();
     expect(params).toHaveBeenCalledOnce();
     expect(name.pending()).toBe(true);
 
     enabled.set(false);
-    await Promise.resolve();
+    await settle();
     expect(vi.getTimerCount()).toBe(0);
     await vi.advanceTimersByTimeAsync(100);
 
@@ -180,11 +232,79 @@ describe('asyncValidator', () => {
 
     await Promise.resolve();
     name.set('second');
+    await settle();
     await new Promise((resolve) => setTimeout(resolve, 5));
 
     expect(signals[0]?.aborted).toBe(true);
     expect(name.errors()).toEqual([]);
     expect(name.valid()).toBe(true);
+  });
+
+  it('publishes completed validators in declaration order and remains pending until all finish', async () => {
+    let resolveFirst!: (result: { kind: string }) => void;
+    let resolveSecond!: (result: { kind: string }) => void;
+    const name = field('David', [
+      asyncValidator(() => new Promise<{ kind: string }>((resolve) => { resolveFirst = resolve; })),
+      asyncValidator(() => new Promise<{ kind: string }>((resolve) => { resolveSecond = resolve; })),
+    ]);
+
+    await Promise.resolve();
+    resolveSecond({ kind: 'second' });
+    await settle();
+
+    expect(name.errors()).toMatchObject([{ kind: 'second' }]);
+    expect(name.pending()).toBe(true);
+    expect(name.validationStatus()).toBe('invalid');
+
+    resolveFirst({ kind: 'first' });
+    await settle();
+
+    expect(name.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
+    expect(name.pending()).toBe(false);
+  });
+
+  it('aborts pending work and ignores its late result after setValidators', async () => {
+    let resolveValidation!: (result: { kind: string }) => void;
+    let abortSignal!: AbortSignal;
+    const name = field('David', [asyncValidator(({ abortSignal: currentSignal }) => {
+      abortSignal = currentSignal;
+      return new Promise((resolve) => { resolveValidation = resolve; });
+    })]);
+
+    await Promise.resolve();
+    name.setValidators([]);
+    await settle();
+
+    expect(abortSignal.aborted).toBe(true);
+    expect(name.pending()).toBe(false);
+    resolveValidation({ kind: 'lateError' });
+    await settle();
+    expect(name.errors()).toEqual([]);
+  });
+
+  it('coalesces simultaneous value, params, and when changes into one latest validation', async () => {
+    const enabled = signal(true);
+    const country = signal('CH');
+    const validate = vi.fn(async () => null);
+    const name = field('David', [asyncValidator({
+      params: ({ value }) => ({ country: country(), username: value() }),
+      validate,
+      when: () => enabled(),
+    })]);
+
+    await settle();
+    expect(validate).toHaveBeenCalledOnce();
+
+    name.set('Daniel');
+    country.set('DE');
+    enabled.set(false);
+    enabled.set(true);
+    await settle();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(validate).toHaveBeenLastCalledWith(expect.objectContaining({
+      params: { country: 'DE', username: 'Daniel' },
+    }));
   });
 
   it('propagates pending state to its form', async () => {

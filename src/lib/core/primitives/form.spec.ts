@@ -839,6 +839,31 @@ describe('form', () => {
     expect(formGroup.api.validationStatus()).toBe('invalid');
   });
 
+  it('remains pending until every form-level asynchronous validator finishes', async () => {
+    let resolveFirst!: (result: { kind: string }) => void;
+    let resolveSecond!: (result: { kind: string }) => void;
+    const formGroup = form({ country: field('Switzerland') }, [
+      asyncValidator(() => new Promise<{ kind: string }>((resolve) => { resolveFirst = resolve; })),
+      asyncValidator(() => new Promise<{ kind: string }>((resolve) => { resolveSecond = resolve; })),
+    ]);
+
+    await Promise.resolve();
+    resolveSecond({ kind: 'second' });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'second' }]);
+    expect(formGroup.api.pending()).toBe(true);
+    expect(formGroup.api.validationStatus()).toBe('invalid');
+
+    resolveFirst({ kind: 'first' });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
+    expect(formGroup.api.pending()).toBe(false);
+  });
+
   it('reruns its asynchronous validator when a signal read by it changes', async () => {
     const allowedCountry = signal('Switzerland');
     const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) =>

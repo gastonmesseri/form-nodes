@@ -32,6 +32,10 @@ export const createAsyncValidation = <TValue, TNode extends Node & { api: AsyncV
   const pending = signal(false);
   let execution = 0;
   let firstValidation = true;
+  let lastParameterizedRun: {
+    source: Validators<TValue>;
+    validators: readonly { params: unknown; validator: AsyncValidator<TValue> }[];
+  } | null = null;
   const controllers = new Set<AbortController>();
   const trackedValidators = new Map<AsyncValidator<TValue>, {
     paramsReader?: () => unknown;
@@ -89,16 +93,19 @@ export const createAsyncValidation = <TValue, TNode extends Node & { api: AsyncV
   const validate = () => {
     const deferInitialInvocation = firstValidation;
     firstValidation = false;
-    cancel();
-    const validators = getValidators().filter(isAsyncValidator) as AsyncValidator<TValue>[];
+    const source = getValidators();
+    const validators = source.filter(isAsyncValidator) as AsyncValidator<TValue>[];
     trackedValidators.forEach(({ runner }, validator) => {
       if (!validators.includes(validator)) {
         runner.destroy();
         trackedValidators.delete(validator);
       }
     });
-    if (validators.length === 0) return;
-    if (!isActive() || getSyncErrors().length > 0) return;
+    if (validators.length === 0 || !isActive() || getSyncErrors().length > 0) {
+      lastParameterizedRun = null;
+      cancel();
+      return;
+    }
     const baseContext = createValidatorContext(context, getTargetNode());
     if (validators.some((validator) => getAsyncValidatorOptions(validator).params === undefined)) context.value();
     const activeValidators = validators.flatMap((validator) => {
@@ -109,7 +116,28 @@ export const createAsyncValidation = <TValue, TNode extends Node & { api: AsyncV
         : runTrackedParams(validator, () => options.params!(baseContext));
       return [{ options, params, validator }];
     });
-    if (activeValidators.length === 0) return;
+    if (activeValidators.length === 0) {
+      lastParameterizedRun = null;
+      cancel();
+      return;
+    }
+    const parameterizedValidators = activeValidators.filter(({ options }) => options.params !== undefined);
+    if (parameterizedValidators.length === activeValidators.length) {
+      const sameRun = lastParameterizedRun?.source === source
+        && lastParameterizedRun.validators.length === parameterizedValidators.length
+        && parameterizedValidators.every(({ params, validator }, index) => {
+          const previous = lastParameterizedRun!.validators[index]!;
+          return previous.validator === validator && shallowEqual(previous.params, params);
+        });
+      if (sameRun) return;
+      lastParameterizedRun = {
+        source,
+        validators: parameterizedValidators.map(({ params, validator }) => ({ params, validator })),
+      };
+    } else {
+      lastParameterizedRun = null;
+    }
+    cancel();
     const currentExecution = execution;
     const results = activeValidators.map(() => [] as ValidationError.WithTargetNode<TNode>[]);
     let remaining = activeValidators.length;

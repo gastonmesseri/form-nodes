@@ -741,6 +741,33 @@ describe('array', () => {
     expect(names.getError('blockedName')).toMatchObject({ kind: 'blockedName' });
   });
 
+  it('remains pending until every array-level asynchronous validator finishes', async () => {
+    let resolveFirst!: (result: { kind: string }) => void;
+    let resolveSecond!: (result: { kind: string }) => void;
+    const names = array(field(''), ['Mono'], {
+      validators: [
+        asyncValidator(() => new Promise<{ kind: string }>((resolve) => { resolveFirst = resolve; })),
+        asyncValidator(() => new Promise<{ kind: string }>((resolve) => { resolveSecond = resolve; })),
+      ],
+    });
+
+    await Promise.resolve();
+    resolveSecond({ kind: 'second' });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(names.errors()).toMatchObject([{ kind: 'second' }]);
+    expect(names.pending()).toBe(true);
+    expect(names.validationStatus()).toBe('invalid');
+
+    resolveFirst({ kind: 'first' });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(names.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
+    expect(names.pending()).toBe(false);
+  });
+
   it('stops array-level reactive validation when its owning injector is destroyed', async () => {
     const blockedName = signal('blocked');
     const validate = vi.fn(async ({ value }) =>
