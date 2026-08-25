@@ -280,6 +280,8 @@ const username = field('', [
 
 Callbacks receive the complete runtime node `api`. By default it is typed as `AsyncValidatorApi<TValue>`, so value access, validation and interaction state, and common node operations preserve the validated value type. Automatic validators react to API signals they read. Parameterized validators may read API signals explicitly inside `params`; their `validate` callback remains untracked. The exact owner type can be supplied explicitly as the second generic argument for a callback validator, for example `asyncValidator<string | null, FieldApi<string | null>>(...)`. Parameterized validators use the third generic argument: `asyncValidator<TValue, TParams, TApi>({...})`. A future owner-contextual validator declaration signature may infer the exact `FieldApi` or `FormApi` automatically.
 
+Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Async validator callbacks access the same reactive path through `context.api.path`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
+
 `when(context)` is reactive. While it returns `false`, the validator does not evaluate explicit params, invoke the service, expose pending state, or contribute errors. A transition to `true` starts normal validation. A transition to `false` cancels any debounce timer or in-flight Promise or Observable, clears that asynchronous validation state, and makes stale results unobservable.
 
 For explicit dependency tracking, pass a reactive `params(context)` function. Its return value is captured synchronously and passed to the validator as a stable, typed snapshot:

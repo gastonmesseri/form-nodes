@@ -202,6 +202,7 @@ describe('asyncValidator', () => {
     asyncValidator<number | null>(async ({ api, value, abortSignal }) => {
       expectTypeOf(api).toEqualTypeOf<AsyncValidatorApi<number | null>>();
       expectTypeOf(api.value()).toEqualTypeOf<number | null>();
+      expectTypeOf(api.path()).toEqualTypeOf<readonly string[]>();
       expectTypeOf(api.set).toBeCallableWith(42);
       expectTypeOf(api.set).toBeCallableWith(null);
       expectTypeOf(value()).toEqualTypeOf<number | null>();
@@ -211,6 +212,18 @@ describe('asyncValidator', () => {
       expectTypeOf(abortSignal).toEqualTypeOf<AbortSignal>();
       return null;
     });
+  });
+
+  it('provides the validated node path through its API', async () => {
+    let path: readonly string[] = [];
+    form({ profile: { age: field(23, [asyncValidator(async ({ api }) => {
+      path = api.path();
+      return null;
+    })]) } });
+
+    await settle();
+
+    expect(path).toEqual(['profile', 'age']);
   });
 
   it('accepts an explicit exact field API type', async () => {

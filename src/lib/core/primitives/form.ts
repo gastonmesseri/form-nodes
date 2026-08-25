@@ -46,6 +46,7 @@ export type NormalizedNodes<TNodes extends NodeDefinitions> = {
 };
 
 export type FormApi<TNodes extends Nodes> = {
+  path: Signal<readonly string[]>;
   value: Signal<FormValue<TNodes>>;
   set(value: FormSet<TNodes>): void;
   patch(value: FormPatch<TNodes>): void;
@@ -115,6 +116,12 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<InternalNodeApi | null>(null);
+  const formKeyInParent = signal<string | null>(null);
+  const formPath = computed<readonly string[]>(() => {
+    const parent = formParent();
+    const key = formKeyInParent();
+    return parent && key !== null ? [...parent.path(), key] : [];
+  });
   const formDisabled = computed(() =>
     formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.disabled() === true,
   );
@@ -198,6 +205,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
   };
   const api: FormApi<TNodes> = {
+    path: formPath,
     value: formValue,
     set,
     patch,
@@ -235,9 +243,12 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   const internalApi = {
     ...api,
-    _setParent: (parent: InternalNodeApi | null) => formParent.set(parent),
+    _setParent: (parent: InternalNodeApi | null, key?: string) => {
+      formParent.set(parent);
+      formKeyInParent.set(parent ? key ?? null : null);
+    },
   };
-  controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(internalApi));
+  controlKeys().forEach((key) => (controls[key] as Node).api._setParent?.(internalApi, String(key)));
   formNode = Object.defineProperties(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...controls, api: internalApi }),

@@ -1,6 +1,7 @@
 import type { Signal } from '@angular/core';
 
 export type InternalNodeApi = {
+  path: Signal<readonly string[]>;
   set(value: any): void;
   patch(value: any): void;
   reset(...args: [] | [value: any]): void;
@@ -22,7 +23,7 @@ export type InternalNodeApi = {
   hidden: Signal<boolean>;
   hide(): void;
   show(): void;
-  _setParent?(parent: InternalNodeApi | null): void;
+  _setParent?(parent: InternalNodeApi | null, key?: string): void;
 };
 
 export type Node = (() => any) & { api: InternalNodeApi };
