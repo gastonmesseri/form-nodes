@@ -146,7 +146,7 @@ describe('asyncValidator', () => {
     expect(name.errors()).toEqual([{ kind: 'unavailable', targetNode: name }]);
   });
 
-  it('debounces node value changes without losing reactive tracking', async () => {
+  it('discovers dependencies immediately but debounces subsequent node value validation', async () => {
     vi.useFakeTimers();
     const validate = vi.fn(async ({ value }) => value() === 'final' ? { kind: 'taken' } : null);
     const name = field('initial', [asyncValidator(validate, { debounce: 100 })]);
@@ -156,27 +156,28 @@ describe('asyncValidator', () => {
     name.set('final');
     await Promise.resolve();
 
-    expect(validate).not.toHaveBeenCalled();
+    expect(validate).toHaveBeenCalledOnce();
     expect(name.pending()).toBe(true);
+    expect(name.errors()).toEqual([]);
 
     await vi.advanceTimersByTimeAsync(100);
 
-    expect(validate).toHaveBeenCalledOnce();
+    expect(validate).toHaveBeenCalledTimes(2);
     expect(name.errors()).toEqual([{ kind: 'taken', targetNode: name }]);
     vi.useRealTimers();
   });
 
-  it('reacts to signals discovered when a debounced validator runs', async () => {
+  it('tracks external signals during the initial call and debounces their changes', async () => {
     vi.useFakeTimers();
     const dependency = signal('available');
     const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
     const name = field('David', [asyncValidator(validate, { debounce: 100 })]);
 
-    await vi.advanceTimersByTimeAsync(100);
     expect(validate).toHaveBeenCalledOnce();
 
     dependency.set('unavailable');
     await Promise.resolve();
+    expect(name.errors()).toEqual([]);
     await vi.advanceTimersByTimeAsync(100);
 
     expect(validate).toHaveBeenCalledTimes(2);
@@ -218,7 +219,7 @@ describe('asyncValidator', () => {
 
     expect(vi.getTimerCount()).toBe(0);
     await vi.advanceTimersByTimeAsync(100);
-    expect(validate).not.toHaveBeenCalled();
+    expect(validate).toHaveBeenCalledOnce();
     vi.useRealTimers();
   });
 });

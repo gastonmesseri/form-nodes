@@ -83,7 +83,12 @@ export const createAsyncValidation = <TValue, TNode>(
       const controller = new AbortController();
       controllers.add(controller);
       const options = getAsyncValidatorOptions(validator);
-      if ((options.debounce ?? 0) > 0) await wait(options.debounce!, controller.signal);
+      const debounce = options.debounce ?? 0;
+      const discoversDependencies = !trackedValidators.has(validator);
+      const initialPublicationDelay = discoversDependencies && debounce > 0
+        ? wait(debounce, controller.signal)
+        : null;
+      if (!discoversDependencies && debounce > 0) await wait(debounce, controller.signal);
       if (controller.signal.aborted || currentExecution !== execution) {
         controllers.delete(controller);
         return;
@@ -93,8 +98,10 @@ export const createAsyncValidation = <TValue, TNode>(
         const validateAsync = validator as unknown as (context: AsyncValidatorContext<TValue>) => AsyncValidationResult;
         const asyncResult = runTracked(validator, () => validateAsync({ ...context, abortSignal: controller.signal }));
         result = await resolveAsyncValidationResult(asyncResult, controller.signal);
+        if (initialPublicationDelay) await initialPublicationDelay;
       } catch (error) {
         if (controller.signal.aborted || currentExecution !== execution) return;
+        if (initialPublicationDelay) await initialPublicationDelay;
         result = options.onError?.(error, context);
       }
       if (controller.signal.aborted || currentExecution !== execution) {
