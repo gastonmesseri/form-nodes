@@ -83,6 +83,11 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  /**
+   * Returns the first validation error belonging directly to this form and matching `kind`.
+   *
+   * @reactive Maintains an independent reactive computation for each `kind`.
+   */
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
