@@ -3,9 +3,9 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import { asyncValidator } from './async-validator';
 import { required } from './validators/required';
-import type { ObservableLike } from './validation.type';
+import { asyncValidator } from './async-validator';
+import type { FieldContext, ObservableLike } from './validation.type';
 
 const settle = async () => {
   await Promise.resolve();
@@ -130,6 +130,18 @@ describe('asyncValidator', () => {
     });
   });
 
+  it('provides typed explicit params to a parameterized validator', () => {
+    asyncValidator({
+      params: ({ value }: FieldContext<string>) => ({ country: 'CH', username: value() }),
+      validate: async ({ abortSignal, params, value }) => {
+        expectTypeOf(value()).toEqualTypeOf<string>();
+        expectTypeOf(params).toEqualTypeOf<{ country: string; username: string }>();
+        expectTypeOf(abortSignal).toEqualTypeOf<AbortSignal>();
+        return null;
+      },
+    });
+  });
+
   it('reacts to signals read by a validator outside an injection context', async () => {
     const dependency = signal('available');
     const validate = vi.fn(async () => dependency() === 'available' ? null : { kind: 'unavailable' });
@@ -183,6 +195,74 @@ describe('asyncValidator', () => {
     expect(validate).toHaveBeenCalledTimes(2);
     expect(name.errors()).toEqual([{ kind: 'unavailable', targetNode: name }]);
     vi.useRealTimers();
+  });
+
+  it('tracks explicit params and debounces the initial service call', async () => {
+    vi.useFakeTimers();
+    const country = signal('CH');
+    const validate = vi.fn(async ({ params }: { params: { country: string; username: string | null } }) =>
+      params.country === 'US' ? { kind: 'unavailable' } : null,
+    );
+    const name = field('David', [asyncValidator({
+      debounce: 100,
+      params: ({ value }) => ({ country: country(), username: value() }),
+      validate,
+    })]);
+
+    expect(validate).not.toHaveBeenCalled();
+    expect(name.pending()).toBe(true);
+
+    country.set('US');
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(99);
+    expect(validate).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(validate).toHaveBeenCalledOnce();
+    expect(validate).toHaveBeenCalledWith(expect.objectContaining({
+      params: { country: 'US', username: 'David' },
+    }));
+    expect(name.errors()).toEqual([{ kind: 'unavailable', targetNode: name }]);
+    vi.useRealTimers();
+  });
+
+  it('does not restart debounce when explicit params remain shallowly equal', async () => {
+    vi.useFakeTimers();
+    const person = signal({ firstName: 'David', lastName: 'Smith' });
+    const validate = vi.fn(async () => null);
+    field('profile', [asyncValidator({
+      debounce: 100,
+      params: () => ({ username: person().firstName }),
+      validate,
+    })]);
+
+    await vi.advanceTimersByTimeAsync(50);
+    person.set({ firstName: 'David', lastName: 'Jones' });
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(50);
+
+    expect(validate).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
+
+  it('does not track signals read only by a parameterized validate callback', async () => {
+    const incidental = signal('first');
+    const validate = vi.fn(async () => {
+      incidental();
+      return null;
+    });
+    field('David', [asyncValidator({
+      params: ({ value }) => ({ username: value() }),
+      validate,
+    })]);
+
+    await settle();
+    expect(validate).toHaveBeenCalledOnce();
+
+    incidental.set('second');
+    await settle();
+
+    expect(validate).toHaveBeenCalledOnce();
   });
 
   it('stops reactive validation when its explicit injector is destroyed', async () => {

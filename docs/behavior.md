@@ -20,7 +20,7 @@ The package exports:
 - `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
-- `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorContext`, and `AsyncValidatorOptions` types.
+- `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
 - Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
@@ -277,6 +277,23 @@ const username = field('', [
 ```
 
 `AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context adds an `abortSignal` to the normal field context. Validators can pass it to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
+
+For explicit dependency tracking, pass a reactive `params(context)` function. Its return value is captured synchronously and passed to the validator as a stable, typed snapshot:
+
+```ts
+asyncValidator({
+  params: ({ value }) => ({ username: value(), country: country() }),
+  debounce: 300,
+  validate: async ({ params, abortSignal }) => {
+    const available = await checkUsername(params.username, params.country, abortSignal);
+    return available ? null : { kind: 'usernameTaken' };
+  },
+});
+```
+
+Every signal read by `params` is an explicit dependency. When one emits, the new params snapshot is compared shallowly with the previous snapshot: primitives use `Object.is`, while plain objects and arrays compare their own entries one level deep with `Object.is`. Validation only restarts when that comparison changes. For example, `params: () => ({ username: person().firstName })` does not rerun when another property of `person()` changes while `firstName` stays equal.
+
+Explicit params are known before the first execution, so the initial service call also waits for the debounce. A meaningful parameter change cancels stale work, restarts the complete debounce period, and the eventual validator invocation receives the snapshot that triggered it. The `validate` callback runs untracked; signals read only inside it never become dependencies when `params` is present.
 
 Asynchronous validation behavior follows Angular 22 Signal Forms where applicable, but uses an internal Promise-and-Observable runner rather than Angular Resource so creation never requires an injection context:
 
