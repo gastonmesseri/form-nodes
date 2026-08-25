@@ -6,6 +6,7 @@ import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signa
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { CSP_NONCE, Component, ViewEncapsulation, forwardRef, input, model, output, type OnDestroy } from '@angular/core';
 
+import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../../validation/validators/required';
@@ -23,6 +24,62 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNodeDirective in Chromium', () => {
+  it('renders and structurally updates array nodes directly through Angular @for', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-array-for-host',
+      imports: [FormNodeDirective],
+      template: `
+        @for (address of addresses; track address) {
+          <input [attr.data-id]="address.id()" [formNode]="address.city">
+        }
+      `,
+    })
+    class Host {
+      addresses = array(
+        { id: field(''), city: field('') },
+        [
+          { id: 'a', city: 'Madrid' },
+          { id: 'b', city: 'Zurich' },
+        ],
+      );
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputs = () => Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    const initial = inputs();
+
+    expect(initial.map(input => [input.dataset['id'], input.value])).toEqual([
+      ['a', 'Madrid'],
+      ['b', 'Zurich'],
+    ]);
+
+    fixture.componentInstance.addresses.push({ id: 'c', city: 'Bern' });
+    fixture.detectChanges();
+    expect(inputs().map(input => input.dataset['id'])).toEqual(['a', 'b', 'c']);
+
+    fixture.componentInstance.addresses.move(2, 0);
+    fixture.detectChanges();
+    const moved = inputs();
+    expect(moved.map(input => input.dataset['id'])).toEqual(['c', 'a', 'b']);
+    expect(moved[1]).toBe(initial[0]);
+    expect(moved[2]).toBe(initial[1]);
+
+    moved[2]!.value = 'Geneva';
+    dispatch(moved[2]!, 'input');
+    expect(fixture.componentInstance.addresses[2]!.city()).toBe('Geneva');
+
+    fixture.componentInstance.addresses.removeAt(1);
+    fixture.detectChanges();
+    expect(inputs().map(input => [input.dataset['id'], input.value])).toEqual([
+      ['c', 'Bern'],
+      ['b', 'Geneva'],
+    ]);
+    expect(inputs()[1]).toBe(initial[1]);
+    fixture.destroy();
+  });
+
   it('synchronizes a native text input, IME composition, and interaction state', () => {
     @Component({
       standalone: true,
