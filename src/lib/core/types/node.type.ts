@@ -7,6 +7,17 @@ export type MarkAsTouchedOptions = {
   skipDescendants?: boolean;
 };
 
+/** A static or reactive condition that disables a node, optionally with a user-facing reason. */
+export type DisabledStateSource = boolean | string | (() => boolean | string);
+
+/** Identifies one active cause of a node's disabled state. */
+export type DisabledReason<TNode extends Node = Node> = {
+  /** Node on which this reason originated. Descendants retain the original source node. */
+  readonly sourceNode: TNode;
+  /** Optional user-facing explanation supplied by the disabled option or disable(). */
+  readonly message?: string;
+};
+
 export type NodeControlBinding = {
   readonly element: Element;
   focus(options?: FocusOptions): void;
@@ -48,8 +59,10 @@ export type NodeApi = {
   markAsDirty(): void;
   markAsPristine(): void;
   disabled: Signal<boolean>;
+  /** Parent reasons followed by the active reasons originating on this node. */
+  disabledReasons: Signal<readonly DisabledReason[]>;
   enabled: Signal<boolean>;
-  disable(): void;
+  disable(message?: string): void;
   enable(): void;
   readonly: Signal<boolean>;
   writable: Signal<boolean>;

@@ -850,10 +850,16 @@ Field actions are available directly and under `field.api`. Form actions are ava
 
 ### State option sources
 
-Each state option has this type:
+Readonly and hidden options have this type:
 
 ```ts
 boolean | (() => boolean)
+```
+
+Disabled options additionally accept a user-facing reason:
+
+```ts
+boolean | string | (() => boolean | string)
 ```
 
 The function can be an Angular `Signal<boolean>`, an Angular computed signal, or a normal function. Normal functions are read from the node's computed state, so Angular signals they read are tracked automatically:
@@ -905,12 +911,10 @@ A signal or function remains a continuing configured condition. An action cannot
 - Applying state to a nested form affects only its subtree, not siblings or ancestors.
 - Shorthand nested forms inherit state exactly like explicit forms.
 
-### Possible future disabled reasons
+### Disabled reasons
 
-The current public contract exposes only the effective `disabled()` boolean. It does not expose
-why the node is disabled. A possible future extension is a readonly `disabledReasons()` signal
-comparable to Angular Signal Forms, where each active reason identifies the node that originated
-the disablement and may include a user-facing message:
+Every field, form, and array exposes `disabledReasons()`. Each active reason identifies the node
+on which that reason originated and can include a user-facing message:
 
 ```ts
 type DisabledReason = {
@@ -919,21 +923,46 @@ type DisabledReason = {
 };
 ```
 
-This should not be implemented merely by translating the current mutable, configured, and
-inherited boolean sources into arbitrary labels. Before adding the public API, the disabled
-configuration must provide a natural way for consumers to supply meaningful reasons and optional
-messages. The design must then define reasons for imperative `disable()`, conditional disabled
-sources, multiple simultaneous reasons, inherited reasons, their ordering, and what `enable()`
-removes. A descendant should retain an inherited reason's original source node so consumers can
-identify which ancestor caused the effective state.
+```ts
+const locked = signal(true);
+const profile = form({
+  name: field('David', {
+    disabled: () => locked() ? 'The profile is locked' : false,
+  }),
+});
+
+profile.name.disabledReasons();
+// [{ sourceNode: profile.name, message: 'The profile is locked' }]
+
+profile.disable('Editing is temporarily unavailable');
+profile.name.disabledReasons();
+// Parent reason first, followed by the field's own reason.
+```
+
+`disabled()` is derived from whether `disabledReasons()` is non-empty. Reasons are ordered from
+the outermost ancestor to the current node. An inherited reason retains its original `sourceNode`,
+allowing a descendant to identify which ancestor disabled it. Multiple local sources remain
+distinct: the imperative reason established by `disable(message?)` appears before the configured
+reactive reason.
+
+A static boolean or string option initializes mutable disabled state and can be removed by
+`enable()`. A reactive function is a continuing condition and remains active after `enable()` while
+it returns `true` or a string. Calling `disable()` without a message creates a reason containing only
+`sourceNode`; calling it again replaces the previous imperative reason. `enable()` removes only that
+imperative reason and cannot clear an active reactive condition.
+
+`FormValueControl` and CVA components that declare a standard `disabledReasons` signal input receive
+the same reactive reason array through `[formNode]`. Native controls continue to consume only the
+derived `disabled` property.
 
 Angular derives `disabled()` from whether its accumulated reason list is non-empty. Its list
 contains parent reasons followed by active local disabled rules. This behavior was inspected in
 Angular `v22.1.4` at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, primarily in
 `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/api/rules/disabled.ts`,
 `packages/forms/signals/src/field/state.ts`, and the disabled tests in
-`packages/forms/signals/test/node/field_node.spec.ts`. This section records a design direction for
-future consideration and is not part of the current public contract.
+`packages/forms/signals/test/node/field_node.spec.ts`. This library uses `sourceNode` instead of
+Angular's `fieldTree` to match its node terminology and adds messages to its existing imperative
+`disable()` operation.
 
 ## Non-interactive behavior
 
@@ -1351,7 +1380,7 @@ The directive currently provides these behaviors:
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - Components implementing Angular's standard `FormValueControl<T>` (`value = model<T>()`) or `FormCheckboxControl` (`checked = model<boolean>()`) are discovered automatically from their compiled component metadata. They require no library-specific interface, provider, or registration. The model synchronizes in both directions and user changes follow the field's normal `setControlValue()` debounce behavior.
 - A `FormValueControl<T>` may bind to an aggregate `form()` or `array()` when `T` matches the node's complete value. A control-originated aggregate value marks that aggregate node dirty and then uses its normal structural update path: forms distribute the complete object to their children, while arrays reconcile, create, move, or detach item nodes according to their configured index or `trackBy` identity. Descendants are not individually marked dirty merely because the aggregate control supplied their values. Programmatic `set()` remains pristine and updates the custom model in the opposite direction.
-- Standard Signal Forms state inputs implemented by the component are synchronized when this library has an equivalent field state: `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`, `readonly`, `required`, and `touched`. The `name` input receives the same stable, path-aware value used by native controls. Constraint inputs receive the same strictest limits and complete pattern list exposed by the field. Input transforms are honored. Angular-specific state without a library equivalent, including `disabledReasons`, is not synthesized.
+- Standard Signal Forms state inputs implemented by the component are synchronized when this library has an equivalent node state: `errors`, `disabled`, `disabledReasons`, `dirty`, `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`, `readonly`, `required`, and `touched`. The `name` input receives the same stable, path-aware value used by native controls. Constraint inputs receive the same strictest limits and complete pattern list exposed by the field. `disabledReasons` receives this library's `DisabledReason[]`, whose `sourceNode` is the equivalent of Angular's originating `fieldTree`. Input transforms are honored.
 - The standard optional `touch` output marks the field touched; optional `focus()` and `reset()` hooks integrate with the directive and field reset lifecycle. A library-specific `node` signal remains available through the optional `FormNodeValueControl` extension, but is not required for Angular-compatible controls.
 - `provideFormNodeControl()` remains an explicit fallback for unusual controls whose model is not exposed in Angular component metadata. Binding precedence is deliberate: a matching `ControlValueAccessor` wins first for compatibility with established Angular controls, then an explicit signal-control provider, then an automatically discovered Signal Forms control, then native-control handling.
 - Model-to-view `writeValue()` calls are guarded against reentrant `onChange` callbacks. A legacy CVA that invokes its registered change callback from inside `writeValue()` therefore cannot mark the field dirty, write the value back, or create a feedback loop.

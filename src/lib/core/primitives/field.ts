@@ -18,6 +18,7 @@ import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-r
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
+import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
 
 export type { Field, FieldApi, FieldOptions } from './field.type';
@@ -68,7 +69,7 @@ export function field<TValue>(
   const fieldValidators = signal<Validators<TValue>>(validators);
   const fieldTouched = signal(false);
   const fieldDirty = signal(false);
-  const fieldSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
+  const fieldSelfDisabled = signal<DisabledState>(getInitialDisabledState(resolvedOptions?.disabled));
   const fieldParent = signal<Node | null>(null);
   const fieldKeyInParent = signal<string | number | null>(null);
   const fieldControlDebounce = computed(() =>
@@ -80,9 +81,17 @@ export function field<TValue>(
     const key = fieldKeyInParent();
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
-  const fieldDisabled = computed(() =>
-    fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.$api.disabled() === true,
+  let fieldNode!: Field<TValue>;
+  const fieldOwnDisabledReason = computed(() => createDisabledReason(fieldSelfDisabled(), fieldNode), { equal: shallowEqual });
+  const fieldConfiguredDisabledReason = computed(
+    () => createDisabledReason(readConfiguredDisabledState(resolvedOptions?.disabled), fieldNode),
+    { equal: shallowEqual },
   );
+  const fieldDisabledReasons = computed(() => [
+    ...(fieldParent()?.$api.disabledReasons() ?? []),
+    ...[fieldOwnDisabledReason(), fieldConfiguredDisabledReason()].filter((reason) => reason !== undefined),
+  ], { equal: shallowEqual });
+  const fieldDisabled = computed(() => fieldDisabledReasons().length > 0);
   const fieldSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const fieldReadonly = computed(() =>
     fieldSelfReadonly() || readStateSource(resolvedOptions?.readonly) || fieldParent()?.$api.readonly() === true,
@@ -92,7 +101,6 @@ export function field<TValue>(
     fieldSelfHidden() || readStateSource(resolvedOptions?.hidden) || fieldParent()?.$api.hidden() === true,
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
-  let fieldNode!: Field<TValue>;
   const emptySyncMetadata = new Map();
   const fieldForm = computed(() => fieldParent()?.$api.form() ?? null);
   const fieldSyncValidation = computed(() => fieldNonInteractive()
@@ -221,8 +229,9 @@ export function field<TValue>(
     markAsDirty: () => fieldDirty.set(true),
     markAsPristine: () => fieldDirty.set(false),
     disabled: fieldDisabled,
+    disabledReasons: fieldDisabledReasons,
     enabled: computed(() => !fieldDisabled()),
-    disable: () => fieldSelfDisabled.set(true),
+    disable: (message?: string) => fieldSelfDisabled.set(message ?? true),
     enable: () => fieldSelfDisabled.set(false),
     readonly: fieldReadonly,
     writable: computed(() => !fieldReadonly()),

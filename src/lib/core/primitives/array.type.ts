@@ -3,8 +3,8 @@ import type { Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { Form, FormOptions } from './form.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { MarkAsTouchedOptions, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { DisabledReason, MarkAsTouchedOptions, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 
 export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
   /**
@@ -165,8 +165,11 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   markAsDirty(): void;
   markAsPristine(): void;
   disabled: Signal<boolean>;
+  /** Active inherited and local causes of this array's disabled state. */
+  disabledReasons: Signal<readonly DisabledReason[]>;
   enabled: Signal<boolean>;
-  disable(): void;
+  /** Disables this array subtree, optionally recording a user-facing reason. */
+  disable(message?: string): void;
   enable(): void;
   readonly: Signal<boolean>;
   writable: Signal<boolean>;

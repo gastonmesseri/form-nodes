@@ -4,7 +4,7 @@ import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
@@ -15,8 +15,8 @@ export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   readonly debounce?: number;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
-  /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
-  readonly disabled?: boolean | (() => boolean);
+  /** Initial or reactive disabled state. A string disables the form and describes the reason. */
+  readonly disabled?: DisabledStateSource;
   /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
   readonly readonly?: boolean | (() => boolean);
   /** Submission behavior used by `submit()` and by a bound native `<form>`. */
@@ -118,8 +118,11 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   markAsDirty(): void;
   markAsPristine(): void;
   disabled: Signal<boolean>;
+  /** Active inherited and local causes of this form's disabled state. */
+  disabledReasons: Signal<readonly DisabledReason[]>;
   enabled: Signal<boolean>;
-  disable(): void;
+  /** Disables this form subtree, optionally recording a user-facing reason. */
+  disable(message?: string): void;
   enable(): void;
   readonly: Signal<boolean>;
   writable: Signal<boolean>;

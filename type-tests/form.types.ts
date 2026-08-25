@@ -30,6 +30,10 @@ profile.update((value) => ({ ...value, age: value.age + 1 }));
 profile.reset();
 profile.reset({ name: null, age: 42, address: { city: null } });
 profile.focus({ preventScroll: true });
+profile.disable('Profile is locked');
+
+form({ name: field('David') }, { disabled: 'Managed externally' });
+form({ name: field('David') }, { disabled: () => 'Managed externally' });
 
 const submittedProfile = form({
   name: field('Marco', { nullable: false }),

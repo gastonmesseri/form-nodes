@@ -1619,6 +1619,37 @@ describe('form', () => {
     expect(formGroup.address.city.disabled()).toBe(true);
   });
 
+  it('inherits disabled reasons in ancestor-to-descendant order and preserves their sources', () => {
+    const formGroup = form({
+      name: field('David', { disabled: 'Name is immutable' }),
+      address: form({ city: field('Zurich') }),
+    });
+
+    formGroup.disable('Profile is locked');
+
+    expect(formGroup.disabledReasons()).toEqual([{
+      sourceNode: formGroup,
+      message: 'Profile is locked',
+    }]);
+    expect(formGroup.name.disabledReasons()).toEqual([
+      { sourceNode: formGroup, message: 'Profile is locked' },
+      { sourceNode: formGroup.name, message: 'Name is immutable' },
+    ]);
+    expect(formGroup.address.city.disabledReasons()).toEqual([{
+      sourceNode: formGroup,
+      message: 'Profile is locked',
+    }]);
+
+    formGroup.enable();
+
+    expect(formGroup.disabledReasons()).toEqual([]);
+    expect(formGroup.name.disabledReasons()).toEqual([{
+      sourceNode: formGroup.name,
+      message: 'Name is immutable',
+    }]);
+    expect(formGroup.address.city.disabledReasons()).toEqual([]);
+  });
+
   it('skips its own validators while disabled', () => {
     const validator = vi.fn(() => ({ kind: 'unavailable' }));
     const formGroup = form({ name: field('David') }, [validator], { disabled: true });

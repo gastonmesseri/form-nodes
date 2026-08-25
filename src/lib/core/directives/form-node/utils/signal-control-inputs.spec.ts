@@ -30,6 +30,7 @@ describe('connectSignalControlInputs', () => {
     class AllStateControl {
       value = model('');
       disabled = input(false, { transform: booleanAttribute });
+      disabledReasons = input<readonly unknown[]>([]);
       dirty = input(false);
       errors = input<readonly ValidationError.WithOptionalFieldTree[]>([]);
       hidden = input(false);
@@ -46,7 +47,7 @@ describe('connectSignalControlInputs', () => {
       touched = input(false);
     }
     registerSignalModelForJit(AllStateControl, 'value');
-    for (const name of ['disabled', 'dirty', 'errors', 'hidden', 'invalid', 'max', 'maxLength', 'min', 'minLength', 'name', 'pattern', 'pending', 'readonly', 'required', 'touched']) {
+    for (const name of ['disabled', 'disabledReasons', 'dirty', 'errors', 'hidden', 'invalid', 'max', 'maxLength', 'min', 'minLength', 'name', 'pattern', 'pending', 'readonly', 'required', 'touched']) {
       registerSignalInputForJit(AllStateControl, name, name);
     }
 
@@ -78,6 +79,7 @@ describe('connectSignalControlInputs', () => {
     profile.name.markAsReadonly();
     TestBed.flushEffects();
     expect(fixture.componentInstance.disabled()).toBe(true);
+    expect(fixture.componentInstance.disabledReasons()).toEqual([{ sourceNode: profile.name }]);
     expect(fixture.componentInstance.hidden()).toBe(true);
     expect(fixture.componentInstance.readonly()).toBe(true);
   });

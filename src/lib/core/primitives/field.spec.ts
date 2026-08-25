@@ -236,10 +236,12 @@ describe('field', () => {
     let validatorApi: unknown;
     let validatorField: unknown;
     let disabled: unknown;
+    let disabledReasons: unknown;
     const fieldNode = field('David', [context => {
       validatorApi = context.api;
       validatorField = context.field;
       disabled = context.disabled;
+      disabledReasons = context.disabledReasons;
       return null;
     }]);
 
@@ -247,6 +249,7 @@ describe('field', () => {
     expect(validatorApi).toBe(fieldNode.api);
     expect(validatorField).toBe(fieldNode);
     expect(disabled).toBe(fieldNode.disabled);
+    expect(disabledReasons).toBe(fieldNode.disabledReasons);
     expect(fieldNode.api.path()).toEqual([]);
     expect(fieldNode.api.parent()).toBeNull();
     expect(fieldNode.api.form()).toBeNull();
@@ -1035,7 +1038,58 @@ describe('field', () => {
   it('starts enabled', () => {
     const fieldNode = field('David');
     expect(fieldNode.disabled()).toBe(false);
+    expect(fieldNode.disabledReasons()).toEqual([]);
     expect(fieldNode.enabled()).toBe(true);
+  });
+
+  it('tracks imperative disabled reasons with an optional message', () => {
+    const fieldNode = field('David');
+
+    fieldNode.disable('Account is archived');
+    expect(fieldNode.disabledReasons()).toEqual([{
+      sourceNode: fieldNode,
+      message: 'Account is archived',
+    }]);
+
+    fieldNode.disable();
+    expect(fieldNode.disabledReasons()).toEqual([{ sourceNode: fieldNode }]);
+
+    fieldNode.enable();
+    expect(fieldNode.disabledReasons()).toEqual([]);
+    expect(fieldNode.enabled()).toBe(true);
+  });
+
+  it('supports static and reactive disabled reasons in options', () => {
+    const staticField = field('David', { disabled: 'Managed externally' });
+    const condition = signal<boolean | string>(false);
+    const reactiveField = field('Ana', { disabled: () => condition() });
+
+    expect(staticField.disabledReasons()).toEqual([{
+      sourceNode: staticField,
+      message: 'Managed externally',
+    }]);
+    staticField.enable();
+    expect(staticField.disabledReasons()).toEqual([]);
+
+    condition.set('Awaiting approval');
+    expect(reactiveField.disabledReasons()).toEqual([{
+      sourceNode: reactiveField,
+      message: 'Awaiting approval',
+    }]);
+    reactiveField.disable('Manually locked');
+    expect(reactiveField.disabledReasons()).toEqual([
+      { sourceNode: reactiveField, message: 'Manually locked' },
+      { sourceNode: reactiveField, message: 'Awaiting approval' },
+    ]);
+    reactiveField.enable();
+    expect(reactiveField.disabledReasons()).toEqual([{
+      sourceNode: reactiveField,
+      message: 'Awaiting approval',
+    }]);
+    condition.set(true);
+    expect(reactiveField.disabledReasons()).toEqual([{ sourceNode: reactiveField }]);
+    condition.set(false);
+    expect(reactiveField.disabledReasons()).toEqual([]);
   });
 
   it('can start disabled through options', () => {
