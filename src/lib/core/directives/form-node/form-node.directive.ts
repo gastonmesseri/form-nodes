@@ -4,6 +4,7 @@ import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_V
 import type { Field } from '../../primitives/field';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
+import type { InternalNode } from '../../types/node.type';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { discoverSignalControl } from './utils/discover-signal-control';
 import type { ValidationError } from '../../validation/validation.type';
@@ -130,6 +131,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
     else throw new Error('formNode: the host must be a native form control, provide a signal custom control, or provide ControlValueAccessor');
     this.bindNodeState();
+    this.registerControlBinding();
     this.warnWhenHidden();
   }
 
@@ -291,6 +293,16 @@ export class FormNodeDirective<TValue> implements OnInit {
       if (!field.hidden()) return;
       const path = field.path().join('.') || '<root>';
       console.warn(`formNode: field '${path}' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.`);
+    }, { injector: this.injector });
+  }
+
+  private registerControlBinding() {
+    effect((onCleanup) => {
+      const field = this.node() as unknown as InternalNode;
+      onCleanup(field.api._registerControlBinding!({
+        element: this.element,
+        focus: (options) => this.focus(options),
+      }));
     }, { injector: this.injector });
   }
 

@@ -125,6 +125,9 @@ describe('FormNodeDirective in Chromium', () => {
     fixture.componentInstance.name.set('Lia');
     fixture.detectChanges();
     expect(input.value).toBe('Lia');
+
+    fixture.componentInstance.name.focus({ preventScroll: true });
+    expect(document.activeElement).toBe(input);
     fixture.destroy();
   });
 

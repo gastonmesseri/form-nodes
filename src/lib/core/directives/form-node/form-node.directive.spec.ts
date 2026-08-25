@@ -9,6 +9,7 @@ import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Numb
 
 import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
+import { array } from '../../primitives/array';
 import type { Field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
@@ -53,6 +54,7 @@ describe('FormNodeDirective', () => {
     })
     class ExplicitSignalControl {
       value = model('');
+      focus = vi.fn();
     }
 
     @Component({
@@ -74,6 +76,9 @@ describe('FormNodeDirective', () => {
     control.value.set('Lia');
 
     expect(fixture.componentInstance.name()).toBe('Lia');
+
+    fixture.componentInstance.name.focus({ preventScroll: true });
+    expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 
   it('synchronizes native text values and interaction state in both directions', () => {
@@ -111,6 +116,8 @@ describe('FormNodeDirective', () => {
     const focus = vi.spyOn(input, 'focus');
     binding.focus({ preventScroll: true });
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    fixture.componentInstance.name.focus({ preventScroll: true });
+    expect(focus).toHaveBeenCalledTimes(2);
 
     input.value = 'pending';
     dispatch(input, 'compositionstart');
@@ -126,6 +133,100 @@ describe('FormNodeDirective', () => {
     expect(fixture.componentInstance.name.dirty()).toBe(false);
 
     binding.flush();
+  });
+
+  it('focuses the first descendant binding in DOM order from forms and arrays', () => {
+    @Component({
+      standalone: true,
+      selector: 'aggregate-focus-form-node-host',
+      imports: [FormNodeDirective],
+      template: `
+        <input data-second [formNode]="profile.second">
+        <input data-first [formNode]="profile.first">
+        <input data-item-one [formNode]="profile.items[1]!">
+        <input data-item-zero [formNode]="profile.items[0]!">
+      `,
+    })
+    class Host {
+      readonly profile = form({
+        first: field('first', { nullable: false }),
+        second: field('second', { nullable: false }),
+        items: array(field('', { nullable: false }), 2),
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const second = fixture.nativeElement.querySelector('[data-second]') as HTMLInputElement;
+    const itemOne = fixture.nativeElement.querySelector('[data-item-one]') as HTMLInputElement;
+    const focusSecond = vi.spyOn(second, 'focus');
+    const focusItemOne = vi.spyOn(itemOne, 'focus');
+
+    fixture.componentInstance.profile.focus({ preventScroll: true });
+    expect(focusSecond).toHaveBeenCalledWith({ preventScroll: true });
+
+    fixture.componentInstance.profile.items.focus();
+    expect(focusItemOne).toHaveBeenCalledOnce();
+  });
+
+  it('selects the first DOM binding for a field and unregisters destroyed bindings', () => {
+    @Component({
+      standalone: true,
+      selector: 'multiple-focus-form-node-host',
+      imports: [FormNodeDirective],
+      template: `
+        <input data-first [formNode]="name">
+        <input data-second [formNode]="name">
+      `,
+    })
+    class Host {
+      readonly name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const first = fixture.nativeElement.querySelector('[data-first]') as HTMLInputElement;
+    const second = fixture.nativeElement.querySelector('[data-second]') as HTMLInputElement;
+    const focusFirst = vi.spyOn(first, 'focus');
+    const focusSecond = vi.spyOn(second, 'focus');
+
+    fixture.componentInstance.name.focus();
+    expect(focusFirst).toHaveBeenCalledOnce();
+    expect(focusSecond).not.toHaveBeenCalled();
+
+    fixture.destroy();
+    fixture.componentInstance.name.focus();
+    expect(focusFirst).toHaveBeenCalledOnce();
+  });
+
+  it('moves focus registration when the bound field changes', () => {
+    @Component({
+      standalone: true,
+      selector: 'dynamic-focus-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input [formNode]="active()">`,
+    })
+    class Host {
+      readonly first = field('first', { nullable: false });
+      readonly second = field('second', { nullable: false });
+      readonly active = signal(this.first);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const focus = vi.spyOn(input, 'focus');
+
+    fixture.componentInstance.first.focus();
+    expect(focus).toHaveBeenCalledOnce();
+
+    fixture.componentInstance.active.set(fixture.componentInstance.second);
+    fixture.detectChanges();
+    fixture.componentInstance.first.focus();
+    expect(focus).toHaveBeenCalledOnce();
+
+    fixture.componentInstance.second.focus();
+    expect(focus).toHaveBeenCalledTimes(2);
   });
 
   it('binds a field nested inside a form tree', () => {

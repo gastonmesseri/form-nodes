@@ -873,6 +873,15 @@ describe('form', () => {
     expect(formGroup.api.required()).toBe(true);
   });
 
+  it('focuses safely without bindings and gives a child named focus precedence', () => {
+    const focusField = field('child');
+    const formGroup = form({ focus: focusField, name: field('David') });
+
+    expect(formGroup.focus).toBe(focusField);
+    expect(formGroup.focus()).toBe('child');
+    expect(() => formGroup.api.focus()).not.toThrow();
+  });
+
   it('derives validationStatus from synchronous child validation', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });

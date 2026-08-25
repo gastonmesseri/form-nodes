@@ -29,6 +29,7 @@ profile.patch({ address: { city: 'Geneva' } });
 profile.update((value) => ({ ...value, age: value.age + 1 }));
 profile.reset();
 profile.reset({ name: null, age: 42, address: { city: null } });
+profile.focus({ preventScroll: true });
 
 const submittedProfile = form({
   name: field('Marco', { nullable: false }),
@@ -60,12 +61,14 @@ const collisions = form({
   reset: field('child'),
   name: field('name'),
   apply: field('apply'),
+  focus: field('focus'),
 });
 
 type _ReadonlyCollision = Expect<Equal<ReturnType<typeof collisions.readonly>, boolean | null>>;
 type _ResetCollision = Expect<Equal<ReturnType<typeof collisions.reset>, string | null>>;
 type _NameCollision = Expect<Equal<ReturnType<typeof collisions.name>, string | null>>;
 type _ApplyCollision = Expect<Equal<ReturnType<typeof collisions.apply>, string | null>>;
+type _FocusCollision = Expect<Equal<ReturnType<typeof collisions.focus>, string | null>>;
 type _ApiReadonlyUnaffected = Expect<Equal<ReturnType<typeof collisions.api.readonly>, boolean>>;
 
 // @ts-expect-error children is a readonly map

@@ -10,12 +10,13 @@ import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createAsyncValidation } from '../validation/create-async-validation';
-import type { InternalNode, MarkAsTouchedOptions, Node } from '../types/node.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
 
@@ -62,6 +63,7 @@ export function field<TValue>(
   const fieldValue = signal<TValue>(value!);
   const fieldControlValue = signal<TValue>(value!);
   const fieldDebouncing = signal(false);
+  const fieldControlBindings = new Set<NodeControlBinding>();
   const fieldContext = markAsFieldContext({ value: fieldValue.asReadonly() });
   const fieldValidators = signal<Validators<TValue>>(validators);
   const fieldTouched = signal(false);
@@ -146,6 +148,7 @@ export function field<TValue>(
     },
   };
   const controlDebounceRef = new WeakRef(controlDebounce);
+  const getControlBindingForFocus = () => findFirstControlBindingInDom(fieldControlBindings);
   const set = (next: TValue) => {
     controlDebounce.cancel();
     fieldControlValue.set(next);
@@ -183,6 +186,7 @@ export function field<TValue>(
     setControlValue,
     debouncing: fieldDebouncing.asReadonly(),
     flush: controlDebounce.commit,
+    focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     reset,
     validators: fieldValidators.asReadonly(),
     setValidators: (next: ValidatorSource<TValue>) => {
@@ -236,6 +240,11 @@ export function field<TValue>(
       fieldParent.set(parent);
       fieldKeyInParent.set(parent ? key ?? null : null);
     },
+    _registerControlBinding: (binding: NodeControlBinding) => {
+      fieldControlBindings.add(binding);
+      return () => { fieldControlBindings.delete(binding); };
+    },
+    _getControlBindingForFocus: getControlBindingForFocus,
   };
   fieldNode = Object.assign(
     () => fieldValue(),

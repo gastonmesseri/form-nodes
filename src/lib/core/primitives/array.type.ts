@@ -153,6 +153,8 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   debouncing: Signal<boolean>;
   /** Immediately commits every pending control value in this array's current item subtrees. */
   flush(): void;
+  /** Focuses the first bound UI control in this array's current item subtrees, in DOM order. */
+  focus(options?: FocusOptions): void;
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
