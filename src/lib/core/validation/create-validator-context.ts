@@ -22,11 +22,11 @@ const readonlyApiKeys = [
 /** Adds the stable readonly node facade used by validator callbacks. */
 export const createValidatorContext = <TValue, TField extends Node>(
   context: FieldContext<TValue>,
-  field: TField & { api: AsyncValidatorState },
+  field: TField & { $api: AsyncValidatorState },
 ): ValidatorContext<TValue, ValidatorApi<TValue>, TField> => {
   const validatorContext = context as ValidatorContext<TValue, ValidatorApi<TValue>, TField>;
   if (Object.hasOwn(validatorContext, 'api')) return validatorContext;
-  const api = field.api as unknown as ValidatorApi<TValue>;
+  const api = field.$api as unknown as ValidatorApi<TValue>;
   readonlyApiKeys.forEach((key) => {
     if (key === 'value') return;
     Object.defineProperty(validatorContext, key, { enumerable: true, value: api[key] });

@@ -43,109 +43,109 @@ describe.each(stateFixtures)('%s shared node-state invariants', (_kind, createFi
   it('starts interactive and exposes leaf validation through aggregate state', () => {
     const { root, leaf } = createFixture();
 
-    expect(root.api.disabled()).toBe(false);
-    expect(root.api.readonly()).toBe(false);
-    expect(root.api.hidden()).toBe(false);
-    expect(root.api.touched()).toBe(false);
-    expect(root.api.dirty()).toBe(false);
-    expect(root.api.pending()).toBe(false);
-    expect(root.api.invalid()).toBe(true);
-    expect(root.api.allErrors()).toEqual([expect.objectContaining({ kind: 'required', targetNode: leaf })]);
+    expect(root.$api.disabled()).toBe(false);
+    expect(root.$api.readonly()).toBe(false);
+    expect(root.$api.hidden()).toBe(false);
+    expect(root.$api.touched()).toBe(false);
+    expect(root.$api.dirty()).toBe(false);
+    expect(root.$api.pending()).toBe(false);
+    expect(root.$api.invalid()).toBe(true);
+    expect(root.$api.allErrors()).toEqual([expect.objectContaining({ kind: 'required', targetNode: leaf })]);
   });
 
   it('changes only its own dirty state through markAsDirty and markAsPristine', () => {
     const { root, descendants } = createFixture();
 
-    root.api.markAsDirty();
-    expect(root.api.dirty()).toBe(true);
-    descendants.forEach((node) => expect(node.api.dirty()).toBe(false));
+    root.$api.markAsDirty();
+    expect(root.$api.dirty()).toBe(true);
+    descendants.forEach((node) => expect(node.$api.dirty()).toBe(false));
 
-    root.api.markAsPristine();
-    expect(root.api.dirty()).toBe(false);
+    root.$api.markAsPristine();
+    expect(root.$api.dirty()).toBe(false);
   });
 
   it('marks interactive descendants as touched unless explicitly skipped', () => {
     const { root, descendants } = createFixture();
 
-    root.api.markAsTouched({ skipDescendants: true });
-    expect(root.api.touched()).toBe(true);
-    descendants.forEach((node) => expect(node.api.touched()).toBe(false));
+    root.$api.markAsTouched({ skipDescendants: true });
+    expect(root.$api.touched()).toBe(true);
+    descendants.forEach((node) => expect(node.$api.touched()).toBe(false));
 
-    root.api.markAsUntouched();
-    root.api.markAsTouched();
-    expect(root.api.touched()).toBe(true);
-    descendants.forEach((node) => expect(node.api.touched()).toBe(true));
+    root.$api.markAsUntouched();
+    root.$api.markAsTouched();
+    expect(root.$api.touched()).toBe(true);
+    descendants.forEach((node) => expect(node.$api.touched()).toBe(true));
   });
 
   it('inherits disabled state and restores stored interaction and validation state when enabled', () => {
     const { root, leaf, descendants } = createFixture();
-    leaf.api.markAsDirty();
-    leaf.api.markAsTouched();
+    leaf.$api.markAsDirty();
+    leaf.$api.markAsTouched();
 
-    root.api.disable();
-    expect(root.api.disabled()).toBe(true);
-    descendants.forEach((node) => expect(node.api.disabled()).toBe(true));
-    expect(root.api.valid()).toBe(true);
-    expect(root.api.invalid()).toBe(false);
-    expect(root.api.allErrors()).toEqual([]);
-    expect(root.api.dirty()).toBe(false);
-    expect(root.api.touched()).toBe(false);
+    root.$api.disable();
+    expect(root.$api.disabled()).toBe(true);
+    descendants.forEach((node) => expect(node.$api.disabled()).toBe(true));
+    expect(root.$api.valid()).toBe(true);
+    expect(root.$api.invalid()).toBe(false);
+    expect(root.$api.allErrors()).toEqual([]);
+    expect(root.$api.dirty()).toBe(false);
+    expect(root.$api.touched()).toBe(false);
 
-    root.api.enable();
-    expect(root.api.disabled()).toBe(false);
-    descendants.forEach((node) => expect(node.api.disabled()).toBe(false));
-    expect(root.api.invalid()).toBe(true);
-    expect(root.api.dirty()).toBe(true);
-    expect(root.api.touched()).toBe(true);
+    root.$api.enable();
+    expect(root.$api.disabled()).toBe(false);
+    descendants.forEach((node) => expect(node.$api.disabled()).toBe(false));
+    expect(root.$api.invalid()).toBe(true);
+    expect(root.$api.dirty()).toBe(true);
+    expect(root.$api.touched()).toBe(true);
   });
 
   it('inherits readonly and hidden state while preserving stored interaction state', () => {
     const { root, leaf, descendants } = createFixture();
-    leaf.api.markAsDirty();
-    leaf.api.markAsTouched();
+    leaf.$api.markAsDirty();
+    leaf.$api.markAsTouched();
 
-    root.api.markAsReadonly();
-    expect(root.api.readonly()).toBe(true);
-    descendants.forEach((node) => expect(node.api.readonly()).toBe(true));
-    expect(root.api.valid()).toBe(true);
-    expect(root.api.dirty()).toBe(false);
-    expect(root.api.touched()).toBe(false);
+    root.$api.markAsReadonly();
+    expect(root.$api.readonly()).toBe(true);
+    descendants.forEach((node) => expect(node.$api.readonly()).toBe(true));
+    expect(root.$api.valid()).toBe(true);
+    expect(root.$api.dirty()).toBe(false);
+    expect(root.$api.touched()).toBe(false);
 
-    root.api.markAsWritable();
-    expect(root.api.invalid()).toBe(true);
-    expect(root.api.dirty()).toBe(true);
-    expect(root.api.touched()).toBe(true);
+    root.$api.markAsWritable();
+    expect(root.$api.invalid()).toBe(true);
+    expect(root.$api.dirty()).toBe(true);
+    expect(root.$api.touched()).toBe(true);
 
-    root.api.hide();
-    expect(root.api.hidden()).toBe(true);
-    descendants.forEach((node) => expect(node.api.hidden()).toBe(true));
-    expect(root.api.valid()).toBe(true);
-    expect(root.api.dirty()).toBe(false);
-    expect(root.api.touched()).toBe(false);
+    root.$api.hide();
+    expect(root.$api.hidden()).toBe(true);
+    descendants.forEach((node) => expect(node.$api.hidden()).toBe(true));
+    expect(root.$api.valid()).toBe(true);
+    expect(root.$api.dirty()).toBe(false);
+    expect(root.$api.touched()).toBe(false);
 
-    root.api.show();
-    expect(root.api.invalid()).toBe(true);
-    expect(root.api.dirty()).toBe(true);
-    expect(root.api.touched()).toBe(true);
+    root.$api.show();
+    expect(root.$api.invalid()).toBe(true);
+    expect(root.$api.dirty()).toBe(true);
+    expect(root.$api.touched()).toBe(true);
   });
 
   it('reset clears interaction state recursively while preserving and revalidating the current value', () => {
     const { root, leaf, descendants } = createFixture();
-    leaf.api.set('valid');
-    root.api.markAsTouched();
-    leaf.api.markAsDirty();
+    leaf.$api.set('valid');
+    root.$api.markAsTouched();
+    leaf.$api.markAsDirty();
 
-    root.api.reset();
+    root.$api.reset();
 
-    expect(root.api.touched()).toBe(false);
-    expect(root.api.dirty()).toBe(false);
+    expect(root.$api.touched()).toBe(false);
+    expect(root.$api.dirty()).toBe(false);
     descendants.forEach((node) => {
-      expect(node.api.touched()).toBe(false);
-      expect(node.api.dirty()).toBe(false);
+      expect(node.$api.touched()).toBe(false);
+      expect(node.$api.dirty()).toBe(false);
     });
     expect(leaf()).toBe('valid');
-    expect(root.api.valid()).toBe(true);
-    expect(root.api.allErrors()).toEqual([]);
+    expect(root.$api.valid()).toBe(true);
+    expect(root.$api.allErrors()).toEqual([]);
   });
 });
 
@@ -153,29 +153,29 @@ describe.each(stateFixtures.slice(1))('%s aggregate-state invariants', (_kind, c
   it('continues aggregating dirty descendants after its own state is cleared', () => {
     const { root, leaf } = createFixture();
 
-    leaf.api.markAsDirty();
-    expect(root.api.dirty()).toBe(true);
+    leaf.$api.markAsDirty();
+    expect(root.$api.dirty()).toBe(true);
 
-    root.api.markAsPristine();
-    expect(leaf.api.dirty()).toBe(true);
-    expect(root.api.dirty()).toBe(true);
+    root.$api.markAsPristine();
+    expect(leaf.$api.dirty()).toBe(true);
+    expect(root.$api.dirty()).toBe(true);
 
-    leaf.api.markAsPristine();
-    expect(root.api.dirty()).toBe(false);
+    leaf.$api.markAsPristine();
+    expect(root.$api.dirty()).toBe(false);
   });
 
   it('continues aggregating touched descendants after its own state is cleared', () => {
     const { root, leaf } = createFixture();
 
-    leaf.api.markAsTouched();
-    expect(root.api.touched()).toBe(true);
+    leaf.$api.markAsTouched();
+    expect(root.$api.touched()).toBe(true);
 
-    root.api.markAsUntouched();
-    expect(leaf.api.touched()).toBe(true);
-    expect(root.api.touched()).toBe(true);
+    root.$api.markAsUntouched();
+    expect(leaf.$api.touched()).toBe(true);
+    expect(root.$api.touched()).toBe(true);
 
-    leaf.api.markAsUntouched();
-    expect(root.api.touched()).toBe(false);
+    leaf.$api.markAsUntouched();
+    expect(root.$api.touched()).toBe(false);
   });
 });
 
@@ -202,23 +202,23 @@ describe('shared asynchronous aggregate-state invariants', () => {
   ] as const)('aggregates pending state for %s until descendant validation settles', async (_kind, createFixture) => {
     const { root, resolve } = createFixture();
 
-    expect(root.api.pending()).toBe(true);
-    expect(root.api.valid()).toBe(false);
-    expect(root.api.invalid()).toBe(false);
+    expect(root.$api.pending()).toBe(true);
+    expect(root.$api.valid()).toBe(false);
+    expect(root.$api.invalid()).toBe(false);
 
-    root.api.disable();
-    expect(root.api.pending()).toBe(false);
-    expect(root.api.valid()).toBe(true);
-    root.api.enable();
-    expect(root.api.pending()).toBe(true);
+    root.$api.disable();
+    expect(root.$api.pending()).toBe(false);
+    expect(root.$api.valid()).toBe(true);
+    root.$api.enable();
+    expect(root.$api.pending()).toBe(true);
 
     resolve();
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(root.api.pending()).toBe(false);
-    expect(root.api.valid()).toBe(true);
-    expect(root.api.invalid()).toBe(false);
+    expect(root.$api.pending()).toBe(false);
+    expect(root.$api.valid()).toBe(true);
+    expect(root.$api.invalid()).toBe(false);
   });
 });

@@ -138,7 +138,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   /** Field, form, or array node bound to the host control. */
   get field(): TNode {
     const node = this.formNodeInput();
-    if (typeof node !== 'function' || typeof (node as unknown as InternalNode).api?._controlValue !== 'function') {
+    if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
       throw new Error('formNode: a field, form, or array node is required');
     }
     return node;
@@ -154,13 +154,13 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     accessor.registerOnChange((value: unknown) => {
       if (this.destroyed || this.writingAccessorValue) return;
       this.lastViewValue = value;
-      (this.field as unknown as InternalNode).api._setControlValue(value);
+      (this.field as unknown as InternalNode).$api._setControlValue(value);
     });
     accessor.registerOnTouched(() => {
-      if (!this.destroyed) this.field.api.markAsTouched();
+      if (!this.destroyed) this.field.$api.markAsTouched();
     });
     effect(() => {
-      const value = (this.node() as unknown as InternalNode).api._controlValue();
+      const value = (this.node() as unknown as InternalNode).$api._controlValue();
       if (Object.is(value, this.lastViewValue)) return;
       this.lastViewValue = value;
       untracked(() => {
@@ -174,7 +174,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     }, { injector: this.injector });
     if (accessor.setDisabledState) {
       effect(() => {
-        const disabled = this.node().api.disabled();
+        const disabled = this.node().$api.disabled();
         untracked(() => accessor.setDisabledState!(disabled));
       }, { injector: this.injector });
     }
@@ -222,7 +222,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     };
     const unlistenInput = this.renderer.listen(control, 'input', commit);
     const unlistenChange = this.renderer.listen(control, 'change', commit);
-    const unlistenBlur = this.renderer.listen(control, 'blur', () => this.field.api.markAsTouched());
+    const unlistenBlur = this.renderer.listen(control, 'blur', () => this.field.$api.markAsTouched());
     const unlistenCompositionStart = this.renderer.listen(control, 'compositionstart', () => { this.composing = true; });
     const unlistenCompositionEnd = this.renderer.listen(control, 'compositionend', () => {
       this.composing = false;
@@ -267,9 +267,9 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
       const node = this.node();
       const field = node as unknown as Partial<Field<NodeValue<TNode>>>;
       if (this.nativeControl) this.renderer.setProperty(this.nativeControl, 'name', getFormNodeName(node, this.appId));
-      this.renderer.setProperty(this.element, 'disabled', node.api.disabled());
-      if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', node.api.readonly());
-      if ('required' in this.element) this.renderer.setProperty(this.element, 'required', node.api.required());
+      this.renderer.setProperty(this.element, 'disabled', node.$api.disabled());
+      if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', node.$api.readonly());
+      if ('required' in this.element) this.renderer.setProperty(this.element, 'required', node.$api.required());
       if ('min' in this.element) this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min?.(), (this.element as HTMLInputElement).type) ?? '');
       if ('max' in this.element) this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max?.(), (this.element as HTMLInputElement).type) ?? '');
       if ('minLength' in this.element) {
@@ -283,7 +283,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
         else this.renderer.setProperty(this.element, 'maxLength', value);
       }
       if ('pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern?.() ?? []));
-      this.renderer.setAttribute(this.element, 'aria-invalid', String(node.api.invalid()));
+      this.renderer.setAttribute(this.element, 'aria-invalid', String(node.$api.invalid()));
     }, { injector: this.injector });
   }
 
@@ -291,8 +291,8 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     if (typeof ngDevMode === 'undefined' || !ngDevMode) return;
     effect(() => {
       const node = this.node();
-      if (!node.api.hidden()) return;
-      const path = node.api.path().join('.') || '<root>';
+      if (!node.$api.hidden()) return;
+      const path = node.$api.path().join('.') || '<root>';
       console.warn(`formNode: field '${path}' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.`);
     }, { injector: this.injector });
   }
@@ -300,7 +300,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   private registerControlBinding() {
     effect((onCleanup) => {
       const field = this.node() as unknown as InternalNode;
-      onCleanup(field.api._registerControlBinding({
+      onCleanup(field.$api._registerControlBinding({
         element: this.element,
         focus: (options) => this.focus(options),
       }));
@@ -312,11 +312,11 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   }
 
   flush() {
-    this.field.api.flush();
+    this.field.$api.flush();
   }
 
   reset() {
-    this.field.api.reset();
+    this.field.$api.reset();
   }
 
   private getNativeField(): Field<NodeValue<TNode>> {

@@ -5,13 +5,13 @@ let nextRootId = 0;
 
 /** Returns the stable Angular-compatible control name for a node binding. */
 export const getFormNodeName = (node: Node, appId: string): string => {
-  const root = node.api.form() ?? node;
+  const root = node.$api.form() ?? node;
   let rootName = rootNames.get(root);
   if (!rootName) {
     rootName = `${appId}.form${nextRootId++}`;
     rootNames.set(root, rootName);
   }
 
-  const path = node.api.path();
+  const path = node.$api.path();
   return path.length ? `${rootName}.${path.join('.')}` : rootName;
 };

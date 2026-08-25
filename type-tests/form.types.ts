@@ -53,8 +53,14 @@ profile.set({ name: 'Daniel', age: 43 });
 profile.patch({ unknown: true });
 // @ts-expect-error nested field value has the wrong type
 profile.patch({ address: { city: 42 } });
-// @ts-expect-error api is a reserved form child key
-form({ api: field('reserved') });
+const apiCollision = form({ api: field('child api') });
+type _ApiCollision = Expect<Equal<ReturnType<typeof apiCollision.api>, string | null>>;
+type _ApiCollisionEscapeHatch = Expect<Equal<ReturnType<typeof apiCollision.$api.value>, { api: string | null }>>;
+
+// @ts-expect-error $api is the reserved form API escape hatch
+form({ $api: field('reserved') });
+// @ts-expect-error $api is reserved at every nested form level
+form({ nested: { $api: field('reserved') } });
 
 const collisions = form({
   readonly: field(false),

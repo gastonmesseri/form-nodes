@@ -21,7 +21,7 @@ const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => new P
   signal.addEventListener('abort', finish, { once: true });
 });
 
-export const createAsyncValidation = <TValue, TNode extends Node & { api: AsyncValidatorState }>(
+export const createAsyncValidation = <TValue, TNode extends Node & { $api: AsyncValidatorState }>(
   context: FieldContext<TValue>,
   getValidators: () => Validators<TValue>,
   getSyncErrors: () => readonly ValidationError[],

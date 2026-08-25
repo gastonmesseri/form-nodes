@@ -14,6 +14,7 @@ const people = array({
   },
 });
 const names = array(field(''), ['David']);
+type _StableApiValue = Expect<Equal<ReturnType<typeof names.$api.value>, (string | null)[]>>;
 const matrix = array(array(field(0), []), [[1, 2]]);
 const forms = array(form({ enabled: field(true, { nullable: false }) }), [{ enabled: true }]);
 const optionPeople = array({

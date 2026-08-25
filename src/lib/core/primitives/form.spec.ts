@@ -197,6 +197,39 @@ describe('form', () => {
     expect(profile.children.address.children.city).toBe(profile.address.city);
   });
 
+  it('gives a child named api precedence while preserving $api', () => {
+    const apiField = field('child api');
+    const profile = form({ api: apiField, age: field(23) });
+
+    expect(profile.api).toBe(apiField);
+    expect(profile.api()).toBe('child api');
+    expect(profile.$api.children.api).toBe(apiField);
+    expect(profile.$api.value()).toEqual({ api: 'child api', age: 23 });
+
+    profile.$api.patch({ api: 'updated' });
+    expect(profile()).toEqual({ api: 'updated', age: 23 });
+  });
+
+  it('gives the real $api runtime precedence over illegally declared children', () => {
+    const illegalRootField = field('root child');
+    const illegalNestedField = field('nested child');
+    const profile = form({
+      $api: illegalRootField,
+      nested: { $api: illegalNestedField },
+    } as any) as any;
+
+    expect(profile.$api).not.toBe(illegalRootField);
+    expect(profile.$api.value()).toEqual({
+      $api: 'root child',
+      nested: { $api: 'nested child' },
+    });
+    expect(profile.$api.children.$api).toBe(illegalRootField);
+
+    expect(profile.nested.$api).not.toBe(illegalNestedField);
+    expect(profile.nested.$api.value()).toEqual({ $api: 'nested child' });
+    expect(profile.nested.$api.children.$api).toBe(illegalNestedField);
+  });
+
   it('gives a child named children precedence while preserving api.children', () => {
     const childrenField = field('child');
     const profile = form({ children: childrenField, age: field(23) });

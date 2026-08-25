@@ -11,21 +11,21 @@ type InputSignal = ((...args: never[]) => unknown) & {
 const getBindingValues = (node: Node, appId: string) => {
   const field = node as unknown as Partial<Field<unknown>>;
   return {
-    disabled: node.api.disabled(),
-    dirty: node.api.dirty(),
-    errors: node.api.errors(),
-    hidden: node.api.hidden(),
-    invalid: node.api.invalid(),
+    disabled: node.$api.disabled(),
+    dirty: node.$api.dirty(),
+    errors: node.$api.errors(),
+    hidden: node.$api.hidden(),
+    invalid: node.$api.invalid(),
     max: field.max?.() ?? undefined,
     maxLength: field.maxLength?.() ?? undefined,
     min: field.min?.() ?? undefined,
     minLength: field.minLength?.() ?? undefined,
     name: getFormNodeName(node, appId),
     pattern: field.pattern?.() ?? [],
-    pending: node.api.pending(),
-    readonly: node.api.readonly(),
-    required: node.api.required(),
-    touched: node.api.touched(),
+    pending: node.$api.pending(),
+    readonly: node.$api.readonly(),
+    required: node.$api.required(),
+    touched: node.$api.touched(),
   };
 };
 

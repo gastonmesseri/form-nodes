@@ -8,6 +8,12 @@ import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
 describe('array', () => {
+  it('exposes the same API through api and $api', () => {
+    const names = array(field(''), []);
+
+    expect(names.$api).toBe(names.api);
+  });
+
   it('allows focusing safely when no descendant UI control is bound', () => {
     const names = array(field('Marco'), 1);
 

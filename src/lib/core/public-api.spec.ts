@@ -133,8 +133,8 @@ describe('types', () => {
   });
 
   it('does not expose internal parent mutation through Node', () => {
-    type ExposesSetParent = '_setParent' extends keyof Node['api'] ? true : false;
-    type ExposesClone = '_clone' extends keyof Node['api'] ? true : false;
+    type ExposesSetParent = '_setParent' extends keyof Node['$api'] ? true : false;
+    type ExposesClone = '_clone' extends keyof Node['$api'] ? true : false;
 
     expectTypeOf<ExposesSetParent>().toEqualTypeOf<false>();
     expectTypeOf<ExposesClone>().toEqualTypeOf<false>();
@@ -541,9 +541,13 @@ describe('types', () => {
     expectTypeOf(formGroup.api.patch).toBeCallableWith({ nope: 1 });
   });
 
-  it('rejects a field named api', () => {
-    // @ts-expect-error 'api' is a reserved key
-    expectTypeOf(form).toBeCallableWith({ api: field(1) });
+  it('allows api as a child name and reserves $api', () => {
+    const withApiChild = form({ api: field(1) });
+    expectTypeOf(withApiChild.api()).toEqualTypeOf<number | null>();
+    expectTypeOf(withApiChild.$api.value()).toEqualTypeOf<{ api: number | null }>();
+
+    // @ts-expect-error '$api' is reserved
+    form({ $api: field(1) });
   });
 
   it('does not expose patch on the field root', () => {

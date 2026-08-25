@@ -4,7 +4,7 @@ This document records the behavior currently implemented by the library. It is a
 
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.x` at commit `004cf3a27734ae90738a0a745cc0369b52306ca3`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
-Both `field()` and `form()` expose their public API members directly on the returned callable node. The complete API also remains available through `.api`:
+Every `field()`, `form()`, and `array()` exposes its complete API through `.api`, which is the recommended access for application code. Every node also exposes the reserved `$api` escape hatch. `$api` always provides collision-safe access to the node API, including when a form declares a child named `api`. Internal library code uses `$api`, so user-defined children cannot interfere with node operations. `$api` is annotated with `@deprecated` only to reduce its prominence in autocomplete; it is not actually obsolete, remains supported, and is not planned for removal.
 
 ```ts
 const profile = form({ age: field(23) });
@@ -12,10 +12,11 @@ const profile = form({ age: field(23) });
 profile.disabled();
 profile.disable();
 profile.patch({ age: 30 });
-profile.api.disabled();
+profile.api.disabled(); // recommended API access
+profile.$api.disabled(); // equivalent reserved escape hatch
 ```
 
-A form also exposes its children as direct properties. When a child name collides with a direct API member, the child always wins in both runtime behavior and TypeScript. Use `.api` to access the form member in that case:
+A form also exposes its children as direct properties. When a child name collides with a direct API member, the child always wins in both runtime behavior and TypeScript. Continue using `.api` in the common case; use `$api` when guaranteed collision-free access is needed:
 
 ```ts
 const profile = form({
@@ -202,9 +203,16 @@ profile.api.value();
 
 The callable and `value()` expose the fully materialized object shape in TypeScript tooling instead of an internal `FormValue<...>` alias. Nested forms and arrays are expanded recursively in IntelliSense.
 
-Each child is exposed under its definition key. Form-level state and actions live under `form.api`.
+Each child is exposed under its definition key. Application code should normally access form-level state and actions through `form.api`. The same API is always available under `form.$api` when a collision-safe access path is required.
 
-The key `api` is reserved and rejected by the public types. Other function property names such as `name` and `length` remain valid child keys and resolve to the user-defined children at runtime.
+The key `api` is a valid child name and that child takes precedence over the alias. The key `$api` is reserved recursively and rejected by the public types, guaranteeing access to the node API at every depth. This guarantee is also enforced at runtime: even if a consumer bypasses TypeScript with `any` and declares a child named `$api`, the real node API keeps precedence at `node.$api`. The illegal child remains part of the form value and can be reached through `node.$api.children.$api`, but it cannot replace the reserved access path. Other function property names such as `name` and `length` remain valid child keys and resolve to the user-defined children at runtime.
+
+```ts
+const profile = form({ api: field('domain value') });
+
+profile.api(); // value of the child named api
+profile.$api.value(); // collision-safe access to the form API
+```
 
 ## Nested forms
 

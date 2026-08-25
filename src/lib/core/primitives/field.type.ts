@@ -121,6 +121,26 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
 };
 
 export type Field<TValue, TParent extends Node = Node> =
-  & { (): TValue; api: FieldApi<TValue, TParent> }
+  & {
+    (): TValue;
+    /**
+     * Complete field API and the recommended access path for application code.
+     *
+    * `$api` exposes the same API through the collision-safe convention shared by every node.
+     */
+    api: FieldApi<TValue, TParent>;
+    /**
+     * Collision-safe access to the field API.
+     *
+     * Prefer `api` for normal application code. `$api` exists as the stable access convention
+     * shared by every node, including forms whose children may be named `api`.
+     *
+     * This property is not obsolete and is not planned for removal. It is marked as deprecated
+     * only to reduce its prominence in autocomplete and keep the usual `api` access easier to find.
+     *
+     * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+     */
+    $api: FieldApi<TValue, TParent>;
+  }
   & Omit<FieldApi<TValue, TParent>, 'patch'>
   & HiddenFunctionMembers;

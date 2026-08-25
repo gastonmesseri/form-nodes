@@ -22,17 +22,23 @@ import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, Form
 
 export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
-export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
-  definitions: TDefinitions,
+type FormDefinitions<TDefinitions extends NodeDefinitions> = {
+  [TKey in keyof TDefinitions]: TKey extends '$api'
+    ? never
+    : TDefinitions[TKey] extends NodeDefinitions ? FormDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
+};
+
+export function form<TDefinitions extends NodeDefinitions>(
+  definitions: TDefinitions & FormDefinitions<TDefinitions>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
-export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
-  definitions: TDefinitions,
+export function form<TDefinitions extends NodeDefinitions>(
+  definitions: TDefinitions & FormDefinitions<TDefinitions>,
   validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
-export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
-  definitions: TDefinitions,
+export function form<TDefinitions extends NodeDefinitions>(
+  definitions: TDefinitions & FormDefinitions<TDefinitions>,
   validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
   separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>> {
@@ -63,23 +69,23 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formKeyInParent = signal<string | number | null>(null);
   const formControlDebounce = computed(() =>
     resolvedOptions?.debounce
-    ?? (formParent() as InternalNode | null)?.api._controlDebounce(),
+    ?? (formParent() as InternalNode | null)?.$api._controlDebounce(),
   );
   const formPath = computed((): readonly string[] => {
     const parent = formParent();
     const key = formKeyInParent();
-    return parent && key !== null ? [...parent.api.path(), String(key)] : [];
+    return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
   const formDisabled = computed(() =>
-    formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.api.disabled() === true,
+    formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.$api.disabled() === true,
   );
   const formSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const formReadonly = computed(() =>
-    formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.api.readonly() === true,
+    formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.$api.readonly() === true,
   );
   const formSelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const formHidden = computed(() =>
-    formSelfHidden() || readStateSource(resolvedOptions?.hidden) || formParent()?.api.hidden() === true,
+    formSelfHidden() || readStateSource(resolvedOptions?.hidden) || formParent()?.$api.hidden() === true,
   );
   const formNonInteractive = computed(() => formHidden() || formDisabled() || formReadonly());
   const formValue = computed(() => {
@@ -91,7 +97,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   const emptySyncMetadata = new Map();
   let formNode!: Form<TNodes>;
-  const rootForm = computed(() => formParent()?.api.form() ?? formNode) as Signal<Form<TNodes>>;
+  const rootForm = computed(() => formParent()?.$api.form() ?? formNode) as Signal<Form<TNodes>>;
   const formSyncValidation = computed(() => formNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(formContext, formValidators(), formNode));
@@ -111,7 +117,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formAllErrors = computed(
     () => [
       ...formErrors(),
-      ...controlKeys().flatMap((key) => controls[key]!.api.allErrors()),
+      ...controlKeys().flatMap((key) => controls[key]!.$api.allErrors()),
     ],
     { equal: shallowEqual },
   );
@@ -121,15 +127,15 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   ) as FormApi<TNodes>['getError'];
   const formPending = computed(() =>
     !formNonInteractive() && (
-      asyncValidation.pending() || controlKeys().some((key) => controls[key]!.api.pending())
+      asyncValidation.pending() || controlKeys().some((key) => controls[key]!.$api.pending())
     ),
   );
   const formSubmitting = computed(() =>
-    formSelfSubmitting() || formParent()?.api.submitting() === true,
+    formSelfSubmitting() || formParent()?.$api.submitting() === true,
   );
   const formValidationStatus = computed<ValidationStatus>(() => {
     if (formNonInteractive()) return 'valid';
-    if (formErrors().length > 0 || controlKeys().some((key) => controls[key]!.api.invalid())) return 'invalid';
+    if (formErrors().length > 0 || controlKeys().some((key) => controls[key]!.$api.invalid())) return 'invalid';
     if (formPending()) return 'unknown';
     return 'valid';
   });
@@ -140,13 +146,13 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const formTouched = computed(() =>
-    !formNonInteractive() && (formSelfTouched() || controlKeys().some((key) => controls[key]!.api.touched())),
+    !formNonInteractive() && (formSelfTouched() || controlKeys().some((key) => controls[key]!.$api.touched())),
   );
   const formDirty = computed(() =>
-    !formNonInteractive() && (formSelfDirty() || controlKeys().some((key) => controls[key]!.api.dirty())),
+    !formNonInteractive() && (formSelfDirty() || controlKeys().some((key) => controls[key]!.$api.dirty())),
   );
   const formDebouncing = computed(() =>
-    controlKeys().some((key) => controls[key]!.api.debouncing()),
+    controlKeys().some((key) => controls[key]!.$api.debouncing()),
   );
   const set = (value: FormSet<TNodes>) => {
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
@@ -155,7 +161,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
         console.warn(`form: unknown key "${String(key)}" ignored on set`);
         return;
       }
-      control.api.set(value[key]);
+      control.$api.set(value[key]);
     });
   };
   const patch = (value: FormPatch<TNodes>) => {
@@ -165,7 +171,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
         console.warn(`form: unknown key "${String(key)}" ignored on patch`);
         return;
       }
-      control.api.patch(value[key]);
+      control.$api.patch(value[key]);
     });
   };
   const reset = (...args: [] | [value: FormSet<TNodes>]) => {
@@ -173,26 +179,26 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     formSelfDirty.set(false);
     notifyExternalValidationReset(formNode);
     if (args.length === 0) {
-      controlKeys().forEach((key) => controls[key]!.api.reset());
+      controlKeys().forEach((key) => controls[key]!.$api.reset());
       return;
     }
     const value = args[0];
-    controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
+    controlKeys().forEach((key) => controls[key]!.$api.reset(value[key]));
   };
   const getControlBindingForFocus = () => {
     const own = findFirstControlBindingInDom(formControlBindings);
     if (own) return own;
     return controlKeys()
-      .map((key) => (controls[key] as InternalNode).api._getControlBindingForFocus())
+      .map((key) => (controls[key] as InternalNode).$api._getControlBindingForFocus())
       .reduce(firstControlBindingInDom, undefined);
   };
   const submit = async (): Promise<boolean> => {
     if (untracked(formSubmitting)) return false;
     const submission = resolvedOptions?.submission;
     if (!submission) throw new Error('form: cannot submit without a configured submission action');
-    formNode.api.markAsTouched();
+    formNode.$api.markAsTouched();
     const shouldRun = submission.ignoreValidators === 'all'
-      || (submission.ignoreValidators === 'none' ? untracked(formNode.api.valid) : !untracked(formNode.api.invalid));
+      || (submission.ignoreValidators === 'none' ? untracked(formNode.$api.valid) : !untracked(formNode.$api.invalid));
     if (!shouldRun) {
       untracked(() => submission.onInvalid?.(formNode));
       return false;
@@ -234,7 +240,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     submitting: formSubmitting,
     submit,
     debouncing: formDebouncing,
-    flush: () => controlKeys().forEach((key) => controls[key]!.api.flush()),
+    flush: () => controlKeys().forEach((key) => controls[key]!.$api.flush()),
     focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: formValidationStatus,
     touched: formTouched,
@@ -242,7 +248,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     markAsTouched: (options) => {
       if (formNonInteractive()) return;
       formSelfTouched.set(true);
-      if (!options?.skipDescendants) controlKeys().forEach((key) => controls[key]!.api.markAsTouched());
+      if (!options?.skipDescendants) controlKeys().forEach((key) => controls[key]!.$api.markAsTouched());
     },
     markAsUntouched: () => formSelfTouched.set(false),
     dirty: formDirty,
@@ -283,9 +289,9 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   formNode = Object.defineProperties(
     () => formValue(),
-    Object.getOwnPropertyDescriptors({ ...api, ...controls, api: internalApi }),
+    Object.getOwnPropertyDescriptors({ ...api, api: internalApi, ...controls, $api: internalApi }),
   ) as Form<TNodes>;
-  controlKeys().forEach((key) => (controls[key] as InternalNode).api._setParent(formNode, String(key)));
+  controlKeys().forEach((key) => (controls[key] as InternalNode).$api._setParent(formNode, String(key)));
   markAsNode(formNode);
   ensureAsyncValidationWatch();
   return formNode;
