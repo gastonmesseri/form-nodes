@@ -12,8 +12,9 @@ const builtInAccessors = [
   SelectMultipleControlValueAccessor,
 ];
 
-const isBuiltInAccessor = (accessor: ControlValueAccessor): boolean =>
-  builtInAccessors.some((accessorType) => accessor instanceof accessorType);
+const isBuiltInAccessor = (accessor: ControlValueAccessor): boolean => {
+  return builtInAccessors.some((accessorType) => accessor instanceof accessorType);
+};
 
 export const selectValueAccessor = (accessors: readonly ControlValueAccessor[] | null): ControlValueAccessor | null => {
   if (!accessors || accessors.length === 0) return null;
@@ -37,11 +38,23 @@ export const selectValueAccessor = (accessors: readonly ControlValueAccessor[] |
   return customAccessor ?? builtInAccessor ?? defaultAccessor!;
 };
 
-export const isValidatorObject = (validator: ValidatorFn | Validator): validator is Validator =>
-  typeof validator === 'object' && validator !== null;
+export const isValidatorObject = (validator: ValidatorFn | Validator): validator is Validator => {
+  return typeof validator === 'object' && validator !== null;
+};
 
-export const toControlErrors = (errors: ValidationErrors | null): readonly ValidationError.WithoutTargetNode[] =>
-  errors ? Object.entries(errors).map(([kind, context]) => ({ kind, context })) : [];
+export const toControlErrors = (errors: ValidationErrors | null): readonly ValidationError.WithoutTargetNode[] => {
+  return errors ? Object.entries(errors).map(([kind, context]) => ({ kind, context })) : [];
+};
+
+export const elementAcceptsMinMax = (element: HTMLElement): element is HTMLInputElement => {
+  if (element.tagName !== 'INPUT') return false;
+  const type = (element as HTMLInputElement).type;
+  return type === 'number' || type === 'range' || type === 'date' || type === 'month';
+};
+
+export const isTextualFormElement = (element: HTMLElement): element is HTMLInputElement | HTMLTextAreaElement => {
+  return element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
+};
 
 export const formatNativeLimit = (value: unknown, type: string): unknown => {
   if (!(value instanceof Date) || (type !== 'date' && type !== 'month')) return value;

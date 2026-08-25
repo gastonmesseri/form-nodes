@@ -16,7 +16,7 @@ import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
-import { formatNativeLimit, formatNativePattern, isValidatorObject, selectValueAccessor, toControlErrors } from './form-node.utils';
+import { elementAcceptsMinMax, formatNativeLimit, formatNativePattern, isTextualFormElement, isValidatorObject, selectValueAccessor, toControlErrors } from './form-node.utils';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
 
 /** Public injection token for the nearest `[formNode]` binding. */
@@ -258,17 +258,17 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
       this.renderer.setProperty(this.element, 'disabled', node.$api.disabled());
       if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', node.$api.readonly());
       if ('required' in this.element) this.renderer.setProperty(this.element, 'required', node.$api.required());
-      if ('min' in this.element) this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min?.(), (this.element as HTMLInputElement).type) ?? '');
-      if ('max' in this.element) this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max?.(), (this.element as HTMLInputElement).type) ?? '');
-      if ('minLength' in this.element) {
+      if (elementAcceptsMinMax(this.element)) {
+        this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min?.(), this.element.type) ?? '');
+        this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max?.(), this.element.type) ?? '');
+      }
+      if (isTextualFormElement(this.element)) {
         const value = field.minLength?.();
         if (value === null) this.renderer.removeAttribute(this.element, 'minlength');
         else this.renderer.setProperty(this.element, 'minLength', value);
-      }
-      if ('maxLength' in this.element) {
-        const value = field.maxLength?.();
-        if (value === null) this.renderer.removeAttribute(this.element, 'maxlength');
-        else this.renderer.setProperty(this.element, 'maxLength', value);
+        const maximumValue = field.maxLength?.();
+        if (maximumValue === null) this.renderer.removeAttribute(this.element, 'maxlength');
+        else this.renderer.setProperty(this.element, 'maxLength', maximumValue);
       }
       if ('pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern?.() ?? []));
       this.renderer.setAttribute(this.element, 'aria-invalid', String(node.$api.invalid()));
