@@ -7,6 +7,7 @@ import { registerExternalValidationErrors } from '../../validation/external-vali
 
 export type SignalControlConnection = {
   focus?: (options?: FocusOptions) => void;
+  inputNames: ReadonlySet<string>;
 };
 
 const getControlModel = <TNode extends Node>(control: FormNodeControl<NodeValue<TNode>, TNode>): ModelSignal<NodeValue<TNode>> =>
@@ -24,7 +25,7 @@ export const connectSignalControl = <TNode extends Node>(
   const noErrors = signal<readonly []>([]);
   let writingControlValue = false;
 
-  connectSignalControlInputs(control, node, injector);
+  const { inputNames } = connectSignalControlInputs(control, node, injector);
 
   const valueSubscription = model.subscribe((value) => {
     if (!writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);
@@ -59,5 +60,5 @@ export const connectSignalControl = <TNode extends Node>(
     }, { injector });
   }
 
-  return control.focus ? { focus: control.focus.bind(control) } : {};
+  return control.focus ? { focus: control.focus.bind(control), inputNames } : { inputNames };
 };

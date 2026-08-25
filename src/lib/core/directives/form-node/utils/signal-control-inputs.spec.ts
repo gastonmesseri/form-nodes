@@ -54,9 +54,12 @@ describe('connectSignalControlInputs', () => {
     const fixture = TestBed.createComponent(AllStateControl);
     const expectedPattern = /^[a-z]+$/;
     const profile = form({ name: field('abc', [required, min(1), max(10), minLength(2), maxLength(5), pattern(expectedPattern)] as never, { nullable: false }) });
-    connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector.get(Injector));
+    const connection = connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
 
+    expect(connection.inputNames).toContain('disabled');
+    expect(connection.inputNames).toContain('required');
+    expect(connection.inputNames).not.toContain('touchedAlias');
     expect(fixture.componentInstance.name()).toMatch(/\.form\d+\.name$/);
     expect(fixture.componentInstance.required()).toBe(true);
     expect(fixture.componentInstance.invalid()).toBe(false);
@@ -90,7 +93,8 @@ describe('connectSignalControlInputs', () => {
     registerSignalModelForJit(ModelOnlyControl, 'value');
     const modelFixture = TestBed.createComponent(ModelOnlyControl);
     const name = field('', { nullable: false });
-    connectSignalControlInputs(modelFixture.componentInstance, () => name, modelFixture.debugElement.injector.get(Injector));
+    const modelConnection = connectSignalControlInputs(modelFixture.componentInstance, () => name, modelFixture.debugElement.injector.get(Injector));
+    expect(modelConnection.inputNames).toEqual(new Set(['value']));
 
     @Component({ standalone: true, selector: 'non-signal-input-control', template: '' })
     class NonSignalInputControl {
@@ -102,8 +106,9 @@ describe('connectSignalControlInputs', () => {
     registerSignalInputForJit(NonSignalInputControl, 'disabled', 'disabled');
     registerSignalInputForJit(NonSignalInputControl, 'dirty', 'dirty');
     const invalidFixture = TestBed.createComponent(NonSignalInputControl);
-    connectSignalControlInputs(invalidFixture.componentInstance as never, () => name, invalidFixture.debugElement.injector.get(Injector));
+    const invalidConnection = connectSignalControlInputs(invalidFixture.componentInstance as never, () => name, invalidFixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
+    expect(invalidConnection.inputNames).toEqual(new Set(['value', 'disabled', 'dirty']));
     expect(invalidFixture.componentInstance.disabled).toBe(false);
     expect(invalidFixture.componentInstance.dirty()).toBe(false);
   });
