@@ -14,6 +14,7 @@ export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field'
 export type { MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export { required, type RequiredOptions } from './lib/core/validation/validators/required';
 export { FORM_NODE, FormNodeDirective } from './lib/core/directives/form-node/form-node.directive';
+export { provideFormNodeConfig, type FormNodeBinding, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
 export { FORM_NODE_CONTROL, provideFormNodeControl, type FormNodeCheckboxControl, type FormNodeControl, type FormNodeUiControl, type FormNodeValueControl } from './lib/core/directives/form-node/form-node-control';
 export { FormRootDirective } from './lib/core/directives/form-node/form-root.directive';
 export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/core/types/observable-like.type';

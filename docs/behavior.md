@@ -1365,6 +1365,30 @@ The directive currently provides these behaviors:
 - Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
 - In development, `[formNode]` warns whenever its bound field is hidden while the control remains rendered. The warning identifies the reactive field path, using `<root>` for a standalone root field. `hidden` is form state and does not manipulate DOM visibility: templates should remove hidden controls with `@if`. No warning is installed in production.
 
+### Automatic CSS classes
+
+`provideFormNodeConfig()` can configure reactive CSS classes for every `[formNode]` binding below the provider:
+
+```ts
+bootstrapApplication(App, {
+  providers: [
+    provideFormNodeConfig({
+      classes: {
+        'is-invalid': binding => binding.node().$api.invalid(),
+        'is-touched': binding => binding.node().$api.touched(),
+        'is-pending': binding => binding.node().$api.pending(),
+      },
+    }),
+  ],
+});
+```
+
+Each class predicate has its own computed reactive context. A predicate reruns only when a signal it read changes, including signals unrelated to the bound node. After rendering, `[formNode]` adds the class when the predicate returns `true` and removes it when it returns `false`. The nearest injected configuration applies to the binding.
+
+The predicate receives a stable `FormNodeBinding` with the host `element`, its `injector`, the reactive `node` reference, and the binding-specific `focus()` operation. Generic binding code uses `$api` because the bound form may legally contain a child named `api`; this is one of the cases for which the collision-safe escape hatch exists.
+
+This behavior follows Angular Signal Forms' automatic status classes as inspected in Angular `22.1.3`, specifically `SignalFormsConfig`, `provideSignalFormsConfig()`, and `FormField.installClassBindingEffect()` in `packages/forms/signals/src/directive/form_field.ts`.
+
 ### Explicit signal-control registration
 
 Automatic `FormValueControl` discovery is the zero-configuration path. A custom component may instead register itself explicitly with `provideFormNodeControl()`. This guarantees that `[formNode]` finds the intended control without relying on discovery from Angular's compiled input/output metadata and is the recommended fallback for components with unusual metadata, wrappers, host directives, or stricter compatibility requirements.
