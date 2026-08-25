@@ -3,7 +3,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Component, forwardRef, inject, input, model, signal } from '@angular/core';
+import { Component, Directive, forwardRef, inject, input, model, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
@@ -18,6 +18,7 @@ import { FormNode } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { provideFormNodeConfig } from './form-node-config';
 import { provideFormNodeControl } from './form-node-control';
+import { provideFormNodePassThrough } from './form-node-pass-through';
 import { pattern } from '../../validation/validators/pattern';
 import { maxDate } from '../../validation/validators/max-date';
 import { minDate } from '../../validation/validators/min-date';
@@ -48,6 +49,60 @@ const accessorWithPrototype = (prototype: object): ControlValueAccessor & { writ
 };
 
 describe('FormNode', () => {
+  it('lets a wrapper component accept and delegate the formNode input', () => {
+    @Component({
+      selector: 'delegating-control',
+      imports: [FormNode],
+      template: `<input [formNode]="formNode()">`,
+    })
+    class DelegatingControl {
+      readonly formNode = input.required<Field<string>>();
+    }
+
+    registerSignalInputForJit(DelegatingControl, 'formNode', 'formNode');
+
+    @Component({
+      imports: [DelegatingControl, FormNode],
+      template: `<delegating-control [formNode]="name" />`,
+    })
+    class PassThroughHost {
+      readonly name = field('initial', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(PassThroughHost);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(inputElement.value).toBe('initial');
+    inputElement.value = 'updated';
+    dispatch(inputElement, 'input');
+    expect(fixture.componentInstance.name()).toBe('updated');
+  });
+
+  it('lets a directive mark its host formNode binding as pass-through explicitly', () => {
+    @Directive({
+      selector: '[delegatesFormNode]',
+      providers: [provideFormNodePassThrough()],
+    })
+    class DelegatesFormNode {
+      readonly formNode = input.required<Field<string>>({ alias: 'formNode' });
+    }
+
+    registerSignalInputForJit(DelegatesFormNode, 'formNode', 'formNode');
+
+    @Component({
+      imports: [DelegatesFormNode, FormNode],
+      template: `<div delegatesFormNode [formNode]="name"></div>`,
+    })
+    class PassThroughHost {
+      readonly name = field('initial', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(PassThroughHost);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(fixture.componentInstance.name()).toBe('initial');
+  });
+
   it('applies configured CSS classes reactively and independently', () => {
     const externalState = signal(false);
     const invalidPredicate = vi.fn((binding: FormNodeBinding) => binding.node().$api.invalid());
