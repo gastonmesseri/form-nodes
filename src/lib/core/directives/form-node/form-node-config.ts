@@ -1,18 +1,8 @@
-import { InjectionToken, type Injector, type Provider, type Signal } from '@angular/core';
+import { InjectionToken, type Provider } from '@angular/core';
 
-import type { Node } from '../../types/node.type';
+import type { FormNodeBinding } from '../../types/form-node-binding.type';
 
-/** Public view of a concrete `[formNode]` binding supplied to configured class predicates. */
-export type FormNodeBinding = {
-  /** Host element carrying the `[formNode]` directive. */
-  readonly element: HTMLElement;
-  /** Injector belonging to the binding's host element. */
-  readonly injector: Injector;
-  /** Reactive reference to the node currently bound to the host. */
-  readonly node: Signal<Node>;
-  /** Focuses this binding using its native or custom-control focus behavior. */
-  focus(options?: FocusOptions): void;
-};
+export type { FormNodeBinding } from '../../types/form-node-binding.type';
 
 export type FormNodeConfig = {
   /**

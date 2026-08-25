@@ -27,6 +27,8 @@ nullable.update((value) => value?.toUpperCase() ?? null);
 nullable.reset();
 nullable.reset('Daniel');
 nullable.focus({ preventScroll: true });
+nullable.errors()[0]?.formNode?.focus({ preventScroll: true });
+nullable.errors()[0]?.formNode?.element.focus();
 
 // @ts-expect-error a string field cannot receive a number
 nullable.set(42);

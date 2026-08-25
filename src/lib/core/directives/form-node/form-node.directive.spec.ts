@@ -10,20 +10,21 @@ import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Numb
 import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import { array } from '../../primitives/array';
-import type { Field } from '../../primitives/field';
 import type { Node } from '../../types/node.type';
+import type { Field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
+import { provideFormNodeConfig } from './form-node-config';
 import { provideFormNodeControl } from './form-node-control';
-import { provideFormNodeConfig, type FormNodeBinding } from './form-node-config';
 import { pattern } from '../../validation/validators/pattern';
 import { maxDate } from '../../validation/validators/max-date';
 import { minDate } from '../../validation/validators/min-date';
 import { required } from '../../validation/validators/required';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
+import type { FormNodeBinding } from '../../types/form-node-binding.type';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
@@ -476,13 +477,15 @@ describe('FormNodeDirective', () => {
       template: `<input type="text" [formNode]="profile.age">`,
     })
     class Host {
-      readonly profile = form({ age: field(23, { nullable: false }) });
+      readonly profile = form({ age: field(23, min(30), { nullable: false }) });
     }
 
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
     const { profile } = fixture.componentInstance;
+
+    expect(profile.age.getError('min')?.formNode).toBeUndefined();
 
     input.value = 'not-a-number';
     dispatch(input, 'input');
@@ -492,7 +495,10 @@ describe('FormNodeDirective', () => {
     expect(profile.age()).toBe(23);
     expect(profile.age.controlValue()).toBe(23);
     expect(profile.age.dirty()).toBe(true);
-    expect(profile.age.getError('parse')).toMatchObject({ kind: 'parse', targetNode: profile.age });
+    const parseError = profile.age.getError('parse');
+    expect(parseError).toMatchObject({ kind: 'parse', targetNode: profile.age });
+    expect(parseError?.formNode?.element).toBe(input);
+    expect(parseError?.formNode?.node()).toBe(profile.age);
     expect(profile.invalid()).toBe(true);
     expect(profile.allErrors()).toContain(profile.age.getError('parse'));
 
@@ -537,7 +543,10 @@ describe('FormNodeDirective', () => {
     fixture.detectChanges();
 
     expect(age()).toBe(23);
-    expect(age.errors().filter((error) => error.kind === 'parse')).toHaveLength(2);
+    const parseErrors = age.errors().filter((error) => error.kind === 'parse');
+    expect(parseErrors).toHaveLength(2);
+    expect(parseErrors.map((error) => error.formNode?.element)).toEqual([first, second]);
+    expect(parseErrors[0]!.formNode).not.toBe(parseErrors[1]!.formNode);
     expect(first.value).toBe('first-invalid');
     expect(second.value).toBe('second-invalid');
 

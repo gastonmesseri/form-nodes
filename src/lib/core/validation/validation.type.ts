@@ -1,6 +1,7 @@
 import type { Signal } from '@angular/core';
 
 import type { ObservableLike } from '../types/observable-like.type';
+import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { MarkAsTouchedOptions, Node, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
@@ -15,16 +16,21 @@ export namespace ValidationError {
   /** An error associated with a specific target node. */
   export type WithTargetNode<TNode = unknown> = ValidationError & {
     readonly targetNode: TNode;
+    /** Concrete control binding that produced this error, when the error is binding-specific. */
+    readonly formNode?: FormNodeBinding;
   };
 
   /** An error that may already define its target node. */
   export type WithOptionalTargetNode<TNode = unknown> = ValidationError & {
     readonly targetNode?: TNode;
+    /** Concrete control binding that produced this error, when the error is binding-specific. */
+    readonly formNode?: FormNodeBinding;
   };
 
   /** An error returned by a field validator before its target node is assigned. */
   export type WithoutTargetNode = ValidationError & {
     readonly targetNode?: never;
+    readonly formNode?: never;
   };
 }
 
