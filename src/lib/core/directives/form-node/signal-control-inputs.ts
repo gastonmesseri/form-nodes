@@ -2,7 +2,6 @@ import { APP_ID, effect, reflectComponentType, untracked, ɵSIGNAL, type Injecto
 
 import { getFormNodeName } from './form-node-name';
 import type { Field } from '../../primitives/field';
-import type { FormNodeControl } from './form-node-control';
 
 type InputSignal = ((...args: never[]) => unknown) & {
   [ɵSIGNAL]?: ɵInputSignalNode<unknown, unknown>;
@@ -31,18 +30,18 @@ const writeInputSignal = (input: InputSignal, value: unknown) => {
 
 /** Synchronizes the standard Angular Signal Forms state inputs implemented by a custom control. */
 export const connectSignalControlInputs = <TValue>(
-  control: FormNodeControl<TValue>,
+  control: object,
   field: () => Field<TValue>,
   injector: Injector,
 ) => {
   const appId = injector.get(APP_ID);
-  const mirror = reflectComponentType(control.constructor as Type<FormNodeControl<TValue>>);
+  const mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
   if (!mirror) return;
   const inputs = new Map(mirror.inputs.map((input) => [input.templateName, input.propName]));
   const bindingNames = Object.keys(getBindingValues(field(), appId)) as (keyof ReturnType<typeof getBindingValues<TValue>>)[];
   const bindings = bindingNames.flatMap((name) => {
     const property = inputs.get(name);
-    return property ? [{ name, input: control[property as keyof typeof control] as InputSignal }] : [];
+    return property ? [{ name, input: (control as Record<PropertyKey, unknown>)[property] as InputSignal }] : [];
   });
   if (!bindings.length) return;
 

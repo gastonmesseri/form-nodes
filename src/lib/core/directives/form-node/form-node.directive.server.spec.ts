@@ -16,18 +16,20 @@ registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 @Component({
   selector: 'test-control',
   standalone: true,
-  template: '<span>{{ value() }}</span><span>{{ disabled() }}</span>',
+  template: '<span>{{ value() }}</span><span>{{ disabled() }}</span><span>{{ name() }}</span>',
   providers: [{ provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => TestControl) }],
 })
 class TestControl implements ControlValueAccessor {
   readonly value = signal('');
   readonly disabled = signal(false);
+  name = input('');
 
   writeValue(value: unknown) { this.value.set(String(value)); }
   registerOnChange(_onChange: (value: unknown) => void) {}
   registerOnTouched(_onTouched: () => void) {}
   setDisabledState(disabled: boolean) { this.disabled.set(disabled); }
 }
+registerSignalInputForJit(TestControl, 'name', 'name');
 
 @Component({
   selector: 'test-signal-control',
@@ -116,6 +118,7 @@ describe('FormNodeDirective server rendering', () => {
     const html = await render(App);
 
     expect(html).toContain('<span>Marco</span><span>false</span>');
+    expect(html).toMatch(/<span>[^<.]+\.form\d+<\/span>/);
   });
 
   it('renders through an automatically discovered signal custom control', async () => {

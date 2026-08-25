@@ -6,6 +6,7 @@ import type { Field } from '../../primitives/field';
 import { connectSignalControl } from './signal-control';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { discoverSignalControl } from './discover-signal-control';
+import { connectSignalControlInputs } from './signal-control-inputs';
 import type { ValidationError } from '../../validation/validation.type';
 import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
@@ -161,6 +162,7 @@ export class FormNodeDirective<TValue> implements OnInit {
       }, { injector: this.injector });
     }
     this.connectLegacyValidators();
+    connectSignalControlInputs(accessor, () => this.field, this.injector);
   }
 
   private connectSignalCustomControl(control: FormNodeControl<TValue>) {
