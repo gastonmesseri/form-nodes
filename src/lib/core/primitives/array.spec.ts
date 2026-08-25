@@ -905,6 +905,30 @@ describe('array', () => {
     expect(names.required()).toBe(false);
   });
 
+  it('creates initial template and factory items through the options object', () => {
+    const people = array(
+      { id: field('', { nullable: false }), name: field('') },
+      {
+        initialValue: [
+          { id: 'marco', name: 'Marco' },
+          { id: 'lia', name: 'Lia' },
+        ],
+        trackBy: person => person.id,
+      },
+    );
+    const defaultNames = array(() => field('default'), { initialValue: 2 });
+    const requiredNames = array(field(''), [required], { initialValue: [''] });
+
+    expect(people()).toEqual([
+      { id: 'marco', name: 'Marco' },
+      { id: 'lia', name: 'Lia' },
+    ]);
+    expect(defaultNames()).toEqual(['default', 'default']);
+    expect(requiredNames()).toEqual(['']);
+    expect(requiredNames.required()).toBe(true);
+    expect(requiredNames.valid()).toBe(true);
+  });
+
   it('resets current items without replacing their values or identities', () => {
     const names = array(field(''), ['Mono']);
     const item = names[0]!;

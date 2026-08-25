@@ -8,6 +8,26 @@ import type { ValidationError, ValidationStatus, ValidatorSource, Validators } f
 
 export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
   /**
+   * **Initial array contents.** Accepts either:
+   *
+   * - An array containing the initial value of every item.
+   * - A non-negative integer specifying how many items to create from the template defaults.
+   *
+   * This option is available in the `array(template, options)` and
+   * `array(template, validators, options)` signatures. When an initial value is supplied as a
+   * positional argument, TypeScript intentionally omits this property to prevent two conflicting
+   * initial-value sources.
+   *
+   * @defaultValue `[]`
+   *
+   * @example
+   * `array(personTemplate, { initialValue: [{ name: 'Marco' }] })`
+   *
+   * @example
+   * `array(personTemplate, { initialValue: 3 })`
+   */
+  readonly initialValue?: TValue | number;
+  /**
    * Returns the stable identity of an item when `set()`, `update()`, or `reset(value)`
    * reconciles incoming values with the array's current nodes.
    *
