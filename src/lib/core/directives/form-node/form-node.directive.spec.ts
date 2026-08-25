@@ -336,6 +336,89 @@ describe('FormNodeDirective', () => {
     expect(input.getAttribute('aria-invalid')).toBe('false');
   });
 
+  it('warns in development when a hidden field remains rendered', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    @Component({
+      standalone: true,
+      selector: 'hidden-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input [formNode]="profile.name">`,
+    })
+    class Host {
+      readonly profile = form({ name: field('David', { hidden: true, nullable: false }) });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(
+      "formNode: field 'name' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.",
+    );
+
+    fixture.detectChanges();
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
+  it('warns each time a rendered root field becomes hidden', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    @Component({
+      standalone: true,
+      selector: 'reactive-hidden-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input [formNode]="name">`,
+    })
+    class Host {
+      readonly hidden = signal(false);
+      readonly name = field('David', { hidden: () => this.hidden(), nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    expect(warn).not.toHaveBeenCalled();
+
+    fixture.componentInstance.hidden.set(true);
+    fixture.detectChanges();
+    expect(warn).toHaveBeenLastCalledWith(
+      "formNode: field '<root>' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.",
+    );
+
+    fixture.componentInstance.hidden.set(false);
+    fixture.detectChanges();
+    fixture.componentInstance.hidden.set(true);
+    fixture.detectChanges();
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it('does not install the rendered-hidden-field warning in production mode', () => {
+    @Component({
+      standalone: true,
+      selector: 'production-hidden-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input [formNode]="name">`,
+    })
+    class Host {
+      readonly name = field('David', { hidden: true, nullable: false });
+    }
+
+    const global = globalThis as typeof globalThis & { ngDevMode: unknown };
+    const previousNgDevMode = global.ngDevMode;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      global.ngDevMode = false;
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      global.ngDevMode = previousNgDevMode;
+      warn.mockRestore();
+    }
+  });
+
   it('binds reactive validator constraints to applicable native properties', () => {
     @Component({
       standalone: true,

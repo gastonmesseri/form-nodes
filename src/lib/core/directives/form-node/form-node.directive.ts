@@ -130,6 +130,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
     else throw new Error('formNode: the host must be a native form control, provide a signal custom control, or provide ControlValueAccessor');
     this.bindNodeState();
+    this.warnWhenHidden();
   }
 
   /** Field node bound to the host native control or ControlValueAccessor. */
@@ -280,6 +281,16 @@ export class FormNodeDirective<TValue> implements OnInit {
       }
       if ('pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern()));
       this.renderer.setAttribute(this.element, 'aria-invalid', String(field.invalid()));
+    }, { injector: this.injector });
+  }
+
+  private warnWhenHidden() {
+    if (typeof ngDevMode === 'undefined' || !ngDevMode) return;
+    effect(() => {
+      const field = this.node();
+      if (!field.hidden()) return;
+      const path = field.path().join('.') || '<root>';
+      console.warn(`formNode: field '${path}' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.`);
     }, { injector: this.injector });
   }
 
