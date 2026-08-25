@@ -6,7 +6,7 @@ import { getAsyncValidatorOptions, isAsyncValidator } from '../utils/async-valid
 import { createTrackedRunner, type TrackedRunner } from '../utils/create-reactive-watch';
 import { shallowEqual } from '../utils/shallow-equal';
 import { resolveAsyncValidationResult } from './resolve-async-validation-result';
-import type { AsyncValidationResult, AsyncValidator, AsyncValidatorContext, FieldContext, ParameterizedAsyncValidatorContext, ValidationError, ValidationResult, Validators } from './validation.type';
+import type { AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorContext, AsyncValidatorState, FieldContext, ParameterizedAsyncValidatorContext, ValidationError, ValidationResult, Validators } from './validation.type';
 
 const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => new Promise((resolve) => {
   if (milliseconds <= 0 || signal.aborted) return resolve();
@@ -19,7 +19,7 @@ const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => new P
   signal.addEventListener('abort', finish, { once: true });
 });
 
-export const createAsyncValidation = <TValue, TNode>(
+export const createAsyncValidation = <TValue, TNode extends { api: AsyncValidatorState }>(
   context: FieldContext<TValue>,
   getValidators: () => Validators<TValue>,
   getSyncErrors: () => readonly ValidationError[],
@@ -94,13 +94,15 @@ export const createAsyncValidation = <TValue, TNode>(
     });
     if (validators.length === 0) return;
     if (!isActive() || getSyncErrors().length > 0) return;
+    const api = getTargetNode().api as AsyncValidatorApi<TValue>;
+    const baseContext = { ...context, api };
     if (validators.some((validator) => getAsyncValidatorOptions(validator).params === undefined)) context.value();
     const activeValidators = validators.flatMap((validator) => {
       const options = getAsyncValidatorOptions(validator);
-      if (options.when?.(context) === false) return [];
+      if (options.when?.(baseContext) === false) return [];
       const params = options.params === undefined
         ? undefined
-        : runTrackedParams(validator, () => options.params!(context));
+        : runTrackedParams(validator, () => options.params!(baseContext));
       return [{ options, params, validator }];
     });
     if (activeValidators.length === 0) return;
@@ -126,8 +128,8 @@ export const createAsyncValidation = <TValue, TNode>(
       try {
         const validateAsync = validator as unknown as (context: AsyncValidatorContext<TValue> | ParameterizedAsyncValidatorContext<TValue, unknown>) => AsyncValidationResult;
         const validatorContext = options.params === undefined
-          ? { ...context, abortSignal: controller.signal }
-          : { ...context, abortSignal: controller.signal, params };
+          ? { ...baseContext, abortSignal: controller.signal }
+          : { ...baseContext, abortSignal: controller.signal, params };
         const asyncResult = options.params === undefined
           ? runTracked(validator, () => validateAsync(validatorContext))
           : untracked(() => validateAsync(validatorContext));
@@ -136,7 +138,7 @@ export const createAsyncValidation = <TValue, TNode>(
       } catch (error) {
         if (controller.signal.aborted || currentExecution !== execution) return;
         if (initialPublicationDelay) await initialPublicationDelay;
-        result = options.onError?.(error, context);
+        result = options.onError?.(error, baseContext);
       }
       if (controller.signal.aborted || currentExecution !== execution) {
         controllers.delete(controller);

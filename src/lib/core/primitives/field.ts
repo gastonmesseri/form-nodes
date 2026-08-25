@@ -68,7 +68,6 @@ export type Field<TValue> =
 
 type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { readonly nullable?: true };
 type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { readonly nullable: false };
-
 export function field<TValue extends {}>(
   value: TValue,
   options: NonNullableFieldOptions<NoInfer<TValue>>,

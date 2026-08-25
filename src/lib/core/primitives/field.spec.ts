@@ -203,6 +203,32 @@ describe('field', () => {
     expect(fieldNode.valid()).toBe(true);
   });
 
+  it('exposes its interaction and availability state to an asynchronous validator', async () => {
+    const states: Array<{ dirty: boolean; disabled: boolean; hidden: boolean; readonly: boolean; touched: boolean }> = [];
+    const fieldNode = field('David', [asyncValidator(async ({ api }) => {
+      states.push({
+        dirty: api.dirty(),
+        disabled: api.disabled(),
+        hidden: api.hidden(),
+        readonly: api.readonly(),
+        touched: api.touched(),
+      });
+      return null;
+    })]);
+
+    await Promise.resolve();
+    await Promise.resolve();
+    fieldNode.markAsDirty();
+    fieldNode.markAsTouched();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(states).toEqual([
+      { dirty: false, disabled: false, hidden: false, readonly: false, touched: false },
+      { dirty: true, disabled: false, hidden: false, readonly: false, touched: true },
+    ]);
+  });
+
   it('collects the errors of several validators in order', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const minLength = ({ value }: Context<string | null>) =>

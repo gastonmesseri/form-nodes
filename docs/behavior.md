@@ -20,7 +20,7 @@ The package exports:
 - `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
-- `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
+- `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
 - Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
@@ -277,6 +277,8 @@ const username = field('', [
 ```
 
 `AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context adds an `abortSignal` to the normal field context. Validators can pass it to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
+
+Callbacks receive the complete runtime node `api`. By default it is typed as `AsyncValidatorApi<TValue>`, so value access, validation and interaction state, and common node operations preserve the validated value type. Automatic validators react to API signals they read. Parameterized validators may read API signals explicitly inside `params`; their `validate` callback remains untracked. The exact owner type can be supplied explicitly as the second generic argument for a callback validator, for example `asyncValidator<string | null, FieldApi<string | null>>(...)`. Parameterized validators use the third generic argument: `asyncValidator<TValue, TParams, TApi>({...})`. A future owner-contextual validator declaration signature may infer the exact `FieldApi` or `FormApi` automatically.
 
 `when(context)` is reactive. While it returns `false`, the validator does not evaluate explicit params, invoke the service, expose pending state, or contribute errors. A transition to `true` starts normal validation. A transition to `false` cancels any debounce timer or in-flight Promise or Observable, clears that asynchronous validation state, and makes stale results unobservable.
 

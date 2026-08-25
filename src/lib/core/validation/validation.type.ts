@@ -40,13 +40,55 @@ export type FieldContext<TValue> = {
   readonly value: Signal<TValue>;
 };
 
+/** Non-validation state exposed to asynchronous validator callbacks. */
+export type AsyncValidatorState = {
+  readonly touched: Signal<boolean>;
+  readonly untouched: Signal<boolean>;
+  readonly dirty: Signal<boolean>;
+  readonly pristine: Signal<boolean>;
+  readonly disabled: Signal<boolean>;
+  readonly enabled: Signal<boolean>;
+  readonly readonly: Signal<boolean>;
+  readonly writable: Signal<boolean>;
+  readonly hidden: Signal<boolean>;
+  readonly visible: Signal<boolean>;
+};
+
+/** Common node API exposed to asynchronous validators when no exact owner API is specified. */
+export type AsyncValidatorApi<TValue> = AsyncValidatorState & {
+  readonly value: Signal<TValue>;
+  readonly errors: Signal<readonly ValidationError[]>;
+  readonly valid: Signal<boolean>;
+  readonly invalid: Signal<boolean>;
+  readonly pending: Signal<boolean>;
+  readonly validationStatus: Signal<ValidationStatus>;
+  set(value: TValue): void;
+  reset(...args: [] | [value: TValue]): void;
+  markAsTouched(): void;
+  markAsUntouched(): void;
+  markAsDirty(): void;
+  markAsPristine(): void;
+  disable(): void;
+  enable(): void;
+  markAsReadonly(): void;
+  markAsWritable(): void;
+  hide(): void;
+  show(): void;
+};
+
+/** Reactive context shared by asynchronous validator conditions, params, and handlers. */
+export type AsyncValidatorBaseContext<TValue, TApi = AsyncValidatorApi<TValue>> = FieldContext<TValue> & {
+  /** Complete API of the field or form being validated when explicitly typed. */
+  readonly api: TApi;
+};
+
 export type ValidationStatus = 'valid' | 'invalid' | 'unknown';
 
-export type AsyncValidatorContext<TValue> = FieldContext<TValue> & {
+export type AsyncValidatorContext<TValue, TApi = AsyncValidatorApi<TValue>> = AsyncValidatorBaseContext<TValue, TApi> & {
   readonly abortSignal: AbortSignal;
 };
 
-export type ParameterizedAsyncValidatorContext<TValue, TParams> = AsyncValidatorContext<TValue> & {
+export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi = AsyncValidatorApi<TValue>> = AsyncValidatorContext<TValue, TApi> & {
   /** Snapshot returned by the validator's reactive `params` function. */
   readonly params: TParams;
 };

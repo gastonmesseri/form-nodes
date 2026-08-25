@@ -1,15 +1,15 @@
 import { markAsAsyncValidator, type AsyncValidatorOptions, type ParameterizedAsyncValidatorOptions } from '../utils/async-validator-marker';
-import type { AsyncValidationResult, AsyncValidator, AsyncValidatorContext, ParameterizedAsyncValidatorContext } from './validation.type';
+import type { AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorContext, ParameterizedAsyncValidatorContext } from './validation.type';
 
-export type ParameterizedAsyncValidatorConfig<TValue, TParams> = ParameterizedAsyncValidatorOptions<TValue, TParams> & {
-  readonly validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams>) => AsyncValidationResult;
+export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi = AsyncValidatorApi<TValue>> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi> & {
+  readonly validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams, TApi>) => AsyncValidationResult;
 };
 
 /** Creates a reactive Promise- or Observable-based validator, optionally with explicit params. */
-export function asyncValidator<TValue, TParams>(config: ParameterizedAsyncValidatorConfig<TValue, TParams>): AsyncValidator<TValue>;
-export function asyncValidator<TValue>(
-  validator: (context: AsyncValidatorContext<TValue>) => AsyncValidationResult,
-  options?: AsyncValidatorOptions<TValue>,
+export function asyncValidator<TValue, TParams, TApi = AsyncValidatorApi<TValue>>(config: ParameterizedAsyncValidatorConfig<TValue, TParams, TApi>): AsyncValidator<TValue>;
+export function asyncValidator<TValue, TApi = AsyncValidatorApi<TValue>>(
+  validator: (context: AsyncValidatorContext<TValue, TApi>) => AsyncValidationResult,
+  options?: AsyncValidatorOptions<TValue, TApi>,
 ): AsyncValidator<TValue>;
 export function asyncValidator<TValue, TParams>(
   validatorOrConfig:
