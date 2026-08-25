@@ -278,6 +278,8 @@ const username = field('', [
 
 `AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context adds an `abortSignal` to the normal field context. Validators can pass it to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
 
+`when(context)` is reactive. While it returns `false`, the validator does not evaluate explicit params, invoke the service, expose pending state, or contribute errors. A transition to `true` starts normal validation. A transition to `false` cancels any debounce timer or in-flight Promise or Observable, clears that asynchronous validation state, and makes stale results unobservable.
+
 For explicit dependency tracking, pass a reactive `params(context)` function. Its return value is captured synchronously and passed to the validator as a stable, typed snapshot:
 
 ```ts

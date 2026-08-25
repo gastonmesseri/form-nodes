@@ -180,6 +180,29 @@ describe('field', () => {
     expect(validate).toHaveBeenCalledTimes(2);
   });
 
+  it('reactively includes or excludes an asynchronous validator through when', async () => {
+    const enabled = signal(false);
+    const validate = vi.fn(async () => ({ kind: 'nameTaken' }));
+    const fieldNode = field('David', [asyncValidator(validate, {
+      when: () => enabled(),
+    })]);
+
+    expect(fieldNode.valid()).toBe(true);
+    expect(validate).not.toHaveBeenCalled();
+
+    enabled.set(true);
+    await Promise.resolve();
+    expect(fieldNode.pending()).toBe(true);
+    await Promise.resolve();
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'nameTaken' }]);
+
+    enabled.set(false);
+    await Promise.resolve();
+    expect(fieldNode.pending()).toBe(false);
+    expect(fieldNode.errors()).toEqual([]);
+    expect(fieldNode.valid()).toBe(true);
+  });
+
   it('collects the errors of several validators in order', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const minLength = ({ value }: Context<string | null>) =>
