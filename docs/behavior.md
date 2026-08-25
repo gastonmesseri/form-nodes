@@ -1324,6 +1324,28 @@ The directive currently provides these behaviors:
 - The directive supports server rendering for native controls and custom `ControlValueAccessor` components. Initial value and node-state bindings are rendered on the server, while browser-only select option observation is installed only in a browser environment. Native value conversion identifies controls structurally instead of depending on browser constructor globals.
 - Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
 
+### Explicit signal-control registration
+
+Automatic `FormValueControl` discovery is the zero-configuration path. A custom component may instead register itself explicitly with `provideFormNodeControl()`. This guarantees that `[formNode]` finds the intended control without relying on discovery from Angular's compiled input/output metadata and is the recommended fallback for components with unusual metadata, wrappers, host directives, or stricter compatibility requirements.
+
+```ts
+@Component({
+  selector: 'app-date-picker',
+  providers: [provideFormNodeControl(() => DatePicker)],
+  template: `...`,
+})
+export class DatePicker implements FormNodeValueControl<Date | null> {
+  value = model<Date | null>(null);
+  node = signal<Field<Date | null> | null>(null);
+}
+```
+
+```html
+<app-date-picker [formNode]="form.birthDate" />
+```
+
+The provider is optional and does not replace Angular's `FormValueControl` model contract: the component still exposes `value = model<T>()`, or `checked = model<boolean>()` for checkbox controls. The optional `node` signal receives the exact bound field, allowing the component to derive additional UI state directly. Supplying the provider avoids automatic control discovery; if the component also declares Angular read-only state inputs such as `disabled` or `errors`, synchronizing those inputs still uses the isolated Angular compatibility adapter described below. A component can avoid that state-input adapter by deriving such state from `node()` instead.
+
 ### Native parse errors
 
 Native controls parse their raw UI state before calling `setControlValue()`. If the browser reports
@@ -1349,6 +1371,8 @@ destroyed. No validity observer or style is installed during server rendering.
 This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
 
 The architecture follows Angular 22 Signal Forms `FormField`, `FormValueControl`, and `FormCheckboxControl` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), especially `packages/forms/signals/src/directive/form_field.ts` and `packages/forms/signals/src/api/types.ts`, while keeping the public name and node model specific to this library. Angular's compiler expansion is specifically tied to a `[formField]` binding, so `[formNode]` performs its own defensive discovery through the public `getDebugNode()` and `reflectComponentType()` APIs. Updating read-only `InputSignal` state uses a small isolated adapter around Angular's `ɵSIGNAL`/`InputSignalNode` mechanism; this compatibility boundary is covered by JIT, full-AOT, server-rendering, hydration, OnPush, and real-Chromium tests. Signal interoperability remains a directive concern and does not change field semantics.
+
+This adapter is intentionally a temporary compatibility boundary, not the desired long-term architecture. Every Angular upgrade must re-evaluate whether a public API can replace direct `InputSignalNode` writes—for example, a supported way for a host directive to obtain the existing component's `ComponentRef` and call `setInput()`, or a new public Signal Forms interoperability protocol. Prefer that public mechanism as soon as Angular provides one, remove the `ɵSIGNAL` dependency, and retain the current AOT, SSR, hydration, OnPush, and browser tests as migration acceptance criteria. Until then, the internal access must remain isolated in `signal-control-inputs.ts`; it must not spread into the node primitives or public API.
 
 ## Internal structural behavior
 
