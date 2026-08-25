@@ -1,7 +1,7 @@
 import { APP_ID, effect, reflectComponentType, untracked, ɵSIGNAL, type Injector, type Type, type ɵInputSignalNode } from '@angular/core';
 
 import { getFormNodeName } from './form-node-name';
-import type { Field } from '../../primitives/field';
+import type { Field } from '../../../primitives/field';
 
 type InputSignal = ((...args: never[]) => unknown) & {
   [ɵSIGNAL]?: ɵInputSignalNode<unknown, unknown>;

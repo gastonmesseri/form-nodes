@@ -1,17 +1,17 @@
 import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit } from '@angular/core';
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
-import { getFormNodeName } from './form-node-name';
 import type { Field } from '../../primitives/field';
 import { connectSignalControl } from './signal-control';
+import { getFormNodeName } from './utils/form-node-name';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { discoverSignalControl } from './discover-signal-control';
-import { connectSignalControlInputs } from './signal-control-inputs';
+import { discoverSignalControl } from './utils/discover-signal-control';
 import type { ValidationError } from '../../validation/validation.type';
+import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
-import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './native-input-validity';
-import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control';
+import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
+import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
 
 export const FORM_NODE = new InjectionToken<FormNodeDirective<unknown>>('FORM_NODE');
 

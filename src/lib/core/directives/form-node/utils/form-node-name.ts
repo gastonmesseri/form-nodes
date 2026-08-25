@@ -1,5 +1,5 @@
-import type { Node } from '../../types/node.type';
-import type { Field } from '../../primitives/field';
+import type { Node } from '../../../types/node.type';
+import type { Field } from '../../../primitives/field';
 
 const rootNames = new WeakMap<Node, string>();
 let nextRootId = 0;
