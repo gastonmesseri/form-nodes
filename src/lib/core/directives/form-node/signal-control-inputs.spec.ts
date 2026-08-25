@@ -45,7 +45,7 @@ describe('connectSignalControlInputs', () => {
     connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
 
-    expect(fixture.componentInstance.name()).toBe('name');
+    expect(fixture.componentInstance.name()).toMatch(/\.form\d+\.name$/);
     expect(fixture.componentInstance.required()).toBe(true);
     expect(fixture.componentInstance.invalid()).toBe(true);
     expect(fixture.componentInstance.errors()).toHaveLength(1);

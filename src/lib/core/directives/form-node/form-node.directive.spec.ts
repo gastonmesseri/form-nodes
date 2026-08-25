@@ -143,6 +143,7 @@ describe('FormNodeDirective', () => {
     const { profile } = fixture.componentInstance;
 
     expect(input.value).toBe('Zurich');
+    expect(input.name).toMatch(/\.form\d+\.address\.city$/);
     expect(profile.address.city.path()).toEqual(['address', 'city']);
     expect(profile.address.city.parent()).toBe(profile.address);
     expect(profile.address.city.form()).toBe(profile);
@@ -154,6 +155,30 @@ describe('FormNodeDirective', () => {
     profile.patch({ address: { city: 'Geneva' } });
     fixture.detectChanges();
     expect(input.value).toBe('Geneva');
+  });
+
+  it('assigns distinct generated names to fields from different root trees', () => {
+    @Component({
+      standalone: true,
+      selector: 'root-field-names-form-node-host',
+      imports: [FormNodeDirective],
+      template: `
+        <input [formNode]="first">
+        <input [formNode]="second">
+      `,
+    })
+    class Host {
+      readonly first = field('first', { nullable: false });
+      readonly second = field('second', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const [first, second] = fixture.nativeElement.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
+
+    expect(first!.name).toMatch(/\.form\d+$/);
+    expect(second!.name).toMatch(/\.form\d+$/);
+    expect(second!.name).not.toBe(first!.name);
   });
 
   it('keeps the last valid numeric model value and contributes parse errors to its form tree', () => {
@@ -383,6 +408,8 @@ describe('FormNodeDirective', () => {
 
     expect(madrid!.checked).toBe(false);
     expect(zurich!.checked).toBe(true);
+    expect(madrid!.name).toMatch(/\.form\d+$/);
+    expect(zurich!.name).toBe(madrid!.name);
 
     dispatch(madrid!, 'change');
     expect(fixture.componentInstance.city()).toBe('Zurich');

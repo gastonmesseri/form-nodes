@@ -54,6 +54,12 @@ describe('FormNodeDirective in Chromium', () => {
       ['a', 'Madrid'],
       ['b', 'Zurich'],
     ]);
+    const rootName = initial[0]!.name.replace(/\.0\.city$/, '');
+    expect(rootName).toMatch(/\.form\d+$/);
+    expect(initial.map(input => input.name)).toEqual([
+      `${rootName}.0.city`,
+      `${rootName}.1.city`,
+    ]);
 
     fixture.componentInstance.addresses.push({ id: 'c', city: 'Bern' });
     fixture.detectChanges();
@@ -63,6 +69,11 @@ describe('FormNodeDirective in Chromium', () => {
     fixture.detectChanges();
     const moved = inputs();
     expect(moved.map(input => input.dataset['id'])).toEqual(['c', 'a', 'b']);
+    expect(moved.map(input => input.name)).toEqual([
+      `${rootName}.0.city`,
+      `${rootName}.1.city`,
+      `${rootName}.2.city`,
+    ]);
     expect(moved[1]).toBe(initial[0]);
     expect(moved[2]).toBe(initial[1]);
 
