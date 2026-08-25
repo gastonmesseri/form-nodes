@@ -5,6 +5,7 @@ import type { Field } from '../../primitives/field';
 import { FORM_NODE_CONFIG } from './form-node-config';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
+import { shallowEqual } from '../../utils/shallow-equal';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { discoverSignalControl } from './utils/discover-signal-control';
 import type { ValidationError } from '../../validation/validation.type';
@@ -16,7 +17,8 @@ import { registerExternalValidationErrors } from '../../validation/external-vali
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
 
-export const FORM_NODE = new InjectionToken<FormNodeDirective<Node>>('FORM_NODE');
+/** Public injection token for the nearest `[formNode]` binding. */
+export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
 
 const builtInAccessors = [
   CheckboxControlValueAccessor,
@@ -78,17 +80,17 @@ const formatNativePattern = (patterns: readonly RegExp[]): string => {
   exportAs: 'formNode',
   standalone: true,
   providers: [
-    { provide: FORM_NODE, useExisting: forwardRef(() => FormNodeDirective) },
-    { provide: NgControl, useFactory: () => inject(FormNodeDirective).ngControl },
+    { provide: FORM_NODE, useExisting: forwardRef(() => _FormNode) },
+    { provide: NgControl, useFactory: () => inject(_FormNode)._ngControl },
   ],
 })
-export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
-  /** **Internal:** Signal input backing the `[formNode]` binding. Consumers should use `field` or `node` instead. */
-  formNodeInput = input.required<TNode>({ alias: 'formNode' });
+export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNode>, OnInit {
+  /** @internal */
+  readonly _formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
   private renderer = inject(Renderer2);
 
-  private injector = inject(Injector);
+  readonly injector = inject(Injector);
 
   private destroyRef = inject(DestroyRef);
 
@@ -96,9 +98,9 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
 
   private appId = inject(APP_ID);
 
-  private element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
-  private _ngControl: FormNodeNgControl | undefined;
+  private interopNgControl: FormNodeNgControl | undefined;
 
   private nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
 
@@ -121,14 +123,13 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /** Current bound field, exposed as a signal for custom integrations. */
-  node = computed(() => this.field);
+  readonly node = computed<TNode>(() => this._field);
 
-  private classBinding: FormNodeBinding = {
-    element: this.element,
-    injector: this.injector,
-    node: this.node as Signal<Node>,
-    focus: (options) => this.focus(options),
-  };
+  /** Errors visible to this binding, excluding errors owned by another binding. */
+  readonly errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]> = computed(() => {
+    const errors = this.node().$api.errors() as readonly ValidationError.WithTargetNode<TNode>[];
+    return errors.filter((error) => !error.formNode || error.formNode === this);
+  }, { equal: shallowEqual });
 
   constructor() {
     this.destroyRef.onDestroy(() => { this.destroyed = true; });
@@ -150,7 +151,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   private installClassBindingEffect() {
     const classes = Object.entries(this.config?.classes ?? {}).map(([className, predicate]) => [
       className,
-      computed(() => predicate(this.classBinding)),
+      computed(() => predicate(this)),
     ] as const);
     if (classes.length === 0) return;
     const appliedClasses = new Map<string, boolean>();
@@ -169,28 +170,28 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   }
 
   /** Field, form, or array node bound to the host control. */
-  get field(): TNode {
-    const node = this.formNodeInput();
+  get _field(): TNode {
+    const node = this._formNodeInput();
     if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
       throw new Error('formNode: a field, form, or array node is required');
     }
     return node;
   }
 
-  /** Fake `NgControl` exposed for interoperability with existing Angular controls. */
-  get ngControl(): FormNodeNgControl {
-    return (this._ngControl ??= new FormNodeNgControl(() => this.field));
+  /** @internal Fake `NgControl` exposed only through Angular dependency injection. */
+  get _ngControl(): FormNodeNgControl {
+    return (this.interopNgControl ??= new FormNodeNgControl(() => this._field));
   }
 
   private connectAccessor(accessor: ControlValueAccessor) {
-    this.ngControl.valueAccessor = accessor;
+    this._ngControl.valueAccessor = accessor;
     accessor.registerOnChange((value: unknown) => {
       if (this.destroyed || this.writingAccessorValue) return;
       this.lastViewValue = value;
-      (this.field as unknown as InternalNode).$api._setControlValue(value);
+      (this._field as unknown as InternalNode).$api._setControlValue(value);
     });
     accessor.registerOnTouched(() => {
-      if (!this.destroyed) this.field.$api.markAsTouched();
+      if (!this.destroyed) this._field.$api.markAsTouched();
     });
     effect(() => {
       const value = (this.node() as unknown as InternalNode).$api._controlValue();
@@ -212,11 +213,11 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
       }, { injector: this.injector });
     }
     this.connectLegacyValidators();
-    connectSignalControlInputs(accessor, () => this.field, this.injector);
+    connectSignalControlInputs(accessor, () => this._field, this.injector);
   }
 
   private connectSignalCustomControl(control: FormNodeControl<NodeValue<TNode>, TNode>) {
-    const connection = connectSignalControl(control, () => this.field, this.injector);
+    const connection = connectSignalControl(control, () => this._field, this.injector);
     this.focuser = connection.focus ?? this.focuser;
   }
 
@@ -234,7 +235,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     ));
     const errors = computed(() => {
       version();
-      return toControlErrors(validator?.(this.ngControl.control) ?? null);
+      return toControlErrors(validator?.(this._ngControl.control) ?? null);
     });
     effect((onCleanup) => {
       const field = this.node();
@@ -246,7 +247,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     const parseErrors = signal<readonly ValidationError.WithoutTargetNode[]>([]);
     const bindingParseErrors = computed(() => parseErrors().map((error) => ({
       ...error,
-      formNode: this.classBinding,
+      formNode: this,
     })));
     const commit = () => {
       if (this.composing || this.destroyed) return;
@@ -259,7 +260,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     };
     const unlistenInput = this.renderer.listen(control, 'input', commit);
     const unlistenChange = this.renderer.listen(control, 'change', commit);
-    const unlistenBlur = this.renderer.listen(control, 'blur', () => this.field.$api.markAsTouched());
+    const unlistenBlur = this.renderer.listen(control, 'blur', () => this._field.$api.markAsTouched());
     const unlistenCompositionStart = this.renderer.listen(control, 'compositionstart', () => { this.composing = true; });
     const unlistenCompositionEnd = this.renderer.listen(control, 'compositionend', () => {
       this.composing = false;
@@ -349,18 +350,24 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   }
 
   flush() {
-    this.field.$api.flush();
+    this._field.$api.flush();
   }
 
   reset() {
-    this.field.$api.reset();
+    this._field.$api.reset();
   }
 
   private getNativeField(): Field<NodeValue<TNode>> {
-    const node = this.field as unknown as Partial<Field<NodeValue<TNode>>>;
+    const node = this._field as unknown as Partial<Field<NodeValue<TNode>>>;
     if (typeof node.controlValue !== 'function') {
       throw new Error('formNode: native controls require a field node');
     }
     return node as Field<NodeValue<TNode>>;
   }
 }
+
+/** Public Angular directive value used in component imports and dependency injection. */
+export const FormNode = _FormNode;
+
+/** Public instance view exposed by `[formNode]` template references and queries. */
+export type FormNode<TNode extends Node = Node> = FormNodeBinding<TNode>;

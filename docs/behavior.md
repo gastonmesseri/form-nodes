@@ -1350,11 +1350,11 @@ interpret returned server-validation errors.
 
 ## Control binding with `[formNode]`
 
-`FormNodeDirective` binds a field node to a native form control, and binds field, form, or array nodes to an explicitly provided signal custom control or a component that implements Angular's `ControlValueAccessor` contract:
+`FormNode` binds a field node to a native form control, and binds field, form, or array nodes to an explicitly provided signal custom control or a component that implements Angular's `ControlValueAccessor` contract:
 
 ```ts
 @Component({
-  imports: [FormNodeDirective],
+  imports: [FormNode],
   template: `
     <input [formNode]="name">
     <select [formNode]="country">
@@ -1387,12 +1387,70 @@ The directive currently provides these behaviors:
 - When several Angular accessors match, selection follows Angular's precedence: one custom accessor, then one specialized built-in accessor, then the default accessor. Multiple accessors within the selected category are rejected as ambiguous.
 - Synchronous validators provided by a CVA through `NG_VALIDATORS` participate in the field's real validation state. Their Angular validation key becomes `error.kind`, and `registerOnValidatorChange()` invalidates the reactive result. These binding-owned errors are suppressed with the field's other errors while it is disabled, readonly, or hidden and are removed when the binding is destroyed or changes field.
 - `NG_ASYNC_VALIDATORS` are not adapted by this CVA compatibility layer. Asynchronous validation belongs to the node's `asyncValidator()` pipeline, which owns cancellation, pending state, debounce, and stale-result handling explicitly.
-- Exporting the directive as `#binding="formNode"` provides `focus()`, `flush()`, and `reset()` operations and a reactive `node` reference.
+- Exporting the directive as `#binding="formNode"` provides the typed public binding API. `node` is the single reactive reference to the current bound node. `focus()`, `flush()`, and `reset()` operate on this concrete binding or its current node. The binding also exposes its host `element`, host `injector`, and a reactive `errors` signal.
+- `binding.errors()` contains every error of the current node that is not owned by a concrete control, plus only the control-specific errors whose `formNode` is that binding. When two controls bind the same field, a native parse error from one control therefore remains absent from the other binding's errors even though the field aggregates both errors. Rebinding updates `node` and `errors` together, and binding-produced errors use the directive itself as their stable `formNode` identity.
 - Every field, form, and array node also exposes `focus(options?)`. A field focuses the first of its current `[formNode]` bindings in DOM order. Forms and arrays search their current descendant bindings and focus the first rendered control in DOM order, independent of schema or array order. Signal custom controls use their optional `focus()` hook; native controls and CVAs focus the host element. Calling `focus()` without a bound control is a no-op, and destroyed or rebound directives are removed from the selection immediately. If a form child is named `focus`, that child keeps direct-property precedence and the operation remains available through `form.api.focus()`.
 - Destroying the directive removes DOM listeners, disconnects select observation, and destroys its reactive effects through Angular's `DestroyRef` ownership.
 - The directive supports server rendering for native controls and custom `ControlValueAccessor` components. Initial value and node-state bindings are rendered on the server, while browser-only select option observation is installed only in a browser environment. Native value conversion identifies controls structurally instead of depending on browser constructor globals.
 - Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
 - In development, `[formNode]` warns whenever its bound field is hidden while the control remains rendered. The warning identifies the reactive field path, using `<root>` for a standalone root field. `hidden` is form state and does not manipulate DOM visibility: templates should remove hidden controls with `@if`. No warning is installed in production.
+
+### Importing `FormNode`
+
+Import the capitalized `FormNode` symbol from the package entry point and add it to the component's `imports`. The template binding remains the lower-camel-case `[formNode]` input:
+
+```ts
+import { Component } from '@angular/core';
+
+import { field, FormNode } from '@gem/ng-forms';
+
+@Component({
+  imports: [FormNode],
+  template: `<input [formNode]="name">`,
+})
+class ProfileEditor {
+  readonly name = field('', { nullable: false });
+}
+```
+
+`FormNode` deliberately serves two TypeScript namespaces: it is the Angular directive value used in `imports`, and it is the clean generic instance type used by queries. Applications should import neither `_FormNode` nor a deep path beneath the package entry point.
+
+### Querying a binding with `viewChild()`
+
+Assign the directive's `formNode` export to a template reference, then query that reference by name with the signal-based `viewChild.required()` API. Parameterize `FormNode` with the exact node type to preserve the field, form, or array returned by `node()` without exposing Angular lifecycle and input infrastructure:
+
+```ts
+import { Component, viewChild } from '@angular/core';
+
+import { field, FormNode } from '@gem/ng-forms';
+
+@Component({
+  imports: [FormNode],
+  template: `<input #nameBinding="formNode" [formNode]="name">`,
+})
+class ProfileEditor {
+  readonly name = field('', { nullable: false });
+  readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
+
+  focusName() {
+    const binding = this.nameBinding();
+    const node = binding.node();
+
+    node.set('Daniel');
+    binding.focus();
+  }
+}
+```
+
+The three related names have distinct roles:
+
+- `FormNode` is the imported Angular directive value and its public instance type.
+- `[formNode]` binds a field, form, or array node to the control.
+- `#nameBinding="formNode"` exports that concrete binding to the template; `nameBinding` is the local reference queried by `viewChild.required<FormNode<...>>('nameBinding')`.
+
+The resulting query is a signal. Calling `nameBinding()` returns the binding; calling its `node()` signal returns the currently bound node. The remaining public binding API is `errors`, `element`, `injector`, `focus()`, `flush()`, and `reset()`.
+
+The package exposes an `_FormNode` symbol solely because Angular's AOT compiler and linker must import the decorated implementation from the package entry point. It is framework infrastructure and must not be used by applications. `FormNodeBinding` remains available as the generic structural type for configuration callbacks and code that should not be named after the Angular directive.
 
 ### Automatic CSS classes
 
@@ -1414,9 +1472,9 @@ bootstrapApplication(App, {
 
 Each class predicate has its own computed reactive context. A predicate reruns only when a signal it read changes, including signals unrelated to the bound node. After rendering, `[formNode]` adds the class when the predicate returns `true` and removes it when it returns `false`. The nearest injected configuration applies to the binding.
 
-The predicate receives a stable `FormNodeBinding` with the host `element`, its `injector`, the reactive `node` reference, and the binding-specific `focus()` operation. Generic binding code uses `$api` because the bound form may legally contain a child named `api`; this is one of the cases for which the collision-safe escape hatch exists.
+The predicate receives the same stable `FormNodeBinding` exposed by the template directive, including the host `element`, its `injector`, the reactive `node` and binding-filtered `errors` signals, and the binding-specific operations. Generic binding code uses `$api` because the bound form may legally contain a child named `api`; this is one of the cases for which the collision-safe escape hatch exists.
 
-This behavior follows Angular Signal Forms' automatic status classes as inspected in Angular `22.1.3`, specifically `SignalFormsConfig`, `provideSignalFormsConfig()`, and `FormField.installClassBindingEffect()` in `packages/forms/signals/src/directive/form_field.ts`.
+This behavior follows Angular Signal Forms as inspected in Angular `22.1.4`, commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, specifically `FormField.errors`, `FormField.focus()`, `FormField.reset()`, and `FormField.installClassBindingEffect()` in `packages/forms/signals/src/directive/form_field.ts`, the public `FormFieldBinding` in `packages/forms/signals/src/api/types.ts`, and the binding coverage in `packages/forms/signals/test/web/form_field.spec.ts`.
 
 ### Explicit signal-control registration
 

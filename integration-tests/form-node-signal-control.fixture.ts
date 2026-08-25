@@ -1,7 +1,7 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output } from '@angular/core';
 
-import { field, FormNodeDirective, required } from '../src/public-api';
+import { field, FormNode, required } from '../src/public-api';
 
 @Component({
   standalone: true,
@@ -33,7 +33,7 @@ export class AotSignalCheckboxControl implements FormCheckboxControl {
 @Component({
   standalone: true,
   selector: 'aot-signal-control-host',
-  imports: [AotSignalValueControl, AotSignalCheckboxControl, FormNodeDirective],
+  imports: [AotSignalValueControl, AotSignalCheckboxControl, FormNode],
   template: `
     <aot-signal-value-control [formNode]="name" />
     <aot-signal-checkbox-control [formNode]="active" />

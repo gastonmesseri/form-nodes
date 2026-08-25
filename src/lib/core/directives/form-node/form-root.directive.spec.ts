@@ -8,12 +8,12 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
-import { FormNodeDirective } from './form-node.directive';
+import { FormNode } from './form-node.directive';
 import { FormRootDirective } from './form-root.directive';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
+registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 registerSignalInputForJit(FormRootDirective, 'formNode', 'form');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
@@ -50,7 +50,7 @@ describe('FormRootDirective', () => {
 
     @Component({
       standalone: true,
-      imports: [FormNodeDirective, FormRootDirective],
+      imports: [FormNode, FormRootDirective],
       template: `<form [formNode]="profile"><input [formNode]="profile.name"></form>`,
     })
     class Host {
