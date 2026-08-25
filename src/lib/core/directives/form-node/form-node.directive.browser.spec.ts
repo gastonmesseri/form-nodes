@@ -8,6 +8,7 @@ import { CSP_NONCE, Component, ViewEncapsulation, forwardRef, input, model, outp
 
 import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
+import { form } from '../../primitives/form';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
@@ -524,6 +525,52 @@ describe('FormNodeDirective in Chromium', () => {
 
     fixture.componentInstance.name.reset();
     expect(valueControl.resetCalls).toBe(1);
+    fixture.destroy();
+  });
+
+  it('binds an aggregate form to an Angular FormValueControl in Chromium', () => {
+    type ProfileValue = { name: string | null; age: number | null };
+
+    @Component({
+      standalone: true,
+      selector: 'browser-profile-control',
+      template: `<button type="button" (click)="value.set({ name: 'Mark', age: 31 })">{{ value().name }}</button>`,
+    })
+    class BrowserProfileControl implements FormValueControl<ProfileValue> {
+      value = model<ProfileValue>({ name: null, age: null });
+    }
+
+    registerSignalModelForJit(BrowserProfileControl, 'value');
+
+    @Component({
+      standalone: true,
+      selector: 'browser-profile-control-host',
+      imports: [BrowserProfileControl, FormNodeDirective],
+      template: `<browser-profile-control [formNode]="profile" />`,
+    })
+    class Host {
+      profile = form({ name: field('David'), age: field(42) });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as BrowserProfileControl;
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+
+    expect(control.value()).toEqual({ name: 'David', age: 42 });
+
+    button.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.profile()).toEqual({ name: 'Mark', age: 31 });
+    expect(fixture.componentInstance.profile.dirty()).toBe(true);
+    expect(fixture.componentInstance.profile.name.pristine()).toBe(true);
+    expect(fixture.componentInstance.profile.age.pristine()).toBe(true);
+
+    fixture.componentInstance.profile.markAsPristine();
+    fixture.componentInstance.profile.set({ name: 'Ada', age: 37 });
+    fixture.detectChanges();
+    expect(control.value()).toEqual({ name: 'Ada', age: 37 });
+    expect(fixture.componentInstance.profile.pristine()).toBe(true);
     fixture.destroy();
   });
 

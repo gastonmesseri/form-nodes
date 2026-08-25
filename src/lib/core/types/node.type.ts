@@ -15,6 +15,7 @@ export type NodeControlBinding = {
 export type NodeApi = {
   form: Signal<Node | null>;
   path: Signal<readonly string[]>;
+  value: Signal<any>;
   /**
    * Property or array index under which this node is stored, or `null` when it is a root node.
    *
@@ -28,6 +29,7 @@ export type NodeApi = {
   reset(...args: [] | [value: any]): void;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  errors: Signal<readonly { readonly kind: string; readonly targetNode: Node }[]>;
   allErrors: Signal<readonly { readonly kind: string; readonly targetNode: Node }[]>;
   getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: Node }) | undefined;
   required: Signal<boolean>;
@@ -38,18 +40,23 @@ export type NodeApi = {
   /** Focuses the first control bound to this node or its descendants, when one exists. */
   focus(options?: FocusOptions): void;
   touched: Signal<boolean>;
+  untouched: Signal<boolean>;
   markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
+  pristine: Signal<boolean>;
   markAsDirty(): void;
   markAsPristine(): void;
   disabled: Signal<boolean>;
+  enabled: Signal<boolean>;
   disable(): void;
   enable(): void;
   readonly: Signal<boolean>;
+  writable: Signal<boolean>;
   markAsReadonly(): void;
   markAsWritable(): void;
   hidden: Signal<boolean>;
+  visible: Signal<boolean>;
   hide(): void;
   show(): void;
 };
@@ -70,9 +77,11 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
     : Node;
 export type InternalNodeApi = NodeApi & {
   _controlDebounce: Signal<number | undefined>;
+  _controlValue: Signal<any>;
+  _setControlValue(value: any): void;
   _clone(): Node;
   _setParent(parent: Node | null, key?: string | number): void;
-  _registerControlBinding?(binding: NodeControlBinding): () => void;
+  _registerControlBinding(binding: NodeControlBinding): () => void;
   _getControlBindingForFocus(): NodeControlBinding | undefined;
 };
 export type InternalNode = (() => any) & { api: InternalNodeApi };

@@ -9,14 +9,15 @@ import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
-import { firstControlBindingInDom } from '../utils/node-control-binding';
+import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createAsyncValidation } from '../validation/create-async-validation';
-import type { InternalNode, Node, NodeDefinitions } from '../types/node.type';
+import type { InternalNode, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNode, NormalizedNodes } from './form.type';
 
 export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
@@ -55,6 +56,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfTouched = signal(false);
   const formSelfDirty = signal(false);
+  const formControlBindings = new Set<NodeControlBinding>();
   const formSelfSubmitting = signal(false);
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
@@ -102,7 +104,10 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     () => formNode,
     () => !formNonInteractive(),
   );
-  const formErrors = computed(() => [...formSyncErrors(), ...asyncValidation.errors()]);
+  const formControlErrors = computed(() => formNonInteractive()
+    ? []
+    : readExternalValidationErrors(formNode));
+  const formErrors = computed(() => [...formSyncErrors(), ...asyncValidation.errors(), ...formControlErrors()]);
   const formAllErrors = computed(
     () => [
       ...formErrors(),
@@ -166,6 +171,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const reset = (...args: [] | [value: FormSet<TNodes>]) => {
     formSelfTouched.set(false);
     formSelfDirty.set(false);
+    notifyExternalValidationReset(formNode);
     if (args.length === 0) {
       controlKeys().forEach((key) => controls[key]!.api.reset());
       return;
@@ -173,9 +179,13 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     const value = args[0];
     controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
   };
-  const getControlBindingForFocus = () => controlKeys()
-    .map((key) => (controls[key] as InternalNode).api._getControlBindingForFocus())
-    .reduce(firstControlBindingInDom, undefined);
+  const getControlBindingForFocus = () => {
+    const own = findFirstControlBindingInDom(formControlBindings);
+    if (own) return own;
+    return controlKeys()
+      .map((key) => (controls[key] as InternalNode).api._getControlBindingForFocus())
+      .reduce(firstControlBindingInDom, undefined);
+  };
   const submit = async (): Promise<boolean> => {
     if (untracked(formSubmitting)) return false;
     const submission = resolvedOptions?.submission;
@@ -255,10 +265,19 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const internalApi = {
     ...api,
     _controlDebounce: formControlDebounce,
+    _controlValue: formValue,
+    _setControlValue: (value: FormSet<TNodes>) => {
+      set(value);
+      formSelfDirty.set(true);
+    },
     _clone: () => form(createDefinitions(), validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);
       formKeyInParent.set(parent ? key ?? null : null);
+    },
+    _registerControlBinding: (binding: NodeControlBinding) => {
+      formControlBindings.add(binding);
+      return () => { formControlBindings.delete(binding); };
     },
     _getControlBindingForFocus: getControlBindingForFocus,
   };

@@ -11,6 +11,7 @@ import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import { array } from '../../primitives/array';
 import type { Field } from '../../primitives/field';
+import type { Node } from '../../types/node.type';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { FormNodeDirective } from './form-node.directive';
@@ -22,7 +23,7 @@ import { minDate } from '../../validation/validators/min-date';
 import { required } from '../../validation/validators/required';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
-import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
@@ -79,6 +80,125 @@ describe('FormNodeDirective', () => {
 
     fixture.componentInstance.name.focus({ preventScroll: true });
     expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
+  it('binds a FormValueControl to an aggregate form node', () => {
+    type ProfileValue = { name: string | null; age: number | null };
+
+    @Component({ standalone: true, selector: 'aggregate-form-control', template: '' })
+    class AggregateFormControl {
+      value = model<ProfileValue>({ name: null, age: null });
+      disabled = input(false);
+      dirty = input(false);
+      reset = vi.fn();
+      focus = vi.fn();
+    }
+    registerSignalModelForJit(AggregateFormControl, 'value');
+    registerSignalInputForJit(AggregateFormControl, 'disabled', 'disabled');
+    registerSignalInputForJit(AggregateFormControl, 'dirty', 'dirty');
+
+    @Component({
+      standalone: true,
+      selector: 'aggregate-form-control-host',
+      imports: [AggregateFormControl, FormNodeDirective],
+      template: `<aggregate-form-control [formNode]="profile" />`,
+    })
+    class Host {
+      readonly profile = form({ name: field('David'), age: field(42) });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as AggregateFormControl;
+    const { profile } = fixture.componentInstance;
+
+    expect(control.value()).toEqual({ name: 'David', age: 42 });
+    expect(control.dirty()).toBe(false);
+
+    control.value.set({ name: 'Lia', age: 30 });
+    fixture.detectChanges();
+    expect(profile()).toEqual({ name: 'Lia', age: 30 });
+    expect(profile.dirty()).toBe(true);
+    expect(profile.name.pristine()).toBe(true);
+    expect(profile.age.pristine()).toBe(true);
+    expect(control.dirty()).toBe(true);
+
+    profile.markAsPristine();
+    profile.set({ name: 'Ada', age: 37 });
+    fixture.detectChanges();
+    expect(control.value()).toEqual({ name: 'Ada', age: 37 });
+    expect(profile.pristine()).toBe(true);
+
+    profile.focus({ preventScroll: true });
+    expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
+
+    profile.reset();
+    expect(control.reset).toHaveBeenCalledOnce();
+  });
+
+  it('binds a FormValueControl to an aggregate array and reconciles its nodes', () => {
+    type PersonValue = { name: string | null };
+
+    @Component({ standalone: true, selector: 'aggregate-array-control', template: '' })
+    class AggregateArrayControl {
+      value = model<PersonValue[]>([]);
+      reset = vi.fn();
+      focus = vi.fn();
+    }
+    registerSignalModelForJit(AggregateArrayControl, 'value');
+
+    @Component({
+      standalone: true,
+      selector: 'aggregate-array-control-host',
+      imports: [AggregateArrayControl, FormNodeDirective],
+      template: `<aggregate-array-control [formNode]="people" />`,
+    })
+    class Host {
+      readonly people = array({ name: field('') }, [{ name: 'David' }]);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as AggregateArrayControl;
+    const { people } = fixture.componentInstance;
+    const originalItem = people[0];
+
+    expect(control.value()).toEqual([{ name: 'David' }]);
+
+    control.value.set([{ name: 'Daniel' }, { name: 'Lia' }]);
+    fixture.detectChanges();
+    expect(people()).toEqual([{ name: 'Daniel' }, { name: 'Lia' }]);
+    expect(people.length()).toBe(2);
+    expect(people[0]).toBe(originalItem);
+    expect(people.dirty()).toBe(true);
+    expect(people[0]!.pristine()).toBe(true);
+
+    control.value.set([]);
+    fixture.detectChanges();
+    expect(people()).toEqual([]);
+    expect(originalItem!.parent()).toBeNull();
+
+    people.focus({ preventScroll: true });
+    expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
+
+    people.reset();
+    expect(control.reset).toHaveBeenCalledOnce();
+  });
+
+  it('rejects aggregate nodes on native controls', () => {
+    @Component({
+      standalone: true,
+      selector: 'native-aggregate-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input [formNode]="profile">`,
+    })
+    class Host {
+      readonly profile = form({ name: field('David') });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    expect(() => fixture.detectChanges()).toThrowError('formNode: native controls require a field node');
+    fixture.destroy();
   });
 
   it('synchronizes native text values and interaction state in both directions', () => {
@@ -951,8 +1071,8 @@ describe('FormNodeDirective', () => {
 
     const fixture = TestBed.createComponent(Host);
     const binding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
-    expect(() => binding.field).toThrowError('formNode: a field node is required');
-    expect(() => binding.node()).toThrowError('formNode: a field node is required');
+    expect(() => binding.field).toThrowError('formNode: a field, form, or array node is required');
+    expect(() => binding.node()).toThrowError('formNode: a field, form, or array node is required');
     fixture.destroy();
   });
 
@@ -1403,12 +1523,14 @@ describe('FormNodeNgControl', () => {
   });
 
   it('reports pending when no terminal validation status is available', () => {
-    const pendingField = {
-      disabled: () => false,
-      valid: () => false,
-      invalid: () => false,
-      pending: () => true,
-    } as unknown as Field<unknown>;
-    expect(new FormNodeNgControl(() => pendingField).status).toBe('PENDING');
+    const pendingNode = {
+      api: {
+        disabled: () => false,
+        valid: () => false,
+        invalid: () => false,
+        pending: () => true,
+      },
+    } as unknown as Node;
+    expect(new FormNodeNgControl(() => pendingNode).status).toBe('PENDING');
   });
 });

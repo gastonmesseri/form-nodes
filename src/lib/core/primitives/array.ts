@@ -10,14 +10,15 @@ import { form, type FormOptions, type NormalizedNode } from './form';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { REQUIRED_METADATA } from '../validation/validators/required';
-import { firstControlBindingInDom } from '../utils/node-control-binding';
+import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { InternalNode, Node, NodeDefinition, NodeSet, NodeValue } from '../types/node.type';
+import type { InternalNode, Node, NodeControlBinding, NodeDefinition, NodeSet, NodeValue } from '../types/node.type';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
@@ -193,6 +194,7 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayItems = signal<readonly TItem[]>(initialItems);
   const arraySelfTouched = signal(false);
   const arraySelfDirty = signal(false);
+  const arrayControlBindings = new Set<NodeControlBinding>();
   const arraySelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const arrayParent = signal<Node | null>(null);
   const arrayKeyInParent = signal<string | number | null>(null);
@@ -235,7 +237,10 @@ export function array<TDefinition extends NodeDefinition>(
     () => arrayNode,
     () => !arrayNonInteractive(),
   );
-  const arrayErrors = computed(() => [...arraySyncErrors(), ...asyncValidation.errors()]);
+  const arrayControlErrors = computed(() => arrayNonInteractive()
+    ? []
+    : readExternalValidationErrors(arrayNode));
+  const arrayErrors = computed(() => [...arraySyncErrors(), ...asyncValidation.errors(), ...arrayControlErrors()]);
   const arrayAllErrors = computed(
     () => [
       ...arrayErrors(),
@@ -352,10 +357,15 @@ export function array<TDefinition extends NodeDefinition>(
     else reconcile(args[0], true);
     arraySelfTouched.set(false);
     arraySelfDirty.set(false);
+    notifyExternalValidationReset(arrayNode);
   };
-  const getControlBindingForFocus = () => arrayItems()
-    .map((item) => (item as InternalNode).api._getControlBindingForFocus())
-    .reduce(firstControlBindingInDom, undefined);
+  const getControlBindingForFocus = () => {
+    const own = findFirstControlBindingInDom(arrayControlBindings);
+    if (own) return own;
+    return arrayItems()
+      .map((item) => (item as InternalNode).api._getControlBindingForFocus())
+      .reduce(firstControlBindingInDom, undefined);
+  };
   const getItemSnapshot = () => [
     ...arrayItems(),
   ] as ArrayItemWithParent<TItem, ArrayNode<TItem>>[];
@@ -485,10 +495,19 @@ export function array<TDefinition extends NodeDefinition>(
   const internalApi = {
     ...api,
     _controlDebounce: arrayControlDebounce,
+    _controlValue: arrayValue,
+    _setControlValue: (value: TSet) => {
+      reconcile(value, false);
+      arraySelfDirty.set(true);
+    },
     _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);
       arrayKeyInParent.set(parent ? key ?? null : null);
+    },
+    _registerControlBinding: (binding: NodeControlBinding) => {
+      arrayControlBindings.add(binding);
+      return () => { arrayControlBindings.delete(binding); };
     },
     _getControlBindingForFocus: getControlBindingForFocus,
   };

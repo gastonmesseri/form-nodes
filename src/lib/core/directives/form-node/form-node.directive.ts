@@ -4,7 +4,7 @@ import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_V
 import type { Field } from '../../primitives/field';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
-import type { InternalNode } from '../../types/node.type';
+import type { InternalNode, Node, NodeValue } from '../../types/node.type';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { discoverSignalControl } from './utils/discover-signal-control';
 import type { ValidationError } from '../../validation/validation.type';
@@ -14,7 +14,7 @@ import { registerExternalValidationErrors } from '../../validation/external-vali
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
 
-export const FORM_NODE = new InjectionToken<FormNodeDirective<unknown>>('FORM_NODE');
+export const FORM_NODE = new InjectionToken<FormNodeDirective<Node>>('FORM_NODE');
 
 const builtInAccessors = [
   CheckboxControlValueAccessor,
@@ -80,9 +80,9 @@ const formatNativePattern = (patterns: readonly RegExp[]): string => {
     { provide: NgControl, useFactory: () => inject(FormNodeDirective).ngControl },
   ],
 })
-export class FormNodeDirective<TValue> implements OnInit {
+export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
   /** **Internal:** Signal input backing the `[formNode]` binding. Consumers should use `field` or `node` instead. */
-  formNodeInput = input.required<Field<TValue>>({ alias: 'formNode' });
+  formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
   private renderer = inject(Renderer2);
 
@@ -127,7 +127,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     const accessor = selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
     const signalControl = this.signalControl ?? discoverSignalControl(this.element);
     if (accessor) this.connectAccessor(accessor);
-    else if (signalControl) this.connectSignalCustomControl(signalControl as FormNodeControl<TValue>);
+    else if (signalControl) this.connectSignalCustomControl(signalControl as FormNodeControl<NodeValue<TNode>, TNode>);
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
     else throw new Error('formNode: the host must be a native form control, provide a signal custom control, or provide ControlValueAccessor');
     this.bindNodeState();
@@ -135,18 +135,18 @@ export class FormNodeDirective<TValue> implements OnInit {
     this.warnWhenHidden();
   }
 
-  /** Field node bound to the host native control or ControlValueAccessor. */
-  get field(): Field<TValue> {
-    const field = this.formNodeInput();
-    if (typeof field !== 'function' || typeof field.controlValue !== 'function') {
-      throw new Error('formNode: a field node is required');
+  /** Field, form, or array node bound to the host control. */
+  get field(): TNode {
+    const node = this.formNodeInput();
+    if (typeof node !== 'function' || typeof (node as unknown as InternalNode).api?._controlValue !== 'function') {
+      throw new Error('formNode: a field, form, or array node is required');
     }
-    return field;
+    return node;
   }
 
   /** Fake `NgControl` exposed for interoperability with existing Angular controls. */
   get ngControl(): FormNodeNgControl {
-    return (this._ngControl ??= new FormNodeNgControl(() => this.field as Field<unknown>));
+    return (this._ngControl ??= new FormNodeNgControl(() => this.field));
   }
 
   private connectAccessor(accessor: ControlValueAccessor) {
@@ -154,13 +154,13 @@ export class FormNodeDirective<TValue> implements OnInit {
     accessor.registerOnChange((value: unknown) => {
       if (this.destroyed || this.writingAccessorValue) return;
       this.lastViewValue = value;
-      this.field.setControlValue(value as TValue);
+      (this.field as unknown as InternalNode).api._setControlValue(value);
     });
     accessor.registerOnTouched(() => {
-      if (!this.destroyed) this.field.markAsTouched();
+      if (!this.destroyed) this.field.api.markAsTouched();
     });
     effect(() => {
-      const value = this.node().controlValue();
+      const value = (this.node() as unknown as InternalNode).api._controlValue();
       if (Object.is(value, this.lastViewValue)) return;
       this.lastViewValue = value;
       untracked(() => {
@@ -174,7 +174,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     }, { injector: this.injector });
     if (accessor.setDisabledState) {
       effect(() => {
-        const disabled = this.node().disabled();
+        const disabled = this.node().api.disabled();
         untracked(() => accessor.setDisabledState!(disabled));
       }, { injector: this.injector });
     }
@@ -182,7 +182,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     connectSignalControlInputs(accessor, () => this.field, this.injector);
   }
 
-  private connectSignalCustomControl(control: FormNodeControl<TValue>) {
+  private connectSignalCustomControl(control: FormNodeControl<NodeValue<TNode>, TNode>) {
     const connection = connectSignalControl(control, () => this.field, this.injector);
     this.focuser = connection.focus ?? this.focuser;
   }
@@ -214,15 +214,15 @@ export class FormNodeDirective<TValue> implements OnInit {
     const commit = () => {
       if (this.composing || this.destroyed) return;
       if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;
-      const field = this.field;
+      const field = this.getNativeField();
       field.markAsDirty();
       const result = parseNativeControlValue(control, () => field.controlValue());
       parseErrors.set(result.error ? [result.error] : []);
-      if ('value' in result) field.setControlValue(result.value as TValue);
+      if ('value' in result) field.setControlValue(result.value as NodeValue<TNode>);
     };
     const unlistenInput = this.renderer.listen(control, 'input', commit);
     const unlistenChange = this.renderer.listen(control, 'change', commit);
-    const unlistenBlur = this.renderer.listen(control, 'blur', () => this.field.markAsTouched());
+    const unlistenBlur = this.renderer.listen(control, 'blur', () => this.field.api.markAsTouched());
     const unlistenCompositionStart = this.renderer.listen(control, 'compositionstart', () => { this.composing = true; });
     const unlistenCompositionEnd = this.renderer.listen(control, 'compositionend', () => {
       this.composing = false;
@@ -236,7 +236,7 @@ export class FormNodeDirective<TValue> implements OnInit {
       unlistenCompositionEnd();
     });
     effect((onCleanup) => {
-      const field = this.node();
+      const field = this.getNativeField();
       onCleanup(registerExternalValidationErrors(field, this.nativeParsingOwner, parseErrors, {
         onReset: () => {
           parseErrors.set([]);
@@ -245,7 +245,7 @@ export class FormNodeDirective<TValue> implements OnInit {
       }));
     }, { injector: this.injector });
     effect(() => {
-      const value = this.node().controlValue();
+      const value = this.getNativeField().controlValue();
       untracked(() => {
         parseErrors.set([]);
         writeNativeControlValue(control, value);
@@ -256,7 +256,7 @@ export class FormNodeDirective<TValue> implements OnInit {
       this.destroyRef.onDestroy(stopWatchingValidity);
     }
     if (isNativeSelect(control) && typeof MutationObserver === 'function') {
-      const observer = new MutationObserver(() => writeNativeControlValue(control, this.field.controlValue()));
+      const observer = new MutationObserver(() => writeNativeControlValue(control, this.getNativeField().controlValue()));
       observer.observe(control, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
       this.destroyRef.onDestroy(() => observer.disconnect());
     }
@@ -264,34 +264,35 @@ export class FormNodeDirective<TValue> implements OnInit {
 
   private bindNodeState() {
     effect(() => {
-      const field = this.node();
-      if (this.nativeControl) this.renderer.setProperty(this.nativeControl, 'name', getFormNodeName(field, this.appId));
-      this.renderer.setProperty(this.element, 'disabled', field.disabled());
-      if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', field.readonly());
-      if ('required' in this.element) this.renderer.setProperty(this.element, 'required', field.required());
-      if ('min' in this.element) this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min(), (this.element as HTMLInputElement).type) ?? '');
-      if ('max' in this.element) this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max(), (this.element as HTMLInputElement).type) ?? '');
+      const node = this.node();
+      const field = node as unknown as Partial<Field<NodeValue<TNode>>>;
+      if (this.nativeControl) this.renderer.setProperty(this.nativeControl, 'name', getFormNodeName(node, this.appId));
+      this.renderer.setProperty(this.element, 'disabled', node.api.disabled());
+      if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', node.api.readonly());
+      if ('required' in this.element) this.renderer.setProperty(this.element, 'required', node.api.required());
+      if ('min' in this.element) this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min?.(), (this.element as HTMLInputElement).type) ?? '');
+      if ('max' in this.element) this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max?.(), (this.element as HTMLInputElement).type) ?? '');
       if ('minLength' in this.element) {
-        const value = field.minLength();
-        if (value === undefined) this.renderer.removeAttribute(this.element, 'minlength');
+        const value = field.minLength?.();
+        if (value === null) this.renderer.removeAttribute(this.element, 'minlength');
         else this.renderer.setProperty(this.element, 'minLength', value);
       }
       if ('maxLength' in this.element) {
-        const value = field.maxLength();
-        if (value === undefined) this.renderer.removeAttribute(this.element, 'maxlength');
+        const value = field.maxLength?.();
+        if (value === null) this.renderer.removeAttribute(this.element, 'maxlength');
         else this.renderer.setProperty(this.element, 'maxLength', value);
       }
-      if ('pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern()));
-      this.renderer.setAttribute(this.element, 'aria-invalid', String(field.invalid()));
+      if ('pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern?.() ?? []));
+      this.renderer.setAttribute(this.element, 'aria-invalid', String(node.api.invalid()));
     }, { injector: this.injector });
   }
 
   private warnWhenHidden() {
     if (typeof ngDevMode === 'undefined' || !ngDevMode) return;
     effect(() => {
-      const field = this.node();
-      if (!field.hidden()) return;
-      const path = field.path().join('.') || '<root>';
+      const node = this.node();
+      if (!node.api.hidden()) return;
+      const path = node.api.path().join('.') || '<root>';
       console.warn(`formNode: field '${path}' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.`);
     }, { injector: this.injector });
   }
@@ -299,7 +300,7 @@ export class FormNodeDirective<TValue> implements OnInit {
   private registerControlBinding() {
     effect((onCleanup) => {
       const field = this.node() as unknown as InternalNode;
-      onCleanup(field.api._registerControlBinding!({
+      onCleanup(field.api._registerControlBinding({
         element: this.element,
         focus: (options) => this.focus(options),
       }));
@@ -311,10 +312,18 @@ export class FormNodeDirective<TValue> implements OnInit {
   }
 
   flush() {
-    this.field.flush();
+    this.field.api.flush();
   }
 
   reset() {
-    this.field.reset();
+    this.field.api.reset();
+  }
+
+  private getNativeField(): Field<NodeValue<TNode>> {
+    const node = this.field as unknown as Partial<Field<NodeValue<TNode>>>;
+    if (typeof node.controlValue !== 'function') {
+      throw new Error('formNode: native controls require a field node');
+    }
+    return node as Field<NodeValue<TNode>>;
   }
 }
