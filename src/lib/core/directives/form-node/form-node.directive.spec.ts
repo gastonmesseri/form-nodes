@@ -2,18 +2,25 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, forwardRef, inject, input, model, signal } from '@angular/core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { Component, forwardRef, inject, input, model, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
 import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import type { Field } from '../../primitives/field';
+import { max } from '../../validation/validators/max';
+import { min } from '../../validation/validators/min';
 import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { required } from '../../validation/validators/required';
 import { provideFormNodeControl } from './form-node-control';
+import { pattern } from '../../validation/validators/pattern';
+import { maxDate } from '../../validation/validators/max-date';
+import { minDate } from '../../validation/validators/min-date';
+import { required } from '../../validation/validators/required';
+import { maxLength } from '../../validation/validators/max-length';
+import { minLength } from '../../validation/validators/min-length';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
@@ -327,6 +334,49 @@ describe('FormNodeDirective', () => {
     fixture.detectChanges();
     expect(input.disabled).toBe(true);
     expect(input.getAttribute('aria-invalid')).toBe('false');
+  });
+
+  it('binds reactive validator constraints to applicable native properties', () => {
+    @Component({
+      standalone: true,
+      selector: 'constraint-form-node-host',
+      imports: [FormNodeDirective],
+      template: `
+        <input type="number" [formNode]="age">
+        <input [formNode]="code">
+        <input type="date" [formNode]="date">
+        <input type="month" [formNode]="month">
+      `,
+    })
+    class Host {
+      readonly minimum = signal<number | undefined>(18);
+      readonly age = field(20, [min(() => this.minimum()), max(100)], { nullable: false });
+      readonly code = field('abc', [minLength(2), maxLength(5), pattern(/^[a-z]+$/), pattern(/^.{3}$/)], { nullable: false });
+      readonly date = field(new Date('2026-06-01T00:00:00.000Z'), [
+        minDate(new Date('2026-01-02T00:00:00.000Z')),
+        maxDate(new Date('2026-12-03T00:00:00.000Z')),
+      ], { nullable: false });
+      readonly month = field(new Date('2026-06-01T00:00:00.000Z'), [
+        minDate(new Date('2026-01-02T00:00:00.000Z')),
+      ], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const [age, code, date, month] = fixture.nativeElement.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
+
+    expect(age!.min).toBe('18');
+    expect(age!.max).toBe('100');
+    expect(code!.minLength).toBe(2);
+    expect(code!.maxLength).toBe(5);
+    expect(code!.pattern).toBe('(?=(?:^[a-z]+$)$)(?=(?:^.{3}$)$).*');
+    expect(date!.min).toBe('2026-01-02');
+    expect(date!.max).toBe('2026-12-03');
+    expect(month!.min).toBe('2026-01');
+
+    fixture.componentInstance.minimum.set(undefined);
+    fixture.detectChanges();
+    expect(age!.min).toBe('');
   });
 
   it('buffers native input through the field control debounce', async () => {

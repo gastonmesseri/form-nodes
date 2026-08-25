@@ -9,8 +9,13 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../../../primitives/form';
 import { field } from '../../../primitives/field';
+import { max } from '../../../validation/validators/max';
+import { min } from '../../../validation/validators/min';
+import { pattern } from '../../../validation/validators/pattern';
 import { required } from '../../../validation/validators/required';
 import { connectSignalControlInputs } from './signal-control-inputs';
+import { maxLength } from '../../../validation/validators/max-length';
+import { minLength } from '../../../validation/validators/min-length';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../../testing/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
@@ -29,26 +34,37 @@ describe('connectSignalControlInputs', () => {
       errors = input<readonly ValidationError.WithOptionalFieldTree[]>([]);
       hidden = input(false);
       invalid = input(false);
+      max = input<number | undefined>(undefined);
+      maxLength = input<number | undefined>(undefined);
+      min = input<number | undefined>(undefined);
+      minLength = input<number | undefined>(undefined);
       name = input('');
+      pattern = input<readonly RegExp[]>([]);
       pending = input(false);
       readonly = input(false);
       required = input(false);
       touched = input(false);
     }
     registerSignalModelForJit(AllStateControl, 'value');
-    for (const name of ['disabled', 'dirty', 'errors', 'hidden', 'invalid', 'name', 'pending', 'readonly', 'required', 'touched']) {
+    for (const name of ['disabled', 'dirty', 'errors', 'hidden', 'invalid', 'max', 'maxLength', 'min', 'minLength', 'name', 'pattern', 'pending', 'readonly', 'required', 'touched']) {
       registerSignalInputForJit(AllStateControl, name, name);
     }
 
     const fixture = TestBed.createComponent(AllStateControl);
-    const profile = form({ name: field('', [required], { nullable: false }) });
+    const expectedPattern = /^[a-z]+$/;
+    const profile = form({ name: field('abc', [required, min(1), max(10), minLength(2), maxLength(5), pattern(expectedPattern)] as never, { nullable: false }) });
     connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
 
     expect(fixture.componentInstance.name()).toMatch(/\.form\d+\.name$/);
     expect(fixture.componentInstance.required()).toBe(true);
-    expect(fixture.componentInstance.invalid()).toBe(true);
-    expect(fixture.componentInstance.errors()).toHaveLength(1);
+    expect(fixture.componentInstance.invalid()).toBe(false);
+    expect(fixture.componentInstance.min()).toBe(1);
+    expect(fixture.componentInstance.max()).toBe(10);
+    expect(fixture.componentInstance.minLength()).toBe(2);
+    expect(fixture.componentInstance.maxLength()).toBe(5);
+    expect(fixture.componentInstance.pattern()).toEqual([expectedPattern]);
+    expect(fixture.componentInstance.errors()).toHaveLength(0);
     expect(fixture.componentInstance.pending()).toBe(false);
 
     profile.name.markAsDirty();

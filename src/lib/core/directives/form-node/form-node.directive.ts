@@ -56,6 +56,20 @@ const isValidatorObject = (validator: ValidatorFn | Validator): validator is Val
 const toControlErrors = (errors: ValidationErrors | null): readonly ValidationError.WithoutTargetNode[] =>
   errors ? Object.entries(errors).map(([kind, context]) => ({ kind, context })) : [];
 
+const formatNativeLimit = (value: unknown, type: string): unknown => {
+  if (!(value instanceof Date) || (type !== 'date' && type !== 'month')) return value;
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+  if (type === 'month') return `${year}-${month}`;
+  const day = String(value.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatNativePattern = (patterns: readonly RegExp[]): string => {
+  if (patterns.length <= 1) return patterns[0]?.source ?? '';
+  return `${patterns.map((pattern) => `(?=(?:${pattern.source})$)`).join('')}.*`;
+};
+
 @Directive({
   selector: ':not(form)[formNode]',
   exportAs: 'formNode',
@@ -252,6 +266,19 @@ export class FormNodeDirective<TValue> implements OnInit {
       this.renderer.setProperty(this.element, 'disabled', field.disabled());
       if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', field.readonly());
       if ('required' in this.element) this.renderer.setProperty(this.element, 'required', field.required());
+      if ('min' in this.element) this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min(), (this.element as HTMLInputElement).type) ?? '');
+      if ('max' in this.element) this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max(), (this.element as HTMLInputElement).type) ?? '');
+      if ('minLength' in this.element) {
+        const value = field.minLength();
+        if (value === undefined) this.renderer.removeAttribute(this.element, 'minlength');
+        else this.renderer.setProperty(this.element, 'minLength', value);
+      }
+      if ('maxLength' in this.element) {
+        const value = field.maxLength();
+        if (value === undefined) this.renderer.removeAttribute(this.element, 'maxlength');
+        else this.renderer.setProperty(this.element, 'maxLength', value);
+      }
+      if ('pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern()));
       this.renderer.setAttribute(this.element, 'aria-invalid', String(field.invalid()));
     }, { injector: this.injector });
   }
