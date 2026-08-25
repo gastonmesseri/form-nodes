@@ -67,7 +67,7 @@ export function field<TValue>(
   const fieldDirty = signal(false);
   const fieldSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const fieldParent = signal<Node | null>(null);
-  const fieldKeyInParent = signal<string | null>(null);
+  const fieldKeyInParent = signal<string | number | null>(null);
   const fieldControlDebounce = computed(() =>
     resolvedOptions?.debounce
     ?? (fieldParent() as InternalNode | null)?.api._controlDebounce(),
@@ -75,7 +75,7 @@ export function field<TValue>(
   const fieldPath = computed<readonly string[]>(() => {
     const parent = fieldParent();
     const key = fieldKeyInParent();
-    return parent && key !== null ? [...parent.api.path(), key] : [];
+    return parent && key !== null ? [...parent.api.path(), String(key)] : [];
   });
   const fieldDisabled = computed(() =>
     fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.api.disabled() === true,
@@ -166,6 +166,7 @@ export function field<TValue>(
     form: fieldForm,
     parent: fieldParent.asReadonly(),
     path: fieldPath,
+    keyInParent: fieldKeyInParent.asReadonly(),
     value: fieldValue.asReadonly(),
     controlValue: fieldControlValue.asReadonly(),
     set,

@@ -332,6 +332,10 @@ describe('form', () => {
     expect(profile.name.api.path()).toEqual(['name']);
     expect(profile.address.api.path()).toEqual(['address']);
     expect(profile.address.city.api.path()).toEqual(['address', 'city']);
+    expect(profile.keyInParent()).toBeNull();
+    expect(profile.name.keyInParent()).toBe('name');
+    expect(profile.address.keyInParent()).toBe('address');
+    expect(profile.address.city.keyInParent()).toBe('city');
     expect(profile.api.parent()).toBeNull();
     expect(profile.name.api.parent()).toBe(profile);
     expect(profile.address.api.parent()).toBe(profile);

@@ -1405,6 +1405,7 @@ This adapter is intentionally a temporary compatibility boundary, not the desire
 These details are not public API, but explain current propagation behavior:
 
 - Every nested node stores a reactive reference to its parent.
+- Every node exposes `keyInParent()`, a reactive structural signal corresponding to Angular Signal Forms. Object children return their property name, while array items return their current numeric index. Moving or reconciling an array updates the index without changing node identity. Root nodes return `null`; this also applies to an item after it is removed and becomes a detached root. This deliberately differs from Angular 22.1.4, which throws when the root key is read. `path()` remains a string array, including stringified array indexes, so it continues to be suitable for serialization and DOM-oriented paths. Angular 22.1.4 types array-element keys as `number` but its current internal object-key map yields numeric keys as strings; this library deliberately returns the typed numeric index instead of reproducing that implementation mismatch.
 - Descendants derive inherited state by reading their parent instead of receiving manually copied state.
 - A private, non-enumerable symbol marks runtime nodes so shorthand normalization does not rely only on `typeof value === 'function'`.
 - The symbol marker is omitted from public types.
