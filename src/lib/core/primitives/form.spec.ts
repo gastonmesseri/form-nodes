@@ -9,6 +9,54 @@ import { asyncValidator } from '../validation/async-validator';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('exposes its public api directly on the form', () => {
+    const profile = form({ age: field(23) });
+
+    expect(profile.value).toBe(profile.api.value);
+    expect(profile.disabled).toBe(profile.api.disabled);
+    expect(profile.set).toBe(profile.api.set);
+    expect(profile.patch).toBe(profile.api.patch);
+    expect(profile.reset).toBe(profile.api.reset);
+
+    profile.disable();
+    expect(profile.disabled()).toBe(true);
+    profile.enable();
+    expect(profile.enabled()).toBe(true);
+    profile.patch({ age: 30 });
+    expect(profile()).toEqual({ age: 30 });
+  });
+
+  it('gives child nodes precedence over colliding direct api members', () => {
+    const readonlyField = field(false);
+    const disabledField = field('child');
+    const resetField = field('reset child');
+    const profile = form({
+      age: field(23),
+      readonly: readonlyField,
+      disabled: disabledField,
+      reset: resetField,
+    });
+
+    expect(profile.readonly).toBe(readonlyField);
+    expect(profile.disabled).toBe(disabledField);
+    expect(profile.reset).toBe(resetField);
+    expect(profile.readonly()).toBe(false);
+    expect(profile.disabled()).toBe('child');
+    expect(profile.reset()).toBe('reset child');
+    expect(profile.api.readonly()).toBe(false);
+    expect(profile.api.disabled()).toBe(false);
+
+    profile.api.markAsReadonly();
+    profile.api.disable();
+    profile.api.reset({ age: 30, readonly: true, disabled: 'updated', reset: 'updated reset' });
+
+    expect(profile.readonly()).toBe(true);
+    expect(profile.disabled()).toBe('updated');
+    expect(profile.reset()).toBe('updated reset');
+    expect(profile.api.readonly()).toBe(true);
+    expect(profile.api.disabled()).toBe(true);
+  });
+
   it('allows a synchronous field validator to read its owning class form on its first execution', () => {
     class ProfileComponent {
       readonly profile = form({

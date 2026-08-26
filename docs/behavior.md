@@ -4,6 +4,29 @@ This document records the behavior currently implemented by the library. It is a
 
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.x` at commit `004cf3a27734ae90738a0a745cc0369b52306ca3`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
+Both `field()` and `form()` expose their public API members directly on the returned callable node. The complete API also remains available through `.api`:
+
+```ts
+const profile = form({ age: field(23) });
+
+profile.disabled();
+profile.disable();
+profile.patch({ age: 30 });
+profile.api.disabled();
+```
+
+A form also exposes its children as direct properties. When a child name collides with a direct API member, the child always wins in both runtime behavior and TypeScript. Use `.api` to access the form member in that case:
+
+```ts
+const profile = form({
+  age: field(23),
+  readonly: field(false),
+});
+
+profile.readonly(); // value of the nested field
+profile.api.readonly(); // readonly state of the form
+```
+
 ## Design guarantees
 
 - The library provides small, typed, signal-based `field()` and `form()` primitives.
