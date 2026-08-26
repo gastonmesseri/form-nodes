@@ -1,6 +1,7 @@
 import { Injector, signal } from '@angular/core';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
+import type { Node } from '../types/node.type';
 import { form, type FormApi } from '../primitives/form';
 import { field, type FieldApi } from '../primitives/field';
 import { required } from './validators/required';
@@ -198,17 +199,19 @@ describe('asyncValidator', () => {
     expect(profile.api.valid()).toBe(true);
   });
 
-  it('provides a value-typed API and abort signal by default', () => {
-    asyncValidator<number | null>(async ({ api, value, abortSignal }) => {
+  it('provides flat readonly state, the field, its API, and an abort signal by default', () => {
+    asyncValidator<number | null>(async ({ api, field: fieldNode, value, path, disabled, readonly, touched, abortSignal }) => {
       expectTypeOf(api).toEqualTypeOf<AsyncValidatorApi<number | null>>();
+      expectTypeOf(fieldNode).toEqualTypeOf<Node>();
       expectTypeOf(api.value()).toEqualTypeOf<number | null>();
       expectTypeOf(api.path()).toEqualTypeOf<readonly string[]>();
       expectTypeOf(api.set).toBeCallableWith(42);
       expectTypeOf(api.set).toBeCallableWith(null);
       expectTypeOf(value()).toEqualTypeOf<number | null>();
-      expectTypeOf(api.disabled()).toEqualTypeOf<boolean>();
-      expectTypeOf(api.readonly()).toEqualTypeOf<boolean>();
-      expectTypeOf(api.touched()).toEqualTypeOf<boolean>();
+      expectTypeOf(path()).toEqualTypeOf<readonly string[]>();
+      expectTypeOf(disabled()).toEqualTypeOf<boolean>();
+      expectTypeOf(readonly()).toEqualTypeOf<boolean>();
+      expectTypeOf(touched()).toEqualTypeOf<boolean>();
       expectTypeOf(abortSignal).toEqualTypeOf<AbortSignal>();
       return null;
     });
@@ -217,9 +220,11 @@ describe('asyncValidator', () => {
   it('provides the validated node path through its API', async () => {
     let path: readonly string[] = [];
     let receivedForm: unknown;
-    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ api }) => {
-      path = api.path();
-      receivedForm = api.form();
+    let receivedField: unknown;
+    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ field: fieldNode, form, path: fieldPath }) => {
+      path = fieldPath();
+      receivedForm = form();
+      receivedField = fieldNode;
       return null;
     })]) } });
 
@@ -227,6 +232,7 @@ describe('asyncValidator', () => {
 
     expect(path).toEqual(['profile', 'age']);
     expect(receivedForm).toBe(rootForm);
+    expect(receivedField).toBe(rootForm.profile.age);
   });
 
   it('accepts an explicit exact field API type', async () => {

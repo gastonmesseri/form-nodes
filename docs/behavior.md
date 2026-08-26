@@ -266,7 +266,22 @@ This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but
 
 Synchronous and asynchronous validators share one readonly validator array. Asynchronous validators must be explicitly wrapped with `asyncValidator()`; the library does not invoke a validator merely to detect whether it returns a Promise or Observable.
 
-Synchronous validator callbacks receive `{ value, api }`. The `api` is the complete runtime API of the field or form being validated, so the callback can read state and navigate the tree through `api.path()`, `api.parent()`, and `api.form()`. It is typed as `ValidatorApi<TValue>` by default and preserves the validated value type. Signals read from the API participate in the synchronous validator's normal reactive dependency tracking.
+Validator callbacks receive a flat readonly facade of the field or form being validated. It includes `value`, `form`, `parent`, `path`, and the interaction and availability signals (`touched`, `dirty`, `disabled`, `readonly`, `hidden`, and their complements). `field` references the real callable node being validated, including when that node is a form, while `api` exposes its complete API as an escape hatch for validation state and mutable operations:
+
+```ts
+field('David', {
+  validators: [context => {
+    context.value();
+    context.disabled();
+    context.path();
+    context.field();
+    context.api.errors();
+    return null;
+  }],
+});
+```
+
+The flat properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` defaults to the common callable `Node` type.
 
 ```ts
 const username = field('', [
@@ -278,17 +293,17 @@ const username = field('', [
 ]);
 ```
 
-`AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context adds an `abortSignal` to the normal field context. Validators can pass it to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
+`AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context extends the same flat readonly facade with an `abortSignal` belonging only to that execution. Parameterized validators additionally receive their `params` snapshot. Neither execution-specific property is added to or mutated on `field`. Validators can pass the signal to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
 
 Asynchronous callbacks also receive the complete runtime node `api`. By default it is typed as `AsyncValidatorApi<TValue>`, so value access, validation and interaction state, and common node operations preserve the validated value type. Automatic validators react to API signals they read. Parameterized validators may read API signals explicitly inside `params`; their `validate` callback remains untracked. The exact owner type can be supplied explicitly as the second generic argument for a callback validator, for example `asyncValidator<string | null, FieldApi<string | null>>(...)`. Parameterized validators use the third generic argument: `asyncValidator<TValue, TParams, TApi>({...})`. A future owner-contextual validator declaration signature may infer the exact `FieldApi` or `FormApi` automatically.
 
-Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Validator callbacks access the same reactive path through `context.api.path`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
+Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Validator callbacks access the same reactive path through either `context.path()` or `context.api.path()`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
 
 Every API also exposes `parent: Signal<Node | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `Node | null` parent type even after being inserted into a form; access through the form provides the refined type.
 
 Nodes returned by the common validator API's `parent()` and `form()` remain callable, but native JavaScript function members such as `apply`, `bind`, `call`, `name`, and `prototype` are intentionally hidden from the public type and IntelliSense. Exact `Field` and `Form` return types apply the same hiding while preserving form keys that intentionally use one of those names.
 
-`api.form` resolves the root form for the current node. A root form returns itself, every nested form and field returns the same root form, and a standalone field returns `null`. Nodes reached through a form refine the signal to that exact root form type, including across nested forms. Because it is reactive, inserting a standalone field into a form updates `form()` and retriggers automatic async validators that read it. Async validator callbacks access it as `context.api.form()`. A validator declared before its owner is known retains `Node | null`; supplying the refined field API explicitly, such as `asyncValidator<TValue, typeof profile.age.api>(...)`, exposes `typeof profile | null` inside the callback.
+`api.form` resolves the root form for the current node. A root form returns itself, every nested form and field returns the same root form, and a standalone field returns `null`. Nodes reached through a form refine the signal to that exact root form type, including across nested forms. Because it is reactive, inserting a standalone field into a form updates `form()` and retriggers automatic async validators that read it. Validator callbacks can use the flat `context.form()` or the equivalent `context.api.form()`. A validator declared before its owner is known retains `Node | null`; supplying the refined field API explicitly, such as `asyncValidator<TValue, typeof profile.age.api>(...)`, exposes `typeof profile | null` through both surfaces inside the callback.
 
 Root-form type resolution follows at most ten parent links. This limit affects TypeScript inference only: paths within ten levels retain the exact root form type, while deeper paths safely fall back to `Node`. Runtime parent and root traversal remains correct and has no depth limit.
 

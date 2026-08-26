@@ -73,13 +73,19 @@ describe('field', () => {
 
   it('exposes the complete field api to synchronous validators', () => {
     let validatorApi: unknown;
+    let validatorField: unknown;
+    let disabled: unknown;
     const fieldNode = field('David', [context => {
       validatorApi = context.api;
+      validatorField = context.field;
+      disabled = context.disabled;
       return null;
     }]);
 
     expect(fieldNode.errors()).toEqual([]);
     expect(validatorApi).toBe(fieldNode.api);
+    expect(validatorField).toBe(fieldNode);
+    expect(disabled).toBe(fieldNode.disabled);
     expect(fieldNode.api.path()).toEqual([]);
     expect(fieldNode.api.parent()).toBeNull();
     expect(fieldNode.api.form()).toBeNull();

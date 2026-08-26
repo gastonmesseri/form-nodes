@@ -1,12 +1,12 @@
-import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult } from '../validation/validation.type';
+import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorReadonlyApi } from '../validation/validation.type';
 
-export type AsyncValidatorOptions<TValue, TApi = AsyncValidatorApi<TValue>> = {
+export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>> = {
   readonly debounce?: number;
   readonly when?: (context: AsyncValidatorBaseContext<TValue, TApi>) => boolean;
   readonly onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi>) => ValidationResult;
 };
 
-export type ParameterizedAsyncValidatorOptions<TValue, TParams, TApi = AsyncValidatorApi<TValue>> = AsyncValidatorOptions<TValue, TApi> & {
+export type ParameterizedAsyncValidatorOptions<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>> = AsyncValidatorOptions<TValue, TApi> & {
   /** Reactively derives the explicit dependency snapshot passed to the validator. */
   readonly params: (context: AsyncValidatorBaseContext<TValue, TApi>) => TParams;
 };

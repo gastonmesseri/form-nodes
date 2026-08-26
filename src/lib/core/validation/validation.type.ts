@@ -83,21 +83,28 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
 
 export type AsyncValidatorApi<TValue> = ValidatorApi<TValue>;
 
+export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & AsyncValidatorState & {
+  readonly form: Signal<any>;
+  readonly parent: Signal<any>;
+  readonly path: Signal<readonly string[]>;
+};
+
 /** Reactive context provided to synchronous validators. */
-export type ValidatorContext<TValue, TApi = ValidatorApi<TValue>> = FieldContext<TValue> & {
+export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = Node> = Pick<TApi, keyof ValidatorReadonlyApi<TValue>> & {
   readonly api: TApi;
+  readonly field: TField;
 };
 
 /** Reactive context shared by asynchronous validator conditions, params, and handlers. */
-export type AsyncValidatorBaseContext<TValue, TApi = AsyncValidatorApi<TValue>> = ValidatorContext<TValue, TApi>;
+export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = ValidatorContext<TValue, TApi, TField>;
 
 export type ValidationStatus = 'valid' | 'invalid' | 'unknown';
 
-export type AsyncValidatorContext<TValue, TApi = AsyncValidatorApi<TValue>> = AsyncValidatorBaseContext<TValue, TApi> & {
+export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = AsyncValidatorBaseContext<TValue, TApi, TField> & {
   readonly abortSignal: AbortSignal;
 };
 
-export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi = AsyncValidatorApi<TValue>> = AsyncValidatorContext<TValue, TApi> & {
+export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = AsyncValidatorContext<TValue, TApi, TField> & {
   /** Snapshot returned by the validator's reactive `params` function. */
   readonly params: TParams;
 };

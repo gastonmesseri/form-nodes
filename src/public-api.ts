@@ -30,6 +30,7 @@ export type {
   Validator,
   ValidatorApi,
   ValidatorContext,
+  ValidatorReadonlyApi,
   Validators,
   ValidationStatus,
 } from './lib/core/validation/validation.type';
