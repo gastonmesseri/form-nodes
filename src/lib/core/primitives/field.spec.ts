@@ -289,6 +289,20 @@ describe('field', () => {
     expect(fieldNode.valid()).toBe(true);
   });
 
+  it('reacts to external signals read by a synchronous validator', () => {
+    const blocked = signal(false);
+    const validate = vi.fn(() => blocked() ? { kind: 'blocked' } : null);
+    const fieldNode = field('David', [validate]);
+
+    expect(fieldNode.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledOnce();
+
+    blocked.set(true);
+
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'blocked' }]);
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
   it('exposes the current validators through validators()', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const fieldNode = field('', [required]);
