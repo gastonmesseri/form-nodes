@@ -264,6 +264,46 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('restores explicit and implicit select values when a hidden field is rendered', async () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-hidden-select-form-node-host',
+      imports: [FormNode],
+      template: `
+        @if (!country.hidden()) {
+          <select data-explicit [formNode]="country">
+            @for (option of options; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
+          <select data-implicit [formNode]="country">
+            @for (option of options; track option) {
+              <option>{{ option }}</option>
+            }
+          </select>
+        }
+      `,
+    })
+    class Host {
+      readonly visible = signal(false);
+      readonly country = field('Spain', { hidden: () => !this.visible(), nullable: false });
+      readonly options = ['Switzerland', 'Spain'];
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('select')).toBeNull();
+
+    fixture.componentInstance.visible.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect((root.querySelector('[data-explicit]') as HTMLSelectElement).value).toBe('Spain');
+    expect((root.querySelector('[data-implicit]') as HTMLSelectElement).value).toBe('Spain');
+  });
+
   it('resynchronizes a reused radio when its authored value changes', async () => {
     type RadioOption = { readonly id: string; readonly value: string };
 
