@@ -3,11 +3,68 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { form } from './form';
 import { field } from './field';
+import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('allows a synchronous field validator to read its owning class form on its first execution', () => {
+    class ProfileComponent {
+      readonly profile = form({
+        name: field<string>(undefined, [required]),
+        age: field(23, {
+          validators: [({ value }) => {
+            if (!this.profile.name()) return { kind: 'missingSiblingName' };
+            return value()! > 120 ? { kind: 'maximumAge' } : null;
+          }],
+        }),
+      });
+    }
+
+    const component = new ProfileComponent();
+
+    expect(() => component.profile.age.errors()).not.toThrow();
+    expect(component.profile.age.errors()).toMatchObject([{ kind: 'missingSiblingName' }]);
+    component.profile.name.set('David');
+    expect(component.profile.age.errors()).toEqual([]);
+  });
+
+  it('allows an asynchronous field validator to read its owning class form on its first execution', async () => {
+    const validate = vi.fn(async (name: string | null) =>
+      name === null ? { kind: 'missingSiblingName' } : null,
+    );
+    class ProfileComponent {
+      readonly profile = form({
+        name: field<string>(undefined, [required]),
+        age: field(23, [asyncValidator(async (): Promise<{ kind: string } | null> =>
+          validate(this.profile.name()),
+        )]),
+      });
+    }
+
+    const component = new ProfileComponent();
+
+    expect(validate).not.toHaveBeenCalled();
+    expect(component.profile.age.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(component.profile.age.errors()).toMatchObject([{ kind: 'missingSiblingName' }]);
+    component.profile.name.set('David');
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(component.profile.age.errors()).toEqual([]);
+  });
+
   it('exposes paths from the root to nested nodes', () => {
     const profile = form({
       name: field('David'),
@@ -326,6 +383,7 @@ describe('form', () => {
       [asyncValidator(validate, { debounce: 100 })],
     );
 
+    await Promise.resolve();
     formGroup.country.set('Germany');
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(100);

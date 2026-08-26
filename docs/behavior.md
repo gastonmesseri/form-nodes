@@ -323,11 +323,52 @@ Asynchronous validation behavior follows Angular 22 Signal Forms where applicabl
 - Rejected Promises produce no validation error unless `onError` maps the rejection to a validation result.
 - Asynchronous results preserve validator-array order, not completion order.
 
-Asynchronous validation is coordinated by a watcher built on Angular's public signals primitives. A validator without debounce is invoked synchronously during the watcher run, so signals read before the validator's first asynchronous boundary become dependencies and automatically trigger a new validation. This includes sibling fields or external signals captured by the validator.
+Asynchronous validation is coordinated by a watcher built on Angular's public signals primitives. The initial callback invocation is scheduled in the next microtask, after the expression that created its field or form has completed. This makes it safe for a validator declared in a class property initializer to read another property through its owning form. The node becomes pending synchronously, before that callback starts. Signals read before the validator's first asynchronous boundary become dependencies and automatically trigger a new validation, including sibling fields or external signals captured by the validator.
 
 The watcher does not require dependency injection. When an explicit or current injector exists, its `DestroyRef` owns the watcher; destroying it stops future reactive executions and cancels the current Promise or Observable operation. Outside an injection context, the watcher weakly references its node-owned target, and a `FinalizationRegistry` disconnects it if that target becomes unreachable. Garbage-collection cleanup is necessarily nondeterministic, while injector cleanup is immediate.
 
-The node value and the `when` condition are tracked before the debounce timer starts. A debounced validator's first invocation runs immediately inside its own persistent reactive watcher so every signal it reads becomes a dependency, including external signals. Its result is not published until the initial debounce period has elapsed. If any discovered dependency changes during that period, the first operation is cancelled and the replacement invocation waits for a full debounce period before running. Later changes use the same cancellation and debounce behavior. This means the first service call is immediate, but validation state and errors still observe the configured debounce.
+The node value and the `when` condition are tracked before the debounce timer starts. A debounced validator that discovers automatic dependencies starts its publication timer immediately and invokes the service in the next microtask without waiting for that timer. Every signal it reads becomes a dependency, including external signals. Its result is not published until the initial debounce period has elapsed. If any discovered dependency changes during that period, the first operation is cancelled and the replacement invocation waits for a full debounce period before running. Later changes use the same cancellation and debounce behavior.
+
+Synchronous validators remain lazy and first run when validation state is consumed. Both synchronous and asynchronous validators can therefore refer to a class-owned form from a field initializer, such as `this.profile.name()`, without observing an uninitialized `this.profile`. Such callbacks are coupled to that class instance; `context.api.form()` remains preferable for reusable validators.
+
+### Typed cross-node validation
+
+When a validator declared inside `field()` needs fully typed access to siblings or other nodes, it can read the class property that owns the completed form. TypeScript then preserves the exact form structure:
+
+```ts
+class ProfileComponent {
+  readonly profile = form({
+    name: field<string>(undefined, [required]),
+    age: field(23, {
+      validators: [
+        ({ value }) => {
+          if (!this.profile.name()) return { kind: 'missingSiblingName' };
+          return value()! > 120 ? { kind: 'maximumAge' } : null;
+        },
+      ],
+    }),
+  });
+}
+```
+
+Here `this.profile.name()` is typed as `string | null`, and nonexistent nodes are rejected by TypeScript. The sibling signal is also tracked reactively, so changing `name` re-evaluates the `age` validator. Synchronous validation is lazy, and the first asynchronous callback invocation is deferred to the next microtask, so the form property has been assigned before either callback reads it.
+
+An asynchronous self-referential initializer may require an explicit callback return type to prevent TypeScript from inferring the property through its own initializer:
+
+```ts
+asyncValidator(async (): Promise<ValidationResult> => {
+  return checkName(this.profile.name());
+});
+```
+
+When coupling a validator to its owning class is undesirable, `context.api.form()` is always available as a fallback. Its default type is the general callable `Node | null`, so it supports common form operations but does not expose exact sibling keys:
+
+```ts
+const root = context.api.form();
+root?.api.valid();
+```
+
+The exact API can still be supplied explicitly where supported, but class-property access is the simplest option for inline, fully typed cross-node validation. Reusable validators should prefer explicit dependencies or the common `api.form()` view instead of closing over a component instance.
 
 Every cancelled debounce removes its timer and abort listener immediately. Injector destruction cancels both timers and in-flight Promise or Observable operations. Completed validator controllers are released individually, including when another validator remains pending.
 

@@ -152,6 +152,7 @@ describe('field', () => {
     );
     const fieldNode = field('Daniel', [asyncValidator(validate, { debounce: 100 })]);
 
+    await Promise.resolve();
     fieldNode.set('David');
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(100);
