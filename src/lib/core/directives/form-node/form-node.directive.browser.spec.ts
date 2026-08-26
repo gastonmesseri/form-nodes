@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, forwardRef, input, model, output, type OnDestroy } from '@angular/core';
+import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, forwardRef, input, model, output, signal, type OnDestroy } from '@angular/core';
 
 import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
@@ -262,6 +262,40 @@ describe('FormNode in Chromium', () => {
     await optionMutation;
     expect(country.value).toBe('France');
     fixture.destroy();
+  });
+
+  it('resynchronizes a reused radio when its authored value changes', async () => {
+    type RadioOption = { readonly id: string; readonly value: string };
+
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `
+        @for (option of options(); track option.id) {
+          <input type="radio" [formNode]="selected" [value]="option.value">
+        }
+      `,
+    })
+    class Host {
+      selected = field('selected', { nullable: false });
+      options = signal<readonly RadioOption[]>([
+        { id: 'shared', value: 'other' },
+        { id: 'old', value: 'selected' },
+      ]);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const checkedStates = () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>('input')).map((inputElement) => inputElement.checked);
+    expect(checkedStates()).toEqual([false, true]);
+
+    fixture.componentInstance.options.set([
+      { id: 'new', value: 'other' },
+      { id: 'shared', value: 'selected' },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(checkedStates()).toEqual([false, true]);
   });
 
   it('commits control values after a real browser debounce timer', async () => {
