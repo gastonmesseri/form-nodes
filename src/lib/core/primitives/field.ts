@@ -1,13 +1,15 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import { markAsNode } from '../utils/node-marker';
+import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import type { Node, RootNode } from '../types/node.type';
 import { computedFunction } from '../utils/computed-function';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { isRequiredValidator } from '../utils/required-validator-marker';
+import { createNodeMetadata } from '../metadata/create-node-metadata';
+import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -132,11 +134,13 @@ export function field<TValue>(
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   let fieldNode!: Field<TValue>;
+  const emptySyncMetadata = new Map();
   const fieldForm = computed(() => fieldParent()?.api.form() ?? null);
   const fieldSyncValidation = computed(() => fieldNonInteractive()
-    ? { errors: [], required: false }
+    ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
   const fieldSyncErrors = computed(() => fieldSyncValidation().errors);
+  const fieldMetadata = createNodeMetadata(fieldValidators, computed(() => fieldSyncValidation().metadata));
   const asyncValidation = createAsyncValidation(
     fieldContext,
     fieldValidators,
@@ -187,8 +191,7 @@ export function field<TValue>(
     invalid: computed(() => fieldValidationStatus() === 'invalid'),
     getError,
     required: computed(() =>
-      fieldValidators().some(isRequiredValidator) ||
-      fieldSyncValidation().required ||
+      readMetadata(fieldMetadata(), REQUIRED_METADATA) ||
       fieldErrors().some((error) => error.kind === 'required'),
     ),
     pending: asyncValidation.pending,

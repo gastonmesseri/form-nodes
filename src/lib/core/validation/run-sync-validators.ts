@@ -1,18 +1,17 @@
 import type { Node } from '../types/node.type';
+import type { MetadataKey } from '../metadata/metadata';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { createValidatorContext } from './create-validator-context';
 import { addDefaultTargetNode } from '../utils/add-default-target-node';
-import { isRequiredValidator } from '../utils/required-validator-marker';
 import { normalizeValidationResult } from '../utils/normalize-validation-result';
+import { collectValidatorMetadata, type ValidatorMetadata } from './validator-metadata';
 import type { AsyncValidatorState, ComposableValidationResult, ComposableValidator, FieldContext, ValidationError, ValidationResult, ValidatorContext, Validators } from './validation.type';
 
 const maximumCompositionDepth = 100;
 
-type SyncValidationMetadata = { required: boolean };
-
 export type SyncValidation<TNode extends Node> = {
   readonly errors: readonly ValidationError.WithTargetNode<TNode>[];
-  readonly required: boolean;
+  readonly metadata: ValidatorMetadata;
 };
 
 const resolveComposableResult = <TValue>(
@@ -20,7 +19,7 @@ const resolveComposableResult = <TValue>(
   context: ValidatorContext<TValue>,
   activeValidators: Set<Function>,
   depth: number,
-  metadata: SyncValidationMetadata,
+  metadata: Map<MetadataKey<unknown, unknown>, unknown[]>,
 ): ValidationResult => {
   if (typeof result === 'function') {
     if (isAsyncValidator(result)) {
@@ -30,7 +29,7 @@ const resolveComposableResult = <TValue>(
     if (depth >= maximumCompositionDepth) {
       throw new Error(`Synchronous validator composition exceeded ${maximumCompositionDepth} levels.`);
     }
-    if (isRequiredValidator(result)) metadata.required = true;
+    collectValidatorMetadata(result, metadata);
     activeValidators.add(result);
     const resolved = resolveComposableResult(result(context), context, activeValidators, depth + 1, metadata);
     activeValidators.delete(result);
@@ -55,7 +54,7 @@ const resolveComposableResult = <TValue>(
 const resolveComposableValidator = <TValue>(
   validator: ComposableValidator<TValue>,
   context: ValidatorContext<TValue>,
-  metadata: SyncValidationMetadata,
+  metadata: Map<MetadataKey<unknown, unknown>, unknown[]>,
 ): ValidationResult => resolveComposableResult(validator, context, new Set(), 0, metadata);
 
 export const runSyncValidators = <TValue, TNode extends Node & { api: AsyncValidatorState }>(
@@ -64,7 +63,7 @@ export const runSyncValidators = <TValue, TNode extends Node & { api: AsyncValid
   targetNode: TNode,
 ): SyncValidation<TNode> => {
   const errors: ValidationError.WithTargetNode<TNode>[] = [];
-  const metadata: SyncValidationMetadata = { required: false };
+  const metadata = new Map<MetadataKey<unknown, unknown>, unknown[]>();
   const validatorContext = createValidatorContext(context, targetNode);
   validators.forEach((validator) => {
     if (isAsyncValidator(validator)) return;
@@ -74,5 +73,5 @@ export const runSyncValidators = <TValue, TNode extends Node & { api: AsyncValid
       ),
     );
   });
-  return { errors, required: metadata.required };
+  return { errors, metadata };
 };

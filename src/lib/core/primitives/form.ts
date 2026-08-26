@@ -1,13 +1,15 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
 import type { Field } from './field';
+import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { computedFunction } from '../utils/computed-function';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { isRequiredValidator } from '../utils/required-validator-marker';
+import { createNodeMetadata } from '../metadata/create-node-metadata';
+import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -164,12 +166,14 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   });
   const formContext = markAsFieldContext({ value: formValue });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
+  const emptySyncMetadata = new Map();
   let formNode!: Form<TNodes>;
   const rootForm = computed(() => formParent()?.api.form() ?? formNode) as Signal<Form<TNodes>>;
   const formSyncValidation = computed(() => formNonInteractive()
-    ? { errors: [], required: false }
+    ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(formContext, formValidators(), formNode));
   const formSyncErrors = computed(() => formSyncValidation().errors);
+  const formMetadata = createNodeMetadata(formValidators, computed(() => formSyncValidation().metadata));
   const asyncValidation = createAsyncValidation(
     formContext,
     formValidators,
@@ -252,8 +256,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     invalid: computed(() => formValidationStatus() === 'invalid'),
     getError,
     required: computed(() =>
-      formValidators().some(isRequiredValidator)
-      || formSyncValidation().required
+      readMetadata(formMetadata(), REQUIRED_METADATA)
       || formErrors().some((error) => error.kind === 'required')
     ),
     pending: formPending,
