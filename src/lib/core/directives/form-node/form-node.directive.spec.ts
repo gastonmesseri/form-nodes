@@ -3,7 +3,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Component, Directive, forwardRef, inject, input, model, signal } from '@angular/core';
+import { Component, Directive, ViewContainerRef, forwardRef, inject, input, model, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
@@ -1413,6 +1413,93 @@ describe('FormNode', () => {
 
     expect(cva.writes).toEqual(['David', 'Mark']);
     expect(fixture.componentInstance.name()).toBe('Mark');
+  });
+
+  it('prefers a ControlValueAccessor over an explicit signal-control provider', () => {
+    @Component({
+      standalone: true,
+      selector: 'combined-control',
+      providers: [
+        provideFormNodeControl(() => CombinedControl),
+        { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CombinedControl), multi: true },
+      ],
+      template: '',
+    })
+    class CombinedControl implements ControlValueAccessor {
+      value = model('signal initial');
+      writes: unknown[] = [];
+      writeValue(value: unknown) { this.writes.push(value); }
+      registerOnChange() {}
+      registerOnTouched() {}
+    }
+
+    @Component({
+      standalone: true,
+      imports: [CombinedControl, FormNode],
+      template: `<combined-control [formNode]="name" />`,
+    })
+    class Host {
+      name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as CombinedControl;
+    expect(control.writes).toEqual(['David']);
+    expect(control.value()).toBe('signal initial');
+  });
+
+  it('binds a native control alongside a directive that injects ViewContainerRef', () => {
+    @Directive({ standalone: true, selector: 'input[withViewContainer]' })
+    class WithViewContainer {
+      readonly viewContainerRef = inject(ViewContainerRef);
+    }
+
+    @Component({
+      standalone: true,
+      imports: [WithViewContainer, FormNode],
+      template: `<input withViewContainer [formNode]="name">`,
+    })
+    class Host {
+      name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(inputElement.value).toBe('David');
+    inputElement.value = 'Mark';
+    inputElement.dispatchEvent(new Event('input'));
+    expect(fixture.componentInstance.name()).toBe('Mark');
+  });
+
+  it('creates and binds a native control while a macrotask is active', async () => {
+    let resolveCreation!: () => void;
+    const creation = new Promise<void>((resolve) => { resolveCreation = resolve; });
+
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `<select [formNode]="country"><option value="ch">Switzerland</option></select>`,
+    })
+    class DynamicForm {
+      country = field('ch', { nullable: false });
+    }
+
+    @Component({ standalone: true, template: '' })
+    class Host {
+      private readonly viewContainerRef = inject(ViewContainerRef);
+      constructor() {
+        creation.then(() => this.viewContainerRef.createComponent(DynamicForm));
+      }
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    resolveCreation();
+    await fixture.whenStable();
+    const selectElement = fixture.debugElement.parent!.nativeElement.querySelector('select') as HTMLSelectElement;
+    expect(selectElement.value).toBe('ch');
   });
 
   it('supports a signal-based CVA without creating reactive write errors', () => {
