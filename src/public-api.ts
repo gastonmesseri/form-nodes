@@ -15,7 +15,7 @@ export type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, N
 export { required, type RequiredOptions } from './lib/core/validation/validators/required';
 export { FORM_NODE, FormNode, _FormNode } from './lib/core/directives/form-node/form-node.directive';
 export type { FormNodeBinding } from './lib/core/types/form-node-binding.type';
-export { provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
+export { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
 export { provideFormNodePassThrough } from './lib/core/directives/form-node/form-node-pass-through';
 export { FORM_NODE_CONTROL, provideFormNodeControl, type FormNodeCheckboxControl, type FormNodeControl, type FormNodeUiControl, type FormNodeValueControl } from './lib/core/directives/form-node/form-node-control';
 export { FormRootDirective } from './lib/core/directives/form-node/form-root.directive';

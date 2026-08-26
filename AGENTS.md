@@ -21,6 +21,7 @@
 - Omit explicit `: void` return annotations from function and method implementations when TypeScript can infer them. Keep `void` where it is part of a type contract, callback signature, overload, abstract declaration, or interface/type member without an implementation body.
 - Give named arrow functions declared with `const` a block body with an explicit `return`, whether they are exported or internal. Concise expression bodies remain allowed for inline callbacks such as those passed to `map()`, `filter()`, or `some()`.
 - In classes, group properties created with `computed()` immediately before the constructor.
+- End every completed change handoff with a suggested English Conventional Commit message that summarizes the delivered change.
 
 ## Import style
 
