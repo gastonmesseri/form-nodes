@@ -1415,6 +1415,93 @@ describe('FormNode', () => {
     expect(fixture.componentInstance.name()).toBe('Mark');
   });
 
+  it('supports a signal custom control implemented as a directive', () => {
+    @Directive({
+      standalone: true,
+      selector: 'input[providedSignalControl]',
+      providers: [provideFormNodeControl(() => ProvidedSignalControl)],
+      host: {
+        '[value]': 'value()',
+        '(input)': 'onInput($event)',
+      },
+    })
+    class ProvidedSignalControl {
+      value = model('');
+      disabled = input(false);
+      required = input(false);
+      onInput(event: Event) { this.value.set((event.target as HTMLInputElement).value); }
+    }
+
+    @Component({
+      standalone: true,
+      imports: [ProvidedSignalControl, FormNode],
+      template: `<input providedSignalControl [formNode]="name">`,
+    })
+    class Host {
+      name = field('', [required], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const control = fixture.debugElement.children[0]!.injector.get(ProvidedSignalControl);
+    expect(control.required()).toBe(true);
+    expect(control.disabled()).toBe(false);
+    expect(inputElement.required).toBe(false);
+
+    inputElement.value = 'Mark';
+    inputElement.dispatchEvent(new Event('input'));
+    expect(fixture.componentInstance.name()).toBe('Mark');
+
+    fixture.componentInstance.name.disable();
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(true);
+    expect(inputElement.disabled).toBe(false);
+  });
+
+  it('supports an explicitly provided signal control composed as a host directive', () => {
+    @Directive({
+      standalone: true,
+      providers: [provideFormNodeControl(() => HostedSignalControl)],
+    })
+    class HostedSignalControl {
+      value = model('');
+      touched = input(false);
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'hosted-signal-control',
+      hostDirectives: [HostedSignalControl],
+      template: `<button type="button" (click)="control.value.set('Mark')">{{ control.value() }}</button>`,
+    })
+    class HostedControlComponent {
+      readonly control = inject(HostedSignalControl);
+    }
+
+    @Component({
+      standalone: true,
+      imports: [HostedControlComponent, FormNode],
+      template: `<hosted-signal-control [formNode]="name" />`,
+    })
+    class Host {
+      name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const component = fixture.debugElement.children[0]!.componentInstance as HostedControlComponent;
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.textContent).toContain('David');
+
+    button.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name()).toBe('Mark');
+    fixture.componentInstance.name.markAsTouched();
+    fixture.detectChanges();
+    expect(component.control.touched()).toBe(true);
+  });
+
   it('prefers a ControlValueAccessor over an explicit signal-control provider', () => {
     @Component({
       standalone: true,

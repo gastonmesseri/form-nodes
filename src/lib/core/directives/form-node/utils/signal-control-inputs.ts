@@ -63,10 +63,15 @@ export const connectSignalControlInputs = <TNode extends Node>(
 ): SignalControlInputConnection => {
   const appId = injector.get(APP_ID);
   const mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
-  if (!mirror) return { inputNames: new Set() };
-  const inputs = new Map(mirror.inputs.map((input) => [input.templateName, input.propName]));
+  const bindingValues = getBindingValues(node(), appId);
+  const inputs = mirror
+    ? new Map(mirror.inputs.map((input) => [input.templateName, input.propName]))
+    : new Map(Object.keys(bindingValues).flatMap((name) => {
+      const candidate = (control as Record<PropertyKey, unknown>)[name];
+      return typeof candidate === 'function' && (candidate as InputSignal)[ɵSIGNAL]?.applyValueToInputSignal ? [[name, name]] : [];
+    }));
   const inputNames = new Set(inputs.keys());
-  const bindingNames = Object.keys(getBindingValues(node(), appId)) as (keyof ReturnType<typeof getBindingValues>)[];
+  const bindingNames = Object.keys(bindingValues) as (keyof ReturnType<typeof getBindingValues>)[];
   const bindings = bindingNames.flatMap((name) => {
     const property = inputs.get(name);
     return property ? [{ name, input: (control as Record<PropertyKey, unknown>)[property] as InputSignal }] : [];
