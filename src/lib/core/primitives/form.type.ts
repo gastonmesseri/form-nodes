@@ -4,19 +4,19 @@ import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
   readonly validators?: ValidatorSource<TValue>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
-  /** Default control-value debounce inherited by descendant fields that do not configure their own debounce. */
-  readonly debounce?: number;
+  /** Default control-value debounce inherited by descendants: milliseconds or commit on `'blur'`. */
+  readonly debounce?: number | 'blur';
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial or reactive disabled state. A string disables the form and describes the reason. */
-  readonly disabled?: DisabledStateSource;
+  readonly disabled?: boolean | string | (() => boolean | string);
   /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
   readonly readonly?: boolean | (() => boolean);
   /** Submission behavior used by `submit()` and by a bound native `<form>`. */

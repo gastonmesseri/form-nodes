@@ -4,6 +4,7 @@ import { computed, signal, type Signal } from '@angular/core';
 import { field } from './field';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import type { InternalNode } from '../types/node.type';
 import { pattern } from '../validation/validators/pattern';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
@@ -120,6 +121,24 @@ describe('field', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('buffers blur-debounced control updates until blur or an explicit flush', () => {
+    const fieldNode = field('initial', { debounce: 'blur' });
+
+    fieldNode.setControlValue('pending');
+    expect(fieldNode.controlValue()).toBe('pending');
+    expect(fieldNode.value()).toBe('initial');
+    expect(fieldNode.debouncing()).toBe(true);
+
+    (fieldNode as unknown as InternalNode).$api._flushControlValueOnBlur();
+    expect(fieldNode.value()).toBe('pending');
+    expect(fieldNode.debouncing()).toBe(false);
+
+    fieldNode.setControlValue('flushed');
+    fieldNode.flush();
+    expect(fieldNode.value()).toBe('flushed');
+    expect(fieldNode.debouncing()).toBe(false);
   });
 
   it('does not restart asynchronous validation until a control value is committed', async () => {

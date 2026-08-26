@@ -325,6 +325,34 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('commits control values on blur in a real browser', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-blur-debounce-form-node-host',
+      imports: [FormNode],
+      template: `<input [formNode]="name">`,
+    })
+    class Host {
+      readonly name = field('David', { debounce: 'blur', nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    inputElement.focus();
+    inputElement.value = 'Mark';
+    dispatch(inputElement, 'input');
+    expect(fixture.componentInstance.name()).toBe('David');
+    expect(fixture.componentInstance.name.debouncing()).toBe(true);
+
+    inputElement.blur();
+    expect(fixture.componentInstance.name()).toBe('Mark');
+    expect(fixture.componentInstance.name.debouncing()).toBe(false);
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+    fixture.destroy();
+  });
+
   it('retains invalid numeric text until a valid value or reset resolves the parse error', () => {
     @Component({
       standalone: true,

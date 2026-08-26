@@ -10,6 +10,9 @@ export type MarkAsTouchedOptions = {
 /** A static or reactive condition that disables a node, optionally with a user-facing reason. */
 export type DisabledStateSource = boolean | string | (() => boolean | string);
 
+/** Strategy used to delay control-originated values before committing them to the model. */
+export type ControlDebounce = number | 'blur';
+
 /** Identifies one active cause of a node's disabled state. */
 export type DisabledReason<TNode extends Node = Node> = {
   /** Node on which this reason originated. Descendants retain the original source node. */
@@ -102,9 +105,10 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
       : TNode
     : Node;
 export type InternalNodeApi = NodeApi & {
-  _controlDebounce: Signal<number | undefined>;
+  _controlDebounce: Signal<ControlDebounce | undefined>;
   _controlValue: Signal<any>;
   _setControlValue(value: any): void;
+  _flushControlValueOnBlur(): void;
   _clone(): Node;
   _setParent(parent: Node | null, key?: string | number): void;
   _registerControlBinding(binding: NodeControlBinding): () => void;

@@ -285,6 +285,7 @@ export function form<TDefinitions extends NodeDefinitions>(
       set(value);
       formSelfDirty.set(true);
     },
+    _flushControlValueOnBlur: api.flush,
     _clone: () => form(createDefinitions(), validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);

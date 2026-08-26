@@ -62,7 +62,11 @@ export const connectSignalControl = <TNode extends Node>(
   const valueSubscription = model.subscribe((value) => {
     if (!writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);
   });
-  const touchSubscription = control.touch?.subscribe(() => node().$api.markAsTouched());
+  const touchSubscription = control.touch?.subscribe(() => {
+    const currentNode = node() as unknown as InternalNode;
+    currentNode.$api.markAsTouched();
+    currentNode.$api._flushControlValueOnBlur();
+  });
 
   injector.get(DestroyRef).onDestroy(() => {
     valueSubscription.unsubscribe();
