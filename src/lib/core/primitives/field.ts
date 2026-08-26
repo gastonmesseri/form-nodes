@@ -5,6 +5,7 @@ import type { Node, RootNode } from '../types/node.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { isRequiredValidator } from '../utils/required-validator-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -40,6 +41,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  required: Signal<boolean>;
   pending: Signal<boolean>;
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
@@ -128,9 +130,10 @@ export function field<TValue>(
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   let fieldNode!: Field<TValue>;
   const fieldForm = computed(() => fieldParent()?.api.form() ?? null);
-  const fieldSyncErrors = computed(() => fieldNonInteractive()
-    ? []
+  const fieldSyncValidation = computed(() => fieldNonInteractive()
+    ? { errors: [], required: false }
     : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
+  const fieldSyncErrors = computed(() => fieldSyncValidation().errors);
   const asyncValidation = createAsyncValidation(
     fieldContext,
     fieldValidators,
@@ -175,6 +178,11 @@ export function field<TValue>(
     errors: fieldErrors,
     valid: computed(() => fieldValidationStatus() === 'valid'),
     invalid: computed(() => fieldValidationStatus() === 'invalid'),
+    required: computed(() =>
+      fieldValidators().some(isRequiredValidator) ||
+      fieldSyncValidation().required ||
+      fieldErrors().some((error) => error.kind === 'required'),
+    ),
     pending: asyncValidation.pending,
     validationStatus: fieldValidationStatus,
     touched: computed(() => !fieldNonInteractive() && fieldTouched()),

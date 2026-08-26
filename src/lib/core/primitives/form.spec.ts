@@ -495,6 +495,28 @@ describe('form', () => {
     expect(formGroup.api.invalid()).toBe(true);
   });
 
+  it('reports only its own active required error', () => {
+    const ownRequired = form({ name: field('David') }, [() => ({ kind: 'required' })]);
+    const configuredRequired = form({ name: field('David') }, [required]);
+    const childRequired = form({ name: field('', [required]) });
+
+    expect(ownRequired.required()).toBe(true);
+    expect(ownRequired.api.required()).toBe(true);
+    expect(configuredRequired.errors()).toEqual([]);
+    expect(configuredRequired.required()).toBe(true);
+    expect(childRequired.name.required()).toBe(true);
+    expect(childRequired.required()).toBe(false);
+  });
+
+  it('gives a child named required precedence over the form required signal', () => {
+    const requiredField = field('child');
+    const formGroup = form({ required: requiredField }, [() => ({ kind: 'required' })]);
+
+    expect(formGroup.required).toBe(requiredField);
+    expect(formGroup.required()).toBe('child');
+    expect(formGroup.api.required()).toBe(true);
+  });
+
   it('derives validationStatus from synchronous child validation', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });

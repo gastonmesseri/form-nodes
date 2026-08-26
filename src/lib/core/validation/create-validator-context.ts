@@ -16,6 +16,7 @@ const readonlyApiKeys = [
   'writable',
   'hidden',
   'visible',
+  'required',
 ] as const;
 
 /** Adds the stable readonly node facade used by validator callbacks. */

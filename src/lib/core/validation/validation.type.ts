@@ -54,6 +54,7 @@ export type AsyncValidatorState = {
   readonly writable: Signal<boolean>;
   readonly hidden: Signal<boolean>;
   readonly visible: Signal<boolean>;
+  readonly required: Signal<boolean>;
 };
 
 /** Common node API exposed to validators when no exact owner API is specified. */

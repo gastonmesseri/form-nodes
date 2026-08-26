@@ -10,6 +10,7 @@ export type NodeApi = {
   reset(...args: [] | [value: any]): void;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  required: Signal<boolean>;
   pending: Signal<boolean>;
   touched: Signal<boolean>;
   markAsTouched(): void;

@@ -190,7 +190,18 @@ describe('types', () => {
       reset: 'updated reset',
     });
     expectTypeOf(form({ age: field(23) }).disabled()).toEqualTypeOf<boolean>();
+    expectTypeOf(form({ age: field(23) }).required()).toEqualTypeOf<boolean>();
     expectTypeOf(form({ age: field(23) }).patch).toBeCallableWith({ age: 30 });
+  });
+
+  it('types required as a boolean signal while a colliding child wins', () => {
+    const fieldNode = field('', [required]);
+    const colliding = form({ required: field('child') });
+
+    expectTypeOf(fieldNode.required()).toEqualTypeOf<boolean>();
+    expectTypeOf(fieldNode.api.required()).toEqualTypeOf<boolean>();
+    expectTypeOf(colliding.required()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.api.required()).toEqualTypeOf<boolean>();
   });
 
   it('types form children explicitly and preserves a child collision', () => {

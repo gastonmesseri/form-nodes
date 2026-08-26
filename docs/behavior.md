@@ -523,9 +523,32 @@ Every cancelled debounce removes its timer and abort listener immediately. Injec
 
 Asynchronous validators accept Promise-like or structurally typed `ObservableLike` results. RxJS Observables satisfy this interface without making RxJS a dependency of the library. An observable-like result represents one validation operation: its first emitted result is used and the subscription is then closed. Completing without emitting is treated as successful validation. A stale or cancelled validation unsubscribes immediately. Observable errors use the same `onError` mapping as rejected Promises.
 
+### Required state
+
+`required()` is a reactive boolean signal intended both for form logic and for presentation metadata. A custom field component can use it to render a required marker or expose an accessibility attribute without inspecting validators or current errors itself:
+
+```ts
+const name = field('Marco', [required]);
+
+name.required(); // true, even though the current value is valid
+```
+
+```html
+<label>
+  Name
+  @if (name.required()) {
+    <span aria-hidden="true">*</span>
+  }
+</label>
+<input [attr.aria-required]="name.required()" />
+```
+
+This is comparable to Angular Signal Forms exposing required state for form controls. `required()` does not mean that the node is currently invalid; use `invalid()` or inspect `errors()` for validation status. Conditional validator composition updates the signal reactively when the marked `required` validator becomes active or inactive.
+
 Validation behavior:
 
 - A node with no failing validators has `errors()` equal to `[]`.
+- `required()` is `true` when the marked `required` validator is configured or active through synchronous conditional composition, even if the current value passes validation. It is also `true` while the node has an active own error whose `kind` is `required`, including errors from custom or asynchronous validators. A form does not aggregate the required state of its descendants.
 - All validators run against the current value.
 - A validator that returns several errors has its result flattened into the node error array.
 - Errors preserve validator order and their order within each validator result.
