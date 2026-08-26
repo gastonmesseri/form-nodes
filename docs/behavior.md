@@ -289,6 +289,26 @@ Synchronous and asynchronous validators observe only committed `value()` changes
 
 This follows the control buffer semantics inspected in Angular Signal Forms 22.1.x at commit `004cf3a27734ae90738a0a745cc0369b52306ca3`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.
 
+#### Possible future form-level debounce
+
+The current implementation configures control-value debounce only on `field()`. A possible future extension is to allow `debounce` on `form()` as an inherited default for descendant fields, following Angular Signal Forms rather than introducing one aggregated control buffer for the complete form value:
+
+```ts
+const profile = form(
+  {
+    name: field(''),
+    address: {
+      city: field('', { debounce: 100 }),
+    },
+  },
+  {
+    debounce: 300,
+  },
+);
+```
+
+Under this possible design, `name` would inherit 300 ms, while `address.city` would override it with 100 ms. A nested form could similarly establish a default for its own subtree. The nearest configured ancestor would win. A form would not aggregate pending descendant `controlValue()` values into a form-level `controlValue()`, and its committed `value()` would continue to aggregate only committed child values. This section records a design direction for future consideration and is not part of the current public contract.
+
 ### Form values
 
 | Operation | Value effect | Dirty effect | Touched effect |
