@@ -145,6 +145,23 @@ describe('types', () => {
     expectTypeOf(form({ age: field(23) }).patch).toBeCallableWith({ age: 30 });
   });
 
+  it('types form children explicitly and preserves a child collision', () => {
+    const profile = form({
+      name: field('David'),
+      address: { city: field('Zurich') },
+    });
+    const colliding = form({ children: field('child'), age: field(23) });
+
+    expectTypeOf(profile.children.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.children.address.children.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.api.children).toEqualTypeOf<typeof profile.children>();
+    // @ts-expect-error the explicit children map is readonly
+    profile.api.children.name = field('other');
+    expectTypeOf(colliding.children()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.api.children.children()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.api.children.age()).toEqualTypeOf<number | null>();
+  });
+
   it('infers shorthand nested forms', () => {
     const formGroup = form({
       name: field('David'),

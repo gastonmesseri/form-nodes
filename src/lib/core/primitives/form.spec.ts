@@ -26,6 +26,28 @@ describe('form', () => {
     expect(profile()).toEqual({ age: 30 });
   });
 
+  it('exposes a stable children map with the same node instances', () => {
+    const profile = form({
+      name: field('David'),
+      address: { city: field('Zurich') },
+    });
+
+    expect(profile.children).toBe(profile.api.children);
+    expect(profile.children.name).toBe(profile.name);
+    expect(profile.children.address).toBe(profile.address);
+    expect(profile.children.address.children.city).toBe(profile.address.city);
+  });
+
+  it('gives a child named children precedence while preserving api.children', () => {
+    const childrenField = field('child');
+    const profile = form({ children: childrenField, age: field(23) });
+
+    expect(profile.children).toBe(childrenField);
+    expect(profile.children()).toBe('child');
+    expect(profile.api.children.children).toBe(childrenField);
+    expect(profile.api.children.age).toBe(profile.age);
+  });
+
   it('gives child nodes precedence over colliding direct api members', () => {
     const readonlyField = field(false);
     const disabledField = field('child');
