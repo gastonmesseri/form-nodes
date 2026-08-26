@@ -1,6 +1,6 @@
 import type { Signal } from '@angular/core';
 
-import type { Node } from '../types/node.type';
+import type { Node, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -58,8 +58,8 @@ export type AsyncValidatorState = {
 
 /** Common node API exposed to validators when no exact owner API is specified. */
 export type ValidatorApi<TValue> = AsyncValidatorState & {
-  readonly form: Signal<Node | null>;
-  readonly parent: Signal<Node | null>;
+  readonly form: Signal<PublicNode<Node> | null>;
+  readonly parent: Signal<PublicNode<Node> | null>;
   readonly path: Signal<readonly string[]>;
   readonly value: Signal<TValue>;
   readonly errors: Signal<readonly ValidationError[]>;

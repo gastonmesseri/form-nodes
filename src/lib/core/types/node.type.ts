@@ -1,5 +1,7 @@
 import type { Signal } from '@angular/core';
 
+import type { HiddenFunctionMembers } from './hidden-function-members.type';
+
 export type NodeApi = {
   form: Signal<Node | null>;
   path: Signal<readonly string[]>;
@@ -27,6 +29,9 @@ export type NodeApi = {
 };
 
 export type Node = (() => any) & { api: NodeApi };
+export type PublicNode<TNode extends Node> = Node extends TNode
+  ? TNode & HiddenFunctionMembers
+  : TNode;
 type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown];
 
 export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = RootLookupDepth> =
