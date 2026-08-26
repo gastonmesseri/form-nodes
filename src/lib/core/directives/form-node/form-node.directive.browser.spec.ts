@@ -454,7 +454,7 @@ describe('FormNode in Chromium', () => {
     expect(document.head.querySelectorAll('style')).toHaveLength(stylesBefore);
   });
 
-  it('installs and removes native validity monitoring inside Shadow DOM', () => {
+  it('synchronizes a native control and cleans up validity monitoring inside Shadow DOM', () => {
     @Component({
       standalone: true,
       selector: 'browser-shadow-validity-form-node-host',
@@ -469,9 +469,26 @@ describe('FormNode in Chromium', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const shadowRoot = (fixture.nativeElement as HTMLElement).shadowRoot!;
+    const inputElement = shadowRoot.querySelector('input')!;
+    const { date } = fixture.componentInstance;
+
+    expect(inputElement.value).toBe('2026-08-29');
     expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) =>
       style.textContent?.includes('@keyframes form-node-valid'),
     )).toBe(true);
+
+    date.set('2026-09-01');
+    fixture.detectChanges();
+    expect(inputElement.value).toBe('2026-09-01');
+
+    inputElement.value = '2026-09-02';
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(date()).toBe('2026-09-02');
+
+    date.disable();
+    fixture.detectChanges();
+    expect(inputElement.disabled).toBe(true);
 
     fixture.destroy();
     expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) =>
