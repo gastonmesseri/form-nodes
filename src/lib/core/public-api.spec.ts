@@ -204,6 +204,23 @@ describe('types', () => {
     expectTypeOf(colliding.api.required()).toEqualTypeOf<boolean>();
   });
 
+  it('types getError with its literal kind and exact target node', () => {
+    const fieldNode = field('', [required]);
+    const formGroup = form({ name: field('David') }, [() => ({ kind: 'formError' })]);
+    const colliding = form({ getError: field('child') });
+    const fieldError = fieldNode.getError('required');
+    const formError = formGroup.getError('formError');
+
+    expectTypeOf(fieldError).toEqualTypeOf<
+      (ValidationError.WithTargetNode<typeof fieldNode> & { readonly kind: 'required' }) | undefined
+    >();
+    expectTypeOf(formError).toEqualTypeOf<
+      (ValidationError.WithTargetNode<typeof formGroup> & { readonly kind: 'formError' }) | undefined
+    >();
+    expectTypeOf(colliding.getError()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.api.getError('missing')?.kind).toEqualTypeOf<'missing' | undefined>();
+  });
+
   it('types form children explicitly and preserves a child collision', () => {
     const profile = form({
       name: field('David'),

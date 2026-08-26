@@ -41,6 +41,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
   validationStatus: Signal<ValidationStatus>;
@@ -142,6 +143,8 @@ export function field<TValue>(
     () => !fieldNonInteractive(),
   );
   const fieldErrors = computed(() => [...fieldSyncErrors(), ...asyncValidation.errors()]);
+  const getError = <TKind extends string>(kind: TKind) =>
+    fieldErrors().find((error): error is typeof error & { readonly kind: TKind } => error.kind === kind);
   const fieldValidationStatus = computed<ValidationStatus>(() => {
     if (fieldNonInteractive()) return 'valid';
     if (fieldErrors().length > 0) return 'invalid';
@@ -178,6 +181,7 @@ export function field<TValue>(
     errors: fieldErrors,
     valid: computed(() => fieldValidationStatus() === 'valid'),
     invalid: computed(() => fieldValidationStatus() === 'invalid'),
+    getError,
     required: computed(() =>
       fieldValidators().some(isRequiredValidator) ||
       fieldSyncValidation().required ||

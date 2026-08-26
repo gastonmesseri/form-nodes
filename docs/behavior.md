@@ -545,10 +545,24 @@ name.required(); // true, even though the current value is valid
 
 This is comparable to Angular Signal Forms exposing required state for form controls. `required()` does not mean that the node is currently invalid; use `invalid()` or inspect `errors()` for validation status. Conditional validator composition updates the signal reactively when the marked `required` validator becomes active or inactive.
 
+### Looking up an error by kind
+
+`getError(kind)` returns the first active own error with the requested kind, or `undefined` when none exists. Calling it inside a `computed()` or `effect()` is reactive because it reads the node's `errors()` signal:
+
+```ts
+const name = field('', [required]);
+
+name.getError('required'); // { kind: 'required', targetNode: name }
+name.getError('missing'); // undefined
+```
+
+The literal kind and exact target node are retained in TypeScript. A form searches only its own errors, not errors belonging to descendants. When several errors have the same kind, `getError()` returns the first and `errors()` remains the API for accessing every match. The method is available both directly and through `.api`; as usual, a form child named `getError` wins at the direct property and `form.api.getError(kind)` remains available.
+
 Validation behavior:
 
 - A node with no failing validators has `errors()` equal to `[]`.
 - `required()` is `true` when the marked `required` validator is configured or active through synchronous conditional composition, even if the current value passes validation. It is also `true` while the node has an active own error whose `kind` is `required`, including errors from custom or asynchronous validators. A form does not aggregate the required state of its descendants.
+- `getError(kind)` returns the first own error of that kind or `undefined`; it does not search descendants.
 - All validators run against the current value.
 - A validator that returns several errors has its result flattened into the node error array.
 - Errors preserve validator order and their order within each validator result.
