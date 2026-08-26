@@ -1,4 +1,4 @@
-import { signal, type Signal } from '@angular/core';
+import { computed, signal, type Signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { field } from './field';
@@ -321,6 +321,26 @@ describe('field', () => {
 
     fieldNode.set('David');
     expect(fieldNode.getError('required')).toBeUndefined();
+  });
+
+  it('does not propagate getError when only another error kind changes', () => {
+    const unrelated = signal(false);
+    const fieldNode = field('', [
+      required,
+      () => unrelated() ? { kind: 'unrelated' } : null,
+    ]);
+    let downstreamRuns = 0;
+    const requiredMessage = computed(() => {
+      downstreamRuns++;
+      return fieldNode.getError('required')?.message;
+    });
+
+    expect(requiredMessage()).toBeUndefined();
+    expect(downstreamRuns).toBe(1);
+
+    unrelated.set(true);
+    expect(requiredMessage()).toBeUndefined();
+    expect(downstreamRuns).toBe(1);
   });
 
   it('derives required from the error kind rather than validator identity', () => {
