@@ -222,6 +222,58 @@ describe('FormNode', () => {
     expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 
+  it('rebinds a signal custom control to a different field', () => {
+    @Component({
+      standalone: true,
+      selector: 'rebound-signal-control',
+      providers: [provideFormNodeControl(() => ReboundSignalControl)],
+      template: `<button type="button" (click)="value.set('updated')">{{ value() }}</button>`,
+    })
+    class ReboundSignalControl {
+      value = model('');
+      dirty = input(false);
+      focus = vi.fn();
+    }
+    registerSignalInputForJit(ReboundSignalControl, 'dirty', 'dirty');
+
+    @Component({
+      standalone: true,
+      imports: [ReboundSignalControl, FormNode],
+      template: `<rebound-signal-control [formNode]="selected()" />`,
+    })
+    class Host {
+      readonly first = field('first', { nullable: false });
+      readonly second = field('second', { nullable: false });
+      readonly selected = signal<Field<string>>(this.first);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as ReboundSignalControl;
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    const { first, second, selected } = fixture.componentInstance;
+    expect(button.textContent).toContain('first');
+
+    first.markAsDirty();
+    fixture.detectChanges();
+    expect(control.dirty()).toBe(true);
+
+    selected.set(second);
+    fixture.detectChanges();
+    expect(button.textContent).toContain('second');
+    expect(control.dirty()).toBe(false);
+
+    button.click();
+    fixture.detectChanges();
+    expect(first()).toBe('first');
+    expect(second()).toBe('updated');
+
+    first.focus();
+    expect(control.focus).not.toHaveBeenCalled();
+    second.focus({ preventScroll: true });
+    expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
   it('binds a FormValueControl to an aggregate form node', () => {
     type ProfileValue = { name: string | null; age: number | null };
 
