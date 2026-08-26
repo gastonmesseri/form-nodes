@@ -298,6 +298,50 @@ username.errors(); // [{ kind: 'blocked', targetNode: username }]
 
 Like every Angular `computed()`, synchronous validation is lazy: a dependency change invalidates it, and the validator re-executes when validation state is next consumed. A reactive consumer of `errors()`, `valid()`, `invalid()`, or `validationStatus()` observes the update automatically. This behavior applies equally to field and form validators.
 
+### Conditional synchronous validators
+
+A synchronous validator may return another synchronous validator. The runner invokes the returned validator with the same stable context and continues resolving returned validators until it reaches a normal validation result. This provides reactive conditional composition without changing the validator array:
+
+```ts
+const otherAge = signal(23);
+const name = field('', {
+  validators: [
+    () => otherAge() > 30 ? required : null,
+  ],
+});
+
+name.errors(); // []
+otherAge.set(31);
+name.errors(); // [{ kind: 'required', targetNode: name }]
+otherAge.set(30);
+name.errors(); // []
+```
+
+Configured validators can be returned in the same way:
+
+```ts
+const requiredName = required({ message: 'Name is required' });
+
+field('', {
+  validators: [context => context.touched() ? requiredName : null],
+});
+```
+
+Signals read by either the outer or returned validator are dependencies of the same synchronous validation `computed()`. Nested composition is supported, and every level receives the same context object. Circular composition throws an English runtime error, and resolution is limited to 100 returned-validator levels to protect against chains that continually allocate new functions.
+
+An `asyncValidator()` cannot be returned by a synchronous validator. Asynchronous validators must be placed directly in the validators array so their watcher lifecycle, debounce, cancellation, pending state, and dependency discovery can be established without executing arbitrary synchronous validators for classification:
+
+```ts
+field('', {
+  validators: [
+    required,
+    asyncValidator(async ({ value }) =>
+      await checkAvailability(value()) ? null : { kind: 'unavailable' },
+    ),
+  ],
+});
+```
+
 ```ts
 const username = field('', [
   required,
@@ -415,6 +459,8 @@ Validation behavior:
 - Changing a field value recomputes its validation.
 - Changing a descendant recomputes ancestor form validators against the aggregated value.
 - Changing an external signal read by a synchronous field or form validator invalidates and recomputes that validation when consumed.
+- A synchronous validator may conditionally return another synchronous validator, which is resolved with the same context.
+- Returning an `asyncValidator()` from a synchronous validator is rejected; asynchronous validators must be direct array entries.
 - `setValidators()` applies the new validators to the current value without marking the node dirty.
 - Reset preserves validators and revalidates an assigned value.
 

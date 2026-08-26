@@ -332,6 +332,30 @@ describe('form', () => {
     expect(validate).toHaveBeenCalledTimes(2);
   });
 
+  it('conditionally applies a synchronous form validator returned by another validator', () => {
+    const enabled = signal(false);
+    const sameCity = vi.fn(({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
+      value().city === value().billingCity ? null : { kind: 'sameCity' },
+    );
+    const formGroup = form(
+      { city: field('Zurich'), billingCity: field('Madrid') },
+      [() => enabled() ? sameCity : null],
+    );
+
+    expect(formGroup.api.errors()).toEqual([]);
+    expect(sameCity).not.toHaveBeenCalled();
+
+    enabled.set(true);
+
+    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
+    expect(sameCity).toHaveBeenCalledOnce();
+
+    enabled.set(false);
+
+    expect(formGroup.api.errors()).toEqual([]);
+    expect(sameCity).toHaveBeenCalledOnce();
+  });
+
   it('is invalid when a child is invalid, even without own errors', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });

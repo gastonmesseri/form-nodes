@@ -2,6 +2,7 @@ import { signal, type Signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { field } from './field';
+import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
@@ -301,6 +302,25 @@ describe('field', () => {
 
     expect(fieldNode.errors()).toMatchObject([{ kind: 'blocked' }]);
     expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('conditionally applies a synchronous validator returned by another validator', () => {
+    const otherAge = signal(23);
+    const validate = vi.fn(() => otherAge() > 30 ? required : null);
+    const name = field('', [validate]);
+
+    expect(name.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledOnce();
+
+    otherAge.set(31);
+
+    expect(name.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(validate).toHaveBeenCalledTimes(2);
+
+    otherAge.set(30);
+
+    expect(name.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(3);
   });
 
   it('exposes the current validators through validators()', () => {
