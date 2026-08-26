@@ -164,6 +164,16 @@ describe('types', () => {
     }>();
   });
 
+  it('types control-originated value buffering on fields', () => {
+    const fieldNode = field('David', { debounce: 100 });
+
+    expectTypeOf(fieldNode.controlValue()).toEqualTypeOf<string | null>();
+    expectTypeOf(fieldNode.api.controlValue()).toEqualTypeOf<string | null>();
+    expectTypeOf(fieldNode.debouncing()).toEqualTypeOf<boolean>();
+    expectTypeOf(fieldNode.setControlValue).toBeCallableWith('Daniel');
+    expectTypeOf(fieldNode.flush).toBeCallableWith();
+  });
+
   it('exposes form api members directly while child types win on collisions', () => {
     const formGroup = form({
       age: field(23),

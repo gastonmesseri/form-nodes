@@ -259,11 +259,35 @@ This differs from Angular Reactive Forms, where `nonNullable` also controls whet
 | Operation | Value effect | Dirty effect | Touched effect |
 | --- | --- | --- | --- |
 | `set(value)` | Replaces the value | Marks dirty, even when the value is equal | No change |
+| `setControlValue(value)` | Updates `controlValue()` immediately and commits `value()` after the configured debounce | Marks dirty immediately | No change |
+| `flush()` | Immediately commits a pending `controlValue()` | No additional change | No change |
 | `api.patch(value)` | Same as `set(value)` | Marks dirty | No change |
 | `reset()` | Preserves the current value | Clears dirty | Clears touched |
 | `reset(value)` | Replaces the value | Clears dirty | Clears touched |
 
 `reset(value)` handles falsy values such as an empty string or zero. Resetting does not replace validators, and validation is recomputed against a newly assigned value.
+
+### Control-originated value debounce
+
+`controlValue()` is the immediate value owned by the UI control bound to a field. `value()` is the committed model value used by validators and aggregated by parent forms. Configure `debounce` on a field and send future UI updates through `setControlValue()`:
+
+```ts
+const search = field('', { debounce: 300 });
+
+search.setControlValue('angular');
+
+search.controlValue(); // 'angular' immediately
+search.value(); // '' until 300 ms elapse
+search.debouncing(); // true
+```
+
+Every new control update restarts the complete delay. `flush()` commits the latest buffered value immediately and cancels its timer. A missing, non-finite, zero, or negative debounce commits control updates immediately.
+
+Programmatic operations are never debounced. `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `controlValue()` and `value()` immediately. `reset()` without a value cancels the pending update, discards the buffered control value, and restores `controlValue()` from the currently committed value. This prevents a stale timer from overwriting a newer programmatic value. A control update marks the field dirty immediately; reset clears dirty and touched state as usual.
+
+Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. A field's `controlValue()` represents only the control bound directly to that field and is not aggregated from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
+
+This follows the control buffer semantics inspected in Angular Signal Forms 22.1.x at commit `004cf3a27734ae90738a0a745cc0369b52306ca3`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.
 
 ### Form values
 

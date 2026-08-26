@@ -50,6 +50,133 @@ describe('field', () => {
     expect(fieldNode.value()).toBe(30);
   });
 
+  it('updates control and model values immediately without control debounce', () => {
+    const fieldNode = field('David');
+
+    fieldNode.setControlValue('Daniel');
+
+    expect(fieldNode.controlValue()).toBe('Daniel');
+    expect(fieldNode.value()).toBe('Daniel');
+    expect(fieldNode.debouncing()).toBe(false);
+    expect(fieldNode.dirty()).toBe(true);
+  });
+
+  it('buffers debounced control updates before committing the model value', async () => {
+    vi.useFakeTimers();
+    try {
+      const validate = vi.fn(({ value }: Context<string | null>) => value() === 'Daniel' ? { kind: 'taken' } : null);
+      const fieldNode = field('David', { validators: [validate], debounce: 100 });
+
+      expect(fieldNode.errors()).toEqual([]);
+      expect(validate).toHaveBeenCalledOnce();
+
+      fieldNode.setControlValue('Daniel');
+
+      expect(fieldNode.controlValue()).toBe('Daniel');
+      expect(fieldNode.value()).toBe('David');
+      expect(fieldNode.debouncing()).toBe(true);
+      expect(fieldNode.errors()).toEqual([]);
+      expect(validate).toHaveBeenCalledOnce();
+
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(fieldNode.value()).toBe('Daniel');
+      expect(fieldNode.debouncing()).toBe(false);
+      expect(fieldNode.errors()).toMatchObject([{ kind: 'taken' }]);
+      expect(validate).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not restart asynchronous validation until a control value is committed', async () => {
+    vi.useFakeTimers();
+    try {
+      const validate = vi.fn(async ({ value }: Context<string | null>) => {
+        value();
+        return null;
+      });
+      const fieldNode = field('David', {
+        validators: [asyncValidator(validate)],
+        debounce: 100,
+      });
+
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(validate).toHaveBeenCalledOnce();
+
+      fieldNode.setControlValue('Daniel');
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(validate).toHaveBeenCalledOnce();
+
+      await vi.advanceTimersByTimeAsync(100);
+      await vi.advanceTimersByTimeAsync(0);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(validate).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('restarts control debounce and flushes only the latest value', async () => {
+    vi.useFakeTimers();
+    try {
+      const fieldNode = field('initial', { debounce: 100 });
+
+      fieldNode.setControlValue('first');
+      await vi.advanceTimersByTimeAsync(50);
+      fieldNode.setControlValue('second');
+      await vi.advanceTimersByTimeAsync(99);
+
+      expect(fieldNode.value()).toBe('initial');
+      expect(fieldNode.controlValue()).toBe('second');
+
+      fieldNode.flush();
+
+      expect(fieldNode.value()).toBe('second');
+      expect(fieldNode.debouncing()).toBe(false);
+      await vi.runAllTimersAsync();
+      expect(fieldNode.value()).toBe('second');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('cancels pending control updates on programmatic set and reset', async () => {
+    vi.useFakeTimers();
+    try {
+      const fieldNode = field('initial', { debounce: 100 });
+
+      fieldNode.setControlValue('stale');
+      fieldNode.set('programmatic');
+      await vi.runAllTimersAsync();
+
+      expect(fieldNode.value()).toBe('programmatic');
+      expect(fieldNode.controlValue()).toBe('programmatic');
+      expect(fieldNode.debouncing()).toBe(false);
+
+      fieldNode.setControlValue('stale reset');
+      fieldNode.reset();
+      await vi.runAllTimersAsync();
+
+      expect(fieldNode.value()).toBe('programmatic');
+      expect(fieldNode.controlValue()).toBe('programmatic');
+      expect(fieldNode.pristine()).toBe(true);
+
+      fieldNode.setControlValue('another stale value');
+      fieldNode.reset('reset value');
+      await vi.runAllTimersAsync();
+
+      expect(fieldNode.value()).toBe('reset value');
+      expect(fieldNode.controlValue()).toBe('reset value');
+      expect(fieldNode.pristine()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('is valid with an empty error array when it has no validators', () => {
     const fieldNode = field('David');
     expect(fieldNode.errors()).toEqual([]);

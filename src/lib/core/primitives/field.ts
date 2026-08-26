@@ -24,6 +24,8 @@ export type FieldOptions<TValue = any> = {
   readonly nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
+  /** Delay in milliseconds for updates received through setControlValue(). */
+  readonly debounce?: number;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
@@ -37,7 +39,16 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
   value: Signal<TValue>;
+  /**
+   * Immediate value buffered from the bound UI control before any configured debounce completes.
+   * Most consumers should read value() instead; controlValue() is primarily intended for control bindings.
+   */
+  controlValue: Signal<TValue>;
   set(value: TValue): void;
+  setControlValue(value: TValue): void;
+  debouncing: Signal<boolean>;
+  /** Immediately commits the pending controlValue(), ending its configured debounce. Has no observable effect when no control update is pending. */
+  flush(): void;
   patch(value: TValue): void;
   reset(...args: [] | [value: TValue]): void;
   validators: Signal<Validators<TValue>>;
@@ -109,6 +120,8 @@ export function field<TValue>(
     : resolvedOptions?.validators ?? [];
   const validators = normalizeValidatorSource(validatorSource);
   const fieldValue = signal<TValue>(value!);
+  const fieldControlValue = signal<TValue>(value!);
+  const fieldDebouncing = signal(false);
   const fieldContext = markAsFieldContext({ value: fieldValue.asReadonly() });
   const fieldValidators = signal<Validators<TValue>>(validators);
   const fieldTouched = signal(false);
@@ -165,12 +178,41 @@ export function field<TValue>(
     asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel, destroy: asyncValidation.destroy };
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
+  const controlDebounce = {
+    timer: null as ReturnType<typeof setTimeout> | null,
+    cancel: () => {
+      if (controlDebounce.timer !== null) clearTimeout(controlDebounce.timer);
+      controlDebounce.timer = null;
+      fieldDebouncing.set(false);
+    },
+    commit: () => {
+      controlDebounce.cancel();
+      fieldValue.set(fieldControlValue());
+    },
+  };
+  const controlDebounceRef = new WeakRef(controlDebounce);
   const set = (next: TValue) => {
+    controlDebounce.cancel();
+    fieldControlValue.set(next);
     fieldValue.set(next);
     fieldDirty.set(true);
   };
+  const setControlValue = (next: TValue) => {
+    controlDebounce.cancel();
+    fieldControlValue.set(next);
+    fieldDirty.set(true);
+    const debounce = resolvedOptions?.debounce ?? 0;
+    if (!Number.isFinite(debounce) || debounce <= 0 || Object.is(next, fieldValue())) {
+      fieldValue.set(next);
+      return;
+    }
+    fieldDebouncing.set(true);
+    controlDebounce.timer = setTimeout(() => controlDebounceRef.deref()?.commit(), debounce);
+  };
   const reset = (...args: [] | [value: TValue]) => {
+    controlDebounce.cancel();
     if (args.length === 1) fieldValue.set(args[0]);
+    fieldControlValue.set(fieldValue());
     fieldTouched.set(false);
     fieldDirty.set(false);
   };
@@ -179,7 +221,11 @@ export function field<TValue>(
     parent: fieldParent.asReadonly(),
     path: fieldPath,
     value: fieldValue.asReadonly(),
+    controlValue: fieldControlValue.asReadonly(),
     set,
+    setControlValue,
+    debouncing: fieldDebouncing.asReadonly(),
+    flush: controlDebounce.commit,
     reset,
     validators: fieldValidators.asReadonly(),
     setValidators: (next: ValidatorSource<TValue>) => {
