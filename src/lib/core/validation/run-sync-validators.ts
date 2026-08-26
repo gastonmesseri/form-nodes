@@ -7,26 +7,44 @@ import type { AsyncValidatorState, ComposableValidationResult, ComposableValidat
 
 const maximumCompositionDepth = 100;
 
-const resolveComposableValidator = <TValue>(
-  validator: ComposableValidator<TValue>,
+const resolveComposableResult = <TValue>(
+  result: ComposableValidationResult<TValue>,
   context: ValidatorContext<TValue>,
+  activeValidators: Set<Function>,
+  depth: number,
 ): ValidationResult => {
-  const visited = new Set<Function>([validator]);
-  let result: ComposableValidationResult<TValue> = validator(context);
-  let depth = 0;
-  while (typeof result === 'function') {
+  if (typeof result === 'function') {
     if (isAsyncValidator(result)) {
       throw new Error('A synchronous validator cannot return an asyncValidator(); add it directly to the validators array.');
     }
-    if (visited.has(result)) throw new Error('Circular synchronous validator composition detected.');
-    if (depth++ >= maximumCompositionDepth) {
+    if (activeValidators.has(result)) throw new Error('Circular synchronous validator composition detected.');
+    if (depth >= maximumCompositionDepth) {
       throw new Error(`Synchronous validator composition exceeded ${maximumCompositionDepth} levels.`);
     }
-    visited.add(result);
-    result = result(context);
+    activeValidators.add(result);
+    const resolved = resolveComposableResult(result(context), context, activeValidators, depth + 1);
+    activeValidators.delete(result);
+    return resolved;
   }
-  return result;
+
+  if (Array.isArray(result)) {
+    const validators = result.filter((item) => typeof item === 'function');
+    if (validators.length === 0) return result as readonly ValidationError.WithoutTargetNode[];
+    if (validators.length !== result.length) {
+      throw new Error('Synchronous validator composition cannot mix validators and validation errors in the same array.');
+    }
+    return (result as Validators<TValue>).flatMap((validator) =>
+      normalizeValidationResult(resolveComposableResult(validator, context, activeValidators, depth)),
+    );
+  }
+
+  return result as ValidationResult;
 };
+
+const resolveComposableValidator = <TValue>(
+  validator: ComposableValidator<TValue>,
+  context: ValidatorContext<TValue>,
+): ValidationResult => resolveComposableResult(validator, context, new Set(), 0);
 
 export const runSyncValidators = <TValue, TNode extends Node & { api: AsyncValidatorState }>(
   context: FieldContext<TValue>,

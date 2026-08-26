@@ -1,21 +1,21 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
+import type { Field } from './field';
 import { isNode, markAsNode } from '../utils/node-marker';
-import { isValidators } from '../validation/is-validators';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
-import type { Field } from './field';
-import type { ValidationError, ValidationStatus, Validators } from '../validation/validation.type';
+import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
+import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
+import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { InternalNode, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
-  readonly validators?: Validators<TValue>;
+  readonly validators?: ValidatorSource<TValue>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
@@ -59,7 +59,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   patch(value: FormPatch<TNodes>): void;
   reset(...args: [] | [value: FormSet<TNodes>]): void;
   validators: Signal<Validators<FormValue<TNodes>>>;
-  setValidators(validators: Validators<FormValue<TNodes>>): void;
+  setValidators(validators: ValidatorSource<FormValue<TNodes>>): void;
   errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes, TParent>>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
@@ -106,22 +106,23 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
 ): Form<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   definitions: TDefinitions,
-  validators?: Validators<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+  validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   definitions: TDefinitions,
-  validatorsOrOptions?: Validators<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
   separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
 ): Form<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = FormValue<TNodes>;
-  const resolvedOptions = isValidators<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
+  const resolvedOptions = isValidatorSource<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
     ? separateOptions
     : validatorsOrOptions;
-  const validators = isValidators<TValue>(validatorsOrOptions)
+  const validatorSource = isValidatorSource<TValue>(validatorsOrOptions)
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
+  const validators = normalizeValidatorSource(validatorSource);
   const controls = Object.fromEntries(
     Object.entries(definitions).map(([key, definition]) => [
       key,
@@ -230,7 +231,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     reset,
     validators: formValidators.asReadonly(),
     setValidators: (next) => {
-      formValidators.set(next);
+      formValidators.set(normalizeValidatorSource(next));
       ensureAsyncValidationWatch();
     },
     errors: formErrors,

@@ -4,7 +4,7 @@ import { field } from '../primitives/field';
 import { asyncValidator } from './async-validator';
 import { required } from './validators/required';
 import { minLength } from './validators/min-length';
-import type { ComposableValidator } from './validation.type';
+import type { ComposableValidationResult, ComposableValidator } from './validation.type';
 
 describe('runSyncValidators', () => {
   it('combines validators in fields', () => {
@@ -59,6 +59,22 @@ describe('runSyncValidators', () => {
 
     expect(() => fieldNode.errors()).toThrow(
       'A synchronous validator cannot return an asyncValidator(); add it directly to the validators array.',
+    );
+  });
+
+  it('allows the same validator in multiple branches of a returned array', () => {
+    const duplicate = () => ({ kind: 'duplicate' });
+    const fieldNode = field('David', [() => [duplicate, duplicate]]);
+
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'duplicate' }, { kind: 'duplicate' }]);
+  });
+
+  it('rejects arrays that mix validators and validation errors', () => {
+    const mixed = () => [required, { kind: 'mixed' }] as unknown as ComposableValidationResult<string | null>;
+    const fieldNode = field('David', [mixed]);
+
+    expect(() => fieldNode.errors()).toThrow(
+      'Synchronous validator composition cannot mix validators and validation errors in the same array.',
     );
   });
 });
