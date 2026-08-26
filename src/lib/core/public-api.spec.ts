@@ -34,6 +34,54 @@ describe('types', () => {
     });
   });
 
+  it('hides native function members unless a form child uses the same key', () => {
+    const fieldNode = field('David');
+    const plainForm = form({ age: field(23) });
+
+    if (false) {
+      // @ts-expect-error native function members are intentionally hidden
+      fieldNode.apply;
+      // @ts-expect-error native function members are intentionally hidden
+      fieldNode.name;
+      // @ts-expect-error native function members are intentionally hidden
+      plainForm.arguments;
+      // @ts-expect-error native function members are intentionally hidden
+      plainForm.bind;
+      // @ts-expect-error native function members are intentionally hidden
+      plainForm.call;
+      // @ts-expect-error native function members are intentionally hidden
+      plainForm.caller;
+      // @ts-expect-error native function members are intentionally hidden
+      plainForm.length;
+      // @ts-expect-error native function members are intentionally hidden
+      plainForm.prototype;
+      // @ts-expect-error native function members are intentionally hidden
+      plainForm.toString;
+    }
+
+    const colliding = form({
+      apply: field('apply'),
+      arguments: field('arguments'),
+      bind: field('bind'),
+      call: field('call'),
+      caller: field('caller'),
+      length: field('length'),
+      name: field('name'),
+      prototype: field('prototype'),
+      toString: field('toString'),
+    });
+
+    expectTypeOf(colliding.apply()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.arguments()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.bind()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.call()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.caller()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.length()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.prototype()).toEqualTypeOf<string | null>();
+    expectTypeOf(colliding.toString()).toEqualTypeOf<string | null>();
+  });
+
   it('types each parent through the form that owns the node', () => {
     const profile = form({
       name: field('David'),
