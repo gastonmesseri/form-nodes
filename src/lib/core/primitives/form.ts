@@ -226,6 +226,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     path: formPath,
     keyInParent: formKeyInParent.asReadonly(),
     value: formValue,
+    controlValue: formValue,
     set,
     update: (updater) => untracked(() => set(updater(formValue()))),
     patch,
@@ -280,7 +281,7 @@ export function form<TDefinitions extends NodeDefinitions>(
   const internalApi = {
     ...api,
     _controlDebounce: formControlDebounce,
-    _controlValue: formValue,
+    _controlValue: api.controlValue,
     _setControlValue: (value: FormSet<TNodes>) => {
       set(value);
       formSelfDirty.set(true);

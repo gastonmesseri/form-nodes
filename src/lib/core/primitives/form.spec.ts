@@ -474,12 +474,14 @@ describe('form', () => {
       expect(profile.address.city.value()).toBe('Zurich');
       expect(profile.address.value()).toEqual({ city: 'Zurich' });
       expect(profile.value()).toEqual({ address: { city: 'Zurich' } });
+      expect(profile.controlValue()).toEqual({ address: { city: 'Zurich' } });
       expect(validate).toHaveBeenCalledOnce();
 
       profile.address.city.flush();
 
       expect(profile.address.value()).toEqual({ city: 'Bern' });
       expect(profile.value()).toEqual({ address: { city: 'Bern' } });
+      expect(profile.controlValue()).toEqual({ address: { city: 'Bern' } });
       expect(profile.errors()).toEqual([]);
       expect(validate).toHaveBeenCalledTimes(2);
       await vi.runAllTimersAsync();

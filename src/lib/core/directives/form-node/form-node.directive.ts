@@ -312,7 +312,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private getNativeField(): Field<NodeValue<TNode>> {
     const node = this._field as unknown as Partial<Field<NodeValue<TNode>>>;
-    if (typeof node.controlValue !== 'function') {
+    if (typeof node.setControlValue !== 'function') {
       throw new Error('formNode: native controls require a field node');
     }
     return node as Field<NodeValue<TNode>>;

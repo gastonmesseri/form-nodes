@@ -405,6 +405,7 @@ export function array<TDefinition extends NodeDefinition>(
     path: arrayPath,
     keyInParent: arrayKeyInParent.asReadonly(),
     value: arrayValue,
+    controlValue: arrayValue,
     at: (index) => arrayItems()[index] as ArrayItemWithParent<TItem, ArrayNode<TItem>> | undefined,
     forEach: (callback) => {
       const snapshot = arrayItems();
@@ -504,7 +505,7 @@ export function array<TDefinition extends NodeDefinition>(
   const internalApi = {
     ...api,
     _controlDebounce: arrayControlDebounce,
-    _controlValue: arrayValue,
+    _controlValue: api.controlValue,
     _setControlValue: (value: TSet) => {
       reconcile(value, false);
       arraySelfDirty.set(true);

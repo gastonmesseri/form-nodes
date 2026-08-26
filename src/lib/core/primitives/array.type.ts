@@ -100,6 +100,8 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
   value: Signal<TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]>;
+  /** Complete value represented by a control bound directly to this array. Pending descendant control values are not aggregated. */
+  controlValue: Signal<TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]>;
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
   forEach(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => void): void;
   map<TResult>(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => TResult): TResult[];
