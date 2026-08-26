@@ -1,5 +1,6 @@
 import { computed, signal, type Injector, type Signal } from '@angular/core';
 
+import type { ArrayNode } from './array';
 import type { Field } from './field';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
@@ -97,7 +98,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
 
 export type NodeWithParent<TNode extends Node, TParent extends Node> =
   TNode extends Field<infer TValue, Node> ? Field<TValue, TParent> :
-  TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent> : TNode;
+  TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent> :
+  TNode extends ArrayNode<infer TItem, Node> ? ArrayNode<TItem, TParent> : TNode;
 
 export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
   readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes, TParent>>;

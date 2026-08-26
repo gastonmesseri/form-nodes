@@ -3,12 +3,28 @@ import { signal, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
+import { array } from './array';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('aggregates a dynamic array child through the public form api', () => {
+    const profile = form({
+      name: field('Marco'),
+      sons: array([{ name: 'Mono', age: 11 }], () => ({ name: field(''), age: field(23) })),
+    });
+
+    expect(profile()).toEqual({ name: 'Marco', sons: [{ name: 'Mono', age: 11 }] });
+    profile.sons.push({ name: 'Lia', age: 7 });
+    expect(profile()).toEqual({
+      name: 'Marco',
+      sons: [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
+    });
+    expect(profile.dirty()).toBe(true);
+  });
+
   it('exposes its public api directly on the form', () => {
     const profile = form({ age: field(23) });
 

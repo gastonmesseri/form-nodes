@@ -1,0 +1,223 @@
+import { signal } from '@angular/core';
+import { describe, expect, it, vi } from 'vitest';
+
+import { array } from './array';
+import { field } from './field';
+import { form } from './form';
+import { required } from '../validation/validators/required';
+import { asyncValidator } from '../validation/async-validator';
+
+describe('array', () => {
+  it('creates independent form items from a count and factory defaults', () => {
+    const factory = vi.fn(() => ({ name: field(''), age: field(23) }));
+    const sons = array(2, factory);
+
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(sons()).toEqual([{ name: '', age: 23 }, { name: '', age: 23 }]);
+    expect(sons.length()).toBe(2);
+    expect(sons.items()[0]).not.toBe(sons.items()[1]);
+
+    sons.at(0)!.name.set('Mono');
+
+    expect(sons.at(0)!.name()).toBe('Mono');
+    expect(sons.at(1)!.name()).toBe('');
+  });
+
+  it('creates pristine and untouched form items from initial values', () => {
+    const sons = array(
+      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
+      () => ({ name: field(''), age: field(23) }),
+    );
+
+    expect(sons()).toEqual([{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }]);
+    expect(sons.pristine()).toBe(true);
+    expect(sons.untouched()).toBe(true);
+    expect(sons.items().every((item) => item.pristine() && item.untouched())).toBe(true);
+  });
+
+  it('supports primitive field items', () => {
+    const tags = array(['first', 'second'], () => field(''));
+
+    expect(tags()).toEqual(['first', 'second']);
+    expect(tags.at(0)!()).toBe('first');
+    tags.at(1)!.set('updated');
+    expect(tags()).toEqual(['first', 'updated']);
+  });
+
+  it('pushes and inserts either defaults or explicit values', () => {
+    const sons = array(0, () => ({ name: field(''), age: field(23) }));
+
+    const defaultSon = sons.push();
+    const explicitSon = sons.push({ name: 'Mono', age: 11 });
+    const insertedSon = sons.insert(1, { name: 'Lia', age: 7 });
+
+    expect(defaultSon()).toEqual({ name: '', age: 23 });
+    expect(explicitSon()).toEqual({ name: 'Mono', age: 11 });
+    expect(insertedSon()).toEqual({ name: 'Lia', age: 7 });
+    expect(sons()).toEqual([
+      { name: '', age: 23 },
+      { name: 'Lia', age: 7 },
+      { name: 'Mono', age: 11 },
+    ]);
+    expect(sons.dirty()).toBe(true);
+  });
+
+  it('preserves node identity and state while moving items and updates paths', () => {
+    const sons = array(
+      [{ name: 'Mono' }, { name: 'Lia' }],
+      () => ({ name: field('') }),
+    );
+    const lia = sons.at(1)!;
+    lia.name.markAsTouched();
+
+    sons.move(1, 0);
+
+    expect(sons.at(0)).toBe(lia);
+    expect(sons.at(0)!.touched()).toBe(true);
+    expect(sons.at(0)!.path()).toEqual(['0']);
+    expect(sons.at(1)!.path()).toEqual(['1']);
+    expect(sons.at(0)!.name.path()).toEqual(['0', 'name']);
+  });
+
+  it('detaches removed items and reindexes the remaining items', () => {
+    const sons = array(3, () => ({ name: field('') }));
+    const removed = sons.removeAt(1)!;
+
+    expect(removed.parent()).toBeNull();
+    expect(removed.path()).toEqual([]);
+    expect(sons.length()).toBe(2);
+    expect(sons.at(1)!.path()).toEqual(['1']);
+    expect(sons.removeAt(99)).toBeUndefined();
+  });
+
+  it('sets values while preserving common node identities', () => {
+    const sons = array([{ name: 'Mono' }], () => ({ name: field('') }));
+    const first = sons.at(0)!;
+
+    sons.set([{ name: 'Updated' }, { name: 'Lia' }]);
+
+    expect(sons.at(0)).toBe(first);
+    expect(sons()).toEqual([{ name: 'Updated' }, { name: 'Lia' }]);
+    expect(sons.dirty()).toBe(true);
+  });
+
+  it('resets values and interaction state while reconciling length', () => {
+    const sons = array([{ name: 'Mono' }], () => ({ name: field('') }));
+    sons.push({ name: 'Lia' });
+    sons.at(0)!.name.markAsTouched();
+
+    sons.reset([{ name: 'Noa' }]);
+
+    expect(sons()).toEqual([{ name: 'Noa' }]);
+    expect(sons.pristine()).toBe(true);
+    expect(sons.untouched()).toBe(true);
+  });
+
+  it('aggregates validation and interaction state from dynamic items', () => {
+    const names = array(1, () => field('', [required]));
+
+    expect(names.invalid()).toBe(true);
+    names.at(0)!.set('Mono');
+    expect(names.valid()).toBe(true);
+    expect(names.dirty()).toBe(true);
+    names.at(0)!.markAsTouched();
+    expect(names.touched()).toBe(true);
+  });
+
+  it('runs reactive validators on the array value', () => {
+    const minimum = signal(2);
+    const names = array(1, () => field('Mono'), {
+      validators: [({ value }) => value().length < minimum() ? { kind: 'minimumItems' } : null],
+    });
+
+    expect(names.getError('minimumItems')).toMatchObject({ kind: 'minimumItems' });
+    names.push('Lia');
+    expect(names.errors()).toEqual([]);
+    minimum.set(3);
+    expect(names.invalid()).toBe(true);
+  });
+
+  it('runs and aggregates asynchronous validation', async () => {
+    const names = array(['Mono'], () => field(''), {
+      validators: [asyncValidator(async ({ value }) =>
+        value().includes('blocked') ? { kind: 'blockedName' } : null,
+      )],
+    });
+
+    expect(names.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(names.valid()).toBe(true);
+
+    names.push('blocked');
+    await Promise.resolve();
+    expect(names.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(names.getError('blockedName')).toMatchObject({ kind: 'blockedName' });
+  });
+
+  it('propagates configured state to current and future items', () => {
+    const disabled = signal(true);
+    const names = array(1, () => field(''), { disabled });
+
+    expect(names.at(0)!.disabled()).toBe(true);
+    const added = names.push('Mono');
+    expect(added.disabled()).toBe(true);
+
+    disabled.set(false);
+    expect(names.at(0)!.enabled()).toBe(true);
+    expect(added.enabled()).toBe(true);
+  });
+
+  it('rejects invalid initial counts and mutation indexes', () => {
+    expect(() => array(-1, () => field(''))).toThrow(RangeError);
+    expect(() => array(1.5, () => field(''))).toThrow(RangeError);
+    const names = array(1, () => field(''));
+    expect(() => names.insert(2)).toThrow(RangeError);
+    expect(() => names.move(0, 1)).toThrow(RangeError);
+  });
+
+  it('rejects factories that reuse the same live node', () => {
+    const shared = field('');
+
+    expect(() => array(2, () => shared)).toThrow('factory must return a fresh node definition');
+  });
+
+  it('rejects factory objects that reuse nested live nodes', () => {
+    const sharedDefinition = { name: field('') };
+
+    expect(() => array(2, () => sharedDefinition)).toThrow('factory must return a fresh node definition');
+  });
+
+  it('clears all items and detaches retained references', () => {
+    const names = array(['Mono'], () => field(''));
+    const item = names.at(0)!;
+
+    names.clear();
+
+    expect(names()).toEqual([]);
+    expect(item.parent()).toBeNull();
+    expect(names.dirty()).toBe(true);
+  });
+
+  it('can be nested inside forms and other arrays', () => {
+    const profile = form({
+      name: field('Marco'),
+      sons: array([{ name: 'Mono', aliases: ['M'] }], () => ({
+        name: field(''),
+        aliases: array(['M'], () => field('')),
+      })),
+    });
+
+    expect(profile()).toEqual({
+      name: 'Marco',
+      sons: [{ name: 'Mono', aliases: ['M'] }],
+    });
+    expect(profile.sons.parent()).toBe(profile);
+    expect(profile.sons.path()).toEqual(['sons']);
+    expect(profile.sons.at(0)!.name.path()).toEqual(['sons', '0', 'name']);
+    expect(profile.sons.at(0)!.aliases.at(0)!.path()).toEqual(['sons', '0', 'aliases', '0']);
+    expect(profile.sons.at(0)!.name.form()).toBe(profile);
+  });
+});
