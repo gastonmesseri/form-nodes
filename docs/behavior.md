@@ -362,12 +362,19 @@ negative value also overrides an inherited delay and commits control updates imm
 array items resolve the effective debounce after they are attached, so both current and future
 items inherit from their array and ancestors.
 
-Aggregate nodes expose a readonly `controlValue()`, but it intentionally does not compose pending
-control values from descendants. Until those descendants commit, both the aggregate `value()` and
-`controlValue()` contain their last committed values. This avoids exposing a partially buffered
-object or array and follows Angular Signal Forms, whose node-level `controlValue()` explicitly does
-not incorporate child control values. Unlike Angular's writable signal, this library keeps the
-signal readonly and distinguishes control-originated writes through its binding API.
+Aggregate nodes expose a readonly `controlValue()` for a custom control bound directly to that form
+or array. Such a control has its own debounce buffer: `controlValue()` changes immediately while
+`value()` and descendants retain their committed values until the aggregate strategy completes or
+`flush()` runs. Descendants remain pristine because the dirty interaction belongs to the aggregate
+control. A newer programmatic or descendant value invalidates the aggregate buffer so stale work
+cannot overwrite it.
+
+Pending control values from descendants are intentionally not composed into an ancestor's
+`controlValue()`. Until those descendants commit, both ancestor `value()` and `controlValue()` keep
+their last committed representation. This follows Angular Signal Forms, whose node-level
+`controlValue()` explicitly does not incorporate child control values. Unlike Angular's writable
+signal, this library keeps the signal readonly and distinguishes control-originated writes through
+its binding API.
 
 `form.debouncing()` and `array.debouncing()` are true while any current descendant field has a
 pending control-value debounce. They aggregate only control debounce state and remain independent
@@ -1540,7 +1547,7 @@ transitions using a small CSS animation hook, matching Angular Signal Forms. The
 document or Shadow Root, honors Angular's `CSP_NONCE`, and is removed when its last binding is
 destroyed. No validity observer or style is installed during server rendering.
 
-Native `input`, `select`, and `textarea` elements still require a `field()` because they edit scalar control representations. Aggregate nodes are accepted only through custom signal controls or CVAs capable of representing their complete object or array value. Forms and arrays expose their complete committed representation through readonly `controlValue()` signals, without composing pending descendant control buffers.
+Native `input`, `select`, and `textarea` elements still require a `field()` because they edit scalar control representations. Aggregate nodes are accepted only through custom signal controls or CVAs capable of representing their complete object or array value. Forms and arrays expose that direct control representation through readonly `controlValue()` signals and may debounce it independently, without composing pending descendant control buffers.
 
 The architecture follows Angular 22 Signal Forms `FormField`, `FormValueControl`, and `FormCheckboxControl` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), especially `packages/forms/signals/src/directive/form_field.ts`, `packages/forms/signals/src/directive/form_field_spec.ts`, `packages/forms/signals/src/api/types.ts`, and the binding selection in `packages/forms/signals/src/field/node.ts`. `[formNode]` reproduces the pass-through result without depending on Angular's internal control-creation hook: component wrappers are discovered through the public `getDebugNode()` and `reflectComponentType()` APIs, while directives opt in through `provideFormNodePassThrough()`. Its signal-control integration remains independent and uses the same public discovery APIs. Updating read-only `InputSignal` state uses a small isolated adapter around Angular's `ɵSIGNAL`/`InputSignalNode` mechanism; this compatibility boundary is covered by JIT, full-AOT, server-rendering, hydration, OnPush, and real-Chromium tests. Signal interoperability remains a directive concern and does not change field semantics.
 

@@ -4,6 +4,7 @@ import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { computedFunction } from '../utils/computed-function';
+import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { form, type FormOptions, type NormalizedNode } from './form';
@@ -283,8 +284,10 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayDirty = computed(() =>
     !arrayNonInteractive() && (arraySelfDirty() || arrayItems().some((item) => item.$api.dirty())),
   );
+  let arrayControlValueBuffer!: ControlValueBuffer<TValue, TSet>;
   const arrayDebouncing = computed(() =>
-    arrayItems().some((item) => item.$api.debouncing()),
+    arrayControlValueBuffer.debouncing()
+    || arrayItems().some((item) => item.$api.debouncing()),
   );
   const assertIndex = (index: number, allowEnd = false) => {
     const maximum = arrayItems().length - (allowEnd ? 0 : 1);
@@ -361,6 +364,7 @@ export function array<TDefinition extends NodeDefinition>(
   };
   const reconcile = resolvedOptions?.trackBy ? reconcileByKey : reconcileByIndex;
   const reset = (...args: [] | [value: TSet]) => {
+    arrayControlValueBuffer?.cancel();
     if (args.length === 0) arrayItems().forEach((item) => item.$api.reset());
     else reconcile(args[0], true);
     arraySelfTouched.set(false);
@@ -397,6 +401,16 @@ export function array<TDefinition extends NodeDefinition>(
     getItemSnapshot().some((item, index) => predicate(item, index, arrayNode));
   const every: ArrayApi<TItem>['every'] = (predicate) =>
     getItemSnapshot().every((item, index) => predicate(item, index, arrayNode));
+  const set = (value: TSet) => {
+    arrayControlValueBuffer?.cancel();
+    reconcile(value, false);
+  };
+  arrayControlValueBuffer = createControlValueBuffer(
+    arrayValue,
+    arrayControlDebounce,
+    set,
+    () => arraySelfDirty.set(true),
+  );
   const api: ArrayApi<TItem> = {
     items: arrayItems.asReadonly() as Signal<ArrayItems<TItem, Node>>,
     length: computed(() => arrayItems().length),
@@ -405,7 +419,7 @@ export function array<TDefinition extends NodeDefinition>(
     path: arrayPath,
     keyInParent: arrayKeyInParent.asReadonly(),
     value: arrayValue,
-    controlValue: arrayValue,
+    controlValue: arrayControlValueBuffer.controlValue,
     at: (index) => arrayItems()[index] as ArrayItemWithParent<TItem, ArrayNode<TItem>> | undefined,
     forEach: (callback) => {
       const snapshot = arrayItems();
@@ -444,11 +458,10 @@ export function array<TDefinition extends NodeDefinition>(
       arrayItems().forEach(detachItem);
       arrayItems.set([]);
     },
-    set: (value) => {
-      reconcile(value, false);
-    },
-    update: (updater) => untracked(() => reconcile(updater(arrayValue()), false)),
+    set,
+    update: (updater) => untracked(() => set(updater(arrayValue()))),
     patch: (value) => {
+      arrayControlValueBuffer.cancel();
       value.forEach((itemValue, index) => {
         const item = arrayItems()[index];
         if (item) item.$api.patch(itemValue);
@@ -473,7 +486,10 @@ export function array<TDefinition extends NodeDefinition>(
     pending: arrayPending,
     submitting: computed(() => arrayParent()?.$api.submitting() === true),
     debouncing: arrayDebouncing,
-    flush: () => arrayItems().forEach((item) => item.$api.flush()),
+    flush: () => {
+      arrayControlValueBuffer.flush();
+      arrayItems().forEach((item) => item.$api.flush());
+    },
     focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: arrayValidationStatus,
     touched: arrayTouched,
@@ -506,10 +522,7 @@ export function array<TDefinition extends NodeDefinition>(
     ...api,
     _controlDebounce: arrayControlDebounce,
     _controlValue: api.controlValue,
-    _setControlValue: (value: TSet) => {
-      reconcile(value, false);
-      arraySelfDirty.set(true);
-    },
+    _setControlValue: arrayControlValueBuffer.set,
     _flushControlValueOnBlur: api.flush,
     _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {

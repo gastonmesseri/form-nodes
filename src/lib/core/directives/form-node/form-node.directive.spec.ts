@@ -447,6 +447,43 @@ describe('FormNode', () => {
     expect(control.reset).toHaveBeenCalledOnce();
   });
 
+  it('flushes a blur-debounced aggregate custom control when it emits touch', () => {
+    type ProfileValue = { name: string };
+
+    @Component({ standalone: true, selector: 'debounced-aggregate-control', template: '' })
+    class DebouncedAggregateControl {
+      value = model<ProfileValue>({ name: '' });
+      touch = output<void>();
+    }
+    registerSignalModelForJit(DebouncedAggregateControl, 'value');
+
+    @Component({
+      standalone: true,
+      imports: [DebouncedAggregateControl, FormNode],
+      template: `<debounced-aggregate-control [formNode]="profile" />`,
+    })
+    class Host {
+      readonly profile = form({ name: field('David', { nullable: false }) }, { debounce: 'blur' });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as DebouncedAggregateControl;
+    const { profile } = fixture.componentInstance;
+
+    control.value.set({ name: 'Lia' });
+
+    expect(profile.controlValue()).toEqual({ name: 'Lia' });
+    expect(profile()).toEqual({ name: 'David' });
+    expect(profile.debouncing()).toBe(true);
+
+    control.touch.emit();
+
+    expect(profile()).toEqual({ name: 'Lia' });
+    expect(profile.touched()).toBe(true);
+    expect(profile.debouncing()).toBe(false);
+  });
+
   it('binds a FormValueControl to an aggregate array and reconciles its nodes', () => {
     type PersonValue = { name: string | null };
 

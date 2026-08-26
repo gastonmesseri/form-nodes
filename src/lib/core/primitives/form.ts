@@ -4,6 +4,7 @@ import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { computedFunction } from '../utils/computed-function';
+import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -159,10 +160,13 @@ export function form<TDefinitions extends NodeDefinitions>(
   const formDirty = computed(() =>
     !formNonInteractive() && (formSelfDirty() || controlKeys().some((key) => controls[key]!.$api.dirty())),
   );
+  let formControlValueBuffer!: ControlValueBuffer<FormValue<TNodes>, FormSet<TNodes>>;
   const formDebouncing = computed(() =>
-    controlKeys().some((key) => controls[key]!.$api.debouncing()),
+    formControlValueBuffer.debouncing()
+    || controlKeys().some((key) => controls[key]!.$api.debouncing()),
   );
   const set = (value: FormSet<TNodes>) => {
+    formControlValueBuffer?.cancel();
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = controls[key];
       if (control === undefined) {
@@ -173,6 +177,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     });
   };
   const patch = (value: FormPatch<TNodes>) => {
+    formControlValueBuffer?.cancel();
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = controls[key] as Node | undefined;
       if (control === undefined) {
@@ -183,6 +188,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     });
   };
   const reset = (...args: [] | [value: FormSet<TNodes>]) => {
+    formControlValueBuffer?.cancel();
     formSelfTouched.set(false);
     formSelfDirty.set(false);
     notifyExternalValidationReset(formNode);
@@ -200,6 +206,12 @@ export function form<TDefinitions extends NodeDefinitions>(
       .map((key) => (controls[key] as InternalNode).$api._getControlBindingForFocus())
       .reduce(firstControlBindingInDom, undefined);
   };
+  formControlValueBuffer = createControlValueBuffer(
+    formValue,
+    formControlDebounce,
+    set,
+    () => formSelfDirty.set(true),
+  );
   const submit = async (): Promise<boolean> => {
     if (untracked(formSubmitting)) return false;
     const submission = resolvedOptions?.submission;
@@ -226,7 +238,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     path: formPath,
     keyInParent: formKeyInParent.asReadonly(),
     value: formValue,
-    controlValue: formValue,
+    controlValue: formControlValueBuffer.controlValue,
     set,
     update: (updater) => untracked(() => set(updater(formValue()))),
     patch,
@@ -249,7 +261,10 @@ export function form<TDefinitions extends NodeDefinitions>(
     submitting: formSubmitting,
     submit,
     debouncing: formDebouncing,
-    flush: () => controlKeys().forEach((key) => controls[key]!.$api.flush()),
+    flush: () => {
+      formControlValueBuffer.flush();
+      controlKeys().forEach((key) => controls[key]!.$api.flush());
+    },
     focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: formValidationStatus,
     touched: formTouched,
@@ -282,10 +297,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     ...api,
     _controlDebounce: formControlDebounce,
     _controlValue: api.controlValue,
-    _setControlValue: (value: FormSet<TNodes>) => {
-      set(value);
-      formSelfDirty.set(true);
-    },
+    _setControlValue: formControlValueBuffer.set,
     _flushControlValueOnBlur: api.flush,
     _clone: () => form(createDefinitions(), validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
