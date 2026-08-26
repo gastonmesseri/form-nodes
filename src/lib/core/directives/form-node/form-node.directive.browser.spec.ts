@@ -303,6 +303,31 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('synchronizes a native color input in both directions', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `<input type="color" [formNode]="color">`,
+    })
+    class Host {
+      readonly color = field('#ff0000', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.value).toBe('#ff0000');
+
+    fixture.componentInstance.color.set('#00ff00');
+    fixture.detectChanges();
+    expect(input.value).toBe('#00ff00');
+
+    input.value = '#0000ff';
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.color()).toBe('#0000ff');
+  });
+
   it('uses native range clamping and reacts to validator constraints', () => {
     @Component({
       standalone: true,
