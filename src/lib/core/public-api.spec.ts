@@ -6,7 +6,7 @@ import { field } from './primitives/field';
 import type { Node } from './types/node.type';
 import { asyncValidator } from './validation/async-validator';
 import { required } from './validation/validators/required';
-import type { FieldContext, ValidationError } from './validation/validation.type';
+import type { FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
   it('does not expose internal parent mutation through Node', () => {
@@ -144,8 +144,11 @@ describe('types', () => {
   it('types validators inside field options', () => {
     field('David', {
       validators: [context => {
-        expectTypeOf(context).toEqualTypeOf<FieldContext<string>>();
+        expectTypeOf(context).toEqualTypeOf<ValidatorContext<string>>();
         expectTypeOf(context.value()).toEqualTypeOf<string>();
+        expectTypeOf(context.api).toEqualTypeOf<ValidatorApi<string>>();
+        expectTypeOf(context.api.value()).toEqualTypeOf<string>();
+        expectTypeOf(context.api.path()).toEqualTypeOf<readonly string[]>();
         return null;
       }],
       nullable: false,

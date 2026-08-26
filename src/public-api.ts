@@ -28,6 +28,8 @@ export type {
   ValidationResult,
   ValidationSuccess,
   Validator,
+  ValidatorApi,
+  ValidatorContext,
   Validators,
   ValidationStatus,
 } from './lib/core/validation/validation.type';
