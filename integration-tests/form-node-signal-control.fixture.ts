@@ -56,6 +56,21 @@ export class AotDirectiveControl {
   onInput(event: Event) { this.value.set((event.target as HTMLInputElement).value); }
 }
 
+@Directive({
+  standalone: true,
+  selector: 'input[aotDirectiveCheckbox]',
+  providers: [provideFormNodeControl(() => AotDirectiveCheckbox)],
+  host: {
+    '[checked]': 'checked()',
+    '(input)': 'onInput($event)',
+  },
+})
+export class AotDirectiveCheckbox {
+  checked = model(false);
+  required = input(false);
+  onInput(event: Event) { this.checked.set((event.target as HTMLInputElement).checked); }
+}
+
 @Component({
   standalone: true,
   selector: 'aot-delegating-control',
@@ -79,12 +94,13 @@ export class AotPassThroughHost {
 @Component({
   standalone: true,
   selector: 'aot-signal-control-host',
-  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, AotDirectiveControl, FormNode],
+  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, AotDirectiveControl, AotDirectiveCheckbox, FormNode],
   template: `
     <aot-signal-value-control [formNode]="name" />
     <aot-signal-checkbox-control [formNode]="active" />
     <aot-paired-value-control [formNode]="pairedName" />
     <input aotDirectiveControl [formNode]="directiveName">
+    <input type="checkbox" aotDirectiveCheckbox [formNode]="directiveActive">
   `,
 })
 export class AotSignalControlHost {
@@ -92,4 +108,5 @@ export class AotSignalControlHost {
   active = field(false, { nullable: false });
   pairedName = field('AOT paired initial', { nullable: false });
   directiveName = field('AOT directive initial', [required], { nullable: false });
+  directiveActive = field(false, [required], { nullable: false });
 }

@@ -1459,6 +1459,48 @@ describe('FormNode', () => {
     expect(inputElement.disabled).toBe(false);
   });
 
+  it('supports a signal checkbox control implemented as a directive', () => {
+    @Directive({
+      standalone: true,
+      selector: 'input[providedSignalCheckbox]',
+      providers: [provideFormNodeControl(() => ProvidedSignalCheckbox)],
+      host: {
+        '[checked]': 'checked()',
+        '(input)': 'onInput($event)',
+      },
+    })
+    class ProvidedSignalCheckbox {
+      checked = model(false);
+      required = input(false);
+      onInput(event: Event) { this.checked.set((event.target as HTMLInputElement).checked); }
+    }
+
+    @Component({
+      standalone: true,
+      imports: [ProvidedSignalCheckbox, FormNode],
+      template: `<input type="checkbox" providedSignalCheckbox [formNode]="active">`,
+    })
+    class Host {
+      active = field(true, [required], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const control = fixture.debugElement.children[0]!.injector.get(ProvidedSignalCheckbox);
+    expect(inputElement.checked).toBe(true);
+    expect(control.required()).toBe(true);
+    expect(inputElement.required).toBe(false);
+
+    fixture.componentInstance.active.set(false);
+    fixture.detectChanges();
+    expect(inputElement.checked).toBe(false);
+
+    inputElement.checked = true;
+    inputElement.dispatchEvent(new Event('input'));
+    expect(fixture.componentInstance.active()).toBe(true);
+  });
+
   it('supports an explicitly provided signal control composed as a host directive', () => {
     @Directive({
       standalone: true,
