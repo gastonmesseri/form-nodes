@@ -255,7 +255,11 @@ export function field<TValue>(
     validationStatus: fieldValidationStatus,
     touched: computed(() => !fieldNonInteractive() && fieldTouched()),
     untouched: computed(() => fieldNonInteractive() || !fieldTouched()),
-    markAsTouched: (_options?: MarkAsTouchedOptions) => { if (!fieldNonInteractive()) fieldTouched.set(true); },
+    markAsTouched: (_options?: MarkAsTouchedOptions) => {
+      if (fieldNonInteractive()) return;
+      fieldTouched.set(true);
+      controlDebounce.commit();
+    },
     markAsUntouched: () => fieldTouched.set(false),
     dirty: computed(() => !fieldNonInteractive() && fieldDirty()),
     pristine: computed(() => fieldNonInteractive() || !fieldDirty()),

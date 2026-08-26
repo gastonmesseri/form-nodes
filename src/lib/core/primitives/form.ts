@@ -272,6 +272,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     markAsTouched: (options) => {
       if (formNonInteractive()) return;
       formSelfTouched.set(true);
+      formControlValueBuffer.flush();
       if (!options?.skipDescendants) controlKeys().forEach((key) => controls[key]!.$api.markAsTouched());
     },
     markAsUntouched: () => formSelfTouched.set(false),

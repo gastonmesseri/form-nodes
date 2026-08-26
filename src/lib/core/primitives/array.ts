@@ -497,6 +497,7 @@ export function array<TDefinition extends NodeDefinition>(
     markAsTouched: (options) => {
       if (arrayNonInteractive()) return;
       arraySelfTouched.set(true);
+      arrayControlValueBuffer.flush();
       if (!options?.skipDescendants) arrayItems().forEach((item) => item.$api.markAsTouched());
     },
     markAsUntouched: () => arraySelfTouched.set(false),
