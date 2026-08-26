@@ -2,7 +2,7 @@
 
 This document records the behavior currently implemented by the library. It is an evolving specification and the source material for future user-facing documentation.
 
-The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.x` at commit `004cf3a27734ae90738a0a745cc0369b52306ca3`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
+The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.4` at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
 Every `field()`, `form()`, and `array()` exposes its complete API through `.api`, which is the recommended access for application code. Every node also exposes the reserved `$api` escape hatch. `$api` always provides collision-safe access to the node API, including when a form declares a child named `api`. Internal library code uses `$api`, so user-defined children cannot interfere with node operations. `$api` is annotated with `@deprecated` only to reduce its prominence in autocomplete; it is not actually obsolete, remains supported, and is not planned for removal.
 
@@ -335,7 +335,7 @@ Programmatic operations are never debounced. `set()`, `api.patch()`, and `reset(
 
 Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. A field's `controlValue()` represents only the control bound directly to that field and is not aggregated from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
 
-This follows the control buffer semantics inspected in Angular Signal Forms 22.1.x at commit `004cf3a27734ae90738a0a745cc0369b52306ca3`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.
+This follows the control buffer semantics inspected in Angular Signal Forms 22.1.4 at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.
 
 #### Inherited and aggregate debounce behavior
 
@@ -1381,6 +1381,7 @@ The directive currently provides these behaviors:
 
 - Two-way synchronization with native `input`, `textarea`, and `select` elements, including number, range, checkbox, radio, date-like, and multiple-select values.
 - Native input updates use `setControlValue()`. They therefore mark the field dirty and honor the field's own or inherited control debounce; programmatic `set()` updates remain immediate and pristine.
+- Resetting a field or an ancestor form cancels its pending native-control debounce, restores the rendered committed value immediately, and prevents the cancelled value from reappearing when its timer would have completed.
 - A blur event marks the field touched. IME composition is buffered until `compositionend`.
 - `disabled`, `readonly`, `required`, `aria-invalid`, `min`, `max`, `minLength`, `maxLength`, and `pattern` are synchronized from field state to applicable DOM properties. Applicability observes an input type bound during Angular initialization. Date limits are formatted for native `date` and `month` inputs. When several pattern validators are active, the generated native pattern requires all of them; the node validators remain the authoritative validation behavior.
 - Native controls receive a stable generated `name` in the form `${APP_ID}.formN.path.to.field`. Bindings for the same field share the same name, which preserves radio grouping, while fields in different root trees receive different names. Because the path is reactive, names follow array items when their indexes change. An explicitly authored native `name` is replaced by the generated field name, matching Angular Signal Forms.
