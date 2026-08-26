@@ -166,6 +166,8 @@ describe('types', () => {
     const fieldNode = field('', { validators: required, nullable: false });
 
     fieldNode.setValidators(() => [required, () => ({ kind: 'second' })]);
+    fieldNode.setValidators(() => [required, null, undefined]);
+    fieldNode.setValidators([required, null, undefined]);
     expectTypeOf(fieldNode.validators()).toEqualTypeOf<readonly ComposableValidator<string>[]>();
   });
 

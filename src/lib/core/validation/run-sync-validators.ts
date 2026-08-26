@@ -28,12 +28,13 @@ const resolveComposableResult = <TValue>(
   }
 
   if (Array.isArray(result)) {
-    const validators = result.filter((item) => typeof item === 'function');
-    if (validators.length === 0) return result as readonly ValidationError.WithoutTargetNode[];
-    if (validators.length !== result.length) {
+    const items = result.filter((item) => item !== null && item !== undefined);
+    const validators = items.filter((item) => typeof item === 'function');
+    if (validators.length === 0) return items as readonly ValidationError.WithoutTargetNode[];
+    if (validators.length !== items.length) {
       throw new Error('Synchronous validator composition cannot mix validators and validation errors in the same array.');
     }
-    return (result as Validators<TValue>).flatMap((validator) =>
+    return (items as Validators<TValue>).flatMap((validator) =>
       normalizeValidationResult(resolveComposableResult(validator, context, activeValidators, depth)),
     );
   }

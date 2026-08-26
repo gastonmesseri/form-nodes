@@ -69,6 +69,12 @@ describe('runSyncValidators', () => {
     expect(fieldNode.errors()).toMatchObject([{ kind: 'duplicate' }, { kind: 'duplicate' }]);
   });
 
+  it('treats a returned array containing only empty entries as successful', () => {
+    const fieldNode = field('David', [() => [null, undefined]]);
+
+    expect(fieldNode.errors()).toEqual([]);
+  });
+
   it('rejects arrays that mix validators and validation errors', () => {
     const mixed = () => [required, { kind: 'mixed' }] as unknown as ComposableValidationResult<string | null>;
     const fieldNode = field('David', [mixed]);

@@ -335,6 +335,13 @@ describe('field', () => {
     expect(fieldNode.errors()).toMatchObject([{ kind: 'replacement' }]);
   });
 
+  it('filters empty entries from the configured validator array', () => {
+    const fieldNode = field('', [required, null, undefined]);
+
+    expect(fieldNode.validators()).toEqual([required]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
+  });
+
   it('conditionally applies an array of synchronous validators returned by one validator', () => {
     const enabled = signal(false);
     const tooShort = ({ value }: Context<string | null>) => value() === 'a' ? { kind: 'tooShort' } : null;
@@ -350,6 +357,12 @@ describe('field', () => {
 
     enabled.set(false);
     expect(name.errors()).toEqual([]);
+  });
+
+  it('filters empty entries from a returned validator array', () => {
+    const fieldNode = field('', () => [required, null, undefined]);
+
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
   });
 
   it('exposes the current validators through validators()', () => {
