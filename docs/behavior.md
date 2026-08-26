@@ -282,6 +282,8 @@ Callbacks receive the complete runtime node `api`. By default it is typed as `As
 
 Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Async validator callbacks access the same reactive path through `context.api.path`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
 
+Every API also exposes `parent: Signal<Node | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `Node | null` parent type even after being inserted into a form; access through the form provides the refined type.
+
 `when(context)` is reactive. While it returns `false`, the validator does not evaluate explicit params, invoke the service, expose pending state, or contribute errors. A transition to `true` starts normal validation. A transition to `false` cancels any debounce timer or in-flight Promise or Observable, clears that asynchronous validation state, and makes stale results unobservable.
 
 For explicit dependency tracking, pass a reactive `params(context)` function. Its return value is captured synchronously and passed to the validator as a stable, typed snapshot:

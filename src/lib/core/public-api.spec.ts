@@ -8,6 +8,22 @@ import { required } from './validation/validators/required';
 import type { FieldContext, ValidationError } from './validation/validation.type';
 
 describe('types', () => {
+  it('types each parent through the form that owns the node', () => {
+    const profile = form({
+      name: field('David'),
+      address: { city: field('Zurich') },
+    });
+
+    const nameParent = profile.name.api.parent();
+    const addressParent = profile.address.api.parent();
+    const cityParent = profile.address.city.api.parent();
+    if (nameParent && addressParent && cityParent) {
+      expectTypeOf(nameParent.name()).toEqualTypeOf<string | null>();
+      expectTypeOf(addressParent.address.city()).toEqualTypeOf<string | null>();
+      expectTypeOf(cityParent.city()).toEqualTypeOf<string | null>();
+    }
+  });
+
   it('infers the value of each field', () => {
     const formGroup = form({
       name: field('David'),

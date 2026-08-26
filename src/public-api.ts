@@ -11,6 +11,7 @@ export type {
   FormSet,
   FormValue,
 } from './lib/core/primitives/form';
+export type { Node } from './lib/core/types/node.type';
 export type {
   FieldContext,
   AsyncValidationResult,

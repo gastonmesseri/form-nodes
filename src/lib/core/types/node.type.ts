@@ -23,7 +23,7 @@ export type InternalNodeApi = {
   hidden: Signal<boolean>;
   hide(): void;
   show(): void;
-  _setParent?(parent: InternalNodeApi | null, key?: string): void;
+  _setParent?(parent: Node | null, key?: string): void;
 };
 
 export type Node = (() => any) & { api: InternalNodeApi };

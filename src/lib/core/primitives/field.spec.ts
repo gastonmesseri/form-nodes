@@ -11,6 +11,7 @@ describe('field', () => {
     const name = field('David');
 
     expect(name.api.path()).toEqual([]);
+    expect(name.api.parent()).toBeNull();
   });
 
   it('exposes the initial value when called and through value()', () => {
