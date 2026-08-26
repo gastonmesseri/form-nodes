@@ -8,6 +8,70 @@ import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
 describe('array', () => {
+  it('creates independent form items from a shorthand template', () => {
+    const template = { name: field(''), age: field(23) };
+    const sons = array(2, template);
+
+    expect(sons()).toEqual([{ name: '', age: 23 }, { name: '', age: 23 }]);
+    expect(sons.at(0)).not.toBe(sons.at(1));
+    expect(sons.at(0)!.name).not.toBe(sons.at(1)!.name);
+    expect(sons.at(0)!.name).not.toBe(template.name);
+
+    sons.at(0)!.name.set('Mono');
+
+    expect(sons.at(1)!.name()).toBe('');
+    expect(template.name()).toBe('');
+    expect(template.name.parent()).toBeNull();
+  });
+
+  it('applies initial values to items cloned from a shorthand template', () => {
+    const sons = array(
+      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
+      { name: field(''), age: field(23) },
+    );
+
+    expect(sons()).toEqual([{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }]);
+    expect(sons.pristine()).toBe(true);
+    expect(sons.untouched()).toBe(true);
+  });
+
+  it('clones declarative validators and state options without runtime state', () => {
+    const template = field('', [required], { disabled: true });
+    template.set('changed');
+    template.markAsTouched();
+    const names = array(1, template);
+
+    expect(names.at(0)!()).toBe('');
+    expect(names.at(0)!.required()).toBe(true);
+    expect(names.at(0)!.disabled()).toBe(true);
+    expect(names.at(0)!.pristine()).toBe(true);
+    expect(names.at(0)!.untouched()).toBe(true);
+  });
+
+  it('uses the declared template value for items added later', () => {
+    const template = field('initial');
+    const names = array(0, template);
+    template.set('changed outside the array');
+
+    const added = names.push();
+
+    expect(added()).toBe('initial');
+  });
+
+  it('recursively clones nested form and array templates', () => {
+    const families = array(2, {
+      surname: field(''),
+      sons: array(1, { name: field(''), age: field(0) }),
+    });
+
+    expect(families()).toEqual([
+      { surname: '', sons: [{ name: '', age: 0 }] },
+      { surname: '', sons: [{ name: '', age: 0 }] },
+    ]);
+    expect(families.at(0)!.sons).not.toBe(families.at(1)!.sons);
+    expect(families.at(0)!.sons.at(0)!.name).not.toBe(families.at(1)!.sons.at(0)!.name);
+  });
+
   it('creates independent form items from a count and factory defaults', () => {
     const factory = vi.fn(() => ({ name: field(''), age: field(23) }));
     const sons = array(2, factory);

@@ -119,6 +119,12 @@ export function field<TValue>(
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
   const validators = normalizeValidatorSource(validatorSource);
+  const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
+  const recreateField = field as unknown as (
+    initialValue: TValue,
+    initialValidators: ValidatorSource<TValue>,
+    initialOptions?: FieldOptions<TValue>,
+  ) => Field<TValue>;
   const fieldValue = signal<TValue>(value!);
   const fieldControlValue = signal<TValue>(value!);
   const fieldDebouncing = signal(false);
@@ -266,6 +272,7 @@ export function field<TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
+    _clone: () => recreateField(value, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       fieldParent.set(parent);
       fieldKeyInParent.set(parent ? key ?? null : null);
