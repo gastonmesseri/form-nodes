@@ -284,6 +284,10 @@ Every field and form API exposes `path: Signal<readonly string[]>`. The root pat
 
 Every API also exposes `parent: Signal<Node | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `Node | null` parent type even after being inserted into a form; access through the form provides the refined type.
 
+`api.form` resolves the root form for the current node. A root form returns itself, every nested form and field returns the same root form, and a standalone field returns `null`. Nodes reached through a form refine the signal to that exact root form type, including across nested forms. Because it is reactive, inserting a standalone field into a form updates `form()` and retriggers automatic async validators that read it. Async validator callbacks access it as `context.api.form()`. A validator declared before its owner is known retains `Node | null`; supplying the refined field API explicitly, such as `asyncValidator<TValue, typeof profile.age.api>(...)`, exposes `typeof profile | null` inside the callback.
+
+Root-form type resolution follows at most ten parent links. This limit affects TypeScript inference only: paths within ten levels retain the exact root form type, while deeper paths safely fall back to `Node`. Runtime parent and root traversal remains correct and has no depth limit.
+
 `when(context)` is reactive. While it returns `false`, the validator does not evaluate explicit params, invoke the service, expose pending state, or contribute errors. A transition to `true` starts normal validation. A transition to `false` cancels any debounce timer or in-flight Promise or Observable, clears that asynchronous validation state, and makes stale results unobservable.
 
 For explicit dependency tracking, pass a reactive `params(context)` function. Its return value is captured synchronously and passed to the validator as a stable, typed snapshot:

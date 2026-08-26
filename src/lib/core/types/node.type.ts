@@ -1,6 +1,7 @@
 import type { Signal } from '@angular/core';
 
-export type InternalNodeApi = {
+export type NodeApi = {
+  form: Signal<Node | null>;
   path: Signal<readonly string[]>;
   set(value: any): void;
   patch(value: any): void;
@@ -23,10 +24,23 @@ export type InternalNodeApi = {
   hidden: Signal<boolean>;
   hide(): void;
   show(): void;
-  _setParent?(parent: Node | null, key?: string): void;
 };
 
-export type Node = (() => any) & { api: InternalNodeApi };
+export type Node = (() => any) & { api: NodeApi };
+type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown];
+
+export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = RootLookupDepth> =
+  TDepth extends readonly [unknown, ...infer TRest]
+    ? TNode extends { api: { parent: Signal<infer TParent | null> } }
+      ? TParent extends Node
+        ? Node extends TParent ? TNode : RootNode<TParent, TRest>
+        : TNode
+      : TNode
+    : Node;
+export type InternalNodeApi = NodeApi & {
+  _setParent(parent: Node | null, key?: string): void;
+};
+export type InternalNode = (() => any) & { api: InternalNodeApi };
 export type Nodes = Record<string, Node>;
 export type NodeDefinition = Node | NodeDefinitions;
 export interface NodeDefinitions {

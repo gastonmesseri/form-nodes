@@ -3,11 +3,18 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import { form } from './primitives/form';
 import { field } from './primitives/field';
+import type { Node } from './types/node.type';
 import { asyncValidator } from './validation/async-validator';
 import { required } from './validation/validators/required';
 import type { FieldContext, ValidationError } from './validation/validation.type';
 
 describe('types', () => {
+  it('does not expose internal parent mutation through Node', () => {
+    type ExposesSetParent = '_setParent' extends keyof Node['api'] ? true : false;
+
+    expectTypeOf<ExposesSetParent>().toEqualTypeOf<false>();
+  });
+
   it('types each parent through the form that owns the node', () => {
     const profile = form({
       name: field('David'),
@@ -22,6 +29,56 @@ describe('types', () => {
       expectTypeOf(addressParent.address.city()).toEqualTypeOf<string | null>();
       expectTypeOf(cityParent.city()).toEqualTypeOf<string | null>();
     }
+  });
+
+  it('types the root form from every node in its tree', () => {
+    const profile = form({
+      name: field('David'),
+      address: { city: field('Zurich') },
+    });
+
+    expectTypeOf(profile.api.form()).toEqualTypeOf<typeof profile>();
+    expectTypeOf(profile.name.api.form()).toEqualTypeOf<typeof profile | null>();
+    expectTypeOf(profile.address.api.form()).toEqualTypeOf<typeof profile>();
+    expectTypeOf(profile.address.city.api.form()).toEqualTypeOf<typeof profile | null>();
+  });
+
+  it('retains the exact root form type through ten parent levels', () => {
+    const root = form({
+      level1: {
+        level2: {
+          level3: {
+            level4: {
+              level5: {
+                level6: {
+                  level7: {
+                    level8: {
+                      level9: {
+                        value: field('deep'),
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expectTypeOf(root.level1.level2.level3.level4.level5.level6.level7.level8.level9.value.api.form())
+      .toEqualTypeOf<typeof root | null>();
+  });
+
+  it('types the root form in an async validator given the refined field API', () => {
+    const profile = form({ name: field('David'), age: field(23) });
+
+    profile.age.setValidators([
+      asyncValidator<number | null, typeof profile.age.api>(async ({ api }) => {
+        expectTypeOf(api.form()).toEqualTypeOf<typeof profile | null>();
+        return null;
+      }),
+    ]);
   });
 
   it('infers the value of each field', () => {
