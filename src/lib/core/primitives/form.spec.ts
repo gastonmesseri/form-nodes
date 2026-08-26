@@ -601,6 +601,25 @@ describe('form', () => {
     expect(profile.debouncing()).toBe(false);
   });
 
+  it('aborts and restores a pending direct control value on reset', () => {
+    let abortSignal!: AbortSignal;
+    const profile = form({ name: field('Marco') }, {
+      debounce: (signal) => {
+        abortSignal = signal;
+        return new Promise<void>(() => {});
+      },
+    });
+    (profile as unknown as InternalNode).$api._setControlValue({ name: 'pending' });
+
+    profile.reset();
+
+    expect(abortSignal.aborted).toBe(true);
+    expect(profile.controlValue()).toEqual({ name: 'Marco' });
+    expect(profile()).toEqual({ name: 'Marco' });
+    expect(profile.pristine()).toBe(true);
+    expect(profile.debouncing()).toBe(false);
+  });
+
   it('uses the nearest configured ancestor control debounce', async () => {
     vi.useFakeTimers();
     try {
