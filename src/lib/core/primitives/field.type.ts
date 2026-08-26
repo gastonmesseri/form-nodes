@@ -11,8 +11,8 @@ export type FieldOptions<TValue = any> = {
   readonly nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
-  /** Delay strategy for control updates. A number waits in milliseconds; `'blur'` commits when the control loses focus. Overrides an inherited debounce. */
-  readonly debounce?: number | 'blur';
+  /** Delay strategy for control updates. A number waits in milliseconds, `'blur'` waits for focus loss, and a function commits when its returned promise resolves. Overrides an inherited debounce. */
+  readonly debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial or reactive disabled state. A string disables the field and describes the reason. */

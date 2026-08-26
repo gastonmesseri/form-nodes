@@ -11,8 +11,8 @@ export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   readonly validators?: ValidatorSource<TValue>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
-  /** Default control-value debounce inherited by descendants: milliseconds or commit on `'blur'`. */
-  readonly debounce?: number | 'blur';
+  /** Default control-value debounce inherited by descendants: milliseconds, `'blur'`, or a cancelable asynchronous function. */
+  readonly debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial or reactive disabled state. A string disables the form and describes the reason. */

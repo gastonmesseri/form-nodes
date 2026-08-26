@@ -10,8 +10,8 @@ export type MarkAsTouchedOptions = {
 /** A static or reactive condition that disables a node, optionally with a user-facing reason. */
 export type DisabledStateSource = boolean | string | (() => boolean | string);
 
-/** Strategy used to delay control-originated values before committing them to the model. */
-export type ControlDebounce = number | 'blur';
+/** Internal strategy used to delay control-originated values before committing them to the model. */
+export type ControlDebounce = number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
 
 /** Identifies one active cause of a node's disabled state. */
 export type DisabledReason<TNode extends Node = Node> = {
