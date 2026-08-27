@@ -1227,6 +1227,42 @@ An array behaves like an aggregate form node:
 
 This API differs intentionally from Angular 22 Signal Forms. Angular derives array field trees from array-valued models and maintains tracked item identities. This library constructs its tree from node definitions, using either an explicit factory or a compiled template recipe to create independent dynamic nodes. Both approaches preserve node identity and interaction state when existing items are reordered.
 
+## Control binding with `[formNode]`
+
+`FormNodeDirective` binds a field node to a native form control or to a component that implements Angular's `ControlValueAccessor` contract:
+
+```ts
+@Component({
+  imports: [FormNodeDirective],
+  template: `
+    <input [formNode]="name">
+    <select [formNode]="country">
+      <option value="ch">Switzerland</option>
+      <option value="es">Spain</option>
+    </select>
+  `,
+})
+class ProfileEditor {
+  readonly name = field('Marco', { debounce: 200, nullable: false });
+  readonly country = field('ch', { nullable: false });
+}
+```
+
+The directive currently provides these behaviors:
+
+- Two-way synchronization with native `input`, `textarea`, and `select` elements, including number, range, checkbox, radio, date-like, and multiple-select values.
+- Native input updates use `setControlValue()`. They therefore mark the field dirty and honor the field's own or inherited control debounce; programmatic `set()` updates remain immediate and pristine.
+- A blur event marks the field touched. IME composition is buffered until `compositionend`.
+- `disabled`, `readonly`, `required`, and `aria-invalid` are synchronized from field state to applicable DOM properties.
+- Changes to native select options reapply the field value, including options rendered after the initial binding.
+- Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
+- Exporting the directive as `#binding="formNode"` provides `focus()`, `flush()`, and `reset()` operations and a reactive `node` reference.
+- Destroying the directive removes DOM listeners, disconnects select observation, and destroys its reactive effects through Angular's `DestroyRef` ownership.
+
+This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
+
+The architecture follows Angular 22 Signal Forms `FormField` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), while keeping the public name and node model specific to this library. Native parsing errors, legacy CVA validator adaptation, configurable state classes, and a first-class signal-based custom-control protocol remain subsequent layers; they should be implemented as adapters around the same directive rather than by changing field semantics.
+
 ## Internal structural behavior
 
 These details are not public API, but explain current propagation behavior:
@@ -1243,7 +1279,7 @@ These details are not public API, but explain current propagation behavior:
 The current implementation does not yet provide:
 
 - Submission state.
-- Control-value-accessor or template directives.
+- Aggregate custom-control binding and a first-class signal-control protocol.
 - Runtime addition or removal of named object children after a `form()` is created.
 - Schema-driven form generation from JSON definitions.
 
