@@ -41,7 +41,56 @@ const looksLikeValidatorSource = (value: unknown): boolean =>
 /**
  * Creates an array node from a declarative node template.
  *
- * @param template Node definition cloned for every item.
+ * **Template with initial value**
+ * 
+ * ```ts
+ * const people = array({
+ *   name: field(''), 
+ *   age: field(0) 
+ * }, [
+ *   { name: 'Marco', age: 30 },
+ *   { name: 'Tom', age: 22 }
+ * ]);
+ * ```
+ * 
+ * **Template with initial amount of values**
+ * ```ts
+ * const people = array({
+ *   name: field(''), 
+ *   age: field(0) 
+ * }, 2);
+ * ```
+ * 
+ * **Primitive field template**
+ * ```ts
+ * const tags = array(field(''), ['angular', 'signals']);
+ * ```
+ * 
+ * **Template with options**
+ * ```ts
+ * const people = array({
+ *   name: field(''), 
+ *   age: field(0) 
+ * }, {
+ *   initialValue: [{ name: 'Marco', age: 30 }],
+ *   validators: [minLength(1)],
+ *   trackBy: item => item.name,
+ * });
+ * ```
+ * 
+ * **Factory with options**
+ * ```ts
+ * const people = array(() => ({
+ *   name: field(''), 
+ *   age: field(0) 
+ * }), {
+ *   validators: [minLength(1)],
+ * });
+ * ```
+ * 
+ * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
+ * `array()`, or shorthand object. The supplied definition remains an independent node and is not
+ * inserted directly into this array.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
  */
 export function array<TDefinition extends NodeDefinition>(
@@ -51,7 +100,8 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a declarative node template and positional initial contents.
  *
- * @param template Node definition cloned for every item.
+ * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
+ * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the template defaults.
  * @param options Additional array configuration.
  */
@@ -63,7 +113,8 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a template, positional initial contents, and validators.
  *
- * @param template Node definition cloned for every item.
+ * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
+ * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the template defaults.
  * @param validators Reactive validator source for the complete array value.
  * @param options Additional array configuration.
@@ -77,7 +128,8 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a template and validators.
  *
- * @param template Node definition cloned for every item.
+ * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
+ * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
  * @param validators Reactive validator source for the complete array value.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
  */
@@ -89,7 +141,17 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a node-definition factory.
  *
- * @param factory Called once for every item and must return a fresh node definition.
+ * @example Factory returning a fresh shorthand form definition for every item.
+ * ```ts
+ * const people = array(
+ *   () => ({ name: field(''), age: field(0) }),
+ *   2,
+ * );
+ * ```
+ *
+ * @param factory Creates the declarative shape for each item. Use a factory when construction
+ * should be deferred or customized. Every call must return a fresh `field()`, `form()`, `array()`,
+ * or shorthand object; returning the same definition twice throws.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
  */
 export function array<TDefinition extends NodeDefinition>(
@@ -99,7 +161,8 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a factory and positional initial contents.
  *
- * @param factory Called once for every item and must return a fresh node definition.
+ * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
+ * Returning the same definition from multiple calls throws.
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
  * @param options Additional array configuration.
  */
@@ -111,7 +174,8 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a factory, positional initial contents, and validators.
  *
- * @param factory Called once for every item and must return a fresh node definition.
+ * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
+ * Returning the same definition from multiple calls throws.
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
  * @param validators Reactive validator source for the complete array value.
  * @param options Additional array configuration.
@@ -125,7 +189,8 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a factory and validators.
  *
- * @param factory Called once for every item and must return a fresh node definition.
+ * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
+ * Returning the same definition from multiple calls throws.
  * @param validators Reactive validator source for the complete array value.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
  */
