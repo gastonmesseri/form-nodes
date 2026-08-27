@@ -13,6 +13,7 @@ export { minLength } from './lib/core/validation/validators/min-length';
 export { maxWords } from './lib/core/validation/validators/max-words';
 export { minWords } from './lib/core/validation/validators/min-words';
 export { validator } from './lib/core/validation/validator';
+export { configureGlobalValidatorMessages, provideValidatorMessages, type ValidatorMessageParameters, type ValidatorMessages } from './lib/core/validation/validator-messages';
 export { asyncValidator } from './lib/core/validation/async-validator';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';

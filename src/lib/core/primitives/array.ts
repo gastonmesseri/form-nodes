@@ -10,6 +10,7 @@ import { markAsFieldContext } from '../utils/field-context-marker';
 import { form, type NormalizedNode } from './form';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
@@ -657,6 +658,7 @@ export function array<TDefinition extends NodeDefinition>(
   }) as ArrayNode<TItem>;
   reparentItems();
   markAsNode(arrayNode);
+  registerNodeValidatorMessages(arrayNode, resolvedOptions?.validatorMessages, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return arrayNode;
 }

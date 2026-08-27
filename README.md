@@ -69,6 +69,14 @@ export class TextField {
 
 Use it as `<app-text-field [formNode]="name" />`. The input must be exposed under the exact template name `formNode`; no provider or registration helper is required.
 
+## Documentation
+
+- [Validator messages and internationalization](docs/validator-messages.md) explains global,
+  Angular provider, form/array, and validator-local configuration, including reactive locale
+  changes and SSR guidance.
+- [Behavior reference](docs/behavior.md) records the complete implemented semantics and deliberate
+  differences from Angular 22 Signal Forms.
+
 Consumers should import from the package entry point. Internal code is organized by role:
 
 ```text

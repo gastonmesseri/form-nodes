@@ -1,6 +1,5 @@
 import type { Validator } from '../validation.type';
 import { MAX_METADATA } from '../constraint-metadata';
-import type { ValidatorOptions } from './validator-options';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
@@ -26,7 +25,10 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const max = (
   maximum: number | (() => number | undefined),
-  options?: ValidatorOptions,
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+  },
 ): Validator<number | null> => {
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
@@ -34,7 +36,7 @@ export const max = (
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'max', max: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.max(resolvedMaximum)) }
+      ? { kind: 'max', max: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('max', { max: resolvedMaximum, actual: currentValue }, options?.message, () => defaultValidatorMessages.max(resolvedMaximum)) }
       : null;
   }, MAX_METADATA, maximum);
 };

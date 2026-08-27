@@ -8,6 +8,7 @@ import { createControlValueBuffer, type ControlValueBuffer } from '../utils/crea
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
@@ -319,6 +320,7 @@ export function form<TDefinitions extends NodeDefinitions>(
   ) as Form<TNodes>;
   controlKeys().forEach(key => (controls[key] as InternalNode).$api._setParent(formNode, String(key)));
   markAsNode(formNode);
+  registerNodeValidatorMessages(formNode, resolvedOptions?.validatorMessages, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return formNode;
 }

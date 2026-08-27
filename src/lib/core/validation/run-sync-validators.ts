@@ -2,6 +2,7 @@ import type { Node } from '../types/node.type';
 import type { MetadataKey } from '../metadata/metadata';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { createValidatorContext } from './create-validator-context';
+import { runWithValidatorMessages } from './validator-messages';
 import { addDefaultTargetNode } from '../utils/add-default-target-node';
 import { normalizeValidationResult } from '../utils/normalize-validation-result';
 import { collectValidatorMetadata, type ValidatorMetadata } from './validator-metadata';
@@ -68,7 +69,10 @@ export const runSyncValidators = <TValue, TNode extends Node & { $api: AsyncVali
   validators.forEach((validator) => {
     if (isAsyncValidator(validator)) return;
     errors.push(
-      ...normalizeValidationResult(resolveComposableValidator(validator, validatorContext, metadata)).map(error =>
+      ...normalizeValidationResult(runWithValidatorMessages(
+        targetNode,
+        () => resolveComposableValidator(validator, validatorContext, metadata),
+      )).map(error =>
         addDefaultTargetNode(error, targetNode),
       ),
     );

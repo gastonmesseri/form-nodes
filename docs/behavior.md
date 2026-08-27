@@ -852,8 +852,8 @@ field(16, [min(18, { message: 'You must be at least 18' })]);
 Every built-in validator returns an English default message with its error. The common optional
 `message` accepts either a static string or a function returning `string | undefined`. A message
 function is evaluated only while its validator is failing; signals read by it are tracked and
-changes update the exposed error reactively. Returning `undefined` selects the built-in default.
-This works inside and outside Angular dependency injection.
+changes update the exposed error reactively. Returning `undefined` continues through the configured
+fallback chain. This works inside and outside Angular dependency injection.
 
 `required` and `email` support direct use in a validators array and an options factory; validators
 that require a constraint accept options as their final argument. Passing a string directly to
@@ -861,12 +861,90 @@ that require a constraint accept options as their final argument. Passing a stri
 marker, allowing overloaded validators to recognize genuine contexts without relying on their
 structural shape or exposing the marker in the public `FieldContext` type.
 
+Built-in validator signatures inline their small options object so IntelliSense shows
+`message?: string | (() => string | undefined)` directly at the call site instead of hiding it
+behind `ValidatorOptions`. Date validators additionally show `parseAs?: 'utc' | 'local'` inline.
+These consumer-created option properties are intentionally mutable in the type declaration;
+marking them `readonly` would add IntelliSense noise without protecting library-owned state. The
+exported `ValidatorOptions` type remains available for reusable options values.
+
 Default messages are centralized within the validation package rather than duplicated across
 validators. Angular 22.1.3 Signal Forms also supports static or reactive custom messages, passing
 its field context to message functions, but leaves an omitted message undefined. This library's
 zero-argument message functions read signals directly and fall back to a built-in message when
-omitted or when they return `undefined`. A future internationalization layer can replace the
-centralized defaults without changing the structured error contract.
+omitted or when every configured layer returns `undefined`.
+
+#### Validator message configuration
+
+See [Validator messages and internationalization](./validator-messages.md) for the complete
+consumer-oriented guide, including setup recommendations, SSR considerations, callback parameters,
+and examples for every configuration scope.
+
+Built-in messages resolve from lowest to highest priority as follows:
+
+1. The English message included with the library.
+2. The process-wide catalog installed by `configureGlobalValidatorMessages()`.
+3. The closest Angular catalog captured from `provideValidatorMessages()`.
+4. The closest ancestor form or array `validatorMessages` option.
+5. The validator's own `message` option.
+
+Each catalog is partial. An absent entry, or a message function that returns `undefined`, continues
+to the next lower-priority layer.
+
+Use global configuration for non-Angular applications or a deliberate process-wide default:
+
+```ts
+const restoreMessages = configureGlobalValidatorMessages(() => ({
+  required: () => language() === 'es'
+    ? 'Este campo es obligatorio.'
+    : 'This field is required.',
+  min: ({ min }) => `The minimum value is ${min}.`,
+}));
+
+// Useful in tests or temporary scopes.
+restoreMessages();
+```
+
+The returned function restores the catalog that preceded that call, provided it is still the
+current global configuration. Because this state belongs to the JavaScript module, concurrent SSR
+requests must not mutate it per request; use a provider or form scope instead.
+
+Configure an Angular application or route once with a factory that may use `inject()`:
+
+```ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideValidatorMessages(() => {
+      const translations = inject(TranslationService);
+
+      return {
+        required: () => translations.translate('validation.required'),
+        min: ({ min }) => translations.translate('validation.min', { min }),
+      };
+    }),
+  ],
+};
+```
+
+The provider is captured when a node is created in that injection context. Its selected message
+function runs during validation, so signals read by the translation service remain reactive.
+
+Forms and arrays can override a catalog for themselves and their descendants without DI:
+
+```ts
+const profile = form({
+  name: field('', [required]),
+  age: field(16, [min(18)]),
+}, {
+  validatorMessages: () => ({
+    required: () => translations().required,
+    min: ({ min }) => translations().minimum(min),
+  }),
+});
+```
+
+Nested forms and arrays inherit the closest catalog. A validator-specific `message` remains the
+highest-priority override for wording tied to one business rule.
 
 Constraint errors also expose `actual`: the rejected number for `min` and `max`, the observed length or size for length validators, the rejected string for `pattern`, and the rejected `Date` for date validators. `oneOf()` and the word-count validators follow the same convention. `required` and `email` omit `actual` because reflecting the entire submitted value adds little diagnostic value and can expose user input unnecessarily. Angular 22.1.4's built-in constraint errors expose the configured constraint but not the actual value, so this is a deliberate diagnostic extension.
 

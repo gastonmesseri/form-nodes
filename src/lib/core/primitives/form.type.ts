@@ -2,6 +2,7 @@ import type { Injector, Signal } from '@angular/core';
 
 import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
+import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { DisabledReason, MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
@@ -11,6 +12,17 @@ export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   readonly validators?: ValidatorSource<TValue>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
+  /**
+   * Partial validator message catalog inherited by this form or array and its descendants.
+   *
+   * ℹ️ This scope overrides provider and global catalogs. A validator's own `message` option has
+   * higher priority. Returning `undefined` from the catalog source or a message function continues
+   * through the fallback chain.
+   *
+   * @reactive Tracks signals read by the catalog source and the selected message function while a
+   * built-in validator is failing.
+   */
+  readonly validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
   /** Default control-value debounce inherited by descendants: milliseconds, `'blur'`, or a cancelable asynchronous function. */
   readonly debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */

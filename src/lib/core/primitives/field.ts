@@ -8,6 +8,7 @@ import type { Field, FieldApi, FieldOptions } from './field.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
@@ -306,6 +307,7 @@ export function field<TValue>(
     { api: internalApi, $api: internalApi },
   ) as unknown as Field<TValue>;
   markAsNode(fieldNode);
+  registerNodeValidatorMessages(fieldNode, undefined, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return fieldNode;
 }

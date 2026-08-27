@@ -1,6 +1,5 @@
 import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
-import type { ValidatorOptions } from './validator-options';
 import { MIN_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
@@ -29,7 +28,10 @@ import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-len
  */
 export const minLength = (
   minimum: number | (() => number | undefined),
-  options?: ValidatorOptions,
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+  },
 ): Validator<ValueWithLengthOrSize | null> => {
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
@@ -38,7 +40,7 @@ export const minLength = (
     if (resolvedMinimum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength < resolvedMinimum
-      ? { kind: 'minLength', minLength: resolvedMinimum, actual: actualLength, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.minLength(resolvedMinimum)) }
+      ? { kind: 'minLength', minLength: resolvedMinimum, actual: actualLength, message: resolveValidatorMessage('minLength', { minLength: resolvedMinimum, actual: actualLength }, options?.message, () => defaultValidatorMessages.minLength(resolvedMinimum)) }
       : null;
   }, MIN_LENGTH_METADATA, minimum);
 };

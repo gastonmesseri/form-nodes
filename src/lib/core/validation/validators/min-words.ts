@@ -1,6 +1,5 @@
 import { countWords } from './count-words';
 import type { Validator } from '../validation.type';
-import type { ValidatorOptions } from './validator-options';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
 
@@ -26,7 +25,10 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const minWords = (
   minimum: number | (() => number | undefined),
-  options?: ValidatorOptions,
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+  },
 ): Validator<string | null> => {
   return ({ value }) => {
     const currentValue = value();
@@ -35,7 +37,7 @@ export const minWords = (
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     const actual = countWords(currentValue);
     return actual < resolvedMinimum
-      ? { kind: 'minWords', minWords: resolvedMinimum, actual, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.minWords(resolvedMinimum)) }
+      ? { kind: 'minWords', minWords: resolvedMinimum, actual, message: resolveValidatorMessage('minWords', { minWords: resolvedMinimum, actual }, options?.message, () => defaultValidatorMessages.minWords(resolvedMinimum)) }
       : null;
   };
 };

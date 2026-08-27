@@ -1,4 +1,4 @@
-import { array, asyncValidator, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, required, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, configureGlobalValidatorMessages, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -16,6 +16,7 @@ name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
 field(18, [min(18, { message: 'Too young' })]);
+field('', [pattern(/^[a-z]+$/, { message: () => 'Use letters only' })]);
 field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);
@@ -49,9 +50,20 @@ const atLeastOneItem = validator<readonly (string | null)[]>(({ value }) => {
 array(field(''), [], [atLeastOneItem]);
 
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
+validatorOptions.message = () => 'Updated invalid value';
 const reactiveValidatorOptions: ValidatorOptions = { message: () => undefined };
+const validatorMessages: ValidatorMessages = {
+  min: ({ min: minimum, actual }) => {
+    type _Minimum = Expect<Equal<typeof minimum, number>>;
+    type _Actual = Expect<Equal<typeof actual, number>>;
+    return `${actual}/${minimum}`;
+  },
+  required: () => 'Required',
+};
+const restoreValidatorMessages = configureGlobalValidatorMessages(() => validatorMessages);
+const validatorMessageProviders = provideValidatorMessages(() => validatorMessages);
 const builtInError: BuiltInValidationError = { kind: 'min', min: 2, actual: 1 };
-void [validatorOptions, reactiveValidatorOptions, builtInError];
+void [validatorOptions, reactiveValidatorOptions, restoreValidatorMessages, validatorMessageProviders, builtInError];
 
 const constrainedAge = field(16, [min(18)]);
 const minimumError = constrainedAge.getError('min');
@@ -72,6 +84,10 @@ const profile = form({
       return null;
     }],
   }),
+}, {
+  validatorMessages: {
+    min: ({ min: minimum }) => `Minimum: ${minimum}`,
+  },
 });
 
 const reactiveAsync = asyncValidator<string | null>((context: AsyncValidatorContext<string | null>) => {
@@ -104,6 +120,9 @@ field(42, [minWords(2)]);
 
 // @ts-expect-error date strings only support explicit UTC or local parsing
 minDate('2026-08-24', { parseAs: 'browser' });
+
+// @ts-expect-error pattern options expose only the static or reactive message
+pattern(/^[a-z]+$/, { debounce: 300 });
 
 // @ts-expect-error synchronous validators must return a supported validation result
 validator<string>(() => 'invalid');

@@ -31,7 +31,12 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const minDate = (
   minimum: Date | string | (() => Date | string | undefined),
-  options?: { readonly message?: string | (() => string | undefined); readonly parseAs?: 'utc' | 'local' },
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+    /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
+    parseAs?: 'utc' | 'local';
+  },
 ): Validator<Date | null> => {
   const parseAs = options?.parseAs ?? 'utc';
   const normalizedMinimum = typeof minimum === 'function'
@@ -47,7 +52,7 @@ export const minDate = (
     const resolvedMinimum = typeof normalizedMinimum === 'function' ? normalizedMinimum() : normalizedMinimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum.getTime())) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.minDate(resolvedMinimum)) }
+      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('minDate', { minDate: resolvedMinimum, actual: currentValue }, options?.message, () => defaultValidatorMessages.minDate(resolvedMinimum)) }
       : null;
   }, MIN_DATE_METADATA, normalizedMinimum);
 };
