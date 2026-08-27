@@ -653,7 +653,7 @@ describe('field', () => {
 
   it('becomes touched through markAsTouched', () => {
     const fieldNode = field('David');
-    fieldNode.markAsTouched();
+    fieldNode.markAsTouched({ skipDescendants: true });
     expect(fieldNode.touched()).toBe(true);
     expect(fieldNode.untouched()).toBe(false);
   });

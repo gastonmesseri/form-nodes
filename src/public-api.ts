@@ -13,7 +13,7 @@ export type {
   FormSet,
   FormValue,
 } from './lib/core/primitives/form';
-export type { Node, NodeApi } from './lib/core/types/node.type';
+export type { MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/core/types/observable-like.type';
 export type {
   FieldContext,

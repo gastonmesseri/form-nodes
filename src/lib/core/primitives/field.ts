@@ -3,7 +3,7 @@ import { computed, signal, type Injector, type Signal } from '@angular/core';
 import { markAsNode } from '../utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
-import type { Node, RootNode } from '../types/node.type';
+import type { MarkAsTouchedOptions, Node, RootNode } from '../types/node.type';
 import { computedFunction } from '../utils/computed-function';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
@@ -62,7 +62,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched(): void;
+  markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;
@@ -250,7 +250,7 @@ export function field<TValue>(
     validationStatus: fieldValidationStatus,
     touched: computed(() => !fieldNonInteractive() && fieldTouched()),
     untouched: computed(() => fieldNonInteractive() || !fieldTouched()),
-    markAsTouched: () => { if (!fieldNonInteractive()) fieldTouched.set(true); },
+    markAsTouched: (_options?: MarkAsTouchedOptions) => { if (!fieldNonInteractive()) fieldTouched.set(true); },
     markAsUntouched: () => fieldTouched.set(false),
     dirty: computed(() => !fieldNonInteractive() && fieldDirty()),
     pristine: computed(() => fieldNonInteractive() || !fieldDirty()),

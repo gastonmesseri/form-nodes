@@ -699,18 +699,19 @@ touched() === false
 untouched() === true
 ```
 
-- `markAsTouched()` marks an interactive field touched.
+- `markAsTouched()` marks an interactive field touched. Fields accept `skipDescendants` for API consistency, although it has no additional effect on a leaf node.
 - `markAsUntouched()` clears its touched state.
 - Value changes through `set()` or `patch()` do not mark a field touched.
 - Touched state is independent from validity and dirty state.
 
-A form has no independent touched flag. It aggregates touched state from descendants:
+A form keeps its own touched state and also aggregates touched state from descendants:
 
 - Any touched interactive descendant makes all its ancestor forms touched.
-- `form.api.markAsTouched()` walks the subtree and marks every interactive descendant touched.
-- `form.api.markAsUntouched()` clears touched throughout the subtree.
+- `form.api.markAsTouched()` marks the form and walks the subtree, marking every interactive descendant touched.
+- `form.api.markAsTouched({ skipDescendants: true })` marks only the form, including when it is empty.
+- `form.api.markAsUntouched()` clears only the form's own touched state; touched descendants can keep its aggregate state touched.
 - Calling either action on a nested form affects only that subtree.
-- Reset clears touched throughout the reset subtree.
+- Reset is the recursive clearing operation and clears touched throughout the reset subtree.
 
 ## Dirty state
 
@@ -1028,6 +1029,25 @@ names.push({ name: 'Mark' });
 ```
 
 Both forms propagate the resulting value through ancestor forms and preserve the identity of existing nodes. They differ in interaction-state effects: `set()` reapplies every value in the common prefix through each existing node's `set()`, so those existing nodes become dirty. `push()` leaves existing item state unchanged and marks the array dirty because its structure changed. Prefer `set()` when replacing the array value as a whole and `push()` when expressing an append operation.
+
+### Array touched state
+
+An array keeps its own touched state in addition to aggregating touched item nodes. Consequently, even an empty array can be marked as touched:
+
+```ts
+const names = array(field(''));
+
+names.markAsTouched();
+names.touched(); // true
+```
+
+`markAsTouched()` marks the array and all current descendants by default. Pass `skipDescendants` when only the array node should be marked:
+
+```ts
+names.markAsTouched({ skipDescendants: true });
+```
+
+`markAsUntouched()` clears only the array's own touched state. A touched descendant can therefore keep the aggregate array state touched. `reset()` remains the recursive operation: it clears the array's own interaction state and resets every current descendant. Calls to `markAsTouched()` while the array is disabled, readonly, or hidden are ignored. Existing stored touched state is temporarily excluded while the array is non-interactive and becomes observable again when interaction is restored.
 
 When an array is nested in a form, `form.set()` delegates the corresponding value array to this same reconciliation behavior:
 

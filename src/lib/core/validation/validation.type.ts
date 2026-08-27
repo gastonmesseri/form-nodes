@@ -1,6 +1,6 @@
 import type { Signal } from '@angular/core';
 
-import type { Node, PublicNode } from '../types/node.type';
+import type { MarkAsTouchedOptions, Node, PublicNode } from '../types/node.type';
 import type { ObservableLike } from '../types/observable-like.type';
 
 /** A validation error produced by a validator. */
@@ -72,7 +72,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   getError<TKind extends string>(kind: TKind): (ValidationError & { readonly kind: TKind }) | undefined;
   set(value: TValue): void;
   reset(...args: [] | [value: TValue]): void;
-  markAsTouched(): void;
+  markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
   markAsDirty(): void;
   markAsPristine(): void;

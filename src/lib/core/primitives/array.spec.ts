@@ -211,6 +211,57 @@ describe('array', () => {
     expect(sons.items().every((item) => item.pristine() && item.untouched())).toBe(true);
   });
 
+  it('can mark an empty array as touched through its own interaction state', () => {
+    const names = array(field(''));
+
+    names.markAsTouched();
+
+    expect(names.touched()).toBe(true);
+    expect(names.untouched()).toBe(false);
+    names.markAsUntouched();
+    expect(names.untouched()).toBe(true);
+  });
+
+  it('marks descendants as touched by default and can skip them', () => {
+    const names = array(field(''), ['Marco', 'Lia']);
+
+    names.markAsTouched({ skipDescendants: true });
+
+    expect(names.touched()).toBe(true);
+    expect(names.items().every((item) => item.untouched())).toBe(true);
+
+    names.markAsUntouched();
+    names.markAsTouched();
+
+    expect(names.touched()).toBe(true);
+    expect(names.items().every((item) => item.touched())).toBe(true);
+  });
+
+  it('only clears its own touched state through markAsUntouched', () => {
+    const names = array(field(''), ['Marco']);
+    names.at(0)!.markAsTouched();
+
+    names.markAsUntouched();
+
+    expect(names.at(0)!.touched()).toBe(true);
+    expect(names.touched()).toBe(true);
+  });
+
+  it('ignores markAsTouched while non-interactive without losing stored state', () => {
+    const names = array(field(''));
+
+    names.disable();
+    names.markAsTouched();
+    names.enable();
+    expect(names.untouched()).toBe(true);
+
+    names.markAsTouched({ skipDescendants: true });
+    names.disable();
+    expect(names.untouched()).toBe(true);
+    names.enable();
+    expect(names.touched()).toBe(true);
+  });
+
   it('supports primitive field items', () => {
     const tags = array(() => field(''), ['first', 'second']);
 
@@ -365,6 +416,7 @@ describe('array', () => {
     const sons = array(() => ({ name: field('') }), [{ name: 'Mono' }]);
     sons.push({ name: 'Lia' });
     sons.at(0)!.name.markAsTouched();
+    sons.markAsTouched({ skipDescendants: true });
 
     sons.reset([{ name: 'Noa' }]);
 
