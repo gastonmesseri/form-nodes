@@ -1002,6 +1002,34 @@ sons.clear();
 
 `set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and marks the array dirty. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
 
+Both immutable value updates and structural shortcuts are supported:
+
+```ts
+const names = array({ name: field('') }, [{ name: 'Marco' }]);
+
+// Immutable value style: creates a new value array and reconciles the node collection.
+names.set([...names(), { name: 'Mark' }]);
+
+// Alternatively, as a structural shortcut that creates and appends only the new node:
+names.push({ name: 'Mark' });
+```
+
+Both forms propagate the resulting value through ancestor forms and preserve the identity of existing nodes. They differ in interaction-state effects: `set()` reapplies every value in the common prefix through each existing node's `set()`, so those existing nodes become dirty. `push()` leaves existing item state unchanged and marks the array dirty because its structure changed. Prefer `set()` when replacing the array value as a whole and `push()` when expressing an append operation.
+
+When an array is nested in a form, `form.set()` delegates the corresponding value array to this same reconciliation behavior:
+
+```ts
+profile.set({
+  name: 'Marco',
+  sons: [
+    { name: 'son1', age: 11 },
+    { name: 'son2', age: 15 },
+  ],
+});
+```
+
+The complete value propagates immediately to the array and every ancestor. Existing nodes in the common index prefix are updated and retain their identity and runtime state. Additional values create fresh nodes from the configured template or factory, with correct parent, root form, and index-derived paths. Surplus nodes are removed and detached from the tree; retained external references to those removed nodes remain usable as independent roots. Setting an empty array removes every item, and a later `form.set()` can create a new collection from the same definition recipe.
+
 ### Aggregated state and validation
 
 An array behaves like an aggregate form node:

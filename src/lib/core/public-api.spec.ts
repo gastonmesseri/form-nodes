@@ -460,6 +460,20 @@ describe('types', () => {
     expectTypeOf(formGroup.api.patch).toBeCallableWith({ age: 30 });
   });
 
+  it('types complete dynamic array replacement through form.set', () => {
+    const profile = form({
+      owner: field('Marco'),
+      sons: array({ name: field(''), age: field(0) }),
+    });
+
+    expectTypeOf(profile.set).toBeCallableWith({
+      owner: 'Marcos',
+      sons: [{ name: 'son1', age: 11 }, { name: 'son2', age: 15 }],
+    });
+    // @ts-expect-error every array item must match the template value
+    expectTypeOf(profile.set).toBeCallableWith({ owner: 'Marcos', sons: [{ name: 'son1' }] });
+  });
+
   it('rejects wrong types and unknown keys', () => {
     const formGroup = form({ age: field(23) });
     // @ts-expect-error 'age' is a number
