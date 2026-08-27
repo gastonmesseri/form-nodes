@@ -844,13 +844,29 @@ field<Date>(null, [maxDate('2026-12-31', { parseAs: 'local' })]);
 ```ts
 field('David', [required]);
 field('David', [required({ message: 'Name is required' })]);
+field('David', [required({ message: () => translatedRequiredMessage() })]);
 field('', [email({ message: 'Enter a work email' })]);
 field(16, [min(18, { message: 'You must be at least 18' })]);
 ```
 
-Every built-in validator returns an English default message with its error. The common optional `{ message }` argument replaces that default without changing the error kind or constraint data. `required` and `email` support direct use in a validators array and an options factory; validators that require a constraint accept options as their final argument. Passing a string directly to `required` is intentionally rejected. Field contexts carry a non-enumerable internal symbol marker, allowing overloaded validators to recognize genuine contexts without relying on their structural shape or exposing the marker in the public `FieldContext` type.
+Every built-in validator returns an English default message with its error. The common optional
+`message` accepts either a static string or a function returning `string | undefined`. A message
+function is evaluated only while its validator is failing; signals read by it are tracked and
+changes update the exposed error reactively. Returning `undefined` selects the built-in default.
+This works inside and outside Angular dependency injection.
 
-Default messages are centralized within the validation package rather than duplicated across validators. This is a deliberate extension over Angular 22.1.4 Signal Forms, which supports static or reactive custom messages but leaves the default message undefined. The current public override is a static string and remains safe outside Angular dependency injection. A future internationalization layer can replace the centralized defaults without changing the structured error contract.
+`required` and `email` support direct use in a validators array and an options factory; validators
+that require a constraint accept options as their final argument. Passing a string directly to
+`required` is intentionally rejected. Field contexts carry a non-enumerable internal symbol
+marker, allowing overloaded validators to recognize genuine contexts without relying on their
+structural shape or exposing the marker in the public `FieldContext` type.
+
+Default messages are centralized within the validation package rather than duplicated across
+validators. Angular 22.1.3 Signal Forms also supports static or reactive custom messages, passing
+its field context to message functions, but leaves an omitted message undefined. This library's
+zero-argument message functions read signals directly and fall back to a built-in message when
+omitted or when they return `undefined`. A future internationalization layer can replace the
+centralized defaults without changing the structured error contract.
 
 Constraint errors also expose `actual`: the rejected number for `min` and `max`, the observed length or size for length validators, the rejected string for `pattern`, and the rejected `Date` for date validators. `oneOf()` and the word-count validators follow the same convention. `required` and `email` omit `actual` because reflecting the entire submitted value adds little diagnostic value and can expose user input unnecessarily. Angular 22.1.4's built-in constraint errors expose the configured constraint but not the actual value, so this is a deliberate diagnostic extension.
 

@@ -1,10 +1,11 @@
 import { isEmpty } from '../../utils/is-empty';
 import { createMetadataKey } from '../../metadata/metadata';
+import type { ValidatorOptions } from './validator-options';
 import { markValidatorMetadata } from '../validator-metadata';
 import { isFieldContext } from '../../utils/field-context-marker';
-import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
+import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
-import type { ValidatorOptions } from './validator-options';
+import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
 
 export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
   getInitial: () => false,
@@ -15,10 +16,10 @@ export type RequiredOptions = ValidatorOptions;
 
 const validateRequired = (
   context: FieldContext<unknown>,
-  message?: string,
+  message?: string | (() => string | undefined),
 ): ValidationError | null => {
   if (!isEmpty(context.value())) return null;
-  return { kind: 'required', message: message ?? defaultValidatorMessages.required() };
+  return { kind: 'required', message: resolveValidatorMessage(message, defaultValidatorMessages.required) };
 };
 
 /**
@@ -31,9 +32,12 @@ const validateRequired = (
  * @example
  * ```ts
  * field('', [required({ message: 'Enter your name' })]);
+ * field('', [required({ message: () => translatedRequiredMessage() })]);
  * ```
  *
- * @param options Optional custom validation message. Omitting `message` uses the default.
+ * @reactive Tracks signals read by a custom message function while validation is failing.
+ *
+ * @param options Optional static or reactive custom validation message. Omitting `message`, or returning `undefined`, uses the default.
  */
 export function required(options: RequiredOptions): Validator<unknown>;
 /**

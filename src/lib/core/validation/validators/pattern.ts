@@ -1,9 +1,10 @@
 import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
-import { markValidatorMetadata } from '../validator-metadata';
 import { PATTERN_METADATA } from '../constraint-metadata';
-import { defaultValidatorMessages } from './default-validator-messages';
 import type { ValidatorOptions } from './validator-options';
+import { markValidatorMetadata } from '../validator-metadata';
+import { resolveValidatorMessage } from './resolve-validator-message';
+import { defaultValidatorMessages } from './default-validator-messages';
 
 /**
  * Requires a non-empty string to match a regular expression.
@@ -14,7 +15,7 @@ import type { ValidatorOptions } from './validator-options';
  * and sticky expressions do not start from stale matching state. A failure produces
  * `{ kind: 'pattern', pattern, actual, message }`.
  *
- * @reactive Tracks signals read by the expression source and revalidates when they change.
+ * @reactive Tracks signals read by the expression and message sources while they are active.
  *
  * @example
  * ```ts
@@ -23,7 +24,7 @@ import type { ValidatorOptions } from './validator-options';
  * ```
  *
  * @param expression Static regular expression or a reactive function returning it.
- * @param options Optional custom validation message.
+ * @param options Optional static or reactive custom validation message.
  */
 export const pattern = (
   expression: RegExp | (() => RegExp | undefined),
@@ -37,6 +38,6 @@ export const pattern = (
     resolvedExpression.lastIndex = 0;
     return resolvedExpression.test(currentValue!)
       ? null
-      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: options?.message ?? defaultValidatorMessages.pattern(resolvedExpression) };
+      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.pattern(resolvedExpression)) };
   }, PATTERN_METADATA, expression);
 };

@@ -1,8 +1,9 @@
 import type { Validator } from '../validation.type';
-import { markValidatorMetadata } from '../validator-metadata';
 import { MAX_METADATA } from '../constraint-metadata';
-import { defaultValidatorMessages } from './default-validator-messages';
 import type { ValidatorOptions } from './validator-options';
+import { markValidatorMetadata } from '../validator-metadata';
+import { resolveValidatorMessage } from './resolve-validator-message';
+import { defaultValidatorMessages } from './default-validator-messages';
 
 /**
  * Requires a non-empty number to be less than or equal to a maximum.
@@ -12,7 +13,7 @@ import type { ValidatorOptions } from './validator-options';
  * the constraint temporarily. A failure produces
  * `{ kind: 'max', max, actual, message }`.
  *
- * @reactive Tracks signals read by the maximum source and revalidates when they change.
+ * @reactive Tracks signals read by the maximum and message sources while they are active.
  *
  * @example
  * ```ts
@@ -21,7 +22,7 @@ import type { ValidatorOptions } from './validator-options';
  * ```
  *
  * @param maximum Static maximum or a reactive function returning it.
- * @param options Optional custom validation message.
+ * @param options Optional static or reactive custom validation message.
  */
 export const max = (
   maximum: number | (() => number | undefined),
@@ -33,7 +34,7 @@ export const max = (
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'max', max: resolvedMaximum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.max(resolvedMaximum) }
+      ? { kind: 'max', max: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.max(resolvedMaximum)) }
       : null;
   }, MAX_METADATA, maximum);
 };
