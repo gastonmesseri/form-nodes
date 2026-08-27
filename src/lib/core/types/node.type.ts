@@ -20,6 +20,8 @@ export type NodeApi = {
   getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: Node }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
+  debouncing: Signal<boolean>;
+  flush(): void;
   touched: Signal<boolean>;
   markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
@@ -52,6 +54,7 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
       : TNode
     : Node;
 export type InternalNodeApi = NodeApi & {
+  _controlDebounce: Signal<number | undefined>;
   _clone(): Node;
   _setParent(parent: Node | null, key?: string): void;
 };

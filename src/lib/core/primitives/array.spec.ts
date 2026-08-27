@@ -617,6 +617,55 @@ describe('array', () => {
     expect(names.touched()).toBe(true);
   });
 
+  it('inherits control debounce into dynamic items and flushes current item subtrees', async () => {
+    vi.useFakeTimers();
+    try {
+      const people = array({ name: field('') }, [], { debounce: 100 });
+      const person = people.push({ name: 'Marco' });
+
+      person.name.setControlValue('Mark');
+
+      expect(person.name.controlValue()).toBe('Mark');
+      expect(person.name()).toBe('Marco');
+      expect(people()).toEqual([{ name: 'Marco' }]);
+      expect(people.debouncing()).toBe(true);
+
+      people.flush();
+
+      expect(person.name()).toBe('Mark');
+      expect(people()).toEqual([{ name: 'Mark' }]);
+      expect(people.debouncing()).toBe(false);
+      await vi.runAllTimersAsync();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('inherits a form control debounce through an array into future items', async () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({
+        names: array(field('')),
+      }, { debounce: 100 });
+      const name = profile.names.push('Marco');
+
+      name.setControlValue('Mark');
+
+      expect(profile.names.debouncing()).toBe(true);
+      expect(profile.debouncing()).toBe(true);
+      expect(profile()).toEqual({ names: ['Marco'] });
+
+      profile.flush();
+
+      expect(profile()).toEqual({ names: ['Mark'] });
+      expect(profile.names.debouncing()).toBe(false);
+      expect(profile.debouncing()).toBe(false);
+      await vi.runAllTimersAsync();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('collects own and item errors in current structural order', () => {
     const names = array(field('', [required]), ['', 'David'], [
       () => ({ kind: 'arrayError' }),

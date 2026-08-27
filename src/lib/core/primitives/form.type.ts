@@ -11,6 +11,8 @@ export type FormOptions<TValue = any> = {
   readonly validators?: ValidatorSource<TValue>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
+  /** Default control-value debounce inherited by descendant fields that do not configure their own debounce. */
+  readonly debounce?: number;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
@@ -73,6 +75,10 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
+  /** Whether any descendant field currently has a pending control-value debounce. */
+  debouncing: Signal<boolean>;
+  /** Immediately commits every pending control value in this form's subtree. */
+  flush(): void;
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;

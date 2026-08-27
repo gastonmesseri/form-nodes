@@ -57,6 +57,10 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
   const formKeyInParent = signal<string | null>(null);
+  const formControlDebounce = computed(() =>
+    resolvedOptions?.debounce
+    ?? (formParent() as InternalNode | null)?.api._controlDebounce(),
+  );
   const formPath = computed<readonly string[]>(() => {
     const parent = formParent();
     const key = formKeyInParent();
@@ -131,6 +135,9 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formDirty = computed(() =>
     !formNonInteractive() && (formSelfDirty() || controlKeys().some((key) => controls[key]!.api.dirty())),
   );
+  const formDebouncing = computed(() =>
+    controlKeys().some((key) => controls[key]!.api.debouncing()),
+  );
   const set = (value: FormSet<TNodes>) => {
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = controls[key];
@@ -186,6 +193,8 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
       || formErrors().some((error) => error.kind === 'required')
     ),
     pending: formPending,
+    debouncing: formDebouncing,
+    flush: () => controlKeys().forEach((key) => controls[key]!.api.flush()),
     validationStatus: formValidationStatus,
     touched: formTouched,
     untouched: computed(() => !formTouched()),
@@ -214,6 +223,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   const internalApi = {
     ...api,
+    _controlDebounce: formControlDebounce,
     _clone: () => form(createDefinitions(), validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);

@@ -11,7 +11,7 @@ export type FieldOptions<TValue = any> = {
   readonly nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
-  /** Delay in milliseconds for updates received through setControlValue(). */
+  /** Delay in milliseconds for updates received through setControlValue(). Overrides an inherited debounce. */
   readonly debounce?: number;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
