@@ -62,7 +62,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   form: Signal<FormRoot<TNodes, TParent>>;
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
-  value: Signal<FormValue<TNodes>>;
+  value: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
   set(value: FormSet<TNodes>): void;
   patch(value: FormPatch<TNodes>): void;
   reset(...args: [] | [value: FormSet<TNodes>]): void;
@@ -107,7 +107,7 @@ export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =
-  & { (): FormValue<TNodes>; api: FormApi<TNodes, TParent> }
+  & { (): { [K in keyof TNodes]: NodeValue<TNodes[K]> }; api: FormApi<TNodes, TParent> }
   & FormChildren<TNodes, TParent>
   & Omit<FormApi<TNodes, TParent>, keyof TNodes>
   & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;

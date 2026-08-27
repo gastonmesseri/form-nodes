@@ -16,7 +16,7 @@ describe('types', () => {
     });
     const son = profile.sons.at(0)!;
 
-    expectTypeOf(profile.sons()).toEqualTypeOf<readonly { name: string | null; age: number | null }[]>();
+    expectTypeOf(profile.sons()).toEqualTypeOf<{ name: string | null; age: number | null }[]>();
     expectTypeOf(son.name()).toEqualTypeOf<string | null>();
     expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
     expectTypeOf(son.name.form()).toEqualTypeOf<typeof profile | null>();
@@ -30,7 +30,7 @@ describe('types', () => {
     });
     const son = profile.sons.at(0)!;
 
-    expectTypeOf(profile.sons()).toEqualTypeOf<readonly { name: string | null; age: number | null }[]>();
+    expectTypeOf(profile.sons()).toEqualTypeOf<{ name: string | null; age: number | null }[]>();
     expectTypeOf(son.name()).toEqualTypeOf<string | null>();
     expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
     expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
@@ -42,15 +42,15 @@ describe('types', () => {
     const names = array(field(''), ['Mono'], [validate], { disabled: true });
     const emptyNames = array(field(''), validate, { readonly: true });
 
-    expectTypeOf(names()).toEqualTypeOf<readonly (string | null)[]>();
-    expectTypeOf(emptyNames()).toEqualTypeOf<readonly (string | null)[]>();
+    expectTypeOf(names()).toEqualTypeOf<(string | null)[]>();
+    expectTypeOf(emptyNames()).toEqualTypeOf<(string | null)[]>();
     expectTypeOf(names.disabled()).toEqualTypeOf<boolean>();
   });
 
   it('infers primitive and nested dynamic arrays', () => {
     const matrix = array(() => array(() => field(0), 2), 2);
 
-    expectTypeOf(matrix()).toEqualTypeOf<readonly (readonly (number | null)[])[]>();
+    expectTypeOf(matrix()).toEqualTypeOf<(number | null)[][]>();
     expectTypeOf(matrix.at(0)!.at(0)!()).toEqualTypeOf<number | null>();
   });
 
@@ -204,6 +204,11 @@ describe('types', () => {
     expectTypeOf(formGroup.age()).toEqualTypeOf<number | null>();
     expectTypeOf(formGroup.name.value()).toEqualTypeOf<string | null>();
     expectTypeOf(formGroup.address.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(formGroup()).toEqualTypeOf<{
+      name: string | null;
+      age: number | null;
+      address: { city: string | null };
+    }>();
     expectTypeOf(formGroup.api.value()).toEqualTypeOf<{
       name: string | null;
       age: number | null;

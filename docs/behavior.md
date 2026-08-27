@@ -171,6 +171,8 @@ profile();
 profile.api.value();
 ```
 
+The callable and `value()` expose the fully materialized object shape in TypeScript tooling instead of an internal `FormValue<...>` alias. Nested forms and arrays are expanded recursively in IntelliSense.
+
 Each child is exposed under its definition key. Form-level state and actions live under `form.api`.
 
 The key `api` is reserved and rejected by the public types. Other function property names such as `name` and `length` remain valid child keys and resolve to the user-defined children at runtime.
@@ -930,7 +932,7 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 
 ### Reading items
 
-- Calling the array node or `value()` returns the aggregated readonly value array.
+- Calling the array node or `value()` returns the aggregated value array with its concrete item-value type.
 - `items()` returns the current readonly node array.
 - `at(index)` returns one typed item or `undefined`.
 - `length()` returns the current item count.
