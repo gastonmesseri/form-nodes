@@ -327,6 +327,23 @@ describe('array', () => {
     expect(names.dirty()).toBe(true);
   });
 
+  it('marks and clears only the array own dirty state', () => {
+    const names = array(field(''), ['Marco']);
+
+    names.markAsDirty();
+    expect(names.dirty()).toBe(true);
+    expect(names.at(0)!.dirty()).toBe(false);
+
+    names.at(0)!.markAsDirty();
+    names.markAsPristine();
+    expect(names.at(0)!.dirty()).toBe(true);
+    expect(names.dirty()).toBe(true);
+
+    const emptyNames = array(field(''));
+    emptyNames.markAsDirty();
+    expect(emptyNames.dirty()).toBe(true);
+  });
+
   it('preserves node identity and state while moving items and updates paths', () => {
     const sons = array(
       () => ({ name: field('') }),

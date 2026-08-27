@@ -145,6 +145,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfTouched = signal(false);
+  const formSelfDirty = signal(false);
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
   const formKeyInParent = signal<string | null>(null);
@@ -213,7 +214,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     !formNonInteractive() && (formSelfTouched() || controlKeys().some((key) => controls[key]!.api.touched())),
   );
   const formDirty = computed(() =>
-    !formNonInteractive() && controlKeys().some((key) => controls[key]!.api.dirty()),
+    !formNonInteractive() && (formSelfDirty() || controlKeys().some((key) => controls[key]!.api.dirty())),
   );
   const set = (value: FormSet<TNodes>) => {
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
@@ -237,6 +238,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   };
   const reset = (...args: [] | [value: FormSet<TNodes>]) => {
     formSelfTouched.set(false);
+    formSelfDirty.set(false);
     if (args.length === 0) {
       controlKeys().forEach((key) => controls[key]!.api.reset());
       return;
@@ -278,8 +280,8 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     markAsUntouched: () => formSelfTouched.set(false),
     dirty: formDirty,
     pristine: computed(() => !formDirty()),
-    markAsDirty: () => controlKeys().forEach((key) => controls[key]!.api.markAsDirty()),
-    markAsPristine: () => controlKeys().forEach((key) => controls[key]!.api.markAsPristine()),
+    markAsDirty: () => formSelfDirty.set(true),
+    markAsPristine: () => formSelfDirty.set(false),
     disabled: formDisabled,
     enabled: computed(() => !formDisabled()),
     disable: () => formSelfDisabled.set(true),

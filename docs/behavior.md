@@ -729,13 +729,13 @@ pristine() === true
 - Validator changes do not mark a field dirty.
 - Dirty state is independent from touched and validity.
 
-A form has no independent dirty flag. It aggregates dirty state from descendants:
+A form keeps its own dirty state and also aggregates dirty state from descendants:
 
 - Any dirty interactive descendant makes all its ancestor forms dirty.
-- `form.api.markAsDirty()` marks every descendant dirty.
-- `form.api.markAsPristine()` clears dirty throughout the subtree without changing values.
-- Calling either action on a nested form affects only that subtree.
-- Reset clears dirty throughout the reset subtree.
+- `form.api.markAsDirty()` marks only the form itself, including when it is empty.
+- `form.api.markAsPristine()` clears only the form's own dirty state without changing values; dirty descendants can keep its aggregate state dirty.
+- Calling either action on a nested form affects only that node, while its aggregate result still propagates to ancestors.
+- Reset is the recursive clearing operation and clears dirty throughout the reset subtree.
 
 ## Configurable node states
 
@@ -1029,6 +1029,8 @@ names.push({ name: 'Mark' });
 ```
 
 Both forms propagate the resulting value through ancestor forms, preserve the identity of existing nodes, and leave dirty state unchanged. Prefer `set()` when replacing the array value as a whole and `push()` when expressing an append operation. If either update represents user interaction rather than application code, the control integration is responsible for calling `markAsDirty()`.
+
+An array keeps its own dirty state and also aggregates dirty item nodes. `markAsDirty()` and `markAsPristine()` affect only the array itself; they do not change item state. Therefore, a dirty item can keep the array dirty after `array.markAsPristine()`. `reset()` is the recursive operation that clears dirty state from the array and every current item.
 
 ### Array touched state
 
