@@ -4,6 +4,7 @@ import { computed, signal, type Signal } from '@angular/core';
 import { field } from './field';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import { validator } from '../validation/validator';
 import { email } from '../validation/validators/email';
 import type { InternalNode } from '../types/node.type';
 import { pattern } from '../validation/validators/pattern';
@@ -782,6 +783,22 @@ describe('field', () => {
 
     expect(name.errors()).toEqual([]);
     expect(validate).toHaveBeenCalledTimes(3);
+  });
+
+  it('runs a reusable validator authored with validator()', () => {
+    const minimum = signal(18);
+    const adult = validator<number | null>(({ value }) => {
+      const age = value();
+      return age !== null && age < minimum()
+        ? { kind: 'adult', minimumAge: minimum(), actual: age }
+        : null;
+    });
+    const age = field<number>(16, [adult]);
+
+    expect(age.getError('adult')).toMatchObject({ minimumAge: 18, actual: 16 });
+
+    minimum.set(16);
+    expect(age.getError('adult')).toBeUndefined();
   });
 
   it('accepts one validator and normalizes it through validators()', () => {

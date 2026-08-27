@@ -751,6 +751,48 @@ A form is valid when its own validators produce no errors and every interactive 
 
 Invalidity propagates upward through any number of nested forms. Fixing the failing descendant updates every ancestor.
 
+### Reusable custom validators
+
+Use `validator<TValue>()` to give a reusable synchronous validator a contextually typed `value`,
+readonly state, `api`, and target `field` when it is declared outside a node definition:
+
+```ts
+export const adult = validator<number | null>(({ value }) => {
+  const age = value();
+  return age !== null && age < 18
+    ? { kind: 'adult', minimumAge: 18, actual: age }
+    : null;
+});
+
+const age = field<number>(null, [adult]);
+```
+
+`TValue` is the exact type returned by the node's `value()` signal; `validator()` does not alter its
+nullability. Since `field()` is nullable by default, standalone field validators normally include
+`null` in their model. A validator that excludes `null` can only be attached when the field is
+explicitly non-nullable:
+
+```ts
+export const positive = validator<number>(({ value }) => {
+  return value() > 0 ? null : { kind: 'positive' };
+});
+
+const quantity = field(1, [positive], { nullable: false });
+```
+
+TypeScript rejects attaching `positive` to a default nullable field. Forms and arrays do not add
+`null` to their aggregate values, so their validators use the aggregate model directly, such as
+`validator<Profile>()` or `validator<readonly Item[]>()`.
+
+The helper returns the original function without wrapping it. Consequently, signal reads remain
+reactively tracked by the ordinary synchronous validation pipeline, validator metadata and
+conditional composition are preserved, and no Angular injection context is required. The same
+helper supports aggregate value models for validators attached to `form()` and `array()`.
+
+This differs from Angular 22.1.3 Signal Forms, where `validate(path, logic)` registers custom logic
+directly against a schema path. This library uses reusable validator values, so `validator()` only
+provides an authoring boundary and attaching the returned function to a node performs registration.
+
 ### Built-in validators
 
 Built-in validators can be passed anywhere a custom validator is accepted:

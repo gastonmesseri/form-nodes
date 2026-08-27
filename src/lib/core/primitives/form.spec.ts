@@ -4,6 +4,7 @@ import { Injector, signal, type Signal } from '@angular/core';
 import { form } from './form';
 import { field } from './field';
 import { array } from './array';
+import { validator } from '../validation/validator';
 import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
@@ -1338,6 +1339,20 @@ describe('form', () => {
     ]);
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
     expect(formGroup.api.valid()).toBe(false);
+  });
+
+  it('runs a reusable aggregate validator authored with validator()', () => {
+    const matchingCities = validator<{ city: string | null; billingCity: string | null }>(({ value }) => {
+      return value().city === value().billingCity ? null : { kind: 'citiesDoNotMatch' };
+    });
+    const formGroup = form(
+      { city: field('Zurich'), billingCity: field('Madrid') },
+      [matchingCities],
+    );
+
+    expect(formGroup.getError('citiesDoNotMatch')).toMatchObject({ kind: 'citiesDoNotMatch' });
+    formGroup.billingCity.set('Zurich');
+    expect(formGroup.getError('citiesDoNotMatch')).toBeUndefined();
   });
 
   it('accepts validators and state in a second-argument options object', () => {
