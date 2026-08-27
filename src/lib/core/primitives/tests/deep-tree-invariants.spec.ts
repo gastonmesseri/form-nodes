@@ -205,7 +205,7 @@ describe('deep mixed form trees', () => {
     expect(root()).toEqual({ teams: [{ name: '', members: [{ email: '' }] }] });
   });
 
-  it('stops aggregating pending validation and late errors from a removed subtree', async () => {
+  it('stops aggregating pending validation and late errors from a directly removed subtree', async () => {
     let resolve!: (result: { kind: string }) => void;
     const root = form({
       groups: array(() => form({
