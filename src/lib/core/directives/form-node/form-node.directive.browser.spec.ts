@@ -395,6 +395,36 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.amount()).toBe(42);
   });
 
+  it('synchronizes numeric datetime-local values through valueAsNumber', () => {
+    const initial = new Date('2024-01-01T12:30:00Z').valueOf();
+
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `<input type="datetime-local" [formNode]="appointment">`,
+    })
+    class Host {
+      readonly appointment = field(initial, { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.valueAsNumber).toBe(initial);
+
+    const modelValue = new Date('2025-02-02T18:45:00Z').valueOf();
+    fixture.componentInstance.appointment.set(modelValue);
+    fixture.detectChanges();
+    expect(input.valueAsNumber).toBe(modelValue);
+
+    const controlValue = new Date('2026-03-03T09:15:00Z').valueOf();
+    input.valueAsNumber = controlValue;
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.appointment()).toBe(controlValue);
+    fixture.destroy();
+  });
+
   it('restores explicit and implicit select values when a hidden field is rendered', async () => {
     @Component({
       standalone: true,
