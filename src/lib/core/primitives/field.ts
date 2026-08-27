@@ -13,6 +13,7 @@ import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { InternalNode, MarkAsTouchedOptions, Node } from '../types/node.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import { readExternalValidationErrors } from '../validation/external-validation-errors';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -103,7 +104,10 @@ export function field<TValue>(
     () => fieldNode,
     () => !fieldNonInteractive(),
   );
-  const fieldErrors = computed(() => [...fieldSyncErrors(), ...asyncValidation.errors()]);
+  const fieldControlErrors = computed(() => fieldNonInteractive()
+    ? []
+    : readExternalValidationErrors(fieldNode));
+  const fieldErrors = computed(() => [...fieldSyncErrors(), ...asyncValidation.errors(), ...fieldControlErrors()]);
   const getError = computedFunction(
     (kind: string) => fieldErrors().find((error) => error.kind === kind),
     { equal: shallowEqual, max: 20 },

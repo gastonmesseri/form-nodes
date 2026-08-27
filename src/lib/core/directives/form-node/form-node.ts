@@ -1,8 +1,10 @@
 import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Input, Renderer2, computed, effect, forwardRef, inject, signal, untracked, type OnInit, type Signal } from '@angular/core';
-import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, type ControlValueAccessor } from '@angular/forms';
+import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
+import type { ValidationError } from '../../validation/validation.type';
+import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 import { isNativeFormNodeControl, readNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control';
 
 export const FORM_NODE = new InjectionToken<FormNodeDirective<unknown>>('FORM_NODE');
@@ -28,6 +30,12 @@ const selectValueAccessor = (accessors: readonly ControlValueAccessor[] | null):
   if (accessors.length > 1) throw new Error('formNode: more than one built-in ControlValueAccessor matches the host');
   return accessors[0]!;
 };
+
+const isValidatorObject = (validator: ValidatorFn | Validator): validator is Validator =>
+  typeof validator === 'object' && validator !== null;
+
+const toControlErrors = (errors: ValidationErrors | null): readonly ValidationError.WithoutTargetNode[] =>
+  errors ? Object.entries(errors).map(([kind, context]) => ({ kind, context })) : [];
 
 @Directive({
   selector: '[formNode]',
@@ -111,6 +119,29 @@ export class FormNodeDirective<TValue> implements OnInit {
         untracked(() => accessor.setDisabledState!(disabled));
       }, { injector: this.injector });
     }
+    this.connectLegacyValidators();
+  }
+
+  private connectLegacyValidators(): void {
+    const validators = this.injector.get<readonly (ValidatorFn | Validator)[] | null>(NG_VALIDATORS, null, { self: true });
+    if (!validators?.length) return;
+    const version = signal(0);
+    validators.forEach((validator) => {
+      if (isValidatorObject(validator) && validator.registerOnValidatorChange) {
+        validator.registerOnValidatorChange(() => version.update((current) => current + 1));
+      }
+    });
+    const validator = Validators.compose(validators.map((item) =>
+      typeof item === 'function' ? item : item.validate.bind(item),
+    ));
+    const errors = computed(() => {
+      version();
+      return toControlErrors(validator?.(this.ngControl.control) ?? null);
+    });
+    effect((onCleanup) => {
+      const field = this.node();
+      onCleanup(registerExternalValidationErrors(field, this, errors));
+    }, { injector: this.injector });
   }
 
   private connectNativeControl(control: NativeFormNodeControl): void {

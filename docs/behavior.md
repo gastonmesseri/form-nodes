@@ -1256,12 +1256,13 @@ The directive currently provides these behaviors:
 - `disabled`, `readonly`, `required`, and `aria-invalid` are synchronized from field state to applicable DOM properties.
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
+- Synchronous validators provided by a CVA through `NG_VALIDATORS` participate in the field's real validation state. Their Angular validation key becomes `error.kind`, and `registerOnValidatorChange()` invalidates the reactive result. These binding-owned errors are suppressed with the field's other errors while it is disabled, readonly, or hidden and are removed when the binding is destroyed or changes field.
 - Exporting the directive as `#binding="formNode"` provides `focus()`, `flush()`, and `reset()` operations and a reactive `node` reference.
 - Destroying the directive removes DOM listeners, disconnects select observation, and destroys its reactive effects through Angular's `DestroyRef` ownership.
 
 This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
 
-The architecture follows Angular 22 Signal Forms `FormField` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), while keeping the public name and node model specific to this library. Native parsing errors, legacy CVA validator adaptation, configurable state classes, and a first-class signal-based custom-control protocol remain subsequent layers; they should be implemented as adapters around the same directive rather than by changing field semantics.
+The architecture follows Angular 22 Signal Forms `FormField` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), while keeping the public name and node model specific to this library. Native parsing errors, configurable state classes, and a first-class signal-based custom-control protocol remain subsequent layers; they should be implemented as adapters around the same directive rather than by changing field semantics.
 
 ## Internal structural behavior
 
