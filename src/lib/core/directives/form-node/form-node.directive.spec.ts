@@ -7,9 +7,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
+import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
-import { FormNodeDirective } from './form-node.directive';
 import type { Field } from '../../primitives/field';
+import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { required } from '../../validation/validators/required';
 import { isNativeFormNodeControl, readNativeControlValue, writeNativeControlValue } from './native-control';
@@ -82,6 +83,41 @@ describe('FormNodeDirective', () => {
     expect(fixture.componentInstance.name.dirty()).toBe(false);
 
     binding.flush();
+  });
+
+  it('binds a field nested inside a form tree', () => {
+    @Component({
+      standalone: true,
+      selector: 'nested-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input [formNode]="profile.address.city">`,
+    })
+    class Host {
+      readonly profile = form({
+        name: field('David', { nullable: false }),
+        address: form({
+          city: field('Zurich', { nullable: false }),
+        }),
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const { profile } = fixture.componentInstance;
+
+    expect(input.value).toBe('Zurich');
+    expect(profile.address.city.path()).toEqual(['address', 'city']);
+    expect(profile.address.city.parent()).toBe(profile.address);
+    expect(profile.address.city.form()).toBe(profile);
+
+    input.value = 'Bern';
+    dispatch(input, 'input');
+    expect(profile()).toEqual({ name: 'David', address: { city: 'Bern' } });
+
+    profile.patch({ address: { city: 'Geneva' } });
+    fixture.detectChanges();
+    expect(input.value).toBe('Geneva');
   });
 
   it('binds disabled, readonly, required, and aria-invalid state', () => {
