@@ -201,6 +201,32 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.password()).toBe('updated while visible');
   });
 
+  it('synchronizes a native textarea in both directions', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `<textarea [formNode]="notes"></textarea>`,
+    })
+    class Host {
+      readonly notes = field('', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+
+    expect(textarea.value).toBe('');
+
+    fixture.componentInstance.notes.set('model value');
+    fixture.detectChanges();
+    expect(textarea.value).toBe('model value');
+
+    textarea.value = 'control value';
+    dispatch(textarea, 'input');
+    expect(fixture.componentInstance.notes()).toBe('control value');
+    expect(fixture.componentInstance.notes.dirty()).toBe(true);
+  });
+
   it('reflects validation, readonly, and disabled state onto a native control', () => {
     @Component({
       standalone: true,
