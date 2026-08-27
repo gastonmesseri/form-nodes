@@ -35,6 +35,20 @@ describe('types', () => {
     expectTypeOf(son.parent()).toEqualTypeOf<typeof profile.sons | null>();
     expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
     expectTypeOf(profile.sons[0]?.name()).toEqualTypeOf<string | null | undefined>();
+    profile.sons.forEach((item, index, owner) => {
+      expectTypeOf(item.name()).toEqualTypeOf<string | null>();
+      expectTypeOf(index).toEqualTypeOf<number>();
+      expectTypeOf(owner).toEqualTypeOf<typeof profile.sons>();
+    });
+    expectTypeOf([...profile.sons]).toEqualTypeOf<(typeof son)[]>();
+    expectTypeOf(profile.sons.map((item) => item.name())).toEqualTypeOf<(string | null)[]>();
+    expectTypeOf(profile.sons.filter((item) => item.age()! > 18)).toEqualTypeOf<(typeof son)[]>();
+    expectTypeOf(profile.sons.find((item) => item.age()! > 18)).toEqualTypeOf<typeof son | undefined>();
+    expectTypeOf(profile.sons.findIndex((item) => item.age()! > 18)).toEqualTypeOf<number>();
+    expectTypeOf(profile.sons.some((item) => item.invalid())).toEqualTypeOf<boolean>();
+    expectTypeOf(profile.sons.every((item) => item.valid())).toEqualTypeOf<boolean>();
+    expectTypeOf(profile.sons.includes(son)).toEqualTypeOf<boolean>();
+    expectTypeOf(profile.sons.indexOf(son)).toEqualTypeOf<number>();
     if (false) {
       // @ts-expect-error numeric item access is readonly
       profile.sons[0] = son;

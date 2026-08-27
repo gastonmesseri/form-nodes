@@ -47,6 +47,12 @@ export type ArrayIndexes<TItem extends Node, TParent extends Node> = {
 };
 
 export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
+  /**
+   * Readonly signal containing the array node's current item nodes.
+   * Reading it participates in reactive tracking, and its array reference changes when the
+   * structure changes. The contained nodes are the live nodes owned by this array, not clones.
+   * Use spread syntax or Array.from() when a mutable copy of the node list is needed.
+   */
   items: Signal<ArrayItems<TItem, TParent>>;
   length: Signal<number>;
   form: Signal<ArrayRoot<TItem, TParent>>;
@@ -54,6 +60,18 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   path: Signal<readonly string[]>;
   value: Signal<TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]>;
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
+  forEach(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => void): void;
+  map<TResult>(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => TResult): TResult[];
+  filter<TFiltered extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFiltered): TFiltered[];
+  filter(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>[];
+  find<TFound extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFound): TFound | undefined;
+  find(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
+  findIndex(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): number;
+  some(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): boolean;
+  every(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): boolean;
+  includes(item: Node, fromIndex?: number): boolean;
+  indexOf(item: Node, fromIndex?: number): number;
+  [Symbol.iterator](): IterableIterator<ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>;
   push(...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
   insert(index: number, ...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
   removeAt(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
@@ -325,6 +343,29 @@ export function array<TDefinition extends NodeDefinition>(
     else reconcile(args[0], true);
     arraySelfDirty.set(false);
   };
+  const getItemSnapshot = () => [
+    ...arrayItems(),
+  ] as ArrayItemWithParent<TItem, ArrayNode<TItem>>[];
+  const map: ArrayApi<TItem>['map'] = (callback) =>
+    getItemSnapshot().map((item, index) => callback(item, index, arrayNode));
+  const filter = ((predicate: (
+    item: ArrayItemWithParent<TItem, ArrayNode<TItem>>,
+    index: number,
+    array: ArrayNode<TItem>,
+  ) => unknown) =>
+    getItemSnapshot().filter((item, index) => predicate(item, index, arrayNode))) as ArrayApi<TItem>['filter'];
+  const find = ((predicate: (
+    item: ArrayItemWithParent<TItem, ArrayNode<TItem>>,
+    index: number,
+    array: ArrayNode<TItem>,
+  ) => unknown) =>
+    getItemSnapshot().find((item, index) => predicate(item, index, arrayNode))) as ArrayApi<TItem>['find'];
+  const findIndex: ArrayApi<TItem>['findIndex'] = (predicate) =>
+    getItemSnapshot().findIndex((item, index) => predicate(item, index, arrayNode));
+  const some: ArrayApi<TItem>['some'] = (predicate) =>
+    getItemSnapshot().some((item, index) => predicate(item, index, arrayNode));
+  const every: ArrayApi<TItem>['every'] = (predicate) =>
+    getItemSnapshot().every((item, index) => predicate(item, index, arrayNode));
   const api: ArrayApi<TItem> = {
     items: arrayItems.asReadonly() as Signal<ArrayItems<TItem, Node>>,
     length: computed(() => arrayItems().length),
@@ -333,6 +374,25 @@ export function array<TDefinition extends NodeDefinition>(
     path: arrayPath,
     value: arrayValue,
     at: (index) => arrayItems()[index] as ArrayItemWithParent<TItem, ArrayNode<TItem>> | undefined,
+    forEach: (callback) => {
+      const snapshot = arrayItems();
+      snapshot.forEach((item, index) => callback(
+        item as ArrayItemWithParent<TItem, ArrayNode<TItem>>,
+        index,
+        arrayNode,
+      ));
+    },
+    map,
+    filter,
+    find,
+    findIndex,
+    some,
+    every,
+    includes: (item, fromIndex) => getItemSnapshot().includes(item as ArrayItemWithParent<TItem, ArrayNode<TItem>>, fromIndex),
+    indexOf: (item, fromIndex) => getItemSnapshot().indexOf(item as ArrayItemWithParent<TItem, ArrayNode<TItem>>, fromIndex),
+    [Symbol.iterator]: () => (
+      arrayItems() as ArrayItems<TItem, Node>
+    )[Symbol.iterator](),
     push: (...args) => insert(arrayItems().length, ...args),
     insert,
     removeAt,
