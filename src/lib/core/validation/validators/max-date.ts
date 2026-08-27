@@ -15,7 +15,7 @@ export const maxDate = (
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum.getTime())) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'maxDate', maxDate: resolvedMaximum, message: options?.message ?? defaultValidatorMessages.maxDate(resolvedMaximum) }
+      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.maxDate(resolvedMaximum) }
       : null;
   }, MAX_DATE_METADATA, maximum);
 };

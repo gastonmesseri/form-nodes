@@ -15,7 +15,7 @@ export const minDate = (
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum.getTime())) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'minDate', minDate: resolvedMinimum, message: options?.message ?? defaultValidatorMessages.minDate(resolvedMinimum) }
+      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.minDate(resolvedMinimum) }
       : null;
   }, MIN_DATE_METADATA, minimum);
 };

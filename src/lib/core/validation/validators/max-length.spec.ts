@@ -10,6 +10,7 @@ describe('maxLength', () => {
     expect(maxLength(2)(context('abc'))).toEqual({
       kind: 'maxLength',
       maxLength: 2,
+      actual: 3,
       message: 'Please provide no more than 2 characters or items.',
     });
     expect(maxLength(2, { message: 'Too long' })(context('abc'))).toMatchObject({ message: 'Too long' });

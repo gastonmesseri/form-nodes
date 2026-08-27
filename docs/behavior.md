@@ -768,17 +768,17 @@ const age = field<number>(null, {
 | Validator | Accepted value | Empty value behavior | Error shape |
 | --- | --- | --- | --- |
 | `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ kind: 'required', message }` |
-| `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, message }` |
-| `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, message }` |
-| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, message }` |
-| `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, message }` |
-| `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, message }` |
+| `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, actual, message }` |
+| `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, actual, message }` |
+| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, actual, message }` |
+| `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
+| `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
 | `oneOf(values)` | The allowed value type, `null`, or `undefined` | Passes for `null`, `undefined`, and `''` | `{ kind: 'oneOf', options, actual, message }` |
 | `minWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'minWords', minWords, actual, message }` |
 | `maxWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'maxWords', maxWords, actual, message }` |
-| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, message }` |
-| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, message }` |
+| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, actual, message }` |
+| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, actual, message }` |
 
 `required` supports direct use and an options object with a message:
 
@@ -792,6 +792,8 @@ field(16, [min(18, { message: 'You must be at least 18' })]);
 Every built-in validator returns an English default message with its error. The common optional `{ message }` argument replaces that default without changing the error kind or constraint data. `required` and `email` support direct use in a validators array and an options factory; validators that require a constraint accept options as their final argument. Passing a string directly to `required` is intentionally rejected. Field contexts carry a non-enumerable internal symbol marker, allowing overloaded validators to recognize genuine contexts without relying on their structural shape or exposing the marker in the public `FieldContext` type.
 
 Default messages are centralized within the validation package rather than duplicated across validators. This is a deliberate extension over Angular 22.1.4 Signal Forms, which supports static or reactive custom messages but leaves the default message undefined. The current public override is a static string and remains safe outside Angular dependency injection. A future internationalization layer can replace the centralized defaults without changing the structured error contract.
+
+Constraint errors also expose `actual`: the rejected number for `min` and `max`, the observed length or size for length validators, the rejected string for `pattern`, and the rejected `Date` for date validators. `oneOf()` and the word-count validators follow the same convention. `required` and `email` omit `actual` because reflecting the entire submitted value adds little diagnostic value and can expose user input unnecessarily. Angular 22.1.4's built-in constraint errors expose the configured constraint but not the actual value, so this is a deliberate diagnostic extension.
 
 Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
 

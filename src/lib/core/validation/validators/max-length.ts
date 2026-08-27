@@ -18,7 +18,7 @@ export const maxLength = (
     if (resolvedMaximum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength > resolvedMaximum
-      ? { kind: 'maxLength', maxLength: resolvedMaximum, message: options?.message ?? defaultValidatorMessages.maxLength(resolvedMaximum) }
+      ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: options?.message ?? defaultValidatorMessages.maxLength(resolvedMaximum) }
       : null;
   }, MAX_LENGTH_METADATA, maximum);
 };

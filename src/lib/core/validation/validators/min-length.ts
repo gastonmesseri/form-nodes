@@ -18,7 +18,7 @@ export const minLength = (
     if (resolvedMinimum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength < resolvedMinimum
-      ? { kind: 'minLength', minLength: resolvedMinimum, message: options?.message ?? defaultValidatorMessages.minLength(resolvedMinimum) }
+      ? { kind: 'minLength', minLength: resolvedMinimum, actual: actualLength, message: options?.message ?? defaultValidatorMessages.minLength(resolvedMinimum) }
       : null;
   }, MIN_LENGTH_METADATA, minimum);
 };

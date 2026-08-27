@@ -11,6 +11,7 @@ describe('min', () => {
     expect(min(3)(context(2))).toEqual({
       kind: 'min',
       min: 3,
+      actual: 2,
       message: 'Please enter a value greater than or equal to 3.',
     });
     expect(min(3, { message: 'Too small' })(context(2))).toMatchObject({ message: 'Too small' });

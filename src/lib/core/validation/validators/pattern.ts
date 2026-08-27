@@ -18,6 +18,6 @@ export const pattern = (
     resolvedExpression.lastIndex = 0;
     return resolvedExpression.test(currentValue!)
       ? null
-      : { kind: 'pattern', pattern: resolvedExpression, message: options?.message ?? defaultValidatorMessages.pattern(resolvedExpression) };
+      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: options?.message ?? defaultValidatorMessages.pattern(resolvedExpression) };
   }, PATTERN_METADATA, expression);
 };

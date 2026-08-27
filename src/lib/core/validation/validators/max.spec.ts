@@ -10,6 +10,7 @@ describe('max', () => {
     expect(max(3)(context(4))).toEqual({
       kind: 'max',
       max: 3,
+      actual: 4,
       message: 'Please enter a value less than or equal to 3.',
     });
     expect(max(3, { message: 'Too large' })(context(4))).toMatchObject({ message: 'Too large' });

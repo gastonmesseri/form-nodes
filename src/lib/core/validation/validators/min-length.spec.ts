@@ -10,6 +10,7 @@ describe('minLength', () => {
     expect(minLength(3)(context('ab'))).toEqual({
       kind: 'minLength',
       minLength: 3,
+      actual: 2,
       message: 'Please provide at least 3 characters or items.',
     });
     expect(minLength(3, { message: 'Too short' })(context('ab'))).toMatchObject({ message: 'Too short' });
