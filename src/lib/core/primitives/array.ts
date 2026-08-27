@@ -416,17 +416,21 @@ export function array<TDefinition extends NodeDefinition>(
     reparentItems();
   };
   const reconcileByKey = (values: TSet, reset: boolean) => {
-    const trackBy = resolvedOptions!.trackBy! as (value: NodeValue<TItem>, index: number) => unknown;
+    const trackBy = resolvedOptions!.trackBy!;
+    const getTrackingKey = (value: NodeValue<TItem>, index: number): unknown => {
+      if (typeof trackBy === 'function') return trackBy(value, index);
+      return (value as Record<string, unknown>)[trackBy as string];
+    };
     const current = [...arrayItems()];
     const currentByKey = new Map<unknown, TItem>();
     current.forEach((item, index) => {
-      const key = trackBy(item() as NodeValue<TItem>, index);
+      const key = getTrackingKey(item() as NodeValue<TItem>, index);
       if (currentByKey.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in current items`);
       currentByKey.set(key, item);
     });
     const incomingKeys = new Set<unknown>();
     const keys = values.map((value, index) => {
-      const key = trackBy(value as NodeValue<TItem>, index);
+      const key = getTrackingKey(value as NodeValue<TItem>, index);
       if (incomingKeys.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in incoming values`);
       incomingKeys.add(key);
       return key;
@@ -443,7 +447,7 @@ export function array<TDefinition extends NodeDefinition>(
     arrayItems.set(next);
     reparentItems();
   };
-  const reconcile = resolvedOptions?.trackBy ? reconcileByKey : reconcileByIndex;
+  const reconcile = resolvedOptions?.trackBy !== undefined ? reconcileByKey : reconcileByIndex;
   const normalizeArrayValue = (value: TInput): TSet => {
     return value ?? [];
   };

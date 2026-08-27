@@ -1258,6 +1258,22 @@ people[0] === kirillNode; // true
 people[1] === alexNode;   // true
 ```
 
+For object items, the same property lookup can be written with a string shorthand. The property name is restricted by TypeScript to actual properties of the item value:
+
+```ts
+const people = array(personTemplate, initialPeople, {
+  trackBy: 'id',
+});
+```
+
+Callbacks remain available for computed keys, composite identities, index-dependent strategies, and primitive item values:
+
+```ts
+const people = array(personTemplate, initialPeople, {
+  trackBy: person => `${person.organizationId}:${person.id}`,
+});
+```
+
 `trackBy` is evaluated for the current item values and the incoming values before reconciliation mutates any node. Matching keys reuse and move the existing node, preserving interaction state, pending validation ownership, and node identity while updating its value and path. Missing keys create fresh nodes, and current keys absent from the incoming values detach their nodes. Duplicate keys are rejected before the array changes because they cannot identify items unambiguously.
 
 This is intentionally explicit rather than storing a hidden identity symbol on value objects. It also works with entirely new objects received from a server, provided their domain keys remain stable. Primitive arrays and arrays without a stable domain identifier should normally keep the default index reconciliation. `move()` remains the direct structural operation when the caller already knows the source and destination indexes.
