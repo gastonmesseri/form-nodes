@@ -568,9 +568,11 @@ asyncValidator({
 });
 ```
 
-Every signal read by `params` is an explicit dependency. When one emits, the new params snapshot is compared shallowly with the previous snapshot: primitives use `Object.is`, while plain objects and arrays compare their own entries one level deep with `Object.is`. Validation only restarts when that comparison changes. For example, `params: () => ({ username: person().firstName })` does not rerun when another property of `person()` changes while `firstName` stays equal.
+Every signal read by `params` is an explicit dependency. When one emits, the new params snapshot is compared shallowly with the previous snapshot: primitives use `Object.is`, while plain objects and arrays compare their own entries one level deep with `Object.is`. Validation only restarts when that comparison changes. For example, `params: () => ({ username: person().firstName })` does not rerun when another property of `person()` changes while `firstName` stays equal. Synchronous changes to several dependencies, including the validated value and `when`, are coalesced into one validation using the latest complete params snapshot; an intermediate stale snapshot is never passed to `validate`.
 
 Explicit params are known before the first execution, so the initial service call also waits for the debounce. A meaningful parameter change cancels stale work, restarts the complete debounce period, and the eventual validator invocation receives the snapshot that triggered it. The `validate` callback runs untracked; signals read only inside it never become dependencies when `params` is present.
+
+Multiple asynchronous validators execute independently. Completed errors become observable while other validators remain pending, but `pending()` stays `true` until every active validator finishes. Errors are always exposed in validator declaration order rather than completion order. Once any completed validator contributes an error, `validationStatus()` is `invalid` even if another validator is still pending; without an error, pending work produces `unknown`. Replacing validators, disabling their `when` condition, changing dependencies, or destroying their owner aborts active work and prevents late Promise resolutions, Observable emissions, and `onError` fallbacks from publishing stale errors.
 
 Asynchronous validation behavior follows Angular 22 Signal Forms where applicable, but uses an internal Promise-and-Observable runner rather than Angular Resource so creation never requires an injection context:
 
