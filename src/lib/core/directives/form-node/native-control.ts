@@ -2,6 +2,12 @@ import { untracked } from '@angular/core';
 
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
+export const isNativeInput = (element: NativeFormNodeControl): element is HTMLInputElement =>
+  element.tagName === 'INPUT';
+
+export const isNativeSelect = (element: NativeFormNodeControl): element is HTMLSelectElement =>
+  element.tagName === 'SELECT';
+
 export const isNativeFormNodeControl = (element: HTMLElement): element is NativeFormNodeControl =>
   element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA';
 
@@ -12,8 +18,8 @@ export const readNativeControlValue = (
   element: NativeFormNodeControl,
   currentValue: () => unknown,
 ): unknown => {
-  if (element instanceof HTMLSelectElement && element.multiple) return readSelectedValues(element);
-  if (!(element instanceof HTMLInputElement)) return element.value;
+  if (isNativeSelect(element) && element.multiple) return readSelectedValues(element);
+  if (!isNativeInput(element)) return element.value;
 
   switch (element.type) {
     case 'checkbox':
@@ -60,11 +66,11 @@ const writeSelectedValues = (select: HTMLSelectElement, value: unknown): void =>
 };
 
 export const writeNativeControlValue = (element: NativeFormNodeControl, value: unknown): void => {
-  if (element instanceof HTMLSelectElement && element.multiple) {
+  if (isNativeSelect(element) && element.multiple) {
     writeSelectedValues(element, value);
     return;
   }
-  if (!(element instanceof HTMLInputElement)) {
+  if (!isNativeInput(element)) {
     element.value = value == null ? '' : String(value);
     return;
   }
