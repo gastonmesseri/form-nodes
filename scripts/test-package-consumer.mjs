@@ -1,0 +1,87 @@
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { dirname, join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+
+const workspace = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const temporaryDirectory = mkdtempSync(join(tmpdir(), 'ng-forms-package-consumer-'));
+
+const run = (command, args, options = {}) => {
+  const result = spawnSync(command, args, {
+    cwd: temporaryDirectory,
+    encoding: 'utf8',
+    env: { ...process.env, npm_config_cache: join(temporaryDirectory, '.npm-cache') },
+    ...options,
+  });
+  if (result.status === 0) return result.stdout.trim();
+
+  const output = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();
+  throw new Error(`${command} ${args.join(' ')} failed.\n${output}`);
+};
+
+try {
+  const packResult = JSON.parse(run('npm', ['pack', resolve(workspace, 'dist'), '--json']));
+  const packed = packResult[0];
+  if (!packed?.filename || !Array.isArray(packed.files)) throw new Error('npm pack returned an unexpected result.');
+  const packedPaths = new Set(packed.files.map(({ path }) => path));
+  if (!packedPaths.has('fesm2022/gem-ng-forms.mjs') || !packedPaths.has('types/gem-ng-forms.d.ts')) {
+    throw new Error('The published package does not contain its JavaScript bundle and public typings.');
+  }
+  if ([...packedPaths].some((path) => path.startsWith('src/'))) {
+    throw new Error('The published package unexpectedly contains library source files.');
+  }
+
+  const packageDirectory = join(temporaryDirectory, 'node_modules', '@gem', 'ng-forms');
+  mkdirSync(packageDirectory, { recursive: true });
+  run('tar', ['-xzf', join(temporaryDirectory, packed.filename), '--strip-components=1', '-C', packageDirectory]);
+  const packageManifest = JSON.parse(readFileSync(join(packageDirectory, 'package.json'), 'utf8'));
+  if (packageManifest.scripts?.prepublishOnly) {
+    throw new Error('The published package was compiled in Angular full compilation mode.');
+  }
+
+  const angularDirectory = join(temporaryDirectory, 'node_modules', '@angular');
+  mkdirSync(angularDirectory, { recursive: true });
+  for (const dependency of ['compiler', 'core', 'forms', 'platform-browser']) {
+    symlinkSync(resolve(workspace, 'node_modules', '@angular', dependency), join(angularDirectory, dependency), 'dir');
+  }
+
+  const source = readFileSync(resolve(workspace, 'integration-tests/package-consumer.ts'), 'utf8');
+  writeFileSync(join(temporaryDirectory, 'package-consumer.ts'), source);
+  writeFileSync(join(temporaryDirectory, 'tsconfig.json'), JSON.stringify({
+    compilerOptions: {
+      target: 'ES2022',
+      module: 'ES2022',
+      moduleResolution: 'bundler',
+      lib: ['ES2022', 'DOM'],
+      strict: true,
+      noEmit: true,
+      skipLibCheck: false,
+      experimentalDecorators: true,
+    },
+    angularCompilerOptions: {
+      strictTemplates: true,
+      strictInjectionParameters: true,
+    },
+    files: [join(temporaryDirectory, 'package-consumer.ts')],
+  }));
+
+  const ngc = resolve(workspace, 'node_modules', '@angular', 'compiler-cli', 'bundles', 'src', 'bin', 'ngc.js');
+  run(process.execPath, [ngc, '-p', join(temporaryDirectory, 'tsconfig.json')]);
+
+  writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
+    import '@angular/compiler';
+    import { array, field, form, required } from '@gem/ng-forms';
+    const profile = form({
+      name: field('', [required]),
+      addresses: array({ city: field('') }, [{ city: 'Zurich' }]),
+    });
+    if (profile.name.valid()) throw new Error('Required validation was not preserved in the package.');
+    if (profile.addresses[0].city() !== 'Zurich') throw new Error('Array values were not preserved in the package.');
+  `);
+  run(process.execPath, [join(temporaryDirectory, 'runtime.mjs')]);
+} finally {
+  rmSync(temporaryDirectory, { recursive: true, force: true });
+}
+
+console.log('Built package consumer checks passed.');
