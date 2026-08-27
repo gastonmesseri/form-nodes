@@ -1,4 +1,4 @@
-import { array, asyncValidator, configureGlobalValidatorMessages, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, configureGlobalValidatorMessages, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -17,6 +17,7 @@ name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
 field(18, [min(18, { message: 'Too young' })]);
 field('', [pattern(/^[a-z]+$/, { message: () => 'Use letters only' })]);
+field('', [url, url({ message: 'Enter an absolute URL' })]);
 field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);

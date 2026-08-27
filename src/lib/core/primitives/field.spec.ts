@@ -4,6 +4,7 @@ import { computed, signal, type Signal } from '@angular/core';
 import { field } from './field';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import { url } from '../validation/validators/url';
 import { validator } from '../validation/validator';
 import { email } from '../validation/validators/email';
 import type { InternalNode } from '../types/node.type';
@@ -357,9 +358,13 @@ describe('field', () => {
 
   it('supports direct built-in validators with default messages', () => {
     const emailField = field('not-an-email', [email]);
+    const urlField = field('/relative-path', [url]);
 
     expect(emailField.errors()).toMatchObject([
       { kind: 'email', message: 'Please enter a valid email address.' },
+    ]);
+    expect(urlField.errors()).toMatchObject([
+      { kind: 'url', message: 'Please enter a valid absolute URL.' },
     ]);
   });
 

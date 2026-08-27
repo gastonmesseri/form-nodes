@@ -168,6 +168,7 @@ parameters available to each callback:
 | --- | --- |
 | `required` | none |
 | `email` | none |
+| `url` | none |
 | `min` | `{ min: number, actual: number }` |
 | `max` | `{ max: number, actual: number }` |
 | `minLength` | `{ minLength: number, actual: number }` |
