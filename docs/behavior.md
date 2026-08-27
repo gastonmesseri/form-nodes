@@ -291,6 +291,16 @@ Nullability intentionally does not change reset behavior. In line with this libr
 
 This differs from Angular Reactive Forms, where `nonNullable` also controls whether a no-argument reset returns to null or to the initial value. Angular Signal Forms instead derives nullability from the model type and does not provide a nullability option.
 
+### Container nullability
+
+The current public nullability model deliberately distinguishes leaf values from structural containers:
+
+- `field()` is nullable by default. Pass `{ nullable: false }` when `null` is not a valid field value.
+- `form()` always exposes a non-null object value. This applies to root forms, explicit nested forms, and shorthand nested objects; a nested form cannot itself be replaced with `null` or `undefined`.
+- `array()` always exposes a non-null array value. It accepts `null` or `undefined` through complete-value inputs as an absence shorthand and normalizes either value to `[]`.
+
+Consequently, nullable business values belong naturally in fields, including fields whose value is an object. `form()` and `array()` represent live structural containers whose children, aggregation, state propagation, and paths remain available at all times. This is the library's current deliberate API decision and may be revisited only as an explicit public behavior change.
+
 ## Value operations
 
 ### Field values
