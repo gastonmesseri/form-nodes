@@ -12,9 +12,47 @@ export interface ValidationError {
   readonly message?: string;
 }
 
+/** Built-in validation errors keyed by their discriminating `kind`. */
+export interface BuiltInValidationErrorMap {
+  readonly required: ValidationError & { readonly kind: 'required' };
+  readonly email: ValidationError & { readonly kind: 'email' };
+  readonly min: ValidationError & { readonly kind: 'min'; readonly min: number; readonly actual: number };
+  readonly max: ValidationError & { readonly kind: 'max'; readonly max: number; readonly actual: number };
+  readonly minLength: ValidationError & { readonly kind: 'minLength'; readonly minLength: number; readonly actual: number };
+  readonly maxLength: ValidationError & { readonly kind: 'maxLength'; readonly maxLength: number; readonly actual: number };
+  readonly pattern: ValidationError & { readonly kind: 'pattern'; readonly pattern: RegExp; readonly actual: string };
+  readonly minDate: ValidationError & { readonly kind: 'minDate'; readonly minDate: Date; readonly actual: Date };
+  readonly maxDate: ValidationError & { readonly kind: 'maxDate'; readonly maxDate: Date; readonly actual: Date };
+  readonly oneOf: ValidationError & { readonly kind: 'oneOf'; readonly options: readonly unknown[]; readonly actual: unknown };
+  readonly minWords: ValidationError & { readonly kind: 'minWords'; readonly minWords: number; readonly actual: number };
+  readonly maxWords: ValidationError & { readonly kind: 'maxWords'; readonly maxWords: number; readonly actual: number };
+}
+
+/** Extensible registry used to resolve structured errors by their discriminating `kind`. */
+export interface ValidationErrorMap extends BuiltInValidationErrorMap {}
+
+/** Union of every validation error provided by the library. */
+export type BuiltInValidationError = BuiltInValidationErrorMap[keyof BuiltInValidationErrorMap];
+
+/** A custom validation error whose additional application-specific properties remain unknown. */
+export type CustomValidationError<TKind extends string = string> = ValidationError
+  & Readonly<Record<string, unknown>>
+  & { readonly kind: TKind };
+
 export namespace ValidationError {
+  /** Resolves a known error kind to its structured type, with a generic fallback for custom kinds. */
+  export type ForKind<TKind extends string> = (
+    TKind extends keyof ValidationErrorMap ? ValidationErrorMap[TKind] : CustomValidationError<TKind>
+  ) & { readonly kind: TKind };
+
   /** An error associated with a specific target node. */
   export type WithTargetNode<TNode = unknown> = ValidationError & {
+    /**
+     * Node whose validation state owns this error.
+     *
+     * When the error is read from an ancestor aggregate through `allErrors()`, this remains the
+     * original field, form, or array that produced the error rather than the observing ancestor.
+     */
     readonly targetNode: TNode;
     /** Concrete control binding that produced this error, when the error is binding-specific. */
     readonly formNode?: FormNodeBinding;
@@ -22,6 +60,13 @@ export namespace ValidationError {
 
   /** An error that may already define its target node. */
   export type WithOptionalTargetNode<TNode = unknown> = ValidationError & {
+    /**
+     * Node whose validation state should own this error, when explicitly provided.
+     *
+     * Validators may omit it to target the node currently being validated. The validation
+     * pipeline then assigns that node before exposing the error through `errors()` or
+     * `allErrors()`.
+     */
     readonly targetNode?: TNode;
     /** Concrete control binding that produced this error, when the error is binding-specific. */
     readonly formNode?: FormNodeBinding;
@@ -79,7 +124,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   readonly pending: Signal<boolean>;
   readonly debouncing: Signal<boolean>;
   readonly validationStatus: Signal<ValidationStatus>;
-  getError<TKind extends string>(kind: TKind): (ValidationError & { readonly kind: TKind }) | undefined;
+  getError<TKind extends string>(kind: TKind): ValidationError.ForKind<TKind> | undefined;
   set(value: TValue): void;
   update(updater: (value: TValue) => TValue): void;
   flush(): void;

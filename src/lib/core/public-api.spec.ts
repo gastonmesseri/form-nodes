@@ -351,12 +351,11 @@ describe('types', () => {
     const fieldError = fieldNode.getError('required');
     const formError = formGroup.getError('formError');
 
-    expectTypeOf(fieldError).toEqualTypeOf<
-      (ValidationError.WithTargetNode<typeof fieldNode> & { readonly kind: 'required' }) | undefined
-    >();
-    expectTypeOf(formError).toEqualTypeOf<
-      (ValidationError.WithTargetNode<typeof formGroup> & { readonly kind: 'formError' }) | undefined
-    >();
+    expectTypeOf(fieldError?.kind).toEqualTypeOf<'required' | undefined>();
+    expectTypeOf(fieldError?.targetNode).toEqualTypeOf<typeof fieldNode | undefined>();
+    expectTypeOf(formError?.kind).toEqualTypeOf<'formError' | undefined>();
+    expectTypeOf(formError?.targetNode).toEqualTypeOf<typeof formGroup | undefined>();
+    expectTypeOf(formError?.applicationData).toEqualTypeOf<unknown>();
     expectTypeOf(colliding.getError()).toEqualTypeOf<string | null>();
     expectTypeOf(colliding.api.getError('missing')?.kind).toEqualTypeOf<'missing' | undefined>();
   });

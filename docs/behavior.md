@@ -795,6 +795,35 @@ Default messages are centralized within the validation package rather than dupli
 
 Constraint errors also expose `actual`: the rejected number for `min` and `max`, the observed length or size for length validators, the rejected string for `pattern`, and the rejected `Date` for date validators. `oneOf()` and the word-count validators follow the same convention. `required` and `email` omit `actual` because reflecting the entire submitted value adds little diagnostic value and can expose user input unnecessarily. Angular 22.1.4's built-in constraint errors expose the configured constraint but not the actual value, so this is a deliberate diagnostic extension.
 
+`getError()` resolves built-in literal kinds to their complete structured types. Editors therefore expose `min`, `actual`, `message`, and `targetNode` without a cast:
+
+```ts
+const age = field(16, [min(18)]);
+const error = age.getError('min');
+
+error?.min;        // number | undefined
+error?.actual;     // number | undefined
+error?.targetNode; // typeof age | undefined
+```
+
+Unknown kinds retain the generic `{ kind, message?, targetNode }` contract and allow additional properties as `unknown`. Application code can therefore read arbitrary custom payload properties and narrow them locally without registering the error first. Reusable custom validation packages can add equally precise kinds by augmenting `ValidationErrorMap`:
+
+```ts
+declare module '@gem/ng-forms' {
+  interface ValidationErrorMap {
+    readonly unavailableUsername: ValidationError & {
+      readonly kind: 'unavailableUsername';
+      readonly suggestion: string;
+    };
+  }
+}
+
+username.getError('unavailableUsername')?.suggestion; // string | undefined
+```
+
+`BuiltInValidationError` remains the union of errors shipped by the library and does not absorb application augmentations. `ValidationErrorMap` is the deliberately extensible lookup registry.
+`CustomValidationError` represents the permissive fallback shape.
+
 Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
 
 `oneOf()` validates membership with `Array.prototype.includes`, so `NaN` matches `NaN` and objects match by reference rather than by structure. Its error includes the resolved allowed `options` and the rejected `actual` value. The allowed values can be static or returned by a reactive function; returning `undefined` temporarily disables the constraint:
