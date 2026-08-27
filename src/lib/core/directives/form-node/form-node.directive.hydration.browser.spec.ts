@@ -16,9 +16,9 @@ declare const __FORM_NODE_SIGNAL_CONTROL_HYDRATION_HTML__: string;
 
 @Component({
   selector: 'form-node-hydration-app',
+  template: '<input data-age type="text" [formNode]="age"><span data-value>{{ age() }}</span>',
   standalone: true,
   imports: [FormNode],
-  template: '<input data-age type="text" [formNode]="age"><span data-value>{{ age() }}</span>',
 })
 class HydrationApp {
   readonly age = field(23, [required], { nullable: false });
@@ -26,7 +26,7 @@ class HydrationApp {
 
 const installServerDom = (encodedHtml: string, selector: string): { host: HTMLElement; nodes: Node[] } => {
   const serverDocument = new DOMParser().parseFromString(atob(encodedHtml), 'text/html');
-  const nodes = Array.from(serverDocument.body.childNodes, (node) => document.importNode(node, true));
+  const nodes = Array.from(serverDocument.body.childNodes, node => document.importNode(node, true));
   document.body.append(...nodes);
   const host = nodes.find((node): node is HTMLElement =>
     node instanceof HTMLElement && node.matches(selector),
@@ -87,7 +87,7 @@ describe('FormNode hydration in Chromium', () => {
       application?.destroy();
       error.mockRestore();
       warn.mockRestore();
-      nodes.forEach((node) => node.parentNode?.removeChild(node));
+      nodes.forEach(node => node.parentNode?.removeChild(node));
       destroyPlatform();
     }
   });
@@ -124,7 +124,7 @@ describe('FormNode hydration in Chromium', () => {
       application?.destroy();
       error.mockRestore();
       warn.mockRestore();
-      nodes.forEach((node) => node.parentNode?.removeChild(node));
+      nodes.forEach(node => node.parentNode?.removeChild(node));
       destroyPlatform();
     }
   });

@@ -107,7 +107,7 @@ describe('array property-based invariants', () => {
               expect(names[index]).toBe(item);
             });
           } else if (operation.kind === 'update') {
-            names.update((values) => [...values, operation.value]);
+            names.update(values => [...values, operation.value]);
             model.push(operation.value);
           } else if (operation.kind === 'clear') {
             const previous = [...names];
@@ -131,7 +131,7 @@ describe('array property-based invariants', () => {
     });
     const snapshotArbitrary = fc.uniqueArray(personArbitrary, {
       maxLength: 15,
-      selector: (person) => person.id,
+      selector: person => person.id,
     });
 
     fc.assert(fc.property(
@@ -140,13 +140,13 @@ describe('array property-based invariants', () => {
         const people = array({
           id: field(0, { nullable: false }),
           name: field('', { nullable: false }),
-        }, [], { trackBy: (person) => person.id });
+        }, [], { trackBy: person => person.id });
 
         snapshots.forEach((snapshot) => {
-          const previousById = new Map(people.items().map((item) => [item.id(), item]));
+          const previousById = new Map(people.items().map(item => [item.id(), item]));
           people.items()[0]?.markAsDirty();
           people.items()[0]?.markAsTouched();
-          const expectedState = new Map(people.items().map((item) => [item.id(), {
+          const expectedState = new Map(people.items().map(item => [item.id(), {
             dirty: item.dirty(),
             touched: item.touched(),
           }]));
@@ -169,7 +169,7 @@ describe('array property-based invariants', () => {
             }
           });
           previousById.forEach((item, id) => {
-            if (!snapshot.some((person) => person.id === id)) {
+            if (!snapshot.some(person => person.id === id)) {
               expect(item.parent()).toBeNull();
               expect(item.path()).toEqual([]);
             }

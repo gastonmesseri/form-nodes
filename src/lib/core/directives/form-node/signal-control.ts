@@ -38,7 +38,7 @@ const getControlModel = <TNode extends Node>(
     lastValue = value;
     writeComponentInput(control, name, value, injector);
   };
-  model.subscribe = (listener) => output.subscribe((value) => {
+  model.subscribe = listener => output.subscribe((value) => {
     lastValue = value;
     listener(value);
   });

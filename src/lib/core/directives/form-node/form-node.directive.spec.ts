@@ -8,10 +8,9 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
 import { form } from '../../primitives/form';
-import { field } from '../../primitives/field';
+import { field, type Field } from '../../primitives/field';
 import { array } from '../../primitives/array';
 import type { Node } from '../../types/node.type';
-import type { Field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { FormNode } from './form-node.directive';
@@ -52,8 +51,8 @@ describe('FormNode', () => {
   it('lets a wrapper component accept and delegate the formNode input', () => {
     @Component({
       selector: 'delegating-control',
-      imports: [FormNode],
       template: `<input [formNode]="formNode()">`,
+      imports: [FormNode],
     })
     class DelegatingControl {
       readonly formNode = input.required<Field<string>>();
@@ -62,8 +61,8 @@ describe('FormNode', () => {
     registerSignalInputForJit(DelegatingControl, 'formNode', 'formNode');
 
     @Component({
-      imports: [DelegatingControl, FormNode],
       template: `<delegating-control [formNode]="name" />`,
+      imports: [DelegatingControl, FormNode],
     })
     class PassThroughHost {
       readonly name = field('initial', { nullable: false });
@@ -91,8 +90,8 @@ describe('FormNode', () => {
     registerSignalInputForJit(DelegatesFormNode, 'formNode', 'formNode');
 
     @Component({
-      imports: [DelegatesFormNode, FormNode],
       template: `<div delegatesFormNode [formNode]="name"></div>`,
+      imports: [DelegatesFormNode, FormNode],
     })
     class PassThroughHost {
       readonly name = field('initial', { nullable: false });
@@ -110,6 +109,7 @@ describe('FormNode', () => {
     const externalPredicate = vi.fn(() => externalState());
 
     @Component({
+      template: `<input [formNode]="name">`,
       standalone: true,
       imports: [FormNode],
       providers: [provideFormNodeConfig({
@@ -119,7 +119,6 @@ describe('FormNode', () => {
           highlighted: externalPredicate,
         },
       })],
-      template: `<input [formNode]="name">`,
     })
     class Host {
       name = field('', [required], { nullable: false });
@@ -163,10 +162,10 @@ describe('FormNode', () => {
 
   it('applies the predefined form-node status classes', () => {
     @Component({
+      template: `<input [formNode]="name">`,
       standalone: true,
       imports: [FormNode],
       providers: [provideFormNodeConfig({ classes: FORM_NODE_STATUS_CLASSES })],
-      template: `<input [formNode]="name">`,
     })
     class Host {
       name = field('', [required], { nullable: false });
@@ -188,10 +187,10 @@ describe('FormNode', () => {
 
   it('supports the explicit signal-control provider as a fallback', () => {
     @Component({
-      standalone: true,
       selector: 'explicit-signal-control',
-      providers: [provideFormNodeControl(() => ExplicitSignalControl)],
       template: `<span>{{ value() }}</span>`,
+      standalone: true,
+      providers: [provideFormNodeControl(() => ExplicitSignalControl)],
     })
     class ExplicitSignalControl {
       value = model('');
@@ -199,10 +198,10 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'explicit-signal-control-host',
-      imports: [ExplicitSignalControl, FormNode],
       template: `<explicit-signal-control [formNode]="name" />`,
+      standalone: true,
+      imports: [ExplicitSignalControl, FormNode],
     })
     class Host {
       name = field('Marco', { nullable: false });
@@ -224,9 +223,9 @@ describe('FormNode', () => {
 
   it('preserves Angular input transforms when synchronizing signal-control state', () => {
     @Component({
-      standalone: true,
       selector: 'transformed-state-control',
       template: '',
+      standalone: true,
     })
     class TransformedStateControl {
       value = model('');
@@ -236,9 +235,9 @@ describe('FormNode', () => {
     registerSignalInputForJit(TransformedStateControl, 'disabled', 'disabled');
 
     @Component({
+      template: `<transformed-state-control [formNode]="name" />`,
       standalone: true,
       imports: [TransformedStateControl, FormNode],
-      template: `<transformed-state-control [formNode]="name" />`,
     })
     class Host {
       readonly name = field('Marco', { nullable: false });
@@ -258,10 +257,10 @@ describe('FormNode', () => {
 
   it('rebinds a signal custom control to a different field', () => {
     @Component({
-      standalone: true,
       selector: 'rebound-signal-control',
-      providers: [provideFormNodeControl(() => ReboundSignalControl)],
       template: `<button type="button" (click)="value.set('updated')">{{ value() }}</button>`,
+      standalone: true,
+      providers: [provideFormNodeControl(() => ReboundSignalControl)],
     })
     class ReboundSignalControl {
       value = model('');
@@ -271,9 +270,9 @@ describe('FormNode', () => {
     registerSignalInputForJit(ReboundSignalControl, 'dirty', 'dirty');
 
     @Component({
+      template: `<rebound-signal-control [formNode]="selected()" />`,
       standalone: true,
       imports: [ReboundSignalControl, FormNode],
-      template: `<rebound-signal-control [formNode]="selected()" />`,
     })
     class Host {
       readonly first = field('first', { nullable: false });
@@ -313,16 +312,20 @@ describe('FormNode', () => {
     try {
       type ProfileValue = { name: string };
 
-      @Component({ standalone: true, selector: 'rebound-aggregate-control', template: '' })
+      @Component({
+        selector: 'rebound-aggregate-control',
+        template: '',
+        standalone: true,
+      })
       class ReboundAggregateControl {
         value = model<ProfileValue>({ name: '' });
       }
       registerSignalModelForJit(ReboundAggregateControl, 'value');
 
       @Component({
+        template: `<rebound-aggregate-control [formNode]="selected()" />`,
         standalone: true,
         imports: [ReboundAggregateControl, FormNode],
-        template: `<rebound-aggregate-control [formNode]="selected()" />`,
       })
       class Host {
         readonly first = form({ name: field('first', { nullable: false }) }, { debounce: 100 });
@@ -364,10 +367,10 @@ describe('FormNode', () => {
     vi.useFakeTimers();
     try {
       @Component({
-        standalone: true,
         selector: 'reset-debounce-signal-control',
-        providers: [provideFormNodeControl(() => ResetDebounceSignalControl)],
         template: `{{ value() }}`,
+        standalone: true,
+        providers: [provideFormNodeControl(() => ResetDebounceSignalControl)],
       })
       class ResetDebounceSignalControl {
         value = model('');
@@ -375,9 +378,9 @@ describe('FormNode', () => {
       }
 
       @Component({
+        template: `<reset-debounce-signal-control [formNode]="name" />`,
         standalone: true,
         imports: [ResetDebounceSignalControl, FormNode],
-        template: `<reset-debounce-signal-control [formNode]="name" />`,
       })
       class Host {
         readonly name = field('initial', { debounce: 100, nullable: false });
@@ -409,10 +412,10 @@ describe('FormNode', () => {
 
   it('commits a blur-debounced signal control when it emits touch', () => {
     @Component({
-      standalone: true,
       selector: 'blur-debounce-signal-control',
-      providers: [provideFormNodeControl(() => BlurDebounceSignalControl)],
       template: '',
+      standalone: true,
+      providers: [provideFormNodeControl(() => BlurDebounceSignalControl)],
     })
     class BlurDebounceSignalControl {
       value = model('');
@@ -420,9 +423,9 @@ describe('FormNode', () => {
     }
 
     @Component({
+      template: `<blur-debounce-signal-control [formNode]="name" />`,
       standalone: true,
       imports: [BlurDebounceSignalControl, FormNode],
-      template: `<blur-debounce-signal-control [formNode]="name" />`,
     })
     class Host {
       readonly profile = form({ name: field('initial', { nullable: false }) }, { debounce: 'blur' });
@@ -448,7 +451,11 @@ describe('FormNode', () => {
   it('binds a FormValueControl to an aggregate form node', () => {
     type ProfileValue = { name: string | null; age: number | null };
 
-    @Component({ standalone: true, selector: 'aggregate-form-control', template: '' })
+    @Component({
+      selector: 'aggregate-form-control',
+      template: '',
+      standalone: true,
+    })
     class AggregateFormControl {
       value = model<ProfileValue>({ name: null, age: null });
       disabled = input(false);
@@ -461,10 +468,10 @@ describe('FormNode', () => {
     registerSignalInputForJit(AggregateFormControl, 'dirty', 'dirty');
 
     @Component({
-      standalone: true,
       selector: 'aggregate-form-control-host',
-      imports: [AggregateFormControl, FormNode],
       template: `<aggregate-form-control [formNode]="profile" />`,
+      standalone: true,
+      imports: [AggregateFormControl, FormNode],
     })
     class Host {
       readonly profile = form({ name: field('David'), age: field(42) });
@@ -502,7 +509,11 @@ describe('FormNode', () => {
   it('flushes a blur-debounced aggregate custom control when it emits touch', () => {
     type ProfileValue = { name: string };
 
-    @Component({ standalone: true, selector: 'debounced-aggregate-control', template: '' })
+    @Component({
+      selector: 'debounced-aggregate-control',
+      template: '',
+      standalone: true,
+    })
     class DebouncedAggregateControl {
       value = model<ProfileValue>({ name: '' });
       touch = output<void>();
@@ -511,9 +522,9 @@ describe('FormNode', () => {
     registerSignalModelForJit(DebouncedAggregateControl, 'value');
 
     @Component({
+      template: `<debounced-aggregate-control [formNode]="profile" />`,
       standalone: true,
       imports: [DebouncedAggregateControl, FormNode],
-      template: `<debounced-aggregate-control [formNode]="profile" />`,
     })
     class Host {
       readonly profile = form({ name: field('David', { nullable: false }) }, { debounce: 'blur' });
@@ -551,7 +562,11 @@ describe('FormNode', () => {
   it('binds a FormValueControl to an aggregate array and reconciles its nodes', () => {
     type PersonValue = { name: string | null };
 
-    @Component({ standalone: true, selector: 'aggregate-array-control', template: '' })
+    @Component({
+      selector: 'aggregate-array-control',
+      template: '',
+      standalone: true,
+    })
     class AggregateArrayControl {
       value = model<PersonValue[]>([]);
       reset = vi.fn();
@@ -560,10 +575,10 @@ describe('FormNode', () => {
     registerSignalModelForJit(AggregateArrayControl, 'value');
 
     @Component({
-      standalone: true,
       selector: 'aggregate-array-control-host',
-      imports: [AggregateArrayControl, FormNode],
       template: `<aggregate-array-control [formNode]="people" />`,
+      standalone: true,
+      imports: [AggregateArrayControl, FormNode],
     })
     class Host {
       readonly people = array({ name: field('') }, [{ name: 'David' }]);
@@ -599,10 +614,10 @@ describe('FormNode', () => {
 
   it('rejects aggregate nodes on native controls', () => {
     @Component({
-      standalone: true,
       selector: 'native-aggregate-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="profile">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly profile = form({ name: field('David') });
@@ -615,10 +630,10 @@ describe('FormNode', () => {
 
   it('synchronizes native text values and interaction state in both directions', () => {
     @Component({
-      standalone: true,
       selector: 'text-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -669,15 +684,15 @@ describe('FormNode', () => {
 
   it('focuses the first descendant binding in DOM order from forms and arrays', () => {
     @Component({
-      standalone: true,
       selector: 'aggregate-focus-form-node-host',
-      imports: [FormNode],
       template: `
         <input data-second [formNode]="profile.second">
         <input data-first [formNode]="profile.first">
         <input data-item-one [formNode]="profile.items[1]!">
         <input data-item-zero [formNode]="profile.items[0]!">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly profile = form({
@@ -703,13 +718,13 @@ describe('FormNode', () => {
 
   it('selects the first DOM binding for a field and unregisters destroyed bindings', () => {
     @Component({
-      standalone: true,
       selector: 'multiple-focus-form-node-host',
-      imports: [FormNode],
       template: `
         <input data-first [formNode]="name">
         <input data-second [formNode]="name">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -733,10 +748,10 @@ describe('FormNode', () => {
 
   it('moves focus registration when the bound field changes', () => {
     @Component({
-      standalone: true,
       selector: 'dynamic-focus-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="active()">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly first = field('first', { nullable: false });
@@ -763,10 +778,10 @@ describe('FormNode', () => {
 
   it('binds a field nested inside a form tree', () => {
     @Component({
-      standalone: true,
       selector: 'nested-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="profile.address.city">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly profile = form({
@@ -799,13 +814,13 @@ describe('FormNode', () => {
 
   it('assigns distinct generated names to fields from different root trees', () => {
     @Component({
-      standalone: true,
       selector: 'root-field-names-form-node-host',
-      imports: [FormNode],
       template: `
         <input [formNode]="first">
         <input [formNode]="second">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly first = field('first', { nullable: false });
@@ -823,10 +838,10 @@ describe('FormNode', () => {
 
   it('keeps the last valid numeric model value and contributes parse errors to its form tree', () => {
     @Component({
-      standalone: true,
       selector: 'numeric-parse-form-node-host',
-      imports: [FormNode],
       template: `<input type="text" [formNode]="profile.age">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly profile = form({ age: field(23, min(30), { nullable: false }) });
@@ -870,13 +885,13 @@ describe('FormNode', () => {
 
   it('tracks parse errors per binding and clears stale raw input on field reset', () => {
     @Component({
-      standalone: true,
       selector: 'multiple-parse-form-node-host',
-      imports: [FormNode],
       template: `
         <input data-first type="text" [formNode]="age">
         <input data-second type="text" [formNode]="age">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly age = field(23, { nullable: false });
@@ -900,14 +915,14 @@ describe('FormNode', () => {
     fixture.detectChanges();
 
     expect(age()).toBe(23);
-    const parseErrors = age.errors().filter((error) => error.kind === 'parse');
+    const parseErrors = age.errors().filter(error => error.kind === 'parse');
     expect(parseErrors).toHaveLength(2);
-    expect(parseErrors.map((error) => error.formNode?.element)).toEqual([first, second]);
+    expect(parseErrors.map(error => error.formNode?.element)).toEqual([first, second]);
     expect(parseErrors[0]!.formNode).not.toBe(parseErrors[1]!.formNode);
     expect(parseErrors[0]!.formNode).toBe(firstBinding);
     expect(parseErrors[1]!.formNode).toBe(secondBinding);
-    expect(firstBinding.errors().filter((error) => error.kind === 'parse')).toEqual([parseErrors[0]]);
-    expect(secondBinding.errors().filter((error) => error.kind === 'parse')).toEqual([parseErrors[1]]);
+    expect(firstBinding.errors().filter(error => error.kind === 'parse')).toEqual([parseErrors[0]]);
+    expect(secondBinding.errors().filter(error => error.kind === 'parse')).toEqual([parseErrors[1]]);
     expect(first.value).toBe('first-invalid');
     expect(second.value).toBe('second-invalid');
 
@@ -924,12 +939,12 @@ describe('FormNode', () => {
 
   it('exposes node errors through every binding while filtering binding-owned errors', () => {
     @Component({
-      standalone: true,
-      imports: [FormNode],
       template: `
         <input type="text" [formNode]="age">
         <input type="text" [formNode]="age">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly age = field(23, [min(30)], { nullable: false });
@@ -941,25 +956,25 @@ describe('FormNode', () => {
     const firstBinding = fixture.debugElement.children[0]!.injector.get(FormNode);
     const secondBinding = fixture.debugElement.children[1]!.injector.get(FormNode);
 
-    expect(firstBinding.errors().map((error) => error.kind)).toEqual(['min']);
-    expect(secondBinding.errors().map((error) => error.kind)).toEqual(['min']);
+    expect(firstBinding.errors().map(error => error.kind)).toEqual(['min']);
+    expect(secondBinding.errors().map(error => error.kind)).toEqual(['min']);
     const secondErrors = secondBinding.errors();
 
     first.value = 'invalid';
     dispatch(first, 'input');
     fixture.detectChanges();
 
-    expect(firstBinding.errors().map((error) => error.kind)).toEqual(['min', 'parse']);
-    expect(secondBinding.errors().map((error) => error.kind)).toEqual(['min']);
+    expect(firstBinding.errors().map(error => error.kind)).toEqual(['min', 'parse']);
+    expect(secondBinding.errors().map(error => error.kind)).toEqual(['min']);
     expect(secondBinding.errors()).toBe(secondErrors);
   });
 
   it('moves native parse-error ownership when the bound field changes', () => {
     @Component({
-      standalone: true,
       selector: 'dynamic-parse-form-node-host',
-      imports: [FormNode],
       template: `<input type="text" [formNode]="selected()">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly first = field(23, { nullable: false });
@@ -978,7 +993,7 @@ describe('FormNode', () => {
     fixture.detectChanges();
     expect(first.getError('parse')?.kind).toBe('parse');
     expect(binding.node()).toBe(first);
-    expect(binding.errors().map((error) => error.kind)).toEqual(['parse']);
+    expect(binding.errors().map(error => error.kind)).toEqual(['parse']);
 
     selected.set(second);
     fixture.detectChanges();
@@ -992,7 +1007,7 @@ describe('FormNode', () => {
     dispatch(input, 'input');
     fixture.detectChanges();
     expect(second.getError('parse')?.kind).toBe('parse');
-    expect(binding.errors().map((error) => error.kind)).toEqual(['parse']);
+    expect(binding.errors().map(error => error.kind)).toEqual(['parse']);
 
     fixture.destroy();
     expect(second.getError('parse')).toBeUndefined();
@@ -1000,10 +1015,10 @@ describe('FormNode', () => {
 
   it('binds disabled, readonly, required, and aria-invalid state', () => {
     @Component({
-      standalone: true,
       selector: 'state-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('', [required], { nullable: false });
@@ -1030,10 +1045,10 @@ describe('FormNode', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     @Component({
-      standalone: true,
       selector: 'hidden-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="profile.name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly profile = form({ name: field('David', { hidden: true, nullable: false }) });
@@ -1044,7 +1059,7 @@ describe('FormNode', () => {
 
     expect(warn).toHaveBeenCalledOnce();
     expect(warn).toHaveBeenCalledWith(
-      "formNode: field 'name' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.",
+      'formNode: field \'name\' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.',
     );
 
     fixture.detectChanges();
@@ -1056,10 +1071,10 @@ describe('FormNode', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     @Component({
-      standalone: true,
       selector: 'reactive-hidden-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly hidden = signal(false);
@@ -1073,7 +1088,7 @@ describe('FormNode', () => {
     fixture.componentInstance.hidden.set(true);
     fixture.detectChanges();
     expect(warn).toHaveBeenLastCalledWith(
-      "formNode: field '<root>' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.",
+      'formNode: field \'<root>\' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.',
     );
 
     fixture.componentInstance.hidden.set(false);
@@ -1086,10 +1101,10 @@ describe('FormNode', () => {
 
   it('does not install the rendered-hidden-field warning in production mode', () => {
     @Component({
-      standalone: true,
       selector: 'production-hidden-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('David', { hidden: true, nullable: false });
@@ -1111,15 +1126,15 @@ describe('FormNode', () => {
 
   it('binds reactive validator constraints to applicable native properties', () => {
     @Component({
-      standalone: true,
       selector: 'constraint-form-node-host',
-      imports: [FormNode],
       template: `
         <input type="number" [formNode]="age">
         <input [formNode]="code">
         <input type="date" [formNode]="date">
         <input type="month" [formNode]="month">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly minimum = signal<number | undefined>(18);
@@ -1154,9 +1169,7 @@ describe('FormNode', () => {
 
   it('applies min and max only to the native input types accepted by Angular Signal Forms', () => {
     @Component({
-      standalone: true,
       selector: 'native-min-max-form-node-host',
-      imports: [FormNode],
       template: `
         <input data-type="number" type="number" [formNode]="value">
         <input data-type="range" type="range" [formNode]="value">
@@ -1168,6 +1181,8 @@ describe('FormNode', () => {
         <input data-type="week" type="week" [formNode]="value">
         <input data-type="datetime-local" type="datetime-local" [formNode]="value">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly value = field(5, [min(1), max(9)], { nullable: false });
@@ -1189,13 +1204,13 @@ describe('FormNode', () => {
 
   it('applies constraints when the native input type is bound during initialization', () => {
     @Component({
-      standalone: true,
       selector: 'late-bound-type-form-node-host',
-      imports: [FormNode],
       template: `
         <input data-numeric [type]="numericType()" [formNode]="amount">
         <input data-textual [type]="textualType()" [formNode]="code">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly numericType = signal('number');
@@ -1219,14 +1234,14 @@ describe('FormNode', () => {
 
   it('applies length constraints to inputs and textareas but not selects', () => {
     @Component({
-      standalone: true,
       selector: 'native-length-form-node-host',
-      imports: [FormNode],
       template: `
         <input type="number" [formNode]="value">
         <textarea [formNode]="value"></textarea>
         <select [formNode]="value"><option>abc</option></select>
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly value = field('abc', [minLength(2), maxLength(5)], { nullable: false });
@@ -1250,10 +1265,10 @@ describe('FormNode', () => {
     vi.useFakeTimers();
     try {
       @Component({
-        standalone: true,
         selector: 'debounce-form-node-host',
-        imports: [FormNode],
         template: `<input [formNode]="name">`,
+        standalone: true,
+        imports: [FormNode],
       })
       class Host {
         readonly name = field('David', { debounce: 100, nullable: false });
@@ -1279,10 +1294,10 @@ describe('FormNode', () => {
 
   it('commits a blur-debounced native control when it loses focus', () => {
     @Component({
-      standalone: true,
       selector: 'blur-debounce-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('initial', { debounce: 'blur', nullable: false });
@@ -1309,10 +1324,10 @@ describe('FormNode', () => {
     vi.useFakeTimers();
     try {
       @Component({
-        standalone: true,
         selector: 'reset-debounce-form-node-host',
-        imports: [FormNode],
         template: `<input [formNode]="profile.name">`,
+        standalone: true,
+        imports: [FormNode],
       })
       class Host {
         readonly profile = form({ name: field('initial', { nullable: false }) }, { debounce: 100 });
@@ -1351,13 +1366,13 @@ describe('FormNode', () => {
 
   it('parses number and checkbox controls using their native value types', () => {
     @Component({
-      standalone: true,
       selector: 'typed-native-form-node-host',
-      imports: [FormNode],
       template: `
         <input type="number" [formNode]="age">
         <input type="checkbox" [formNode]="active">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly age = field(23, { nullable: false });
@@ -1379,13 +1394,13 @@ describe('FormNode', () => {
 
   it('synchronizes a native radio group through a shared field', () => {
     @Component({
-      standalone: true,
       selector: 'radio-form-node-host',
-      imports: [FormNode],
       template: `
         <input type="radio" name="city" value="Madrid" [formNode]="city">
         <input type="radio" name="city" value="Zurich" [formNode]="city">
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly city = field('Zurich', { nullable: false });
@@ -1414,13 +1429,13 @@ describe('FormNode', () => {
 
   it('supports single and multiple native selects and reapplies values after option mutations', async () => {
     @Component({
-      standalone: true,
       selector: 'select-form-node-host',
-      imports: [FormNode],
       template: `
         <select [formNode]="city"><option>Madrid</option><option>Zurich</option></select>
         <select multiple [formNode]="cities"><option>Madrid</option><option>Zurich</option></select>
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly city = field('Zurich', { nullable: false });
@@ -1432,7 +1447,7 @@ describe('FormNode', () => {
     const [city, cities] = fixture.nativeElement.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
 
     expect(city!.value).toBe('Zurich');
-    expect(Array.from(cities!.selectedOptions, (option) => option.value)).toEqual(['Madrid']);
+    expect(Array.from(cities!.selectedOptions, option => option.value)).toEqual(['Madrid']);
 
     cities!.options[1]!.selected = true;
     dispatch(cities!, 'change');
@@ -1441,7 +1456,7 @@ describe('FormNode', () => {
     fixture.componentInstance.city.set('Paris');
     fixture.detectChanges();
     expect(city!.value).toBe('');
-    const optionMutation = new Promise<void>((resolve) =>
+    const optionMutation = new Promise<void>(resolve =>
       new MutationObserver(() => resolve()).observe(city!, { childList: true }),
     );
     city!.append(new Option('Paris'));
@@ -1451,9 +1466,9 @@ describe('FormNode', () => {
 
   it('integrates with a custom ControlValueAccessor and provides NgControl', () => {
     @Component({
-      standalone: true,
       selector: 'test-cva',
       template: '',
+      standalone: true,
       providers: [{
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => TestCva),
@@ -1485,10 +1500,10 @@ describe('FormNode', () => {
     registerSignalInputForJit(TestCva, 'name', 'name');
 
     @Component({
-      standalone: true,
       selector: 'cva-form-node-host',
-      imports: [FormNode, TestCva],
       template: `<test-cva [formNode]="active()" />`,
+      standalone: true,
+      imports: [FormNode, TestCva],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1550,10 +1565,10 @@ describe('FormNode', () => {
 
   it('commits a blur-debounced ControlValueAccessor through its touched callback', () => {
     @Component({
-      standalone: true,
       selector: 'blur-debounce-cva',
-      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => BlurDebounceCva), multi: true }],
       template: '',
+      standalone: true,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => BlurDebounceCva), multi: true }],
     })
     class BlurDebounceCva implements ControlValueAccessor {
       change = (_value: string) => {};
@@ -1564,9 +1579,9 @@ describe('FormNode', () => {
     }
 
     @Component({
+      template: `<blur-debounce-cva [formNode]="name" />`,
       standalone: true,
       imports: [BlurDebounceCva, FormNode],
-      template: `<blur-debounce-cva [formNode]="name" />`,
     })
     class Host {
       readonly name = field('initial', { debounce: 'blur', nullable: false });
@@ -1589,10 +1604,10 @@ describe('FormNode', () => {
 
   it('rejects a host that is neither a native control nor a ControlValueAccessor', () => {
     @Component({
-      standalone: true,
       selector: 'invalid-form-node-host',
-      imports: [FormNode],
       template: `<div [formNode]="name"></div>`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1610,9 +1625,9 @@ describe('FormNode', () => {
     });
 
     @Component({
-      standalone: true,
       selector: 'ambiguous-cva',
       template: '',
+      standalone: true,
       providers: [
         { provide: NG_VALUE_ACCESSOR, useFactory: accessor, multi: true },
         { provide: NG_VALUE_ACCESSOR, useFactory: accessor, multi: true },
@@ -1621,10 +1636,10 @@ describe('FormNode', () => {
     class AmbiguousCva {}
 
     @Component({
-      standalone: true,
       selector: 'ambiguous-cva-host',
-      imports: [AmbiguousCva, FormNode],
       template: `<ambiguous-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [AmbiguousCva, FormNode],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1643,9 +1658,9 @@ describe('FormNode', () => {
     };
 
     @Component({
-      standalone: true,
       selector: 'accessor-priority-control',
       template: '',
+      standalone: true,
       providers: [
         { provide: NG_VALUE_ACCESSOR, useFactory: () => Object.create(DefaultValueAccessor.prototype), multi: true },
         { provide: NG_VALUE_ACCESSOR, useFactory: () => Object.create(NumberValueAccessor.prototype), multi: true },
@@ -1655,10 +1670,10 @@ describe('FormNode', () => {
     class PriorityControl {}
 
     @Component({
-      standalone: true,
       selector: 'accessor-priority-host',
-      imports: [FormNode, PriorityControl],
       template: `<accessor-priority-control [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, PriorityControl],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1676,24 +1691,24 @@ describe('FormNode', () => {
     let accessor!: ReturnType<typeof accessorWithPrototype>;
 
     @Component({
-      standalone: true,
       selector: 'single-angular-accessor',
-      host: { 'data-accessor-kind': _kind },
       template: '',
+      standalone: true,
       providers: [{
         provide: NG_VALUE_ACCESSOR,
         useFactory: () => (accessor = accessorWithPrototype(prototype)),
         multi: true,
       }],
+      host: { 'data-accessor-kind': _kind },
     })
     class SingleAccessorControl {}
 
     @Component({
-      standalone: true,
       selector: 'single-angular-accessor-host',
-      host: { 'data-accessor-kind': _kind },
-      imports: [FormNode, SingleAccessorControl],
       template: `<single-angular-accessor [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, SingleAccessorControl],
+      host: { 'data-accessor-kind': _kind },
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1709,23 +1724,23 @@ describe('FormNode', () => {
     ['built-in', NumberValueAccessor.prototype, 'formNode: more than one built-in ControlValueAccessor matches the host'],
   ])('rejects multiple %s accessors', (_kind, prototype, message) => {
     @Component({
-      standalone: true,
       selector: 'duplicate-angular-accessor',
-      host: { 'data-accessor-kind': _kind },
       template: '',
+      standalone: true,
       providers: [
         { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(prototype), multi: true },
         { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(prototype), multi: true },
       ],
+      host: { 'data-accessor-kind': _kind },
     })
     class DuplicateAccessorControl {}
 
     @Component({
-      standalone: true,
       selector: 'duplicate-angular-accessor-host',
-      host: { 'data-accessor-kind': _kind },
-      imports: [DuplicateAccessorControl, FormNode],
       template: `<duplicate-angular-accessor [formNode]="name" />`,
+      standalone: true,
+      imports: [DuplicateAccessorControl, FormNode],
+      host: { 'data-accessor-kind': _kind },
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1736,10 +1751,10 @@ describe('FormNode', () => {
 
   it('reports access before its required field input is initialized', () => {
     @Component({
-      standalone: true,
       selector: 'missing-field-host',
-      imports: [FormNode],
       template: `<input formNode>`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {}
 
@@ -1751,9 +1766,9 @@ describe('FormNode', () => {
 
   it('supports a minimal CVA without disabled handling or legacy validators and ignores callbacks after destroy', () => {
     @Component({
-      standalone: true,
       selector: 'minimal-cva',
       template: '',
+      standalone: true,
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => MinimalCva), multi: true }],
     })
     class MinimalCva implements ControlValueAccessor {
@@ -1766,10 +1781,10 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'minimal-cva-host',
-      imports: [FormNode, MinimalCva],
       template: `<minimal-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, MinimalCva],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1787,9 +1802,9 @@ describe('FormNode', () => {
 
   it('does not loop or duplicate model writes when writeValue synchronously calls onChange', () => {
     @Component({
-      standalone: true,
       selector: 'echoing-cva',
       template: '',
+      standalone: true,
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => EchoingCva), multi: true }],
     })
     class EchoingCva implements ControlValueAccessor {
@@ -1804,10 +1819,10 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'echoing-cva-host',
-      imports: [FormNode, EchoingCva],
       template: `<echoing-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, EchoingCva],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1830,8 +1845,8 @@ describe('FormNode', () => {
 
   it('supports a signal custom control implemented as a directive', () => {
     @Directive({
-      standalone: true,
       selector: 'input[providedSignalControl]',
+      standalone: true,
       providers: [provideFormNodeControl(() => ProvidedSignalControl)],
       host: {
         '[value]': 'value()',
@@ -1846,9 +1861,9 @@ describe('FormNode', () => {
     }
 
     @Component({
+      template: `<input providedSignalControl [formNode]="name">`,
       standalone: true,
       imports: [ProvidedSignalControl, FormNode],
-      template: `<input providedSignalControl [formNode]="name">`,
     })
     class Host {
       name = field('', [required], { nullable: false });
@@ -1874,8 +1889,8 @@ describe('FormNode', () => {
 
   it('supports a signal checkbox control implemented as a directive', () => {
     @Directive({
-      standalone: true,
       selector: 'input[providedSignalCheckbox]',
+      standalone: true,
       providers: [provideFormNodeControl(() => ProvidedSignalCheckbox)],
       host: {
         '[checked]': 'checked()',
@@ -1889,9 +1904,9 @@ describe('FormNode', () => {
     }
 
     @Component({
+      template: `<input type="checkbox" providedSignalCheckbox [formNode]="active">`,
       standalone: true,
       imports: [ProvidedSignalCheckbox, FormNode],
-      template: `<input type="checkbox" providedSignalCheckbox [formNode]="active">`,
     })
     class Host {
       active = field(true, [required], { nullable: false });
@@ -1925,19 +1940,19 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'hosted-signal-control',
-      hostDirectives: [HostedSignalControl],
       template: `<button type="button" (click)="control.value.set('Mark')">{{ control.value() }}</button>`,
+      standalone: true,
+      hostDirectives: [HostedSignalControl],
     })
     class HostedControlComponent {
       readonly control = inject(HostedSignalControl);
     }
 
     @Component({
+      template: `<hosted-signal-control [formNode]="name" />`,
       standalone: true,
       imports: [HostedControlComponent, FormNode],
-      template: `<hosted-signal-control [formNode]="name" />`,
     })
     class Host {
       name = field('David', { nullable: false });
@@ -1974,19 +1989,19 @@ describe('FormNode', () => {
     class SignalControlBridge {}
 
     @Component({
-      standalone: true,
       selector: 'transitive-signal-control',
-      hostDirectives: [SignalControlBridge],
       template: `<button type="button" (click)="control.value.set('Mark')">{{ control.value() }}</button>`,
+      standalone: true,
+      hostDirectives: [SignalControlBridge],
     })
     class TransitiveControlComponent {
       readonly control = inject(TransitiveSignalControl);
     }
 
     @Component({
+      template: `<transitive-signal-control [formNode]="name" />`,
       standalone: true,
       imports: [TransitiveControlComponent, FormNode],
-      template: `<transitive-signal-control [formNode]="name" />`,
     })
     class Host {
       name = field('David', [required], { nullable: false });
@@ -2006,13 +2021,13 @@ describe('FormNode', () => {
 
   it('prefers a ControlValueAccessor over an explicit signal-control provider', () => {
     @Component({
-      standalone: true,
       selector: 'combined-control',
+      template: '',
+      standalone: true,
       providers: [
         provideFormNodeControl(() => CombinedControl),
         { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CombinedControl), multi: true },
       ],
-      template: '',
     })
     class CombinedControl implements ControlValueAccessor {
       value = model('signal initial');
@@ -2023,9 +2038,9 @@ describe('FormNode', () => {
     }
 
     @Component({
+      template: `<combined-control [formNode]="name" />`,
       standalone: true,
       imports: [CombinedControl, FormNode],
-      template: `<combined-control [formNode]="name" />`,
     })
     class Host {
       name = field('David', { nullable: false });
@@ -2039,15 +2054,18 @@ describe('FormNode', () => {
   });
 
   it('binds a native control alongside a directive that injects ViewContainerRef', () => {
-    @Directive({ standalone: true, selector: 'input[withViewContainer]' })
+    @Directive({
+      selector: 'input[withViewContainer]',
+      standalone: true,
+    })
     class WithViewContainer {
       readonly viewContainerRef = inject(ViewContainerRef);
     }
 
     @Component({
+      template: `<input withViewContainer [formNode]="name">`,
       standalone: true,
       imports: [WithViewContainer, FormNode],
-      template: `<input withViewContainer [formNode]="name">`,
     })
     class Host {
       name = field('David', { nullable: false });
@@ -2067,15 +2085,18 @@ describe('FormNode', () => {
     const creation = new Promise<void>((resolve) => { resolveCreation = resolve; });
 
     @Component({
+      template: `<select [formNode]="country"><option value="ch">Switzerland</option></select>`,
       standalone: true,
       imports: [FormNode],
-      template: `<select [formNode]="country"><option value="ch">Switzerland</option></select>`,
     })
     class DynamicForm {
       country = field('ch', { nullable: false });
     }
 
-    @Component({ standalone: true, template: '' })
+    @Component({
+      template: '',
+      standalone: true,
+    })
     class Host {
       private readonly viewContainerRef = inject(ViewContainerRef);
       constructor() {
@@ -2093,9 +2114,9 @@ describe('FormNode', () => {
 
   it('supports a signal-based CVA without creating reactive write errors', () => {
     @Component({
-      standalone: true,
       selector: 'signal-cva',
       template: '',
+      standalone: true,
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SignalCva), multi: true }],
     })
     class SignalCva implements ControlValueAccessor {
@@ -2109,10 +2130,10 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'signal-cva-host',
-      imports: [FormNode, SignalCva],
       template: `<signal-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, SignalCva],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -2132,9 +2153,9 @@ describe('FormNode', () => {
     const instances: RecreatedCva[] = [];
 
     @Component({
-      standalone: true,
       selector: 'recreated-cva',
       template: '',
+      standalone: true,
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => RecreatedCva), multi: true }],
     })
     class RecreatedCva implements ControlValueAccessor {
@@ -2148,10 +2169,10 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'recreated-cva-host',
-      imports: [FormNode, RecreatedCva],
       template: `@if (visible()) { <recreated-cva [formNode]="name" /> }`,
+      standalone: true,
+      imports: [FormNode, RecreatedCva],
     })
     class Host {
       readonly visible = signal(true);
@@ -2184,9 +2205,9 @@ describe('FormNode', () => {
 
   it('re-evaluates object legacy validators only after their change callback is invoked', () => {
     @Component({
-      standalone: true,
       selector: 'dynamic-validator-cva',
       template: '',
+      standalone: true,
       providers: [
         { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DynamicValidatorCva), multi: true },
         { provide: NG_VALIDATORS, useExisting: forwardRef(() => DynamicValidatorCva), multi: true },
@@ -2203,10 +2224,10 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'dynamic-validator-host',
-      imports: [FormNode, DynamicValidatorCva],
       template: `<dynamic-validator-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, DynamicValidatorCva],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -2235,9 +2256,9 @@ describe('FormNode', () => {
       control.value === 'invalid' ? { legacyFunction: true } : null;
 
     @Component({
-      standalone: true,
       selector: 'function-validator-cva',
       template: '',
+      standalone: true,
       providers: [
         { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => FunctionValidatorCva), multi: true },
         { provide: NG_VALIDATORS, useValue: legacyValidator, multi: true },
@@ -2251,10 +2272,10 @@ describe('FormNode', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'function-validator-host',
-      imports: [FormNode, FunctionValidatorCva],
       template: `<function-validator-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, FunctionValidatorCva],
     })
     class Host {
       readonly name = field('valid', { nullable: false });
@@ -2413,7 +2434,7 @@ describe('native control conversion', () => {
     select.multiple = true;
     select.append(new Option('One', '1'), new Option('Two', '2'));
     writeNativeControlValue(select, [2]);
-    expect(Array.from(select.selectedOptions, (option) => option.value)).toEqual(['2']);
+    expect(Array.from(select.selectedOptions, option => option.value)).toEqual(['2']);
     writeNativeControlValue(select, null);
     expect(select.selectedOptions).toHaveLength(0);
   });

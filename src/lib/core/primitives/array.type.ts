@@ -55,9 +55,9 @@ export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
 };
 
 export type ArrayItemWithParent<TItem extends Node, TParent extends Node> =
-  TItem extends Field<infer TValue, Node> ? Field<TValue, TParent> :
-  TItem extends Form<infer TNodes, Node> ? Form<TNodes, TParent> :
-  TItem extends ArrayNode<infer TNestedItem, Node> ? ArrayNode<TNestedItem, TParent> : TItem;
+  TItem extends Field<infer TValue, Node> ? Field<TValue, TParent>
+    : TItem extends Form<infer TNodes, Node> ? Form<TNodes, TParent>
+      : TItem extends ArrayNode<infer TNestedItem, Node> ? ArrayNode<TNestedItem, TParent> : TItem;
 
 export type ArrayValue<TItem extends Node> =
   TItem extends Form<infer TNodes, Node>

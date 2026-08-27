@@ -31,7 +31,7 @@ export const computedFunction = <TArgs extends readonly unknown[], TResult>(
   return (...args: TArgs): TResult => {
     if (maximumEntries < 1) return computation(...args);
 
-    let entry = entries.find((candidate) => argsEqual(candidate.args, args));
+    let entry = entries.find(candidate => argsEqual(candidate.args, args));
     if (entry === undefined) {
       if (entries.length >= maximumEntries) {
         let leastRecentlyUsedIndex = 0;

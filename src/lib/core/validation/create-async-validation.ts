@@ -84,7 +84,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
 
   const cancel = () => {
     execution++;
-    controllers.forEach((controller) => controller.abort());
+    controllers.forEach(controller => controller.abort());
     controllers.clear();
     errors.set([]);
     pending.set(false);
@@ -107,7 +107,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
       return;
     }
     const baseContext = createValidatorContext(context, getTargetNode());
-    if (validators.some((validator) => getAsyncValidatorOptions(validator).params === undefined)) context.value();
+    if (validators.some(validator => getAsyncValidatorOptions(validator).params === undefined)) context.value();
     const activeValidators = validators.flatMap((validator) => {
       const options = getAsyncValidatorOptions(validator);
       if (options.when?.(baseContext) === false) return [];
@@ -177,7 +177,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
         controllers.delete(controller);
         return;
       }
-      results[index] = normalizeValidationResult(result).map((error) => addDefaultTargetNode(error, getTargetNode()));
+      results[index] = normalizeValidationResult(result).map(error => addDefaultTargetNode(error, getTargetNode()));
       controllers.delete(controller);
       errors.set(results.flat());
       remaining--;

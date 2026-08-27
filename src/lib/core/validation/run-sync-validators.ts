@@ -37,13 +37,13 @@ const resolveComposableResult = <TValue>(
   }
 
   if (Array.isArray(result)) {
-    const items = result.filter((item) => item !== null && item !== undefined);
-    const validators = items.filter((item) => typeof item === 'function');
+    const items = result.filter(item => item !== null && item !== undefined);
+    const validators = items.filter(item => typeof item === 'function');
     if (validators.length === 0) return items as readonly ValidationError.WithoutTargetNode[];
     if (validators.length !== items.length) {
       throw new Error('Synchronous validator composition cannot mix validators and validation errors in the same array.');
     }
-    return (items as Validators<TValue>).flatMap((validator) =>
+    return (items as Validators<TValue>).flatMap(validator =>
       normalizeValidationResult(resolveComposableResult(validator, context, activeValidators, depth, metadata)),
     );
   }
@@ -68,7 +68,7 @@ export const runSyncValidators = <TValue, TNode extends Node & { $api: AsyncVali
   validators.forEach((validator) => {
     if (isAsyncValidator(validator)) return;
     errors.push(
-      ...normalizeValidationResult(resolveComposableValidator(validator, validatorContext, metadata)).map((error) =>
+      ...normalizeValidationResult(resolveComposableValidator(validator, validatorContext, metadata)).map(error =>
         addDefaultTargetNode(error, targetNode),
       ),
     );

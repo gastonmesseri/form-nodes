@@ -81,6 +81,7 @@ export function field<TValue>(
     const key = fieldKeyInParent();
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
+  // eslint-disable-next-line prefer-const -- Assigned after self-referencing computed state has been declared.
   let fieldNode!: Field<TValue>;
   const fieldOwnDisabledReason = computed(() => createDisabledReason(fieldSelfDisabled(), fieldNode), { equal: shallowEqual });
   const fieldConfiguredDisabledReason = computed(
@@ -89,7 +90,7 @@ export function field<TValue>(
   );
   const fieldDisabledReasons = computed(() => [
     ...(fieldParent()?.$api.disabledReasons() ?? []),
-    ...[fieldOwnDisabledReason(), fieldConfiguredDisabledReason()].filter((reason) => reason !== undefined),
+    ...[fieldOwnDisabledReason(), fieldConfiguredDisabledReason()].filter(reason => reason !== undefined),
   ], { equal: shallowEqual });
   const fieldDisabled = computed(() => fieldDisabledReasons().length > 0);
   const fieldSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
@@ -130,7 +131,7 @@ export function field<TValue>(
     : readExternalValidationErrors(fieldNode));
   const fieldErrors = computed(() => [...fieldSyncErrors(), ...asyncValidation.errors(), ...fieldControlErrors()]);
   const getError = computedFunction(
-    (kind: string) => fieldErrors().find((error) => error.kind === kind),
+    (kind: string) => fieldErrors().find(error => error.kind === kind),
     { equal: shallowEqual, max: 20 },
   ) as FieldApi<TValue>['getError'];
   const fieldValidationStatus = computed<ValidationStatus>(() => {
@@ -247,8 +248,8 @@ export function field<TValue>(
     maxLength: computed(() => readMetadata(fieldMetadata(), MAX_LENGTH_METADATA) ?? null),
     pattern: computed(() => readMetadata(fieldMetadata(), PATTERN_METADATA)),
     required: computed(() =>
-      readMetadata(fieldMetadata(), REQUIRED_METADATA) ||
-      fieldErrors().some((error) => error.kind === 'required'),
+      readMetadata(fieldMetadata(), REQUIRED_METADATA)
+      || fieldErrors().some(error => error.kind === 'required'),
     ),
     pending: computed(() => !fieldNonInteractive() && asyncValidation.pending()),
     submitting: computed(() => fieldParent()?.$api.submitting() === true),

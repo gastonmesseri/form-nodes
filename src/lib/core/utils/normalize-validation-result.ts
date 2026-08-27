@@ -2,6 +2,6 @@ import type { ValidationError, ValidationResult } from '../validation/validation
 
 /** Normalizes a validator result to the readonly error array exposed by nodes. */
 export const normalizeValidationResult = (result: ValidationResult): readonly ValidationError[] => {
-  if (result == null) return [];
+  if (result === null || result === undefined) return [];
   return Array.isArray(result) ? result : [result as ValidationError];
 };

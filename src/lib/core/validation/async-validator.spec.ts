@@ -227,13 +227,13 @@ describe('asyncValidator', () => {
     const name = field('first', [asyncValidator(({ value, abortSignal }) => {
       signals.push(abortSignal);
       const current = value();
-      return new Promise((resolve) => setTimeout(() => resolve(current === 'first' ? { kind: 'stale' } : null), 1));
+      return new Promise(resolve => setTimeout(() => resolve(current === 'first' ? { kind: 'stale' } : null), 1));
     })]);
 
     await Promise.resolve();
     name.set('second');
     await settle();
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    await new Promise(resolve => setTimeout(resolve, 5));
 
     expect(signals[0]?.aborted).toBe(true);
     expect(name.errors()).toEqual([]);

@@ -24,9 +24,9 @@ describe('FormRootDirective', () => {
     const action = vi.fn();
 
     @Component({
+      template: `<form [formNode]="profile"><button type="submit">Save</button></form>`,
       standalone: true,
       imports: [FormRootDirective],
-      template: `<form [formNode]="profile"><button type="submit">Save</button></form>`,
     })
     class Host {
       readonly profile = form({ name: field('Marco') }, { submission: { action } });
@@ -49,9 +49,9 @@ describe('FormRootDirective', () => {
     const action = vi.fn();
 
     @Component({
+      template: `<form [formNode]="profile"><input [formNode]="profile.name"></form>`,
       standalone: true,
       imports: [FormNode, FormRootDirective],
-      template: `<form [formNode]="profile"><input [formNode]="profile.name"></form>`,
     })
     class Host {
       readonly profile = form({ name: field('', [required]) }, { submission: { action } });

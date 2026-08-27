@@ -148,7 +148,7 @@ describe('field', () => {
       reject(): void;
     }> = [];
     const fieldNode = field('initial', {
-      debounce: (abortSignal) => new Promise<void>((resolve, reject) => {
+      debounce: abortSignal => new Promise<void>((resolve, reject) => {
         runs.push({ signal: abortSignal, resolve, reject });
       }),
     });
@@ -327,7 +327,7 @@ describe('field', () => {
     let validatorField: unknown;
     let disabled: unknown;
     let disabledReasons: unknown;
-    const fieldNode = field('David', [context => {
+    const fieldNode = field('David', [(context) => {
       validatorApi = context.api;
       validatorField = context.field;
       disabled = context.disabled;
@@ -546,7 +546,7 @@ describe('field', () => {
       { kind: 'required' },
       { kind: 'minLength', minLength: 3, actualLength: 0 },
     ]);
-    expect(fieldNode.errors().every((error) => error.targetNode === fieldNode)).toBe(true);
+    expect(fieldNode.errors().every(error => error.targetNode === fieldNode)).toBe(true);
   });
 
   it('leaves out the keys of validators that pass', () => {
@@ -675,12 +675,12 @@ describe('field', () => {
     const fieldNode = field('', [required, () => ({ kind: 'custom' })]);
 
     expect(fieldNode.allErrors()).toBe(fieldNode.errors());
-    expect(fieldNode.allErrors().map((error) => error.kind)).toEqual(['required', 'custom']);
-    expect(fieldNode.allErrors().every((error) => error.targetNode === fieldNode)).toBe(true);
+    expect(fieldNode.allErrors().map(error => error.kind)).toEqual(['required', 'custom']);
+    expect(fieldNode.allErrors().every(error => error.targetNode === fieldNode)).toBe(true);
 
     fieldNode.set('David');
 
-    expect(fieldNode.allErrors().map((error) => error.kind)).toEqual(['custom']);
+    expect(fieldNode.allErrors().map(error => error.kind)).toEqual(['custom']);
     expect(fieldNode.api.allErrors()).toBe(fieldNode.allErrors());
   });
 

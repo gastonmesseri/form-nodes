@@ -14,6 +14,7 @@ const resolveObservable = (
 ): Promise<ValidationResult> => new Promise((resolve, reject) => {
   let settled = false;
   let subscribing = true;
+  // eslint-disable-next-line prefer-const -- Assigned after observer callbacks that close over it have been created.
   let subscription: SubscriptionLike | undefined;
   let synchronousEvent: ObservableEvent | undefined;
   const settle = (event: ObservableEvent) => {
@@ -30,8 +31,8 @@ const resolveObservable = (
   let subscriptionCandidate: unknown;
   try {
     subscriptionCandidate = observable.subscribe({
-      next: (value) => settle({ type: 'next', value }),
-      error: (error) => settle({ type: 'error', error }),
+      next: value => settle({ type: 'next', value }),
+      error: error => settle({ type: 'error', error }),
       complete: () => settle({ type: 'complete' }),
     });
   } catch (error) {

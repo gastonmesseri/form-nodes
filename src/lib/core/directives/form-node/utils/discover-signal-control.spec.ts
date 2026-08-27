@@ -17,11 +17,23 @@ describe('discoverSignalControl', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   it('discovers value and checked models from Angular component metadata', () => {
-    @Component({ standalone: true, selector: 'value-control', template: '' })
+    @Component({
+      selector: 'value-control',
+      template: '',
+      standalone: true,
+    })
     class ValueControl { value = model(''); }
-    @Component({ standalone: true, selector: 'checked-control', template: '' })
+    @Component({
+      selector: 'checked-control',
+      template: '',
+      standalone: true,
+    })
     class CheckedControl { checked = model(false); }
-    @Component({ standalone: true, selector: 'paired-control', template: '' })
+    @Component({
+      selector: 'paired-control',
+      template: '',
+      standalone: true,
+    })
     class PairedControl { value = input(''); valueChange = output<string>(); }
     registerSignalModelForJit(ValueControl, 'value');
     registerSignalModelForJit(CheckedControl, 'checked');
@@ -36,7 +48,11 @@ describe('discoverSignalControl', () => {
   });
 
   it('rejects an ordinary input and the owning component of a native child element', () => {
-    @Component({ standalone: true, selector: 'ordinary-control', template: '<div></div>' })
+    @Component({
+      selector: 'ordinary-control',
+      template: '<div></div>',
+      standalone: true,
+    })
     class OrdinaryControl { value = input(''); }
     registerSignalInputForJit(OrdinaryControl, 'value', 'value');
 

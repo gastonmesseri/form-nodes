@@ -70,15 +70,24 @@ describe('connectSignalControl', () => {
   });
 
   it('supports separate signal and decorator input-output pairs', () => {
-    @Component({ standalone: true, selector: 'signal-pair-control', template: '' })
+    @Component({
+      selector: 'signal-pair-control',
+      template: '',
+      standalone: true,
+    })
     class SignalPairControl {
       value = input('');
       valueChange = output<string>();
     }
     registerSignalModelForJit(SignalPairControl, 'value');
 
-    @Component({ standalone: true, selector: 'decorator-pair-control', template: '' })
+    @Component({
+      selector: 'decorator-pair-control',
+      template: '',
+      standalone: true,
+    })
     class DecoratorPairControl {
+      // eslint-disable-next-line @angular-eslint/prefer-signals -- Exercise legacy decorator input-output interoperability.
       @Input() checked = false;
       @Output() checkedChange = new EventEmitter<boolean>();
     }
@@ -109,7 +118,7 @@ describe('connectSignalControl', () => {
     const injector = TestBed.inject(Injector);
     const name = field('', { nullable: false });
     expect(() => connectSignalControl({ checked: undefined } as never, () => name, injector)).toThrowError(
-      "formNode: a signal custom control requires a 'checked' model or 'checked'/'checkedChange' input-output pair",
+      'formNode: a signal custom control requires a \'checked\' model or \'checked\'/\'checkedChange\' input-output pair',
     );
   });
 });

@@ -29,12 +29,12 @@ const dispatch = (element: HTMLElement, type: string) => {
 describe('FormNode in Chromium', () => {
   it('exposes binding-scoped errors through the exported template reference', () => {
     @Component({
-      standalone: true,
-      imports: [FormNode],
       template: `
         <input #binding="formNode" type="text" [formNode]="age">
         <output data-errors>{{ binding.errors().length }}</output>
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly age = field(23, { nullable: false });
@@ -53,20 +53,20 @@ describe('FormNode in Chromium', () => {
     fixture.detectChanges();
 
     expect(output.textContent).toBe('1');
-    expect(binding.errors().map((error) => error.kind)).toEqual(['parse']);
+    expect(binding.errors().map(error => error.kind)).toEqual(['parse']);
     expect(binding.errors()[0]!.formNode).toBe(binding);
   });
 
   it('renders and structurally updates array nodes directly through Angular @for', () => {
     @Component({
-      standalone: true,
       selector: 'browser-array-for-host',
-      imports: [FormNode],
       template: `
         @for (address of addresses; track address) {
           <input [attr.data-id]="address.id()" [formNode]="address.city">
         }
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       addresses = array(
@@ -126,10 +126,10 @@ describe('FormNode in Chromium', () => {
 
   it('synchronizes a native text input, IME composition, and interaction state', () => {
     @Component({
-      standalone: true,
       selector: 'browser-text-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -166,9 +166,9 @@ describe('FormNode in Chromium', () => {
 
   it('continues synchronizing when a native input changes between password and text', () => {
     @Component({
+      template: `<input [type]="passwordVisible() ? 'text' : 'password'" [formNode]="password">`,
       standalone: true,
       imports: [FormNode],
-      template: `<input [type]="passwordVisible() ? 'text' : 'password'" [formNode]="password">`,
     })
     class Host {
       readonly password = field('', { nullable: false });
@@ -203,9 +203,9 @@ describe('FormNode in Chromium', () => {
 
   it('synchronizes a native textarea in both directions', () => {
     @Component({
+      template: `<textarea [formNode]="notes"></textarea>`,
       standalone: true,
       imports: [FormNode],
-      template: `<textarea [formNode]="notes"></textarea>`,
     })
     class Host {
       readonly notes = field('', { nullable: false });
@@ -229,10 +229,10 @@ describe('FormNode in Chromium', () => {
 
   it('reflects validation, readonly, and disabled state onto a native control', () => {
     @Component({
-      standalone: true,
       selector: 'browser-state-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('', [required], { nullable: false });
@@ -258,9 +258,7 @@ describe('FormNode in Chromium', () => {
 
   it('uses browser-native number, checkbox, radio, and select semantics', async () => {
     @Component({
-      standalone: true,
       selector: 'browser-native-form-node-host',
-      imports: [FormNode],
       template: `
         <input data-age type="number" [formNode]="age">
         <input data-active type="checkbox" [formNode]="active">
@@ -275,6 +273,8 @@ describe('FormNode in Chromium', () => {
           <option>Zurich</option>
         </select>
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly age = field(23, { nullable: false });
@@ -331,9 +331,9 @@ describe('FormNode in Chromium', () => {
 
   it('synchronizes a native color input in both directions', () => {
     @Component({
+      template: `<input type="color" [formNode]="color">`,
       standalone: true,
       imports: [FormNode],
-      template: `<input type="color" [formNode]="color">`,
     })
     class Host {
       readonly color = field('#ff0000', { nullable: false });
@@ -356,9 +356,9 @@ describe('FormNode in Chromium', () => {
 
   it('uses native range clamping and reacts to validator constraints', () => {
     @Component({
+      template: `<input type="range" [formNode]="amount">`,
       standalone: true,
       imports: [FormNode],
-      template: `<input type="range" [formNode]="amount">`,
     })
     class Host {
       readonly minimum = signal<number | undefined>(undefined);
@@ -399,9 +399,9 @@ describe('FormNode in Chromium', () => {
     const initial = new Date('2024-01-01T12:30:00Z').valueOf();
 
     @Component({
+      template: `<input type="datetime-local" [formNode]="appointment">`,
       standalone: true,
       imports: [FormNode],
-      template: `<input type="datetime-local" [formNode]="appointment">`,
     })
     class Host {
       readonly appointment = field(initial, { nullable: false });
@@ -427,10 +427,10 @@ describe('FormNode in Chromium', () => {
 
   it('synchronizes Date models with native date inputs', () => {
     @Component({
-      standalone: true,
       selector: 'browser-date-model-form-node-host',
-      imports: [FormNode],
       template: `<input type="date" [formNode]="birthday">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly birthday = field(new Date('2024-01-01T12:00:00.000Z'), { nullable: false });
@@ -456,10 +456,10 @@ describe('FormNode in Chromium', () => {
     const initial = new Date('2024-01-01T12:00:00.000Z').valueOf();
 
     @Component({
-      standalone: true,
       selector: 'browser-date-timestamp-form-node-host',
-      imports: [FormNode],
       template: `<input type="date" [formNode]="birthday">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly birthday = field(initial, { nullable: false });
@@ -483,9 +483,7 @@ describe('FormNode in Chromium', () => {
 
   it('restores explicit and implicit select values when a hidden field is rendered', async () => {
     @Component({
-      standalone: true,
       selector: 'browser-hidden-select-form-node-host',
-      imports: [FormNode],
       template: `
         @if (!country.hidden()) {
           <select data-explicit [formNode]="country">
@@ -500,6 +498,8 @@ describe('FormNode in Chromium', () => {
           </select>
         }
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly visible = signal(false);
@@ -525,13 +525,13 @@ describe('FormNode in Chromium', () => {
     type RadioOption = { readonly id: string; readonly value: string };
 
     @Component({
-      standalone: true,
-      imports: [FormNode],
       template: `
         @for (option of options(); track option.id) {
           <input type="radio" [formNode]="selected" [value]="option.value">
         }
       `,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       selected = field('selected', { nullable: false });
@@ -543,7 +543,7 @@ describe('FormNode in Chromium', () => {
 
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
-    const checkedStates = () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>('input')).map((inputElement) => inputElement.checked);
+    const checkedStates = () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>('input')).map(inputElement => inputElement.checked);
     expect(checkedStates()).toEqual([false, true]);
 
     fixture.componentInstance.options.set([
@@ -557,10 +557,10 @@ describe('FormNode in Chromium', () => {
 
   it('commits control values after a real browser debounce timer', async () => {
     @Component({
-      standalone: true,
       selector: 'browser-debounce-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('David', { debounce: 20, nullable: false });
@@ -576,7 +576,7 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.name()).toBe('David');
     expect(fixture.componentInstance.name.debouncing()).toBe(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await new Promise(resolve => setTimeout(resolve, 30));
     expect(fixture.componentInstance.name()).toBe('Mark');
     expect(fixture.componentInstance.name.debouncing()).toBe(false);
     fixture.destroy();
@@ -584,10 +584,10 @@ describe('FormNode in Chromium', () => {
 
   it('commits control values on blur in a real browser', () => {
     @Component({
-      standalone: true,
       selector: 'browser-blur-debounce-form-node-host',
-      imports: [FormNode],
       template: `<input [formNode]="name">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly name = field('David', { debounce: 'blur', nullable: false });
@@ -612,10 +612,10 @@ describe('FormNode in Chromium', () => {
 
   it('retains invalid numeric text until a valid value or reset resolves the parse error', () => {
     @Component({
-      standalone: true,
       selector: 'browser-parse-form-node-host',
-      imports: [FormNode],
       template: `<input type="text" [formNode]="age">`,
+      standalone: true,
+      imports: [FormNode],
     })
     class Host {
       readonly age = field(23, { nullable: false });
@@ -650,10 +650,7 @@ describe('FormNode in Chromium', () => {
 
   it('tracks browser bad-input transitions for every date-like input and cleans up its shared style', () => {
     @Component({
-      standalone: true,
       selector: 'browser-validity-form-node-host',
-      imports: [FormNode],
-      providers: [{ provide: CSP_NONCE, useValue: 'test-nonce' }],
       template: `
         <input data-date type="date" [formNode]="date">
         <input data-datetime type="datetime-local" [formNode]="datetime">
@@ -661,6 +658,9 @@ describe('FormNode in Chromium', () => {
         <input data-time type="time" [formNode]="time">
         <input data-week type="week" [formNode]="week">
       `,
+      standalone: true,
+      imports: [FormNode],
+      providers: [{ provide: CSP_NONCE, useValue: 'test-nonce' }],
     })
     class Host {
       readonly date = field('2026-08-29', { nullable: false });
@@ -673,7 +673,7 @@ describe('FormNode in Chromium', () => {
     const stylesBefore = document.head.querySelectorAll('style').length;
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
-    const validityStyle = Array.from(document.head.querySelectorAll('style')).find((style) =>
+    const validityStyle = Array.from(document.head.querySelectorAll('style')).find(style =>
       style.textContent?.includes('@keyframes form-node-valid'),
     );
     expect(document.head.querySelectorAll('style')).toHaveLength(stylesBefore + 1);
@@ -713,11 +713,11 @@ describe('FormNode in Chromium', () => {
 
   it('synchronizes a native control and cleans up validity monitoring inside Shadow DOM', () => {
     @Component({
-      standalone: true,
       selector: 'browser-shadow-validity-form-node-host',
-      imports: [FormNode],
-      encapsulation: ViewEncapsulation.ShadowDom,
       template: `<input type="date" [formNode]="date">`,
+      standalone: true,
+      encapsulation: ViewEncapsulation.ShadowDom,
+      imports: [FormNode],
     })
     class Host {
       readonly date = field('2026-08-29', { nullable: false });
@@ -730,7 +730,7 @@ describe('FormNode in Chromium', () => {
     const { date } = fixture.componentInstance;
 
     expect(inputElement.value).toBe('2026-08-29');
-    expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) =>
+    expect(Array.from(shadowRoot.querySelectorAll('style')).some(style =>
       style.textContent?.includes('@keyframes form-node-valid'),
     )).toBe(true);
 
@@ -748,16 +748,16 @@ describe('FormNode in Chromium', () => {
     expect(inputElement.disabled).toBe(true);
 
     fixture.destroy();
-    expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) =>
+    expect(Array.from(shadowRoot.querySelectorAll('style')).some(style =>
       style.textContent?.includes('@keyframes form-node-valid'),
     )).toBe(false);
   });
 
   it('integrates with a custom ControlValueAccessor through real DOM events', () => {
     @Component({
-      standalone: true,
       selector: 'browser-cva',
       template: `<button type="button" [disabled]="disabled" (click)="select()" (blur)="touch()">{{ value }}</button>`,
+      standalone: true,
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => BrowserCva), multi: true }],
     })
     class BrowserCva implements ControlValueAccessor, OnDestroy {
@@ -775,10 +775,10 @@ describe('FormNode in Chromium', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'browser-cva-form-node-host',
-      imports: [BrowserCva, FormNode],
       template: `<browser-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [BrowserCva, FormNode],
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -805,9 +805,9 @@ describe('FormNode in Chromium', () => {
 
   it('automatically integrates with Angular FormValueControl and FormCheckboxControl components', () => {
     @Component({
-      standalone: true,
       selector: 'browser-signal-value-control',
       template: `<button type="button" [disabled]="disabled()" (click)="value.set('Mark')" (blur)="touch.emit()">{{ value() }}</button>`,
+      standalone: true,
     })
     class BrowserSignalValueControl implements FormValueControl<string> {
       value = model('');
@@ -824,9 +824,9 @@ describe('FormNode in Chromium', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'browser-signal-checkbox-control',
       template: `<button type="button" (click)="checked.update(value => !value)">{{ checked() }}</button>`,
+      standalone: true,
     })
     class BrowserSignalCheckboxControl implements FormCheckboxControl {
       checked = model(false);
@@ -841,13 +841,13 @@ describe('FormNode in Chromium', () => {
     registerSignalModelForJit(BrowserSignalCheckboxControl, 'checked');
 
     @Component({
-      standalone: true,
       selector: 'browser-signal-control-host',
-      imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNode],
       template: `
         <browser-signal-value-control #valueBinding="formNode" [formNode]="name" />
         <browser-signal-checkbox-control [formNode]="active" />
       `,
+      standalone: true,
+      imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNode],
     })
     class Host {
       name = field('David', [required], { nullable: false });
@@ -900,9 +900,9 @@ describe('FormNode in Chromium', () => {
 
   it('integrates with separate signal input-output control pairs', () => {
     @Component({
-      standalone: true,
       selector: 'browser-paired-value-control',
       template: `<button type="button" (click)="valueChange.emit('Mark')">{{ value() }}</button>`,
+      standalone: true,
     })
     class PairedValueControl {
       value = input('');
@@ -910,9 +910,9 @@ describe('FormNode in Chromium', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'browser-paired-checkbox-control',
       template: `<button type="button" (click)="checkedChange.emit(!checked())">{{ checked() }}</button>`,
+      standalone: true,
     })
     class PairedCheckboxControl {
       checked = input(false);
@@ -923,13 +923,13 @@ describe('FormNode in Chromium', () => {
     registerSignalModelForJit(PairedCheckboxControl, 'checked');
 
     @Component({
-      standalone: true,
       selector: 'browser-paired-control-host',
-      imports: [PairedValueControl, PairedCheckboxControl, FormNode],
       template: `
         <browser-paired-value-control [formNode]="name" />
         <browser-paired-checkbox-control [formNode]="active" />
       `,
+      standalone: true,
+      imports: [PairedValueControl, PairedCheckboxControl, FormNode],
     })
     class Host {
       name = field('David', { nullable: false });
@@ -957,20 +957,21 @@ describe('FormNode in Chromium', () => {
 
   it('integrates with separate decorator input-output control pairs', () => {
     @Component({
-      standalone: true,
       selector: 'browser-decorator-paired-control',
       template: `<button type="button" (click)="valueChange.emit('Mark')">{{ value }}</button>`,
+      standalone: true,
     })
     class DecoratorPairedControl {
+      // eslint-disable-next-line @angular-eslint/prefer-signals -- Exercise legacy decorator input-output interoperability.
       @Input() value = '';
       @Output() valueChange = new EventEmitter<string>();
     }
 
     @Component({
-      standalone: true,
       selector: 'browser-decorator-paired-control-host',
-      imports: [DecoratorPairedControl, FormNode],
       template: `<browser-decorator-paired-control [formNode]="name" />`,
+      standalone: true,
+      imports: [DecoratorPairedControl, FormNode],
     })
     class Host {
       name = field('David', { nullable: false });
@@ -994,9 +995,9 @@ describe('FormNode in Chromium', () => {
     type ProfileValue = { name: string | null; age: number | null };
 
     @Component({
-      standalone: true,
       selector: 'browser-profile-control',
       template: `<button type="button" (click)="value.set({ name: 'Mark', age: 31 })">{{ value().name }}</button>`,
+      standalone: true,
     })
     class BrowserProfileControl implements FormValueControl<ProfileValue> {
       value = model<ProfileValue>({ name: null, age: null });
@@ -1005,10 +1006,10 @@ describe('FormNode in Chromium', () => {
     registerSignalModelForJit(BrowserProfileControl, 'value');
 
     @Component({
-      standalone: true,
       selector: 'browser-profile-control-host',
-      imports: [BrowserProfileControl, FormNode],
       template: `<browser-profile-control [formNode]="profile" />`,
+      standalone: true,
+      imports: [BrowserProfileControl, FormNode],
     })
     class Host {
       profile = form({ name: field('David'), age: field(42) });
@@ -1113,9 +1114,9 @@ describe('FormNode in Chromium', () => {
 
   it('ignores a reentrant onChange callback during a CVA model-to-view write', () => {
     @Component({
-      standalone: true,
       selector: 'browser-echoing-cva',
       template: `<span>{{ value }}</span>`,
+      standalone: true,
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => EchoingCva), multi: true }],
     })
     class EchoingCva implements ControlValueAccessor {
@@ -1130,10 +1131,10 @@ describe('FormNode in Chromium', () => {
     }
 
     @Component({
-      standalone: true,
       selector: 'browser-echoing-cva-host',
-      imports: [EchoingCva, FormNode],
       template: `<browser-echoing-cva [formNode]="name" />`,
+      standalone: true,
+      imports: [EchoingCva, FormNode],
     })
     class Host {
       readonly name = field('David', { nullable: false });

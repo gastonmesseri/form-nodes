@@ -24,12 +24,12 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
 
 @Directive({
   selector: ':not(form)[formNode]',
-  exportAs: 'formNode',
   standalone: true,
   providers: [
     { provide: FORM_NODE, useExisting: forwardRef(() => _FormNode) },
     { provide: NgControl, useFactory: () => inject(_FormNode)._ngControl },
   ],
+  exportAs: 'formNode',
 })
 export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNode>, OnInit {
   /** @internal */
@@ -79,7 +79,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   /** Errors visible to this binding, excluding errors owned by another binding. */
   readonly errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]> = computed(() => {
     const errors = this.node().$api.errors() as readonly ValidationError.WithTargetNode<TNode>[];
-    return errors.filter((error) => !error.formNode || error.formNode === this);
+    return errors.filter(error => !error.formNode || error.formNode === this);
   }, { equal: shallowEqual });
 
   constructor() {
@@ -124,6 +124,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   /** Field, form, or array node bound to the host control. */
   get _field(): TNode {
     const node = this._formNodeInput();
+    // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the callable node itself before invoking it.
     if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
       throw new Error('formNode: a field, form, or array node is required');
     }
@@ -182,10 +183,10 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     const version = signal(0);
     validators.forEach((validator) => {
       if (isValidatorObject(validator) && validator.registerOnValidatorChange) {
-        validator.registerOnValidatorChange(() => version.update((current) => current + 1));
+        validator.registerOnValidatorChange(() => version.update(current => current + 1));
       }
     });
-    const validator = Validators.compose(validators.map((item) =>
+    const validator = Validators.compose(validators.map(item =>
       typeof item === 'function' ? item : item.validate.bind(item),
     ));
     const errors = computed(() => {
@@ -200,7 +201,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private connectNativeControl(control: NativeFormNodeControl) {
     const parseErrors = signal<readonly ValidationError.WithoutTargetNode[]>([]);
-    const bindingParseErrors = computed(() => parseErrors().map((error) => ({
+    const bindingParseErrors = computed(() => parseErrors().map(error => ({
       ...error,
       formNode: this,
     })));
@@ -305,7 +306,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
       const field = this.node() as unknown as InternalNode;
       onCleanup(field.$api._registerControlBinding({
         element: this.element,
-        focus: (options) => this.focus(options),
+        focus: options => this.focus(options),
       }));
     }, { injector: this.injector });
   }

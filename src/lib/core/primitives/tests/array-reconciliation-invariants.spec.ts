@@ -10,7 +10,7 @@ const createPeople = () => array({
 }, [
   { id: 'alex', name: 'Alex' },
   { id: 'kirill', name: 'Kirill' },
-], { trackBy: (person) => person.id });
+], { trackBy: person => person.id });
 
 /**
  * Interaction tests for keyed array reconciliation.
@@ -39,7 +39,7 @@ describe('array keyed reconciliation invariants', () => {
     expect(alex.touched()).toBe(true);
     expect(lia.pristine()).toBe(true);
     expect(lia.untouched()).toBe(true);
-    expect(people.map((person) => person.path())).toEqual([['0'], ['1'], ['2']]);
+    expect(people.map(person => person.path())).toEqual([['0'], ['1'], ['2']]);
 
     people.set([{ id: 'lia', name: 'Lia retained' }]);
 
@@ -84,7 +84,7 @@ describe('array keyed reconciliation invariants', () => {
       }, [
         { id: 'alex', name: 'Alex' },
         { id: 'kirill', name: 'Kirill' },
-      ], { debounce: 100, trackBy: (person) => person.id });
+      ], { debounce: 100, trackBy: person => person.id });
       const alex = people[0]!;
 
       alex.name.setControlValue('Buffered Alex');
@@ -125,7 +125,7 @@ describe('array keyed reconciliation invariants', () => {
     }, [
       { id: 'alex', name: 'Alex' },
       { id: 'kirill', name: 'Kirill' },
-    ], { trackBy: (person) => person.id });
+    ], { trackBy: person => person.id });
     const alex = people[0]!;
     const kirill = people[1]!;
     await Promise.resolve();

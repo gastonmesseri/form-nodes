@@ -13,7 +13,7 @@ const builtInAccessors = [
 ];
 
 const isBuiltInAccessor = (accessor: ControlValueAccessor): boolean => {
-  return builtInAccessors.some((accessorType) => accessor instanceof accessorType);
+  return builtInAccessors.some(accessorType => accessor instanceof accessorType);
 };
 
 export const selectValueAccessor = (accessors: readonly ControlValueAccessor[] | null): ControlValueAccessor | null => {
@@ -67,5 +67,5 @@ export const formatNativeLimit = (value: unknown, type: string): unknown => {
 
 export const formatNativePattern = (patterns: readonly RegExp[]): string => {
   if (patterns.length <= 1) return patterns[0]?.source ?? '';
-  return `${patterns.map((pattern) => `(?=(?:${pattern.source})$)`).join('')}.*`;
+  return `${patterns.map(pattern => `(?=(?:${pattern.source})$)`).join('')}.*`;
 };

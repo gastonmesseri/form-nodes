@@ -50,6 +50,7 @@
 ## Required verification
 
 - Always execute the relevant focused tests while implementing or reviewing a change; do not rely only on static inspection or previously reported results.
+- Always run `npm run lint` after source or configuration changes and resolve all errors and warnings before handing off the work. This is also included by `npm run typecheck` and must remain enabled there.
 - Before handing off completed code changes, run `npm run typecheck`, `npm run build`, and `npm run test:coverage` unless the change is strictly non-code documentation with no effect on examples, configuration, or generated output.
 - Run `npm run test:types` whenever public types, overloads, inference, exports, or IntelliSense-facing declarations change. This is also included by `npm run typecheck` and must remain enabled there.
 - Run `npm run test:package` whenever package metadata, build configuration, public exports, peer dependencies, or published artifact structure changes.

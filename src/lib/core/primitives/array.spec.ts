@@ -141,7 +141,7 @@ describe('array', () => {
 
     expect(index).toBe(1);
     expect(visits).toEqual(['0:Mono', '1:Lia']);
-    expect(sons.findIndex((son) => son.name() === 'Missing')).toBe(-1);
+    expect(sons.findIndex(son => son.name() === 'Missing')).toBe(-1);
     expect(sons.includes(lia)).toBe(true);
     expect(sons.includes(lia, 2)).toBe(false);
     expect(sons.indexOf(lia)).toBe(1);
@@ -221,7 +221,7 @@ describe('array', () => {
     expect(sons()).toEqual([{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }]);
     expect(sons.pristine()).toBe(true);
     expect(sons.untouched()).toBe(true);
-    expect(sons.items().every((item) => item.pristine() && item.untouched())).toBe(true);
+    expect(sons.items().every(item => item.pristine() && item.untouched())).toBe(true);
   });
 
   it('can mark an empty array as touched through its own interaction state', () => {
@@ -241,13 +241,13 @@ describe('array', () => {
     names.markAsTouched({ skipDescendants: true });
 
     expect(names.touched()).toBe(true);
-    expect(names.items().every((item) => item.untouched())).toBe(true);
+    expect(names.items().every(item => item.untouched())).toBe(true);
 
     names.markAsUntouched();
     names.markAsTouched();
 
     expect(names.touched()).toBe(true);
-    expect(names.items().every((item) => item.touched())).toBe(true);
+    expect(names.items().every(item => item.touched())).toBe(true);
   });
 
   it('only clears its own touched state through markAsUntouched', () => {
@@ -495,7 +495,7 @@ describe('array', () => {
     const sons = array(
       { id: field('', { nullable: false }), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
-      { trackBy: (value) => value.id },
+      { trackBy: value => value.id },
     );
     const alex = sons[0]!;
     const kirill = sons[1]!;
@@ -521,12 +521,12 @@ describe('array', () => {
     const people = array(
       { id: field('', { nullable: false }), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
-      { trackBy: (value) => value.id },
+      { trackBy: value => value.id },
     );
     const alex = people[0]!;
     const kirill = people[1]!;
 
-    people.update((value) => [
+    people.update(value => [
       { ...value[1]!, name: 'Kirill updated' },
       { ...value[0]!, name: 'Alex updated' },
     ]);
@@ -544,7 +544,7 @@ describe('array', () => {
     const properties = array(
       { city: field(''), country: field('') },
       [{ city: null, country: 'Unknown' }, { city: 'Zurich', country: 'Switzerland' }],
-      { trackBy: (value) => value.city },
+      { trackBy: value => value.city },
     );
     const unknown = properties[0]!;
     const zurich = properties[1]!;
@@ -563,7 +563,7 @@ describe('array', () => {
     const sons = array(
       { id: field('', { nullable: false }), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
-      { trackBy: (value) => value.id },
+      { trackBy: value => value.id },
     );
     const alex = sons[0]!;
     const kirill = sons[1]!;
@@ -580,7 +580,7 @@ describe('array', () => {
     const sons = array(
       { id: field('', { nullable: false }), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
-      { trackBy: (value) => value.id },
+      { trackBy: value => value.id },
     );
     const alex = sons[0]!;
     const kirill = sons[1]!;
@@ -602,7 +602,7 @@ describe('array', () => {
     const sons = array(
       { id: field('', { nullable: false }), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
-      { trackBy: (value) => value.id },
+      { trackBy: value => value.id },
     );
     const first = sons[0];
     const second = sons[1];
@@ -821,15 +821,15 @@ describe('array', () => {
       () => ({ kind: 'arrayError' }),
     ]);
 
-    expect(names.errors().map((error) => error.kind)).toEqual(['arrayError']);
-    expect(names.allErrors().map((error) => error.kind)).toEqual(['arrayError', 'required']);
-    expect(names.allErrors().map((error) => error.targetNode)).toEqual([names, names[0]]);
+    expect(names.errors().map(error => error.kind)).toEqual(['arrayError']);
+    expect(names.allErrors().map(error => error.kind)).toEqual(['arrayError', 'required']);
+    expect(names.allErrors().map(error => error.targetNode)).toEqual([names, names[0]]);
 
     names.move(0, 1);
 
-    expect(names.allErrors().map((error) => error.targetNode)).toEqual([names, names[1]]);
+    expect(names.allErrors().map(error => error.targetNode)).toEqual([names, names[1]]);
     names.removeAt(1);
-    expect(names.allErrors().map((error) => error.kind)).toEqual(['arrayError']);
+    expect(names.allErrors().map(error => error.kind)).toEqual(['arrayError']);
   });
 
   it('runs reactive validators on the array value', () => {
@@ -1137,7 +1137,7 @@ describe('array', () => {
     const names = array(
       { id: field('', { nullable: false }) },
       [{ id: 'one' }, { id: 'two' }],
-      { trackBy: (value) => value.id },
+      { trackBy: value => value.id },
     );
     names[1]!.id.set('one');
 

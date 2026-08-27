@@ -9,7 +9,7 @@ export const createNodeMetadata = (
 ): Signal<MetadataContributions> =>
   computed<MetadataContributions>(() => {
     const result = new Map<MetadataKey<unknown, unknown>, unknown[]>();
-    validators().forEach((validator) => collectValidatorMetadata(validator, result));
+    validators().forEach(validator => collectValidatorMetadata(validator, result));
     appendMetadataContributions(result, validatorMetadata());
     return result;
   });
