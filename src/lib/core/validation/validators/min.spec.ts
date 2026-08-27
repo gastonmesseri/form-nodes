@@ -8,7 +8,12 @@ const context = <TValue>(value: TValue) => ({ value: signal(value).asReadonly() 
 
 describe('min', () => {
   it('validates minimum numbers', () => {
-    expect(min(3)(context(2))).toEqual({ kind: 'min', min: 3 });
+    expect(min(3)(context(2))).toEqual({
+      kind: 'min',
+      min: 3,
+      message: 'Please enter a value greater than or equal to 3.',
+    });
+    expect(min(3, { message: 'Too small' })(context(2))).toMatchObject({ message: 'Too small' });
     expect(min(3)(context(3))).toBeNull();
     expect(min(3)(context(null))).toBeNull();
     expect(min(3)(context(Number.NaN))).toBeNull();

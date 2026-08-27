@@ -12,7 +12,9 @@ describe('maxDate', () => {
     expect(maxDate(maximum)(context(middle))).toEqual({
       kind: 'maxDate',
       maxDate: maximum,
+      message: 'Please enter a date on or before 2026-05-01T00:00:00.000Z.',
     });
+    expect(maxDate(maximum, { message: 'Too late' })(context(middle))).toMatchObject({ message: 'Too late' });
     expect(maxDate(maximum)(context(maximum))).toBeNull();
     expect(maxDate(maximum)(context(null))).toBeNull();
     expect(maxDate(maximum)(context(new Date(Number.NaN)))).toBeNull();

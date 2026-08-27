@@ -11,7 +11,9 @@ describe('pattern', () => {
     expect(pattern(/^[a-z]+$/)(context('123'))).toEqual({
       kind: 'pattern',
       pattern: /^[a-z]+$/,
+      message: 'Please enter a value that matches /^[a-z]+$/.',
     });
+    expect(pattern(/^[a-z]+$/, { message: 'Letters only' })(context('123'))).toMatchObject({ message: 'Letters only' });
     expect(pattern(/^[a-z]+$/)(context(''))).toBeNull();
     expect(pattern(/^[a-z]+$/)(context(null))).toBeNull();
     expect(pattern(() => undefined)(context('abc'))).toBeNull();

@@ -1,4 +1,4 @@
-import { asyncValidator, field, form, required, type AsyncValidatorContext, type ValidatorContext } from '../src/public-api';
+import { asyncValidator, email, field, form, maxLength, min, required, type AsyncValidatorContext, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 
@@ -12,6 +12,11 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
 const name = field('David', [required, nameValidator]);
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
+field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
+field(18, [min(18, { message: 'Too young' })]);
+
+const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
+void validatorOptions;
 
 const profile = form({
   name,
