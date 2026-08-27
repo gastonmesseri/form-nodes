@@ -10,7 +10,7 @@ import { asyncValidator } from '../validation/async-validator';
 describe('array', () => {
   it('creates independent form items from a shorthand template', () => {
     const template = { name: field(''), age: field(23) };
-    const sons = array(2, template);
+    const sons = array(template, 2);
 
     expect(sons()).toEqual([{ name: '', age: 23 }, { name: '', age: 23 }]);
     expect(sons.at(0)).not.toBe(sons.at(1));
@@ -26,8 +26,8 @@ describe('array', () => {
 
   it('applies initial values to items cloned from a shorthand template', () => {
     const sons = array(
-      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
       { name: field(''), age: field(23) },
+      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
     );
 
     expect(sons()).toEqual([{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }]);
@@ -39,7 +39,7 @@ describe('array', () => {
     const template = field('', [required], { disabled: true });
     template.set('changed');
     template.markAsTouched();
-    const names = array(1, template);
+    const names = array(template, 1);
 
     expect(names.at(0)!()).toBe('');
     expect(names.at(0)!.required()).toBe(true);
@@ -50,7 +50,7 @@ describe('array', () => {
 
   it('uses the declared template value for items added later', () => {
     const template = field('initial');
-    const names = array(0, template);
+    const names = array(template);
     template.set('changed outside the array');
 
     const added = names.push();
@@ -59,10 +59,10 @@ describe('array', () => {
   });
 
   it('recursively clones nested form and array templates', () => {
-    const families = array(2, {
+    const families = array({
       surname: field(''),
-      sons: array(1, { name: field(''), age: field(0) }),
-    });
+      sons: array({ name: field(''), age: field(0) }, 1),
+    }, 2);
 
     expect(families()).toEqual([
       { surname: '', sons: [{ name: '', age: 0 }] },
@@ -74,7 +74,7 @@ describe('array', () => {
 
   it('creates independent form items from a count and factory defaults', () => {
     const factory = vi.fn(() => ({ name: field(''), age: field(23) }));
-    const sons = array(2, factory);
+    const sons = array(factory, 2);
 
     expect(factory).toHaveBeenCalledTimes(2);
     expect(sons()).toEqual([{ name: '', age: 23 }, { name: '', age: 23 }]);
@@ -89,8 +89,8 @@ describe('array', () => {
 
   it('creates pristine and untouched form items from initial values', () => {
     const sons = array(
-      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
       () => ({ name: field(''), age: field(23) }),
+      [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
     );
 
     expect(sons()).toEqual([{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }]);
@@ -100,7 +100,7 @@ describe('array', () => {
   });
 
   it('supports primitive field items', () => {
-    const tags = array(['first', 'second'], () => field(''));
+    const tags = array(() => field(''), ['first', 'second']);
 
     expect(tags()).toEqual(['first', 'second']);
     expect(tags.at(0)!()).toBe('first');
@@ -108,8 +108,15 @@ describe('array', () => {
     expect(tags()).toEqual(['first', 'updated']);
   });
 
+  it('treats null-only arrays as initial values rather than validator shorthand', () => {
+    const values = array(field<string>(null), [null]);
+
+    expect(values()).toEqual([null]);
+    expect(values.length()).toBe(1);
+  });
+
   it('pushes and inserts either defaults or explicit values', () => {
-    const sons = array(0, () => ({ name: field(''), age: field(23) }));
+    const sons = array(() => ({ name: field(''), age: field(23) }));
 
     const defaultSon = sons.push();
     const explicitSon = sons.push({ name: 'Mono', age: 11 });
@@ -128,8 +135,8 @@ describe('array', () => {
 
   it('preserves node identity and state while moving items and updates paths', () => {
     const sons = array(
-      [{ name: 'Mono' }, { name: 'Lia' }],
       () => ({ name: field('') }),
+      [{ name: 'Mono' }, { name: 'Lia' }],
     );
     const lia = sons.at(1)!;
     lia.name.markAsTouched();
@@ -144,7 +151,7 @@ describe('array', () => {
   });
 
   it('detaches removed items and reindexes the remaining items', () => {
-    const sons = array(3, () => ({ name: field('') }));
+    const sons = array(() => ({ name: field('') }), 3);
     const removed = sons.removeAt(1)!;
 
     expect(removed.parent()).toBeNull();
@@ -155,7 +162,7 @@ describe('array', () => {
   });
 
   it('sets values while preserving common node identities', () => {
-    const sons = array([{ name: 'Mono' }], () => ({ name: field('') }));
+    const sons = array(() => ({ name: field('') }), [{ name: 'Mono' }]);
     const first = sons.at(0)!;
 
     sons.set([{ name: 'Updated' }, { name: 'Lia' }]);
@@ -166,7 +173,7 @@ describe('array', () => {
   });
 
   it('resets values and interaction state while reconciling length', () => {
-    const sons = array([{ name: 'Mono' }], () => ({ name: field('') }));
+    const sons = array(() => ({ name: field('') }), [{ name: 'Mono' }]);
     sons.push({ name: 'Lia' });
     sons.at(0)!.name.markAsTouched();
 
@@ -178,7 +185,7 @@ describe('array', () => {
   });
 
   it('aggregates validation and interaction state from dynamic items', () => {
-    const names = array(1, () => field('', [required]));
+    const names = array(() => field('', [required]), 1);
 
     expect(names.invalid()).toBe(true);
     names.at(0)!.set('Mono');
@@ -190,7 +197,7 @@ describe('array', () => {
 
   it('runs reactive validators on the array value', () => {
     const minimum = signal(2);
-    const names = array(1, () => field('Mono'), {
+    const names = array(() => field('Mono'), 1, {
       validators: [({ value }) => value().length < minimum() ? { kind: 'minimumItems' } : null],
     });
 
@@ -201,8 +208,33 @@ describe('array', () => {
     expect(names.invalid()).toBe(true);
   });
 
+  it('accepts validator shorthand with the default empty initial value', () => {
+    const names = array(field(''), [
+      ({ value }) => value().length === 0 ? { kind: 'emptyArray' } : null,
+    ]);
+
+    expect(names()).toEqual([]);
+    expect(names.getError('emptyArray')).toMatchObject({ kind: 'emptyArray' });
+  });
+
+  it('accepts initial values followed by validator shorthand and options', () => {
+    const names = array(
+      field(''),
+      ['Mono'],
+      [({ value }) => value().length < 2 ? { kind: 'minimumItems' } : null],
+      { readonly: true },
+    );
+
+    expect(names()).toEqual(['Mono']);
+    expect(names.getError('minimumItems')).toBeUndefined();
+    expect(names.readonly()).toBe(true);
+
+    names.markAsWritable();
+    expect(names.getError('minimumItems')).toMatchObject({ kind: 'minimumItems' });
+  });
+
   it('runs and aggregates asynchronous validation', async () => {
-    const names = array(['Mono'], () => field(''), {
+    const names = array(() => field(''), ['Mono'], {
       validators: [asyncValidator(async ({ value }) =>
         value().includes('blocked') ? { kind: 'blockedName' } : null,
       )],
@@ -223,7 +255,7 @@ describe('array', () => {
 
   it('propagates configured state to current and future items', () => {
     const disabled = signal(true);
-    const names = array(1, () => field(''), { disabled });
+    const names = array(() => field(''), 1, { disabled });
 
     expect(names.at(0)!.disabled()).toBe(true);
     const added = names.push('Mono');
@@ -235,9 +267,9 @@ describe('array', () => {
   });
 
   it('rejects invalid initial counts and mutation indexes', () => {
-    expect(() => array(-1, () => field(''))).toThrow(RangeError);
-    expect(() => array(1.5, () => field(''))).toThrow(RangeError);
-    const names = array(1, () => field(''));
+    expect(() => array(() => field(''), -1)).toThrow(RangeError);
+    expect(() => array(() => field(''), 1.5)).toThrow(RangeError);
+    const names = array(() => field(''), 1);
     expect(() => names.insert(2)).toThrow(RangeError);
     expect(() => names.move(0, 1)).toThrow(RangeError);
   });
@@ -245,17 +277,17 @@ describe('array', () => {
   it('rejects factories that reuse the same live node', () => {
     const shared = field('');
 
-    expect(() => array(2, () => shared)).toThrow('factory must return a fresh node definition');
+    expect(() => array(() => shared, 2)).toThrow('factory must return a fresh node definition');
   });
 
   it('rejects factory objects that reuse nested live nodes', () => {
     const sharedDefinition = { name: field('') };
 
-    expect(() => array(2, () => sharedDefinition)).toThrow('factory must return a fresh node definition');
+    expect(() => array(() => sharedDefinition, 2)).toThrow('factory must return a fresh node definition');
   });
 
   it('clears all items and detaches retained references', () => {
-    const names = array(['Mono'], () => field(''));
+    const names = array(() => field(''), ['Mono']);
     const item = names.at(0)!;
 
     names.clear();
@@ -268,10 +300,10 @@ describe('array', () => {
   it('can be nested inside forms and other arrays', () => {
     const profile = form({
       name: field('Marco'),
-      sons: array([{ name: 'Mono', aliases: ['M'] }], () => ({
+      sons: array(() => ({
         name: field(''),
-        aliases: array(['M'], () => field('')),
-      })),
+        aliases: array(() => field(''), ['M']),
+      }), [{ name: 'Mono', aliases: ['M'] }]),
     });
 
     expect(profile()).toEqual({

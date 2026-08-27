@@ -12,7 +12,7 @@ import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, 
 describe('types', () => {
   it('infers dynamic array values, items, parents, and root form', () => {
     const profile = form({
-      sons: array([{ name: 'Mono', age: 11 }], () => ({ name: field(''), age: field(23) })),
+      sons: array(() => ({ name: field(''), age: field(23) }), [{ name: 'Mono', age: 11 }]),
     });
     const son = profile.sons.at(0)!;
 
@@ -26,7 +26,7 @@ describe('types', () => {
 
   it('infers dynamic arrays declared from a shorthand template', () => {
     const profile = form({
-      sons: array(2, { name: field(''), age: field(23) }),
+      sons: array({ name: field(''), age: field(23) }, 2),
     });
     const son = profile.sons.at(0)!;
 
@@ -36,8 +36,19 @@ describe('types', () => {
     expectTypeOf(profile.sons.push).toBeCallableWith({ name: 'Lia', age: 7 });
   });
 
+  it('types dynamic array initial values, validator shorthand, and options', () => {
+    const validate = ({ value }: FieldContext<readonly (string | null)[]>) =>
+      value().length === 0 ? { kind: 'empty' } : null;
+    const names = array(field(''), ['Mono'], [validate], { disabled: true });
+    const emptyNames = array(field(''), validate, { readonly: true });
+
+    expectTypeOf(names()).toEqualTypeOf<readonly (string | null)[]>();
+    expectTypeOf(emptyNames()).toEqualTypeOf<readonly (string | null)[]>();
+    expectTypeOf(names.disabled()).toEqualTypeOf<boolean>();
+  });
+
   it('infers primitive and nested dynamic arrays', () => {
-    const matrix = array(2, () => array(2, () => field(0)));
+    const matrix = array(() => array(() => field(0), 2), 2);
 
     expectTypeOf(matrix()).toEqualTypeOf<readonly (readonly (number | null)[])[]>();
     expectTypeOf(matrix.at(0)!.at(0)!()).toEqualTypeOf<number | null>();

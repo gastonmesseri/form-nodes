@@ -832,12 +832,12 @@ An empty form has value `{}` and is valid, enabled, writable, visible, untouched
 
 ## Dynamic arrays
 
-`array()` creates a dynamic node whose items all have the same node shape. Its first argument is either an initial item count or an array of initial values. Its second argument can be a factory or a shorthand node template:
+`array()` creates a dynamic node whose items all have the same node shape. Its first argument is a shorthand node template or factory. With no further arguments, its initial value is an empty array:
 
 ```ts
 const profile = form({
   name: field('Marco'),
-  sons: array(2, () => ({
+  sons: array(() => ({
     name: field(''),
     age: field(23),
   })),
@@ -849,7 +849,7 @@ The equivalent shorthand template omits the factory:
 ```ts
 const profile = form({
   name: field('Marco'),
-  sons: array(2, {
+  sons: array({
     name: field(''),
     age: field(23),
   }),
@@ -859,20 +859,50 @@ const profile = form({
 A plain object returned by a factory or used as a template is normalized to a `form()` node. Both forms may also define a `field()`, an explicit `form()`, or another `array()`:
 
 ```ts
-const tags = array(['angular', 'signals'], () => field(''));
-const shorthandTags = array(['angular', 'signals'], field(''));
+const tags = array(() => field(''), ['angular', 'signals']);
+const shorthandTags = array(field(''), ['angular', 'signals']);
 ```
 
-When initial values are provided, the framework creates each node from the factory and resets it to the corresponding value. Initial items therefore remain pristine and untouched:
+The optional second argument can be a non-negative initial item count or an array of initial values. The framework creates each node from the template or factory and resets it to the corresponding value. Initial items therefore remain pristine and untouched:
 
 ```ts
 const sons = array(
-  [{ name: 'Mono', age: 11 }],
   { name: field(''), age: field(23) },
+  [{ name: 'Mono', age: 11 }],
+);
+
+const twoDefaultSons = array(
+  { name: field(''), age: field(23) },
+  2,
 );
 ```
 
 The explicit factory contract deliberately prevents node reuse. Returning the same live `field()`, `form()`, or `array()` instance more than once throws because items must not share values, parents, interaction state, validation state, or asynchronous watchers.
+
+### Constructor signatures
+
+Templates and factories support the same argument combinations:
+
+```ts
+array(templateOrFactory);
+array(templateOrFactory, options);
+array(templateOrFactory, validators, options?);
+array(templateOrFactory, initialValue, options?);
+array(templateOrFactory, initialValue, validators, options?);
+```
+
+`initialValue` is either a non-negative item count or an array of item values. Validators can therefore retain the same shorthand style as fields and forms:
+
+```ts
+const names = array(
+  field(''),
+  ['Marco'],
+  [({ value }) => value().length < 2 ? { kind: 'minimumItems' } : null],
+  { disabled: false },
+);
+```
+
+At runtime, an array argument is recognized as a validator source when it contains at least one function and every other entry is a function, `null`, or `undefined`. Empty and null-only arrays therefore remain valid initial values. An array whose actual item values are themselves functions is still structurally ambiguous with a validator array. For that uncommon case, create the array empty and apply the function values through `reset()` instead of passing them in the constructor.
 
 ### Template cloning
 
