@@ -128,6 +128,13 @@ const looksLikeValidatorSource = (value: unknown): boolean =>
 
 export function array<TDefinition extends NodeDefinition>(
   template: TDefinition,
+  initial: NoInfer<ArrayInitial<TDefinition>>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+export function array<TDefinition extends NodeDefinition>(
+  template: TDefinition,
+  initial: NoInfer<ArrayInitial<TDefinition>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
@@ -137,17 +144,17 @@ export function array<TDefinition extends NodeDefinition>(
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
   template: TDefinition,
-  initial: ArrayInitial<TDefinition>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
-  initial: ArrayInitial<TDefinition>,
+  factory: ArrayFactory<TDefinition>,
+  initial: NoInfer<ArrayInitial<TDefinition>>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
   factory: ArrayFactory<TDefinition>,
+  initial: NoInfer<ArrayInitial<TDefinition>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
@@ -157,13 +164,6 @@ export function array<TDefinition extends NodeDefinition>(
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
   factory: ArrayFactory<TDefinition>,
-  initial: ArrayInitial<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-export function array<TDefinition extends NodeDefinition>(
-  factory: ArrayFactory<TDefinition>,
-  initial: ArrayInitial<TDefinition>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
