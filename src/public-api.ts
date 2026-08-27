@@ -4,6 +4,7 @@ export { array } from './lib/core/primitives/array';
 export { max } from './lib/core/validation/validators/max';
 export { min } from './lib/core/validation/validators/min';
 export { url } from './lib/core/validation/validators/url';
+export { integer } from './lib/core/validation/validators/integer';
 export { email } from './lib/core/validation/validators/email';
 export { oneOf } from './lib/core/validation/validators/one-of';
 export { pattern } from './lib/core/validation/validators/pattern';

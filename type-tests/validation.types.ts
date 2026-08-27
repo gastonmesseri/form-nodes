@@ -1,4 +1,4 @@
-import { array, asyncValidator, configureGlobalValidatorMessages, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, configureGlobalValidatorMessages, email, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -18,6 +18,7 @@ field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { me
 field(18, [min(18, { message: 'Too young' })]);
 field('', [pattern(/^[a-z]+$/, { message: () => 'Use letters only' })]);
 field('', [url, url({ message: 'Enter an absolute URL' })]);
+field(1, [integer, integer({ message: 'Enter a whole number' })]);
 field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);
@@ -74,6 +75,10 @@ const unknownError = constrainedAge.getError('applicationSpecific');
 const _unknownMessage: string | undefined = unknownError?.message;
 const _unknownProperty: unknown = unknownError?.applicationData;
 void [_minimum, _minimumActual, _unknownMessage, _unknownProperty];
+
+const integerError = field(1.5, [integer]).getError('integer');
+const _integerActual: number | undefined = integerError?.actual;
+void _integerActual;
 
 const profile = form({
   name,
