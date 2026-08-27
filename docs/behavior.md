@@ -865,6 +865,19 @@ const tags = array(() => field(''), ['angular', 'signals']);
 const shorthandTags = array(field(''), ['angular', 'signals']);
 ```
 
+A field can be passed directly as the template for a primitive-value array. The field is treated as a declarative template and cloned into an independent field node for every item:
+
+```ts
+const names = array(field('Marco'), []);
+
+names();            // []
+names.push();       // appends a fresh field with the declared default value, 'Marco'
+names.push('Lia');  // appends a fresh field initialized with 'Lia'
+names();            // ['Marco', 'Lia']
+```
+
+The field passed as the template is not itself inserted into the array. Its validators, options, and declared initial value are compiled into the same clone recipe used by object, form, and nested-array templates.
+
 The optional second argument can be a non-negative initial item count or an array of initial values. The framework creates each node from the template or factory and resets it to the corresponding value. Initial items therefore remain pristine and untouched:
 
 ```ts

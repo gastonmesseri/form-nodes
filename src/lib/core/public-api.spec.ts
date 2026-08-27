@@ -68,9 +68,13 @@ describe('types', () => {
 
   it('infers primitive and nested dynamic arrays', () => {
     const matrix = array(() => array(() => field(0), 2), 2);
+    const names = array(field('Marco'), []);
 
     expectTypeOf(matrix()).toEqualTypeOf<(number | null)[][]>();
     expectTypeOf(matrix.at(0)!.at(0)!()).toEqualTypeOf<number | null>();
+    expectTypeOf(names()).toEqualTypeOf<(string | null)[]>();
+    expectTypeOf(names.push()()).toEqualTypeOf<string | null>();
+    expectTypeOf(names.push).toBeCallableWith('Lia');
   });
 
   it('does not expose internal parent mutation through Node', () => {

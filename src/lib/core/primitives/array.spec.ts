@@ -220,6 +220,22 @@ describe('array', () => {
     expect(tags()).toEqual(['first', 'updated']);
   });
 
+  it('accepts a field node directly as the template for primitive items', () => {
+    const names = array(field('Marco'), []);
+
+    expect(names()).toEqual([]);
+    expect(names.length()).toBe(0);
+
+    const defaultName = names.push();
+    const explicitName = names.push('Lia');
+
+    expect(defaultName()).toBe('Marco');
+    expect(explicitName()).toBe('Lia');
+    expect(names()).toEqual(['Marco', 'Lia']);
+    expect(names[0]).toBe(defaultName);
+    expect(names[1]).toBe(explicitName);
+  });
+
   it('treats null-only arrays as initial values rather than validator shorthand', () => {
     const values = array(field<string>(null), [null]);
 
