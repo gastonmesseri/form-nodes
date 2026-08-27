@@ -303,7 +303,7 @@ describe('FormNode in Chromium', () => {
     active.click();
     madrid.click();
     country.value = 'Spain';
-    dispatch(country, 'change');
+    dispatch(country, 'input');
     cities.options[1]!.selected = true;
     dispatch(cities, 'change');
 
