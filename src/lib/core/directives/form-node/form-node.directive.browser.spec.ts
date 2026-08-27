@@ -428,6 +428,7 @@ describe('FormNode in Chromium', () => {
   it('synchronizes Date models with native date inputs', () => {
     @Component({
       standalone: true,
+      selector: 'browser-date-model-form-node-host',
       imports: [FormNode],
       template: `<input type="date" [formNode]="birthday">`,
     })
@@ -448,6 +449,35 @@ describe('FormNode in Chromium', () => {
     input.value = '2026-03-03';
     dispatch(input, 'input');
     expect(fixture.componentInstance.birthday()).toEqual(new Date('2026-03-03T00:00:00.000Z'));
+    fixture.destroy();
+  });
+
+  it('synchronizes numeric timestamps with native date inputs', () => {
+    const initial = new Date('2024-01-01T12:00:00.000Z').valueOf();
+
+    @Component({
+      standalone: true,
+      selector: 'browser-date-timestamp-form-node-host',
+      imports: [FormNode],
+      template: `<input type="date" [formNode]="birthday">`,
+    })
+    class Host {
+      readonly birthday = field(initial, { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.value).toBe('2024-01-01');
+
+    fixture.componentInstance.birthday.set(new Date('2025-02-02T12:00:00.000Z').valueOf());
+    fixture.detectChanges();
+    expect(input.value).toBe('2025-02-02');
+
+    input.value = '2026-03-03';
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.birthday()).toBe(new Date('2026-03-03T00:00:00.000Z').valueOf());
     fixture.destroy();
   });
 
