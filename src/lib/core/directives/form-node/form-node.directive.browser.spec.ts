@@ -425,6 +425,32 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('synchronizes Date models with native date inputs', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `<input type="date" [formNode]="birthday">`,
+    })
+    class Host {
+      readonly birthday = field(new Date('2024-01-01T12:00:00.000Z'), { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.value).toBe('2024-01-01');
+
+    fixture.componentInstance.birthday.set(new Date('2025-02-02T12:00:00.000Z'));
+    fixture.detectChanges();
+    expect(input.value).toBe('2025-02-02');
+
+    input.value = '2026-03-03';
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.birthday()).toEqual(new Date('2026-03-03T00:00:00.000Z'));
+    fixture.destroy();
+  });
+
   it('restores explicit and implicit select values when a hidden field is rendered', async () => {
     @Component({
       standalone: true,
