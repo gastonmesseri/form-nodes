@@ -168,6 +168,13 @@ export function array<TDefinition extends NodeDefinition>(
     () => !arrayNonInteractive(),
   );
   const arrayErrors = computed(() => [...arraySyncErrors(), ...asyncValidation.errors()]);
+  const arrayAllErrors = computed(
+    () => [
+      ...arrayErrors(),
+      ...arrayItems().flatMap((item) => item.api.allErrors()),
+    ],
+    { equal: shallowEqual },
+  );
   const getError = computedFunction(
     (kind: string) => arrayErrors().find((error) => error.kind === kind),
     { equal: shallowEqual, max: 20 },
@@ -361,6 +368,7 @@ export function array<TDefinition extends NodeDefinition>(
       ensureAsyncValidationWatch();
     },
     errors: arrayErrors,
+    allErrors: arrayAllErrors,
     valid: computed(() => arrayValidationStatus() === 'valid'),
     invalid: computed(() => arrayValidationStatus() === 'invalid'),
     getError,

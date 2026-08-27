@@ -95,7 +95,24 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   reset(...args: [] | [value: ArraySet<TItem>]): void;
   validators: Signal<Validators<ArrayValue<TItem>>>;
   setValidators(validators: ValidatorSource<ArrayValue<TItem>>): void;
+  /**
+   * **Scope: current array node only.**
+   *
+   * Validation errors that apply **directly to this array node**, **excluding item and descendant errors**.
+   * Item and descendant errors still contribute to invalid().
+   *
+   * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
+   */
   errors: Signal<readonly ValidationError.WithTargetNode<ArrayNode<TItem, TParent>>[]>;
+  /**
+   * **Scope: current array node and all descendants.**
+   *
+   * Validation errors from **this array node and all item subtrees**, in current item order.
+   * Own errors appear first, followed recursively by each item.
+   *
+   * ℹ️ To read only errors belonging directly to this array node, use `errors()` instead.
+   */
+  allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & { readonly kind: TKind }) | undefined;

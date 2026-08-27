@@ -472,6 +472,19 @@ describe('field', () => {
     expect(fieldNode.getError('required')).toBeUndefined();
   });
 
+  it('exposes all field errors through allErrors', () => {
+    const fieldNode = field('', [required, () => ({ kind: 'custom' })]);
+
+    expect(fieldNode.allErrors()).toBe(fieldNode.errors());
+    expect(fieldNode.allErrors().map((error) => error.kind)).toEqual(['required', 'custom']);
+    expect(fieldNode.allErrors().every((error) => error.targetNode === fieldNode)).toBe(true);
+
+    fieldNode.set('David');
+
+    expect(fieldNode.allErrors().map((error) => error.kind)).toEqual(['custom']);
+    expect(fieldNode.api.allErrors()).toBe(fieldNode.allErrors());
+  });
+
   it('does not propagate getError when only another error kind changes', () => {
     const unrelated = signal(false);
     const fieldNode = field('', [
