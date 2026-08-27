@@ -9,6 +9,9 @@ describe('max', () => {
   it('validates maximum numbers', () => {
     expect(max(3)(context(4))).toEqual({ kind: 'max', max: 3 });
     expect(max(3)(context(3))).toBeNull();
+    expect(max(3)(context(null))).toBeNull();
     expect(max(3)(context(Number.NaN))).toBeNull();
+    expect(max(() => undefined)(context(4))).toBeNull();
+    expect(max(Number.NaN)(context(4))).toBeNull();
   });
 });

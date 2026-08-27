@@ -11,6 +11,9 @@ describe('min', () => {
     expect(min(3)(context(2))).toEqual({ kind: 'min', min: 3 });
     expect(min(3)(context(3))).toBeNull();
     expect(min(3)(context(null))).toBeNull();
+    expect(min(3)(context(Number.NaN))).toBeNull();
+    expect(min(() => undefined)(context(2))).toBeNull();
+    expect(min(Number.NaN)(context(2))).toBeNull();
   });
 
   it('tracks reactive limits', () => {

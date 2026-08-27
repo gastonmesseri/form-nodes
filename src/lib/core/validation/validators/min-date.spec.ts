@@ -15,5 +15,8 @@ describe('minDate', () => {
     });
     expect(minDate(minimum)(context(minimum))).toBeNull();
     expect(minDate(minimum)(context(null))).toBeNull();
+    expect(minDate(minimum)(context(new Date(Number.NaN)))).toBeNull();
+    expect(minDate(() => undefined)(context(middle))).toBeNull();
+    expect(minDate(new Date(Number.NaN))(context(middle))).toBeNull();
   });
 });
