@@ -92,8 +92,7 @@ For example:
 
 ```ts
 /**
- * Validation errors that apply **directly to this form node**, **excluding descendant errors**.
- * Descendant errors still contribute to invalid().
+ * A signal containing the validation errors of **this form node itself, excluding its descendants**.
  *
  * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
  */
@@ -864,6 +863,36 @@ A signal or function remains a continuing configured condition. An action cannot
 - Clearing the parent's state reveals the child's still-active own state.
 - Applying state to a nested form affects only its subtree, not siblings or ancestors.
 - Shorthand nested forms inherit state exactly like explicit forms.
+
+### Possible future disabled reasons
+
+The current public contract exposes only the effective `disabled()` boolean. It does not expose
+why the node is disabled. A possible future extension is a readonly `disabledReasons()` signal
+comparable to Angular Signal Forms, where each active reason identifies the node that originated
+the disablement and may include a user-facing message:
+
+```ts
+type DisabledReason = {
+  readonly sourceNode: Node;
+  readonly message?: string;
+};
+```
+
+This should not be implemented merely by translating the current mutable, configured, and
+inherited boolean sources into arbitrary labels. Before adding the public API, the disabled
+configuration must provide a natural way for consumers to supply meaningful reasons and optional
+messages. The design must then define reasons for imperative `disable()`, conditional disabled
+sources, multiple simultaneous reasons, inherited reasons, their ordering, and what `enable()`
+removes. A descendant should retain an inherited reason's original source node so consumers can
+identify which ancestor caused the effective state.
+
+Angular derives `disabled()` from whether its accumulated reason list is non-empty. Its list
+contains parent reasons followed by active local disabled rules. This behavior was inspected in
+Angular `v22.1.4` at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, primarily in
+`packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/api/rules/disabled.ts`,
+`packages/forms/signals/src/field/state.ts`, and the disabled tests in
+`packages/forms/signals/test/node/field_node.spec.ts`. This section records a design direction for
+future consideration and is not part of the current public contract.
 
 ## Non-interactive behavior
 
