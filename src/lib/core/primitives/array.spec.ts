@@ -491,6 +491,39 @@ describe('array', () => {
     expect(sons.dirty()).toBe(false);
   });
 
+  it('normalizes nullish complete values to an empty array', () => {
+    const names = array(field(''), ['Marco']);
+    const marco = names[0]!;
+
+    names.set(null);
+
+    expect(names()).toEqual([]);
+    expect(marco.parent()).toBeNull();
+
+    const lia = names.push('Lia');
+    lia.markAsDirty();
+    lia.markAsTouched();
+    names.reset(undefined);
+
+    expect(names()).toEqual([]);
+    expect(names.pristine()).toBe(true);
+    expect(names.untouched()).toBe(true);
+    expect(lia.parent()).toBeNull();
+
+    names.push('Noa');
+    names.update(() => null);
+    expect(names()).toEqual([]);
+
+    names.push('Leo');
+    names.set(undefined);
+    expect(names()).toEqual([]);
+  });
+
+  it('normalizes a nullish initial value to an empty array', () => {
+    expect(array(field(''), { initialValue: null })()).toEqual([]);
+    expect(array(field(''), null)()).toEqual([]);
+  });
+
   it('reconciles object item nodes by an explicit trackBy key', () => {
     const sons = array(
       { id: field('', { nullable: false }), name: field('') },

@@ -1217,6 +1217,8 @@ sons.clear();
 
 `set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and preserves existing interaction state. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
 
+An `array()` node always exposes an array value even when an input source represents absence with `null` or `undefined`. Nullish values passed through `initialValue`, `set()`, the result of `update()`, or `reset(value)` normalize to `[]`; reconciliation then removes and detaches every current item. `reset(null)` and `reset(undefined)` additionally clear interaction state like any other reset with a value. This normalization also applies when `form.set()` supplies a nullish value for a nested array. Individual item values may independently be nullable when their templates allow it.
+
 By default, reconciliation is positional. Applications that replace or reorder object values immutably can provide `trackBy` in the array options to preserve each node with its logical entity:
 
 ```ts

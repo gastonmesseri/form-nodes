@@ -58,6 +58,12 @@ people.patch([{ name: 'Grace' }]);
 people.update((value) => [...value, { id: 'four', name: null, age: null }]);
 people.focus({ preventScroll: true });
 
+people.set(null);
+people.reset(undefined);
+people.update(() => null);
+array(field(''), { initialValue: null });
+array(field(''), null);
+
 people.forEach((item, index, owner) => {
   const _name: string | null = item.name();
   const _index: number = index;

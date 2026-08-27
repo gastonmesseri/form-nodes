@@ -13,6 +13,9 @@ export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
    * - An array containing the initial value of every item.
    * - A non-negative integer specifying how many items to create from the template defaults.
    *
+   * ℹ️ `null` and `undefined` normalize to `[]`; the observable array value itself is never
+   * nullable. Individual item values may still be nullable when their templates allow it.
+   *
    * This option is available in the `array(template, options)` and
    * `array(template, validators, options)` signatures. When an initial value is supplied as a
    * positional argument, TypeScript intentionally omits this property to prevent two conflicting
@@ -26,7 +29,7 @@ export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
    * @example
    * `array(personTemplate, { initialValue: 3 })`
    */
-  readonly initialValue?: TValue | number;
+  readonly initialValue?: TValue | number | null;
   /**
    * Returns the stable identity of an item when `set()`, `update()`, or `reset(value)`
    * reconciles incoming values with the array's current nodes.
@@ -144,11 +147,55 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    */
   swap(firstIndex: number, secondIndex: number): void;
   clear(): void;
-  set(value: ArraySet<TItem>): void;
-  /** Computes and sets the complete array value using the configured index or trackBy reconciliation. */
-  update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem>): void;
+  /**
+   * Reconciles the complete array value while preserving matching item nodes.
+   *
+   * ℹ️ Passing `null` or `undefined` clears the array.
+   */
+  set(value: ArraySet<TItem> | null | undefined): void;
+  /**
+   * Computes the complete array value using the configured index or `trackBy` reconciliation.
+   *
+   * ℹ️ Returning `null` or `undefined` clears the array.
+  */
+  update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
+  /**
+   * Partially updates existing item nodes by array index without changing the array structure.
+   *
+   * Each supplied index delegates to that item's own `patch()` operation. This is most useful for
+   * arrays of forms, where individual object properties can be updated without supplying complete
+   * item values. A field item treats its patch as a normal value assignment.
+   *
+   * The patch array's length does not resize this array: missing trailing indexes and sparse holes
+   * are skipped, while supplied indexes beyond the current structure are ignored with a console
+   * warning. Existing node identity and interaction state are preserved.
+   *
+   * ℹ️ `patch()` is positional. Use `set()` or `update()` for complete value reconciliation, and
+   * use `insert()`, `removeAt()`, `move()`, or `swap()` for explicit structural changes.
+   *
+   * @example Patch selected properties of the first item.
+   * ```ts
+   * const people = array(
+   *   { name: field(''), age: field(0) },
+   *   [{ name: 'Marco', age: 30 }],
+   * );
+   *
+   * people.patch([{ age: 31 }]);
+   * // people() === [{ name: 'Marco', age: 31 }]
+   * ```
+   *
+   * @example Skip the first item and patch only the second.
+   * ```ts
+   * people.patch([, { name: 'Lia' }]);
+   * ```
+   */
   patch(value: ArrayPatch<TItem>): void;
-  reset(...args: [] | [value: ArraySet<TItem>]): void;
+  /**
+   * Resets state, optionally reconciling a complete value first.
+   *
+   * ℹ️ Passing `null` or `undefined` clears the array before resetting its state.
+   */
+  reset(...args: [] | [value: ArraySet<TItem> | null | undefined]): void;
   validators: Signal<Validators<ArrayValue<TItem>>>;
   setValidators(validators: ValidatorSource<ArrayValue<TItem>>): void;
   /**
