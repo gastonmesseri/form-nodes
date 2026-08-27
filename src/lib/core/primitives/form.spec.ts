@@ -22,7 +22,7 @@ describe('form', () => {
       name: 'Marco',
       sons: [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
     });
-    expect(profile.dirty()).toBe(true);
+    expect(profile.dirty()).toBe(false);
   });
 
   it('grows an array child through form.set and propagates the complete value', () => {
@@ -50,7 +50,7 @@ describe('form', () => {
     expect(profile.sons[1]!.name.path()).toEqual(['sons', '1', 'name']);
     expect(profile.sons[1]!.form()).toBe(profile);
     expect(factory).toHaveBeenCalledTimes(2);
-    expect(profile.dirty()).toBe(true);
+    expect(profile.dirty()).toBe(false);
   });
 
   it('shrinks and empties an array child through form.set while detaching removed nodes', () => {
@@ -1018,7 +1018,7 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    formGroup.name.set('Ana');
+    formGroup.name.setControlValue('Ana');
     expect(formGroup.api.dirty()).toBe(true);
     expect(formGroup.api.pristine()).toBe(false);
     expect(formGroup.age.dirty()).toBe(false);
@@ -1028,34 +1028,48 @@ describe('form', () => {
     const formGroup = form({
       address: form({ city: field('Zurich') }),
     });
-    formGroup.address.city.set('Madrid');
+    formGroup.address.city.setControlValue('Madrid');
     expect(formGroup.address.api.dirty()).toBe(true);
     expect(formGroup.api.dirty()).toBe(true);
   });
 
-  it('becomes dirty through set', () => {
+  it('stays pristine through programmatic set', () => {
     const formGroup = form({
       name: field('David'),
       age: field(23),
     });
     formGroup.api.set({ name: 'Ana', age: 30 });
-    expect(formGroup.name.dirty()).toBe(true);
-    expect(formGroup.age.dirty()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.name.dirty()).toBe(false);
+    expect(formGroup.age.dirty()).toBe(false);
+    expect(formGroup.api.dirty()).toBe(false);
   });
 
-  it('only dirties the patched keys', () => {
+  it('preserves existing descendant dirty state through programmatic set', () => {
+    const formGroup = form({
+      name: field('David'),
+      age: field(23),
+    });
+    formGroup.name.markAsDirty();
+
+    formGroup.set({ name: 'Ana', age: 30 });
+
+    expect(formGroup.name.dirty()).toBe(true);
+    expect(formGroup.age.dirty()).toBe(false);
+    expect(formGroup.dirty()).toBe(true);
+  });
+
+  it('stays pristine through programmatic patch', () => {
     const formGroup = form({
       name: field('David'),
       age: field(23),
     });
     formGroup.api.patch({ name: 'Ana' });
-    expect(formGroup.name.dirty()).toBe(true);
+    expect(formGroup.name.dirty()).toBe(false);
     expect(formGroup.age.dirty()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.api.dirty()).toBe(false);
   });
 
-  it('only dirties the patched branch of a nested form', () => {
+  it('keeps every branch pristine through a nested programmatic patch', () => {
     const formGroup = form({
       name: field('David'),
       address: form({
@@ -1064,7 +1078,7 @@ describe('form', () => {
       }),
     });
     formGroup.api.patch({ address: { country: 'ES' } });
-    expect(formGroup.address.country.dirty()).toBe(true);
+    expect(formGroup.address.country.dirty()).toBe(false);
     expect(formGroup.address.city.dirty()).toBe(false);
     expect(formGroup.name.dirty()).toBe(false);
   });
@@ -1145,8 +1159,8 @@ describe('form', () => {
     });
     formGroup.name.api.set('Ana');
     expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Zurich' } });
-    expect(formGroup.name.api.dirty()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.name.api.dirty()).toBe(false);
+    expect(formGroup.api.dirty()).toBe(false);
   });
 
   it('keeps every value on reset with no argument', () => {
@@ -1201,6 +1215,8 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
     formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.name.setControlValue('Ana');
+    formGroup.address.city.setControlValue('Madrid');
     formGroup.address.api.reset({ city: 'Bern' });
     expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Bern' } });
     expect(formGroup.address.city.dirty()).toBe(false);

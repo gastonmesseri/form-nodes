@@ -635,14 +635,14 @@ describe('field', () => {
     expect(fieldNode.api.errors()).toEqual(fieldNode.errors());
     fieldNode.api.set('David');
     expect(fieldNode()).toBe('David');
-    expect(fieldNode.dirty()).toBe(true);
+    expect(fieldNode.dirty()).toBe(false);
   });
 
   it('patches like it sets, through api', () => {
     const fieldNode = field('David');
     fieldNode.api.patch('Ana');
     expect(fieldNode()).toBe('Ana');
-    expect(fieldNode.dirty()).toBe(true);
+    expect(fieldNode.dirty()).toBe(false);
   });
 
   it('starts untouched', () => {
@@ -685,16 +685,25 @@ describe('field', () => {
     expect(fieldNode.pristine()).toBe(true);
   });
 
-  it('becomes dirty when the value is set', () => {
+  it('stays pristine when the value is set programmatically', () => {
     const fieldNode = field('David');
     fieldNode.set('Ana');
-    expect(fieldNode.dirty()).toBe(true);
-    expect(fieldNode.pristine()).toBe(false);
+    expect(fieldNode.dirty()).toBe(false);
+    expect(fieldNode.pristine()).toBe(true);
   });
 
-  it('becomes dirty even when set to the same value', () => {
+  it('stays pristine when set programmatically to the same value', () => {
     const fieldNode = field('David');
     fieldNode.set('David');
+    expect(fieldNode.dirty()).toBe(false);
+  });
+
+  it('preserves existing dirty state across programmatic updates', () => {
+    const fieldNode = field('David');
+    fieldNode.markAsDirty();
+
+    fieldNode.set('Ana');
+
     expect(fieldNode.dirty()).toBe(true);
   });
 
@@ -707,7 +716,7 @@ describe('field', () => {
 
   it('goes back to pristine through markAsPristine', () => {
     const fieldNode = field('David');
-    fieldNode.set('Ana');
+    fieldNode.setControlValue('Ana');
     fieldNode.markAsPristine();
     expect(fieldNode.dirty()).toBe(false);
     expect(fieldNode.pristine()).toBe(true);
@@ -722,7 +731,7 @@ describe('field', () => {
 
   it('keeps dirty and touched independent', () => {
     const fieldNode = field('David');
-    fieldNode.set('Ana');
+    fieldNode.setControlValue('Ana');
     expect(fieldNode.dirty()).toBe(true);
     expect(fieldNode.touched()).toBe(false);
     fieldNode.markAsPristine();
@@ -1015,6 +1024,7 @@ describe('field', () => {
   it('preserves its value and underlying dirty state while readonly', () => {
     const fieldNode = field('David', undefined, { readonly: true });
     fieldNode.set('Ana');
+    fieldNode.markAsDirty();
     expect(fieldNode()).toBe('Ana');
     expect(fieldNode.dirty()).toBe(false);
     expect(fieldNode.pristine()).toBe(true);
