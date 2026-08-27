@@ -774,6 +774,7 @@ const age = field<number>(null, {
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, message }` |
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
+| `oneOf(values)` | The allowed value type, `null`, or `undefined` | Passes for `null`, `undefined`, and `''` | `{ kind: 'oneOf', options, actual, message }` |
 | `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, message }` |
 | `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, message }` |
 
@@ -791,6 +792,20 @@ Every built-in validator returns an English default message with its error. The 
 Default messages are centralized within the validation package rather than duplicated across validators. This is a deliberate extension over Angular 22.1.4 Signal Forms, which supports static or reactive custom messages but leaves the default message undefined. The current public override is a static string and remains safe outside Angular dependency injection. A future internationalization layer can replace the centralized defaults without changing the structured error contract.
 
 Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
+
+`oneOf()` validates membership with `Array.prototype.includes`, so `NaN` matches `NaN` and objects match by reference rather than by structure. Its error includes the resolved allowed `options` and the rejected `actual` value. The allowed values can be static or returned by a reactive function; returning `undefined` temporarily disables the constraint:
+
+```ts
+const availableStatuses = signal<readonly Status[] | undefined>(['draft', 'published']);
+
+const status = field<Status>('draft', [
+  oneOf(availableStatuses, {
+    message: 'Choose an available status',
+  }),
+]);
+```
+
+Unlike Angular 22.1.4 Signal Forms, which has no equivalent built-in rule, `oneOf()` is provided as a library-specific validator.
 
 The required emptiness rules follow Angular 22 Signal Forms. Empty arrays, empty sets, and empty objects are not considered empty by `required`. Length validators inspect `length` or `size`, so `minLength(1)` can reject an empty array or set.
 

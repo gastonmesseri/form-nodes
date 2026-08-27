@@ -1,4 +1,4 @@
-import { asyncValidator, email, field, form, maxLength, min, required, type AsyncValidatorContext, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
+import { asyncValidator, email, field, form, maxLength, min, oneOf, required, type AsyncValidatorContext, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 
@@ -14,6 +14,8 @@ name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
 field(18, [min(18, { message: 'Too young' })]);
+field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
+field(2, [oneOf(() => [1, 2, 3])]);
 
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
 void validatorOptions;
@@ -51,3 +53,6 @@ void profile;
 
 // @ts-expect-error a string validator cannot be assigned to a number field
 field(42, [nameValidator]);
+
+// @ts-expect-error numeric allowed values cannot validate a string field
+field('draft', [oneOf([1, 2])]);
