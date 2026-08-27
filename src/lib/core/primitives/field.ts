@@ -1,4 +1,4 @@
-import { computed, signal, type Injector, type Signal } from '@angular/core';
+import { computed, signal, untracked, type Injector, type Signal } from '@angular/core';
 
 import { markAsNode } from '../utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
@@ -45,6 +45,8 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    */
   controlValue: Signal<TValue>;
   set(value: TValue): void;
+  /** Computes and sets a complete value from the current committed value without marking the field dirty. */
+  update(updater: (value: TValue) => TValue): void;
   setControlValue(value: TValue): void;
   debouncing: Signal<boolean>;
   /** Immediately commits the pending controlValue(), ending its configured debounce. Has no observable effect when no control update is pending. */
@@ -228,6 +230,7 @@ export function field<TValue>(
     value: fieldValue.asReadonly(),
     controlValue: fieldControlValue.asReadonly(),
     set,
+    update: (updater: (value: TValue) => TValue) => untracked(() => set(updater(fieldValue()))),
     setControlValue,
     debouncing: fieldDebouncing.asReadonly(),
     flush: controlDebounce.commit,

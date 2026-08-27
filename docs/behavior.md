@@ -261,6 +261,7 @@ This differs from Angular Reactive Forms, where `nonNullable` also controls whet
 | Operation | Value effect | Dirty effect | Touched effect |
 | --- | --- | --- | --- |
 | `set(value)` | Replaces the value | Preserves current state | No change |
+| `update(updater)` | Computes and replaces the value from the current committed value | Preserves current state | No change |
 | `setControlValue(value)` | Updates `controlValue()` immediately and commits `value()` after the configured debounce | Marks dirty immediately | No change |
 | `flush()` | Immediately commits a pending `controlValue()` | No additional change | No change |
 | `api.patch(value)` | Same as `set(value)` | Preserves current state | No change |
@@ -268,6 +269,14 @@ This differs from Angular Reactive Forms, where `nonNullable` also controls whet
 | `reset(value)` | Replaces the value | Clears dirty | Clears touched |
 
 `reset(value)` handles falsy values such as an empty string or zero. Resetting does not replace validators, and validation is recomputed against a newly assigned value.
+
+`update()` is the immutable convenience form of reading and setting a complete value. Its updater runs synchronously once and receives `value()`, never a pending `controlValue()`:
+
+```ts
+age.update(value => (value ?? 0) + 1);
+```
+
+The operation is executed untracked, delegates to the same programmatic behavior as `set()`, cancels pending field control debounce, synchronizes `controlValue()`, and preserves existing dirty and touched state.
 
 ### Control-originated value debounce
 
@@ -317,12 +326,13 @@ A future `form.flush()` operation would recursively flush every pending control-
 
 | Operation | Value effect | Dirty effect | Touched effect |
 | --- | --- | --- | --- |
-| `api.set(value)` | Recursively assigns all supplied branches | Marks every affected leaf dirty | No change |
-| `api.patch(value)` | Recursively assigns only supplied branches | Marks only affected leaves dirty | No change |
+| `api.set(value)` | Recursively assigns all supplied branches | Preserves current state | No change |
+| `api.update(updater)` | Computes and recursively assigns a complete value from the current form value | Preserves current state | No change |
+| `api.patch(value)` | Recursively assigns only supplied branches | Preserves current state | No change |
 | `api.reset()` | Preserves every descendant value | Clears dirty throughout the subtree | Clears touched throughout the subtree |
 | `api.reset(value)` | Recursively assigns the complete value | Clears dirty throughout the subtree | Clears touched throughout the subtree |
 
-At the type level, `set()` requires every form key and `patch()` rejects unknown keys. At runtime, unknown keys passed through an unsafe cast are ignored and produce an English console warning.
+At the type level, `set()` and the result of `update()` require every form key, while `patch()` rejects unknown keys. At runtime, unknown keys passed through an unsafe cast are ignored and produce an English console warning. The `update()` callback runs synchronously once in an untracked context and delegates its complete result to `set()`.
 
 Calling reset on a nested form only resets that subtree. State belonging to siblings is preserved.
 
@@ -1057,11 +1067,14 @@ const names = array({ name: field('') }, [{ name: 'Marco' }]);
 // Immutable value style: creates a new value array and reconciles the node collection.
 names.set([...names(), { name: 'Mark' }]);
 
+// Equivalent updater style, without repeating the array node read.
+names.update(values => [...values, { name: 'Mark' }]);
+
 // Alternatively, as a structural shortcut that creates and appends only the new node:
 names.push({ name: 'Mark' });
 ```
 
-Both forms propagate the resulting value through ancestor forms, preserve the identity of existing nodes, and leave dirty state unchanged. Prefer `set()` when replacing the array value as a whole and `push()` when expressing an append operation. If either update represents user interaction rather than application code, the control integration is responsible for calling `markAsDirty()`.
+All three forms propagate the resulting value through ancestor forms, preserve the identity of existing nodes, and leave dirty state unchanged. `update()` delegates its result to the same reconciliation used by `set()`, including `trackBy`. Prefer `set()` when assigning an already available complete value, `update()` when deriving one immutably from the current value, and `push()` when expressing an append operation. If any update represents user interaction rather than application code, the control integration is responsible for calling `markAsDirty()`.
 
 An array keeps its own dirty state and also aggregates dirty item nodes. `markAsDirty()` and `markAsPristine()` affect only the array itself; they do not change item state. Therefore, a dirty item can keep the array dirty after `array.markAsPristine()`. `reset()` is the recursive operation that clears dirty state from the array and every current item.
 

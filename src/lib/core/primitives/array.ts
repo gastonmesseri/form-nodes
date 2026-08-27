@@ -1,4 +1,4 @@
-import { computed, signal, type Injector, type Signal } from '@angular/core';
+import { computed, signal, untracked, type Injector, type Signal } from '@angular/core';
 
 import type { Form } from './form';
 import type { Field } from './field';
@@ -104,6 +104,8 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   move(fromIndex: number, toIndex: number): void;
   clear(): void;
   set(value: ArraySet<TItem>): void;
+  /** Computes and sets the complete array value using the configured index or trackBy reconciliation. */
+  update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem>): void;
   patch(value: ArrayPatch<TItem>): void;
   reset(...args: [] | [value: ArraySet<TItem>]): void;
   validators: Signal<Validators<ArrayValue<TItem>>>;
@@ -469,6 +471,7 @@ export function array<TDefinition extends NodeDefinition>(
     set: (value) => {
       reconcile(value, false);
     },
+    update: (updater) => untracked(() => reconcile(updater(arrayValue()), false)),
     patch: (value) => {
       value.forEach((itemValue, index) => {
         const item = arrayItems()[index];

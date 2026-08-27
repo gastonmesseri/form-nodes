@@ -50,6 +50,19 @@ describe('field', () => {
     expect(fieldNode.value()).toBe(30);
   });
 
+  it('updates programmatically from the committed value without marking dirty', () => {
+    const updater = vi.fn((value: number | null) => (value ?? 0) + 1);
+    const fieldNode = field(23);
+
+    fieldNode.update(updater);
+
+    expect(updater).toHaveBeenCalledOnce();
+    expect(updater).toHaveBeenCalledWith(23);
+    expect(fieldNode()).toBe(24);
+    expect(fieldNode.controlValue()).toBe(24);
+    expect(fieldNode.pristine()).toBe(true);
+  });
+
   it('updates control and model values immediately without control debounce', () => {
     const fieldNode = field('David');
 

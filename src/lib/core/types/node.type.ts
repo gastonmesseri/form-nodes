@@ -11,6 +11,7 @@ export type NodeApi = {
   form: Signal<Node | null>;
   path: Signal<readonly string[]>;
   set(value: any): void;
+  update(updater: (value: any) => any): void;
   patch(value: any): void;
   reset(...args: [] | [value: any]): void;
   valid: Signal<boolean>;

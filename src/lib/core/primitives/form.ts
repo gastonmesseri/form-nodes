@@ -1,4 +1,4 @@
-import { computed, signal, type Injector, type Signal } from '@angular/core';
+import { computed, signal, untracked, type Injector, type Signal } from '@angular/core';
 
 import type { Field } from './field';
 import type { ArrayNode } from './array';
@@ -64,6 +64,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   path: Signal<readonly string[]>;
   value: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
   set(value: FormSet<TNodes>): void;
+  /** Computes and sets the complete form value from its current value without marking nodes dirty. */
+  update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;
   patch(value: FormPatch<TNodes>): void;
   reset(...args: [] | [value: FormSet<TNodes>]): void;
   validators: Signal<Validators<FormValue<TNodes>>>;
@@ -253,6 +255,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     path: formPath,
     value: formValue,
     set,
+    update: (updater) => untracked(() => set(updater(formValue()))),
     patch,
     reset,
     validators: formValidators.asReadonly(),
