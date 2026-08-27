@@ -232,4 +232,41 @@ describe('FormNodeDirective in Chromium', () => {
     fixture.destroy();
     expect(control.destroyed).toBe(true);
   });
+
+  it('ignores a reentrant onChange callback during a CVA model-to-view write', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-echoing-cva',
+      template: `<span>{{ value }}</span>`,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => EchoingCva), multi: true }],
+    })
+    class EchoingCva implements ControlValueAccessor {
+      value = '';
+      change = (_value: string) => {};
+      writeValue(value: string): void {
+        this.value = value;
+        this.change(value);
+      }
+      registerOnChange(callback: (value: string) => void): void { this.change = callback; }
+      registerOnTouched(): void {}
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'browser-echoing-cva-host',
+      imports: [EchoingCva, FormNodeDirective],
+      template: `<browser-echoing-cva [formNode]="name" />`,
+    })
+    class Host {
+      readonly name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.name()).toBe('David');
+    expect(fixture.componentInstance.name.dirty()).toBe(false);
+    expect(fixture.nativeElement.querySelector('span').textContent).toContain('David');
+    fixture.destroy();
+  });
 });

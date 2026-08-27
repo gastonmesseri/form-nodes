@@ -1258,8 +1258,10 @@ The directive currently provides these behaviors:
 - `disabled`, `readonly`, `required`, and `aria-invalid` are synchronized from field state to applicable DOM properties.
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
+- Model-to-view `writeValue()` calls are guarded against reentrant `onChange` callbacks. A legacy CVA that invokes its registered change callback from inside `writeValue()` therefore cannot mark the field dirty, write the value back, or create a feedback loop.
 - When several Angular accessors match, selection follows Angular's precedence: one custom accessor, then one specialized built-in accessor, then the default accessor. Multiple accessors within the selected category are rejected as ambiguous.
 - Synchronous validators provided by a CVA through `NG_VALIDATORS` participate in the field's real validation state. Their Angular validation key becomes `error.kind`, and `registerOnValidatorChange()` invalidates the reactive result. These binding-owned errors are suppressed with the field's other errors while it is disabled, readonly, or hidden and are removed when the binding is destroyed or changes field.
+- `NG_ASYNC_VALIDATORS` are not adapted by this CVA compatibility layer. Asynchronous validation belongs to the node's `asyncValidator()` pipeline, which owns cancellation, pending state, debounce, and stale-result handling explicitly.
 - Exporting the directive as `#binding="formNode"` provides `focus()`, `flush()`, and `reset()` operations and a reactive `node` reference.
 - Destroying the directive removes DOM listeners, disconnects select observation, and destroys its reactive effects through Angular's `DestroyRef` ownership.
 
