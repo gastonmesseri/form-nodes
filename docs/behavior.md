@@ -1215,7 +1215,7 @@ profile.set({
 });
 ```
 
-The complete value propagates immediately to the array and every ancestor. Existing nodes in the common index prefix are updated and retain their identity and runtime state. Additional values create fresh nodes from the configured template or factory, with correct parent, root form, and index-derived paths. Surplus nodes are removed and detached from the tree; retained external references to those removed nodes remain usable as independent roots. Setting an empty array removes every item, and a later `form.set()` can create a new collection from the same definition recipe.
+The complete value propagates immediately to the array and every ancestor. Existing nodes in the common index prefix are updated and retain their identity and runtime state. Additional values create fresh nodes from the configured template or factory, with correct parent, root form, and index-derived paths. Surplus nodes are removed and detached from the tree; retained external references to those removed nodes remain usable as independent roots. Descendants remain attached to that removed root, and their paths are recalculated relative to it. Their values, interaction state, pending validation, and eventual errors no longer contribute to the former array or form ancestors. Setting an empty array removes every item, and a later `form.set()` can create a new collection from the same definition recipe.
 
 ### Aggregated state and validation
 
