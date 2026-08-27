@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { Injector, signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { array } from './array';
@@ -739,6 +739,56 @@ describe('array', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(names.getError('blockedName')).toMatchObject({ kind: 'blockedName' });
+  });
+
+  it('stops array-level reactive validation when its owning injector is destroyed', async () => {
+    const blockedName = signal('blocked');
+    const validate = vi.fn(async ({ value }) =>
+      value().includes(blockedName()) ? { kind: 'blockedName' } : null,
+    );
+    const injector = Injector.create({ providers: [] });
+    const names = array(field(''), ['Mono'], {
+      validators: [asyncValidator(validate)],
+      injector,
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    blockedName.set('Mono');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(names.pending()).toBe(false);
+    expect(names.errors()).toEqual([]);
+  });
+
+  it('aborts pending array-level validation when its owning injector is destroyed', async () => {
+    let abortSignal: AbortSignal | undefined;
+    let resolveValidation!: (result: { kind: string } | null) => void;
+    const injector = Injector.create({ providers: [] });
+    const names = array(field(''), ['Mono'], {
+      validators: [asyncValidator(({ abortSignal: currentSignal }) => {
+        abortSignal = currentSignal;
+        return new Promise((resolve) => { resolveValidation = resolve; });
+      })],
+      injector,
+    });
+
+    await Promise.resolve();
+    expect(names.pending()).toBe(true);
+
+    injector.destroy();
+    expect(abortSignal?.aborted).toBe(true);
+    expect(names.pending()).toBe(false);
+
+    resolveValidation({ kind: 'lateError' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(names.errors()).toEqual([]);
   });
 
   it('propagates configured state to current and future items', () => {

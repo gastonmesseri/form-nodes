@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { signal, type Signal } from '@angular/core';
+import { Injector, signal, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
@@ -860,6 +860,58 @@ describe('form', () => {
 
     expect(validate).toHaveBeenCalledTimes(2);
     expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
+  });
+
+  it('stops form-level reactive validation when its owning injector is destroyed', async () => {
+    const allowedCountry = signal('Switzerland');
+    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) =>
+      value().country === allowedCountry() ? null : { kind: 'countryNotAllowed' },
+    );
+    const injector = Injector.create({ providers: [] });
+    const formGroup = form(
+      { country: field('Switzerland') },
+      [asyncValidator(validate)],
+      { injector },
+    );
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    allowedCountry.set('Germany');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(formGroup.api.pending()).toBe(false);
+    expect(formGroup.api.errors()).toEqual([]);
+  });
+
+  it('aborts pending form-level validation when its owning injector is destroyed', async () => {
+    let abortSignal: AbortSignal | undefined;
+    let resolveValidation!: (result: { kind: string } | null) => void;
+    const injector = Injector.create({ providers: [] });
+    const formGroup = form(
+      { country: field('Switzerland') },
+      [asyncValidator(({ abortSignal: currentSignal }) => {
+        abortSignal = currentSignal;
+        return new Promise((resolve) => { resolveValidation = resolve; });
+      })],
+      { injector },
+    );
+
+    await Promise.resolve();
+    expect(formGroup.api.pending()).toBe(true);
+
+    injector.destroy();
+    expect(abortSignal?.aborted).toBe(true);
+    expect(formGroup.api.pending()).toBe(false);
+
+    resolveValidation({ kind: 'lateError' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(formGroup.api.errors()).toEqual([]);
   });
 
   it('restarts its debounced asynchronous validation when a descendant changes', async () => {
