@@ -728,6 +728,7 @@ describe('array', () => {
     });
 
     expect(names.pending()).toBe(true);
+    expect(names.validationStatus()).toBe('unknown');
     await Promise.resolve();
     await Promise.resolve();
     expect(names.valid()).toBe(true);
@@ -802,5 +803,97 @@ describe('array', () => {
     expect(profile.sons.at(0)!.name.path()).toEqual(['sons', '0', 'name']);
     expect(profile.sons.at(0)!.aliases.at(0)!.path()).toEqual(['sons', '0', 'aliases', '0']);
     expect(profile.sons.at(0)!.name.form()).toBe(profile);
+  });
+
+  it('patches existing indexes and warns for indexes outside the current structure', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const names = array(field(''), ['Mono']);
+
+    names.patch(['Lia', 'ignored']);
+
+    expect(names()).toEqual(['Lia']);
+    expect(warning).toHaveBeenCalledWith('array: unknown index 1 ignored on patch');
+    warning.mockRestore();
+  });
+
+  it('replaces validators and exposes required metadata and required errors', () => {
+    const names = array(field(''), { validators: [required] });
+
+    expect(names.required()).toBe(true);
+
+    names.setValidators([() => ({ kind: 'required' })]);
+    expect(names.required()).toBe(true);
+    expect(names.getError('required')).toMatchObject({ kind: 'required' });
+    names.setValidators([]);
+    expect(names.required()).toBe(false);
+  });
+
+  it('resets current items without replacing their values or identities', () => {
+    const names = array(field(''), ['Mono']);
+    const item = names[0]!;
+    item.setControlValue('Lia');
+    item.markAsTouched();
+
+    names.reset();
+
+    expect(names[0]).toBe(item);
+    expect(names()).toEqual(['Lia']);
+    expect(item.pristine()).toBe(true);
+    expect(item.untouched()).toBe(true);
+  });
+
+  it('treats moving an item to its current index and clearing an empty array as no-ops', () => {
+    const names = array(field(''), ['Mono']);
+    const item = names[0];
+
+    names.move(0, 0);
+    expect(names[0]).toBe(item);
+    names.clear();
+    names.clear();
+    expect(names()).toEqual([]);
+  });
+
+  it('rejects duplicate keys already present in current tracked items', () => {
+    const names = array(
+      { id: field('', { nullable: false }) },
+      [{ id: 'one' }, { id: 'two' }],
+      { trackBy: (value) => value.id },
+    );
+    names[1]!.id.set('one');
+
+    expect(() => names.set([{ id: 'one' }]))
+      .toThrow('array: duplicate trackBy key one in current items');
+  });
+
+  it('allows ordinary function properties while keeping numeric properties readonly', () => {
+    const names = array(field(''), ['Mono']);
+    (names as any).label = 'names';
+    expect((names as any).label).toBe('names');
+    expect('label' in names).toBe(true);
+    expect(delete (names as any).label).toBe(true);
+    expect('label' in names).toBe(false);
+    expect((names as any)[Number.MAX_SAFE_INTEGER + 1]).toBeUndefined();
+  });
+
+  it('toggles its own readonly and hidden state', () => {
+    const names = array(field(''), ['Mono']);
+
+    names.markAsReadonly();
+    expect(names.readonly()).toBe(true);
+    names.markAsWritable();
+    expect(names.writable()).toBe(true);
+    names.hide();
+    expect(names.hidden()).toBe(true);
+    names.show();
+    expect(names.visible()).toBe(true);
+  });
+
+  it('clones a form node used directly as its item template', () => {
+    const template = form({ name: field('') });
+    const people = array(template, 2);
+
+    expect(people()).toEqual([{ name: '' }, { name: '' }]);
+    expect(people[0]).not.toBe(template);
+    expect(people[0]).not.toBe(people[1]);
   });
 });
