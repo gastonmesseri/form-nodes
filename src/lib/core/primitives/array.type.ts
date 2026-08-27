@@ -118,7 +118,31 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   push(...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
   insert(index: number, ...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
   removeAt(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
+  /** Moves the item one position toward the start. The first item remains in place. */
+  moveUp(index: number): void;
+  /** Moves the item one position toward the end. The last item remains in place. */
+  moveDown(index: number): void;
+  /**
+   * Moves an item from `fromIndex` to `toIndex`, shifting the intervening items by one position.
+   *
+   * The moved node retains its identity, interaction state, validation state, and pending work.
+   * Its path and the paths of affected siblings update to reflect their new indexes. Moving an
+   * item to its current index is a no-op. Both indexes must identify existing items.
+   *
+   * @example
+   * `items.move(3, 1)` moves the fourth item into the second position.
+   */
   move(fromIndex: number, toIndex: number): void;
+  /**
+   * Exchanges two item positions without recreating either node.
+   *
+   * Both nodes retain their identity and state, while their paths update to their new indexes.
+   * Passing the same index twice is a no-op. Both indexes must identify existing items.
+   *
+   * @example
+   * `items.swap(0, 2)` exchanges the first and third items.
+   */
+  swap(firstIndex: number, secondIndex: number): void;
   clear(): void;
   set(value: ArraySet<TItem>): void;
   /** Computes and sets the complete array value using the configured index or trackBy reconciliation. */

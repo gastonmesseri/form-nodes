@@ -49,6 +49,10 @@ type _MappedNames = Expect<Equal<ReturnType<typeof names.map<string | null>>, (s
 
 people.push({ id: 'two', name: 'Daniel', age: 35 });
 people.insert(0, { id: 'zero', name: null, age: null });
+people.moveUp(1);
+people.moveDown(0);
+people.move(0, 1);
+people.swap(0, 1);
 people.set([{ id: 'three', name: 'Ada', age: 37 }]);
 people.patch([{ name: 'Grace' }]);
 people.update((value) => [...value, { id: 'four', name: null, age: null }]);

@@ -1150,7 +1150,7 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 - `items()` returns the current readonly node array.
 - `at(index)` returns one typed item or `undefined`.
 - Numeric property access such as `sons[0]` returns the same typed node as `sons.at(0)` while the array node remains callable.
-- Numeric properties are readonly. Structure must be changed through `push()`, `insert()`, `removeAt()`, `move()`, `clear()`, `set()`, or `reset()`.
+- Numeric properties are readonly. Structure must be changed through `push()`, `insert()`, `removeAt()`, `moveUp()`, `moveDown()`, `move()`, `swap()`, `clear()`, `set()`, or `reset()`.
 - `forEach()` iterates item nodes and receives `(item, index, arrayNode)` like the native array method.
 - Array nodes are iterable, so `for...of`, spread, and `Array.from()` also produce item nodes rather than item values.
 - Angular templates can iterate an array node directly with `@for (item of items; track item)`. Tracking the node preserves the rendered DOM and its `[formNode]` binding across structural `move()` operations; `push()` and `removeAt()` add and remove the corresponding views.
@@ -1211,7 +1211,7 @@ sons.clear();
 - `push()` and `insert()` without a value preserve the defaults created by the factory.
 - Passing a value initializes the fresh item through reset, so the item itself starts pristine and untouched.
 - Structural mutations are programmatic updates and preserve the array's current dirty state. A future control binding must call `markAsDirty()` when the same operation originates from user interaction.
-- `move()` preserves the exact node instance and all of its state; it only changes item order and paths.
+- `move()`, `moveUp()`, `moveDown()`, and `swap()` preserve the exact node instances and all of their state; they only change item order and paths. `move()` removes one item and inserts it at the destination while shifting the intervening items. `swap()` directly exchanges two positions. `moveUp(0)`, `moveDown(lastIndex)`, moving to the current index, and swapping an index with itself are no-ops, while an index that does not identify an item throws `RangeError`.
 - `removeAt()` and `clear()` detach removed nodes from the tree. A removed node retained by application code remains usable independently: its parent and path are cleared, inherited state is removed, and subsequent value, validation, dirty, or touched changes do not affect the former array.
 - Invalid insertion and movement indexes throw `RangeError`. `removeAt()` returns `undefined` for a missing index.
 
