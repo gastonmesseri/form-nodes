@@ -22,4 +22,16 @@ describe('maxDate', () => {
     expect(maxDate(() => undefined)(context(middle))).toBeNull();
     expect(maxDate(new Date(Number.NaN))(context(middle))).toBeNull();
   });
+
+  it('parses static and reactive ISO calendar-date strings', () => {
+    const maximum = signal<string | undefined>('2026-08-24');
+    const validator = maxDate(() => maximum());
+
+    expect(validator(context(new Date('2026-08-25T00:00:00.000Z')))).toMatchObject({
+      maxDate: new Date('2026-08-24T00:00:00.000Z'),
+    });
+
+    maximum.set(undefined);
+    expect(validator(context(new Date('2026-08-25T00:00:00.000Z')))).toBeNull();
+  });
 });

@@ -21,9 +21,35 @@ const validateRequired = (
   return { kind: 'required', message: message ?? defaultValidatorMessages.required() };
 };
 
-/** Creates a required validator with custom options. */
+/**
+ * Creates a required validator with an optional custom message.
+ *
+ * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. Empty arrays, sets, maps,
+ * and objects are considered present; combine `required` with `minLength(1)` when an aggregate
+ * must contain an item. A failure produces `{ kind: 'required', message }`.
+ *
+ * @example
+ * ```ts
+ * field('', [required({ message: 'Enter your name' })]);
+ * ```
+ *
+ * @param options Optional custom validation message. Omitting `message` uses the default.
+ */
 export function required(options: RequiredOptions): Validator<unknown>;
-/** Validates a value when the function is passed directly in a validators array. */
+/**
+ * Validates required presence when passed directly in a validators array.
+ *
+ * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. Empty arrays, sets, maps,
+ * and objects are considered present. A failure produces `{ kind: 'required', message }` using
+ * the default message.
+ *
+ * @example
+ * ```ts
+ * field('', [required]);
+ * ```
+ *
+ * @param context Reactive field context supplied by the validation pipeline.
+ */
 export function required(context: FieldContext<unknown>): ValidationResult;
 export function required(
   contextOrOptions: FieldContext<unknown> | RequiredOptions,

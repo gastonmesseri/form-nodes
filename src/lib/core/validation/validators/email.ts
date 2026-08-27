@@ -14,9 +14,33 @@ const validateEmail = ({ value }: FieldContext<string | null>, message?: string)
     : { kind: 'email', message: message ?? defaultValidatorMessages.email() };
 };
 
-/** Creates an email validator with custom options. */
+/**
+ * Creates an email-format validator with an optional custom message.
+ *
+ * `null` and `''` pass so this validator can be composed with `required`. Non-empty strings use
+ * Angular's standard email-address format. A failure produces `{ kind: 'email', message }`.
+ *
+ * @example
+ * ```ts
+ * field('', [email({ message: 'Enter a valid work email' })]);
+ * ```
+ *
+ * @param options Optional custom validation message. Omitting `message` uses the default.
+ */
 export function email(options: ValidatorOptions): Validator<string | null>;
-/** Validates a value when the function is passed directly in a validators array. */
+/**
+ * Validates email format when passed directly in a validators array.
+ *
+ * `null` and `''` pass so this validator can be composed with `required`. A failure produces
+ * `{ kind: 'email', message }` using the default message.
+ *
+ * @example
+ * ```ts
+ * field('', [required, email]);
+ * ```
+ *
+ * @param context Reactive field context supplied by the validation pipeline.
+ */
 export function email(context: FieldContext<string | null>): ValidationResult;
 export function email(
   contextOrOptions: FieldContext<string | null> | ValidatorOptions,

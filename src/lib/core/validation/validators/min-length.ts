@@ -1,14 +1,33 @@
 import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
 import { markValidatorMetadata } from '../validator-metadata';
-import { MIN_LENGTH_METADATA, type ConstraintSource } from '../constraint-metadata';
+import { MIN_LENGTH_METADATA } from '../constraint-metadata';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 import { defaultValidatorMessages } from './default-validator-messages';
 import type { ValidatorOptions } from './validator-options';
 
-/** Requires a non-empty value whose length or size meets a static or reactive minimum. */
+/**
+ * Requires a non-empty value's numeric `length` or `size` to meet a minimum.
+ *
+ * This supports strings, arrays, sets, maps, and other values with a numeric `length` or `size`.
+ * `null` and `''` pass so this validator can be composed with `required`; an empty array or set is
+ * validated normally. A reactive constraint may return `undefined` to disable itself temporarily.
+ * A failure produces `{ kind: 'minLength', minLength, actual, message }`, where `actual` is the
+ * observed length or size.
+ *
+ * @reactive Tracks signals read by the minimum source and revalidates when they change.
+ *
+ * @example
+ * ```ts
+ * field('', [required, minLength(3)]);
+ * array(field(''), [], [minLength(() => minimumItems())]);
+ * ```
+ *
+ * @param minimum Static minimum length or size, or a reactive function returning it.
+ * @param options Optional custom validation message.
+ */
 export const minLength = (
-  minimum: ConstraintSource<number>,
+  minimum: number | (() => number | undefined),
   options?: ValidatorOptions,
 ): Validator<ValueWithLengthOrSize | null> => {
   return markValidatorMetadata(({ value }) => {

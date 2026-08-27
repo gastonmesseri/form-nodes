@@ -22,4 +22,16 @@ describe('minDate', () => {
     expect(minDate(() => undefined)(context(middle))).toBeNull();
     expect(minDate(new Date(Number.NaN))(context(middle))).toBeNull();
   });
+
+  it('parses ISO calendar-date strings as UTC or local dates', () => {
+    const utcError = minDate('2026-08-24')(context(new Date('2026-08-23T23:00:00.000Z')));
+    const localMinimum = new Date(2026, 7, 24);
+    const localError = minDate('2026-08-24', { parseAs: 'local' })(context(new Date(localMinimum.getTime() - 1)));
+
+    expect(utcError).toMatchObject({ minDate: new Date('2026-08-24T00:00:00.000Z') });
+    expect(localError).toMatchObject({ minDate: localMinimum });
+    expect(minDate('2026-02-30')(context(new Date('2026-01-01')))).toBeNull();
+    expect(minDate('2026-02-30', { parseAs: 'local' })(context(new Date(2026, 0, 1)))).toBeNull();
+    expect(minDate('08/24/2026')(context(new Date('2026-01-01')))).toBeNull();
+  });
 });

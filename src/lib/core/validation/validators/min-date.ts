@@ -1,21 +1,52 @@
 import type { Validator } from '../validation.type';
 import { markValidatorMetadata } from '../validator-metadata';
-import { MIN_DATE_METADATA, type ConstraintSource } from '../constraint-metadata';
+import { MIN_DATE_METADATA } from '../constraint-metadata';
+import { parseDateConstraint } from './date-constraint';
 import { defaultValidatorMessages } from './default-validator-messages';
-import type { ValidatorOptions } from './validator-options';
 
-/** Requires a date on or after a static or reactive minimum date. */
+/**
+ * Requires a valid, non-empty date to be on or after a minimum date.
+ *
+ * `null` and invalid current dates pass so this validator can be composed with `required`. The
+ * minimum may be a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), or returned by a reactively
+ * tracked function. Strings are parsed as UTC by default; set `parseAs` to `'local'` to use local
+ * midnight. Returning `undefined`, an invalid `Date`, or an invalid string disables the constraint
+ * temporarily. A failure produces
+ * `{ kind: 'minDate', minDate, actual, message }` with the rejected `Date` as `actual`.
+ *
+ * @reactive Tracks signals read by the minimum source and revalidates when they change.
+ *
+ * @example
+ * ```ts
+ * field<Date>(null, [minDate(new Date('2026-01-01'))]);
+ * field<Date>(null, [minDate('2026-01-01')]);
+ * field<Date>(null, [minDate('2026-01-01', { parseAs: 'local' })]);
+ * field<Date>(null, [minDate(moment('2026-01-01').toDate())]);
+ * field<Date>(null, [minDate(() => bookingWindowStart())]);
+ * ```
+ *
+ * @param minimum Static minimum date or ISO calendar-date string, or a reactive function returning one.
+ * @param options Optional custom validation message and string parsing mode. `parseAs` defaults to `'utc'`.
+ */
 export const minDate = (
-  minimum: ConstraintSource<Date>,
-  options?: ValidatorOptions,
+  minimum: Date | string | (() => Date | string | undefined),
+  options?: { readonly message?: string; readonly parseAs?: 'utc' | 'local' },
 ): Validator<Date | null> => {
+  const parseAs = options?.parseAs ?? 'utc';
+  const normalizedMinimum = typeof minimum === 'function'
+    ? () => {
+      const value = minimum();
+      return value === undefined ? undefined : parseDateConstraint(value, parseAs);
+    }
+    : parseDateConstraint(minimum, parseAs);
+
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (currentValue === null || Number.isNaN(currentValue.getTime())) return null;
-    const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
+    const resolvedMinimum = typeof normalizedMinimum === 'function' ? normalizedMinimum() : normalizedMinimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum.getTime())) return null;
     return currentValue < resolvedMinimum
       ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.minDate(resolvedMinimum) }
       : null;
-  }, MIN_DATE_METADATA, minimum);
+  }, MIN_DATE_METADATA, normalizedMinimum);
 };

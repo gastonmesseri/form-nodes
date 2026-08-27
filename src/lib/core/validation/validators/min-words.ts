@@ -1,5 +1,4 @@
 import type { Validator } from '../validation.type';
-import type { ConstraintSource } from '../constraint-metadata';
 import { countWords } from './count-words';
 import { defaultValidatorMessages } from './default-validator-messages';
 import type { ValidatorOptions } from './validator-options';
@@ -9,18 +8,23 @@ import type { ValidatorOptions } from './validator-options';
  *
  * A word is a Unicode letter-or-number sequence that may contain internal apostrophes or hyphens.
  * Empty strings and `null` pass so this validator can be composed with `required`. A source
- * function is evaluated reactively and may return `undefined` to disable the constraint.
+ * function is evaluated reactively and may return `undefined` to disable the constraint. A
+ * failure produces `{ kind: 'minWords', minWords, actual, message }`, where `actual` is the
+ * observed word count.
+ *
+ * @reactive Tracks signals read by the minimum source and revalidates when they change.
  *
  * @example
  * ```ts
  * field('', [required, minWords(3)]);
+ * field('', [minWords(() => minimumWords(), { message: 'Add more detail' })]);
  * ```
  *
  * @param minimum Static minimum word count or a reactive function returning it.
  * @param options Optional custom validation message.
  */
 export const minWords = (
-  minimum: ConstraintSource<number>,
+  minimum: number | (() => number | undefined),
   options?: ValidatorOptions,
 ): Validator<string | null> => {
   return ({ value }) => {
