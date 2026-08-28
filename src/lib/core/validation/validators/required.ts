@@ -25,14 +25,17 @@ const validateRequired = (
 /**
  * Creates a required validator with an optional custom message.
  *
- * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. Empty arrays, sets, maps,
- * and objects are considered present; combine `required` with `minLength(1)` when an aggregate
- * must contain an item. A failure produces `{ kind: 'required', message }`.
+ * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. A failure produces
+ * `{ kind: 'required', message }`.
+ *
+ * ℹ️ `required` does not reject empty arrays, sets, maps, or objects. Combine it with
+ * `minLength(1)` when an aggregate must contain at least one item.
  *
  * @example
  * ```ts
  * field('', [required({ message: 'Enter your name' })]);
  * field('', [required({ message: () => translatedRequiredMessage() })]);
+ * array(field(''), [], [required, minLength(1)]);
  * ```
  *
  * @reactive Tracks signals read by a custom message function while validation is failing.
@@ -46,13 +49,16 @@ export function required(options: {
 /**
  * Validates required presence when passed directly in a validators array.
  *
- * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. Empty arrays, sets, maps,
- * and objects are considered present. A failure produces `{ kind: 'required', message }` using
- * the default message.
+ * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. A failure produces
+ * `{ kind: 'required', message }` using the default message.
+ *
+ * ℹ️ `required` does not reject empty arrays, sets, maps, or objects. Combine it with
+ * `minLength(1)` when an aggregate must contain at least one item.
  *
  * @example
  * ```ts
  * field('', [required]);
+ * array(field(''), [], [required, minLength(1)]);
  * ```
  *
  * @param context Reactive field context supplied by the validation pipeline.
