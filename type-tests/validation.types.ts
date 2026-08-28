@@ -1,4 +1,4 @@
-import { array, asyncValidator, between, configureGlobalValidatorMessages, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -26,6 +26,7 @@ field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);
 field<Date>(null, [minDate('2026-08-24'), maxDate(() => '2026-12-31', { parseAs: 'local' })]);
+field<Date>(null, [dateBetween('2026-01-01', () => '2026-12-31', { parseAs: 'local', message: 'Outside range' })]);
 
 const adult = validator<number | null>(({ value, api, field: targetField }) => {
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;
@@ -95,6 +96,10 @@ const betweenError = field(70, [between(18, 65)]).getError('between');
 const _betweenBounds: [number | undefined, number | undefined] = [betweenError?.min, betweenError?.max];
 void _betweenBounds;
 
+const dateBetweenError = field<Date>(new Date(), [dateBetween('2026-01-01', '2026-12-31')]).getError('dateBetween');
+const _dateBetweenBounds: [Date | undefined, Date | undefined] = [dateBetweenError?.minDate, dateBetweenError?.maxDate];
+void _dateBetweenBounds;
+
 const uniqueError = array(field(''), ['same', 'same'], [uniqueItems()]).getError('uniqueItems');
 const _duplicateIndexes: readonly number[] | undefined = uniqueError?.duplicateIndexes;
 void _duplicateIndexes;
@@ -154,6 +159,9 @@ field('', [uniqueItems]);
 
 // @ts-expect-error date strings only support explicit UTC or local parsing
 minDate('2026-08-24', { parseAs: 'browser' });
+
+// @ts-expect-error dateBetween strings only support explicit UTC or local parsing
+dateBetween('2026-01-01', '2026-12-31', { parseAs: 'browser' });
 
 // @ts-expect-error pattern options expose only the static or reactive message
 pattern(/^[a-z]+$/, { debounce: 300 });
