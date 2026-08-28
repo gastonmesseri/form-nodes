@@ -74,10 +74,16 @@ const usernameAvailable = asyncValidator({
 });
 ```
 
-With explicit `params`, the returned snapshot is compared shallowly with the previous one. A newly
-allocated object does not restart validation when its property values are unchanged. The
-`validate` callback runs untracked, so put every dependency in `params` rather than reading signals
-only after asynchronous work begins.
+With explicit `params`, the library compares the returned result with the previous one before
+starting another validation. A newly allocated object does not cause another request when all its
+first-level values remain equal. Changing a first-level value does; nested objects compare by
+reference rather than recursively. This makes object-literal params convenient while avoiding
+duplicate work for unrelated signal changes.
+
+The `validate` callback runs untracked, so put every dependency in `params` rather than reading
+signals only after asynchronous work begins. The
+[`asyncValidator()` reference](../reference/async-validator.md#explicit-parameters) includes a
+concrete example of which changes do and do not restart validation.
 
 Without `params`, signals read before the callback's first asynchronous boundary are discovered as
 dependencies automatically. Prefer `params` for reusable validators because it makes the service
@@ -106,4 +112,6 @@ Disabling, hiding, or marking a node readonly cancels its active async work. Ret
 interactive state starts validation again against the current committed value.
 
 See [Advanced behavior and edge cases](../advanced/behavior-details.md#asynchronous-scheduling-and-dependencies)
-for exact dependency, scheduling, ownership, and stale-result semantics.
+for exact dependency, scheduling, ownership, and stale-result semantics. The
+[`asyncValidator()` reference](../reference/async-validator.md) lists every signature, option, and
+context member.

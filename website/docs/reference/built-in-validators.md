@@ -385,3 +385,6 @@ Multiple minimum constraints expose the strictest, largest minimum; multiple max
 ## Tree shaking
 
 Validators are independent, side-effect-free exports. Consumer bundlers can remove validators and default messages that an application does not import; every validator remains available in the published package itself.
+
+For authoring application-specific rules, see the [custom validator reference](./custom-validators.md)
+and [`asyncValidator()` reference](./async-validator.md).
