@@ -9,8 +9,8 @@ Define a form by composing fields:
 ```ts
 import { email, field, form, minLength, required } from '@gem/ng-forms';
 
-const registration = form({
-  name: field('', [required, minLength(2)]),
+const myForm = form({
+  name: field('Unknown', [required, minLength(2)]),
   email: field('', [required, email]),
 });
 ```
@@ -18,49 +18,45 @@ const registration = form({
 Every node is callable. Calling it is the preferred way to read its committed value:
 
 ```ts
-registration.name(); // preferred field value read
-registration(); // preferred complete form value read
+myForm.name(); // 'Unknown'
+myForm.email(); // ''
+myForm(); // { name: 'Unknown', email: '' }
 ```
 
-The same values remain available through the explicit `value()` signal and `.api`:
+Validation state is exposed as signals too:
 
 ```ts
-registration.name.value();
-registration.name.api.value();
-registration.value();
-registration.api.value();
-
-registration.valid();
-registration.allErrors();
+myForm.valid(); // false because email is required
+myForm.allErrors();
 ```
 
 Update a field programmatically with `set()`:
 
 ```ts
-registration.name.set('Marco');
+myForm.name.set('Marco');
 ```
 
-Bind fields in an Angular template with `[formNode]`:
-
-```html
-<input [formNode]="registration.name" />
-<input type="email" [formNode]="registration.email" />
-```
-
-Import `FormNode` in the component or directive that owns the template:
+Import `FormNode` in the component that owns the form and keep the bindings next to their model:
 
 ```ts
 import { Component } from '@angular/core';
-import { FormNode, field, form, required } from '@gem/ng-forms';
+
+import { email, FormNode, field, form, minLength, required } from '@gem/ng-forms';
 
 @Component({
   selector: 'app-registration',
   imports: [FormNode],
-  templateUrl: './registration.html',
+  template: `
+    <input [formNode]="myForm.name" />
+    <input type="email" [formNode]="myForm.email" />
+
+    <p>Current name: {{ myForm.name() }}</p>
+  `,
 })
 export class RegistrationComponent {
-  readonly registration = form({
-    name: field('', [required]),
+  myForm = form({
+    name: field('Unknown', [required, minLength(2)]),
+    email: field('', [required, email]),
   });
 }
 ```
@@ -79,3 +75,7 @@ export class SharedModule {}
 ```
 
 Every NgModule or standalone component that imports `SharedModule` can then use `[formNode]` in its templates. Angular does not provide an application-wide import for template directives through `ApplicationConfig`; standalone components must import `FormNode` themselves, either directly or through a shared NgModule.
+
+When you are ready to see the same syntax at application scale, continue with the [complete form example](../examples/complex-form.md).
+The [executable first-form example](../examples/executable-examples.mdx#first-form) is compiled and
+run during documentation verification.

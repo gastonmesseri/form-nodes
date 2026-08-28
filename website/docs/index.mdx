@@ -19,20 +19,21 @@ import Link from '@docusaurus/Link';
     </p>
     <div className="docs-hero__actions">
       <Link className="button button--primary button--lg" to="/getting-started/installation">Get started</Link>
-      <Link className="button button--secondary button--lg" to="/getting-started/first-form">Build your first form</Link>
+      <Link className="button button--secondary button--lg" to="/tutorial">Follow the tutorial</Link>
     </div>
   </div>
   <div className="docs-hero__example" aria-label="Gem Forms example">
 
 ```ts
-const profile = form({
+const myForm = form({
   name: field('', [required]),
   age: field(23, [min(18)]),
 });
 
-profile.name.set('Ada');
-profile.valid(); // true
-profile(); // { name: 'Ada', age: 23 }
+myForm.name.set('Ada');
+myForm.valid(); // true
+myForm(); // { name: 'Ada', age: 23 }
+myForm.name(); // 'Ada'
 ```
 
   </div>
@@ -65,6 +66,10 @@ profile(); // { name: 'Ada', age: 23 }
   <Link className="docs-link-card" to="/guides/dynamic-arrays"><span className="docs-link-card__label">Repeat</span><strong>Manage dynamic arrays</strong><span>Stable identity, reconciliation, insertion, removal, movement, and patching.</span></Link>
   <Link className="docs-link-card" to="/guides/submission"><span className="docs-link-card__label">Submit</span><strong>Run submission workflows</strong><span>Validation policy, native forms, pending actions, reset, and focus.</span></Link>
   <Link className="docs-link-card" to="/guides/validator-messages"><span className="docs-link-card__label">Localize</span><strong>Configure messages once</strong><span>Reactive messages at global, provider, form-tree, and validator scope.</span></Link>
+  <Link className="docs-link-card" to="/examples/complex-form"><span className="docs-link-card__label">Scale</span><strong>Explore a complete form</strong><span>A large Angular form with nested branches, dynamic arrays, validation, state, and submission.</span></Link>
+  <Link className="docs-link-card" to="/reference/built-in-validators"><span className="docs-link-card__label">Reference</span><strong>Browse every validator</strong><span>Concrete signatures, examples, error shapes, empty values, and reactive constraints.</span></Link>
+  <Link className="docs-link-card" to="/tutorial"><span className="docs-link-card__label">Tutorial</span><strong>Build a form progressively</strong><span>Start with a model and add Angular controls, validation, nesting, arrays, async work, and submission.</span></Link>
+  <Link className="docs-link-card" to="/cookbook"><span className="docs-link-card__label">Cookbook</span><strong>Solve a common form problem</strong><span>Focused recipes for confirmation fields, conditional UI, API data, arrays, i18n, and custom controls.</span></Link>
 </div>
 
 <section className="docs-next-step">

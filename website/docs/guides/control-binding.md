@@ -4,6 +4,9 @@ title: Control binding
 
 # Control binding
 
+The [type-checked Angular example](../examples/executable-examples.mdx#angular-binding-and-viewchild)
+covers the standalone directive import, `[formNode]`, `FormNode`, and `viewChild.required()`.
+
 Import `FormNode` and bind a node with `[formNode]`:
 
 ```ts
@@ -15,11 +18,16 @@ import { FormNode, field } from '@gem/ng-forms';
   template: `<input [formNode]="name" />`,
 })
 export class Editor {
-  readonly name = field('');
+  name = field('');
 }
 ```
 
-It supports native `input`, `select`, and `textarea` elements, Angular `ControlValueAccessor` components, and signal custom controls. Native controls bind scalar `field()` nodes; aggregate forms and arrays require a custom control that represents their complete value.
+It supports native `input`, `select`, and `textarea` elements, Angular `ControlValueAccessor`
+components, `value = model<T>()` controls, `checked = model<boolean>()` checkbox controls, and
+equivalent input/output pairs. Native controls bind scalar `field()` nodes; aggregate forms and
+arrays require a custom control that represents their complete value. See
+[Custom controls](./custom-controls.md#angular-api-compatibility) for the complete compatibility
+matrix and integration boundaries.
 
 ## Native controls
 
@@ -67,7 +75,7 @@ import { FormNode, field } from '@gem/ng-forms';
   template: `<input #nameBinding="formNode" [formNode]="name" />`,
 })
 export class Editor {
-  readonly name = field('');
+  name = field('');
   readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
 
   focusName() {
@@ -84,7 +92,7 @@ Every node also exposes `focus(options?)`. A field focuses its first binding in 
 
 ```ts
 profile.name.focus();
-profile.api.focus();
+profile.focus();
 ```
 
 ## Status classes

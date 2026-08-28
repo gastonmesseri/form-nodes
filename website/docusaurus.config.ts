@@ -32,6 +32,22 @@ const config: Config = {
       } satisfies Options,
     ],
   ],
+  themes: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        docsRouteBasePath: '/',
+        explicitSearchResultPath: true,
+        hashed: 'filename',
+        highlightSearchTermsOnTargetPage: true,
+        indexBlog: false,
+        indexDocs: true,
+        indexPages: false,
+        language: 'en',
+        searchBarPosition: 'right',
+      },
+    ],
+  ],
   themeConfig: {
     colorMode: {
       respectPrefersColorScheme: true,

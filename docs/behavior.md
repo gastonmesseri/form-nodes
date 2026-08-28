@@ -24,7 +24,7 @@ const profile = form({
   readonly: field(false),
 });
 
-profile.readonly(); // value of the nested field
+profile.readonly(); // false
 profile.api.readonly(); // readonly state of the form
 ```
 
@@ -46,8 +46,8 @@ As with every direct form API member, a child named `children` takes precedence 
 ```ts
 const profile = form({ children: field('value') });
 
-profile.children(); // value of the child field
-profile.api.children.children(); // value of the same child field
+profile.children(); // 'value'
+profile.api.children.children(); // 'value'
 ```
 
 Native function members such as `name`, `apply`, `arguments`, `call`, and `length` are hidden from the public `field()` and `form()` types. If a form declares a child with one of those names, that child is intentionally exposed instead and takes precedence in both TypeScript and runtime behavior:
@@ -155,9 +155,9 @@ In the separate-argument form, the validator array is the second argument and st
 A field is callable and returns its current value:
 
 ```ts
-name();
-name.value();
-name.api.value();
+name(); // ''
+name.value(); // ''
+name.api.value(); // ''
 ```
 
 These reads refer to the same value. Most field state and actions are exposed both on the callable field and under `field.api`. `patch()` is intentionally available only under `field.api`; for a leaf field it behaves exactly like `set()`.
@@ -176,19 +176,16 @@ const profile = form({
 The preferred signature accepts a node definition followed by an options object:
 
 ```ts
-const profile = form(
-  {
-    city: field('Moscow'),
-    billingCity: field('Zurich'),
-  },
-  {
-      validators: [sameCity],
-      injector,
-    disabled: false,
-    readonly: false,
-    hidden: false,
-  },
-);
+const profile = form({
+  city: field('Moscow'),
+  billingCity: field('Zurich'),
+}, {
+  validators: [sameCity],
+  injector,
+  disabled: false,
+  readonly: false,
+  hidden: false,
+});
 ```
 
 All options are optional, so form state can be configured without supplying validators. Validators and state options can alternatively be passed as separate arguments:
@@ -204,8 +201,8 @@ A definition can contain fields, explicit nested forms, or shorthand nested obje
 A form is callable and returns its aggregated value:
 
 ```ts
-profile();
-profile.api.value();
+profile(); // { city: 'Moscow', billingCity: 'Zurich' }
+profile.api.value(); // { city: 'Moscow', billingCity: 'Zurich' }
 ```
 
 The callable and `value()` expose the fully materialized object shape in TypeScript tooling instead of an internal `FormValue<...>` alias. Nested forms and arrays are expanded recursively in IntelliSense.
@@ -217,8 +214,8 @@ The key `api` is a valid child name and that child takes precedence over the ali
 ```ts
 const profile = form({ api: field('domain value') });
 
-profile.api(); // value of the child named api
-profile.$api.value(); // collision-safe access to the form API
+profile.api(); // 'domain value'
+profile.$api.value(); // { api: 'domain value' }
 ```
 
 ## Nested forms
@@ -250,9 +247,9 @@ Shorthand nesting works at any depth. Every shorthand object is normalized to an
 Both forms provide the same child access and value shape:
 
 ```ts
-profile.address.city();
-profile.address.api.value();
-profile.api.value();
+profile.address.city(); // 'Moscow'
+profile.address.api.value(); // { city: 'Moscow', country: 'Russia' }
+profile.api.value(); // { address: { city: 'Moscow', country: 'Russia' } }
 ```
 
 Changes to any descendant are reflected reactively in every ancestor value.
@@ -361,17 +358,14 @@ own `debounce` takes precedence, and nested aggregate nodes can establish a diff
 their subtrees. The nearest configured node wins:
 
 ```ts
-const profile = form(
-  {
-    name: field(''),
-    address: {
-      city: field('', { debounce: 100 }),
-    },
+const profile = form({
+  name: field(''),
+  address: {
+    city: field('', { debounce: 100 }),
   },
-  {
-    debounce: 300,
-  },
-);
+}, {
+  debounce: 300,
+});
 ```
 
 Here, `name` inherits 300 ms and `address.city` overrides it with 100 ms. An explicit zero or

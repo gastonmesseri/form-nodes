@@ -18,9 +18,9 @@ Nodes start untouched. Value changes do not imply touch.
 - `reset()` is the recursive operation that clears touch throughout a subtree.
 
 ```ts
-profile.api.markAsTouched({ skipDescendants: true });
+profile.markAsTouched({ skipDescendants: true });
 profile.name.touched(); // false
-profile.api.touched(); // true
+profile.touched(); // true
 ```
 
 ## Dirty state
@@ -74,7 +74,7 @@ Disabled, readonly, and hidden propagate downward, never upward:
 `disabledReasons()` identifies every cause in outermost-to-innermost order:
 
 ```ts
-profile.api.disable('Editing is temporarily unavailable');
+profile.disable('Editing is temporarily unavailable');
 
 profile.name.disabledReasons();
 // [{ sourceNode: profile, message: 'Editing is temporarily unavailable' }, ...]

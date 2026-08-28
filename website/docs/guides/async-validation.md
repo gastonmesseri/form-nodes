@@ -9,16 +9,18 @@ Wrap asynchronous validators explicitly with `asyncValidator()`. This lets the n
 ```ts
 import { asyncValidator, field, required } from '@gem/ng-forms';
 
-const username = field('', [
-  required,
-  asyncValidator(async ({ value, abortSignal }) => {
-    const available = await checkUsername(value(), abortSignal);
+const myForm = form({
+  username: field('', [
+    required,
+    asyncValidator(async ({ value, abortSignal }) => {
+      const available = await checkUsername(value(), abortSignal);
 
-    return available
-      ? null
-      : { kind: 'usernameTaken', message: 'This username is already in use.' };
-  }, { debounce: 300 }),
-]);
+      return available
+        ? null
+        : { kind: 'usernameTaken', message: 'This username is already in use.' };
+    }, { debounce: 300 }),
+  ]),
+});
 ```
 
 The callback may return a promise, an Observable-like value, a validation result, or a collection of those results.

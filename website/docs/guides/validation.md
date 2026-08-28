@@ -4,16 +4,20 @@ title: Validation
 
 # Validation
 
+The [executable validation example](../examples/executable-examples.mdx#validation-ownership) checks
+field and form error ownership through both failing and valid states.
+
 Pass validators in a node's options or as the positional validator argument:
 
 ```ts
 import { field, minLength, required } from '@gem/ng-forms';
 
-const name = field('', {
-  validators: [required, minLength(2)],
+const myForm = form({
+  name: field('', {
+    validators: [required, minLength(2)],
+  }),
+  alias: field('', [required]),
 });
-
-const alias = field('', [required]);
 ```
 
 Validators may be a single validator or an array. `null` and `undefined` array entries are ignored.
@@ -32,8 +36,8 @@ name.getError('minLength');
 `errors()` contains errors owned directly by the current node. `allErrors()` includes the complete descendant subtree, which matters for forms and arrays:
 
 ```ts
-profile.api.errors(); // profile-level errors only
-profile.api.allErrors(); // profile and descendant errors
+profile.errors(); // profile-level errors only
+profile.allErrors(); // profile and descendant errors
 ```
 
 Every exposed error contains `kind` and `targetNode`; built-in errors also contain a default or configured `message` and constraint-specific data. `getError()` infers known built-in error data from its kind.
@@ -78,24 +82,24 @@ const age = field<number>(null, [({ value }) => {
 Attach a validator to a form to validate its aggregated value:
 
 ```ts
-const passwords = form(
-  {
-    password: field(''),
-    confirmation: field(''),
-  },
-  {
-    validators: [({ value }) => value().password === value().confirmation
-      ? null
-      : { kind: 'passwordMismatch', message: 'Passwords must match.' }],
-  },
-);
+const passwords = form({
+  password: field(''),
+  confirmation: field(''),
+}, {
+  validators: [({ value }) => value().password === value().confirmation
+    ? null
+    : { kind: 'passwordMismatch', message: 'Passwords must match.' }],
+});
 ```
 
 For a field-level confirmation rule, `equalTo()` accepts a reactive source:
 
 ```ts
 const password = field('');
-const confirmation = field('', [equalTo(() => password())]);
+const myForm = form({
+  password,
+  confirmation: field('', [equalTo(() => password())]),
+});
 ```
 
 ## Conditional validators
@@ -105,8 +109,10 @@ A validator may return another synchronous validator or an array of validators. 
 ```ts
 const requireName = signal(false);
 
-const name = field('', {
-  validators: [() => requireName() ? [required, minLength(2)] : null],
+const myForm = form({
+  name: field('', {
+    validators: [() => requireName() ? [required, minLength(2)] : null],
+  }),
 });
 ```
 

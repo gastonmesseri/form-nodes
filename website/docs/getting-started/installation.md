@@ -7,7 +7,7 @@ title: Installation
 Install Gem Forms alongside Angular 22:
 
 ```bash
-npm install @gem/ng-forms
+npm install --save @gem/ng-forms
 ```
 
 Import only the primitives and validators that your application uses:

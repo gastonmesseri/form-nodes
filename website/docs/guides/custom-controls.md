@@ -6,6 +6,31 @@ title: Custom controls
 
 `[formNode]` works with standard Angular `ControlValueAccessor` components and signal-based controls.
 
+## Angular API compatibility
+
+Choose the Angular contract that already fits your control. Conventional components require no
+Gem Forms interface, base class, or registration provider.
+
+| Angular control API | Recognized shape | Binding support |
+| --- | --- | --- |
+| Signal Forms value control | `value = model<T>()` | Fields, forms, and arrays |
+| Signal Forms checkbox control | `checked = model<boolean>()` | Boolean fields |
+| Signal input and output pair | `value` + `valueChange`, or `checked` + `checkedChange` | Fields, forms, and arrays |
+| Classic input and output pair | `@Input() value` + `@Output() valueChange` | Fields, forms, and arrays |
+| Reactive Forms / Forms API | `ControlValueAccessor` through `NG_VALUE_ACCESSOR` | Fields and compatible aggregate values |
+| Native form element | `input`, `select`, or `textarea` | Scalar fields |
+
+The `value` and `checked` contracts follow Angular's `FormValueControl<T>` and
+`FormCheckboxControl` shapes. A component does not have to declare that it implements those types;
+`[formNode]` discovers the public Angular inputs and outputs from component metadata.
+
+Binding precedence is deterministic when a component exposes more than one mechanism:
+
+1. `ControlValueAccessor`
+2. An explicit `provideFormNodeControl()` registration
+3. An automatically discovered signal or input/output control
+4. Native element handling
+
 ## Signal model controls
 
 The zero-configuration approach is a component exposing `value = model<T>()` or, for a checkbox, `checked = model<boolean>()`:
@@ -33,7 +58,62 @@ export class Rating {
 
 Separate `value`/`valueChange` or `checked`/`checkedChange` pairs are also supported. A separate input must have a default value rather than be required.
 
+For example, the equivalent value contract can be written without `model()`:
+
+```ts
+import { Component, input, output } from '@angular/core';
+
+@Component({
+  selector: 'app-rating',
+  template: `...`,
+})
+export class Rating {
+  readonly value = input<number | null>(null);
+  readonly valueChange = output<number | null>();
+
+  choose(value: number) {
+    this.valueChange.emit(value);
+  }
+}
+```
+
+Do not make a separate `value` or `checked` input required. Angular's compiler has a special rule
+that lets its own `[formField]` directive satisfy a required model input, but third-party binding
+directives cannot participate in that rule. Give the input or model a sensible initial value; the
+bound node replaces it during initialization.
+
+### Aggregate value models
+
+A `value = model<T>()` control may bind directly to a `form()` or `array()` when `T` is the complete
+aggregate value:
+
+```ts
+@Component({
+  selector: 'app-address-editor',
+  template: `...`,
+})
+export class AddressEditor {
+  readonly value = model({ city: '', country: '' });
+}
+```
+
+```html
+<app-address-editor [formNode]="myForm.address" />
+```
+
+A value emitted by the control marks the directly bound aggregate node dirty and distributes or
+reconciles the complete value through its children. The descendants are not individually marked
+dirty solely because the aggregate control changed them.
+
 Optional standard state inputs—such as `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `min`, `max`, `name`, `pending`, `readonly`, `required`, and `touched`—receive node state automatically. Optional `touch`, `focus()`, and `reset()` hooks integrate with interaction and reset behavior.
+
+The complete recognized state surface is `errors`, `disabled`, `disabledReasons`, `dirty`,
+`hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`,
+`readonly`, `required`, and `touched`.
+
+Declare only the inputs the component uses. Input transforms are preserved. The optional
+`touch` output marks the node touched; `focus(options?)` is used by `node.focus()`, and `reset()` is
+called during the binding reset lifecycle.
 
 ## Explicit registration
 
@@ -54,7 +134,27 @@ A library-specific optional `node` signal may receive the exact bound node when 
 
 ## ControlValueAccessor
 
-Existing CVA controls work without changes. If several accessors match, selection follows Angular's precedence: custom, specialized built-in, then default. Synchronous `NG_VALIDATORS` errors join the node's validation state. Asynchronous CVA validators are not adapted; use the node's [async validation](./async-validation.md) pipeline instead.
+Existing CVA controls work without changes:
+
+```html
+<app-existing-date-picker [formNode]="myForm.appointment" />
+```
+
+`[formNode]` calls `writeValue()`, registers change and touch callbacks, and propagates disabled
+state through the normal CVA contract. It also provides a lightweight `NgControl` view for
+components—such as Angular Material-style controls—that inspect their injected control.
+
+If several accessors match, selection follows Angular's precedence: custom, specialized built-in,
+then default. Reentrant change callbacks fired from inside `writeValue()` are ignored so legacy
+controls cannot create a feedback loop or mark a programmatic update dirty.
+
+Synchronous validators registered through `NG_VALIDATORS` join the node's validation state, and
+`registerOnValidatorChange()` triggers reevaluation. `NG_ASYNC_VALIDATORS` are intentionally not
+adapted; use the node's [async validation](./async-validation.md) pipeline, which owns pending state,
+cancellation, debounce, and stale-result handling.
+
+A CVA component can also declare the standard signal state inputs listed above. Those inputs receive
+the same node state as a signal-model control.
 
 ## Wrapper components
 
@@ -77,6 +177,16 @@ export class TextField {
 
 The wrapper is detected as pass-through, so only the inner control creates a binding. A directive or host directive that consumes or re-exports `formNode` must register `provideFormNodePassThrough()` because Angular does not expose equivalent public runtime input reflection for directives.
 
-## Binding precedence
+## Compatibility boundaries
 
-When several integration mechanisms are available, `[formNode]` chooses a matching CVA first, then an explicitly provided signal control, then an automatically discovered signal control, and finally native-control handling.
+- Automatic signal-control discovery applies to Angular components. A control implemented as a
+  directive or host directive should use `provideFormNodeControl()`.
+- Native elements bind scalar fields. Use a value-model or CVA component when one control edits a
+  complete object or array.
+- State inputs declared by a component take precedence over same-named native host properties.
+- Custom-element hosts do not receive synthetic native properties such as `disabled`, `required`,
+  `readonly`, `name`, `min`, or `max` unless the component declares the corresponding input.
+- Initial state is rendered during server rendering, and browser behavior reconnects during
+  hydration.
+
+See [Control binding](./control-binding.md) for native element behavior and state propagation.

@@ -61,16 +61,13 @@ Global configuration is shared module state. Do not mutate it per request during
 ## Form-tree configuration
 
 ```ts
-const checkout = form(
-  {
-    quantity: field(0, [min(1)]),
-  },
-  {
-    validatorMessages: () => ({
-      min: ({ min }) => checkoutTranslations().minimumQuantity(min),
-    }),
-  },
-);
+const checkout = form({
+  quantity: field(0, [min(1)]),
+}, {
+  validatorMessages: () => ({
+    min: ({ min }) => checkoutTranslations().minimumQuantity(min),
+  }),
+});
 ```
 
 The catalog applies to that form or array and all descendants. A nested catalog overrides only the keys it defines.
@@ -78,13 +75,15 @@ The catalog applies to that form or array and all descendants. A nested catalog 
 ## Validator-local messages
 
 ```ts
-const age = field(16, [
-  min(18, {
-    message: () => locale() === 'es'
-      ? 'Debes ser mayor de edad.'
-      : 'You must be an adult.',
-  }),
-]);
+const myForm = form({
+  age: field(16, [
+    min(18, {
+      message: () => locale() === 'es'
+        ? 'Debes ser mayor de edad.'
+        : 'You must be an adult.',
+    }),
+  ]),
+});
 ```
 
 Local message functions close over their dependencies and take no parameters. Catalog callbacks receive strongly typed constraint data; IntelliSense exposes the available keys and parameters.

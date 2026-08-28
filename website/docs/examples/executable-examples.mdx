@@ -1,0 +1,103 @@
+---
+title: Executable examples
+---
+
+import CodeBlock from '@theme/CodeBlock';
+
+import angularBindingSource from '!!raw-loader!../../examples/angular-binding.typecheck.ts';
+import arrayOperationsSource from '!!raw-loader!../../examples/array-operations.example.ts';
+import builtInValidatorsSource from '!!raw-loader!../../examples/built-in-validators.typecheck.ts';
+import choosingPrimitivesSource from '!!raw-loader!../../examples/choosing-primitives.example.ts';
+import firstFormSource from '!!raw-loader!../../examples/first-form.example.ts';
+import submissionSource from '!!raw-loader!../../examples/submission.example.ts';
+import validationSource from '!!raw-loader!../../examples/validation.example.ts';
+
+# Executable and type-checked examples
+
+The examples on this page are rendered directly from real TypeScript files. The documentation
+verification compiles every file under strict settings. Files ending in `.example.ts` are also
+bundled and executed, including their assertions; `.typecheck.ts` files cover Angular declarations
+that require the framework runtime. Angular's compiler type-checks their inline templates as part
+of the same verification.
+
+These are the canonical, complete versions of the shorter snippets used throughout the guides.
+
+## First form
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="first-form.example.ts">{firstFormSource}</CodeBlock>
+
+This verifies value inference, required validation, programmatic updates, aggregate validity, and
+the final form value. Start with [Your first form](../getting-started/first-form.md) for the guided
+version.
+
+## Choosing primitives
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="choosing-primitives.example.ts">{choosingPrimitivesSource}</CodeBlock>
+
+The example deliberately combines an atomic object field, a nested form, and a dynamic array. See
+[Choosing a primitive](../guides/choosing-a-primitive.md) for the trade-offs.
+
+## Array reconciliation and operations
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="array-operations.example.ts">{arrayOperationsSource}</CodeBlock>
+
+The assertions prove that `trackBy` preserves item nodes while complete values reorder, then cover
+positional patching, swapping, and insertion. Continue with [Dynamic arrays](../guides/dynamic-arrays.md).
+
+## Validation ownership
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="validation.example.ts">{validationSource}</CodeBlock>
+
+This combines field-level built-ins with a form-level cross-field rule and checks both failure and
+recovery. See [Validation](../guides/validation.md) for composition and reactive dependencies.
+
+## Submission
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="submission.example.ts">{submissionSource}</CodeBlock>
+
+Both invalid and valid submission paths execute. The assertions cover return values, `onInvalid`,
+and the asynchronous action. See [Submission](../guides/submission.md).
+
+## Angular binding and `viewChild()`
+
+**Type-checked**
+
+<CodeBlock language="ts" title="angular-binding.typecheck.ts">{angularBindingSource}</CodeBlock>
+
+This is compiled as an Angular component example. It verifies the standalone `FormNode` import,
+template binding, typed `FormNode`, and `viewChild.required()` query. See
+[Control binding](../guides/control-binding.md).
+
+## Every built-in validator signature
+
+**Type-checked**
+
+<CodeBlock language="ts" title="built-in-validators.typecheck.ts">{builtInValidatorsSource}</CodeBlock>
+
+This compilation fixture keeps the common call signature of every built-in validator aligned with
+the public API. The [built-in validator reference](../reference/built-in-validators.md) documents
+each validator individually, including options, empty-value behavior, and error shape.
+
+## What remains a documentation snippet
+
+Not every code block should become a program. The following stay inline intentionally:
+
+- isolated signatures and return-type illustrations;
+- one-line alternatives shown side by side;
+- incomplete fragments whose surrounding setup is the subject of the page;
+- HTML-only template fragments; and
+- deliberately invalid TypeScript used to explain a compiler error.
+
+When a new example claims observable runtime behavior, prefer adding an executable assertion here
+or in another `.example.ts` file. When it demonstrates Angular integration or public inference,
+prefer a `.typecheck.ts` fixture.

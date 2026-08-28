@@ -1,0 +1,26 @@
+---
+title: Cookbook
+slug: /cookbook
+description: Focused Gem Forms recipes for common Angular form workflows.
+---
+
+# Cookbook
+
+The cookbook starts from a concrete problem and shows the smallest useful solution. Each recipe is independent; use the progressive [tutorial](../tutorial/index.md) when you want to learn the library in sequence.
+
+## Validation and conditional behavior
+
+- [Confirm a password](./password-confirmation.md)
+- [Show and validate conditional fields](./conditional-fields.md)
+- [Validate against a remote API](./remote-validation.md)
+- [Translate validator messages](./localized-messages.md)
+
+## Values and structure
+
+- [Load and edit server data](./edit-server-data.md)
+- [Build a reorderable array](./reorderable-arrays.md)
+- [Build a multi-step form](./multi-step-form.md)
+
+## Angular integration
+
+- [Build a custom rating control](./custom-rating-control.md)
