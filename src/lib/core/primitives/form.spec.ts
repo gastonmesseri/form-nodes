@@ -10,6 +10,7 @@ import { oneOf } from '../validation/validators/one-of';
 import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { uniqueItems } from '../validation/validators/unique-items';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -120,6 +121,23 @@ describe('form', () => {
       sons: [{ name: 'Mono', age: 11 }, { name: 'Lia', age: 7 }],
     });
     expect(profile.dirty()).toBe(false);
+  });
+
+  it('aggregates a unique-items error owned by a nested array', () => {
+    const profile = form({
+      names: array(field(''), ['Marco', 'Marco'], [uniqueItems()]),
+    });
+
+    expect(profile.invalid()).toBe(true);
+    expect(profile.errors()).toEqual([]);
+    expect(profile.allErrors()).toMatchObject([{
+      kind: 'uniqueItems',
+      duplicateIndexes: [0, 1],
+      targetNode: profile.names,
+    }]);
+
+    profile.names[1]!.set('Lia');
+    expect(profile.valid()).toBe(true);
   });
 
   it('grows an array child through form.set and propagates the complete value', () => {

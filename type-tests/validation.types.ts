@@ -1,4 +1,4 @@
-import { array, asyncValidator, configureGlobalValidatorMessages, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, configureGlobalValidatorMessages, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -51,6 +51,14 @@ const atLeastOneItem = validator<readonly (string | null)[]>(({ value }) => {
   return value().length > 0 ? null : { kind: 'emptyArray' };
 });
 array(field(''), [], [atLeastOneItem]);
+array(field(''), ['one', 'two'], [uniqueItems()]);
+array(field(''), ['one', 'two'], [uniqueItems]);
+field<readonly string[]>(null, [uniqueItems()]);
+field<readonly string[] | undefined>(undefined, [uniqueItems()]);
+array({ id: field(1), name: field('') }, [{ id: 1, name: 'One' }], [uniqueItems('id')]);
+array({ id: field(1), name: field('') }, [{ id: 1, name: 'One' }], [
+  uniqueItems<{ id: number | null; name: string | null }>(item => item.id),
+]);
 
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
 validatorOptions.message = () => 'Updated invalid value';
@@ -80,6 +88,10 @@ void [_minimum, _minimumActual, _unknownMessage, _unknownProperty];
 const integerError = field(1.5, [integer]).getError('integer');
 const _integerActual: number | undefined = integerError?.actual;
 void _integerActual;
+
+const uniqueError = array(field(''), ['same', 'same'], [uniqueItems()]).getError('uniqueItems');
+const _duplicateIndexes: readonly number[] | undefined = uniqueError?.duplicateIndexes;
+void _duplicateIndexes;
 
 const profile = form({
   name,
@@ -127,6 +139,9 @@ field(1, [equalTo('1')]);
 
 // @ts-expect-error word-count validators require string values
 field(42, [minWords(2)]);
+
+// @ts-expect-error uniqueItems validators require array values
+field('', [uniqueItems]);
 
 // @ts-expect-error date strings only support explicit UTC or local parsing
 minDate('2026-08-24', { parseAs: 'browser' });

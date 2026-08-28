@@ -108,7 +108,7 @@ The package exports:
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
-- Built-in `required`, `min`, `max`, `integer`, `equalTo`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
+- Built-in `required`, `min`, `max`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
 
@@ -814,6 +814,7 @@ const age = field<number>(null, {
 | `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, actual, message }` |
 | `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
 | `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
+| `uniqueItems(selector?)` | A readonly array, `null`, or `undefined` | Absent, empty, and one-item arrays pass | `{ kind: 'uniqueItems', duplicateIndexes, message }` |
 | `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, actual, message }` |
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
@@ -872,6 +873,35 @@ This prevents aggregate errors, logs, translation functions, or UI components fr
 receiving sensitive confirmation data such as passwords. Angular 22.1.4 Signal Forms has no
 built-in equality rule; it supports this behavior through a custom validator. This library adds the
 helper because cross-field confirmation is common and otherwise awkward to express repeatedly.
+
+`uniqueItems` validates an array node and keeps its error on that array rather than mutating errors
+on its item nodes. `null` and `undefined` are treated as empty arrays so the validator remains safe
+when composed with nullable fields, even though `array()` itself normalizes those inputs to `[]`.
+Without a selector it compares items using SameValueZero equality, matching
+`Set`: `NaN` values match, `0` and `-0` match, and objects use reference identity. A property-name
+shorthand or function can select a comparable key:
+
+```ts
+array(field(''), ['admin', 'admin'], [uniqueItems]);
+array(field(''), initialRoles, [uniqueItems({ message: 'Roles must be unique' })]);
+
+array(
+  { email: field(''), name: field('') },
+  initialContacts,
+  [uniqueItems('email')],
+);
+
+array(productTemplate, initialProducts, [
+  uniqueItems<Product>(product => `${tenantId()}:${product.sku}`),
+]);
+```
+
+Selector functions participate in reactive dependency tracking. The error reports every index
+participating in a duplicate group, in ascending order, but deliberately omits the duplicated keys
+and values. This provides enough information for array UIs to identify affected rows without
+placing potentially sensitive data in aggregate errors. Structural changes and item value changes
+recompute the indexes. Angular 22.1.4 Signal Forms has no equivalent built-in validator; aggregate
+validator errors likewise belong to the validated aggregate node.
 
 `integer` uses `Number.isSafeInteger()`. It rejects decimals, `NaN`, positive and negative
 infinity, and integers outside `Number.MIN_SAFE_INTEGER` through `Number.MAX_SAFE_INTEGER`, where
