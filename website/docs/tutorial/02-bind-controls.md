@@ -4,7 +4,7 @@ title: 2. Bind native controls
 
 # 2. Bind native controls
 
-Import `FormNode` into the component and bind each field with `[formNode]`.
+Expand the initial name binding to every field with `[formNode]`.
 
 ```ts
 import { Component } from '@angular/core';

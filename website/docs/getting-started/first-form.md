@@ -4,39 +4,7 @@ title: Your first form
 
 # Your first form
 
-Define a form by composing fields:
-
-```ts
-import { email, field, form, minLength, required } from '@gem/ng-forms';
-
-const myForm = form({
-  name: field('', [required, minLength(2)]),
-  email: field('', [required, email]),
-});
-```
-
-Every node is callable. Calling it is the preferred way to read its committed value:
-
-```ts
-myForm(); // { name: '', email: '' }
-myForm.name(); // ''
-myForm.email(); // ''
-```
-
-Validation state is exposed as signals too:
-
-```ts
-myForm.valid(); // false because email is required
-myForm.allErrors();
-```
-
-Update a field programmatically with `set()`:
-
-```ts
-myForm.name.set('Marco');
-```
-
-Import `FormNode` in the component that owns the form and keep the bindings next to their model:
+Define and bind the form in an Angular component:
 
 ```ts
 import { Component } from '@angular/core';
@@ -51,15 +19,67 @@ import { email, FormNode, field, form, minLength, required } from '@gem/ng-forms
     <input type="email" [formNode]="myForm.email" />
 
     <p>Current name: {{ myForm.name() }}</p>
+    <p>Current email: {{ myForm.email() }}</p>
   `,
 })
 export class RegistrationComponent {
   myForm = form({
-    name: field('Unknown', [required, minLength(2)]),
+    name: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   });
 }
 ```
+
+Every node is callable. Calling it is the preferred way to read its committed value:
+
+```ts
+myForm(); // { name: '', email: '' }
+myForm.name(); // ''
+myForm.email(); // ''
+```
+
+Validation state is exposed as signals too:
+
+```ts
+myForm.valid(); // false because name and email are required
+
+myForm.allErrors();
+// [
+//   { kind: 'required', message: 'This field is required.', targetNode: myForm.name },
+//   { kind: 'required', message: 'This field is required.', targetNode: myForm.email },
+// ]
+```
+
+## Reactive state signals
+
+Fields, forms, and arrays expose their state as Angular signals, so templates and reactive code can
+read it directly without subscriptions:
+
+```ts
+myForm.valid(); // false
+myForm.disabled(); // false
+
+myForm.name.invalid(); // true
+myForm.name.touched(); // false
+myForm.name.dirty(); // false
+```
+
+Angular tracks these reads automatically in the template:
+
+```html
+@if (myForm.name.touched() && myForm.name.invalid()) {
+  <p>Please enter your name.</p>
+}
+```
+
+Update a field programmatically with `set()`:
+
+```ts
+myForm.name.set('Marco');
+```
+
+`FormNode` is imported by the standalone component so `[formNode]` is available in its template.
+Keep the bindings next to the model whenever a compact inline template remains readable.
 
 If your application uses NgModules, you can import and re-export `FormNode` from a shared module instead:
 

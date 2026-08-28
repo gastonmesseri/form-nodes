@@ -25,15 +25,23 @@ import Link from '@docusaurus/Link';
   <div className="docs-hero__example" aria-label="Gem Forms example">
 
 ```ts
-const myForm = form({
-  name: field('', [required]),
-  age: field(23, [min(18)]),
-});
+import { Component } from '@angular/core';
 
-myForm.name.set('Ada');
-myForm.valid(); // true
-myForm(); // { name: 'Ada', age: 23 }
-myForm.name(); // 'Ada'
+import { field, FormNode, form } from '@gem/ng-forms';
+
+@Component({
+  selector: 'app-profile-editor',
+  imports: [FormNode],
+  template: `
+    <input [formNode]="myForm.name" />
+    <p>Hello {{ myForm.name() }}</p>
+  `,
+})
+export class ProfileEditor {
+  myForm = form({
+    name: field('Unknown'),
+  });
+}
 ```
 
   </div>
