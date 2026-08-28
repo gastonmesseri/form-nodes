@@ -12,7 +12,7 @@ import type { Form } from '../../primitives/form';
     '(reset)': 'reset($event)',
   },
 })
-export class FormRootDirective {
+export class FormRoot {
   /** Root form node submitted and reset by the host element. */
   form = input.required<Form<any>>({ alias: 'formNode' });
 

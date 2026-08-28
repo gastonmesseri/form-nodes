@@ -1690,7 +1690,7 @@ pending validation. Only one action may run at a time. Concurrent calls resolve 
 `submitting()` is `true` on the submitted form and inherited by every descendant. The state is
 cleared in a `finally` block if the action succeeds or rejects.
 
-`FormRootDirective` binds this behavior to a native form while retaining the `[formNode]` binding
+`FormRoot` binds this behavior to a native form while retaining the `[formNode]` binding
 name:
 
 ```html
