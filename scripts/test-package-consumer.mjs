@@ -39,6 +39,9 @@ try {
   if (packageManifest.scripts?.prepublishOnly) {
     throw new Error('The published package was compiled in Angular full compilation mode.');
   }
+  if (packageManifest.sideEffects !== false) {
+    throw new Error('The published package must declare sideEffects: false for consumer tree shaking.');
+  }
 
   const angularDirectory = join(temporaryDirectory, 'node_modules', '@angular');
   mkdirSync(angularDirectory, { recursive: true });
@@ -80,6 +83,38 @@ try {
     if (profile.addresses[0].city() !== 'Zurich') throw new Error('Array values were not preserved in the package.');
   `);
   run(process.execPath, [join(temporaryDirectory, 'runtime.mjs')]);
+
+  writeFileSync(join(temporaryDirectory, 'tree-shaking.mjs'), `
+    import { required } from '@gem/ng-forms';
+    console.log(required);
+  `);
+  const treeShakenBundle = join(temporaryDirectory, 'tree-shaking-bundle.mjs');
+  const esbuild = resolve(workspace, 'node_modules', '.bin', 'esbuild');
+  run(esbuild, [
+    join(temporaryDirectory, 'tree-shaking.mjs'),
+    '--bundle',
+    '--format=esm',
+    '--platform=browser',
+    '--minify',
+    '--tree-shaking=true',
+    '--external:@angular/*',
+    `--outfile=${treeShakenBundle}`,
+  ]);
+  const treeShakenSource = readFileSync(treeShakenBundle, 'utf8');
+  if (!treeShakenSource.includes('This field is required.')) {
+    throw new Error('The consumer bundle unexpectedly removed the imported required validator.');
+  }
+  const unusedValidatorMarkers = [
+    'Please ensure every item is unique.',
+    'Please enter a date between',
+    'Please enter a valid absolute URL.',
+    'duplicateIndexes',
+    'dateBetween',
+  ];
+  const retainedMarker = unusedValidatorMarkers.find(marker => treeShakenSource.includes(marker));
+  if (retainedMarker !== undefined) {
+    throw new Error(`The consumer bundle retained an unused validator marker: ${retainedMarker}`);
+  }
 } finally {
   rmSync(temporaryDirectory, { recursive: true, force: true });
 }

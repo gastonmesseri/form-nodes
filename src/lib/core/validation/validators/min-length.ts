@@ -3,7 +3,7 @@ import type { Validator } from '../validation.type';
 import { MIN_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMinLengthMessage } from './default-validator-messages';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /**
@@ -40,7 +40,7 @@ export const minLength = (
     if (resolvedMinimum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength < resolvedMinimum
-      ? { kind: 'minLength', minLength: resolvedMinimum, actual: actualLength, message: resolveValidatorMessage('minLength', { minLength: resolvedMinimum, actual: actualLength }, options?.message, () => defaultValidatorMessages.minLength(resolvedMinimum)) }
+      ? { kind: 'minLength', minLength: resolvedMinimum, actual: actualLength, message: resolveValidatorMessage('minLength', { minLength: resolvedMinimum, actual: actualLength }, options?.message, () => defaultMinLengthMessage(resolvedMinimum)) }
       : null;
   }, MIN_LENGTH_METADATA, minimum);
 };

@@ -1,6 +1,6 @@
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultUniqueItemsMessage } from './default-validator-messages';
 import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator } from '../validation.type';
 
 type UniqueItemsOptions = {
@@ -40,7 +40,7 @@ const validateUniqueItems = <TItem>(
   return {
     kind: 'uniqueItems',
     duplicateIndexes: indexes,
-    message: resolveValidatorMessage('uniqueItems', { duplicateIndexes: indexes }, message, defaultValidatorMessages.uniqueItems),
+    message: resolveValidatorMessage('uniqueItems', { duplicateIndexes: indexes }, message, defaultUniqueItemsMessage),
   };
 };
 

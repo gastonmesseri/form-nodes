@@ -1,7 +1,7 @@
 import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultUrlMessage } from './default-validator-messages';
 import type { FieldContext, ValidationResult, Validator } from '../validation.type';
 
 const validateUrl = (
@@ -15,7 +15,7 @@ const validateUrl = (
     new URL(currentValue!);
     return null;
   } catch {
-    return { kind: 'url', message: resolveValidatorMessage('url', {}, message, defaultValidatorMessages.url) };
+    return { kind: 'url', message: resolveValidatorMessage('url', {}, message, defaultUrlMessage) };
   }
 };
 

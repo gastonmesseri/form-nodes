@@ -1,6 +1,6 @@
 import type { Validator } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultEqualToMessage } from './default-validator-messages';
 
 /**
  * Requires a value to equal a static or reactive expected value using `Object.is()`.
@@ -40,6 +40,6 @@ export const equalTo = <TValue>(
     const expectedValue = typeof expected === 'function' ? (expected as () => TValue)() : expected;
     return Object.is(value(), expectedValue)
       ? null
-      : { kind: 'equalTo', message: resolveValidatorMessage('equalTo', {}, options?.message, defaultValidatorMessages.equalTo) };
+      : { kind: 'equalTo', message: resolveValidatorMessage('equalTo', {}, options?.message, defaultEqualToMessage) };
   };
 };

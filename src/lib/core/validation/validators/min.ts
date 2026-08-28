@@ -2,7 +2,7 @@ import type { Validator } from '../validation.type';
 import { MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMinMessage } from './default-validator-messages';
 
 /**
  * Requires a non-empty number to be greater than or equal to a minimum.
@@ -36,7 +36,7 @@ export const min = (
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('min', { min: resolvedMinimum, actual: currentValue }, options?.message, () => defaultValidatorMessages.min(resolvedMinimum)) }
+      ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('min', { min: resolvedMinimum, actual: currentValue }, options?.message, () => defaultMinMessage(resolvedMinimum)) }
       : null;
   }, MIN_METADATA, minimum);
 };

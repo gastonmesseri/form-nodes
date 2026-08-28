@@ -1,7 +1,7 @@
 import { countWords } from './count-words';
 import type { Validator } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMaxWordsMessage } from './default-validator-messages';
 
 /**
  * Requires a non-empty string to contain no more than the configured number of words.
@@ -37,7 +37,7 @@ export const maxWords = (
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     const actual = countWords(currentValue);
     return actual > resolvedMaximum
-      ? { kind: 'maxWords', maxWords: resolvedMaximum, actual, message: resolveValidatorMessage('maxWords', { maxWords: resolvedMaximum, actual }, options?.message, () => defaultValidatorMessages.maxWords(resolvedMaximum)) }
+      ? { kind: 'maxWords', maxWords: resolvedMaximum, actual, message: resolveValidatorMessage('maxWords', { maxWords: resolvedMaximum, actual }, options?.message, () => defaultMaxWordsMessage(resolvedMaximum)) }
       : null;
   };
 };

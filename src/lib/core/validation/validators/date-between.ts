@@ -3,7 +3,7 @@ import { parseDateConstraint } from './date-constraint';
 import { markValidatorMetadata } from '../validator-metadata';
 import { MAX_DATE_METADATA, MIN_DATE_METADATA } from '../constraint-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultDateBetweenMessage } from './default-validator-messages';
 
 type DateSource = Date | string | (() => Date | string | undefined);
 
@@ -92,7 +92,7 @@ export const dateBetween = (
     return {
       kind: 'dateBetween',
       ...parameters,
-      message: resolveValidatorMessage('dateBetween', parameters, options?.message, () => defaultValidatorMessages.dateBetween(bounds.minimum, bounds.maximum)),
+      message: resolveValidatorMessage('dateBetween', parameters, options?.message, () => defaultDateBetweenMessage(bounds.minimum, bounds.maximum)),
     };
   };
   markValidatorMetadata(validator, MIN_DATE_METADATA, () => resolveBounds()?.minimum);

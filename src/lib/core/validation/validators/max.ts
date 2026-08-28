@@ -2,7 +2,7 @@ import type { Validator } from '../validation.type';
 import { MAX_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMaxMessage } from './default-validator-messages';
 
 /**
  * Requires a non-empty number to be less than or equal to a maximum.
@@ -36,7 +36,7 @@ export const max = (
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'max', max: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('max', { max: resolvedMaximum, actual: currentValue }, options?.message, () => defaultValidatorMessages.max(resolvedMaximum)) }
+      ? { kind: 'max', max: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('max', { max: resolvedMaximum, actual: currentValue }, options?.message, () => defaultMaxMessage(resolvedMaximum)) }
       : null;
   }, MAX_METADATA, maximum);
 };

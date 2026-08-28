@@ -1,7 +1,7 @@
 import { countWords } from './count-words';
 import type { Validator } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMinWordsMessage } from './default-validator-messages';
 
 /**
  * Requires a non-empty string to contain at least the configured number of words.
@@ -37,7 +37,7 @@ export const minWords = (
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     const actual = countWords(currentValue);
     return actual < resolvedMinimum
-      ? { kind: 'minWords', minWords: resolvedMinimum, actual, message: resolveValidatorMessage('minWords', { minWords: resolvedMinimum, actual }, options?.message, () => defaultValidatorMessages.minWords(resolvedMinimum)) }
+      ? { kind: 'minWords', minWords: resolvedMinimum, actual, message: resolveValidatorMessage('minWords', { minWords: resolvedMinimum, actual }, options?.message, () => defaultMinWordsMessage(resolvedMinimum)) }
       : null;
   };
 };

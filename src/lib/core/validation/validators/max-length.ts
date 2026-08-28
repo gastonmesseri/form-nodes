@@ -3,7 +3,7 @@ import type { Validator } from '../validation.type';
 import { MAX_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMaxLengthMessage } from './default-validator-messages';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /**
@@ -40,7 +40,7 @@ export const maxLength = (
     if (resolvedMaximum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength > resolvedMaximum
-      ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: resolveValidatorMessage('maxLength', { maxLength: resolvedMaximum, actual: actualLength }, options?.message, () => defaultValidatorMessages.maxLength(resolvedMaximum)) }
+      ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: resolveValidatorMessage('maxLength', { maxLength: resolvedMaximum, actual: actualLength }, options?.message, () => defaultMaxLengthMessage(resolvedMaximum)) }
       : null;
   }, MAX_LENGTH_METADATA, maximum);
 };
