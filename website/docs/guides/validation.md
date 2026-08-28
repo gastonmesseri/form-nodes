@@ -38,6 +38,8 @@ profile.api.allErrors(); // profile and descendant errors
 
 Every exposed error contains `kind` and `targetNode`; built-in errors also contain a default or configured `message` and constraint-specific data. `getError()` infers known built-in error data from its kind.
 
+See [Errors and validation status](./errors-and-status.md) for ownership, aggregate ordering, typed custom kinds, binding errors, and the exact status table.
+
 ## Custom validators
 
 A synchronous validator receives a stable context containing the node's value and readonly state signals:
@@ -78,8 +80,8 @@ Attach a validator to a form to validate its aggregated value:
 ```ts
 const passwords = form(
   {
-    password: field('', { nullable: false }),
-    confirmation: field('', { nullable: false }),
+    password: field(''),
+    confirmation: field(''),
   },
   {
     validators: [({ value }) => value().password === value().confirmation
@@ -92,8 +94,8 @@ const passwords = form(
 For a field-level confirmation rule, `equalTo()` accepts a reactive source:
 
 ```ts
-const password = field('', { nullable: false });
-const confirmation = field('', [equalTo(() => password())], { nullable: false });
+const password = field('');
+const confirmation = field('', [equalTo(() => password())]);
 ```
 
 ## Conditional validators

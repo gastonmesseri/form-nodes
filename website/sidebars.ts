@@ -14,6 +14,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'concepts/form-nodes',
         'concepts/creating-nodes',
+        'concepts/tree-and-api',
         'concepts/values-and-state',
       ],
     },
@@ -22,7 +23,10 @@ const sidebars: SidebarsConfig = {
       label: 'Guides',
       items: [
         'guides/validation',
+        'guides/errors-and-status',
         'guides/async-validation',
+        'guides/value-flow-and-debounce',
+        'guides/interaction-and-availability',
         'guides/dynamic-arrays',
         'guides/control-binding',
         'guides/custom-controls',

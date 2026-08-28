@@ -15,7 +15,7 @@ import { FormNode, field } from '@gem/ng-forms';
   template: `<input [formNode]="name" />`,
 })
 export class Editor {
-  readonly name = field('', { nullable: false });
+  readonly name = field('');
 }
 ```
 
@@ -34,7 +34,25 @@ The directive synchronizes value, disabled, readonly, required, name, and applic
 </select>
 ```
 
+Native support includes text and numeric inputs, range, checkbox, radio, date-like inputs, single and multiple selects, and textareas. IME composition is buffered until `compositionend`. Dynamically changing between compatible textual input types preserves synchronization.
+
+Bindings receive a stable generated `name` based on the application, root form, and reactive path. Controls bound to the same field share a name, preserving radio groups; moving an array item updates that path-derived name. An explicitly authored native name is replaced.
+
+Select values are reapplied when options change, including asynchronously rendered options. Radio bindings reevaluate their authored option value after Angular renders.
+
+## Native constraints
+
+`required`, `aria-invalid`, `min`, `max`, `minLength`, `maxLength`, and combined pattern metadata are synchronized when applicable:
+
+- Numeric and date `min`/`max` are written to number, range, date, and month inputs.
+- `minLength` and `maxLength` apply to inputs and textareas, not selects.
+- Multiple pattern validators become one native pattern requiring every expression.
+- Node validation remains authoritative; browser constraints improve native UI interoperability.
+- Time, week, and datetime-local currently do not receive `min`/`max`, matching Angular 22 Signal Forms behavior.
+
 Invalid native numeric or date input produces a `parse` error while retaining the last valid model value and the user's raw text. A later valid input, programmatic update, reset, rebind, or binding destruction clears the binding-owned parse error.
+
+Date-like controls can change native validity without emitting an input event. Browser bindings monitor those transitions; the mechanism is CSP nonce-aware and is not installed during server rendering.
 
 ## Querying the binding
 
@@ -49,7 +67,7 @@ import { FormNode, field } from '@gem/ng-forms';
   template: `<input #nameBinding="formNode" [formNode]="name" />`,
 })
 export class Editor {
-  readonly name = field('', { nullable: false });
+  readonly name = field('');
   readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
 
   focusName() {
