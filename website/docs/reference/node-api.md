@@ -108,3 +108,5 @@ Import public APIs only from `@gem/ng-forms`. `_FormNode` is exported solely for
 
 For compatibility with Angular `model()`, input/output pairs, `ControlValueAccessor`, `NgControl`,
 and native controls, see [Custom controls](../guides/custom-controls.md#angular-api-compatibility).
+For scheduling, detached-node lifetime, multiple bindings, and defensive runtime behavior, see
+[Advanced behavior and edge cases](../advanced/behavior-details.md).

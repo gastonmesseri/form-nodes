@@ -37,6 +37,11 @@ const nickname = field<string>();
 
 A standalone field is fully supported, but a form tree provides the typed parent, path, aggregate value, and state propagation used by most applications.
 
+A field may contain an object or array value and still remain one leaf node. Use this for controls
+that edit a structured value atomically, such as a multi-select editing `string[]`. Use nested
+`form()` or `array()` nodes only when the value's parts need independent bindings and state. See
+[Choosing a primitive](../guides/choosing-a-primitive.md).
+
 ## Forms
 
 Use `form()` to combine named nodes into an object:
@@ -82,6 +87,9 @@ const profile = form({
 ```
 
 Forms always have a non-null object value. Use a field containing an object when the object itself must be nullable.
+
+An empty form is valid, enabled, writable, visible, untouched, and pristine by default and has the
+value `{}`, unless a form-level validator or state option changes that result.
 
 ## Arrays
 
@@ -133,6 +141,27 @@ const account = form({
 ```
 
 The closest configured node provides inherited `disabled`, `readonly`, `hidden`, and debounce behavior to its descendants. A descendant can define its own option to override the inherited debounce or add another state cause.
+
+## Compile-time value safety
+
+TypeScript recursively infers the complete form value from the node tree. `set()` and
+`reset(value)` require a complete value, while `patch()` accepts only known recursive partial
+branches:
+
+```ts
+profile.set({
+  name: 'Ada',
+  address: { city: 'London', country: 'UK' },
+});
+
+profile.patch({
+  address: { city: 'Zurich' },
+});
+```
+
+Incorrect value types, missing complete-value properties, and unknown patch keys are compile-time
+errors. Validators receive the inferred value type too. Runtime warnings protect against unknown
+keys that enter through unsafe casts or untyped external data, but they do not add nodes dynamically.
 
 ## Using nodes outside Angular
 

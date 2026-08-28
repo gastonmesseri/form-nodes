@@ -190,3 +190,5 @@ The wrapper is detected as pass-through, so only the inner control creates a bin
   hydration.
 
 See [Control binding](./control-binding.md) for native element behavior and state propagation.
+The [advanced binding details](../advanced/behavior-details.md#binding-selection-and-compatibility)
+cover selection precedence, ambiguous accessors, binding ownership, and server rendering semantics.
