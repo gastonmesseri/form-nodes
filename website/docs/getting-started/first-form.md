@@ -24,7 +24,7 @@ registration.valid();
 registration.allErrors();
 ```
 
-Programmatic writes are immediate and do not mark a field dirty:
+Update a field programmatically with `set()`:
 
 ```ts
 registration.name.set('Marco');
@@ -54,3 +54,18 @@ export class RegistrationComponent {
   });
 }
 ```
+
+If your application uses NgModules, you can import and re-export `FormNode` from a shared module instead:
+
+```ts
+import { NgModule } from '@angular/core';
+import { FormNode } from '@gem/ng-forms';
+
+@NgModule({
+  imports: [FormNode],
+  exports: [FormNode],
+})
+export class SharedModule {}
+```
+
+Every NgModule or standalone component that imports `SharedModule` can then use `[formNode]` in its templates. Angular does not provide an application-wide import for template directives through `ApplicationConfig`; standalone components must import `FormNode` themselves, either directly or through a shared NgModule.
