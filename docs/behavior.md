@@ -108,7 +108,7 @@ The package exports:
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
-- Built-in `required`, `min`, `max`, `integer`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
+- Built-in `required`, `min`, `max`, `integer`, `equalTo`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
 
@@ -813,6 +813,7 @@ const age = field<number>(null, {
 | `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, actual, message }` |
 | `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, actual, message }` |
 | `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
+| `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
 | `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, actual, message }` |
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
@@ -850,8 +851,27 @@ field('David', [required({ message: () => translatedRequiredMessage() })]);
 field('', [email({ message: 'Enter a work email' })]);
 field('', [url({ message: 'Enter a complete URL' })]);
 field(1.5, [integer({ message: 'Enter a whole number' })]);
+field('yes', [equalTo('yes', { message: 'Values must match' })]);
 field(16, [min(18, { message: 'You must be at least 18' })]);
 ```
+
+`equalTo` compares with `Object.is()` and accepts either a static expected value or a reactive
+function. Unlike optional format validators, it does not skip `null` or `undefined`: both are real
+values that can match or differ. Signals read by the expected-value function are dependencies of
+the validator, enabling confirmation fields to follow their sibling:
+
+```ts
+const credentialsForm = form({
+  password: field(''),
+  confirmPassword: field('', [equalTo(() => credentialsForm.password())]),
+});
+```
+
+The `equalTo` error and its configurable-message callback intentionally omit both compared values.
+This prevents aggregate errors, logs, translation functions, or UI components from accidentally
+receiving sensitive confirmation data such as passwords. Angular 22.1.4 Signal Forms has no
+built-in equality rule; it supports this behavior through a custom validator. This library adds the
+helper because cross-field confirmation is common and otherwise awkward to express repeatedly.
 
 `integer` uses `Number.isSafeInteger()`. It rejects decimals, `NaN`, positive and negative
 infinity, and integers outside `Number.MIN_SAFE_INTEGER` through `Number.MAX_SAFE_INTEGER`, where

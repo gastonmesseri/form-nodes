@@ -17,6 +17,7 @@ export interface BuiltInValidationErrorMap {
   readonly required: ValidationError & { readonly kind: 'required' };
   readonly email: ValidationError & { readonly kind: 'email' };
   readonly url: ValidationError & { readonly kind: 'url' };
+  readonly equalTo: ValidationError & { readonly kind: 'equalTo' };
   readonly min: ValidationError & {
     readonly kind: 'min';
     /** Resolved minimum required by the validator. */

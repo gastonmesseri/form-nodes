@@ -7,12 +7,35 @@ import { array } from './array';
 import { validator } from '../validation/validator';
 import type { InternalNode } from '../types/node.type';
 import { oneOf } from '../validation/validators/one-of';
+import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('reactively validates a field against a sibling without exposing either value', () => {
+    const password = field('secret');
+    const profile = form({
+      password,
+      confirmation: field('different', [equalTo(() => password())]),
+    });
+
+    expect(profile.confirmation.errors()).toEqual([{
+      kind: 'equalTo',
+      message: 'Please enter the matching value.',
+      targetNode: profile.confirmation,
+    }]);
+    expect(profile.confirmation.errors()[0]).not.toHaveProperty('actual');
+    expect(profile.confirmation.errors()[0]).not.toHaveProperty('expected');
+
+    profile.confirmation.set('secret');
+    expect(profile.confirmation.errors()).toEqual([]);
+
+    profile.password.set('changed');
+    expect(profile.confirmation.getError('equalTo')?.message).toBe('Please enter the matching value.');
+  });
+
   it('submits valid forms, exposes submitting state through the tree, and prevents concurrent submissions', async () => {
     let resolve!: () => void;
     const pendingAction = new Promise<void>((done) => { resolve = done; });

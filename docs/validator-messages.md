@@ -169,6 +169,7 @@ parameters available to each callback:
 | `required` | none |
 | `email` | none |
 | `url` | none |
+| `equalTo` | none; compared values are intentionally private |
 | `min` | `{ min: number, actual: number }` |
 | `max` | `{ max: number, actual: number }` |
 | `integer` | `{ actual: number }` |

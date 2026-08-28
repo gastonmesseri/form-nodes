@@ -10,6 +10,7 @@ import { email } from '../validation/validators/email';
 import type { InternalNode } from '../types/node.type';
 import { pattern } from '../validation/validators/pattern';
 import { integer } from '../validation/validators/integer';
+import { equalTo } from '../validation/validators/equal-to';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
 import { required } from '../validation/validators/required';
@@ -361,6 +362,7 @@ describe('field', () => {
     const emailField = field('not-an-email', [email]);
     const urlField = field('/relative-path', [url]);
     const integerField = field(1.5, [integer]);
+    const confirmationField = field('different', [equalTo('expected')]);
 
     expect(emailField.errors()).toMatchObject([
       { kind: 'email', message: 'Please enter a valid email address.' },
@@ -370,6 +372,9 @@ describe('field', () => {
     ]);
     expect(integerField.errors()).toMatchObject([
       { kind: 'integer', actual: 1.5, message: 'Please enter a safe integer.' },
+    ]);
+    expect(confirmationField.errors()).toMatchObject([
+      { kind: 'equalTo', message: 'Please enter the matching value.' },
     ]);
   });
 

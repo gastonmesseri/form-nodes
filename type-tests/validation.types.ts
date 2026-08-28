@@ -1,4 +1,4 @@
-import { array, asyncValidator, configureGlobalValidatorMessages, email, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, configureGlobalValidatorMessages, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -19,6 +19,7 @@ field(18, [min(18, { message: 'Too young' })]);
 field('', [pattern(/^[a-z]+$/, { message: () => 'Use letters only' })]);
 field('', [url, url({ message: 'Enter an absolute URL' })]);
 field(1, [integer, integer({ message: 'Enter a whole number' })]);
+field('confirmed', [equalTo('confirmed'), equalTo(() => 'confirmed')]);
 field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);
@@ -120,6 +121,9 @@ field(42, [nameValidator]);
 
 // @ts-expect-error numeric allowed values cannot validate a string field
 field('draft', [oneOf([1, 2])]);
+
+// @ts-expect-error equality validators preserve the expected value type
+field(1, [equalTo('1')]);
 
 // @ts-expect-error word-count validators require string values
 field(42, [minWords(2)]);

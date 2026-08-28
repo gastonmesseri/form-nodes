@@ -8,6 +8,7 @@ import { email } from './email';
 import { oneOf } from './one-of';
 import { pattern } from './pattern';
 import { integer } from './integer';
+import { equalTo } from './equal-to';
 import { maxDate } from './max-date';
 import { minDate } from './min-date';
 import { required } from './required';
@@ -28,6 +29,7 @@ describe('reactive validator messages', () => {
       field(1, [min(2, { message })]),
       field(2, [max(1, { message })]),
       field(1.5, [integer({ message })]),
+      field('actual', [equalTo('expected', { message })]),
       field('a', [minLength(2, { message })]),
       field('ab', [maxLength(1, { message })]),
       field<Date>(new Date('2026-01-01'), [minDate('2026-02-01', { message })]),
