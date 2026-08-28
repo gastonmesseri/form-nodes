@@ -84,7 +84,9 @@ Use `array()` for a dynamic collection. Its first argument is a node template cl
 ```ts
 import { array, field } from '@gem/ng-forms';
 
-const tags = array(field(''), ['angular', 'signals']);
+const tags = array(field(''), {
+  initialValue: ['angular', 'signals'],
+});
 
 tags(); // ['angular', 'signals']
 tags[0]?.set('typescript');
@@ -93,14 +95,13 @@ tags[0]?.set('typescript');
 The template may also be a form definition:
 
 ```ts
-const people = array(
-  {
-    id: field(''),
-    name: field(''),
-  },
-  [{ id: '1', name: 'Ada' }],
-  { trackBy: 'id' },
-);
+const people = array({
+  id: field(''),
+  name: field(''),
+}, {
+  initialValue: [{ id: '1', name: 'Ada' }],
+  trackBy: 'id',
+});
 ```
 
 Arrays always expose an array value. Passing `null` or `undefined` to `set()` or `reset(value)` clears the array.
