@@ -171,6 +171,7 @@ parameters available to each callback:
 | `url` | none |
 | `equalTo` | none; compared values are intentionally private |
 | `uniqueItems` | `{ duplicateIndexes: readonly number[] }` |
+| `between` | `{ min: number; max: number; actual: number }` |
 | `min` | `{ min: number, actual: number }` |
 | `max` | `{ max: number, actual: number }` |
 | `integer` | `{ actual: number }` |

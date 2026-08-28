@@ -23,6 +23,9 @@ export const defaultValidatorMessages = {
   max(maximum: number): string {
     return `Please enter a value less than or equal to ${maximum}.`;
   },
+  between(minimum: number, maximum: number): string {
+    return `Please enter a value between ${minimum} and ${maximum}.`;
+  },
   integer(): string {
     return 'Please enter a safe integer.';
   },

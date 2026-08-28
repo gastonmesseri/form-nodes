@@ -23,6 +23,15 @@ export interface BuiltInValidationErrorMap {
     /** Ascending indexes of every item participating in a duplicate group. */
     readonly duplicateIndexes: readonly number[];
   };
+  readonly between: ValidationError & {
+    readonly kind: 'between';
+    /** Resolved inclusive minimum required by the validator. */
+    readonly min: number;
+    /** Resolved inclusive maximum allowed by the validator. */
+    readonly max: number;
+    /** Rejected numeric value. */
+    readonly actual: number;
+  };
   readonly min: ValidationError & {
     readonly kind: 'min';
     /** Resolved minimum required by the validator. */
