@@ -4,6 +4,7 @@ import type { Options, ThemeConfig } from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Gem Forms',
   tagline: 'Typed, signal-based forms for Angular',
+  favicon: 'img/favicon.svg',
   url: process.env.DOCS_URL ?? 'https://gastonmesseri.github.io',
   baseUrl: process.env.DOCS_BASE_URL ?? '/ng-forms/',
   organizationName: 'gastonmesseri',
@@ -37,8 +38,15 @@ const config: Config = {
     },
     navbar: {
       title: 'Gem Forms',
+      hideOnScroll: true,
+      logo: {
+        alt: 'Gem Forms',
+        src: 'img/favicon.svg',
+      },
       items: [
-        { type: 'docSidebar', sidebarId: 'consumerDocs', position: 'left', label: 'Documentation' },
+        { type: 'docSidebar', sidebarId: 'consumerDocs', position: 'left', label: 'Docs' },
+        { to: '/guides/validation', position: 'left', label: 'Guides' },
+        { to: '/reference/node-api', position: 'left', label: 'API' },
         { href: 'https://github.com/gastonmesseri/ng-forms', position: 'right', label: 'GitHub' },
       ],
     },
@@ -50,12 +58,15 @@ const config: Config = {
           items: [
             { label: 'Getting started', to: '/getting-started/installation' },
             { label: 'Core concepts', to: '/concepts/form-nodes' },
+            { label: 'Guides', to: '/guides/validation' },
+            { label: 'API reference', to: '/reference/node-api' },
           ],
         },
         {
           title: 'Project',
           items: [
             { label: 'GitHub', href: 'https://github.com/gastonmesseri/ng-forms' },
+            { label: 'npm', href: 'https://www.npmjs.com/package/@gem/ng-forms' },
           ],
         },
       ],

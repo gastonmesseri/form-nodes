@@ -4,14 +4,26 @@ title: Values and state
 
 # Values and state
 
-Nodes are callable signals. Calling a node or its `value()` signal reads the committed value:
+Nodes are callable signals. **Prefer calling the node itself to read its committed value:**
 
 ```ts
-profile();
-profile.api.value();
-profile.name();
-profile.name.value();
+const profileValue = profile();
+const nameValue = profile.name();
 ```
+
+The same committed value is also available through `value()` directly or under `.api`:
+
+```ts
+profile.value();
+profile.api.value();
+
+profile.name.value();
+profile.name.api.value();
+```
+
+These alternatives can be useful in generic code or when explicitly naming the value signal
+improves readability. They do not represent different snapshots: for any node, `myNode()`,
+`myNode.value()`, and `myNode.api.value()` return the same committed value.
 
 For forms, prefer `.api` for form-level operations because children are also exposed as direct properties. `$api` is the collision-safe alternative when a form contains a child named `api`.
 
@@ -47,16 +59,25 @@ Resetting a nested node affects only that subtree. Validators remain configured 
 
 ## Control values and debounce
 
-`controlValue()` is the immediate value buffered from a bound UI control. `value()` is the committed model value observed by validators and ancestors:
+`controlValue()` is not another general-purpose value accessor. It is the immediate value buffered
+from a bound UI control, while the node call and `value()` read the committed model observed by
+validators and ancestors:
 
 ```ts
 const search = field('', { debounce: 300, nullable: false });
 
 search.setControlValue('angular');
 search.controlValue(); // 'angular'
-search.value(); // '' until the delay completes
+search(); // '' until the delay completes (preferred committed-value read)
+search.value(); // also ''
+search.api.value(); // also ''
 search.debouncing(); // true
 ```
+
+Without a pending control debounce, `controlValue()` and the committed value normally match.
+Pending values from descendant controls are not composed into a form or array's
+`controlValue()`; aggregate nodes continue exposing their last committed representation until the
+descendant value commits.
 
 Use `debounce: 'blur'` to commit on focus loss, or provide a function that receives an `AbortSignal` and optionally returns a promise. A new control value cancels the previous debounce. `flush()` commits immediately.
 
