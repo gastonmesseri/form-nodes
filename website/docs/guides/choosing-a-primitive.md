@@ -184,7 +184,9 @@ domain genuinely treat the object atomically.
 
 ## Array field or `array()`?
 
-An array-valued field and an array node also model different interaction boundaries:
+An array value does **not** require `array()`. A normal field can hold an array—or any other
+JavaScript value. Choose between them based on the controls and state the UI needs, not only on the
+TypeScript value shape.
 
 ```ts
 const myForm = form({
@@ -197,8 +199,42 @@ const myForm = form({
 });
 ```
 
-Use the field when one control owns the complete collection—for example, a multi-select. Use
-`array()` when every item needs its own node or the UI performs structural operations.
+Use the field when one control owns the complete collection. A native multi-select is a common
+example: the select reads and writes one `string[]` value, so no item nodes are needed.
+
+```ts
+import { Component } from '@angular/core';
+
+import { field, form, FormNode } from '@gem/ng-forms';
+
+@Component({
+  selector: 'app-role-picker',
+  imports: [FormNode],
+  template: `
+    <label for="roles">Roles</label>
+    <select id="roles" multiple [formNode]="myForm.selectedRoles">
+      <option value="admin">Administrator</option>
+      <option value="editor">Editor</option>
+      <option value="viewer">Viewer</option>
+    </select>
+
+    <p>Selected roles: {{ (myForm.selectedRoles() ?? []).join(', ') }}</p>
+  `,
+})
+export class RolePicker {
+  myForm = form({
+    selectedRoles: field<string[]>([]),
+  });
+}
+```
+
+`selectedRoles` is one leaf node with one touched, dirty, pending, and validation state. Update the
+whole selection with `selectedRoles.set([...])`; it intentionally has no `push()`, `removeAt()`,
+numeric child indexes, or per-role errors.
+
+Use `array()` when every item needs its own node or the UI performs structural operations. An
+`array()` gives each item an independent path, value, binding, validation state, touched state, and
+dirty state, and exposes operations such as `push()`, `insert()`, `removeAt()`, and `move()`.
 
 Unlike `field<string[]>()`, an `array()` value is never null. Passing `null` or `undefined` to its
 complete-value operations clears it to `[]`.

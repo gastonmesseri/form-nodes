@@ -38,4 +38,11 @@ The tutorial uses standalone components and Angular's built-in control flow. The
 6. [Validate asynchronously](./06-async-validation.md)
 7. [Submit the form](./07-submission.md)
 
+## Tutorial and reference together
+
+Each step ends with a small set of related guides, API references, and cookbook recipes. Follow the
+steps in order for a working progression, then use those contextual links when you need exact
+behavior, complete signatures, or a focused production pattern. The main [documentation
+overview](../index.mdx) also groups pages by task.
+
 Continue with [Step 1: Declare the model](./01-model.md).

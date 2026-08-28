@@ -37,10 +37,12 @@ export class Checkout {
 
   myForm = form({
     customerName: field('', [required]),
-    companyName: field('', [required], {
+    companyName: field('', {
+      validators: [required],
       hidden: () => !this.isBusiness(),
     }),
-    taxId: field('', [required], {
+    taxId: field('', {
+      validators: [required],
       hidden: () => !this.isBusiness(),
     }),
   });

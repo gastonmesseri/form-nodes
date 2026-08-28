@@ -69,6 +69,10 @@ body {
   margin-top: 2.75rem;
 }
 
+.theme-doc-markdown > h2 > code {
+  font-size: inherit;
+}
+
 .theme-doc-markdown table {
   display: table;
   width: 100%;

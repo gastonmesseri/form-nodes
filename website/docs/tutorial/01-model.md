@@ -69,4 +69,13 @@ The model itself also works outside Angular and does not require dependency inje
 field is already connected to a native input; next, bind the remaining fields and examine the
 control interaction behavior.
 
+## Related guides and reference
+
+- [Creating nodes](../concepts/creating-nodes.md) covers every `field()`, `form()`, nested-object,
+  and `array()` declaration shape.
+- [Values and state](../concepts/values-and-state.md) explains callable values, `set()`, `update()`,
+  `patch()`, and `reset()`.
+- [`field()` reference](../reference/field.md) documents nullability, options, state, and validation.
+- [`form()` reference](../reference/form.md) documents aggregate values, children, and operations.
+
 Continue with [Step 2: Bind controls](./02-bind-controls.md).

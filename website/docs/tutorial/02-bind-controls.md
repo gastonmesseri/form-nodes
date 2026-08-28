@@ -210,4 +210,15 @@ the custom-controls guide.
 The [Custom controls](../guides/custom-controls.md) guide documents the complete compatibility
 matrix, state inputs, hooks, precedence, and limitations.
 
+## Related guides and reference
+
+- [Control binding](../guides/control-binding.md) details native value conversion, constraints,
+  focus, status classes, SSR, and hydration.
+- [Custom controls](../guides/custom-controls.md) covers `model()`, input/output pairs,
+  `ControlValueAccessor`, and explicit registration.
+- [Node API](../reference/node-api.md#binding-api) lists the public API available from a
+  `viewChild()` binding.
+- [Build a custom rating control](../cookbook/custom-rating-control.md) is a focused end-to-end
+  recipe.
+
 Continue with [Step 3: Add validation](./03-validation.md).

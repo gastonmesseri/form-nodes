@@ -6,24 +6,28 @@ title: 4. Add nesting and state
 
 Group related fields with shorthand objects. Use an explicit nested `form()` when that branch needs its own configuration.
 
+The validators from the previous step are omitted here so the nested structure remains easy to
+scan. They can stay on the same fields in the complete application without changing how nesting
+works.
+
 ```ts
 readonly useShippingAddress = signal(true);
 
 myForm = form({
-  name: field('', [required, minLength(2)]),
-  age: field<number>(null, [between(18, 120), integer]),
-  email: field('', [required, email]),
+  name: field(''),
+  age: field<number>(null),
+  email: field(''),
 
   shippingAddress: {
-    street: field('', [required]),
-    city: field('', [required]),
-    postalCode: field('', [required]),
+    street: field(''),
+    city: field(''),
+    postalCode: field(''),
   },
 
   billingAddress: form({
-    street: field('', [required]),
-    city: field('', [required]),
-    postalCode: field('', [required]),
+    street: field(''),
+    city: field(''),
+    postalCode: field(''),
   }, {
     disabled: () => this.useShippingAddress()
       ? 'Using the shipping address for billing.'
@@ -56,5 +60,14 @@ this.myForm.patch({
   },
 });
 ```
+
+## Related guides and reference
+
+- [Interaction and availability](../guides/interaction-and-availability.md) documents touched,
+  dirty, disabled, readonly, hidden, propagation, and suppression behavior.
+- [Tree navigation and API access](../concepts/tree-and-api.md) explains direct children, paths,
+  parents, roots, and name collisions.
+- [Values and state](../concepts/values-and-state.md) covers nested updates and aggregate state.
+- [`form()` reference](../reference/form.md) documents nested shorthand and explicit form options.
 
 Continue with [Step 5: Manage a dynamic array](./05-dynamic-arrays.md).
