@@ -97,26 +97,44 @@ profile.focus();
 
 ## Status classes
 
-Configure reactive classes once through dependency injection:
+Configure reactive classes once in the standalone application providers:
 
 ```ts
-provideFormNodeConfig({
-  classes: {
-    'is-invalid': binding => binding.node().$api.invalid(),
-    'is-touched': binding => binding.node().$api.touched(),
-    'is-pending': binding => binding.node().$api.pending(),
-  },
-});
+import type { ApplicationConfig } from '@angular/core';
+
+import { provideFormNodeConfig } from '@gem/ng-forms';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFormNodeConfig({
+      classes: {
+        'is-invalid': binding => binding.node().$api.invalid(),
+        'is-touched': binding => binding.node().$api.touched(),
+        'is-pending': binding => binding.node().$api.pending(),
+      },
+    }),
+  ],
+};
 ```
 
-The nearest provider wins. Each predicate tracks only the signals it reads.
+The configuration applies to bindings below that injector. Register it in a route, component, or
+NgModule `providers` array for a narrower scope. The nearest provider wins, and each predicate
+tracks only the signals it reads.
 
 Use the optional preset for Angular-style status classes:
 
 ```ts
-provideFormNodeConfig({
-  classes: FORM_NODE_STATUS_CLASSES,
-});
+import type { ApplicationConfig } from '@angular/core';
+
+import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFormNodeConfig({
+      classes: FORM_NODE_STATUS_CLASSES,
+    }),
+  ],
+};
 ```
 
 It adds `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng-untouched`/`ng-touched`. No status classes are installed by default.

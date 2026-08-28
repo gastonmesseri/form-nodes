@@ -34,11 +34,11 @@ Submission marks the form subtree touched, which also commits pending control va
 
 ## Native form elements
 
-Import `FormRootDirective` and bind the root node to a native form:
+Import `FormRoot` and bind the root node to a native form:
 
 ```ts
 @Component({
-  imports: [FormNode, FormRootDirective],
+  imports: [FormNode, FormRoot],
   template: `
     <form [formNode]="registration">
       <input [formNode]="registration.name" />

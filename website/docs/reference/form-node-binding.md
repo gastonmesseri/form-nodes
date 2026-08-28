@@ -53,25 +53,45 @@ co-located with the host genuinely needs the concrete binding.
 
 ## Automatic CSS classes
 
-`provideFormNodeConfig()` installs reactive classes for bindings below that injector:
+For the common application-wide setup, register `provideFormNodeConfig()` in the standalone
+application configuration:
 
 ```ts
-provideFormNodeConfig({
-  classes: {
-    'is-invalid': binding => binding.node().$api.invalid(),
-    'is-touched': binding => binding.node().$api.touched(),
-  },
-});
+import type { ApplicationConfig } from '@angular/core';
+
+import { provideFormNodeConfig } from '@gem/ng-forms';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFormNodeConfig({
+      classes: {
+        'is-invalid': binding => binding.node().$api.invalid(),
+        'is-touched': binding => binding.node().$api.touched(),
+      },
+    }),
+  ],
+};
 ```
 
 Each predicate tracks its own signal dependencies independently. The nearest provider applies.
+Register the provider in a route, component, or NgModule instead when the configuration should
+apply only to that injector subtree.
+
 `FORM_NODE_STATUS_CLASSES` is an optional preset containing Angular-style validity, pending, dirty,
 pristine, touched, and untouched classes. No classes are installed by default.
 
 ```ts
-provideFormNodeConfig({
-  classes: FORM_NODE_STATUS_CLASSES,
-});
+import type { ApplicationConfig } from '@angular/core';
+
+import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFormNodeConfig({
+      classes: FORM_NODE_STATUS_CLASSES,
+    }),
+  ],
+};
 ```
 
 ## Custom-control registration
@@ -120,11 +140,11 @@ export class FormNodeWrapperDirective {}
 
 ## Native form submission
 
-Import `FormRootDirective` alongside `FormNode` when binding a root node to a native form:
+Import `FormRoot` alongside `FormNode` when binding a root node to a native form:
 
 ```ts
 @Component({
-  imports: [FormNode, FormRootDirective],
+  imports: [FormNode, FormRoot],
   template: `
     <form [formNode]="myForm">
       <input [formNode]="myForm.email" />
