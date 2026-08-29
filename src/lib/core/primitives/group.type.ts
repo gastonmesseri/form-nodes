@@ -1,5 +1,4 @@
 import type { Signal } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
 
 import type { Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -176,24 +175,22 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
     : GroupApi<TNodes, TParent>;
   /**
    * Collision-safe access to the group API.
-   *
-   * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+   * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
   $api: GroupApi<TNodes, TParent>;
   /**
-   * Angular Signal Forms view of this node for binding with `[formField]`.
+   * Opaque Angular Signal Forms adapter for binding with `[formField]`.
    *
-   * This property is supported and is not planned for removal. It is marked as deprecated only
-   * to keep this template-specific adapter out of the way in ordinary node autocomplete.
+   * This property is supported and is not planned for removal. Use it only as the terminal value
+   * passed to Angular's `[formField]` binding.
    *
    * @example
    * ```html
-   * <my-component [formField]="myForm.address.$field" />
+   * <input [formField]="form.user.$field" />
    * ```
    *
-   * @deprecated Not actually deprecated. Use only when binding through Angular's `[formField]`.
    */
-  readonly $field: FieldTree<GroupValue<TNodes>> & HiddenFunctionMembers<keyof FieldTree<GroupValue<TNodes>>>;
+  readonly $field: never;
 };
 
 /** A fixed, object-shaped structural node without its own submission workflow. */

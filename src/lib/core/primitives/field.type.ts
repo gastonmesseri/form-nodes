@@ -1,5 +1,4 @@
 import type { Injector, Signal } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
 
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, Node, NodeKeyInParent, RootNode } from '../types/node.type';
@@ -246,26 +245,22 @@ export type Field<TValue, TParent extends Node = Node> =
      * Prefer `api` for normal application code. `$api` exists as the stable access convention
      * shared by every node, including forms whose children may be named `api`.
      *
-     * This property is not obsolete and is not planned for removal. It is marked as deprecated
-     * only to reduce its prominence in autocomplete and keep the usual `api` access easier to find.
-     *
-     * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+     * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
      */
     $api: FieldApi<TValue, TParent>;
     /**
-     * Angular Signal Forms view of this node for binding with `[formField]`.
+     * Opaque Angular Signal Forms adapter for binding with `[formField]`.
      *
-     * This property is supported and is not planned for removal. It is marked as deprecated only
-     * to keep this template-specific adapter out of the way in ordinary node autocomplete.
+     * This property is supported and is not planned for removal. Use it only as the terminal value
+     * passed to Angular's `[formField]` binding.
      *
      * @example
      * ```html
-     * <my-component [formField]="myForm.name.$field" />
+     * <input [formField]="form.user.$field" />
      * ```
      *
-     * @deprecated Not actually deprecated. Use only when binding through Angular's `[formField]`.
      */
-    readonly $field: FieldTree<TValue> & HiddenFunctionMembers<keyof FieldTree<TValue>>;
+    readonly $field: never;
   }
   & Omit<FieldApi<TValue, TParent>, 'patch'>
   & HiddenFunctionMembers;

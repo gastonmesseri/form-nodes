@@ -87,10 +87,7 @@ export type Node = (() => any) & {
    * Prefer `api` for normal application code. Use `$api` when a form declares a child named
    * `api`, or when generic node code requires an access path that cannot collide with children.
    *
-   * This property is not obsolete and is not planned for removal. It is marked as deprecated
-   * only to reduce its prominence in autocomplete and keep the usual `api` access easier to find.
-   *
-   * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+   * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
   $api: NodeApi;
 };

@@ -8,8 +8,7 @@ Every `field()`, `group()`, `form()`, and `array()` exposes its complete API thr
 is the recommended access for application code. Every node also exposes the reserved `$api` escape
 hatch. `$api` always provides collision-safe access to the node API, including when an object node
 declares a child named `api`. Internal library code uses `$api`, so user-defined children cannot
-interfere with node operations. `$api` is annotated with `@deprecated` only to reduce its prominence
-in autocomplete; it is not actually obsolete, remains supported, and is not planned for removal.
+interfere with node operations. `$api` is a supported, stable escape hatch; it is not deprecated.
 
 ```ts
 const profile = form({ age: field(23) });
@@ -1811,13 +1810,9 @@ submission-owning form.
 
 ### Angular Signal Forms `FieldTree` adapter
 
-Every node exposes a lazy `$field` property containing the corresponding official Angular Signal
-Forms `FieldTree`. A single Angular tree is created for the complete root and descendant `$field`
-properties navigate that same tree, preserving identity:
-
-```ts
-myForm.name.$field === myForm.$field.name;
-```
+Every node exposes a lazy `$field` property whose runtime value is the corresponding official
+Angular Signal Forms `FieldTree`. A single Angular tree is created for the complete root and all
+descendant adapters navigate that same tree internally.
 
 This enables Angular's own directive without replacing the library model:
 
@@ -1828,12 +1823,12 @@ This enables Angular's own directive without replacing the library model:
 Committed values synchronize bidirectionally. Disabled, readonly, hidden, required, validation,
 touched, and dirty state are mirrored so Angular controls observe the library node as their source
 of form state, while control-originated value and interaction changes update the library node.
-`$field` is reserved as collision-safe interop syntax and is intentionally less prominent than
-the normal callable node API. Its public JSDoc uses TypeScript's `@deprecated` editor marker solely
-to demote it in autocomplete: the adapter remains supported, is not obsolete, and is not planned
-for removal. The public type remains structurally assignable to Angular's `FieldTree`, while
-irrelevant inherited function-object members such as `toString`, `apply`, and `bind` are hidden.
-Actual `FieldTree` children remain navigable and typed.
+`$field` is reserved as collision-safe interop syntax and remains a supported, stable adapter. Its
+public type is deliberately `never`. This makes the expression assignable to
+Angular's `FormField` input during strict template checking while preventing application
+TypeScript from calling it or accessing any runtime `FieldTree` property, including children and
+function-object members. Consumers select the Gem Forms node first and use `$field` only as the
+terminal template-binding adapter.
 
 At leaf bindings, Angular control interaction is bidirectional: input-driven dirty state and
 blur-driven touched state update the library node, Angular reset clears both flags in the node, and
