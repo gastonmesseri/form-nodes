@@ -1,5 +1,7 @@
 import { untracked } from '@angular/core';
 
+import type { ValidationError } from '../../validation/validation.type';
+
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
 export const isNativeInput = (element: NativeFormNodeControl): element is HTMLInputElement =>
@@ -10,6 +12,10 @@ export const isNativeSelect = (element: NativeFormNodeControl): element is HTMLS
 
 export const isNativeFormNodeControl = (element: HTMLElement): element is NativeFormNodeControl =>
   element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA';
+
+export type NativeControlParseResult =
+  | { readonly value: unknown; readonly error?: never }
+  | { readonly value?: never; readonly error: ValidationError.WithoutTargetNode };
 
 const readSelectedValues = (select: HTMLSelectElement): string[] =>
   Array.from(select.selectedOptions, (option) => option.value);
@@ -53,6 +59,23 @@ export const readNativeControlValue = (
     default:
       return element.value;
   }
+};
+
+/** Parses a native control value without replacing the last valid model value on failure. */
+export const parseNativeControlValue = (
+  element: NativeFormNodeControl,
+  currentValue: () => unknown,
+): NativeControlParseResult => {
+  if (isNativeInput(element) && (element.validity?.badInput ?? false)) {
+    return { error: { kind: 'parse' } };
+  }
+  if (isNativeInput(element) && element.type === 'text') {
+    const value = untracked(currentValue);
+    if ((typeof value === 'number' || value === null) && element.value !== '' && Number.isNaN(Number(element.value))) {
+      return { error: { kind: 'parse' } };
+    }
+  }
+  return { value: readNativeControlValue(element, currentValue) };
 };
 
 const writeNumber = (element: HTMLInputElement, value: number): void => {

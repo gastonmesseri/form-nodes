@@ -1270,6 +1270,28 @@ The directive currently provides these behaviors:
 - The directive supports server rendering for native controls and custom `ControlValueAccessor` components. Initial value and node-state bindings are rendered on the server, while browser-only select option observation is installed only in a browser environment. Native value conversion identifies controls structurally instead of depending on browser constructor globals.
 - Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
 
+### Native parse errors
+
+Native controls parse their raw UI state before calling `setControlValue()`. If the browser reports
+`ValidityState.badInput`, or a numeric model is bound to a text input containing a non-numeric value,
+the field receives an external validation error with `kind: 'parse'`. The failed raw value remains in
+the DOM so the user can correct it, while both `value()` and `controlValue()` retain their last valid
+values. The interaction still marks the field dirty, and the parse error immediately participates in
+the field and ancestor validation state. A successful later parse clears the error and follows the
+normal control debounce rules.
+
+Parse errors belong to an individual `[formNode]` binding. Two controls bound to the same field may
+therefore contribute independent parse errors. A programmatic model update clears stale parse errors
+and writes the new value to every binding. `reset()` also clears each binding's parse state and forces
+its raw DOM value back to the current model, including when the model value itself is unchanged.
+Changing the directive's bound field or destroying the binding removes its previous error ownership.
+
+Date, datetime-local, month, time, and week inputs can change between `badInput` and an empty valid
+state without dispatching an `input` event. In the browser, `[formNode]` monitors their native validity
+transitions using a small CSS animation hook, matching Angular Signal Forms. The style is shared per
+document or Shadow Root, honors Angular's `CSP_NONCE`, and is removed when its last binding is
+destroyed. No validity observer or style is installed during server rendering.
+
 This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
 
 The architecture follows Angular 22 Signal Forms `FormField` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), while keeping the public name and node model specific to this library. Native parsing errors, configurable state classes, and a first-class signal-based custom-control protocol remain subsequent layers; they should be implemented as adapters around the same directive rather than by changing field semantics.

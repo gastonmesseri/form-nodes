@@ -11,14 +11,14 @@ const packageUrl = pathToFileURL(resolve(workspace, 'dist', 'fesm2022', 'gem-ng-
 const { field, required, FormNodeDirective } = await import(packageUrl);
 
 class HydrationApp {
-  name = field('', [required], { nullable: false });
+  age = field(23, [required], { nullable: false });
 }
 
 Component({
   selector: 'form-node-hydration-app',
   standalone: true,
   imports: [FormNodeDirective],
-  template: '<input data-name [formNode]="name"><span data-value>{{ name() }}</span>',
+  template: '<input data-age type="text" [formNode]="age"><span data-value>{{ age() }}</span>',
 })(HydrationApp);
 
 const hydrationHtml = await renderApplication(

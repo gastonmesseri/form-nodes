@@ -1,8 +1,8 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Component, forwardRef, type OnDestroy } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
+import { CSP_NONCE, Component, ViewEncapsulation, forwardRef, type OnDestroy } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { field } from '../../primitives/field';
@@ -181,6 +181,132 @@ describe('FormNodeDirective in Chromium', () => {
     expect(fixture.componentInstance.name()).toBe('Mark');
     expect(fixture.componentInstance.name.debouncing()).toBe(false);
     fixture.destroy();
+  });
+
+  it('retains invalid numeric text until a valid value or reset resolves the parse error', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-parse-form-node-host',
+      imports: [FormNodeDirective],
+      template: `<input type="text" [formNode]="age">`,
+    })
+    class Host {
+      readonly age = field(23, { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const { age } = fixture.componentInstance;
+
+    input.value = 'invalid';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+
+    expect(input.value).toBe('invalid');
+    expect(age()).toBe(23);
+    expect(age.getError('parse')?.kind).toBe('parse');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+
+    age.reset();
+    fixture.detectChanges();
+    expect(input.value).toBe('23');
+    expect(age.valid()).toBe(true);
+
+    input.value = '42';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+    expect(age()).toBe(42);
+    expect(age.getError('parse')).toBeUndefined();
+    fixture.destroy();
+  });
+
+  it('tracks browser bad-input transitions for every date-like input and cleans up its shared style', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-validity-form-node-host',
+      imports: [FormNodeDirective],
+      providers: [{ provide: CSP_NONCE, useValue: 'test-nonce' }],
+      template: `
+        <input data-date type="date" [formNode]="date">
+        <input data-datetime type="datetime-local" [formNode]="datetime">
+        <input data-month type="month" [formNode]="month">
+        <input data-time type="time" [formNode]="time">
+        <input data-week type="week" [formNode]="week">
+      `,
+    })
+    class Host {
+      readonly date = field('2026-08-29', { nullable: false });
+      readonly datetime = field('2026-08-29T12:30', { nullable: false });
+      readonly month = field('2026-08', { nullable: false });
+      readonly time = field('12:30', { nullable: false });
+      readonly week = field('2026-W35', { nullable: false });
+    }
+
+    const stylesBefore = document.head.querySelectorAll('style').length;
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const validityStyle = Array.from(document.head.querySelectorAll('style')).find((style) =>
+      style.textContent?.includes('@keyframes form-node-valid'),
+    );
+    expect(document.head.querySelectorAll('style')).toHaveLength(stylesBefore + 1);
+    expect(validityStyle?.nonce).toBe('test-nonce');
+
+    const cases = [
+      ['date', fixture.componentInstance.date],
+      ['datetime', fixture.componentInstance.datetime],
+      ['month', fixture.componentInstance.month],
+      ['time', fixture.componentInstance.time],
+      ['week', fixture.componentInstance.week],
+    ] as const;
+    for (const [selector, node] of cases) {
+      const input = fixture.nativeElement.querySelector(`[data-${selector}]`) as HTMLInputElement;
+      const initialValue = node();
+      let badInput = true;
+      Object.defineProperty(input, 'validity', {
+        configurable: true,
+        get: () => ({ badInput }),
+      });
+      input.value = '';
+      dispatch(input, 'input');
+      fixture.detectChanges();
+      expect(node()).toBe(initialValue);
+      expect(node.getError('parse')?.kind).toBe('parse');
+
+      badInput = false;
+      input.dispatchEvent(new AnimationEvent('animationstart', { animationName: 'form-node-valid' }));
+      fixture.detectChanges();
+      expect(node()).toBe('');
+      expect(node.getError('parse')).toBeUndefined();
+    }
+
+    fixture.destroy();
+    expect(document.head.querySelectorAll('style')).toHaveLength(stylesBefore);
+  });
+
+  it('installs and removes native validity monitoring inside Shadow DOM', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-shadow-validity-form-node-host',
+      imports: [FormNodeDirective],
+      encapsulation: ViewEncapsulation.ShadowDom,
+      template: `<input type="date" [formNode]="date">`,
+    })
+    class Host {
+      readonly date = field('2026-08-29', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const shadowRoot = (fixture.nativeElement as HTMLElement).shadowRoot!;
+    expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) =>
+      style.textContent?.includes('@keyframes form-node-valid'),
+    )).toBe(true);
+
+    fixture.destroy();
+    expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) =>
+      style.textContent?.includes('@keyframes form-node-valid'),
+    )).toBe(false);
   });
 
   it('integrates with a custom ControlValueAccessor through real DOM events', () => {

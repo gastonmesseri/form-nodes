@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
 import { field } from '../primitives/field';
-import { readExternalValidationErrors, registerExternalValidationErrors } from './external-validation-errors';
+import { notifyExternalValidationReset, readExternalValidationErrors, registerExternalValidationErrors } from './external-validation-errors';
 
 describe('external validation errors', () => {
   it('combines reactive sources in registration order and supplies the default target node', () => {
@@ -57,5 +57,19 @@ describe('external validation errors', () => {
 
     cleanupSecond();
     expect(readExternalValidationErrors(name)).toEqual([]);
+  });
+
+  it('notifies only currently registered reset handlers', () => {
+    const name = field('David');
+    let resetCount = 0;
+    const cleanup = registerExternalValidationErrors(name, {}, signal([]), {
+      onReset: () => resetCount++,
+    });
+
+    notifyExternalValidationReset(name);
+    cleanup();
+    notifyExternalValidationReset(name);
+
+    expect(resetCount).toBe(1);
   });
 });
