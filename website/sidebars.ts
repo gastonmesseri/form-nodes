@@ -3,6 +3,7 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   consumerDocs: [
     'index',
+    'playground',
     {
       type: 'category',
       label: 'Getting started',
@@ -81,6 +82,16 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Help',
       items: ['help/common-mistakes', 'help/troubleshooting'],
+    },
+    {
+      type: 'category',
+      label: 'Project',
+      items: [
+        'project/versioning',
+        'project/compatibility',
+        'project/changelog',
+        'project/migrations',
+      ],
     },
     {
       type: 'category',

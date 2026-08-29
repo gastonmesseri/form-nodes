@@ -55,6 +55,8 @@ const myForm = form({
   })
 });
 
+myForm.sons1.insert(1)
+
 myForm.sons1[0]?.getError('')
 
 const directiveInstance: FormNode<typeof myForm.age> = {} as any;
