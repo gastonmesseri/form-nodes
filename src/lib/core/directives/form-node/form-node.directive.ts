@@ -1,4 +1,4 @@
-import { CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Input, Renderer2, computed, effect, forwardRef, inject, signal, untracked, type OnInit, type Signal } from '@angular/core';
+import { CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
@@ -61,24 +61,19 @@ const toControlErrors = (errors: ValidationErrors | null): readonly ValidationEr
   ],
 })
 export class FormNodeDirective<TValue> implements OnInit {
-  private readonly currentField = signal<Field<TValue> | undefined>(undefined);
+  readonly _fieldInput = input.required<Field<TValue>>({ alias: 'formNode' });
 
   /** Field node bound to the host native control or ControlValueAccessor. */
-  @Input({ required: true, alias: 'formNode' })
-  set field(value: Field<TValue>) { this.currentField.set(value); }
-
   get field(): Field<TValue> {
-    const field = this.currentField();
-    if (!field) throw new Error('formNode: a field node is required');
+    const field = this._fieldInput();
+    if (typeof field !== 'function' || typeof field.controlValue !== 'function') {
+      throw new Error('formNode: a field node is required');
+    }
     return field;
   }
 
   /** Current bound field, exposed as a signal for custom integrations. */
-  readonly node: Signal<Field<TValue>> = computed(() => {
-    const field = this.currentField();
-    if (!field) throw new Error('formNode: a field node is required');
-    return field;
-  });
+  readonly node: Signal<Field<TValue>> = computed(() => this.field);
   private _ngControl: FormNodeNgControl | undefined;
 
   /** Fake `NgControl` exposed for interoperability with existing Angular controls. */

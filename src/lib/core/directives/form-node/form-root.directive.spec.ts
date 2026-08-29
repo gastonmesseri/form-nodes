@@ -1,51 +1,81 @@
-import { describe, expect, it, vi } from 'vitest';
-import { Injector, runInInjectionContext, ɵSIGNAL as SIGNAL, type ɵInputSignalNode as InputSignalNode } from '@angular/core';
+// @vitest-environment jsdom
+
+import '@angular/compiler';
+import { Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
-import { required } from '../../validation/validators/required';
+import { FormNodeDirective } from './form-node.directive';
 import { FormRootDirective } from './form-root.directive';
+import { required } from '../../validation/validators/required';
+import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 
-const bindForm = (directive: FormRootDirective, formNode: ReturnType<typeof form>): void => {
-  const node = directive.form[SIGNAL] as InputSignalNode<ReturnType<typeof form>, ReturnType<typeof form>>;
-  node.applyValueToInputSignal(node, formNode);
-};
-const createDirective = (): FormRootDirective =>
-  runInInjectionContext(Injector.create({ providers: [] }), () => new FormRootDirective());
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
+registerSignalInputForJit(FormRootDirective, 'formNode', 'form');
+
+beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
+afterAll(() => TestBed.resetTestEnvironment());
 
 describe('FormRootDirective', () => {
-  it('prevents native submission and submits the bound form node', async () => {
+  it('sets novalidate and submits the bound form node', async () => {
     const action = vi.fn();
-    const profile = form({ name: field('Marco') }, { submission: { action } });
-    const directive = createDirective();
-    const event = new Event('submit', { cancelable: true });
-    bindForm(directive, profile);
 
-    directive.submit(event);
+    @Component({
+      standalone: true,
+      imports: [FormRootDirective],
+      template: `<form [formNode]="profile"><button type="submit">Save</button></form>`,
+    })
+    class Host {
+      readonly profile = form({ name: field('Marco') }, { submission: { action } });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const element = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    const event = new Event('submit', { bubbles: true, cancelable: true });
+
+    element.dispatchEvent(event);
     await Promise.resolve();
 
+    expect(element.noValidate).toBe(true);
     expect(event.defaultPrevented).toBe(true);
-    expect(action).toHaveBeenCalledWith(profile, { name: 'Marco' });
+    expect(action).toHaveBeenCalledWith(fixture.componentInstance.profile, { name: 'Marco' });
   });
 
-  it('delegates native reset to the complete form tree', () => {
+  it('prevents an invalid action and resets model and interaction state from a native reset', () => {
     const action = vi.fn();
-    const profile = form({ name: field('', [required]) }, { submission: { action } });
-    const directive = createDirective();
-    bindForm(directive, profile);
 
-    directive.submit(new Event('submit', { cancelable: true }));
+    @Component({
+      standalone: true,
+      imports: [FormNodeDirective, FormRootDirective],
+      template: `<form [formNode]="profile"><input [formNode]="profile.name"></form>`,
+    })
+    class Host {
+      readonly profile = form({ name: field('', [required]) }, { submission: { action } });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const element = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    element.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
     expect(action).not.toHaveBeenCalled();
-    expect(profile.name.touched()).toBe(true);
+    expect(fixture.componentInstance.profile.name.touched()).toBe(true);
 
-    profile.name.set('changed');
-    profile.name.markAsDirty();
-    const event = new Event('reset', { cancelable: true });
-    directive.reset(event);
+    input.value = 'changed';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.value = 'stale view';
+    const resetEvent = new Event('reset', { bubbles: true, cancelable: true });
+    element.dispatchEvent(resetEvent);
 
-    expect(event.defaultPrevented).toBe(true);
-    expect(profile()).toEqual({ name: 'changed' });
-    expect(profile.touched()).toBe(false);
-    expect(profile.dirty()).toBe(false);
+    expect(resetEvent.defaultPrevented).toBe(true);
+    expect(fixture.componentInstance.profile()).toEqual({ name: 'changed' });
+    expect(input.value).toBe('changed');
+    expect(fixture.componentInstance.profile.touched()).toBe(false);
+    expect(fixture.componentInstance.profile.dirty()).toBe(false);
   });
 });

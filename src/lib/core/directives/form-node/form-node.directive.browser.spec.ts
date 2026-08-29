@@ -8,6 +8,9 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { field } from '../../primitives/field';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../../validation/validators/required';
+import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
+
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());

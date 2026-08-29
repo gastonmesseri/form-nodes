@@ -13,7 +13,10 @@ import type { Field } from '../../primitives/field';
 import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { required } from '../../validation/validators/required';
+import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './native-control';
+
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
