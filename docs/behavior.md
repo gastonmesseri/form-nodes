@@ -910,18 +910,19 @@ Angular 22.1.4 Signal Forms has separate `minDate` and `maxDate` schema rules bu
 `dateBetween` rule. This is a convenience API with the same inclusive date comparisons and
 optional-value behavior.
 
-`required` supports direct use and an options object with a message:
+Built-in validators accept a static message string directly wherever it is unambiguous. Their
+options object remains available for reactive messages and additional options such as date parsing:
 
 ```ts
 field('David', [required]);
-field('David', [required({ message: 'Name is required' })]);
+field('David', [required('Name is required')]);
 field('David', [required({ message: () => translatedRequiredMessage() })]);
-field('', [email({ message: 'Enter a work email' })]);
-field('', [url({ message: 'Enter a complete URL' })]);
-field(1.5, [integer({ message: 'Enter a whole number' })]);
-field('yes', [equalTo('yes', { message: 'Values must match' })]);
-field(16, [min(18, { message: 'You must be at least 18' })]);
-field(70, [between(18, 65, { message: 'Enter a supported age' })]);
+field('', [email('Enter a work email')]);
+field('', [url('Enter a complete URL')]);
+field(1.5, [integer('Enter a whole number')]);
+field('yes', [equalTo('yes', 'Values must match')]);
+field(16, [min(18, 'You must be at least 18')]);
+field(70, [between(18, 65, 'Enter a supported age')]);
 ```
 
 `between(minimum, maximum)` validates an inclusive numeric range and reports one structured error
@@ -1006,13 +1007,16 @@ function is evaluated only while its validator is failing; signals read by it ar
 changes update the exposed error reactively. Returning `undefined` continues through the configured
 fallback chain. This works inside and outside Angular dependency injection.
 
-`required`, `email`, and `url` support direct use in a validators array and an options factory; validators
-that require a constraint accept options as their final argument. Passing a string directly to
-`required` is intentionally rejected. Field contexts carry a non-enumerable internal symbol
+`required`, `email`, `url`, `integer`, and `uniqueItems` support direct use in a validators array and
+an options factory; validators that require a constraint accept message configuration as their final
+argument. A static string is the concise message form. The inline object is retained for reactive
+message functions and date parsing options. `uniqueItems` cannot use a one-argument string message
+because strings select an object property; use `uniqueItems({ message: ... })` without a selector or
+`uniqueItems('property', 'message')` with one. Field contexts carry a non-enumerable internal symbol
 marker, allowing overloaded validators to recognize genuine contexts without relying on their
 structural shape or exposing the marker in the public `FieldContext` type.
 
-Built-in validator signatures inline their small options object so IntelliSense shows
+Built-in validator signatures expose the static-string shorthand and inline their small options object so IntelliSense shows
 `message?: string | (() => string | undefined)` directly at the call site instead of hiding it
 behind `ValidatorOptions`. Date validators additionally show `parseAs?: 'utc' | 'local'` inline.
 These consumer-created option properties are intentionally mutable in the type declaration;

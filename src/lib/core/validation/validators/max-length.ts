@@ -4,6 +4,7 @@ import { MAX_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMaxLengthMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /**
@@ -20,19 +21,21 @@ import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-len
  * @example
  * ```ts
  * field('', [maxLength(500)]);
+ * field('', [maxLength(500, 'Keep this under 500 characters')]);
  * array(field(''), [], [maxLength(10, { message: 'Choose at most 10 items' })]);
  * ```
  *
  * @param maximum Static maximum length or size, or a reactive function returning it.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const maxLength = (
   maximum: number | (() => number | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<ValueWithLengthOrSize | null> => {
+  const message = resolveValidatorMessageOption(options);
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (isEmpty(currentValue)) return null;
@@ -40,7 +43,7 @@ export const maxLength = (
     if (resolvedMaximum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength > resolvedMaximum
-      ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: resolveValidatorMessage('maxLength', { maxLength: resolvedMaximum, actual: actualLength }, options?.message, () => defaultMaxLengthMessage(resolvedMaximum)) }
+      ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: resolveValidatorMessage('maxLength', { maxLength: resolvedMaximum, actual: actualLength }, message, () => defaultMaxLengthMessage(resolvedMaximum)) }
       : null;
   }, MAX_LENGTH_METADATA, maximum);
 };

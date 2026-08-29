@@ -2,6 +2,7 @@ import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultUrlMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 import type { FieldContext, ValidationResult, Validator } from '../validation.type';
 
 const validateUrl = (
@@ -29,15 +30,16 @@ const validateUrl = (
  *
  * @example
  * ```ts
+ * field('', [url('Enter a complete URL')]);
  * field('', [url({ message: 'Enter a complete URL' })]);
  * field('', [url({ message: () => translatedUrlMessage() })]);
  * ```
  *
  * @reactive Tracks signals read by a custom message function while validation is failing.
  *
- * @param options Optional static or reactive custom validation message. Omitting `message`, or returning `undefined`, uses the configured fallback.
+ * @param options Optional static message string, or an object containing a static or reactive message. Omitting `message`, or returning `undefined`, uses the configured fallback.
  */
-export function url(options: {
+export function url(options: string | {
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
 }): Validator<string | null>;
@@ -56,8 +58,8 @@ export function url(options: {
  */
 export function url(context: FieldContext<string | null>): ValidationResult;
 export function url(
-  contextOrOptions: FieldContext<string | null> | { message?: string | (() => string | undefined) },
+  contextOrOptions: FieldContext<string | null> | string | { message?: string | (() => string | undefined) },
 ): Validator<string | null> | ValidationResult {
   if (isFieldContext(contextOrOptions)) return validateUrl(contextOrOptions);
-  return context => validateUrl(context, contextOrOptions.message);
+  return context => validateUrl(context, resolveValidatorMessageOption(contextOrOptions));
 }

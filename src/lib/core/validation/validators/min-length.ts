@@ -4,6 +4,7 @@ import { MIN_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMinLengthMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /**
@@ -20,19 +21,21 @@ import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-len
  * @example
  * ```ts
  * field('', [required, minLength(3)]);
+ * field('', [minLength(3, 'Enter at least 3 characters')]);
  * array(field(''), [], [minLength(() => minimumItems())]);
  * ```
  *
  * @param minimum Static minimum length or size, or a reactive function returning it.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const minLength = (
   minimum: number | (() => number | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<ValueWithLengthOrSize | null> => {
+  const message = resolveValidatorMessageOption(options);
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (isEmpty(currentValue)) return null;
@@ -40,7 +43,7 @@ export const minLength = (
     if (resolvedMinimum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength < resolvedMinimum
-      ? { kind: 'minLength', minLength: resolvedMinimum, actual: actualLength, message: resolveValidatorMessage('minLength', { minLength: resolvedMinimum, actual: actualLength }, options?.message, () => defaultMinLengthMessage(resolvedMinimum)) }
+      ? { kind: 'minLength', minLength: resolvedMinimum, actual: actualLength, message: resolveValidatorMessage('minLength', { minLength: resolvedMinimum, actual: actualLength }, message, () => defaultMinLengthMessage(resolvedMinimum)) }
       : null;
   }, MIN_LENGTH_METADATA, minimum);
 };

@@ -1,6 +1,7 @@
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultUniqueItemsMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator } from '../validation.type';
 
 type UniqueItemsOptions = {
@@ -96,23 +97,23 @@ export function uniqueItems(context: FieldContext<readonly unknown[] | null | un
  * );
  *
  * const products = array(productTemplate, initialProducts, [
- *   uniqueItems<Product>(product => `${tenantId()}:${product.sku}`),
+ *   uniqueItems<Product>(product => `${tenantId()}:${product.sku}`, 'SKUs must be unique'),
  * ]);
  * ```
  *
  * @param selector Property name or function selecting the comparable key for each item.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export function uniqueItems<TItem>(
   selector: keyof TItem | ((item: TItem, index: number) => unknown),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<readonly TItem[] | null | undefined>;
 export function uniqueItems<TItem>(
   contextOrSelectorOrOptions?: FieldContext<readonly TItem[] | null | undefined> | UniqueItemsSelector<TItem> | UniqueItemsOptions,
-  selectedOptions?: UniqueItemsOptions,
+  selectedOptions?: string | UniqueItemsOptions,
 ): Validator<readonly TItem[] | null | undefined> | ValidationResult {
   if (isFieldContext(contextOrSelectorOrOptions)) return validateUniqueItems(contextOrSelectorOrOptions);
   const hasSelector = typeof contextOrSelectorOrOptions === 'function'
@@ -121,5 +122,5 @@ export function uniqueItems<TItem>(
     || typeof contextOrSelectorOrOptions === 'symbol';
   const selector = hasSelector ? contextOrSelectorOrOptions as UniqueItemsSelector<TItem> : undefined;
   const options = hasSelector ? selectedOptions : contextOrSelectorOrOptions as UniqueItemsOptions | undefined;
-  return context => validateUniqueItems(context, selector, options?.message);
+  return context => validateUniqueItems(context, selector, resolveValidatorMessageOption(options));
 }

@@ -9,3 +9,9 @@ export type ValidatorOptions = {
    */
   message?: string | (() => string | undefined);
 };
+
+export const resolveValidatorMessageOption = (
+  options?: string | ValidatorOptions,
+): string | (() => string | undefined) | undefined => {
+  return typeof options === 'string' ? options : options?.message;
+};

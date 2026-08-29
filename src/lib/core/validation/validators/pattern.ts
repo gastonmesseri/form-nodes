@@ -4,6 +4,7 @@ import { PATTERN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultPatternMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a non-empty string to match a regular expression.
@@ -19,19 +20,21 @@ import { defaultPatternMessage } from './default-validator-messages';
  * @example
  * ```ts
  * field('', [pattern(/^[a-z]+$/i)]);
+ * field('', [pattern(/^[a-z]+$/i, 'Use letters only')]);
  * field('', [pattern(() => configuredPattern(), { message: 'Use letters only' })]);
  * ```
  *
  * @param expression Static regular expression or a reactive function returning it.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const pattern = (
   expression: RegExp | (() => RegExp | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<string | null> => {
+  const message = resolveValidatorMessageOption(options);
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (isEmpty(currentValue)) return null;
@@ -40,6 +43,6 @@ export const pattern = (
     resolvedExpression.lastIndex = 0;
     return resolvedExpression.test(currentValue!)
       ? null
-      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage('pattern', { pattern: resolvedExpression, actual: currentValue! }, options?.message, () => defaultPatternMessage(resolvedExpression)) };
+      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage('pattern', { pattern: resolvedExpression, actual: currentValue! }, message, () => defaultPatternMessage(resolvedExpression)) };
   }, PATTERN_METADATA, expression);
 };

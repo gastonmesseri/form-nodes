@@ -3,6 +3,7 @@ import { MAX_METADATA, MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultBetweenMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 type ResolvedBounds = {
   minimum: number;
@@ -28,6 +29,7 @@ const resolveBound = (source: number | (() => number | undefined)): number | und
  * @example
  * ```ts
  * field(17, [between(18, 65)]);
+ * field(70, [between(18, 65, 'Enter a supported age')]);
  * field(70, [between(() => minimumAge(), () => maximumAge(), {
  *   message: 'Enter an age within the supported range',
  * })]);
@@ -35,16 +37,17 @@ const resolveBound = (source: number | (() => number | undefined)): number | und
  *
  * @param minimum Static inclusive minimum or a reactive function returning it.
  * @param maximum Static inclusive maximum or a reactive function returning it.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const between = (
   minimum: number | (() => number | undefined),
   maximum: number | (() => number | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<number | null> => {
+  const message = resolveValidatorMessageOption(options);
   const resolveBounds = (): ResolvedBounds | undefined => {
     const resolvedMinimum = resolveBound(minimum);
     const resolvedMaximum = resolveBound(maximum);
@@ -66,7 +69,7 @@ export const between = (
     return {
       kind: 'between',
       ...parameters,
-      message: resolveValidatorMessage('between', parameters, options?.message, () => defaultBetweenMessage(bounds.minimum, bounds.maximum)),
+      message: resolveValidatorMessage('between', parameters, message, () => defaultBetweenMessage(bounds.minimum, bounds.maximum)),
     };
   };
   markValidatorMetadata(validator, MIN_METADATA, () => resolveBounds()?.minimum);

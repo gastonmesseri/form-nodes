@@ -1,6 +1,6 @@
 import { isEmpty } from '../../utils/is-empty';
 import { createMetadataKey } from '../../metadata/metadata';
-import type { ValidatorOptions } from './validator-options';
+import { resolveValidatorMessageOption, type ValidatorOptions } from './validator-options';
 import { markValidatorMetadata } from '../validator-metadata';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
@@ -33,6 +33,7 @@ const validateRequired = (
  *
  * @example
  * ```ts
+ * field('', [required('Enter your name')]);
  * field('', [required({ message: 'Enter your name' })]);
  * field('', [required({ message: () => translatedRequiredMessage() })]);
  * array(field(''), [], [required, minLength(1)]);
@@ -40,9 +41,9 @@ const validateRequired = (
  *
  * @reactive Tracks signals read by a custom message function while validation is failing.
  *
- * @param options Optional static or reactive custom validation message. Omitting `message`, or returning `undefined`, uses the default.
+ * @param options Optional static message string, or an object containing a static or reactive message. Omitting `message`, or returning `undefined`, uses the default.
  */
-export function required(options: {
+export function required(options: string | {
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
 }): Validator<unknown>;
@@ -65,13 +66,13 @@ export function required(options: {
  */
 export function required(context: FieldContext<unknown>): ValidationResult;
 export function required(
-  contextOrOptions: FieldContext<unknown> | RequiredOptions,
+  contextOrOptions: FieldContext<unknown> | string | RequiredOptions,
 ): Validator<unknown> | ValidationResult {
   if (isFieldContext(contextOrOptions)) {
     return validateRequired(contextOrOptions);
   }
   return markValidatorMetadata(
-    context => validateRequired(context, contextOrOptions.message),
+    context => validateRequired(context, resolveValidatorMessageOption(contextOrOptions)),
     REQUIRED_METADATA,
     true,
   );

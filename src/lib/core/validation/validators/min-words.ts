@@ -2,6 +2,7 @@ import { countWords } from './count-words';
 import type { Validator } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMinWordsMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a non-empty string to contain at least the configured number of words.
@@ -17,19 +18,21 @@ import { defaultMinWordsMessage } from './default-validator-messages';
  * @example
  * ```ts
  * field('', [required, minWords(3)]);
+ * field('', [minWords(3, 'Add more detail')]);
  * field('', [minWords(() => minimumWords(), { message: 'Add more detail' })]);
  * ```
  *
  * @param minimum Static minimum word count or a reactive function returning it.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const minWords = (
   minimum: number | (() => number | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<string | null> => {
+  const message = resolveValidatorMessageOption(options);
   return ({ value }) => {
     const currentValue = value();
     if (currentValue === null || currentValue === '') return null;
@@ -37,7 +40,7 @@ export const minWords = (
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     const actual = countWords(currentValue);
     return actual < resolvedMinimum
-      ? { kind: 'minWords', minWords: resolvedMinimum, actual, message: resolveValidatorMessage('minWords', { minWords: resolvedMinimum, actual }, options?.message, () => defaultMinWordsMessage(resolvedMinimum)) }
+      ? { kind: 'minWords', minWords: resolvedMinimum, actual, message: resolveValidatorMessage('minWords', { minWords: resolvedMinimum, actual }, message, () => defaultMinWordsMessage(resolvedMinimum)) }
       : null;
   };
 };

@@ -4,6 +4,7 @@ import { markValidatorMetadata } from '../validator-metadata';
 import { MAX_DATE_METADATA, MIN_DATE_METADATA } from '../constraint-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultDateBetweenMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 type DateSource = Date | string | (() => Date | string | undefined);
 
@@ -43,6 +44,7 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
  * @example
  * ```ts
  * field<Date>(null, [dateBetween('2026-01-01', '2026-12-31')]);
+ * field<Date>(null, [dateBetween('2026-01-01', '2026-12-31', 'Choose a date in 2026')]);
  * field<Date>(null, [dateBetween(
  *   () => bookingWindow().start,
  *   () => bookingWindow().end,
@@ -56,19 +58,20 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
  *
  * @param minimum Static inclusive minimum date or ISO calendar-date string, or a reactive function returning one.
  * @param maximum Static inclusive maximum date or ISO calendar-date string, or a reactive function returning one.
- * @param options Optional static or reactive custom message and string parsing mode. `parseAs` defaults to `'utc'`.
+ * @param options Optional static message string, or an object containing a message and string parsing mode. `parseAs` defaults to `'utc'`.
  */
 export const dateBetween = (
   minimum: Date | string | (() => Date | string | undefined),
   maximum: Date | string | (() => Date | string | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
     parseAs?: 'utc' | 'local';
   },
 ): Validator<Date | null> => {
-  const parseAs = options?.parseAs ?? 'utc';
+  const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
+  const message = resolveValidatorMessageOption(options);
   const normalizedMinimum = normalizeDateSource(minimum, parseAs);
   const normalizedMaximum = normalizeDateSource(maximum, parseAs);
   const resolveBounds = (): ResolvedDateBounds | undefined => {
@@ -92,7 +95,7 @@ export const dateBetween = (
     return {
       kind: 'dateBetween',
       ...parameters,
-      message: resolveValidatorMessage('dateBetween', parameters, options?.message, () => defaultDateBetweenMessage(bounds.minimum, bounds.maximum)),
+      message: resolveValidatorMessage('dateBetween', parameters, message, () => defaultDateBetweenMessage(bounds.minimum, bounds.maximum)),
     };
   };
   markValidatorMetadata(validator, MIN_DATE_METADATA, () => resolveBounds()?.minimum);
