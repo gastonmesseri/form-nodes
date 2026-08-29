@@ -8,6 +8,83 @@ title: Custom controls
 
 ## Angular API compatibility
 
+### Use Angular's own `[formField]` directive
+
+Every Gem Forms node exposes `$field`, a lazy view backed by an official Angular Signal Forms
+`FieldTree`. This lets an application opt into Angular's directive for a particular control while
+keeping Gem Forms as its model:
+
+```ts
+import { Component } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
+
+import { field, form } from '@gem/ng-forms';
+
+@Component({
+  imports: [FormField],
+  template: `
+    <input [formField]="profileForm.displayName.$field">
+  `,
+})
+export class ProfileComponent {
+  profileForm = form({
+    displayName: field(''),
+  });
+}
+```
+
+### Import `FormField` where the template is compiled
+
+`$field` provides the compatible field tree, but Angular still needs its own `FormField` directive
+in the template's compilation scope. In a standalone component, import it directly from
+`@angular/forms/signals` and add it to the component's `imports`, as in the example above. No
+provider or adapter-specific setup is required.
+
+For NgModule-based applications, import and re-export `FormField` from a shared module when many
+declared components use `[formField]`:
+
+```ts
+import { NgModule } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
+
+@NgModule({
+  imports: [FormField],
+  exports: [FormField],
+})
+export class SharedFormsModule {}
+```
+
+Every NgModule that declares a component using `[formField]` must import either `FormField` itself
+or a module that re-exports it. Likewise, every standalone component must import `FormField`
+directly or import a shared module that exports it.
+
+`$field` is intentionally marked with TypeScript's `@deprecated` tag so this specialized adapter
+does not compete with the everyday node API in autocomplete. It remains fully supported and is not
+scheduled for removal; use it specifically in templates that bind Angular's `[formField]`. Its type
+remains assignable to Angular's `FieldTree`, but inherited function-object members such as
+`toString`, `apply`, and `bind` are hidden because they are not part of the adapter's consumer API.
+Real `FieldTree` children remain typed for structural compatibility.
+
+No conversion function is required. Values synchronize in both directions, and the adapter mirrors
+disabled, readonly, hidden, required, validation, touched, and dirty state. Every descendant uses
+the same adapted tree, so `profileForm.displayName.$field` is the same field as
+`profileForm.$field.displayName`.
+
+The adapter is created only when `$field` is read. Component field initializers automatically
+capture their Angular injector. If a form is created outside an Angular injection context, pass an
+explicit `injector` option before using `$field`:
+
+```ts
+const profileForm = form({
+  displayName: field(''),
+}, {
+  injector,
+});
+```
+
+For the library-native binding and its broader control discovery options, continue with
+[`[formNode]`](../reference/form-node-binding.md).
+
 Choose the Angular contract that already fits your control. Conventional components require no
 Gem Forms interface, base class, or registration provider.
 

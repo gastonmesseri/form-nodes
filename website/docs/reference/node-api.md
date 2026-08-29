@@ -42,6 +42,7 @@ guide documents `.api` only for name collisions and generic infrastructure.
 | `parent()` | Direct parent or null at the root |
 | `path()` | Reactive string path from the root |
 | `keyInParent()` | Property name, array index, or null |
+| `$field` | Lazy Angular Signal Forms `FieldTree` for direct `[formField]` interoperability; irrelevant function-object members are hidden, and its `@deprecated` editor marker only reduces autocomplete prominence rather than indicating planned removal |
 
 Forms and arrays additionally expose `patch()`, aggregate `flush()`, `debouncing()`, and subtree
 `focus()`. Use `set()` rather than patching a leaf field.

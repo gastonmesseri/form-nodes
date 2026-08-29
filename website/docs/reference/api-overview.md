@@ -203,6 +203,28 @@ The binding supports native controls, `ControlValueAccessor`, Angular-compatible
 and input/output control pairs. Its public query type exposes `node()`, `errors()`, `element`,
 `injector`, `focus()`, `flush()`, and `reset()`.
 
+To use Angular Signal Forms' own directive instead, bind the node's lazy `$field` adapter:
+
+```ts
+import { Component } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
+
+import { field, form } from '@gem/ng-forms';
+
+@Component({
+  imports: [FormField],
+  template: `<input [formField]="myForm.displayName.$field" />`,
+})
+export class ProfileComponent {
+  myForm = form({
+    displayName: field(''),
+  });
+}
+```
+
+See [Custom controls](../guides/custom-controls.md#use-angulars-own-formfield-directive) for the
+standalone and NgModule import options and the complete synchronization behavior.
+
 Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` import supports native controls, custom controls, and native form roots.
 
 ### Custom-control and binding configuration

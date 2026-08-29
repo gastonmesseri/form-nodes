@@ -15,7 +15,7 @@ export default defineConfig({
     __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: JSON.stringify(signalControlFixture),
   },
   optimizeDeps: {
-    include: ['@angular/platform-browser'],
+    include: ['@angular/forms/signals', '@angular/platform-browser'],
   },
   test: {
     include: ['**/*.browser.spec.ts'],

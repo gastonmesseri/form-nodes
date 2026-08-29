@@ -4,6 +4,7 @@ import { isNotNil } from '../utils/is-nil';
 import { markAsNode } from '../utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
+import { registerAngularField } from '../interop/angular-field';
 import { computedFunction } from '../utils/computed-function';
 import type { Field, FieldApi, FieldOptions } from './field.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
@@ -324,6 +325,7 @@ export function field<TValue>(
     { api: internalApi, $api: internalApi },
   ) as unknown as Field<TValue>;
   markAsNode(fieldNode);
+  registerAngularField(fieldNode, resolvedOptions?.injector);
   registerNodeValidatorMessages(fieldNode, undefined, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return fieldNode;

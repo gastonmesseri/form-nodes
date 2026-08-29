@@ -1,4 +1,5 @@
 import type { Injector, Signal } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 
 import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
@@ -8,7 +9,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { DisabledReason, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
-export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
+export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
   /**
    * One validator or an array of validators that validate the complete form value.
    *
@@ -173,7 +174,7 @@ export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   submission?: FormSubmissionOptions<TValue, TForm>;
 };
 
-export type FormSubmissionOptions<TValue, TForm extends Form<any> = Form<any>> = {
+export type FormSubmissionOptions<TValue, TForm extends Node = Form<any>> = {
   /** Runs when submission is allowed by the current validation state. */
   action: (form: TForm, value: TValue) => void | PromiseLike<void>;
   /** Runs instead of `action` when validation blocks submission. */
@@ -325,6 +326,20 @@ type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
    * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
    */
   $api: FormApi<TNodes, TParent>;
+  /**
+   * Angular Signal Forms view of this node for binding with `[formField]`.
+   *
+   * This property is supported and is not planned for removal. It is marked as deprecated only
+   * to keep this template-specific adapter out of the way in ordinary node autocomplete.
+   *
+   * @example
+   * ```html
+   * <my-component [formField]="myForm.$field" />
+   * ```
+   *
+   * @deprecated Not actually deprecated. Use only when binding through Angular's `[formField]`.
+   */
+  readonly $field: FieldTree<FormValue<TNodes>> & HiddenFunctionMembers<keyof FieldTree<FormValue<TNodes>>>;
 };
 
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =

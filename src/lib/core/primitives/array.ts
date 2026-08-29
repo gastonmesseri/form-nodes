@@ -7,6 +7,7 @@ import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { computedFunction } from '../utils/computed-function';
+import { registerAngularField } from '../interop/angular-field';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
@@ -665,6 +666,7 @@ export function array<TDefinition extends NodeDefinition>(
   }) as ArrayNode<TItem>;
   reparentItems();
   markAsNode(arrayNode);
+  registerAngularField(arrayNode, resolvedOptions?.injector);
   registerNodeValidatorMessages(arrayNode, resolvedOptions?.validatorMessages, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return arrayNode;

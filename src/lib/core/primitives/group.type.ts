@@ -1,4 +1,5 @@
 import type { Signal } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 
 import type { Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -179,6 +180,20 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
    * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
    */
   $api: GroupApi<TNodes, TParent>;
+  /**
+   * Angular Signal Forms view of this node for binding with `[formField]`.
+   *
+   * This property is supported and is not planned for removal. It is marked as deprecated only
+   * to keep this template-specific adapter out of the way in ordinary node autocomplete.
+   *
+   * @example
+   * ```html
+   * <my-component [formField]="myForm.address.$field" />
+   * ```
+   *
+   * @deprecated Not actually deprecated. Use only when binding through Angular's `[formField]`.
+   */
+  readonly $field: FieldTree<GroupValue<TNodes>> & HiddenFunctionMembers<keyof FieldTree<GroupValue<TNodes>>>;
 };
 
 /** A fixed, object-shaped structural node without its own submission workflow. */

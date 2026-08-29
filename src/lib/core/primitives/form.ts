@@ -7,6 +7,7 @@ import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
+import { registerAngularField } from '../interop/angular-field';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -29,7 +30,7 @@ import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledSt
 export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
 type FormDefinitions<TDefinitions extends NodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends '$api'
+  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field'
     ? never
     : TDefinitions[TKey] extends NodeDefinitions ? FormDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
 };
@@ -328,6 +329,7 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
   ) as Form<TNodes>;
   controlKeys().forEach(key => (controls[key] as InternalNode).$api._setParent(formNode, String(key)));
   markAsNode(formNode);
+  registerAngularField(formNode, resolvedOptions?.injector);
   registerNodeValidatorMessages(formNode, resolvedOptions?.validatorMessages, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return formNode;

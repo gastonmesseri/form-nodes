@@ -2,7 +2,7 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
-import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
+import { FormField, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, forwardRef, input, model, output, signal, type OnDestroy } from '@angular/core';
 
@@ -28,6 +28,31 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNode in Chromium', () => {
+  it('binds a library field through the Angular formField adapter', () => {
+    @Component({
+      template: `<input [formField]="profile.name.$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      profile = form({ name: field('David') });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.value).toBe('David');
+    input.value = 'Ana';
+    dispatch(input, 'input');
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.profile.name()).toBe('Ana');
+
+    fixture.componentInstance.profile.name.set('Mark');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('Mark');
+  });
+
   it('tolerates a group as a native form root and preserves submit and reset state behavior', () => {
     @Component({
       template: `
