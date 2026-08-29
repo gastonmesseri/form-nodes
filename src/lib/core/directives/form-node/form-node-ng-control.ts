@@ -1,11 +1,12 @@
 import { Validators, type AbstractControl, type ControlValueAccessor, type FormControlStatus, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 
+import { arrayToObject } from '../../utils/array-to-object';
 import type { InternalNode, Node } from '../../types/node.type';
 
 const toValidationErrors = (node: Node): ValidationErrors | null => {
   const errors = node.$api.errors();
   if (errors.length === 0) return null;
-  return Object.fromEntries(errors.map(error => [error.kind, error]));
+  return arrayToObject(errors, error => [error.kind, error]);
 };
 
 export class FormNodeNgControl {
