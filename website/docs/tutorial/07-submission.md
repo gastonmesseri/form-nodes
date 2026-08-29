@@ -35,12 +35,12 @@ The `value` argument is inferred from the complete form tree, including nested a
 
 ## Bind the native form
 
-Import `FormRoot` alongside `FormNode`:
+The existing `FormNode` import handles both the native form and its controls:
 
 ```ts
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode, FormRoot],
+  imports: [FormNode],
   templateUrl: './profile-editor.html',
 })
 export class ProfileEditor {

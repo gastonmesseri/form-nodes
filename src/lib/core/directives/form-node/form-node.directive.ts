@@ -23,12 +23,16 @@ import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeCont
 export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
 
 @Directive({
-  selector: ':not(form)[formNode]',
+  selector: '[formNode]',
   standalone: true,
   providers: [
     { provide: FORM_NODE, useExisting: forwardRef(() => _FormNode) },
     { provide: NgControl, useFactory: () => inject(_FormNode)._ngControl },
   ],
+  host: {
+    '(submit)': '_submitNativeForm($event)',
+    '(reset)': '_resetNativeForm($event)',
+  },
   exportAs: 'formNode',
 })
 export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNode>, OnInit {
@@ -50,6 +54,8 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   private interopNgControl: FormNodeNgControl | undefined;
 
   private nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
+
+  private nativeForm = this.element.tagName === 'FORM';
 
   private legacyValidationOwner = {};
 
@@ -87,6 +93,11 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   }
 
   ngOnInit() {
+    if (this.nativeForm) {
+      this.requireFormNode();
+      this.renderer.setAttribute(this.element, 'novalidate', '');
+      return;
+    }
     if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) return;
     const accessor = selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
     const signalControl = this.signalControl ?? discoverSignalControl(this.element);
@@ -98,6 +109,26 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     this.registerControlBinding();
     this.warnWhenHidden();
     this.installClassBindingEffect();
+  }
+
+  /** @internal Handles submission only when this binding is hosted by a native form. */
+  _submitNativeForm(event: Event) {
+    if (!this.nativeForm) return;
+    event.preventDefault();
+    this.requireFormNode().submit();
+  }
+
+  /** @internal Handles reset only when this binding is hosted by a native form. */
+  _resetNativeForm(event: Event) {
+    if (!this.nativeForm) return;
+    event.preventDefault();
+    this.requireFormNode().reset();
+  }
+
+  private requireFormNode(): { submit(): Promise<boolean>; reset(): void } {
+    const api = this._field.$api as Partial<{ submit(): Promise<boolean>; reset(): void }>;
+    if (typeof api.submit !== 'function') throw new Error('formNode: a native form requires a form() node');
+    return api as { submit(): Promise<boolean>; reset(): void };
   }
 
   private installClassBindingEffect() {

@@ -9,24 +9,22 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import { FormNode } from './form-node.directive';
-import { FormRoot } from './form-root.directive';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
-registerSignalInputForJit(FormRoot, 'formNode', 'form');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('FormRoot', () => {
+describe('FormNode on a native form', () => {
   it('sets novalidate and submits the bound form node', async () => {
     const action = vi.fn();
 
     @Component({
       template: `<form [formNode]="profile"><button type="submit">Save</button></form>`,
       standalone: true,
-      imports: [FormRoot],
+      imports: [FormNode],
     })
     class Host {
       readonly profile = form({ name: field('Marco') }, { submission: { action } });
@@ -51,7 +49,7 @@ describe('FormRoot', () => {
     @Component({
       template: `<form [formNode]="profile"><input [formNode]="profile.name"></form>`,
       standalone: true,
-      imports: [FormNode, FormRoot],
+      imports: [FormNode],
     })
     class Host {
       readonly profile = form({ name: field('', [required]) }, { submission: { action } });

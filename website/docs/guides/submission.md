@@ -34,11 +34,11 @@ Submission marks the form subtree touched, which also commits pending control va
 
 ## Native form elements
 
-Import `FormRoot` and bind the root node to a native form:
+Import `FormNode` once and use it for both the native form and its controls:
 
 ```ts
 @Component({
-  imports: [FormNode, FormRoot],
+  imports: [FormNode],
   template: `
     <form [formNode]="registration">
       <input [formNode]="registration.name" />
@@ -52,7 +52,7 @@ Import `FormRoot` and bind the root node to a native form:
 export class RegistrationPage {}
 ```
 
-The directive prevents native navigation, calls the node's configured submission action, disables native constraint submission with `novalidate`, and maps a native reset event to `form.reset()`.
+On a native `<form>`, `FormNode` prevents native navigation, calls the node's configured submission action, disables native constraint submission with `novalidate`, and maps a native reset event to `form.reset()`.
 
 ## Submission state
 
