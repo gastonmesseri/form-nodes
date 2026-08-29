@@ -1,27 +1,14 @@
 import type { Validator } from '../validation.type';
-import { parseDateConstraint } from './date-constraint';
+import { normalizeDateConstraintSource, type DateConstraintSource } from './date-constraint';
 import { markValidatorMetadata } from '../validator-metadata';
 import { MAX_DATE_METADATA, MIN_DATE_METADATA } from '../constraint-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultDateBetweenMessage } from './default-validator-messages';
 import { resolveValidatorMessageOption } from './validator-options';
 
-type DateSource = Date | string | (() => Date | string | undefined);
-
 type ResolvedDateBounds = {
   minimum: Date;
   maximum: Date;
-};
-
-const normalizeDateSource = (
-  source: DateSource,
-  parseAs: 'utc' | 'local',
-): Date | (() => Date | undefined) => {
-  if (typeof source !== 'function') return parseDateConstraint(source, parseAs);
-  return () => {
-    const value = source();
-    return value === undefined ? undefined : parseDateConstraint(value, parseAs);
-  };
 };
 
 const resolveDateSource = (source: Date | (() => Date | undefined)): Date | undefined => {
@@ -32,9 +19,10 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
  * Requires a valid, non-empty date to be within an inclusive date range.
  *
  * `null` and invalid current dates pass so this validator can be composed with `required`. Both
- * limits accept a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), or a reactively tracked
- * function returning either representation. Strings use UTC midnight by default; set `parseAs`
- * to `'local'` to use local midnight. An absent or invalid limit disables the range temporarily.
+ * limits accept a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), a relative shortcut
+ * (`'today'`), or a reactively tracked function returning one of
+ * those representations. Strings and shortcuts use UTC midnight by default; set `parseAs` to
+ * `'local'` to use local midnight. An absent or invalid limit disables the range temporarily.
  * A failure produces `{ kind: 'dateBetween', minDate, maxDate, actual, message }`.
  *
  * The validator also contributes both dates to the node's `min()` and `max()` metadata.
@@ -54,6 +42,8 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
  *   moment('2026-01-01').toDate(),
  *   moment('2026-12-31').toDate(),
  * )]);
+ * field<Date>(null, [dateBetween('today', '2026-12-31')]);
+ * field<Date>(null, [dateBetween(() => 'today', () => bookingWindowEnd())]);
  * ```
  *
  * @param minimum Static inclusive minimum date or ISO calendar-date string, or a reactive function returning one.
@@ -61,8 +51,8 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
  * @param options Optional static message string, or an object containing a message and string parsing mode. `parseAs` defaults to `'utc'`.
  */
 export const dateBetween = (
-  minimum: Date | string | (() => Date | string | undefined),
-  maximum: Date | string | (() => Date | string | undefined),
+  minimum: Date | 'today' | (string & {}) | (() => Date | 'today' | (string & {}) | undefined),
+  maximum: Date | 'today' | (string & {}) | (() => Date | 'today' | (string & {}) | undefined),
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
@@ -72,8 +62,8 @@ export const dateBetween = (
 ): Validator<Date | null> => {
   const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
   const message = resolveValidatorMessageOption(options);
-  const normalizedMinimum = normalizeDateSource(minimum, parseAs);
-  const normalizedMaximum = normalizeDateSource(maximum, parseAs);
+  const normalizedMinimum = normalizeDateConstraintSource(minimum as DateConstraintSource, parseAs);
+  const normalizedMaximum = normalizeDateConstraintSource(maximum as DateConstraintSource, parseAs);
   const resolveBounds = (): ResolvedDateBounds | undefined => {
     const resolvedMinimum = resolveDateSource(normalizedMinimum);
     const resolvedMaximum = resolveDateSource(normalizedMaximum);

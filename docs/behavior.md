@@ -893,22 +893,34 @@ const age = field<number>(null, {
 | `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, actual, message }` |
 | `dateBetween(minimum, maximum)` | `Date | null` | Passes for `null` and invalid dates; disabled if either limit is absent or invalid | `{ kind: 'dateBetween', minDate, maxDate, actual, message }` |
 
-Date limits accept a `Date`, an ISO calendar-date string in `YYYY-MM-DD` format, or a reactive
-function returning either representation. Strings use UTC midnight by default so their behavior
-matches `new Date('YYYY-MM-DD')` and Angular's native date-input constraint formatting. Pass
+Date limits accept a `Date`, an ISO calendar-date string in `YYYY-MM-DD` format, the relative-day
+shortcut `'today'`, or a reactive function returning any of those
+representations. Strings and shortcuts use UTC midnight by default so their behavior matches
+`new Date('YYYY-MM-DD')` and Angular's native date-input constraint formatting. Pass
 `{ parseAs: 'local' }` to use midnight in the consumer's local time zone instead. Invalid calendar
 dates and other string formats disable the constraint, just like an invalid `Date`. Regardless of
 the input representation, validation errors and the public `min()`/`max()` metadata signals expose
 the normalized `Date`.
 
-This is an intentional public-API extension over Angular 22.1.3 Signal Forms, whose `minDate` and
-`maxDate` rules accept `Date` constraints only. Validation and constraint propagation remain
-Date-based after normalization.
+Relative-day shortcuts are resolved lazily whenever their validator or constraint metadata is
+evaluated. A static shortcut such as `minDate('today')` therefore does not capture the date when it
+is declared. The library deliberately does not install a hidden midnight timer: after midnight,
+the newly resolved boundary becomes observable on the next normal validation invalidation, such as
+a value change or a reactive dependency change.
+
+This is an intentional public-API extension over Angular 22.1.4 Signal Forms
+(`898380974d49cf7976e9d89cc74a0801a26ce7b1`), whose `minDate` and `maxDate` rules accept `Date`
+constraints only. The reference implementation and tests inspected were
+`packages/forms/signals/src/api/rules/validation/min_date.ts`, `max_date.ts`,
+`packages/forms/signals/test/node/api/validators/min_date.spec.ts`, and `max_date.spec.ts`.
+Validation and constraint propagation remain Date-based after normalization.
 
 ```ts
 field<Date>(null, [minDate('2026-08-24')]);
+field<Date>(null, [minDate('today')]);
+field<Date>(null, [maxDate(() => 'today')]);
 field<Date>(null, [maxDate('2026-12-31', { parseAs: 'local' })]);
-field<Date>(null, [dateBetween('2026-01-01', '2026-12-31')]);
+field<Date>(null, [dateBetween('today', '2026-12-31')]);
 ```
 
 `dateBetween(minimum, maximum)` combines the inclusive comparisons of `minDate()` and `maxDate()`

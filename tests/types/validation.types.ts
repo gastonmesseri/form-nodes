@@ -35,6 +35,8 @@ field<Date>(null, [minDate('2026-08-24'), maxDate(() => '2026-12-31', { parseAs:
 field<Date>(null, [minDate('2026-08-24', 'Too early'), maxDate('2026-12-31', 'Too late')]);
 field<Date>(null, [dateBetween('2026-01-01', () => '2026-12-31', { parseAs: 'local', message: 'Outside range' })]);
 field<Date>(null, [dateBetween('2026-01-01', '2026-12-31', 'Outside range')]);
+field<Date>(null, [minDate('today'), maxDate(() => 'today')]);
+field<Date>(null, [dateBetween('today', () => '2026-12-31')]);
 
 const adult = validator<number | null>(({ value, api, field: targetField }) => {
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;

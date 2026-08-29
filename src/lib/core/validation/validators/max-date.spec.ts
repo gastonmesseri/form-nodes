@@ -1,9 +1,11 @@
 import { signal } from '@angular/core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { maxDate } from './max-date';
 
 const context = <TValue>(value: TValue) => ({ value: signal(value).asReadonly() });
+
+afterEach(() => vi.useRealTimers());
 
 describe('maxDate', () => {
   it('validates maximum dates', () => {
@@ -33,5 +35,17 @@ describe('maxDate', () => {
 
     maximum.set(undefined);
     expect(validator(context(new Date('2026-08-25T00:00:00.000Z')))).toBeNull();
+  });
+
+  it('resolves today shortcuts in UTC or local time', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-24T15:00:00.000Z'));
+
+    expect(maxDate('today')(context(new Date('2026-08-25T00:00:00.000Z')))).toMatchObject({
+      maxDate: new Date('2026-08-24T00:00:00.000Z'),
+    });
+    expect(maxDate(() => 'today', { parseAs: 'local' })(context(new Date(2026, 7, 25)))).toMatchObject({
+      maxDate: new Date(2026, 7, 24),
+    });
   });
 });

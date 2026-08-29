@@ -243,6 +243,8 @@ Requires a valid date on or after an inclusive minimum:
 ```ts
 const myForm = form({
   appointment: field<Date>(null, [minDate('2026-08-24')]),
+  sameDayAppointment: field<Date>(null, [minDate('today')]),
+  reactiveTodayAppointment: field<Date>(null, [minDate(() => 'today')]),
   earliestAppointment: field<Date>(null, [minDate(() => bookingWindowStart())]),
   localAppointment: field<Date>(null, [
     minDate('2026-08-24', {
@@ -258,7 +260,7 @@ const myForm = form({
 });
 ```
 
-The limit accepts a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), or a reactive function returning either. Strings use UTC midnight by default; `parseAs: 'local'` selects local midnight. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'minDate', minDate, actual, message }`. The normalized `Date` contributes to `min()` metadata.
+The limit accepts a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), the relative shortcut `'today'`, or a reactive function returning any of them. Strings and the shortcut use UTC midnight by default; `parseAs: 'local'` selects local midnight. The shortcut is resolved when validation runs, so `minDate('today')` does not permanently capture its declaration date. The library does not create a midnight timer; after the day changes, the boundary updates on the next value or reactive dependency change. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'minDate', minDate, actual, message }`. The normalized `Date` contributes to `min()` metadata.
 
 ## `maxDate`
 
@@ -267,6 +269,7 @@ Requires a valid date on or before an inclusive maximum:
 ```ts
 const myForm = form({
   appointment: field<Date>(null, [maxDate('2026-12-31')]),
+  todayOnly: field<Date>(null, [maxDate('today')]),
   reactiveAppointment: field<Date>(null, [maxDate(() => bookingWindowEnd())]),
   localAppointment: field<Date>(null, [
     maxDate('2026-12-31', { parseAs: 'local' }),
@@ -280,7 +283,7 @@ const myForm = form({
 });
 ```
 
-It accepts the same limit representations and parsing modes as `minDate`. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'maxDate', maxDate, actual, message }`. The normalized `Date` contributes to `max()` metadata.
+It accepts the same absolute dates, relative shortcuts, reactive sources, and parsing modes as `minDate`. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'maxDate', maxDate, actual, message }`. The normalized `Date` contributes to `max()` metadata.
 
 ## `dateBetween`
 
@@ -288,6 +291,9 @@ Requires a valid date within an inclusive range:
 
 ```ts
 const myForm = form({
+  immediateBookingDate: field<Date>(null, [
+    dateBetween('today', '2026-12-31'),
+  ]),
   campaignDate: field<Date>(null, [
     dateBetween('2026-08-24', '2026-09-30'),
   ]),
@@ -308,7 +314,7 @@ const myForm = form({
 });
 ```
 
-Both boundaries accept a `Date`, `YYYY-MM-DD`, or a reactive source. `parseAs` applies to both string limits. `null` and invalid current dates pass. If either limit is absent or invalid, the range and both metadata constraints are disabled together. A failure is `{ kind: 'dateBetween', minDate, maxDate, actual, message }`. The normalized boundaries contribute to `min()` and `max()` metadata.
+Both boundaries accept a `Date`, `YYYY-MM-DD`, `'today'`, or a reactive source. `parseAs` applies to both string limits and the shortcut. `null` and invalid current dates pass. If either limit is absent or invalid, the range and both metadata constraints are disabled together. A failure is `{ kind: 'dateBetween', minDate, maxDate, actual, message }`. The normalized boundaries contribute to `min()` and `max()` metadata.
 
 ## `oneOf`
 
