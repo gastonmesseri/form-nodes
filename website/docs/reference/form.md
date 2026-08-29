@@ -4,13 +4,14 @@ title: form()
 
 # `form()`
 
-`form()` creates a fixed, typed object tree from named fields, nested forms, and arrays. It is the
-usual root primitive for application forms.
+`form()` creates a fixed, typed object tree that owns a submission workflow. It is the usual root
+primitive for an application form. Use groups or nested object shorthand for ordinary structural
+branches.
 
 Not sure which node shape fits a value? See [Choosing a primitive](../guides/choosing-a-primitive.md).
 
 ```ts
-import { array, field, form } from '@gem/ng-forms';
+import { array, field, form, group } from '@gem/ng-forms';
 
 const myForm = form({
   name: field(''),
@@ -43,13 +44,14 @@ form(definitions, options?);
 form(definitions, validators, options?);
 ```
 
-Nested object definitions are normalized to nested forms. Use an explicit `form()` when that
-level needs validators, options, validator messages, or submission behavior.
+Nested object definitions are normalized to groups. Use an explicit `group()` when that level needs
+validators, structural options, or validator messages. Use an explicit nested `form()` only when
+that branch needs an independent submission workflow.
 
 ```ts
 const myForm = form({
   name: field(''),
-  address: form({
+  address: group({
     city: field(''),
     country: field(''),
   }, {
@@ -246,7 +248,7 @@ clearing touched and dirty state throughout the tree.
 
 | Member | Description |
 | --- | --- |
-| `submit()` | Flushes pending values by touching the tree, checks the configured validation policy, and runs `submission.action` when allowed. Resolves to `true` when the action runs successfully and `false` when submission is blocked or already running. It throws when no submission action is configured. |
+| `submit()` | Flushes pending values by touching the tree, checks the configured validation policy, and runs `submission.action` when allowed. Resolves to `true` when the action runs successfully and `false` when submission is blocked, already running, or has no configured action. |
 | `submitting()` | Remains `true` while this form's asynchronous action runs and is inherited by descendants. |
 
 ```ts

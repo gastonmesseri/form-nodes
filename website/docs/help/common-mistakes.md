@@ -39,9 +39,9 @@ const myForm = form({
 Use `array()` only when individual items need their own nodes, bindings, errors, paths, state, or
 structural operations. See [Array field or `array()`](../guides/choosing-a-primitive.md#array-field-or-array).
 
-## Using a nested form for an atomic or nullable object
+## Using a group for an atomic or nullable object
 
-A nested form represents a permanent child structure. It cannot itself become `null`.
+A group represents a permanent child structure. It cannot itself become `null`.
 
 ```ts
 // Appropriate only when city and country need independent nodes.
@@ -68,7 +68,7 @@ const myForm = form({
 myForm.shippingAddress.set(null);
 ```
 
-See [Object field or nested form](../guides/choosing-a-primitive.md#object-field-or-nested-form).
+See [Object field or group](../guides/choosing-a-primitive.md#object-field-or-group).
 
 ## Forgetting that fields are nullable by default
 

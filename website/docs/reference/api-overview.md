@@ -16,7 +16,9 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | I want to… | Start with | Details |
 | --- | --- | --- |
 | Model one logical value | `field()` | [`field()` reference](./field.md) |
-| Model a fixed object with independently addressable children | `form()` | [`form()` reference](./form.md) |
+| Organize unrelated standalone nodes without aggregate behavior | Plain JavaScript object | [Creating nodes](../concepts/creating-nodes.md#a-container-is-optional) |
+| Model an ordinary fixed object with independently addressable children | `group()` or nested shorthand | [`group()` reference](./group.md) |
+| Define a submission workflow boundary | `form()` | [`form()` reference](./form.md) |
 | Model a dynamic ordered collection of independent nodes | `array()` | [`array()` reference](./array.md) |
 | Choose between a structured field, form, or array | — | [Choosing a primitive](../guides/choosing-a-primitive.md) |
 | Design a large domain-oriented form tree | Modeling boundaries and lifecycle | [Form modeling patterns](../guides/form-modeling-patterns.md) |
@@ -54,10 +56,10 @@ multi-select. It intentionally has no per-item nodes or structural operations.
 
 Main exports: `field`, `Field`, `FieldApi`, and `FieldOptions`.
 
-### `form()`
+### `group()` and nested shorthand
 
-Creates a fixed object tree whose named children retain their exact node types. Plain nested objects
-are shorthand for nested forms.
+`group()` creates a fixed object tree without its own submission action. Plain nested objects are
+shorthand for groups and are preferred when no branch-specific options are needed.
 
 ```ts
 const myForm = form({
@@ -68,6 +70,16 @@ const myForm = form({
   },
 });
 ```
+
+Use an explicit `group({...}, options)` for aggregate validators or structural configuration.
+Main exports: `group`, `Group`, `GroupApi`, `GroupOptions`, `GroupValue`, `GroupSet`, and
+`GroupPatch`.
+
+### `form()`
+
+Creates the fixed object tree that owns a submission workflow. It has the same structural behavior
+as a group plus `submission` configuration and `submit()`. Root application workflows normally
+start with `form()`; explicit nested forms are reserved for independent subflows.
 
 Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, `FormPatch`, and
 `FormSubmissionOptions`.

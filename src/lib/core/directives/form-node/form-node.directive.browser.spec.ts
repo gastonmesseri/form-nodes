@@ -9,6 +9,7 @@ import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, f
 import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
 import { form } from '../../primitives/form';
+import { group } from '../../primitives/group';
 import { FormNode } from './form-node.directive';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
@@ -27,6 +28,43 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNode in Chromium', () => {
+  it('tolerates a group as a native form root and preserves submit and reset state behavior', () => {
+    @Component({
+      template: `
+        <form [formNode]="filters">
+          <input [formNode]="filters.query">
+        </form>
+      `,
+      standalone: true,
+      imports: [FormNode],
+    })
+    class Host {
+      readonly filters = group({ query: field('', { debounce: 'blur' }) });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const formElement = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.value = 'angular';
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.filters.query()).toBe('');
+
+    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+    formElement.dispatchEvent(submitEvent);
+
+    expect(submitEvent.defaultPrevented).toBe(true);
+    expect(fixture.componentInstance.filters.query()).toBe('angular');
+    expect(fixture.componentInstance.filters.touched()).toBe(true);
+
+    const resetEvent = new Event('reset', { bubbles: true, cancelable: true });
+    formElement.dispatchEvent(resetEvent);
+
+    expect(resetEvent.defaultPrevented).toBe(true);
+    expect(fixture.componentInstance.filters.touched()).toBe(false);
+  });
+
   it('exposes binding-scoped errors through the exported template reference', () => {
     @Component({
       template: `

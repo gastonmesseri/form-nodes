@@ -22,7 +22,8 @@ Ask these questions for every value:
 | Modeling need | Recommended primitive |
 | --- | --- |
 | One control owns one complete value | `field()` |
-| Fixed named properties need independent nodes | Nested object shorthand or `form()` |
+| Fixed named properties need independent nodes | Nested object shorthand or `group()` |
+| Object tree owns a submission workflow | `form()` |
 | Repeated items need independent nodes | `array()` |
 | Nullable object or collection edited atomically | Object- or array-valued `field()` |
 | Runtime collection of keyed entries | `array()` of `{ key, value }` forms, or one record-valued `field()` |
@@ -93,12 +94,12 @@ const profileForm = form({
 });
 ```
 
-Use explicit nested `form()` only when that boundary needs its own options or validators:
+Use explicit `group()` only when that boundary needs its own options or validators:
 
 ```ts
 const profileForm = form({
   displayName: field(''),
-  address: form({
+  address: group({
     street: field(''),
     city: field(''),
     countryCode: field(''),
@@ -132,8 +133,8 @@ const settingsForm = form({
 });
 ```
 
-Do not use a nested form for a nullable object merely to obtain child syntax. Nested forms and
-arrays are permanent containers. When the complete object can be missing, choose an object-valued
+Do not use a group for a nullable object merely to obtain child syntax. Groups, forms, and arrays
+are permanent containers. When the complete object can be missing, choose an object-valued
 field or model the absence explicitly with a sibling field:
 
 ```ts

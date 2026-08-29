@@ -2,6 +2,7 @@ import type { Injector, Signal } from '@angular/core';
 
 import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
+import type { Group } from './group.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -58,7 +59,7 @@ export type FormPatch<TNodes extends Nodes> = {
 
 export type NormalizedNode<TNode extends NodeDefinition> =
   TNode extends Node ? TNode
-    : TNode extends NodeDefinitions ? Form<NormalizedNodes<TNode>> : Node;
+    : TNode extends NodeDefinitions ? Group<NormalizedNodes<TNode>> : Node;
 
 export type NormalizedNodes<TNodes extends NodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
@@ -115,7 +116,10 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   pending: Signal<boolean>;
   /** Whether this form or an ancestor form is currently running its submission action. */
   submitting: Signal<boolean>;
-  /** Marks the subtree touched and runs its configured submission action when validation allows it. */
+  /**
+   * Marks and flushes the subtree, then runs the configured submission action when validation
+   * allows it. Resolves to `false` without throwing when no action is configured.
+   */
   submit(): Promise<boolean>;
   /** Whether any descendant field currently has a pending control-value debounce. */
   debouncing: Signal<boolean>;
@@ -152,7 +156,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
 export type NodeWithParent<TNode extends Node, TParent extends Node> =
   TNode extends Field<infer TValue, Node> ? Field<TValue, TParent>
     : TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent>
-      : TNode extends ArrayNode<infer TItem, Node> ? ArrayNode<TItem, TParent> : TNode;
+      : TNode extends Group<infer TNodes, Node> ? Group<TNodes, TParent>
+        : TNode extends ArrayNode<infer TItem, Node> ? ArrayNode<TItem, TParent> : TNode;
 
 export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
   readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes, TParent>>;

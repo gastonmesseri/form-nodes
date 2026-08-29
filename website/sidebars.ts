@@ -59,6 +59,7 @@ const sidebars: SidebarsConfig = {
         'reference/api-overview',
         'reference/configuration',
         'reference/form',
+        'reference/group',
         'reference/field',
         'reference/array',
         'reference/built-in-validators',

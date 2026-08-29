@@ -1,4 +1,5 @@
 export { form } from './lib/core/primitives/form';
+export { group } from './lib/core/primitives/group';
 export { field } from './lib/core/primitives/field';
 export { array } from './lib/core/primitives/array';
 export { max } from './lib/core/validation/validators/max';
@@ -42,6 +43,7 @@ export type {
   FormOptions,
   FormSubmissionOptions,
 } from './lib/core/primitives/form';
+export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/core/primitives/group';
 export type {
   Validator,
   Validators,

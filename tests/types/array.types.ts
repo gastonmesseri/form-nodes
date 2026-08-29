@@ -64,6 +64,8 @@ people.update(() => null);
 array(field(''), { initialValue: null });
 array(field(''), null);
 
+// @ts-expect-error arrays inherit submission state but cannot own submission behavior
+array(field(''), { submission: { action: () => undefined } });
 // @ts-expect-error trackBy property names must exist on the item value
 array({ id: field('', { nullable: false }) }, { trackBy: 'missing' });
 // @ts-expect-error primitive item values require a trackBy callback

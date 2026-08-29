@@ -174,8 +174,10 @@ export class EmailEditor {
 }
 ```
 
-On a native `<form>`, the directive prevents native navigation, applies `novalidate`, calls `submit()` on submit, and
-maps native reset events to `form.reset()`.
+On a native `<form>`, the directive prevents native navigation and applies `novalidate`. A bound
+`form()` delegates submit to `form.submit()`. A bound `group()` is also accepted: submit marks and
+flushes its tree without running an action. Native reset delegates to either node's `reset()`.
+Fields and arrays remain invalid native-form roots.
 
 See [Control binding](../guides/control-binding.md), [Custom controls](../guides/custom-controls.md),
 and [Form submission](../guides/submission.md).

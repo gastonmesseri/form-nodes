@@ -104,7 +104,10 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
         : TNode
       : TNode
     : Node;
+export type NodeType = 'field' | 'group' | 'form' | 'array';
 export type InternalNodeApi = NodeApi & {
+  /** Runtime discriminant for internal node capability and implementation selection. */
+  readonly _nodeType: NodeType;
   _controlDebounce: Signal<ControlDebounce | undefined>;
   _controlValue: Signal<any>;
   _setControlValue(value: any): void;

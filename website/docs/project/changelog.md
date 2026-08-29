@@ -14,9 +14,14 @@ canonical release record.
 
 - A complete consumer documentation website with tutorials, API reference, recipes, integration
   guides, executable examples, and an interactive playground.
-- Typed `field()`, `form()`, and `array()` signal-based primitives.
+- Typed `field()`, `group()`, `form()`, and `array()` signal-based primitives.
 - Synchronous and asynchronous validation with reactive, configurable messages.
 - Angular `[formNode]` binding for native, signal-based, and `ControlValueAccessor` controls.
+
+### Changed
+
+- Nested object shorthand and object templates in `array()` now create structural `Group` nodes.
+  `Form` is reserved for explicit submission workflow boundaries.
 
 ## 0.1.0
 

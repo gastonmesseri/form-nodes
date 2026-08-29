@@ -13,9 +13,16 @@ consumer migration guide.
 
 - Consumer documentation website, including tutorials, reference pages, recipes, integrations,
   executable examples, and an interactive playground.
-- Typed `field()`, `form()`, and `array()` signal-based form primitives.
+- Typed `field()`, `group()`, `form()`, and `array()` signal-based form primitives. `group()` owns
+  fixed object structure while `form()` additionally represents a submission workflow boundary.
 - Synchronous and asynchronous validation with configurable, reactive validator messages.
 - Angular `[formNode]` binding for native, signal-based, and `ControlValueAccessor` controls.
+
+### Changed
+
+- Plain nested object definitions and object templates passed to `array()` now normalize to
+  `Group` rather than `Form`. Use an explicit nested `form()` only for an independent submission
+  workflow.
 
 ## [0.1.0] - Unreleased
 

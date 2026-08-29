@@ -17,7 +17,7 @@ fallback validator-message catalog.
 | Scope | API | Affects | Reactive |
 | --- | --- | --- | --- |
 | Validator call | `{ message }` | That validator instance | Message functions are reactive |
-| Node or subtree | `field()`, `form()`, and `array()` options | The declared node; selected options inherit | Function sources are reactive |
+| Node or subtree | `field()`, `group()`, `form()`, and `array()` options | The declared node; selected options inherit | Function sources are reactive |
 | Angular injector | `provideValidatorMessages()` | Nodes created in that injector scope | Selected message functions are reactive |
 | Angular injector | `provideFormNodeConfig()` | Descendant `[formNode]` bindings | Class predicates are reactive |
 | JavaScript process | `configureGlobalValidatorMessages()` | Fallback for every node | Catalog sources and selected messages are reactive |
@@ -43,16 +43,16 @@ ancestor.
 
 ### Options shared by nodes
 
-| Option | `field()` | `form()` | `array()` | Inheritance |
-| --- | --- | --- | --- | --- |
-| `validators` | Yes | Yes | Yes | No; validates that exact node |
-| `injector` | Yes | Yes | Yes | No; owns that node's async watcher and captures provider messages |
-| `debounce` | Yes | Yes | Yes | Yes; nearest configured node wins for descendants |
-| `hidden` | Yes | Yes | Yes | Effective state propagates through descendants |
-| `disabled` | Yes | Yes | Yes | Effective state propagates through descendants |
-| `readonly` | Yes | Yes | Yes | Effective state propagates through descendants |
+| Option | `field()` | `group()` | `form()` | `array()` | Inheritance |
+| --- | --- | --- | --- | --- | --- |
+| `validators` | Yes | Yes | Yes | Yes | No; validates that exact node |
+| `injector` | Yes | Yes | Yes | Yes | No; owns that node's async watcher and captures provider messages |
+| `debounce` | Yes | Yes | Yes | Yes | Yes; nearest configured node wins for descendants |
+| `hidden` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
+| `disabled` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
+| `readonly` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
 
-`form()` and `array()` additionally accept `validatorMessages`. A form also accepts `submission`.
+`group()`, `form()`, and `array()` additionally accept `validatorMessages`. Only a form accepts `submission`.
 An array additionally accepts `initialValue` and `trackBy`. Only `field()` accepts `nullable`.
 
 ### Static and reactive state

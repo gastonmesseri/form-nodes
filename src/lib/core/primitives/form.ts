@@ -18,6 +18,7 @@ import { isValidatorSource, normalizeValidatorSource } from '../validation/valid
 import type { InternalNode, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import { group } from './group';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
@@ -45,6 +46,15 @@ export function form<TDefinitions extends NodeDefinitions>(
   validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
   separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>> {
+  return _createObjectNode<TDefinitions>(definitions, validatorsOrOptions, separateOptions, 'form') as Form<NormalizedNodes<TDefinitions>>;
+}
+
+export function _createObjectNode<TDefinitions extends NodeDefinitions>(
+  definitions: TDefinitions,
+  validatorsOrOptions: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
+  separateOptions: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
+  nodeType: 'form' | 'group',
+): Node {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = FormValue<TNodes>;
   const resolvedOptions = isValidatorSource<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
@@ -59,7 +69,7 @@ export function form<TDefinitions extends NodeDefinitions>(
   const controls = Object.fromEntries(
     Object.entries(definitions).map(([key, definition]) => [
       key,
-      isNode(definition) ? definition : form(definition),
+      isNode(definition) ? definition : group(definition),
     ]),
   ) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
@@ -218,8 +228,8 @@ export function form<TDefinitions extends NodeDefinitions>(
   const submit = async (): Promise<boolean> => {
     if (untracked(formSubmitting)) return false;
     const submission = resolvedOptions?.submission;
-    if (!submission) throw new Error('form: cannot submit without a configured submission action');
     formNode.$api.markAsTouched();
+    if (!submission) return false;
     const shouldRun = submission.ignoreValidators === 'all'
       || (submission.ignoreValidators === 'none' ? untracked(formNode.$api.valid) : !untracked(formNode.$api.invalid));
     if (!shouldRun) {
@@ -234,7 +244,7 @@ export function form<TDefinitions extends NodeDefinitions>(
       formSelfSubmitting.set(false);
     }
   };
-  const api: FormApi<TNodes> = {
+  const api = {
     children: controls as FormChildren<TNodes, Node>,
     form: rootForm,
     parent: formParent.asReadonly(),
@@ -262,7 +272,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     ),
     pending: formPending,
     submitting: formSubmitting,
-    submit,
+    ...(nodeType === 'form' ? { submit } : {}),
     debouncing: formDebouncing,
     flush: () => {
       formControlValueBuffer.flush();
@@ -296,14 +306,15 @@ export function form<TDefinitions extends NodeDefinitions>(
     visible: computed(() => !formHidden()),
     hide: () => formSelfHidden.set(true),
     show: () => formSelfHidden.set(false),
-  };
+  } as FormApi<TNodes>;
   const internalApi = {
     ...api,
+    _nodeType: nodeType,
     _controlDebounce: formControlDebounce,
     _controlValue: api.controlValue,
     _setControlValue: formControlValueBuffer.set,
     _flushControlValueOnBlur: api.flush,
-    _clone: () => form(createDefinitions(), validatorSource, cloneOptions),
+    _clone: () => _createObjectNode(createDefinitions(), validatorSource, cloneOptions, nodeType),
     _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);
       formKeyInParent.set(parent ? key ?? null : null);

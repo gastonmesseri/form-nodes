@@ -129,11 +129,11 @@ describe('form', () => {
     expect(action).toHaveBeenCalledTimes(1);
   });
 
-  it('requires a configured action and always clears submitting after rejection', async () => {
+  it('tolerates submission without an action and always clears submitting after rejection', async () => {
     const withoutSubmission = form({ name: field('Marco') });
-    await expect(withoutSubmission.submit()).rejects.toThrowError(
-      'form: cannot submit without a configured submission action',
-    );
+    expect(await withoutSubmission.submit()).toBe(false);
+    expect(withoutSubmission.touched()).toBe(true);
+    expect(withoutSubmission.name.touched()).toBe(true);
 
     const failure = new Error('submit failed');
     const profile = form({ name: field('Marco') }, {
@@ -804,7 +804,7 @@ describe('form', () => {
     expect(formGroup()).toEqual({ profile: { address: { city: 'Zurich' } } });
   });
 
-  it('propagates parent state through shorthand nested forms', () => {
+  it('propagates parent state through shorthand nested groups', () => {
     const formGroup = form({ address: { city: field('Moscow') } });
     formGroup.api.disable();
     expect(formGroup.address.api.disabled()).toBe(true);

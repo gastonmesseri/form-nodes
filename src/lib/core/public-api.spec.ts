@@ -3,6 +3,7 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import { form } from './primitives/form';
 import { field } from './primitives/field';
+import { group } from './primitives/group';
 import { array } from './primitives/array';
 import type { Node } from './types/node.type';
 import { required } from './validation/validators/required';
@@ -377,7 +378,7 @@ describe('types', () => {
     expectTypeOf(colliding.api.children.age()).toEqualTypeOf<number | null>();
   });
 
-  it('infers shorthand nested forms', () => {
+  it('infers shorthand nested groups', () => {
     const formGroup = form({
       name: field('David'),
       address: {
@@ -396,6 +397,14 @@ describe('types', () => {
     expectTypeOf(formGroup.api.patch).toBeCallableWith({
       address: { location: { latitude: 47.3769 } },
     });
+  });
+
+  it('types groups as structural object nodes without submission', () => {
+    const address = group({ city: field('Zurich') });
+
+    expectTypeOf(address()).toEqualTypeOf<{ city: string | null }>();
+    expectTypeOf(address.city.parent()).toEqualTypeOf<typeof address | null>();
+    expectTypeOf(address.submitting()).toEqualTypeOf<boolean>();
   });
 
   it('types field errors as a readonly error array', () => {

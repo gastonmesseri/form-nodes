@@ -52,7 +52,11 @@ Import `FormNode` once and use it for both the native form and its controls:
 export class RegistrationPage {}
 ```
 
-On a native `<form>`, `FormNode` prevents native navigation, calls the node's configured submission action, disables native constraint submission with `novalidate`, and maps a native reset event to `form.reset()`.
+On a native `<form>`, `FormNode` prevents native navigation, disables native constraint submission
+with `novalidate`, and maps native reset to the bound object node's `reset()`. With `form()`, submit
+runs the configured action. Binding a `group()` is intentionally tolerated: submit still marks and
+flushes the tree but runs no action. This makes an accidental group/form choice non-destructive
+while keeping submission configuration exclusive to `form()`.
 
 ## Submission state
 
