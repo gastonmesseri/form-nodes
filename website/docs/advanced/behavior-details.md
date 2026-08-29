@@ -159,6 +159,31 @@ Synchronous `NG_VALIDATORS` errors participate in the node's real validation sta
 `NG_ASYNC_VALIDATORS` are not adapted; use `asyncValidator()` so cancellation, debounce, pending
 state, and stale-result handling remain owned by the node.
 
+### Read-only signal-input compatibility
+
+Angular does not expose a public setter for an `input()` signal. To synchronize optional custom-control
+state inputs such as `disabled`, `required`, and `errors`, Gem Forms currently uses a narrowly isolated
+adapter around Angular's exported `ɵSIGNAL` and `ɵInputSignalNode` symbols. Angular explicitly excludes
+all `ɵ`-prefixed symbols from its supported public API, so this adapter is tested on every supported
+Angular upgrade rather than treated as version-stable.
+
+The edited `value = model<T>()` or `checked = model<boolean>()` path does not need this adapter because
+models are publicly writable. A custom control can also avoid read-only state-input writes by accepting
+the bound node and deriving its UI state directly:
+
+```ts
+export class DatePicker {
+  value = model<Date | null>(null);
+  node = signal<Field<Date | null> | null>(null);
+
+  disabled = computed(() => this.node()?.disabled() ?? false);
+  errors = computed(() => this.node()?.errors() ?? []);
+}
+```
+
+This is the most future-proof signal-control integration when the component needs direct access to
+form state. See [Custom controls](../guides/custom-controls.md) for the complete contracts.
+
 ## Server rendering and hydration
 
 Native controls, signal controls, and CVAs receive their initial value and supported state during

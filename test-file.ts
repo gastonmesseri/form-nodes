@@ -52,8 +52,12 @@ const myForm = form({
     initialValue: [{ name: 'Marco', age: 30 }],
     validators: [minLength(1)],
     trackBy: 'name',
-  })
+  }),
+  whatIsThis: field(null),
 });
+
+myForm.whatIsThis.set(23);
+myForm.whatIsThis();
 
 myForm.sons1.insert(1)
 
