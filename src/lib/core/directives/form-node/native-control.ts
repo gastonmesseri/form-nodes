@@ -78,17 +78,17 @@ export const parseNativeControlValue = (
   return { value: readNativeControlValue(element, currentValue) };
 };
 
-const writeNumber = (element: HTMLInputElement, value: number): void => {
+const writeNumber = (element: HTMLInputElement, value: number) => {
   if (Number.isNaN(value)) element.value = '';
   else element.valueAsNumber = value;
 };
 
-const writeSelectedValues = (select: HTMLSelectElement, value: unknown): void => {
+const writeSelectedValues = (select: HTMLSelectElement, value: unknown) => {
   const selectedValues = new Set(Array.isArray(value) ? value.map(String) : []);
   Array.from(select.options).forEach((option) => { option.selected = selectedValues.has(option.value); });
 };
 
-export const writeNativeControlValue = (element: NativeFormNodeControl, value: unknown): void => {
+export const writeNativeControlValue = (element: NativeFormNodeControl, value: unknown) => {
   if (isNativeSelect(element) && element.multiple) {
     writeSelectedValues(element, value);
     return;

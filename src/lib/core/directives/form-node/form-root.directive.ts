@@ -17,13 +17,13 @@ export class FormRootDirective {
   readonly form = input.required<Form<any>>({ alias: 'formNode' });
 
   /** Prevents native navigation and runs the form node's configured submission action. */
-  submit(event: Event): void {
+  submit(event: Event) {
     event.preventDefault();
     void this.form().api.submit();
   }
 
   /** Resets the complete form tree instead of letting the browser reset only DOM controls. */
-  reset(event: Event): void {
+  reset(event: Event) {
     event.preventDefault();
     this.form().api.reset();
   }

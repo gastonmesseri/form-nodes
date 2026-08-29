@@ -37,5 +37,5 @@ export class FormNodeNgControl {
     return validator === Validators.required && this.getField().required();
   }
 
-  updateValueAndValidity(): void {}
+  updateValueAndValidity() {}
 }

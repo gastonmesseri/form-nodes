@@ -21,7 +21,7 @@ registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-const dispatch = (element: HTMLElement, type: string): void => {
+const dispatch = (element: HTMLElement, type: string) => {
   element.dispatchEvent(new Event(type, { bubbles: true }));
 };
 
@@ -423,14 +423,14 @@ describe('FormNodeDirective', () => {
       change = (_value: unknown) => {};
       touch = () => {};
       validatorChange = () => {};
-      writeValue(value: unknown): void { this.value = value; }
-      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
-      registerOnTouched(callback: () => void): void { this.touch = callback; }
-      setDisabledState(disabled: boolean): void { this.disabled = disabled; }
+      writeValue(value: unknown) { this.value = value; }
+      registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
+      registerOnTouched(callback: () => void) { this.touch = callback; }
+      setDisabledState(disabled: boolean) { this.disabled = disabled; }
       validate(_control: AbstractControl): ValidationErrors | null {
         return this.rejectValue ? { customCva: { rejected: true } } : null;
       }
-      registerOnValidatorChange(callback: () => void): void { this.validatorChange = callback; }
+      registerOnValidatorChange(callback: () => void) { this.validatorChange = callback; }
     }
 
     @Component({
@@ -543,7 +543,7 @@ describe('FormNodeDirective', () => {
   it('prefers a custom accessor over Angular built-in and default accessors', () => {
     const custom: ControlValueAccessor & { writes: unknown[] } = {
       writes: [],
-      writeValue(value: unknown): void { this.writes.push(value); },
+      writeValue(value: unknown) { this.writes.push(value); },
       registerOnChange: () => {},
       registerOnTouched: () => {},
     };
@@ -667,9 +667,9 @@ describe('FormNodeDirective', () => {
       change = (_value: unknown) => {};
       touch = () => {};
       writes: unknown[] = [];
-      writeValue(value: unknown): void { this.writes.push(value); }
-      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
-      registerOnTouched(callback: () => void): void { this.touch = callback; }
+      writeValue(value: unknown) { this.writes.push(value); }
+      registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
+      registerOnTouched(callback: () => void) { this.touch = callback; }
     }
 
     @Component({
@@ -702,12 +702,12 @@ describe('FormNodeDirective', () => {
     class EchoingCva implements ControlValueAccessor {
       change = (_value: unknown) => {};
       writes: unknown[] = [];
-      writeValue(value: unknown): void {
+      writeValue(value: unknown) {
         this.writes.push(value);
         this.change(value);
       }
-      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
-      registerOnTouched(): void {}
+      registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
+      registerOnTouched() {}
     }
 
     @Component({
@@ -746,10 +746,10 @@ describe('FormNodeDirective', () => {
       readonly value = signal<unknown>(undefined);
       readonly disabled = signal(false);
       change = (_value: unknown) => {};
-      writeValue(value: unknown): void { this.value.set(value); }
-      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
-      registerOnTouched(): void {}
-      setDisabledState(disabled: boolean): void { this.disabled.set(disabled); }
+      writeValue(value: unknown) { this.value.set(value); }
+      registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
+      registerOnTouched() {}
+      setDisabledState(disabled: boolean) { this.disabled.set(disabled); }
     }
 
     @Component({
@@ -786,9 +786,9 @@ describe('FormNodeDirective', () => {
       touch = () => {};
       writes: unknown[] = [];
       constructor() { instances.push(this); }
-      writeValue(value: unknown): void { this.writes.push(value); }
-      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
-      registerOnTouched(callback: () => void): void { this.touch = callback; }
+      writeValue(value: unknown) { this.writes.push(value); }
+      registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
+      registerOnTouched(callback: () => void) { this.touch = callback; }
     }
 
     @Component({
@@ -839,11 +839,11 @@ describe('FormNodeDirective', () => {
     class DynamicValidatorCva implements ControlValueAccessor, Validator {
       reject = false;
       validatorChange = () => {};
-      writeValue(): void {}
-      registerOnChange(): void {}
-      registerOnTouched(): void {}
+      writeValue() {}
+      registerOnChange() {}
+      registerOnTouched() {}
       validate(): ValidationErrors | null { return this.reject ? { dynamicLegacy: true } : null; }
-      registerOnValidatorChange(callback: () => void): void { this.validatorChange = callback; }
+      registerOnValidatorChange(callback: () => void) { this.validatorChange = callback; }
     }
 
     @Component({
@@ -889,9 +889,9 @@ describe('FormNodeDirective', () => {
     })
     class FunctionValidatorCva implements ControlValueAccessor {
       change = (_value: unknown) => {};
-      writeValue(): void {}
-      registerOnChange(callback: (value: unknown) => void): void { this.change = callback; }
-      registerOnTouched(): void {}
+      writeValue() {}
+      registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
+      registerOnTouched() {}
     }
 
     @Component({

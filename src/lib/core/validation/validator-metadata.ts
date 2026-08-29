@@ -26,7 +26,7 @@ export const markValidatorMetadata = <TValidator extends Function, TWrite, TAccu
 };
 
 /** Appends every raw contribution attached to a validator to one node resolution store. */
-export const collectValidatorMetadata = (validator: Function, target: MutableValidatorMetadata): void => {
+export const collectValidatorMetadata = (validator: Function, target: MutableValidatorMetadata) => {
   validatorMetadata.get(validator)?.forEach((contributions, key) => {
     const current = target.get(key) ?? [];
     current.push(...contributions);

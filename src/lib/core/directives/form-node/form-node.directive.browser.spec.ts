@@ -15,7 +15,7 @@ registerSignalInputForJit(FormNodeDirective, 'formNode', '_fieldInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-const dispatch = (element: HTMLElement, type: string): void => {
+const dispatch = (element: HTMLElement, type: string) => {
   element.dispatchEvent(new Event(type, { bubbles: true }));
 };
 
@@ -325,12 +325,12 @@ describe('FormNodeDirective in Chromium', () => {
       change = (_value: string) => {};
       touch = () => {};
       destroyed = false;
-      writeValue(value: string): void { this.value = value; }
-      registerOnChange(callback: (value: string) => void): void { this.change = callback; }
-      registerOnTouched(callback: () => void): void { this.touch = callback; }
-      setDisabledState(disabled: boolean): void { this.disabled = disabled; }
-      select(): void { this.change('Mark'); }
-      ngOnDestroy(): void { this.destroyed = true; }
+      writeValue(value: string) { this.value = value; }
+      registerOnChange(callback: (value: string) => void) { this.change = callback; }
+      registerOnTouched(callback: () => void) { this.touch = callback; }
+      setDisabledState(disabled: boolean) { this.disabled = disabled; }
+      select() { this.change('Mark'); }
+      ngOnDestroy() { this.destroyed = true; }
     }
 
     @Component({
@@ -372,12 +372,12 @@ describe('FormNodeDirective in Chromium', () => {
     class EchoingCva implements ControlValueAccessor {
       value = '';
       change = (_value: string) => {};
-      writeValue(value: string): void {
+      writeValue(value: string) {
         this.value = value;
         this.change(value);
       }
-      registerOnChange(callback: (value: string) => void): void { this.change = callback; }
-      registerOnTouched(): void {}
+      registerOnChange(callback: (value: string) => void) { this.change = callback; }
+      registerOnTouched() {}
     }
 
     @Component({

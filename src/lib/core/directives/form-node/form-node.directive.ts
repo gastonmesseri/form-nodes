@@ -98,7 +98,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     this.destroyRef.onDestroy(() => { this.destroyed = true; });
   }
 
-  ngOnInit(): void {
+  ngOnInit() {
     const accessor = selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
     if (accessor) this.connectAccessor(accessor);
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
@@ -106,11 +106,11 @@ export class FormNodeDirective<TValue> implements OnInit {
     this.bindNodeState();
   }
 
-  focus(options?: FocusOptions): void { this.element.focus(options); }
-  flush(): void { this.field.flush(); }
-  reset(): void { this.field.reset(); }
+  focus(options?: FocusOptions) { this.element.focus(options); }
+  flush() { this.field.flush(); }
+  reset() { this.field.reset(); }
 
-  private connectAccessor(accessor: ControlValueAccessor): void {
+  private connectAccessor(accessor: ControlValueAccessor) {
     this.ngControl.valueAccessor = accessor;
     accessor.registerOnChange((value: unknown) => {
       if (this.destroyed || this.writingAccessorValue) return;
@@ -142,7 +142,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     this.connectLegacyValidators();
   }
 
-  private connectLegacyValidators(): void {
+  private connectLegacyValidators() {
     const validators = this.injector.get<readonly (ValidatorFn | Validator)[] | null>(NG_VALIDATORS, null, { self: true });
     if (!validators?.length) return;
     const version = signal(0);
@@ -164,7 +164,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     }, { injector: this.injector });
   }
 
-  private connectNativeControl(control: NativeFormNodeControl): void {
+  private connectNativeControl(control: NativeFormNodeControl) {
     const parseErrors = signal<readonly ValidationError.WithoutTargetNode[]>([]);
     const commit = () => {
       if (this.composing || this.destroyed) return;
@@ -217,7 +217,7 @@ export class FormNodeDirective<TValue> implements OnInit {
     }
   }
 
-  private bindNodeState(): void {
+  private bindNodeState() {
     effect(() => {
       const field = this.node();
       this.renderer.setProperty(this.element, 'disabled', field.disabled());
