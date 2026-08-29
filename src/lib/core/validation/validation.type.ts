@@ -45,6 +45,7 @@ export type FieldContext<TValue> = {
 
 /** Non-validation state exposed to validator callbacks. */
 export type AsyncValidatorState = {
+  readonly submitting: Signal<boolean>;
   readonly touched: Signal<boolean>;
   readonly untouched: Signal<boolean>;
   readonly dirty: Signal<boolean>;

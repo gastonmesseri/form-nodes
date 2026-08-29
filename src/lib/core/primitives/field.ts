@@ -189,6 +189,7 @@ export function field<TValue>(
       fieldErrors().some((error) => error.kind === 'required'),
     ),
     pending: computed(() => !fieldNonInteractive() && asyncValidation.pending()),
+    submitting: computed(() => fieldParent()?.api.submitting() === true),
     validationStatus: fieldValidationStatus,
     touched: computed(() => !fieldNonInteractive() && fieldTouched()),
     untouched: computed(() => fieldNonInteractive() || !fieldTouched()),

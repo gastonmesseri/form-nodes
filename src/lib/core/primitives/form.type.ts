@@ -6,7 +6,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
-export type FormOptions<TValue = any> = {
+export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
   readonly validators?: ValidatorSource<TValue>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
@@ -19,6 +19,17 @@ export type FormOptions<TValue = any> = {
   readonly disabled?: boolean | (() => boolean);
   /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
   readonly readonly?: boolean | (() => boolean);
+  /** Submission behavior used by `submit()` and by a bound native `<form>`. */
+  readonly submission?: FormSubmissionOptions<TValue, TForm>;
+};
+
+export type FormSubmissionOptions<TValue, TForm extends Form<any> = Form<any>> = {
+  /** Runs when submission is allowed by the current validation state. */
+  readonly action: (form: TForm, value: TValue) => void | PromiseLike<void>;
+  /** Runs instead of `action` when validation blocks submission. */
+  readonly onInvalid?: (form: TForm) => void;
+  /** Which validation states may be ignored when deciding whether to run `action`. */
+  readonly ignoreValidators?: 'pending' | 'none' | 'all';
 };
 
 export type FormValue<TNodes extends Nodes> = {
@@ -75,6 +86,10 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
+  /** Whether this form or an ancestor form is currently running its submission action. */
+  submitting: Signal<boolean>;
+  /** Marks the subtree touched and runs its configured submission action when validation allows it. */
+  submit(): Promise<boolean>;
   /** Whether any descendant field currently has a pending control-value debounce. */
   debouncing: Signal<boolean>;
   /** Immediately commits every pending control value in this form's subtree. */

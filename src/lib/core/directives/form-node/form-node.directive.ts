@@ -52,7 +52,7 @@ const toControlErrors = (errors: ValidationErrors | null): readonly ValidationEr
   errors ? Object.entries(errors).map(([kind, context]) => ({ kind, context })) : [];
 
 @Directive({
-  selector: '[formNode]',
+  selector: ':not(form)[formNode]',
   exportAs: 'formNode',
   standalone: true,
   providers: [

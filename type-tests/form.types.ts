@@ -28,6 +28,22 @@ profile.update((value) => ({ ...value, age: value.age + 1 }));
 profile.reset();
 profile.reset({ name: null, age: 42, address: { city: null } });
 
+const submittedProfile = form({
+  name: field('Marco', { nullable: false }),
+  age: field(42, { nullable: false }),
+}, {
+  submission: {
+    action: (formNode, value) => {
+      type _SubmittedForm = Expect<Equal<ReturnType<typeof formNode>, { name: string; age: number }>>;
+      type _SubmittedValue = Expect<Equal<typeof value, { name: string; age: number }>>;
+      return Promise.resolve();
+    },
+  },
+});
+
+type _SubmittingSignal = Expect<Equal<ReturnType<typeof submittedProfile.submitting>, boolean>>;
+type _SubmitResult = Expect<Equal<ReturnType<typeof submittedProfile.submit>, Promise<boolean>>>;
+
 // @ts-expect-error set requires every form property
 profile.set({ name: 'Daniel', age: 43 });
 // @ts-expect-error patch cannot contain unknown properties

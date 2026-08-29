@@ -112,6 +112,8 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
+  /** Whether this array or an ancestor form is currently running its submission action. */
+  submitting: Signal<boolean>;
   /** Whether any current item descendant has a pending control-value debounce. */
   debouncing: Signal<boolean>;
   /** Immediately commits every pending control value in this array's current item subtrees. */

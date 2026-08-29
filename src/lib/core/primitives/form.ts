@@ -18,21 +18,21 @@ import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-r
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNode, NormalizedNodes } from './form.type';
 
-export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
+export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   definitions: TDefinitions,
-  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   definitions: TDefinitions,
   validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
-  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   definitions: TDefinitions,
-  validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
-  separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
+  separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = FormValue<TNodes>;
@@ -54,6 +54,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfTouched = signal(false);
   const formSelfDirty = signal(false);
+  const formSelfSubmitting = signal(false);
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
   const formKeyInParent = signal<string | null>(null);
@@ -117,6 +118,9 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
       asyncValidation.pending() || controlKeys().some((key) => controls[key]!.api.pending())
     ),
   );
+  const formSubmitting = computed(() =>
+    formSelfSubmitting() || formParent()?.api.submitting() === true,
+  );
   const formValidationStatus = computed<ValidationStatus>(() => {
     if (formNonInteractive()) return 'valid';
     if (formErrors().length > 0 || controlKeys().some((key) => controls[key]!.api.invalid())) return 'invalid';
@@ -168,6 +172,25 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     const value = args[0];
     controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
   };
+  const submit = async (): Promise<boolean> => {
+    if (untracked(formSubmitting)) return false;
+    const submission = resolvedOptions?.submission;
+    if (!submission) throw new Error('form: cannot submit without a configured submission action');
+    formNode.api.markAsTouched();
+    const shouldRun = submission.ignoreValidators === 'all'
+      || (submission.ignoreValidators === 'none' ? untracked(formNode.api.valid) : !untracked(formNode.api.invalid));
+    if (!shouldRun) {
+      untracked(() => submission.onInvalid?.(formNode));
+      return false;
+    }
+    formSelfSubmitting.set(true);
+    try {
+      await untracked(() => submission.action(formNode, formValue()));
+      return true;
+    } finally {
+      formSelfSubmitting.set(false);
+    }
+  };
   const api: FormApi<TNodes> = {
     children: controls as FormChildren<TNodes, Node>,
     form: rootForm,
@@ -193,6 +216,8 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
       || formErrors().some((error) => error.kind === 'required')
     ),
     pending: formPending,
+    submitting: formSubmitting,
+    submit,
     debouncing: formDebouncing,
     flush: () => controlKeys().forEach((key) => controls[key]!.api.flush()),
     validationStatus: formValidationStatus,
