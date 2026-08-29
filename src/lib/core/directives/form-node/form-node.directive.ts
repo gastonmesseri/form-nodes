@@ -61,7 +61,8 @@ const toControlErrors = (errors: ValidationErrors | null): readonly ValidationEr
   ],
 })
 export class FormNodeDirective<TValue> implements OnInit {
-  _fieldInput = input.required<Field<TValue>>({ alias: 'formNode' });
+  /** **Internal:** Signal input backing the `[formNode]` binding. Consumers should use `field` or `node` instead. */
+  formNodeInput = input.required<Field<TValue>>({ alias: 'formNode' });
 
   private renderer = inject(Renderer2);
 
@@ -76,11 +77,17 @@ export class FormNodeDirective<TValue> implements OnInit {
   private _ngControl: FormNodeNgControl | undefined;
 
   private nativeControl = isNativeFormNodeControl(this.element) ? this.element : null;
+
   private legacyValidationOwner = {};
+
   private nativeParsingOwner = {};
+
   private destroyed = false;
+
   private composing = false;
+
   private writingAccessorValue = false;
+
   private lastViewValue: unknown = Symbol('unset');
 
   /** Current bound field, exposed as a signal for custom integrations. */
@@ -100,7 +107,7 @@ export class FormNodeDirective<TValue> implements OnInit {
 
   /** Field node bound to the host native control or ControlValueAccessor. */
   get field(): Field<TValue> {
-    const field = this._fieldInput();
+    const field = this.formNodeInput();
     if (typeof field !== 'function' || typeof field.controlValue !== 'function') {
       throw new Error('formNode: a field node is required');
     }
