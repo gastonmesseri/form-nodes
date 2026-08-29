@@ -1,7 +1,7 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, inject, input, model, output } from '@angular/core';
 
-import { field, FormNode, provideFormNodeControl, required, type Field } from '../src/public-api';
+import { field, FormNode, provideFormNodeControl, required, type Field } from '../../src/public-api';
 
 @Component({
   standalone: true,

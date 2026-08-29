@@ -16,7 +16,7 @@ import { required } from '../../../validation/validators/required';
 import { connectSignalControlInputs, writeComponentInput } from './signal-control-inputs';
 import { maxLength } from '../../../validation/validators/max-length';
 import { minLength } from '../../../validation/validators/min-length';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../../testing/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());

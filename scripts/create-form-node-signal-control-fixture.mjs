@@ -23,7 +23,7 @@ writeFileSync(config, JSON.stringify({
   angularCompilerOptions: {
     compilationMode: 'full',
   },
-  files: [resolve(workspace, 'integration-tests', 'form-node-signal-control.fixture.ts')],
+  files: [resolve(workspace, 'tests', 'integration', 'form-node-signal-control.fixture.ts')],
 }));
 
 const result = spawnSync(process.execPath, [ngc, '-p', config], {
@@ -36,7 +36,7 @@ if (result.status !== 0) {
   throw new Error(`AOT signal-control fixture compilation failed.\n${output}`);
 }
 
-const compiledFixture = resolve(outputDirectory, 'integration-tests', 'form-node-signal-control.fixture.js');
+const compiledFixture = resolve(outputDirectory, 'tests', 'integration', 'form-node-signal-control.fixture.js');
 const bundledFixture = resolve(outputDirectory, 'form-node-signal-control.fixture.mjs');
 const bundleResult = spawnSync(esbuild, [
   compiledFixture,

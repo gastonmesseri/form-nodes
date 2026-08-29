@@ -1,5 +1,5 @@
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNode, field, provideFormNodeConfig, type FormNodeBinding } from '../src/public-api';
+import { FormNode, field, provideFormNodeConfig, type FormNodeBinding } from '../../src/public-api';
 
 const name = field('David', { nullable: false });
 declare const nameBinding: FormNodeBinding<typeof name>;
@@ -20,13 +20,13 @@ nameBinding.reset();
 nameDirective.errors();
 nameDirective.focus();
 // @ts-expect-error native form behavior is provided by FormNode
-import { FormRoot } from '../src/public-api';
+import { FormRoot } from '../../src/public-api';
 
 // @ts-expect-error native form behavior is provided by FormNode
-import { FormRootDirective } from '../src/public-api';
+import { FormRootDirective } from '../../src/public-api';
 
 // @ts-expect-error internal implementation helpers are not public
-import { appendMetadataContributions, createNodeDefinitionFactory, createReactiveWatch, markAsAsyncValidator } from '../src/public-api';
+import { appendMetadataContributions, createNodeDefinitionFactory, createReactiveWatch, markAsAsyncValidator } from '../../src/public-api';
 
 provideFormNodeConfig({
   classes: {
