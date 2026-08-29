@@ -121,23 +121,26 @@ The configuration applies to bindings below that injector. Register it in a rout
 NgModule `providers` array for a narrower scope. The nearest provider wins, and each predicate
 tracks only the signals it reads.
 
-Use the optional preset for Angular-style status classes:
+Use the optional preset when application styles or a UI library expect Angular Forms status
+classes. `[formNode]` does not require the preset:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFormNodeConfig({
-      classes: FORM_NODE_STATUS_CLASSES,
-    }),
+    provideFormNodeConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES }),
   ],
 };
 ```
 
-It adds `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng-untouched`/`ng-touched`. No status classes are installed by default.
+It adds `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and
+`ng-untouched`/`ng-touched`. The classes update reactively with the bound node and do not alter its
+state. No status classes are installed by default. See
+[`ANGULAR_FORMS_STATUS_CLASSES`](../reference/form-node-binding.md#automatic-css-classes) for the
+complete mapping and extension example.
 
 ## Hidden controls
 

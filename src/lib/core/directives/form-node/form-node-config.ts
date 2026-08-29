@@ -11,11 +11,11 @@ export type FormNodeConfig = {
    * Each predicate runs in a reactive context. Signals read from the binding or elsewhere cause
    * that class to be reevaluated without reevaluating unrelated class predicates.
    */
-  readonly classes?: Readonly<Record<string, (binding: FormNodeBinding) => boolean>>;
+  classes?: Record<string, (binding: FormNodeBinding) => boolean>;
 };
 
 /** Reactive Forms-compatible status classes for use with `provideFormNodeConfig()`. */
-export const FORM_NODE_STATUS_CLASSES: NonNullable<FormNodeConfig['classes']> = {
+export const ANGULAR_FORMS_STATUS_CLASSES: NonNullable<FormNodeConfig['classes']> = {
   'ng-touched': (binding) => {
     return binding.node().$api.touched();
   },
@@ -41,8 +41,34 @@ export const FORM_NODE_STATUS_CLASSES: NonNullable<FormNodeConfig['classes']> = 
 
 export const FORM_NODE_CONFIG = new InjectionToken<FormNodeConfig>('FORM_NODE_CONFIG');
 
-/** Configures automatic CSS classes for every `[formNode]` binding below this provider. */
-export const provideFormNodeConfig = (config: FormNodeConfig): Provider[] => [{
+/**
+ * Configures automatic CSS classes for every `[formNode]` binding below this provider.
+ * Each predicate is evaluated reactively and toggles its corresponding class.
+ *
+ * @example Configure application-wide Angular-style states and one custom class.
+ * ```ts
+ * import type { ApplicationConfig } from '@angular/core';
+ *
+ * import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+ *
+ * export const appConfig: ApplicationConfig = {
+ *   providers: [
+ *     provideFormNodeConfig({
+ *       classes: {
+ *         ...ANGULAR_FORMS_STATUS_CLASSES,
+ *         'is-readonly': binding => binding.node().$api.readonly(),
+ *       },
+ *     }),
+ *   ],
+ * };
+ * ```
+ *
+ * @param config Binding configuration installed in the current Angular injector scope.
+ */
+export const provideFormNodeConfig = (config: {
+  /** Reactive class predicates keyed by the CSS class to toggle on each binding. */
+  classes?: Record<string, (binding: FormNodeBinding) => boolean>;
+}): Provider[] => [{
   provide: FORM_NODE_CONFIG,
   useValue: config,
 }];

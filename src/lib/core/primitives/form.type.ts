@@ -6,13 +6,78 @@ import type { Group } from './group.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { DisabledReason, MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
-  /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
-  readonly validators?: ValidatorSource<TValue>;
+  /**
+   * One validator or an array of validators that validate the complete form value.
+   *
+   * Start with a named validator when the rule is reused:
+   *
+   * @example
+   * ```ts
+   * form({
+   *   email: field(''),
+   *   marketingConsent: field(false),
+   * }, {
+   *   validators: [profilePolicy],
+   * });
+   * ```
+   *
+   * A small form-specific rule can be declared inline:
+   *
+   * @example
+   * ```ts
+   * form({
+   *   acceptTerms: field(false),
+   * }, {
+   *   validators: ({ value }) => {
+   *     return value().acceptTerms
+   *       ? null
+   *       : { kind: 'termsRequired', message: 'Accept the terms to continue.' };
+   *   },
+   * });
+   * ```
+   *
+   * Form validators are also useful for cross-field rules:
+   *
+   * @example
+   * ```ts
+   * form({
+   *   password: field(''),
+   *   confirmation: field(''),
+   * }, {
+   *   validators: [
+   *     ({ value }) => {
+   *       return value().password === value().confirmation
+   *         ? null
+   *         : { kind: 'passwordMismatch', message: 'Passwords must match.' };
+   *     },
+   *   ],
+   * });
+   * ```
+   *
+   * Asynchronous rules must be wrapped with `asyncValidator()`:
+   *
+   * @example
+   * ```ts
+   * form({
+   *   username: field(''),
+   * }, {
+   *   validators: asyncValidator(async ({ value }) => {
+   *     const available = await isAccountAvailable(value());
+   *     return available ? null : { kind: 'accountUnavailable' };
+   *   }),
+   * });
+   * ```
+   *
+   * Use an array when the form needs multiple validators. Arrays may contain synchronous
+   * validators, validators created with `asyncValidator()`, and ignored `null` or `undefined`
+   * entries.
+   */
+  validators?: ValidatorSource<TValue>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
-  readonly injector?: Injector;
+  injector?: Injector;
   /**
    * Partial validator message catalog inherited by this form or array and its descendants.
    *
@@ -23,26 +88,81 @@ export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
    * @reactive Tracks signals read by the catalog source and the selected message function while a
    * built-in validator is failing.
    */
-  readonly validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
+  validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
   /** Default control-value debounce inherited by descendants: milliseconds, `'blur'`, or a cancelable asynchronous function. */
-  readonly debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-  /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
-  readonly hidden?: boolean | (() => boolean);
-  /** Initial or reactive disabled state. A string disables the form and describes the reason. */
-  readonly disabled?: boolean | string | (() => boolean | string);
-  /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
-  readonly readonly?: boolean | (() => boolean);
+  debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
+  /**
+   * Initial or reactive visibility of the complete form subtree.
+   *
+   * @example Create a form that starts hidden.
+   * ```ts
+   * form({
+   *   internalNotes: field(''),
+   * }, { hidden: true });
+   * ```
+   *
+   * @example Hide a business-details workflow for personal accounts.
+   * ```ts
+   * form({
+   *   companyName: field(''),
+   * }, {
+   *   hidden: () => accountType() !== 'business',
+   * });
+   * ```
+   */
+  hidden?: boolean | (() => boolean);
+  /**
+   * Initial or reactive disabled state for the complete subtree. Return a string to record a
+   * user-facing reason.
+   *
+   * @example Create a form that starts disabled.
+   * ```ts
+   * form({
+   *   email: field(''),
+   * }, { disabled: 'This workflow is not available yet.' });
+   * ```
+   *
+   * @example Disable a checkout workflow while its order is being submitted.
+   * ```ts
+   * form({
+   *   email: field(''),
+   * }, {
+   *   disabled: () => submittingOrder() ? 'The order is being submitted.' : false,
+   * });
+   * ```
+   */
+  disabled?: boolean | string | (() => boolean | string);
+  /**
+   * Initial or reactive readonly state for the complete subtree.
+   *
+   * @example Create a form that starts in readonly mode.
+   * ```ts
+   * form({
+   *   displayName: field(''),
+   * }, { readonly: true });
+   * ```
+   *
+   * @example Present an archived record without allowing edits.
+   * ```ts
+   * form({
+   *   displayName: field(''),
+   * }, {
+   *   readonly: () => recordStatus() === 'archived',
+   * });
+   * ```
+   */
+  readonly?: boolean | (() => boolean);
   /** Submission behavior used by `submit()` and by a bound native `<form>`. */
-  readonly submission?: FormSubmissionOptions<TValue, TForm>;
+  submission?: FormSubmissionOptions<TValue, TForm>;
 };
 
 export type FormSubmissionOptions<TValue, TForm extends Form<any> = Form<any>> = {
   /** Runs when submission is allowed by the current validation state. */
-  readonly action: (form: TForm, value: TValue) => void | PromiseLike<void>;
+  action: (form: TForm, value: TValue) => void | PromiseLike<void>;
   /** Runs instead of `action` when validation blocks submission. */
-  readonly onInvalid?: (form: TForm) => void;
+  onInvalid?: (form: TForm) => void;
   /** Which validation states may be ignored when deciding whether to run `action`. */
-  readonly ignoreValidators?: 'pending' | 'none' | 'all';
+  ignoreValidators?: 'pending' | 'none' | 'all';
 };
 
 export type FormValue<TNodes extends Nodes> = {
@@ -130,7 +250,10 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched(options?: MarkAsTouchedOptions): void;
+  markAsTouched(options?: {
+    /** When true, marks only this form and leaves every descendant untouched. */
+    skipDescendants?: boolean;
+  }): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;

@@ -17,9 +17,9 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | --- | --- | --- |
 | Model one logical value | `field()` | [`field()` reference](./field.md) |
 | Organize unrelated standalone nodes without aggregate behavior | Plain JavaScript object | [Creating nodes](../concepts/creating-nodes.md#a-container-is-optional) |
-| Model an ordinary fixed object with independently addressable children | `group()` or nested shorthand | [`group()` reference](./group.md) |
 | Define a submission workflow boundary | `form()` | [`form()` reference](./form.md) |
 | Model a dynamic ordered collection of independent nodes | `array()` | [`array()` reference](./array.md) |
+| Give an object branch its own options without creating a submission workflow | Explicit `group()` | [`group()` reference](./group.md) |
 | Choose between a structured field, form, or array | — | [Choosing a primitive](../guides/choosing-a-primitive.md) |
 | Design a large domain-oriented form tree | Modeling boundaries and lifecycle | [Form modeling patterns](../guides/form-modeling-patterns.md) |
 | Add a built-in validation rule | `required`, `email`, `min`, and others | [Built-in validators](./built-in-validators.md) |
@@ -56,25 +56,6 @@ multi-select. It intentionally has no per-item nodes or structural operations.
 
 Main exports: `field`, `Field`, `FieldApi`, and `FieldOptions`.
 
-### `group()` and nested shorthand
-
-`group()` creates a fixed object tree without its own submission action. Plain nested objects are
-shorthand for groups and are preferred when no branch-specific options are needed.
-
-```ts
-const myForm = form({
-  displayName: field(''),
-  address: {
-    city: field(''),
-    country: field(''),
-  },
-});
-```
-
-Use an explicit `group({...}, options)` for aggregate validators or structural configuration.
-Main exports: `group`, `Group`, `GroupApi`, `GroupOptions`, `GroupValue`, `GroupSet`, and
-`GroupPatch`.
-
 ### `form()`
 
 Creates the fixed object tree that owns a submission workflow. It has the same structural behavior
@@ -100,6 +81,25 @@ const myForm = form({
 
 Main exports: `array`, `ArrayNode`, `ArrayApi`, `ArrayOptions`, `ArrayValue`, `ArraySet`,
 `ArrayPatch`, `ArrayItems`, `ArrayIndexes`, and `ArrayItemWithParent`.
+
+### Explicit `group()`
+
+Plain nested objects already create structural groups and are the preferred way to model ordinary
+fixed branches:
+
+```ts
+const myForm = form({
+  displayName: field(''),
+  address: {
+    city: field(''),
+    country: field(''),
+  },
+});
+```
+
+Use explicit `group({...}, options)` only when an object branch needs its own aggregate validators,
+state options, or message configuration without becoming a submission workflow. Main exports:
+`group`, `Group`, `GroupApi`, `GroupOptions`, `GroupValue`, `GroupSet`, and `GroupPatch`.
 
 ## Validation
 
@@ -210,7 +210,7 @@ Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` imp
 | API | Purpose |
 | --- | --- |
 | `provideFormNodeConfig()` | Configures reactive CSS classes for descendant bindings. |
-| `FORM_NODE_STATUS_CLASSES` | Optional Angular-style validity and interaction class preset. |
+| `ANGULAR_FORMS_STATUS_CLASSES` | Optional Angular Forms-compatible validity and interaction class preset. |
 | `provideFormNodeControl()` | Explicitly registers a signal-based custom control. |
 | `provideFormNodePassThrough()` | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
@@ -221,12 +221,12 @@ Configure binding classes once in the application providers for the common appli
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideFormNodeConfig({
-      classes: FORM_NODE_STATUS_CLASSES,
+      classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
 };

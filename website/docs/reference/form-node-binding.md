@@ -88,41 +88,108 @@ Each predicate tracks its own signal dependencies independently. The nearest pro
 Register the provider in a route, component, or NgModule instead when the configuration should
 apply only to that injector subtree.
 
-`FORM_NODE_STATUS_CLASSES` is an optional preset containing Angular-style validity, pending, dirty,
-pristine, touched, and untouched classes. No classes are installed by default.
+`ANGULAR_FORMS_STATUS_CLASSES` is an optional compatibility preset for applications, component
+libraries, and existing styles that expect Angular Forms status classes. It maps the node's reactive
+state to the following classes:
+
+| Node state | Applied class |
+| --- | --- |
+| Valid | `ng-valid` |
+| Invalid | `ng-invalid` |
+| Async validation in progress | `ng-pending` |
+| Pristine | `ng-pristine` |
+| Dirty | `ng-dirty` |
+| Untouched | `ng-untouched` |
+| Touched | `ng-touched` |
+
+Opposite classes are updated together as state changes. For example, a binding moves from
+`ng-pristine` to `ng-dirty`; it does not retain both classes. No status classes are installed by
+default, so applications that do not need Angular-compatible CSS incur no class-management work.
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideFormNodeConfig({
-      classes: FORM_NODE_STATUS_CLASSES,
+      classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
 };
 ```
+
+The preset is an ordinary class map. Spread it when Angular-compatible classes and application
+classes should coexist:
+
+```ts
+provideFormNodeConfig({
+  classes: {
+    ...ANGULAR_FORMS_STATUS_CLASSES,
+    'has-visible-error': binding => binding.node().invalid() && binding.node().touched(),
+  },
+});
+```
+
+These classes reflect state only. Adding or removing them does not change validation, interaction
+state, or submission behavior.
 
 ## Custom-control registration
 
 Components exposing `value = model<T>()`, `checked = model<boolean>()`, compatible input/output
 pairs, or a CVA are normally discovered automatically.
 
-Use `provideFormNodeControl()` when an unusual component or directive must register its control
-contract explicitly:
+Use `provideFormNodeControl()` when a custom control should register its signal contract explicitly
+instead of relying on compiled-metadata discovery. The provider belongs to the custom control
+component itself:
 
 ```ts
+import { Component, input, model, output } from '@angular/core';
+
+import { FormNode, field, form, provideFormNodeControl, type FormNodeValueControl } from '@gem/ng-forms';
+
 @Component({
   selector: 'app-date-picker',
   providers: [provideFormNodeControl(() => DatePicker)],
-  template: `...`,
+  template: `
+    <input
+      type="date"
+      [value]="value() ?? ''"
+      [disabled]="disabled()"
+      (input)="select($any($event.target).value)"
+      (blur)="touch.emit()"
+    >
+  `,
 })
-export class DatePicker implements FormNodeValueControl<Date | null> {
-  value = model<Date | null>(null);
+export class DatePicker implements FormNodeValueControl<string | null> {
+  value = model<string | null>(null);
+  disabled = input(false);
+  touch = output<void>();
+
+  select(value: string) {
+    this.value.set(value || null);
+  }
+}
+
+@Component({
+  selector: 'app-appointment-editor',
+  imports: [FormNode, DatePicker],
+  template: `
+    <app-date-picker [formNode]="appointmentForm.date" />
+    <p>Selected date: {{ appointmentForm.date() ?? 'None' }}</p>
+  `,
+})
+export class AppointmentEditor {
+  appointmentForm = form({
+    date: field<string | null>(null),
+  });
 }
 ```
+
+`[formNode]` initializes `value`, receives subsequent `value` changes, supplies `disabled`, and
+marks the field touched when the component emits `touch`. Consumers use the component exactly like
+any automatically discovered custom control; they do not repeat the provider.
 
 The related public types are:
 

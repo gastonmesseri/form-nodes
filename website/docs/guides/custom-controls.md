@@ -117,16 +117,58 @@ called during the binding reset lifecycle.
 
 ## Explicit registration
 
-Use `provideFormNodeControl()` when unusual component metadata prevents automatic discovery:
+Use `provideFormNodeControl()` when a control should declare its signal contract explicitly instead
+of relying on automatic metadata discovery. Configure it once on the control component—not on every
+consumer:
 
 ```ts
+import { Component, input, model, output } from '@angular/core';
+
+import { provideFormNodeControl, type FormNodeValueControl } from '@gem/ng-forms';
+
 @Component({
   selector: 'app-date-picker',
   providers: [provideFormNodeControl(() => DatePicker)],
-  template: `...`,
+  template: `
+    <input
+      type="date"
+      [value]="value() ?? ''"
+      [disabled]="disabled()"
+      (input)="select($any($event.target).value)"
+      (blur)="touch.emit()"
+    >
+  `,
 })
-export class DatePicker {
-  readonly value = model<Date | null>(null);
+export class DatePicker implements FormNodeValueControl<string | null> {
+  value = model<string | null>(null);
+  disabled = input(false);
+  touch = output<void>();
+
+  select(value: string) {
+    this.value.set(value || null);
+  }
+}
+```
+
+Consume it normally; the application using the component does not repeat the provider:
+
+```ts
+import { Component } from '@angular/core';
+
+import { FormNode, field, form } from '@gem/ng-forms';
+
+@Component({
+  selector: 'app-appointment-editor',
+  imports: [FormNode, DatePicker],
+  template: `
+    <app-date-picker [formNode]="appointmentForm.date" />
+    <p>Selected date: {{ appointmentForm.date() ?? 'None' }}</p>
+  `,
+})
+export class AppointmentEditor {
+  appointmentForm = form({
+    date: field<string | null>(null),
+  });
 }
 ```
 

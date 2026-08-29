@@ -1,13 +1,103 @@
 import type { Signal } from '@angular/core';
 
 import type { Field } from './field.type';
-import type { Form, FormOptions } from './form.type';
 import type { Group } from './group.type';
+import type { Form, FormOptions } from './form.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+import type { DisabledReason, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { DisabledReason, MarkAsTouchedOptions, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 
-export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission'> & {
+export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'hidden' | 'disabled' | 'readonly'> & {
+  /**
+   * One validator or an array of validators for the complete array value, not each item.
+   *
+   * @example Validate the collection with one built-in validator.
+   * ```ts
+   * array(field(''), {
+   *   validators: minLength(1),
+   * });
+   * ```
+   *
+   * @example Combine collection validators.
+   * ```ts
+   * array(field(''), {
+   *   validators: [minLength(1), uniqueItems],
+   * });
+   * ```
+   *
+   * @example Declare a custom collection rule inline.
+   * ```ts
+   * array(field(0), {
+   *   validators: ({ value }) => {
+   *     return value().some(amount => amount !== null && amount < 0)
+   *       ? { kind: 'negativeAmount', message: 'Amounts cannot be negative.' }
+   *       : null;
+   *   },
+   * });
+   * ```
+   *
+   * @example Add one asynchronous collection validator.
+   * ```ts
+   * array(field(''), {
+   *   validators: asyncValidator(async ({ value }) => {
+   *     const allowed = await areTagsAllowed(value());
+   *     return allowed ? null : { kind: 'tagsNotAllowed' };
+   *   }),
+   * });
+   * ```
+   *
+   * Put validators in the item template when every item should be validated independently.
+   */
+  validators?: ValidatorSource<TValue>;
+  /**
+   * Initial or reactive visibility of the complete collection.
+   *
+   * @example Create a collection that starts hidden.
+   * ```ts
+   * array(field(''), { hidden: true });
+   * ```
+   *
+   * @example Hide contact rows when the user opts out of providing contacts.
+   * ```ts
+   * array(field(''), {
+   *   hidden: () => !collectContacts(),
+   * });
+   * ```
+   */
+  hidden?: boolean | (() => boolean);
+  /**
+   * Initial or reactive disabled state for the collection and its items. Return a string to record
+   * a user-facing reason.
+   *
+   * @example Create a collection that starts disabled.
+   * ```ts
+   * array(orderLineTemplate, { disabled: 'Order lines are managed externally.' });
+   * ```
+   *
+   * @example Lock order lines after the order is submitted.
+   * ```ts
+   * array(orderLineTemplate, {
+   *   disabled: () => orderSubmitted() ? 'The order has already been submitted.' : false,
+   * });
+   * ```
+   */
+  disabled?: boolean | string | (() => boolean | string);
+  /**
+   * Initial or reactive readonly state for the collection and its items.
+   *
+   * @example Create a collection that starts in readonly mode.
+   * ```ts
+   * array(auditEntryTemplate, { readonly: true });
+   * ```
+   *
+   * @example Show audit entries without allowing them to be edited.
+   * ```ts
+   * array(auditEntryTemplate, {
+   *   readonly: () => auditFinalized(),
+   * });
+   * ```
+   */
+  readonly?: boolean | (() => boolean);
   /**
    * **Initial array contents.** Accepts either:
    *
@@ -30,7 +120,7 @@ export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission'>
    * @example
    * `array(personTemplate, { initialValue: 3 })`
    */
-  readonly initialValue?: TValue | number | null;
+  initialValue?: TValue | number | null;
   /**
    * Selects the stable identity of an item when `set()`, `update()`, or `reset(value)` reconciles
    * incoming values with the array's current nodes. Pass either a typed property name such as
@@ -61,7 +151,7 @@ export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission'>
    * });
    * ```
   */
-  readonly trackBy?: TValue extends readonly (infer TItemValue)[]
+  trackBy?: TValue extends readonly (infer TItemValue)[]
     ? ((value: TItemValue, index: number) => unknown)
       | (TItemValue extends object ? Extract<keyof TItemValue, string> : never)
     : never;
@@ -245,7 +335,10 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched(options?: MarkAsTouchedOptions): void;
+  markAsTouched(options?: {
+    /** When true, marks only this array and leaves every current item subtree untouched. */
+    skipDescendants?: boolean;
+  }): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;

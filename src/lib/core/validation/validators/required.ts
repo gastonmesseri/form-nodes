@@ -12,8 +12,6 @@ export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
   reduce: (current, contribution) => current || contribution,
 });
 
-export type RequiredOptions = ValidatorOptions;
-
 const validateRequired = (
   context: FieldContext<unknown>,
   message?: string | (() => string | undefined),
@@ -66,7 +64,7 @@ export function required(options: string | {
  */
 export function required(context: FieldContext<unknown>): ValidationResult;
 export function required(
-  contextOrOptions: FieldContext<unknown> | string | RequiredOptions,
+  contextOrOptions: FieldContext<unknown> | string | ValidatorOptions,
 ): Validator<unknown> | ValidationResult {
   if (isFieldContext(contextOrOptions)) {
     return validateRequired(contextOrOptions);

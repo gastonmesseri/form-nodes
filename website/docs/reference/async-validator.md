@@ -70,6 +70,23 @@ execution.
 | `onError` | `(error, context) => ValidationResult` | Maps a rejected Promise or Observable error into a domain-validation result. |
 | `params` | `(context) => TParams` | Explicitly derives the tracked snapshot passed to `validate`. Available in the configuration signature. |
 
+For example, delay a username check, skip short values, and turn a network failure into a useful
+validation error:
+
+```ts
+asyncValidator(({ value, abortSignal }) => {
+  return api.isUsernameAvailable(value(), abortSignal)
+    .then(available => available ? null : { kind: 'usernameTaken' });
+}, {
+  debounce: 300,
+  when: ({ value }) => (value()?.length ?? 0) >= 3,
+  onError: () => ({
+    kind: 'usernameCheckUnavailable',
+    message: 'The username could not be checked. Try again later.',
+  }),
+});
+```
+
 Unlike field control debounce, async-validator `debounce` accepts milliseconds only; `'blur'` and
 custom debounce functions are not async-validation options.
 
@@ -85,6 +102,29 @@ Observable-like values use their first emission. RxJS Observables satisfy the st
 but the library does not require RxJS as a dependency.
 
 ## Explicit parameters
+
+Use a readable object to name the exact values that should restart the request:
+
+```ts
+const location = signal({ city: 'Zurich', country: 'Switzerland' });
+
+const storeAvailable = asyncValidator({
+  params: () => ({
+    where: location().city,
+  }),
+  validate: ({ params, abortSignal }) => {
+    return api.checkStoreAvailability(params.where, abortSignal).then(available =>
+      available ? null : { kind: 'storeUnavailable' },
+    );
+  },
+});
+```
+
+`location().city` reads—and therefore tracks—the `location` signal. Angular signals track the
+signal read, not an individual object property: any `location.set(...)` reevaluates `params`.
+Gem Forms then compares the returned snapshot shallowly. A change to `country` alone still produces
+the same `{ where: 'Zurich' }`, so it does not restart validation. A change to `city` changes
+`where`, cancels stale work, and starts a new execution.
 
 ```ts
 const tenantId = signal('public');
@@ -139,6 +179,12 @@ This lets `params` return a readable object literal without causing duplicate re
 because that object is newly allocated. Include only values that should restart validation.
 
 `validate` runs untracked in this form; signals read only inside it do not become dependencies.
+
+The two `asyncValidator()` call styles expose their option shapes directly in IntelliSense. The
+callback form shows `debounce`, `when`, and `onError`; the parameterized form additionally shows
+`params` and `validate`, including which callbacks participate in reactive dependency tracking.
+The exported `AsyncValidatorOptions` and `ParameterizedAsyncValidatorConfig` types remain useful
+when configuration is assembled or shared separately.
 
 ## Status, ordering, and cancellation
 

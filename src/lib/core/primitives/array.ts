@@ -1,44 +1,48 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
+import { group } from './group';
+import type { NormalizedNode } from './form';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { computedFunction } from '../utils/computed-function';
-import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import { group } from './group';
-import type { NormalizedNode } from './form';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
+import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import type { InternalNode, Node, NodeControlBinding, NodeDefinition, NodeSet, NodeValue } from '../types/node.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
+
 type ArrayFactory<TDefinition extends NodeDefinition> = () => TDefinition;
 type ArraySource<TDefinition extends NodeDefinition> = TDefinition | ArrayFactory<TDefinition>;
 type ArrayInitial<TDefinition extends NodeDefinition> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
 type PositionalArrayOptions<TValue> = Omit<ArrayOptions<TValue>, 'initialValue'>;
+
 const omitInitialValue = <TValue>(options: ArrayOptions<TValue>): PositionalArrayOptions<TValue> => {
   const { initialValue: _initialValue, ...remainingOptions } = options;
   return remainingOptions;
 };
-const looksLikeValidatorSource = (value: unknown): boolean =>
-  typeof value === 'function'
-  || (Array.isArray(value)
+
+const looksLikeValidatorSource = (value: unknown): boolean => {
+  return typeof value === 'function'
+    || (Array.isArray(value)
     && value.some(entry => typeof entry === 'function')
     && value.every(entry => entry === null || entry === undefined || typeof entry === 'function'));
+};
 
 /**
  * Creates an array node from a declarative node template.
@@ -157,7 +161,7 @@ export function array<TDefinition extends NodeDefinition>(
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
  */
 export function array<TDefinition extends NodeDefinition>(
-  factory: ArrayFactory<TDefinition>,
+  factory: () => TDefinition,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
@@ -169,7 +173,7 @@ export function array<TDefinition extends NodeDefinition>(
  * @param options Additional array configuration.
  */
 export function array<TDefinition extends NodeDefinition>(
-  factory: ArrayFactory<TDefinition>,
+  factory: () => TDefinition,
   initial: NoInfer<ArrayInitial<TDefinition>>,
   options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
@@ -183,7 +187,7 @@ export function array<TDefinition extends NodeDefinition>(
  * @param options Additional array configuration.
  */
 export function array<TDefinition extends NodeDefinition>(
-  factory: ArrayFactory<TDefinition>,
+  factory: () => TDefinition,
   initial: NoInfer<ArrayInitial<TDefinition>>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
@@ -197,7 +201,7 @@ export function array<TDefinition extends NodeDefinition>(
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
  */
 export function array<TDefinition extends NodeDefinition>(
-  factory: ArrayFactory<TDefinition>,
+  factory: () => TDefinition,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;

@@ -3,28 +3,28 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Component, Directive, ViewContainerRef, booleanAttribute, forwardRef, inject, input, model, output, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { Component, Directive, ViewContainerRef, booleanAttribute, forwardRef, inject, input, model, output, signal } from '@angular/core';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
 import { form } from '../../primitives/form';
-import { field, type Field } from '../../primitives/field';
 import { array } from '../../primitives/array';
+import { FormNode } from './form-node.directive';
 import type { Node } from '../../types/node.type';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
-import { FormNode } from './form-node.directive';
+import { field, type Field } from '../../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from './form-node-config';
 import { provideFormNodeControl } from './form-node-control';
-import { provideFormNodePassThrough } from './form-node-pass-through';
 import { pattern } from '../../validation/validators/pattern';
 import { maxDate } from '../../validation/validators/max-date';
 import { minDate } from '../../validation/validators/min-date';
 import { required } from '../../validation/validators/required';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
+import { provideFormNodePassThrough } from './form-node-pass-through';
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from './form-node-config';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
@@ -165,7 +165,7 @@ describe('FormNode', () => {
       template: `<input [formNode]="name">`,
       standalone: true,
       imports: [FormNode],
-      providers: [provideFormNodeConfig({ classes: FORM_NODE_STATUS_CLASSES })],
+      providers: [provideFormNodeConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES })],
     })
     class Host {
       name = field('', [required], { nullable: false });

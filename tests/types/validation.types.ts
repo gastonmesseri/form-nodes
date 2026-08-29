@@ -83,6 +83,7 @@ const validatorMessages: ValidatorMessages = {
   },
   required: () => 'Required',
 };
+validatorMessages.required = 'Required';
 const restoreValidatorMessages = configureGlobalValidatorMessages(() => validatorMessages);
 const validatorMessageProviders = provideValidatorMessages(() => validatorMessages);
 const builtInError: BuiltInValidationError = { kind: 'min', min: 2, actual: 1 };

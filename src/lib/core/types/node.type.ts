@@ -55,7 +55,10 @@ export type NodeApi = {
   focus(options?: FocusOptions): void;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched(options?: MarkAsTouchedOptions): void;
+  markAsTouched(options?: {
+    /** When true, marks only the current node and leaves its descendants untouched. */
+    skipDescendants?: boolean;
+  }): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;

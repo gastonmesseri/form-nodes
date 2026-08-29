@@ -4,7 +4,7 @@ title: Creating nodes
 
 # Creating nodes
 
-Gem Forms models a workflow as a tree of `field()`, `group()`, `form()`, and `array()` nodes.
+Gem Forms models a workflow as a tree of `field()`, `form()`, `array()`, and `group()` nodes.
 TypeScript infers the complete value shape from that tree.
 
 ## Fields

@@ -8,24 +8,25 @@ import type { Field, FieldApi, FieldOptions } from './field.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
+import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
 
 export type { Field, FieldApi, FieldOptions } from './field.type';
 
-type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { readonly nullable?: true };
-type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { readonly nullable: false };
+type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { nullable?: true };
+type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { nullable: false };
+
 /**
  * Creates a nullable field whose future value type is not yet known.
  *
