@@ -1,15 +1,17 @@
 // @vitest-environment jsdom
 
 import '@angular/compiler';
-import { Component, Injector, runInInjectionContext } from '@angular/core';
+import { Component, Injector, runInInjectionContext, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { FormField } from '@angular/forms/signals';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { FormField, form as createAngularForm, provideSignalFormsConfig } from '@angular/forms/signals';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { field } from '../primitives/field';
 import { form } from '../primitives/form';
 import { array } from '../primitives/array';
+import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
+import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { required } from '../validation/validators/required';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
@@ -114,5 +116,90 @@ describe('Angular Signal Forms field adapter', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
     expect(input.value).toBe('Mark');
+  });
+
+  it('applies provideFormNodeConfig classes only to formField bindings backed by $field', () => {
+    const invalidPredicate = vi.fn((binding: FormNodeBinding) => binding.node().$api.invalid());
+    const touchedPredicate = vi.fn((binding: FormNodeBinding) => binding.node().$api.touched());
+
+    @Component({
+      template: `
+        <input class="adapted" [formField]="name.$field">
+        <input class="angular form-invalid" [formField]="angularName">
+      `,
+      imports: [FormField],
+      providers: [provideFormNodeConfig({
+        classes: {
+          'form-invalid': invalidPredicate,
+          'form-touched': touchedPredicate,
+        },
+      })],
+    })
+    class Host {
+      name = field('', [required]);
+      angularName = createAngularForm(signal(''));
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const adaptedInput = fixture.nativeElement.querySelector('.adapted') as HTMLInputElement;
+    const angularInput = fixture.nativeElement.querySelector('.angular') as HTMLInputElement;
+
+    expect(adaptedInput.classList.contains('form-invalid')).toBe(true);
+    expect(adaptedInput.classList.contains('form-touched')).toBe(false);
+    expect(angularInput.classList.contains('form-invalid')).toBe(true);
+    expect(angularInput.classList.contains('form-touched')).toBe(false);
+    expect(invalidPredicate).toHaveBeenCalledTimes(1);
+    expect(touchedPredicate).toHaveBeenCalledTimes(1);
+    const adaptedBinding = invalidPredicate.mock.calls[0]![0];
+    expect(adaptedBinding.element).toBe(adaptedInput);
+    expect(adaptedBinding.node()).toBe(fixture.componentInstance.name);
+    expect(adaptedBinding.errors()).toHaveLength(1);
+    adaptedBinding.focus({ preventScroll: true });
+    expect(document.activeElement).toBe(adaptedInput);
+    adaptedBinding.flush();
+
+    fixture.componentInstance.name.markAsTouched();
+    fixture.detectChanges();
+
+    expect(adaptedInput.classList.contains('form-touched')).toBe(true);
+    expect(touchedPredicate).toHaveBeenCalledTimes(2);
+    expect(invalidPredicate).toHaveBeenCalledTimes(1);
+
+    adaptedBinding.reset();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.name.touched()).toBe(false);
+    expect(adaptedInput.classList.contains('form-touched')).toBe(false);
+  });
+
+  it('uses classes configured directly through provideSignalFormsConfig', () => {
+    @Component({
+      template: `<input [formField]="name.$field">`,
+      imports: [FormField],
+      providers: [provideSignalFormsConfig({
+        classes: {
+          'angular-invalid': binding => binding.state().invalid(),
+          'angular-touched': binding => binding.state().touched(),
+        },
+      })],
+    })
+    class Host {
+      name = field('', [required]);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.classList.contains('angular-invalid')).toBe(true);
+    expect(input.classList.contains('angular-touched')).toBe(false);
+
+    fixture.componentInstance.name.set('David');
+    fixture.componentInstance.name.markAsTouched();
+    fixture.detectChanges();
+
+    expect(input.classList.contains('angular-invalid')).toBe(false);
+    expect(input.classList.contains('angular-touched')).toBe(true);
   });
 });

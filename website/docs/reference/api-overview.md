@@ -29,7 +29,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
 | Configure validator messages through Angular DI | `provideValidatorMessages()` | [Configuration](./configuration.md#angular-application-scope) |
 | Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Configuration](./configuration.md#process-wide-fallback) |
-| Add reactive status classes to every binding | `provideFormNodeConfig()` | [Binding configuration](./configuration.md#formnode-binding-configuration) |
+| Add reactive status classes to every binding | `provideFormNodeConfig()` | [Binding configuration](./configuration.md#binding-configuration) |
 | Integrate an unusual signal control | `provideFormNodeControl()` | [Custom controls](../guides/custom-controls.md) |
 | Inspect the API shared by all nodes | `Node` and `NodeApi` | [Node API](./node-api.md) |
 | Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
@@ -231,7 +231,7 @@ Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` imp
 
 | API | Purpose |
 | --- | --- |
-| `provideFormNodeConfig()` | Configures reactive CSS classes for descendant bindings. |
+| `provideFormNodeConfig()` | Configures reactive CSS classes for descendant `[formNode]` and `$field`-backed `[formField]` bindings. |
 | `ANGULAR_FORMS_STATUS_CLASSES` | Optional Angular Forms-compatible validity and interaction class preset. |
 | `provideFormNodeControl()` | Explicitly registers a signal-based custom control. |
 | `provideFormNodePassThrough()` | Marks a directive or host directive that delegates `formNode`. |
@@ -254,9 +254,10 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-The configuration applies to `[formNode]` bindings created below that injector. Put the same
-provider in a route, component, or NgModule `providers` array when only that subtree should use it;
-the nearest provider wins. No automatic classes are installed unless this provider is configured.
+The configuration applies to `[formNode]` bindings and `$field`-backed `[formField]` bindings created
+below that injector. Put the same provider in a route, component, or NgModule `providers` array when
+only that subtree should use it; the nearest provider wins. No automatic classes are installed
+unless this provider is configured.
 
 Most ordinary signal components and CVAs require no explicit provider. See
 [Custom controls](../guides/custom-controls.md) before choosing a lower-level integration API.

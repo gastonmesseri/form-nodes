@@ -65,7 +65,8 @@ co-located with the host genuinely needs the concrete binding.
 ## Automatic CSS classes
 
 For the common application-wide setup, register `provideFormNodeConfig()` in the standalone
-application configuration:
+application configuration. The same predicates apply to `[formNode]` and to `[formField]` controls
+whose field comes from a Gem Forms node's `$field`:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
@@ -134,6 +135,18 @@ provideFormNodeConfig({
 
 These classes reflect state only. Adding or removing them does not change validation, interaction
 state, or submission behavior.
+
+`provideFormNodeConfig()` uses Angular's Signal Forms configuration internally for adapted
+`[formField]` controls. Do not combine it with `provideSignalFormsConfig({ classes })` in the same
+injector because Angular's config token is not multi and the last provider would replace the first.
+Angular `[formField]` controls backed by ordinary Angular field trees do not receive Gem Forms class
+predicates.
+
+Conversely, an existing `provideSignalFormsConfig({ classes })` works normally with
+`[formField]="node.$field"` without any Gem Forms configuration. Its callbacks receive Angular's
+`FormFieldBinding` and can read `binding.state()`. Choose this when the application wants one Angular
+class map for both adapted and native Angular field trees; choose `provideFormNodeConfig()` when the
+same `FormNodeBinding` callbacks should work with both `[formNode]` and adapted `[formField]`.
 
 ## Custom-control registration
 

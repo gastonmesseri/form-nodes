@@ -117,9 +117,19 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-The configuration applies to bindings below that injector. Register it in a route, component, or
-NgModule `providers` array for a narrower scope. The nearest provider wins, and each predicate
-tracks only the signals it reads.
+The configuration applies to `[formNode]` and `$field`-backed Angular `[formField]` bindings below
+that injector. Register it in a route, component, or NgModule `providers` array for a narrower
+scope. The nearest provider wins, and each predicate tracks only the signals it reads. Ordinary
+Angular field trees are ignored.
+
+This provider configures Angular's Signal Forms classes internally for adapted controls. Do not
+combine it with `provideSignalFormsConfig({ classes })` in the same injector because Angular uses a
+single, non-multi configuration token and the last provider would replace the other.
+
+An existing `provideSignalFormsConfig({ classes })` also applies naturally to `$field`-backed
+`[formField]` controls. Keep it when predicates are written against Angular's `FormFieldBinding` and
+should also cover native Angular field trees. Use `provideFormNodeConfig()` when predicates are
+written against `FormNodeBinding` and should be shared with `[formNode]`.
 
 Use the optional preset when application styles or a UI library expect Angular Forms status
 classes. `[formNode]` does not require the preset:
