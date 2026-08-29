@@ -1835,6 +1835,19 @@ for removal. The public type remains structurally assignable to Angular's `Field
 irrelevant inherited function-object members such as `toString`, `apply`, and `bind` are hidden.
 Actual `FieldTree` children remain navigable and typed.
 
+At leaf bindings, Angular control interaction is bidirectional: input-driven dirty state and
+blur-driven touched state update the library node, Angular reset clears both flags in the node, and
+node calls can independently set or clear either flag without resetting the other. Availability is
+intentionally directional: disabled, readonly, hidden, and required are derived schema state in
+Angular, so the library node is their source and `[formField]` reflects them into Angular and the
+control. Angular does not expose reverse setters for those states.
+
+Independent clearing uses the runtime `FieldNode.markAsUntouched()` and
+`FieldNode.markAsPristine()` methods present in Angular 22.1.4. Angular omits those methods from its
+public `FieldState` type even though its implementation exposes them, so this access remains
+isolated in the adapter, regression-tested, and listed in the Angular upgrade checklist. Using the
+public `reset()` as a substitute would incorrectly clear both flags and invoke binding reset hooks.
+
 Adapter creation is lazy. Declaring and using nodes outside Angular dependency injection remains
 safe as long as `$field` is not requested. In normal component field initializers, the current
 injector is captured automatically. Code creating nodes outside an injection context must pass an
