@@ -129,6 +129,21 @@ const optionalName = field<string>();
 
 Fields are nullable by default. The examples above have types `Field<string | null>`, `Field<number | null>`, and `Field<string | null>`. A field created without a value starts at `null`.
 
+A field created from the literal `null` without an explicit generic is inferred as `Field<unknown>`:
+
+```ts
+const unspecified = field(null);
+unspecified.set('David');
+unspecified.set(42);
+
+const known = field<string>(null);
+// Field<string | null>
+```
+
+`unknown` is used instead of `any` so reads cannot silently bypass type checking. TypeScript reduces
+`unknown | null` to `unknown`; the field remains nullable at runtime and in its options, but consumers
+should supply an explicit generic when the eventual non-null type is known.
+
 The preferred signature accepts an optional initial value followed by an options object:
 
 ```ts
@@ -275,6 +290,9 @@ const name = field('David');
 
 const emptyName = field<string>(null, []);
 // Field<string | null>
+
+const unspecified = field(null);
+// Field<unknown>; accepts null and future values of any type
 ```
 
 The nullable type affects the complete field API. `value`, `set`, `patch`, `reset`, and validators all use `TValue | null`.

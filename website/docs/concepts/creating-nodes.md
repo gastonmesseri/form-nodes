@@ -35,6 +35,19 @@ A field created without an initial value starts at `null`:
 const nickname = field<string>();
 ```
 
+If the initial value is the literal `null` and no generic supplies the eventual type, the field is
+inferred as `Field<unknown>`:
+
+```ts
+const myForm = form({
+  unspecifiedValue: field(null),      // Field<unknown>
+  nickname: field<string>(null),      // Field<string | null>
+});
+```
+
+The first form is intentionally safer than `Field<any>`: it accepts later values, but consumers
+must narrow a read before using it. Prefer the explicit generic when the domain type is known.
+
 A standalone field is fully supported, but a form tree provides the typed parent, path, aggregate value, and state propagation used by most applications.
 
 A field may contain an object or array value and still remain one leaf node. Use this for controls

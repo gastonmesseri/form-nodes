@@ -80,6 +80,23 @@ const myForm = form({
 myForm.name.set(null);
 ```
 
+When the literal initial value is `null`, there is no non-null value from which TypeScript can infer
+a future type. Gem Forms uses `unknown`, rather than the unsafe `any`:
+
+```ts
+const myForm = form({
+  unspecified: field(null),         // Field<unknown>
+  nickname: field<string>(null),    // Field<string | null>
+});
+
+myForm.unspecified.set('Marco');
+myForm.unspecified.set(42);
+```
+
+Use an explicit generic when the domain type is known. Although `Field<unknown>` accepts `null`,
+TypeScript displays it as `unknown` because `unknown | null` simplifies to `unknown`; reads must be
+narrowed before use and therefore do not acquire `any`-like behavior.
+
 Set `nullable: false` only when `null` is not a valid business value:
 
 ```ts
