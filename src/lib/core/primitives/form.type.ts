@@ -89,7 +89,24 @@ export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
    * built-in validator is failing.
    */
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
-  /** Default control-value debounce inherited by descendants: milliseconds, `'blur'`, or a cancelable asynchronous function. */
+  /**
+   * Default control-value debounce inherited by descendants: milliseconds, `'blur'`, or a
+   * cancelable asynchronous function.
+   *
+   * @example Give descendant controls a 300-millisecond debounce by default.
+   * ```ts
+   * form({
+   *   searchTerm: field(''),
+   * }, { debounce: 300 });
+   * ```
+   *
+   * @example Commit descendant control values when their controls lose focus.
+   * ```ts
+   * form({
+   *   displayName: field(''),
+   * }, { debounce: 'blur' });
+   * ```
+   */
   debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /**
    * Initial or reactive visibility of the complete form subtree.

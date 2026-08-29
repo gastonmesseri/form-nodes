@@ -6,7 +6,7 @@ import type { FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParen
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidatorSource } from '../validation/validation.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
-export type GroupOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'hidden' | 'disabled' | 'readonly'> & {
+export type GroupOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * One validator or an array of validators for the complete group value.
    *
@@ -49,6 +49,26 @@ export type GroupOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' 
    * consider the object boundary as a whole.
    */
   validators?: ValidatorSource<TValue>;
+  /**
+   * Default control-value debounce inherited by descendants of this object branch.
+   *
+   * @example Give address controls a 300-millisecond debounce by default.
+   * ```ts
+   * group({
+   *   city: field(''),
+   *   country: field(''),
+   * }, { debounce: 300 });
+   * ```
+   *
+   * @example Commit address values when their controls lose focus.
+   * ```ts
+   * group({
+   *   city: field(''),
+   *   country: field(''),
+   * }, { debounce: 'blur' });
+   * ```
+   */
+  debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /**
    * Initial or reactive visibility of the complete object branch.
    *
