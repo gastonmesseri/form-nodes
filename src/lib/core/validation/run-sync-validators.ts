@@ -1,4 +1,4 @@
-import { isNil } from '../utils/is-nil';
+import { isNotNil } from '../utils/is-nil';
 import type { Node } from '../types/node.type';
 import type { MetadataKey } from '../metadata/metadata';
 import { runWithValidatorMessages } from './validator-messages';
@@ -39,7 +39,7 @@ const resolveComposableResult = <TValue>(
   }
 
   if (Array.isArray(result)) {
-    const items = result.filter(item => !isNil(item));
+    const items = result.filter(isNotNil);
     const validators = items.filter(item => typeof item === 'function');
     if (validators.length === 0) return items as readonly ValidationError.WithoutTargetNode[];
     if (validators.length !== items.length) {

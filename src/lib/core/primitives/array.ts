@@ -2,7 +2,7 @@ import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
 import type { NormalizedNode } from './form';
-import { isNil } from '../utils/is-nil';
+import { isNil, isNotNil } from '../utils/is-nil';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
@@ -294,7 +294,7 @@ export function array<TDefinition extends NodeDefinition>(
   );
   const arrayDisabledReasons = computed(() => [
     ...(arrayParent()?.$api.disabledReasons() ?? []),
-    ...[arrayOwnDisabledReason(), arrayConfiguredDisabledReason()].filter(reason => reason !== undefined),
+    ...[arrayOwnDisabledReason(), arrayConfiguredDisabledReason()].filter(isNotNil),
   ], { equal: shallowEqual });
   const arrayDisabled = computed(() => arrayDisabledReasons().length > 0);
   const arraySelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));

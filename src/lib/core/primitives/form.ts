@@ -1,6 +1,7 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
+import { isNotNil } from '../utils/is-nil';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
@@ -94,7 +95,7 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
   );
   const formDisabledReasons = computed(() => [
     ...(formParent()?.$api.disabledReasons() ?? []),
-    ...[formOwnDisabledReason(), formConfiguredDisabledReason()].filter(reason => reason !== undefined),
+    ...[formOwnDisabledReason(), formConfiguredDisabledReason()].filter(isNotNil),
   ], { equal: shallowEqual });
   const formDisabled = computed(() => formDisabledReasons().length > 0);
   const formSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
