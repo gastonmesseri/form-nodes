@@ -79,6 +79,10 @@ Control edits use the same value channel as `[formNode]`. With `debounce: 300` o
 contains the text currently rendered by the control. Calling `flush()` commits it immediately;
 calling `set()` programmatically replaces it and cancels the pending edit.
 
+If application code writes the node in the same reactive turn as a real bound-control edit, the
+control edit takes precedence. This deterministic rule protects user input from effect-ordering
+races; when no control edit occurred, the programmatic node value remains authoritative.
+
 For a bound leaf field, control interaction flows back naturally: input marks the Gem Forms field
 dirty, blur marks it touched, and an Angular field reset clears both interaction flags. Calls such
 as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so

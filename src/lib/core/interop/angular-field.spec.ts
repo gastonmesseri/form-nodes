@@ -7,13 +7,14 @@ import { FormField, form as createAngularForm, provideSignalFormsConfig } from '
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { field } from '../primitives/field';
 import { form } from '../primitives/form';
 import { array } from '../primitives/array';
-import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
-import type { FormNodeBinding } from '../types/form-node-binding.type';
-import { required } from '../validation/validators/required';
+import { field } from '../primitives/field';
 import { getAngularField } from './angular-field';
+import type { InternalNode } from '../types/node.type';
+import { required } from '../validation/validators/required';
+import type { FormNodeBinding } from '../types/form-node-binding.type';
+import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -47,6 +48,54 @@ describe('Angular Signal Forms field adapter', () => {
     getAngularField<string | null>(profile.name)().value.set('Mark');
     TestBed.flushEffects();
     expect(profile.name()).toBe('Mark');
+  });
+
+  it('gives a bound control edit deterministic precedence over a simultaneous node write', () => {
+    @Component({
+      template: `<input [formField]="name.$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      name = field('David');
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const name = fixture.componentInstance.name;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const internalName = name as unknown as InternalNode;
+    const setControlValue = vi.spyOn(internalName.$api, '_setControlValue');
+
+    name.set('Programmatic');
+    input.value = 'Control edit';
+    input.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+
+    expect(name()).toBe('Control edit');
+    expect(name.controlValue()).toBe('Control edit');
+    expect(input.value).toBe('Control edit');
+    expect(setControlValue).toHaveBeenCalledTimes(1);
+    expect(setControlValue).toHaveBeenCalledWith('Control edit');
+
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(name()).toBe('Control edit');
+    expect(input.value).toBe('Control edit');
+    expect(setControlValue).toHaveBeenCalledTimes(1);
+
+    input.value = 'Later control edit';
+    input.dispatchEvent(new Event('input'));
+    name.set('Later programmatic write');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(name()).toBe('Later control edit');
+    expect(input.value).toBe('Later control edit');
+    expect(setControlValue).toHaveBeenCalledTimes(2);
+
+    TestBed.flushEffects();
+    expect(setControlValue).toHaveBeenCalledTimes(2);
   });
 
   it('mirrors availability, required, validation, and interaction state', () => {

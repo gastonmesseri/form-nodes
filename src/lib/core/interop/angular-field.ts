@@ -181,14 +181,14 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
     const angularValue = model();
     const nodeChanged = !shallowEqual(nodeValue, previousNodeValue);
     const angularChanged = !shallowEqual(angularValue, previousAngularValue);
+    let routedControlValue = false;
 
-    if (angularChanged && !nodeChanged) {
-      untracked(() => {
-        if (!routeAngularControlValues(root, fieldTree, angularControlValues)) {
-          (root as InternalNode).$api._setControlValue(angularValue);
-        }
-      });
-    } else if (nodeChanged && !shallowEqual(nodeValue, angularValue)) {
+    if (angularChanged) {
+      routedControlValue = untracked(() => routeAngularControlValues(root, fieldTree, angularControlValues));
+    }
+    if (angularChanged && !nodeChanged && !routedControlValue) {
+      untracked(() => (root as InternalNode).$api._setControlValue(angularValue));
+    } else if (nodeChanged && !routedControlValue && !shallowEqual(nodeValue, angularValue)) {
       untracked(() => model.set(nodeValue));
     }
     previousNodeValue = root();
