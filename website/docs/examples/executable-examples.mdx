@@ -5,10 +5,14 @@ title: Executable examples
 import CodeBlock from '@theme/CodeBlock';
 
 import angularBindingSource from '!!raw-loader!../../examples/angular-binding.typecheck.ts';
+import asyncValidationSource from '!!raw-loader!../../examples/async-validation.example.ts';
 import arrayOperationsSource from '!!raw-loader!../../examples/array-operations.example.ts';
 import builtInValidatorsSource from '!!raw-loader!../../examples/built-in-validators.typecheck.ts';
 import choosingPrimitivesSource from '!!raw-loader!../../examples/choosing-primitives.example.ts';
+import debounceSource from '!!raw-loader!../../examples/debounce.example.ts';
 import firstFormSource from '!!raw-loader!../../examples/first-form.example.ts';
+import nativeFormBindingSource from '!!raw-loader!../../examples/native-form-binding.typecheck.ts';
+import reactiveConfigurationSource from '!!raw-loader!../../examples/reactive-configuration.example.ts';
 import submissionSource from '!!raw-loader!../../examples/submission.example.ts';
 import validationSource from '!!raw-loader!../../examples/validation.example.ts';
 
@@ -68,6 +72,34 @@ recovery. See [Validation](../guides/validation.md) for composition and reactive
 Both invalid and valid submission paths execute. The assertions cover return values, `onInvalid`,
 and the asynchronous action. See [Submission](../guides/submission.md).
 
+## Control-value debounce
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="debounce.example.ts">{debounceSource}</CodeBlock>
+
+The assertions distinguish immediate control state from committed model state, then verify dirty,
+touched, debouncing, and blur-commit behavior. See
+[Value flow and debounce](../guides/value-flow-and-debounce.md).
+
+## Asynchronous validation
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="async-validation.example.ts">{asyncValidationSource}</CodeBlock>
+
+This runs both failing and recovering async validation transitions, including pending and unknown
+status. See [Async validation](../guides/async-validation.md).
+
+## Reactive configuration and precedence
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="reactive-configuration.example.ts">{reactiveConfigurationSource}</CodeBlock>
+
+This verifies reactive message catalogs, tree-over-global precedence, inherited disabled state,
+and disabled reasons. See the [Configuration reference](../reference/configuration.md).
+
 ## Angular binding and `viewChild()`
 
 **Type-checked**
@@ -77,6 +109,16 @@ and the asynchronous action. See [Submission](../guides/submission.md).
 This is compiled as an Angular component example. It verifies the standalone `FormNode` import,
 template binding, typed `FormNode`, and `viewChild.required()` query. See
 [Control binding](../guides/control-binding.md).
+
+## Native form binding
+
+**Type-checked**
+
+<CodeBlock language="ts" title="native-form-binding.typecheck.ts">{nativeFormBindingSource}</CodeBlock>
+
+Angular's compiler verifies that one `FormNode` import binds both the native form root and its
+controls, including reset, submit, errors, and submission state. See
+[Form submission](../guides/submission.md).
 
 ## Every built-in validator signature
 

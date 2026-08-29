@@ -8,6 +8,9 @@ description: A task-oriented map of the Gem Forms public API and its detailed re
 Use this page to find the API that matches what you are trying to model or integrate. Import public
 symbols from `@gem/ng-forms`; do not import internal files or deep package paths.
 
+If you already have a concrete failure or unexpected state, use the symptom-oriented
+[Troubleshooting guide](../help/troubleshooting.md).
+
 ## Choose an API by task
 
 | I want to… | Start with | Details |
@@ -16,16 +19,20 @@ symbols from `@gem/ng-forms`; do not import internal files or deep package paths
 | Model a fixed object with independently addressable children | `form()` | [`form()` reference](./form.md) |
 | Model a dynamic ordered collection of independent nodes | `array()` | [`array()` reference](./array.md) |
 | Choose between a structured field, form, or array | — | [Choosing a primitive](../guides/choosing-a-primitive.md) |
+| Design a large domain-oriented form tree | Modeling boundaries and lifecycle | [Form modeling patterns](../guides/form-modeling-patterns.md) |
 | Add a built-in validation rule | `required`, `email`, `min`, and others | [Built-in validators](./built-in-validators.md) |
 | Author a reusable synchronous rule | `validator()` | [Custom validator reference](./custom-validators.md) |
 | Run Promise- or Observable-based validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
 | Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
 | Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
-| Configure validator messages through Angular DI | `provideValidatorMessages()` | [Validator messages and i18n](../guides/validator-messages.md) |
-| Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Global configuration](../guides/validator-messages.md#global-configuration) |
-| Add reactive status classes to every binding | `provideFormNodeConfig()` | [`FormNode` binding API](./form-node-binding.md#automatic-css-classes) |
+| Configure validator messages through Angular DI | `provideValidatorMessages()` | [Configuration](./configuration.md#angular-application-scope) |
+| Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Configuration](./configuration.md#process-wide-fallback) |
+| Add reactive status classes to every binding | `provideFormNodeConfig()` | [Binding configuration](./configuration.md#formnode-binding-configuration) |
 | Integrate an unusual signal control | `provideFormNodeControl()` | [Custom controls](../guides/custom-controls.md) |
 | Inspect the API shared by all nodes | `Node` and `NodeApi` | [Node API](./node-api.md) |
+| Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
+| Use Angular Material controls | `FormNode` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
+| Use PrimeNG controls | `FormNode` with PrimeNG's normal modules | [PrimeNG integration](../integrations/primeng.md) |
 
 ## Modeling primitives
 

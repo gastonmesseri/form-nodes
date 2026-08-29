@@ -24,6 +24,17 @@ const myForm = form({
 Async validators must be direct entries in a node's validator source. Do not return one from a
 synchronous conditional validator.
 
+## API map
+
+| I want to… | Details |
+| --- | --- |
+| Choose callback or explicit-parameter syntax | [Signatures](#signatures) |
+| Read node state or cancellation | [Callback context](#callback-context) |
+| Configure debounce, conditions, or failures | [Options](#options) |
+| Return a Promise, Observable-like value, or validation result | [Return value](#return-value) |
+| Control exactly which dependency changes rerun work | [Explicit parameters](#explicit-parameters) |
+| Understand pending state, ordering, cancellation, and stale work | [Status, ordering, and cancellation](#status-ordering-and-cancellation) |
+
 ## Signatures
 
 ```ts

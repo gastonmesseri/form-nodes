@@ -24,6 +24,21 @@ Returning `undefined` from a message function continues through form, provider, 
 
 Constraints passed as functions are reactive. Signals read by them are tracked, and returning `undefined` temporarily disables constraints that support optional sources.
 
+## Validator map
+
+| Need | Validators |
+| --- | --- |
+| Presence | [`required`](#required) |
+| Numeric limits and shape | [`min`](#min), [`max`](#max), [`between`](#between), [`integer`](#integer) |
+| Text or collection size | [`minLength`](#minlength), [`maxLength`](#maxlength) |
+| Word count | [`minWords`](#minwords), [`maxWords`](#maxwords) |
+| Text format | [`pattern`](#pattern), [`email`](#email), [`url`](#url) |
+| Date limits | [`minDate`](#mindate), [`maxDate`](#maxdate), [`dateBetween`](#datebetween) |
+| Allowed or matching values | [`oneOf`](#oneof), [`equalTo`](#equalto) |
+| Collection uniqueness | [`uniqueItems`](#uniqueitems) |
+| Native/custom-control constraint hints | [Constraint metadata](#constraint-metadata) |
+| Bundle behavior | [Tree shaking](#tree-shaking) |
+
 ## `required`
 
 Requires a value to be present. It can be passed directly or called with message options:

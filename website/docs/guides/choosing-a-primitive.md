@@ -12,6 +12,9 @@ Choose a primitive from the shape and lifecycle of the value you need to model:
 
 Most application forms combine all three rather than choosing only one.
 
+For broader domain and UI design decisions after choosing a primitive, continue with
+[Form modeling patterns](./form-modeling-patterns.md).
+
 ```ts
 import { array, field, form, uniqueItems } from '@gem/ng-forms';
 

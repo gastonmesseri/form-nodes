@@ -7,7 +7,8 @@ description: Frequent Gem Forms modeling and state mistakes, with corrected exam
 
 Most surprises come from choosing the wrong node boundary or treating programmatic model updates as
 if they were user interaction. This page collects the mistakes that are easiest to make when first
-using Gem Forms.
+using Gem Forms. If something already fails or produces an unexpected result, start with
+[Troubleshooting](./troubleshooting.md).
 
 ## Using `array()` for every array value
 

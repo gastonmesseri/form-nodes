@@ -4,6 +4,9 @@ title: Async validation
 
 # Async validation
 
+The complete [asynchronous validation example](../examples/executable-examples.mdx#asynchronous-validation)
+is compiled and executed with assertions for pending, failure, rerun, and recovery.
+
 Wrap asynchronous validators explicitly with `asyncValidator()`. This lets the node own pending state, debounce, cancellation, and stale-result handling without executing arbitrary validators to classify them.
 
 ```ts

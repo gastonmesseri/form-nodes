@@ -135,7 +135,8 @@ export class CountryEditor {
 
 See the official [Angular Material select documentation](https://material.angular.dev/components/select/overview)
 for its ordinary installation and theming requirements. Gem Forms requires no additional Material
-setup.
+setup. Continue with the complete [Angular Material integration](../integrations/angular-material.md)
+for inputs, selects, checkboxes, datepickers, errors, submission, and testing.
 
 ## Bind PrimeNG controls naturally
 
@@ -170,6 +171,8 @@ export class CityEditor {
 
 See the official [PrimeNG Select documentation](https://primeng.org/select) for package setup and
 available options. Once PrimeNG itself is configured, there is no extra Gem Forms configuration.
+Continue with the complete [PrimeNG integration](../integrations/primeng.md) for installation,
+inputs, selects, checkboxes, datepickers, validation styling, submission, and testing.
 
 ## Bind other Angular-compatible controls
 

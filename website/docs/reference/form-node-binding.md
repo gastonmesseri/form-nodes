@@ -30,6 +30,17 @@ export class EmailEditor {
 Import neither `_FormNode` nor internal package paths. `_FormNode` is exported only for Angular AOT
 and linker infrastructure.
 
+## API map
+
+| I want to… | Start with | Details |
+| --- | --- | --- |
+| Query or inspect one concrete binding | `FormNode<TNode>`, `FormNodeBinding<TNode>` | [Binding instance](#binding-instance) |
+| Inject the binding on its host | `FORM_NODE` | [`FORM_NODE`](#form_node) |
+| Apply reactive CSS classes | `provideFormNodeConfig()` | [Automatic CSS classes](#automatic-css-classes) |
+| Adapt an unusual signal component | `provideFormNodeControl()` | [Custom-control registration](#custom-control-registration) |
+| Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
+| Bind submit and reset on `<form>` | The same `FormNode` import | [Native form submission](#native-form-submission) |
+
 ## Binding instance
 
 | Member | Description |

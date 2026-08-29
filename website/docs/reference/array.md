@@ -36,6 +36,19 @@ const myForm = form({
 });
 ```
 
+## API map
+
+| I want to… | Start with | Details |
+| --- | --- | --- |
+| Choose a template and initial items | `array(template, ...)` | [Signatures](#signatures) and [options](#options) |
+| Read values, nodes, or array position | `myArray()`, `items()`, `myArray[index]` | [Instance shape](#instance-shape) and [value and tree properties](#value-and-tree-properties) |
+| Search or iterate live item nodes | `at()`, `forEach()`, `map()`, `find()` | [Collection methods](#item-access-and-collection-methods) |
+| Add, remove, move, swap, or clear items | `push()`, `removeAt()`, `move()`, `swap()` | [Structural methods](#structural-methods) |
+| Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Value update methods](#value-update-methods) |
+| Preserve identity across server updates | `trackBy` | [Reconciliation](#reconciliation-and-trackby) |
+| Inspect aggregate state | Validation, interaction, and availability signals | [Validation](#validation-properties-and-methods), [interaction](#interaction-properties-and-methods), and [availability](#availability-properties-and-methods) |
+| Commit, focus, or inspect submission state | `flush()`, `focus()`, `submitting()` | [Control and submission](#control-and-submission-properties-and-methods) |
+
 ## Signatures
 
 ```ts

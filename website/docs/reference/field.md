@@ -19,6 +19,19 @@ const myForm = form({
 });
 ```
 
+## API map
+
+| I want to… | Start with | Details |
+| --- | --- | --- |
+| Decide whether a value should be one field | `field<T>()` | [Arrays and objects](#fields-can-hold-arrays-and-objects) |
+| Create a nullable or non-nullable field | `field(...)`, `{ nullable }` | [Signatures](#signatures) and [nullability](#nullability) |
+| Configure validation, debounce, or state | `FieldOptions` | [Options](#options) |
+| Read value, parent, or path | `myField()`, `parent()`, `path()` | [Value and tree properties](#value-and-tree-properties) |
+| Change or reset its value | `set()`, `update()`, `reset()` | [Value and control methods](#value-and-control-methods) |
+| Inspect errors or constraints | `errors()`, `getError()`, `required()`, `min()` | [Validation](#validation-properties-and-methods) and [constraint metadata](#constraint-metadata) |
+| Manage touched, dirty, or availability | State signals and marker methods | [Interaction](#interaction-properties-and-methods) and [availability](#availability-properties-and-methods) |
+| Connect it to an Angular control | `FormNode`, `[formNode]` | [Binding in Angular](#binding-in-angular) |
+
 ## Fields can hold arrays and objects
 
 `field()` means “one leaf node,” not “one scalar.” A field can hold an array when the complete
