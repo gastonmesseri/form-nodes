@@ -14,7 +14,7 @@ import type { Form } from '../../primitives/form';
 })
 export class FormRootDirective {
   /** Root form node submitted and reset by the host element. */
-  readonly form = input.required<Form<any>>({ alias: 'formNode' });
+  form = input.required<Form<any>>({ alias: 'formNode' });
 
   /** Prevents native navigation and runs the form node's configured submission action. */
   submit(event: Event) {
