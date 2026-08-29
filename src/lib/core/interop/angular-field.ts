@@ -11,6 +11,8 @@ type AngularFieldAdapter = {
   readonly model: WritableSignal<any>;
 };
 
+type AngularControlValueSnapshots = WeakMap<Node, unknown>;
+
 type AngularInteractionState = ReturnType<FieldTree<any>> & {
   markAsPristine(): void;
   markAsUntouched(): void;
@@ -115,6 +117,33 @@ const synchronizeTreeState = (node: Node, fieldTree: FieldTree<any>, injector: I
   });
 };
 
+const captureAngularControlValues = (node: Node, fieldTree: FieldTree<any>, snapshots: AngularControlValueSnapshots) => {
+  snapshots.set(node, fieldTree().controlValue());
+  getChildren(node as InternalNode).forEach((child) => {
+    const key = child.$api.keyInParent()!;
+    captureAngularControlValues(child, (fieldTree as unknown as Record<PropertyKey, FieldTree<any>>)[key]!, snapshots);
+  });
+};
+
+const routeAngularControlValues = (node: Node, fieldTree: FieldTree<any>, snapshots: AngularControlValueSnapshots): boolean => {
+  const state = fieldTree();
+  const controlValue = state.controlValue();
+  let routed = false;
+  if (!shallowEqual(controlValue, snapshots.get(node)) && state.formFieldBindings().length > 0) {
+    (node as InternalNode).$api._setControlValue(controlValue);
+    routed = true;
+  }
+  getChildren(node as InternalNode).forEach((child) => {
+    const key = child.$api.keyInParent()!;
+    routed = routeAngularControlValues(
+      child,
+      (fieldTree as unknown as Record<PropertyKey, FieldTree<any>>)[key]!,
+      snapshots,
+    ) || routed;
+  });
+  return routed;
+};
+
 export const getFormNodeBindingForAngularField = (binding: FormFieldBinding): FormNodeBinding | undefined => {
   const resolveNode = () => {
     return angularFieldNodes.get(binding.state().fieldTree as FieldTree<any>);
@@ -144,6 +173,8 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
   }, { injector });
   let previousNodeValue = root();
   let previousAngularValue = model();
+  const angularControlValues: AngularControlValueSnapshots = new WeakMap();
+  captureAngularControlValues(root, fieldTree, angularControlValues);
 
   effect(() => {
     const nodeValue = root();
@@ -152,12 +183,17 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
     const angularChanged = !shallowEqual(angularValue, previousAngularValue);
 
     if (angularChanged && !nodeChanged) {
-      untracked(() => root.$api.set(angularValue));
+      untracked(() => {
+        if (!routeAngularControlValues(root, fieldTree, angularControlValues)) {
+          (root as InternalNode).$api._setControlValue(angularValue);
+        }
+      });
     } else if (nodeChanged && !shallowEqual(nodeValue, angularValue)) {
       untracked(() => model.set(nodeValue));
     }
     previousNodeValue = root();
     previousAngularValue = model();
+    captureAngularControlValues(root, fieldTree, angularControlValues);
   }, { injector });
   synchronizeTreeState(root, fieldTree, injector);
   return { fieldTree, model };

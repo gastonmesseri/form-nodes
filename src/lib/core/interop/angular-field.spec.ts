@@ -20,7 +20,10 @@ afterAll(() => TestBed.resetTestEnvironment());
 
 describe('Angular Signal Forms field adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    vi.useRealTimers();
+    TestBed.resetTestingModule();
+  });
   it('exposes one stable Angular field tree for a form and its children', () => {
     const injector = TestBed.inject(Injector);
     const profile = runInInjectionContext(injector, () => form({
@@ -176,6 +179,89 @@ describe('Angular Signal Forms field adapter', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
     expect(input.value).toBe('Mark');
+  });
+
+  it('routes formField input through numeric node debounce', () => {
+    vi.useFakeTimers();
+
+    @Component({
+      template: `<input [formField]="name.$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      name = field('David', { debounce: 100 });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const name = fixture.componentInstance.name;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.value = 'Ana';
+    input.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+
+    expect(name()).toBe('David');
+    expect(name.controlValue()).toBe('Ana');
+    expect(name.debouncing()).toBe(true);
+    expect(name.dirty()).toBe(true);
+    expect(input.value).toBe('Ana');
+
+    vi.advanceTimersByTime(100);
+    TestBed.flushEffects();
+
+    expect(name()).toBe('Ana');
+    expect(name.debouncing()).toBe(false);
+
+    input.value = 'Lea';
+    input.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+    name.flush();
+    TestBed.flushEffects();
+    expect(name()).toBe('Lea');
+
+    input.value = 'Mia';
+    input.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+    name.set('Mark');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    vi.advanceTimersByTime(100);
+
+    expect(name()).toBe('Mark');
+    expect(name.controlValue()).toBe('Mark');
+    expect(name.debouncing()).toBe(false);
+    expect(input.value).toBe('Mark');
+  });
+
+  it('routes formField input through blur node debounce', () => {
+    @Component({
+      template: `<input [formField]="name.$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      name = field('David', { debounce: 'blur' });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const name = fixture.componentInstance.name;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.value = 'Ana';
+    input.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+
+    expect(name()).toBe('David');
+    expect(name.controlValue()).toBe('Ana');
+    expect(name.debouncing()).toBe(true);
+
+    input.dispatchEvent(new Event('blur'));
+    TestBed.flushEffects();
+
+    expect(name()).toBe('Ana');
+    expect(name.debouncing()).toBe(false);
+    expect(name.touched()).toBe(true);
   });
 
   it('applies provideFormNodeConfig classes only to formField bindings backed by $field', () => {
