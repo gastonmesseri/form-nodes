@@ -1,8 +1,7 @@
-import type { FieldTree } from '@angular/forms/signals';
-
 import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 import type { Equal, Expect, HasKey } from './assert.types';
 
+type IsAny<TValue> = 0 extends (1 & TValue) ? true : false;
 type _NoExampleCustomError = Expect<Equal<HasKey<ValidationErrorMap, 'unavailableUsername'>, false>>;
 
 const nameValidator = (context: ValidatorContext<string | null>) => {
@@ -13,13 +12,7 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
 };
 
 const name = field('David', [required, nameValidator]);
-const angularNameField: FieldTree<string | null> = name.$field;
-type _OpaqueAngularNameField = Expect<Equal<typeof name.$field, never>>;
-// @ts-expect-error The adapter is opaque in TypeScript and cannot expose properties.
-name.$field.toString();
-// @ts-expect-error The adapter is opaque in TypeScript and cannot be called.
-name.$field();
-void angularNameField;
+type _OpaqueAngularNameField = Expect<IsAny<typeof name.$field>>;
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
@@ -47,14 +40,7 @@ field<Date>(null, [minDate('today'), maxDate(() => 'today')]);
 field<Date>(null, [dateBetween('today', () => '2026-12-31')]);
 
 const angularProfile = form({ name: field('David'), age: field(30) });
-const angularProfileField: FieldTree<{ name: string | null; age: number | null }> = angularProfile.$field;
-const angularProfileNameField: FieldTree<string | null> = angularProfile.name.$field;
-// @ts-expect-error The adapter is opaque; navigate through the Gem Forms node instead.
-angularProfile.$field.name;
-// @ts-expect-error The adapter is opaque in TypeScript and cannot expose properties.
-angularProfile.$field.bind(undefined);
-void angularProfileField;
-void angularProfileNameField;
+type _OpaqueAngularProfileField = Expect<IsAny<typeof angularProfile.$field>>;
 
 const adult = validator<number | null>(({ value, api, field: targetField }) => {
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;

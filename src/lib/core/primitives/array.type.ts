@@ -3,6 +3,7 @@ import type { Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { Group } from './group.type';
 import type { Form, FormOptions } from './form.type';
+import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -405,7 +406,7 @@ export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
      * ```
      *
      */
-    readonly $field: never;
+    readonly $field: OpaqueAngularField;
   }
   & ArrayIndexes<TItem, TParent>
   & ArrayApi<TItem, TParent>

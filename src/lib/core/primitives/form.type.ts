@@ -3,6 +3,7 @@ import type { Injector, Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
 import type { Group } from './group.type';
+import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -334,7 +335,7 @@ type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
    * ```
    *
    */
-  readonly $field: never;
+  readonly $field: OpaqueAngularField;
 };
 
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =
