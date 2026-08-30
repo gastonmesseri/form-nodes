@@ -15,25 +15,41 @@ type GroupDefinitions<TDefinitions extends NodeDefinitions> = {
 /**
  * Creates a fixed object-shaped structural node without an independent submission workflow.
  *
+ * ```ts
+ * const address = group({
+ *   city: field('Zurich'),
+ *   country: field('Switzerland'),
+ * });
+ *
+ * address();
+ * // { city: 'Zurich', country: 'Switzerland' }
+ * ```
+ *
  * Plain nested object definitions are equivalent shorthand. Use an explicit group when the
  * object aggregate needs validators, state configuration, debounce, or validator messages. Use
  * `form()` instead when this exact node must own `submission` and `submit()`.
  *
- * @example
- * ```ts
- * const address = group({
- *   city: field(''),
- *   country: field(''),
- * }, {
- *   disabled: () => !canEditAddress(),
- * });
- * ```
+ * @param definitions Fixed child-node definitions.
+ * @param options Group configuration.
  */
 export function group<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
 ): Group<NormalizedNodes<TDefinitions>>;
-/** Creates a fixed object-shaped structural node with positional validators and optional configuration. */
+/**
+ * Creates a fixed object-shaped structural node with positional validators and optional configuration.
+ *
+ * ```ts
+ * const address = group(
+ *   { city: field('') },
+ *   [addressValidator],
+ * );
+ * ```
+ *
+ * @param definitions Fixed child-node definitions.
+ * @param validators Validators for the complete group value.
+ * @param options Group configuration.
+ */
 export function group<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   validators?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
