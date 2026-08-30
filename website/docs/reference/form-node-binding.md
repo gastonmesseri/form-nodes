@@ -154,8 +154,9 @@ Components exposing `value = model<T>()`, `checked = model<boolean>()`, compatib
 pairs, or a CVA are normally discovered automatically.
 
 Use `provideFormNodeControl()` when a custom control should register its signal contract explicitly
-instead of relying on compiled-metadata discovery. The provider belongs to the custom control
-component itself:
+instead of relying on compiled component-metadata discovery. This is also the supported discovery
+path for directive and host-directive controls, because `getDebugNode()` does not expose arbitrary
+directive instances. The provider belongs to the custom control itself:
 
 ```ts
 import { Component, input, model, output } from '@angular/core';

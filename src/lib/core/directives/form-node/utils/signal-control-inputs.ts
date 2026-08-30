@@ -1,12 +1,9 @@
-import { APP_ID, ChangeDetectorRef, effect, reflectComponentType, untracked, ɵSIGNAL, type Injector, type Type, type ɵInputSignalNode } from '@angular/core';
+import { APP_ID, effect, reflectComponentType, untracked, type Injector, type Type } from '@angular/core';
 
 import { getFormNodeName } from './form-node-name';
 import type { Field } from '../../../primitives/field';
 import type { Node } from '../../../types/node.type';
-
-type InputSignal = ((...args: never[]) => unknown) & {
-  [ɵSIGNAL]?: ɵInputSignalNode<unknown, unknown>;
-};
+import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
 
 export type SignalControlInputConnection = {
   inputNames: ReadonlySet<string>;
@@ -34,28 +31,6 @@ const getBindingValues = (node: Node, appId: string) => {
   };
 };
 
-const writeInputSignal = (input: InputSignal, value: unknown) => {
-  // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the signal input before accessing its internal node.
-  if (typeof input !== 'function') return;
-  const node = input[ɵSIGNAL];
-  if (!node?.applyValueToInputSignal) return;
-  const transformedValue = node.transformFn ? node.transformFn(value) : value;
-  node.applyValueToInputSignal(node, transformedValue);
-};
-
-/** Writes a component input using public metadata while preserving signal-input transforms. */
-export const writeComponentInput = (control: object, name: string, value: unknown, injector: Injector): boolean => {
-  const mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
-  const inputMetadata = mirror?.inputs.find(({ templateName }) => templateName === name);
-  if (!inputMetadata) return false;
-  const record = control as Record<PropertyKey, unknown>;
-  const inputValue = record[inputMetadata.propName];
-  if (inputMetadata.isSignal) writeInputSignal(inputValue as InputSignal, value);
-  else record[inputMetadata.propName] = inputMetadata.transform ? inputMetadata.transform(value) : value;
-  injector.get(ChangeDetectorRef).markForCheck();
-  return true;
-};
-
 /** Synchronizes the standard Angular Signal Forms state inputs implemented by a custom control. */
 export const connectSignalControlInputs = <TNode extends Node>(
   control: object,
@@ -63,26 +38,36 @@ export const connectSignalControlInputs = <TNode extends Node>(
   injector: Injector,
 ): SignalControlInputConnection => {
   const appId = injector.get(APP_ID);
-  const mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
+  let mirror: ReturnType<typeof reflectComponentType> = null;
+  try {
+    mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
+  } catch {
+    // Fall back to structural signal-input discovery when component reflection is unavailable.
+  }
   const bindingValues = getBindingValues(node(), appId);
   const inputs = mirror
     ? new Map(mirror.inputs.map(input => [input.templateName, input.propName]))
     : new Map(Object.keys(bindingValues).flatMap((name) => {
       const candidate = (control as Record<PropertyKey, unknown>)[name];
-      return typeof candidate === 'function' && (candidate as InputSignal)[ɵSIGNAL]?.applyValueToInputSignal ? [[name, name]] : [];
+      return isInputSignal(candidate) ? [[name, name]] : [];
     }));
   const inputNames = new Set(inputs.keys());
   const bindingNames = Object.keys(bindingValues) as (keyof ReturnType<typeof getBindingValues>)[];
   const bindings = bindingNames.flatMap((name) => {
     const property = inputs.get(name);
-    return property ? [{ name, input: (control as Record<PropertyKey, unknown>)[property] as InputSignal }] : [];
+    return property ? [{ name, property }] : [];
   });
   if (!bindings.length) return { inputNames };
 
   effect(() => {
     const currentNode = node();
     const values = getBindingValues(currentNode, appId);
-    untracked(() => bindings.forEach(({ name, input }) => writeInputSignal(input, values[name])));
+    untracked(() => bindings.forEach(({ name, property }) => {
+      const written = mirror
+        ? writeComponentInput(control, name, values[name], injector)
+        : writeInputSignal((control as Record<PropertyKey, unknown>)[property], values[name]);
+      if (!written) warnFailedInputWrite(control, name);
+    }));
   }, { injector });
   return { inputNames };
 };

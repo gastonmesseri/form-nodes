@@ -1,5 +1,5 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
-import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, inject, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, inject, input, model, output, type OnChanges, type SimpleChanges } from '@angular/core';
 
 import { field, FormNode, provideFormNodeControl, required, type Field } from '../../src/public-api';
 
@@ -9,15 +9,20 @@ import { field, FormNode, provideFormNodeControl, required, type Field } from '.
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<button type="button" [disabled]="disabled()" (click)="value.set('AOT value')" (blur)="touch.emit()">{{ value() }}</button>`,
 })
-export class AotSignalValueControl implements FormValueControl<string> {
+export class AotSignalValueControl implements FormValueControl<string>, OnChanges {
   value = model('');
   touch = output<void>();
   disabled = input(false, { transform: booleanAttribute });
   dirty = input(false);
   invalid = input(false);
   readonly = input(false);
-  required = input(false);
+  requiredState = input(false, { alias: 'required' });
   touched = input(false);
+  stateChanges: SimpleChanges[] = [];
+
+  ngOnChanges(changes: SimpleChanges) {
+    this.stateChanges.push(changes);
+  }
 }
 
 @Component({

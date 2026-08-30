@@ -291,15 +291,17 @@ The complete recognized state surface is `errors`, `disabled`, `disabledReasons`
 `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`,
 `readonly`, `required`, and `touched`.
 
-Declare only the inputs the component uses. Input transforms are preserved. The optional
-`touch` output marks the node touched; `focus(options?)` is used by `node.focus()`, and `reset()` is
-called during the binding reset lifecycle.
+Declare only the inputs the component uses. Public input aliases and transforms are preserved for
+both `input()` and decorator inputs, and components implementing `ngOnChanges` receive the state
+changes. The optional `touch` output marks the node touched; `focus(options?)` is used by
+`node.focus()`, and `reset()` is called during the binding reset lifecycle.
 
 ## Explicit registration
 
 Use `provideFormNodeControl()` when a control should declare its signal contract explicitly instead
-of relying on automatic metadata discovery. Configure it once on the control component—not on every
-consumer:
+of relying on automatic component-metadata discovery. It remains necessary for controls implemented
+as directives or host directives because `getDebugNode()` exposes the host component instance, not
+arbitrary directive instances. Configure it once on the control—not on every consumer:
 
 ```ts
 import { Component, input, model, output } from '@angular/core';
