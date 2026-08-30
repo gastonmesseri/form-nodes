@@ -154,12 +154,16 @@ const optionalName = field<string>();
 
 Fields are nullable by default. The examples above have types `Field<string | null>`, `Field<number | null>`, and `Field<string | null>`. A field created without a value starts at `null`.
 
-A field created from the literal `null` without an explicit generic is inferred as `Field<unknown>`:
+A field created from the literal `null` or `undefined` without an explicit generic is inferred as
+`Field<unknown>`. Both absence values start at runtime as `null`:
 
 ```ts
 const unspecified = field(null);
 unspecified.set('David');
 unspecified.set(42);
+
+const alsoUnspecified = field(undefined);
+alsoUnspecified(); // null
 
 const known = field<string>(null);
 // Field<string | null>
@@ -327,7 +331,8 @@ const emptyName = field<string>(null, []);
 // Field<string | null>
 
 const unspecified = field(null);
-// Field<unknown>; accepts null and future values of any type
+const unspecifiedFromUndefined = field(undefined);
+// Both are Field<unknown>; both start at null and accept future values of any type
 ```
 
 The nullable type affects the complete field API. `value`, `set`, `patch`, `reset`, and validators all use `TValue | null`.

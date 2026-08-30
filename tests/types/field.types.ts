@@ -15,6 +15,8 @@ const explicit = field<number>(undefined);
 const explicitNull = field<string>(null);
 const unknownNullable = field(null);
 const unknownNullableWithOptions = field(null, { debounce: 'blur' });
+const unknownUndefined = field(undefined);
+const unknownUndefinedWithOptions = field(undefined, { debounce: 'blur' });
 
 type _NullableValue = Expect<Equal<ReturnType<typeof nullable>, string | null>>;
 type _NonNullableValue = Expect<Equal<ReturnType<typeof nonNullable>, string>>;
@@ -22,6 +24,8 @@ type _ExplicitValue = Expect<Equal<ReturnType<typeof explicit>, number | null>>;
 type _ExplicitNullValue = Expect<Equal<ReturnType<typeof explicitNull>, string | null>>;
 type _UnknownNullableValue = Expect<Equal<ReturnType<typeof unknownNullable>, unknown>>;
 type _UnknownNullableOptionsValue = Expect<Equal<ReturnType<typeof unknownNullableWithOptions>, unknown>>;
+type _UnknownUndefinedValue = Expect<Equal<ReturnType<typeof unknownUndefined>, unknown>>;
+type _UnknownUndefinedOptionsValue = Expect<Equal<ReturnType<typeof unknownUndefinedWithOptions>, unknown>>;
 type _ApiValue = Expect<Equal<ReturnType<typeof nullable.api.value>, string | null>>;
 type _StableApiValue = Expect<Equal<ReturnType<typeof nullable.$api.value>, string | null>>;
 type _Minimum = Expect<Equal<ReturnType<typeof nullable.min>, string | null>>;
@@ -39,6 +43,9 @@ nullable.set(null);
 unknownNullable.set('Daniel');
 unknownNullable.set(42);
 unknownNullable.set(null);
+unknownUndefined.set('Daniel');
+unknownUndefined.set(42);
+unknownUndefined.set(null);
 nonNullable.set('Daniel');
 nullable.update((value) => value?.toUpperCase() ?? null);
 nullable.reset();
@@ -54,6 +61,8 @@ nullable.set(42);
 nonNullable.set(null);
 // @ts-expect-error a null initial value cannot create a non-nullable field
 field(null, { nullable: false });
+// @ts-expect-error an undefined initial value cannot create a non-nullable field
+field(undefined, { nullable: false });
 // @ts-expect-error field patching is intentionally exposed only through api
 nullable.patch('Daniel');
 // @ts-expect-error native callable members are intentionally hidden

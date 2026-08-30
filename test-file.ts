@@ -53,11 +53,19 @@ const myForm = form({
     validators: [minLength(1)],
     trackBy: 'name',
   }),
-  whatIsThis: field(null),
+  whatIsThis: field(undefined),
+  something: field('')
 });
+// claro creo que tampoco necesitariamos un arbol completo de FieldTree, es decir, solo con un nodo de FieldTree que se bindee a un [formField] yo creo que podriamos reflejar y recibir entre ese nodo y nuestro nodo de nuestra libreria
 
 myForm.whatIsThis.set(23);
 myForm.whatIsThis();
+myForm.name.$field;
+myForm.address.city();
+// myForm.controls.address.signals.value();
+// myForm.$field();
+// myForm.$field().errorSummary;
+// myForm.$field.toString;
 
 myForm.sons1.insert(1)
 

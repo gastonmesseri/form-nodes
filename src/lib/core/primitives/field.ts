@@ -33,7 +33,8 @@ type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { nullable: false 
 /**
  * Creates a nullable field whose future value type is not yet known.
  *
- * Use an explicit generic such as `field<string>(null)` when the eventual value type is known.
+ * Literal `null` and `undefined` initial values both use this safe inference. Use an explicit
+ * generic such as `field<string>(null)` when the eventual value type is known.
  */
 export function field(
   value: null,
@@ -41,6 +42,15 @@ export function field(
 ): Field<unknown>;
 export function field(
   value: null,
+  validators: ValidatorSource<unknown>,
+  options?: NullableFieldOptions<unknown>,
+): Field<unknown>;
+export function field(
+  value: undefined,
+  options?: NullableFieldOptions<unknown>,
+): Field<unknown>;
+export function field(
+  value: undefined,
   validators: ValidatorSource<unknown>,
   options?: NullableFieldOptions<unknown>,
 ): Field<unknown>;
