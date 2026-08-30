@@ -1856,6 +1856,14 @@ untouched and pristine on both sides while retaining their underlying flags, whi
 again when the node returns to an interactive state. Existing array items follow the same rules;
 items added or reconciled after adapter creation are covered by the separate dynamic-array work.
 
+Every live Angular `FormFieldBinding` is also registered as a control binding on its original
+library node. Calling `focus()` on a field therefore works identically for `[formNode]` and
+`[formField]`; aggregate focus can discover adapted descendant controls as well. When several
+controls bind the same node, the first connected control in DOM order is focused rather than the
+first one registered. Angular's binding-level `focus()` is invoked, preserving a custom control's
+own focus implementation and `FocusOptions`. Destroyed bindings unregister automatically, and a
+`FormField` rebound to another `$field` moves its focus registration without leaving a stale entry.
+
 Independent clearing uses the runtime `FieldNode.markAsUntouched()` and
 `FieldNode.markAsPristine()` methods present in Angular 22.1.4. Angular omits those methods from its
 public `FieldState` type even though its implementation exposes them, so this access remains

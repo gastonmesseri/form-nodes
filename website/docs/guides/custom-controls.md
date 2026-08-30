@@ -94,6 +94,12 @@ Aggregate `markAsTouched()` reaches descendants unless `skipDescendants` is used
 readonly, or hidden node temporarily appears untouched and pristine on both sides and restores its
 previous interaction state when it becomes interactive again.
 
+Calling `node.focus()` also works for controls bound through `$field`. With multiple bindings, the
+first connected control in DOM order is chosen. Custom Angular controls retain their own `focus()`
+implementation, including `FocusOptions`, and destroyed or rebound controls are removed from the
+old node automatically. Calling `focus()` on a form, group, or array can discover the first adapted
+control among its descendants.
+
 Availability is intentionally node-owned. Calling `disable()`, `markAsReadonly()`, or `hide()` on
 the Gem Forms node updates Angular's field state and the bound control. Angular models disabled,
 readonly, hidden, and required as derived schema state and does not expose reverse setters, so a

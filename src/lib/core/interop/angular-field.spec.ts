@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import '@angular/compiler';
-import { Component, Injector, runInInjectionContext, signal } from '@angular/core';
+import { Component, Injector, input, output, runInInjectionContext, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form as createAngularForm, provideSignalFormsConfig } from '@angular/forms/signals';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -15,6 +15,7 @@ import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
+import { registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -341,6 +342,102 @@ describe('Angular Signal Forms field adapter', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
     expect(input.value).toBe('Mark');
+  });
+
+  it('registers formField controls for node focus in DOM order and unregisters destroyed bindings', () => {
+    @Component({
+      template: `
+        @if (showFirst()) {
+          <input class="first" [formField]="name.$field">
+        }
+        <input class="second" [formField]="name.$field">
+      `,
+      imports: [FormField],
+    })
+    class Host {
+      name = field('David');
+      showFirst = signal(true);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    const host = fixture.componentInstance;
+    const first = fixture.nativeElement.querySelector('.first') as HTMLInputElement;
+    const second = fixture.nativeElement.querySelector('.second') as HTMLInputElement;
+
+    host.name.focus({ preventScroll: true });
+    expect(document.activeElement).toBe(first);
+
+    host.showFirst.set(false);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    host.name.focus();
+
+    expect(document.activeElement).toBe(second);
+  });
+
+  it('moves focus registration when a formField binding is rebound to another node', () => {
+    @Component({
+      template: `<input [formField]="selected().$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      first = field('First');
+      second = field('Second');
+      selected = signal(this.first);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    const host = fixture.componentInstance;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    host.first.focus();
+    expect(document.activeElement).toBe(input);
+    input.blur();
+
+    host.selected.set(host.second);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    host.first.focus();
+    expect(document.activeElement).not.toBe(input);
+
+    host.second.focus();
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('preserves the custom focus implementation exposed through Angular formField', () => {
+    @Component({
+      selector: 'custom-control',
+      template: '',
+    })
+    class CustomControl {
+      value = input<string | null>('');
+      valueChange = output<string | null>();
+      focus = vi.fn<(options?: FocusOptions) => void>();
+    }
+    registerSignalModelForJit(CustomControl, 'value');
+
+    @Component({
+      template: `<custom-control [formField]="name.$field" />`,
+      imports: [CustomControl, FormField],
+    })
+    class Host {
+      name = field('David');
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    const control = fixture.debugElement.children[0]!.componentInstance as CustomControl;
+    const options = { preventScroll: true };
+
+    fixture.componentInstance.name.focus(options);
+
+    expect(control.focus).toHaveBeenCalledOnce();
+    expect(control.focus).toHaveBeenCalledWith(options);
   });
 
   it('routes formField input through numeric node debounce', () => {
