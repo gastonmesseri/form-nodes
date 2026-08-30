@@ -16,7 +16,7 @@ import type { ComposableValidator } from './validation.type';
  *
  * @example
  * ```ts
- * export const adult = validator<number | null>(({ value }) => {
+ * export const isAdult = validator<number | null>(({ value }) => {
  *   const age = value();
  *   return age !== null && age < 18
  *     ? { kind: 'adult', minimumAge: 18, actual: age }

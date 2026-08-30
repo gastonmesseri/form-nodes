@@ -136,8 +136,11 @@ export type GroupOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' 
   readonly?: boolean | (() => boolean);
 };
 
+/** Object value produced by a group, with each child node mapped to its readable value. */
 export type GroupValue<TNodes extends Nodes> = FormValue<TNodes>;
+/** Complete object accepted by a group's `set()`, recursively using each child's set type. */
 export type GroupSet<TNodes extends Nodes> = FormSet<TNodes>;
+/** Partial object accepted by a group's `patch()`; omitted child properties remain unchanged. */
 export type GroupPatch<TNodes extends Nodes> = FormPatch<TNodes>;
 
 export type NormalizedNode<TNode extends Node | NodeDefinitions> =

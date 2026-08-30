@@ -178,13 +178,16 @@ export type ArrayItemWithParent<TItem extends Node, TParent extends Node> =
       : TItem extends Group<infer TNodes, Node> ? Group<TNodes, TParent>
         : TItem extends ArrayNode<infer TNestedItem, Node> ? ArrayNode<TNestedItem, TParent> : TItem;
 
+/** Mutable array value produced by an array node, with every item mapped to its readable value. */
 export type ArrayValue<TItem extends Node> =
   TItem extends Form<infer TNodes, Node>
     ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
     : TItem extends Group<infer TNodes, Node>
       ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
       : NodeValue<TItem>[];
+/** Complete readonly sequence accepted by an array node's `set()`. */
 export type ArraySet<TItem extends Node> = readonly NodeSet<TItem>[];
+/** Readonly sequence accepted by an array node's `patch()`, mapped through the item patch type. */
 export type ArrayPatch<TItem extends Node> = readonly NodePatch<TItem>[];
 
 export type ArrayRoot<TItem extends Node, TParent extends Node> = Node extends TParent
