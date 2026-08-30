@@ -507,11 +507,48 @@ describe('Angular Signal Forms field adapter', () => {
     expect(getAngularField<(string | null)[]>(tags)[0]!().value()).toBe('angular');
   });
 
+  it('resolves the root injector for descendants added outside its injection context', () => {
+    const injector = TestBed.inject(Injector);
+    const people = runInInjectionContext(injector, () => array(() => ({
+      name: field(''),
+      address: { city: field('') },
+    })));
+
+    const person = people.push({ name: 'David', address: { city: 'Zurich' } });
+    const angularPeople = getAngularField<{
+      name: string | null;
+      address: { city: string | null };
+    }[]>(people);
+
+    expect(person.$field).toBe(angularPeople[0]);
+    expect(person.name.$field).toBe(angularPeople[0]!.name);
+    expect(person.address.city.$field).toBe(angularPeople[0]!.address.city);
+    expect(getAngularField<string | null>(person.address.city)().value()).toBe('Zurich');
+  });
+
+  it('uses an explicit root injector for descendants added later', () => {
+    const injector = TestBed.inject(Injector);
+    const tags = array(field(''), { injector });
+
+    const tag = tags.push('angular');
+
+    expect(tag.$field).toBe(getAngularField<(string | null)[]>(tags)[0]);
+    expect(getAngularField<string | null>(tag)().value()).toBe('angular');
+  });
+
   it('remains lazy and reports how to opt in outside Angular injection', () => {
     const name = field('David');
 
     expect(name()).toBe('David');
     expect(() => name.$field).toThrow(/injection context|injector/);
+  });
+
+  it('does not adopt an ambient injector after a complete root was created outside injection', () => {
+    const tags = array(field(''));
+    const tag = tags.push('angular');
+    const injector = TestBed.inject(Injector);
+
+    expect(() => runInInjectionContext(injector, () => tag.$field)).toThrow(/injection context|injector/);
   });
 
   it('binds naturally through the Angular formField directive', () => {
