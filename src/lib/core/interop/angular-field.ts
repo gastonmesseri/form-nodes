@@ -1,5 +1,5 @@
 import { assertInInjectionContext, computed, effect, inject, Injector, signal, untracked, type WritableSignal } from '@angular/core';
-import { disabled, form as createAngularForm, hidden, readonly as configureReadonly, required, validate, type FieldTree, type FormFieldBinding, type SchemaPath } from '@angular/forms/signals';
+import { disabled, form as createAngularForm, hidden, MAX, MAX_DATE, MAX_LENGTH, MAX_NUMBER, metadata, MIN, MIN_DATE, MIN_LENGTH, MIN_NUMBER, PATTERN, readonly as configureReadonly, required, validate, type FieldTree, type FormFieldBinding, type SchemaPath } from '@angular/forms/signals';
 
 import { shallowEqual } from '../utils/shallow-equal';
 import type { InternalNode, Node } from '../types/node.type';
@@ -22,6 +22,14 @@ type AngularInteractionState = ReturnType<FieldTree<any>> & {
 type AngularParseError = ValidationError & Readonly<Record<string, unknown>>;
 type AngularFieldBindingWithParseErrors = FormFieldBinding & {
   readonly parseErrors: () => readonly AngularParseError[];
+};
+
+type ConstraintNode = Node & {
+  max(): number | Date | null;
+  maxLength(): number | null;
+  min(): number | Date | null;
+  minLength(): number | null;
+  pattern(): readonly RegExp[];
 };
 
 const nodeInjectors = new WeakMap<Node, Injector>();
@@ -58,6 +66,34 @@ const getChildren = (node: InternalNode): readonly Node[] => {
   return [];
 };
 
+const configureConstraints = (path: SchemaPath<any>, resolveNode: () => Node) => {
+  const resolveConstraintNode = () => resolveNode() as ConstraintNode;
+  metadata(path, MIN_NUMBER, () => {
+    const value = resolveConstraintNode().min();
+    return typeof value === 'number' ? value : undefined;
+  });
+  metadata(path, MIN_DATE, () => {
+    const value = resolveConstraintNode().min();
+    return value instanceof Date ? value : undefined;
+  });
+  metadata(path, MIN, () => resolveConstraintNode().min() instanceof Date ? MIN_DATE : MIN_NUMBER);
+  metadata(path, MAX_NUMBER, () => {
+    const value = resolveConstraintNode().max();
+    return typeof value === 'number' ? value : undefined;
+  });
+  metadata(path, MAX_DATE, () => {
+    const value = resolveConstraintNode().max();
+    return value instanceof Date ? value : undefined;
+  });
+  metadata(path, MAX, () => resolveConstraintNode().max() instanceof Date ? MAX_DATE : MAX_NUMBER);
+  metadata(path, MIN_LENGTH, () => resolveConstraintNode().minLength() ?? undefined);
+  metadata(path, MAX_LENGTH, () => resolveConstraintNode().maxLength() ?? undefined);
+  const patternSlots = Math.max(resolveConstraintNode().pattern().length, 1);
+  for (let index = 0; index < patternSlots; index++) {
+    metadata(path, PATTERN, () => resolveConstraintNode().pattern()[index]);
+  }
+};
+
 const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: Node) => {
   disabled(path, { when: () => resolveNode()!.$api.disabled() });
   configureReadonly(path, { when: () => resolveNode()!.$api.readonly() });
@@ -68,6 +104,7 @@ const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: N
   })));
 
   const internalSample = sample as InternalNode;
+  if (internalSample.$api._nodeType === 'field') configureConstraints(path, resolveNode);
   if (internalSample.$api._nodeType !== 'form' && internalSample.$api._nodeType !== 'group') return;
   const children = (internalSample.$api as typeof internalSample.$api & { children: Record<string, Node> }).children;
   Object.entries(children).forEach(([key, child]) => {

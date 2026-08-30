@@ -13,6 +13,8 @@ import { group } from '../../primitives/group';
 import { FormNode } from './form-node.directive';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
+import { maxLength } from '../../validation/validators/max-length';
+import { minLength } from '../../validation/validators/min-length';
 import { provideFormNodeConfig } from './form-node-config';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
@@ -162,6 +164,46 @@ describe('FormNode in Chromium', () => {
 
     expect(profile.age.getError('parse')).toBeUndefined();
     expect(input.value).toBe('12');
+  });
+
+  it('reflects reactive Gem constraints through formField native properties', () => {
+    @Component({
+      template: `
+        <input id="amount" type="number" [formField]="profile.amount.$field">
+        <input id="code" [formField]="profile.code.$field">
+      `,
+      imports: [FormField],
+    })
+    class Host {
+      minimum = signal(2);
+      maximum = signal(10);
+      minimumLength = signal(2);
+      profile = form({
+        amount: field(5, [min(() => this.minimum()), max(() => this.maximum())]),
+        code: field('abc', [minLength(() => this.minimumLength()), maxLength(8)]),
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const amount = fixture.nativeElement.querySelector('#amount') as HTMLInputElement;
+    const code = fixture.nativeElement.querySelector('#code') as HTMLInputElement;
+
+    expect(amount.min).toBe('2');
+    expect(amount.max).toBe('10');
+    expect(code.minLength).toBe(2);
+    expect(code.maxLength).toBe(8);
+
+    host.minimum.set(4);
+    host.maximum.set(9);
+    host.minimumLength.set(3);
+    fixture.detectChanges();
+
+    expect(amount.min).toBe('4');
+    expect(amount.max).toBe('9');
+    expect(code.minLength).toBe(3);
+    expect(code.maxLength).toBe(8);
   });
 
   it('bridges a native form reset through formNode into formField controls', () => {
