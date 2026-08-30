@@ -325,23 +325,51 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   /**
    * Reconciles the complete array value while preserving matching item nodes.
    *
-   * ℹ️ Passing `null` or `undefined` clears the array.
+   * **Field items**
    *
-   * @example
    * ```ts
+   * const names = array(field(''));
+   *
    * names.set(['Marco', 'Lia']);
    * ```
+   *
+   * **Group items**
+   *
+   * ```ts
+   * const people = array({ name: field('') });
+   *
+   * people.set([
+   *   { name: 'Marco' },
+   *   { name: 'Lia' },
+   * ]);
+   * ```
+   *
+   * ℹ️ Passing `null` or `undefined` clears the array.
    */
   set(value: ArraySet<TItem> | null | undefined): void;
   /**
    * Computes the complete array value using the configured index or `trackBy` reconciliation.
    *
-   * ℹ️ Returning `null` or `undefined` clears the array.
+   * **Field items**
    *
-   * @example
    * ```ts
+   * const names = array(field(''));
+   *
    * names.update(value => [...value, 'Lia']);
    * ```
+   *
+   * **Group items**
+   *
+   * ```ts
+   * const people = array({ name: field('') });
+   *
+   * people.update(value => [
+   *   ...value,
+   *   { name: 'Lia' },
+   * ]);
+   * ```
+   *
+   * ℹ️ Returning `null` or `undefined` clears the array.
    */
   update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
   /**
