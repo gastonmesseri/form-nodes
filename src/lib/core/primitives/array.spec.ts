@@ -1039,6 +1039,128 @@ describe('array', () => {
     expect(names.errors()).toEqual([]);
   });
 
+  it('owns async validation for field items created later by a factory', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async ({ value }) => {
+      if (value() === 'David') dependency();
+      return null;
+    });
+    const injector = Injector.create({ providers: [] });
+    const names = array(() => field('', [asyncValidator(validate)]), { injector });
+
+    const name = names.push('David');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.pending()).toBe(false);
+  });
+
+  it('owns async validation for field items cloned from a template', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async ({ value }) => {
+      if (value() === 'David') dependency();
+      return null;
+    });
+    const injector = Injector.create({ providers: [] });
+    const names = array(field('', [asyncValidator(validate)]), { injector });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    validate.mockClear();
+    const name = names.push('David');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.pending()).toBe(false);
+  });
+
+  it('respects an injector-inheritance boundary on items created later', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const injector = Injector.create({ providers: [] });
+    const names = array(
+      () => field('', [asyncValidator(validate)], { inheritInjector: false }),
+      { injector },
+    );
+
+    names.push('David');
+    await Promise.resolve();
+    await Promise.resolve();
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves an injector-inheritance boundary when cloning a template', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async ({ value }) => {
+      if (value() === 'David') dependency();
+      return null;
+    });
+    const injector = Injector.create({ providers: [] });
+    const names = array(
+      field('', [asyncValidator(validate)], { inheritInjector: false }),
+      { injector },
+    );
+
+    await Promise.resolve();
+    await Promise.resolve();
+    validate.mockClear();
+    names.push('David');
+    await Promise.resolve();
+    await Promise.resolve();
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('releases inherited ownership when an item is detached', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const injector = Injector.create({ providers: [] });
+    const names = array(() => field('', [asyncValidator(validate)]), { injector });
+    const name = names.push('David');
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    names.removeAt(0);
+    injector.destroy();
+    dependency.set('after detach');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(name.pending()).toBe(false);
+  });
+
   it('aborts pending array-level validation when its owning injector is destroyed', async () => {
     let abortSignal: AbortSignal | undefined;
     let resolveValidation!: (result: { kind: string } | null) => void;

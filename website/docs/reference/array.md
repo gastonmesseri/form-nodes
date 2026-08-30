@@ -90,6 +90,10 @@ The factory must return a fresh node each time.
 
 Arrays accept the form options described in [`form()`](./form.md), plus:
 
+Items created later from either a template or factory inherit the array's nearest injector by
+default. Set `inheritInjector: false` on an item template or factory result to create a lifecycle
+boundary for that item subtree.
+
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | `initialValue` | item-value array, non-negative count, or `null` | Creates the initial items |

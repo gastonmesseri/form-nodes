@@ -36,7 +36,7 @@ group(definitions, options?);
 group(definitions, validators, options?);
 ```
 
-`GroupOptions` accepts `validators`, `injector`, `validatorMessages`, `debounce`, `disabled`,
+`GroupOptions` accepts `validators`, `injector`, `inheritInjector`, `validatorMessages`, `debounce`, `disabled`,
 `readonly`, and `hidden`. It does not accept `submission`.
 
 Start with a named validator for a reusable object rule. Use an inline callback for a small rule

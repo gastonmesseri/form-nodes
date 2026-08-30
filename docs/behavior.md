@@ -188,7 +188,10 @@ All options are optional, so state can be configured without supplying validator
 field('', [required], { disabled: false });
 ```
 
-`injector` is optional. When supplied, its `DestroyRef` deterministically owns the asynchronous validation watcher.
+`injector` is optional. An explicit or currently captured injector takes precedence and its
+`DestroyRef` deterministically owns the asynchronous validation watcher. Without an injector of its
+own, the field uses the nearest injector on its parent chain by default. Set
+`inheritInjector: false` to prevent that lookup.
 
 In the separate-argument form, the validator array is the second argument and state options are the third argument. When no initial value is passed, the runtime value starts as `null`.
 
@@ -234,7 +237,8 @@ All options are optional, so form state can be configured without supplying vali
 form({ name: field('David') }, [validator], { hidden: false });
 ```
 
-`injector` has the same optional asynchronous-validation role as it does for fields.
+`injector` and `inheritInjector` have the same asynchronous-validation ownership roles as they do
+for fields.
 
 A definition can contain fields, groups, explicit nested forms, arrays, or shorthand nested objects.
 
@@ -680,7 +684,22 @@ Asynchronous validation behavior follows Angular 22 Signal Forms where applicabl
 
 Asynchronous validation is coordinated by a watcher built on Angular's public signals primitives. The initial callback invocation is scheduled in the next microtask, after the expression that created its field or form has completed. This makes it safe for a validator declared in a class property initializer to read another property through its owning form. The node becomes pending synchronously, before that callback starts. Signals read before the validator's first asynchronous boundary become dependencies and automatically trigger a new validation, including sibling fields or external signals captured by the validator.
 
-The watcher does not require dependency injection. When an explicit or current injector exists, its `DestroyRef` owns the watcher; destroying it stops future reactive executions and cancels the current Promise or Observable operation. Outside an injection context, the watcher weakly references its node-owned target, and a `FinalizationRegistry` disconnects it if that target becomes unreachable. Garbage-collection cleanup is necessarily nondeterministic, while injector cleanup is immediate.
+The watcher does not require dependency injection. A node first uses its explicit or currently
+captured injector. Without one, it uses the nearest ancestor injector by default, so descendants
+created later by an array template or factory join the array's lifecycle even when their factory
+runs outside an injection context. `inheritInjector: false` stops lookup at that node and forms a
+boundary for its whole subtree unless a descendant has an injector of its own. Moving a node
+between parents transfers inherited ownership; detaching it releases that ownership, and destroying
+an injector that no longer owns the node has no effect. Destroying the effective injector stops
+future reactive executions and cancels the current Promise or Observable operation.
+
+With no effective injector, the watcher weakly references its node-owned target, and a
+`FinalizationRegistry` disconnects it if that target becomes unreachable. Garbage-collection
+cleanup is necessarily nondeterministic, while injector cleanup is immediate. Angular 22.1.4's
+`packages/forms/signals/src/field/util.ts` similarly resolves the root field structure's injector
+for descendant field trees. Gem Forms deliberately generalizes that lifecycle behavior to every
+node and exposes the opt-out boundary because its independently constructed nodes can be detached
+or inserted dynamically.
 
 The node value and the `when` condition are tracked before the debounce timer starts. A debounced validator that discovers automatic dependencies starts its publication timer immediately and invokes the service in the next microtask without waiting for that timer. Every signal it reads becomes a dependency, including external signals. Its result is not published until the initial debounce period has elapsed. If any discovered dependency changes during that period, the first operation is cancelled and the replacement invocation waits for a full debounce period before running. Later changes use the same cancellation and debounce behavior.
 

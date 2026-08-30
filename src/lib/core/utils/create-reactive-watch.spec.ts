@@ -45,6 +45,22 @@ describe('createReactiveWatch', () => {
     injector.destroy();
     expect(destroy).toHaveBeenCalledOnce();
   });
+
+  it('transfers ownership without letting a previous injector destroy the watch', () => {
+    const firstInjector = Injector.create({ providers: [] });
+    const secondInjector = Injector.create({ providers: [] });
+    const destroy = vi.fn();
+    const watch = createReactiveWatch({ run: () => {}, cleanup: () => {}, destroy }, null);
+
+    watch.setInjector(firstInjector);
+    watch.setInjector(secondInjector);
+    firstInjector.destroy();
+
+    expect(destroy).not.toHaveBeenCalled();
+
+    secondInjector.destroy();
+    expect(destroy).toHaveBeenCalledOnce();
+  });
 });
 
 describe('createTrackedRunner', () => {

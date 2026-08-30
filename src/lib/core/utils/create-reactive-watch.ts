@@ -12,6 +12,11 @@ export type TrackedRunner = {
   destroy(): void;
 };
 
+export type ReactiveWatchRef = {
+  destroy(): void;
+  setInjector(injector: Injector | undefined): void;
+};
+
 type TrackedRunnerTarget = {
   callback: (() => unknown) | null;
   notify(): void;
@@ -19,20 +24,19 @@ type TrackedRunnerTarget = {
 
 const finalizationRegistry = new FinalizationRegistry<Watch>(watch => watch.destroy());
 
-const getDestroyRef = (injector?: Injector): DestroyRef | null => {
-  if (injector) return injector.get(DestroyRef);
+const getCurrentInjector = (): Injector | undefined => {
   try {
     assertInInjectionContext(createReactiveWatch);
   } catch {
-    return null;
+    return undefined;
   }
-  return inject(DestroyRef);
+  return inject(Injector);
 };
 
 export const createReactiveWatch = (
   target: ReactiveWatchTarget,
-  injector?: Injector,
-): Watch => {
+  injector?: Injector | null,
+): ReactiveWatchRef => {
   const targetRef = new WeakRef(target);
   let scheduled = false;
   const watch = createWatch(
@@ -52,14 +56,29 @@ export const createReactiveWatch = (
     },
     true,
   );
+  let destroyed = false;
+  let owner: Injector | undefined;
+  let ownerVersion = 0;
   finalizationRegistry.register(target, watch, watch);
-  getDestroyRef(injector)?.onDestroy(() => {
+  const destroy = () => {
+    if (destroyed) return;
+    destroyed = true;
+    ownerVersion++;
     finalizationRegistry.unregister(watch);
     targetRef.deref()?.destroy?.();
     watch.destroy();
-  });
+  };
+  const setInjector = (nextInjector: Injector | undefined) => {
+    if (destroyed || nextInjector === owner) return;
+    owner = nextInjector;
+    const version = ++ownerVersion;
+    nextInjector?.get(DestroyRef).onDestroy(() => {
+      if (ownerVersion === version) destroy();
+    });
+  };
+  setInjector(injector === null ? undefined : injector ?? getCurrentInjector());
   watch.run();
-  return watch;
+  return { destroy, setInjector };
 };
 
 export const createTrackedRunner = (target: TrackedRunnerTarget): TrackedRunner => {

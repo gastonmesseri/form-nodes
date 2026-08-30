@@ -1,7 +1,8 @@
-import { assertInInjectionContext, computed, effect, inject, Injector, signal, untracked, type EffectRef, type WritableSignal } from '@angular/core';
+import { computed, effect, Injector, signal, untracked, type EffectRef, type WritableSignal } from '@angular/core';
 import { applyEach, disabled, form as createAngularForm, hidden, MAX, MAX_DATE, MAX_LENGTH, MAX_NUMBER, metadata, MIN, MIN_DATE, MIN_LENGTH, MIN_NUMBER, PATTERN, readonly as configureReadonly, required, validate, type FieldTree, type FormFieldBinding, type SchemaPath } from '@angular/forms/signals';
 
 import { shallowEqual } from '../utils/shallow-equal';
+import { resolveNodeInjector } from '../utils/node-injector';
 import type { InternalNode, Node } from '../types/node.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ValidationError } from '../validation/validation.type';
@@ -37,20 +38,10 @@ type ArrayNodeWithSchemaSample = InternalNode & {
   $api: InternalNode['$api'] & { _getSchemaSample(): Node };
 };
 
-const nodeInjectors = new WeakMap<Node, Injector>();
 const rootAdapters = new WeakMap<Node, AngularFieldAdapter>();
 const angularFieldNodes = new WeakMap<object, Node>();
 const angularFormNodeBindings = new WeakMap<FormFieldBinding, FormNodeBinding>();
 const adaptedAngularFormNodeBindings = new WeakSet<FormNodeBinding>();
-
-const getCurrentInjector = (): Injector | undefined => {
-  try {
-    assertInInjectionContext(getCurrentInjector);
-    return inject(Injector);
-  } catch {
-    return undefined;
-  }
-};
 
 const getRootNode = (node: Node): Node => {
   let current = node;
@@ -328,7 +319,7 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
 
 export const getAngularField = <TValue>(node: Node): FieldTree<TValue> => {
   const root = getRootNode(node);
-  const injector = nodeInjectors.get(root) ?? nodeInjectors.get(node);
+  const injector = resolveNodeInjector(root) ?? resolveNodeInjector(node);
   if (!injector) {
     throw new Error('Angular Signal Forms interoperability requires an Angular injection context or an explicit `injector` option.');
   }
@@ -345,9 +336,7 @@ export const getAngularField = <TValue>(node: Node): FieldTree<TValue> => {
   return fieldTree as FieldTree<TValue>;
 };
 
-export const registerAngularField = (node: Node, injector?: Injector) => {
-  const resolvedInjector = injector ?? getCurrentInjector();
-  if (resolvedInjector) nodeInjectors.set(node, resolvedInjector);
+export const registerAngularField = (node: Node) => {
   Object.defineProperty(node, '$field', {
     configurable: false,
     enumerable: false,

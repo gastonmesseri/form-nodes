@@ -1259,6 +1259,53 @@ describe('form', () => {
     expect(formGroup.api.errors()).toEqual([]);
   });
 
+  it('inherits async-validation ownership from an ancestor form injector', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const address = form(
+      { city: field('Zurich') },
+      [asyncValidator(validate)],
+    );
+    const injector = Injector.create({ providers: [] });
+    form({ address }, { injector });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(address.pending()).toBe(false);
+  });
+
+  it('stops injector inheritance at a nested form boundary', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const city = field('Zurich', [asyncValidator(validate)]);
+    const address = form({ city }, { inheritInjector: false });
+    const injector = Injector.create({ providers: [] });
+    form({ address }, { injector });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
   it('aborts pending form-level validation when its owning injector is destroyed', async () => {
     let abortSignal: AbortSignal | undefined;
     let resolveValidation!: (result: { kind: string } | null) => void;

@@ -115,6 +115,7 @@ export type InternalNodeApi = NodeApi & {
   _flushControlValueOnBlur(): void;
   _clone(): Node;
   _setParent(parent: Node | null, key?: string | number): void;
+  _refreshInjector(): void;
   _registerControlBinding(binding: NodeControlBinding): () => void;
   _getControlBindingForFocus(): NodeControlBinding | undefined;
 };

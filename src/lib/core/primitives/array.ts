@@ -5,6 +5,7 @@ import type { NormalizedNode } from './form';
 import { isNil, isNotNil } from '../utils/is-nil';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
+import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
@@ -18,7 +19,7 @@ import { createAsyncValidation } from '../validation/create-async-validation';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
-import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
+import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
@@ -361,10 +362,12 @@ export function array<TDefinition extends NodeDefinition>(
     return 'valid';
   });
   let asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
+  let asyncValidationWatchRef: ReactiveWatchRef | null = null;
   const ensureAsyncValidationWatch = () => {
     if (asyncValidationWatchTarget || !arrayValidators().some(isAsyncValidator)) return;
     asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel, destroy: asyncValidation.destroy };
-    createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
+    asyncValidationWatchRef = createReactiveWatch(asyncValidationWatchTarget, null);
+    watchNodeInjector(arrayNode, injector => asyncValidationWatchRef?.setInjector(injector));
   };
   const arrayTouched = computed(() =>
     !arrayNonInteractive() && (arraySelfTouched() || arrayItems().some(item => item.$api.touched())),
@@ -634,6 +637,10 @@ export function array<TDefinition extends NodeDefinition>(
     hide: () => arraySelfHidden.set(true),
     show: () => arraySelfHidden.set(false),
   };
+  const refreshInjector = () => {
+    refreshNodeInjector(arrayNode);
+    arrayItems().forEach(item => (item as InternalNode).$api._refreshInjector());
+  };
   const internalApi = {
     ...api,
     _nodeType: 'array' as const,
@@ -646,7 +653,9 @@ export function array<TDefinition extends NodeDefinition>(
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);
       arrayKeyInParent.set(parent ? key ?? null : null);
+      refreshInjector();
     },
+    _refreshInjector: refreshInjector,
     _registerControlBinding: (binding: NodeControlBinding) => {
       arrayControlBindings.add(binding);
       return () => { arrayControlBindings.delete(binding); };
@@ -678,8 +687,10 @@ export function array<TDefinition extends NodeDefinition>(
   }) as ArrayNode<TItem>;
   reparentItems();
   markAsNode(arrayNode);
-  registerAngularField(arrayNode, resolvedOptions?.injector);
+  registerNodeInjector(arrayNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false);
+  registerAngularField(arrayNode);
   registerNodeValidatorMessages(arrayNode, resolvedOptions?.validatorMessages, resolvedOptions?.injector);
+  refreshInjector();
   ensureAsyncValidationWatch();
   return arrayNode;
 }
