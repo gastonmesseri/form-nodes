@@ -207,9 +207,8 @@ The `value` and `checked` contracts follow Angular's `FormValueControl<T>` and
 Binding precedence is deterministic when a component exposes more than one mechanism:
 
 1. `ControlValueAccessor`
-2. An explicit `provideFormNodeControl()` registration
-3. An automatically discovered signal or input/output control
-4. Native element handling
+2. An automatically discovered signal or input/output control
+3. Native element handling
 
 ## Signal model controls
 
@@ -296,66 +295,6 @@ both `input()` and decorator inputs, and components implementing `ngOnChanges` r
 changes. The optional `touch` output marks the node touched; `focus(options?)` is used by
 `node.focus()`, and `reset()` is called during the binding reset lifecycle.
 
-## Explicit registration
-
-Use `provideFormNodeControl()` when a control should declare its signal contract explicitly instead
-of relying on automatic component-metadata discovery. It remains necessary for controls implemented
-as directives or host directives because `getDebugNode()` exposes the host component instance, not
-arbitrary directive instances. Configure it once on the control—not on every consumer:
-
-```ts
-import { Component, input, model, output } from '@angular/core';
-
-import { provideFormNodeControl, type FormNodeValueControl } from '@gem/ng-forms';
-
-@Component({
-  selector: 'app-date-picker',
-  providers: [provideFormNodeControl(() => DatePicker)],
-  template: `
-    <input
-      type="date"
-      [value]="value() ?? ''"
-      [disabled]="disabled()"
-      (input)="select($any($event.target).value)"
-      (blur)="touch.emit()"
-    >
-  `,
-})
-export class DatePicker implements FormNodeValueControl<string | null> {
-  value = model<string | null>(null);
-  disabled = input(false);
-  touch = output<void>();
-
-  select(value: string) {
-    this.value.set(value || null);
-  }
-}
-```
-
-Consume it normally; the application using the component does not repeat the provider:
-
-```ts
-import { Component } from '@angular/core';
-
-import { FormNode, field, form } from '@gem/ng-forms';
-
-@Component({
-  selector: 'app-appointment-editor',
-  imports: [FormNode, DatePicker],
-  template: `
-    <app-date-picker [formNode]="appointmentForm.date" />
-    <p>Selected date: {{ appointmentForm.date() ?? 'None' }}</p>
-  `,
-})
-export class AppointmentEditor {
-  appointmentForm = form({
-    date: field<string | null>(null),
-  });
-}
-```
-
-A library-specific optional `node` signal may receive the exact bound node when the component needs direct access to additional state.
-
 ## ControlValueAccessor
 
 Existing CVA controls work without changes:
@@ -404,7 +343,7 @@ The wrapper is detected as pass-through, so only the inner control creates a bin
 ## Compatibility boundaries
 
 - Automatic signal-control discovery applies to Angular components. A control implemented as a
-  directive or host directive should use `provideFormNodeControl()`.
+  directive or host directive should use a component wrapper or `ControlValueAccessor`.
 - Native elements bind scalar fields. Use a value-model or CVA component when one control edits a
   complete object or array.
 - State inputs declared by a component take precedence over same-named native host properties.

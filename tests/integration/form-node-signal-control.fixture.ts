@@ -1,7 +1,7 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
-import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, inject, input, model, output, type OnChanges, type SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, type OnChanges, type SimpleChanges } from '@angular/core';
 
-import { field, FormNode, provideFormNodeControl, required, type Field } from '../../src/public-api';
+import { field, FormNode, required, type Field } from '../../src/public-api';
 
 @Component({
   standalone: true,
@@ -46,61 +46,6 @@ export class AotPairedValueControl {
   valueChange = output<string>();
 }
 
-@Directive({
-  standalone: true,
-  selector: 'input[aotDirectiveControl]',
-  providers: [provideFormNodeControl(() => AotDirectiveControl)],
-  host: {
-    '[value]': 'value()',
-    '(input)': 'onInput($event)',
-  },
-})
-export class AotDirectiveControl {
-  value = model('');
-  required = input(false);
-  onInput(event: Event) { this.value.set((event.target as HTMLInputElement).value); }
-}
-
-@Directive({
-  standalone: true,
-  selector: 'input[aotDirectiveCheckbox]',
-  providers: [provideFormNodeControl(() => AotDirectiveCheckbox)],
-  host: {
-    '[checked]': 'checked()',
-    '(input)': 'onInput($event)',
-  },
-})
-export class AotDirectiveCheckbox {
-  checked = model(false);
-  required = input(false);
-  onInput(event: Event) { this.checked.set((event.target as HTMLInputElement).checked); }
-}
-
-@Directive({
-  standalone: true,
-  providers: [provideFormNodeControl(() => AotTransitiveSignalControl)],
-})
-export class AotTransitiveSignalControl {
-  value = model('');
-  required = input(false);
-}
-
-@Directive({
-  standalone: true,
-  hostDirectives: [AotTransitiveSignalControl],
-})
-export class AotSignalControlBridge {}
-
-@Component({
-  standalone: true,
-  selector: 'aot-transitive-signal-control',
-  hostDirectives: [AotSignalControlBridge],
-  template: `<button type="button" (click)="control.value.set('AOT transitive value')">{{ control.value() }}</button>`,
-})
-export class AotTransitiveControlComponent {
-  readonly control = inject(AotTransitiveSignalControl);
-}
-
 @Component({
   standalone: true,
   selector: 'aot-delegating-control',
@@ -124,21 +69,15 @@ export class AotPassThroughHost {
 @Component({
   standalone: true,
   selector: 'aot-signal-control-host',
-  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, AotDirectiveControl, AotDirectiveCheckbox, AotTransitiveControlComponent, FormNode],
+  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, FormNode],
   template: `
     <aot-signal-value-control [formNode]="name" />
     <aot-signal-checkbox-control [formNode]="active" />
     <aot-paired-value-control [formNode]="pairedName" />
-    <input aotDirectiveControl [formNode]="directiveName">
-    <input type="checkbox" aotDirectiveCheckbox [formNode]="directiveActive">
-    <aot-transitive-signal-control [formNode]="transitiveName" />
   `,
 })
 export class AotSignalControlHost {
   name = field('AOT initial', [required], { nullable: false });
   active = field(false, { nullable: false });
   pairedName = field('AOT paired initial', { nullable: false });
-  directiveName = field('AOT directive initial', [required], { nullable: false });
-  directiveActive = field(false, [required], { nullable: false });
-  transitiveName = field('AOT transitive initial', [required], { nullable: false });
 }

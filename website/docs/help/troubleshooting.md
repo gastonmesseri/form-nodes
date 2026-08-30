@@ -41,7 +41,7 @@ one supported Angular contract:
 - `value = model(...)` or `checked = model(...)`.
 - A matching `value`/`valueChange` or `checked`/`checkedChange` pair.
 - `ControlValueAccessor` registered through `NG_VALUE_ACCESSOR`.
-- An explicit `provideFormNodeControl()` adapter for an unusual control.
+- An automatically discovered signal-control component.
 
 See [Custom controls](../guides/custom-controls.md) for the supported shapes and precedence.
 

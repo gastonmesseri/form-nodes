@@ -13,7 +13,7 @@ import type { ValidationError } from '../../validation/validation.type';
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
 import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../../types/node.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
-import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
+import type { FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
@@ -72,8 +72,6 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private lastViewValue: unknown = Symbol('unset');
 
-  private signalControl = inject(FORM_NODE_CONTROL, { optional: true, self: true });
-
   private customControlInputNames: ReadonlySet<string> = new Set();
 
   private explicitPassThrough = inject(FORM_NODE_PASS_THROUGH, { optional: true, self: true }) ?? false;
@@ -115,11 +113,11 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     }
     if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) return;
     const accessor = selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
-    const signalControl = this.signalControl ?? discoverSignalControl(this.element);
+    const signalControl = discoverSignalControl(this.element);
     if (accessor) this.connectAccessor(accessor);
     else if (signalControl) this.connectSignalCustomControl(signalControl as FormNodeControl<NodeValue<TNode>, TNode>);
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
-    else throw new Error('formNode: the host must be a native form control, provide a signal custom control, or provide ControlValueAccessor');
+    else throw new Error('formNode: the host must be a native form control, a recognized signal custom-control component, or provide ControlValueAccessor');
     this.bindNodeState();
     this.registerControlBinding();
     this.warnWhenHidden();
