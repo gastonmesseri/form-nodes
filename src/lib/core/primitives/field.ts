@@ -235,6 +235,7 @@ export function field<TValue>(
     fieldTouched.set(false);
     fieldDirty.set(false);
     notifyExternalValidationReset(fieldNode);
+    fieldControlBindings.forEach(binding => binding.reset?.());
   };
   const members = {
     form: fieldForm,

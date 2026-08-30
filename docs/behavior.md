@@ -1840,9 +1840,9 @@ TypeScript from calling it or accessing any runtime `FieldTree` property, includ
 function-object members. Consumers select the Gem Forms node first and use `$field` only as the
 terminal template-binding adapter.
 
-At leaf bindings, Angular control interaction is bidirectional: input-driven dirty state and
-blur-driven touched state update the library node, Angular reset clears both flags in the node, and
-node calls can independently set or clear either flag without resetting the other. Availability is
+At leaf bindings, control interaction flows back into Gem Forms: input-driven dirty state and
+blur-driven touched state update the library node, while node calls can independently set or clear
+either flag without resetting the other. Availability is
 intentionally directional: disabled, readonly, hidden, and required are derived schema state in
 Angular, so the library node is their source and `[formField]` reflects them into Angular and the
 control. Angular does not expose reverse setters for those states.
@@ -1864,7 +1864,19 @@ first one registered. Angular's binding-level `focus()` is invoked, preserving a
 own focus implementation and `FocusOptions`. Destroyed bindings unregister automatically, and a
 `FormField` rebound to another `$field` moves its focus registration without leaving a stale entry.
 
-Independent clearing uses the runtime `FieldNode.markAsUntouched()` and
+Reset is intentionally node-owned. A library `reset()` updates Angular's value and raw control
+value, clears Angular parsing state, and invokes every native, custom-control, or CVA reset hook in
+the affected subtree. It also retains Gem Forms semantics for explicit values, external errors,
+interaction state, and pending debounce. The adapter does not treat Angular's internal field-state
+`reset()` as a second entry point: `$field` is opaque application infrastructure, and consumers
+reset through the Gem node API instead.
+
+Angular 22.1.4 `FormRoot` handles submission but does not listen for the native `reset` event. A
+native `<form>` containing `$field`-backed controls should use `[formNode]` on the form root when it
+needs Gem Forms reset behavior; the root directive resets the library tree, and the adapter then
+resets all Angular `FormField` controls.
+
+Independent interaction clearing uses the runtime `FieldNode.markAsUntouched()` and
 `FieldNode.markAsPristine()` methods present in Angular 22.1.4. Angular omits those methods from its
 public `FieldState` type even though its implementation exposes them, so this access remains
 isolated in the adapter, regression-tested, and listed in the Angular upgrade checklist. Using the

@@ -84,8 +84,7 @@ control edit takes precedence. This deterministic rule protects user input from 
 races; when no control edit occurred, the programmatic node value remains authoritative.
 
 For a bound leaf field, control interaction flows back naturally: input marks the Gem Forms field
-dirty, blur marks it touched, and an Angular field reset clears both interaction flags. Calls such
-as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so
+dirty and blur marks it touched. Calls such as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so
 clearing one does not clear the other.
 
 The same state remains consistent through materialized forms, groups, arrays, and their ancestors.
@@ -99,6 +98,26 @@ first connected control in DOM order is chosen. Custom Angular controls retain t
 implementation, including `FocusOptions`, and destroyed or rebound controls are removed from the
 old node automatically. Calling `focus()` on a form, group, or array can discover the first adapted
 control among its descendants.
+
+Reset through the Gem node API. Calling `node.reset()` resets Angular's control state, invokes
+native, custom-control, or CVA reset handling, and cancels pending Gem debounce. Explicit reset
+values update the control as well. A reset without a value keeps the last committed Gem Forms value
+rather than committing text that was still waiting for debounce. Angular's internal field-state
+reset is deliberately not another application API: `$field` is opaque and Gem Forms remains the
+sole authority.
+
+For native form reset events, bind the form root with `[formNode]` while its controls may continue
+using `[formField]`:
+
+```html
+<form [formNode]="profileForm">
+  <input [formField]="profileForm.displayName.$field">
+</form>
+```
+
+Angular 22's `FormRoot` handles submission but does not handle the native `reset` event. The
+`[formNode]` root receives that event, resets Gem Forms, and the adapter resets every Angular-bound
+control in the subtree.
 
 Availability is intentionally node-owned. Calling `disable()`, `markAsReadonly()`, or `hide()` on
 the Gem Forms node updates Angular's field state and the bound control. Angular models disabled,

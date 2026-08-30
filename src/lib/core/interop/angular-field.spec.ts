@@ -440,6 +440,68 @@ describe('Angular Signal Forms field adapter', () => {
     expect(control.focus).toHaveBeenCalledWith(options);
   });
 
+  it('propagates node subtree resets to control hooks and cancels pending debounce', () => {
+    @Component({
+      selector: 'resettable-control',
+      template: '',
+    })
+    class ResettableControl {
+      value = input<string | null>('');
+      valueChange = output<string | null>();
+      reset = vi.fn<() => void>();
+    }
+    registerSignalModelForJit(ResettableControl, 'value');
+
+    @Component({
+      template: `<resettable-control [formField]="profile.name.$field" />`,
+      imports: [ResettableControl, FormField],
+    })
+    class Host {
+      profile = form({
+        name: field('David', { debounce: 'blur' }),
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    const profile = fixture.componentInstance.profile;
+    const control = fixture.debugElement.children[0]!.componentInstance as ResettableControl;
+    const angularProfile = getAngularField<{ name: string | null }>(profile);
+
+    control.valueChange.emit('Pending');
+    TestBed.flushEffects();
+    expect(profile.name()).toBe('David');
+    expect(profile.name.controlValue()).toBe('Pending');
+    expect(profile.name.debouncing()).toBe(true);
+
+    profile.reset({ name: 'Library reset' });
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(profile.name()).toBe('Library reset');
+    expect(profile.name.controlValue()).toBe('Library reset');
+    expect(profile.name.debouncing()).toBe(false);
+    expect(angularProfile.name().value()).toBe('Library reset');
+    expect(angularProfile.name().controlValue()).toBe('Library reset');
+    expect(control.value()).toBe('Library reset');
+    expect(control.reset).toHaveBeenCalledTimes(1);
+
+    control.valueChange.emit('Another pending value');
+    TestBed.flushEffects();
+    expect(profile.name.debouncing()).toBe(true);
+
+    profile.name.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(profile.name()).toBe('Library reset');
+    expect(profile.name.controlValue()).toBe('Library reset');
+    expect(profile.name.debouncing()).toBe(false);
+    expect(control.value()).toBe('Library reset');
+    expect(control.reset).toHaveBeenCalledTimes(2);
+  });
+
   it('routes formField input through numeric node debounce', () => {
     vi.useFakeTimers();
 
