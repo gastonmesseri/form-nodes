@@ -47,7 +47,7 @@ const myForm = form({
   // a: array()
   items: array({
     name: field(''),
-    age: field(0),
+    age: field(null),
   }, {
     initialValue: [{ name: 'Marco', age: 30 }],
     validators: [minLength(1)],
@@ -55,6 +55,7 @@ const myForm = form({
   }),
   whatIsThis: field(undefined),
   something: field('')
+  // a: field(2)
 });
 // claro creo que tampoco necesitariamos un arbol completo de FieldTree, es decir, solo con un nodo de FieldTree que se bindee a un [formField] yo creo que podriamos reflejar y recibir entre ese nodo y nuestro nodo de nuestra libreria
 
@@ -62,14 +63,17 @@ myForm.whatIsThis.set(23);
 myForm.whatIsThis();
 myForm.name.$field;
 myForm.address.city();
-// myForm.controls.address.signals.value();
-// myForm.$field();
-// myForm.$field().errorSummary;
-// myForm.$field.toString;
+myForm.$field();
+myForm.$field().errorSummary;
+myForm.$field.toString;
+myForm.name.debouncing;
+myForm.items[0]?.age.set(23);
+myForm.items[0]?.name.set('');
+myForm.age.set
 
 myForm.sons1.insert(1)
 
-myForm.sons1[0]?.getError('')
+myForm.sons1[0]?.getError('required');
 
 const directiveInstance: FormNode<typeof myForm.age> = {} as any;
 const nodeFromDirective = directiveInstance.node();

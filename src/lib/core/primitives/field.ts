@@ -40,33 +40,43 @@ export function field(
   value: null,
   options?: NullableFieldOptions<unknown>,
 ): Field<unknown>;
+/** Creates a field inferred as `Field<unknown>` from `null`, with positional validators. */
 export function field(
   value: null,
   validators: ValidatorSource<unknown>,
   options?: NullableFieldOptions<unknown>,
 ): Field<unknown>;
+/**
+ * Creates a nullable field whose future value type is not yet known from an `undefined` initial value.
+ * Use an explicit generic such as `field<string>(undefined)` when the eventual value type is known.
+ */
 export function field(
   value: undefined,
   options?: NullableFieldOptions<unknown>,
 ): Field<unknown>;
+/** Creates a field inferred as `Field<unknown>` from `undefined`, with positional validators. */
 export function field(
   value: undefined,
   validators: ValidatorSource<unknown>,
   options?: NullableFieldOptions<unknown>,
 ): Field<unknown>;
+/** Creates a non-nullable field when `{ nullable: false }` is explicitly configured. */
 export function field<TValue extends {}>(
   value: TValue,
   options: NonNullableFieldOptions<NoInfer<TValue>>,
 ): Field<TValue>;
+/** Creates a non-nullable field with positional validators when `{ nullable: false }` is configured. */
 export function field<TValue extends {}>(
   value: TValue,
   validators: ValidatorSource<NoInfer<TValue>>,
   options: NonNullableFieldOptions<NoInfer<TValue>>,
 ): Field<TValue>;
+/** Creates a nullable field from an initial value and options. Omitting the value initializes it to `null`. */
 export function field<TValue>(
   value?: TValue | null,
   options?: NullableFieldOptions<NoInfer<TValue>>,
 ): Field<TValue | null>;
+/** Creates a nullable field from an initial value, positional validators, and optional configuration. */
 export function field<TValue>(
   value?: TValue | null,
   validators?: ValidatorSource<NoInfer<TValue | null>>,

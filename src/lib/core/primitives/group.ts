@@ -33,6 +33,7 @@ export function group<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
 ): Group<NormalizedNodes<TDefinitions>>;
+/** Creates a fixed object-shaped structural node with positional validators and optional configuration. */
 export function group<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   validators?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
