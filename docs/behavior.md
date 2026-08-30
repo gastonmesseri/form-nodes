@@ -1874,14 +1874,26 @@ and one slot is reserved when the initial list is empty so a normal reactive pat
 later. Activating more simultaneous patterns than the initial slot count is recorded as a later
 compatibility enhancement because Angular schemas have a fixed rule structure after creation.
 
-Interaction synchronization applies to the complete materialized tree, not only bound leaves. A
+Interaction synchronization applies to the complete current tree, not only bound leaves. A
 touched or dirty descendant makes its Angular and library ancestors touched or dirty through their
 normal aggregation rules. Marking an aggregate as touched propagates to descendants unless
 `skipDescendants` is requested; marking an aggregate dirty affects only that aggregate. Reset
 clears both flags throughout the subtree. Disabled, readonly, and hidden nodes temporarily report
 untouched and pristine on both sides while retaining their underlying flags, which become visible
-again when the node returns to an interactive state. Existing array items follow the same rules;
-items added or reconciled after adapter creation are covered by the separate dynamic-array work.
+again when the node returns to an interactive state.
+
+Dynamic array changes reconcile the adapter after creation. `push()`, `insert()`, `removeAt()`,
+`clear()`, `set()`, `reset()`, `move()`, `moveUp()`, `moveDown()`, `swap()`, and `trackBy`
+reconciliation add, remove, or remap requested Angular paths without replacing the root `$field`.
+The adapter does not eagerly mirror every array descendant: a node is connected when application
+code or a template reads its `$field`. Retained connected Gem items preserve their identity and
+interaction state while their `$field` path follows the new index. Synchronization for a removed
+connected node is destroyed before Angular removes the corresponding field, avoiding reads from an
+Angular orphan field. A newly rendered descendant receives value, interaction, availability,
+validation, constraint, binding, and parse-error synchronization when its `$field` is evaluated.
+Angular tracks object array entries by identity and primitive or nested-array entries by index, as
+in Angular 22.1.4. The adapter still remaps each current Angular path to the authoritative Gem item
+connected node after either kind of update.
 
 Every live Angular `FormFieldBinding` is also registered as a control binding on its original
 library node. Calling `focus()` on a field therefore works identically for `[formNode]` and
@@ -1917,7 +1929,10 @@ explicit `injector` option before using `$field`; otherwise access throws a desc
 The implementation was derived from Angular Signal Forms 22.1.4 at commit
 `898380974d49cf7976e9d89cc74a0801a26ce7b1`, specifically
 `packages/forms/signals/src/api/structure.ts`, `api/types.ts`,
-`directive/form_field.ts`, and the field and web binding tests. A real Angular `FieldTree` is
+`field/structure.ts`, `directive/form_field.ts`,
+`packages/forms/signals/test/node/field_node.spec.ts`,
+`packages/forms/signals/test/web/form_field.spec.ts`, and
+`packages/forms/signals/test/web/orphan_repro.spec.ts`. A real Angular `FieldTree` is
 required because `[formField]` resolves Angular's private `FieldNode`; a structurally compatible
 object is insufficient.
 

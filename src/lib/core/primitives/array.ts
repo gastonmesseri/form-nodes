@@ -258,10 +258,20 @@ export function array<TDefinition extends NodeDefinition>(
     createdDefinitions.add(definition);
     if (!isNode(definition)) (Object.values(definition) as NodeDefinition[]).forEach(trackDefinition);
   };
-  const createItem = (): TItem => {
+  const instantiateItem = (): TItem => {
     const definition = factory();
     trackDefinition(definition);
     return (isNode(definition) ? definition : group(definition)) as TItem;
+  };
+  let preparedItem: TItem | undefined;
+  const createItem = (): TItem => {
+    const item = preparedItem ?? instantiateItem();
+    preparedItem = undefined;
+    return item;
+  };
+  const getSchemaSample = (): TItem => {
+    preparedItem ??= instantiateItem();
+    return preparedItem;
   };
   const initialValues = typeof normalizedInitial === 'number' ? null : [...normalizedInitial];
   const initialCount = typeof normalizedInitial === 'number' ? normalizedInitial : normalizedInitial.length;
@@ -631,6 +641,7 @@ export function array<TDefinition extends NodeDefinition>(
     _controlValue: api.controlValue,
     _setControlValue: (value: TInput) => arrayControlValueBuffer.set(normalizeArrayValue(value)),
     _flushControlValueOnBlur: api.flush,
+    _getSchemaSample: getSchemaSample,
     _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);

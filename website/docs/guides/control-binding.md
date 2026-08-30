@@ -65,6 +65,36 @@ error payload—including `message`, constraint data, and custom properties—an
 `targetNode` to the corresponding Angular field path. Angular-originated parse errors are not fed
 back into that same Angular state a second time.
 
+## Dynamic arrays with `formField`
+
+The same `$field` adapter follows dynamic `array()` operations without eagerly adapting the complete
+collection. When Angular renders an item and evaluates its `$field`, that node receives its field
+path, validators, constraints, availability, touched and dirty synchronization, and control
+binding. Removing a connected item disposes its synchronization; moving, swapping, or reconciling
+a retained `trackBy` item keeps the Gem node and its state while updating its Angular path.
+
+```ts
+myForm = form({
+  people: array({
+    id: field(0),
+    displayName: field('', [minLength(2)]),
+  }),
+});
+
+myForm.people.push({ id: 1, displayName: 'Ada' });
+myForm.people.push({ id: 2, displayName: 'Grace' });
+myForm.people.move(0, 1);
+```
+
+```html
+@for (person of myForm.people; track person) {
+  <input [formField]="person.displayName.$field">
+}
+```
+
+Gem remains the source of collection identity and operations. Use `array()` methods rather than
+trying to mutate the opaque Angular `$field`.
+
 Date-like controls can change native validity without emitting an input event. Browser bindings monitor those transitions; the mechanism is CSP nonce-aware and is not installed during server rendering.
 
 ## Querying the binding

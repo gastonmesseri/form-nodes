@@ -206,6 +206,61 @@ describe('FormNode in Chromium', () => {
     expect(code.maxLength).toBe(8);
   });
 
+  it('reconciles dynamic array formField controls without orphaning moved or removed items', () => {
+    @Component({
+      template: `
+        @for (person of people; track person) {
+          <input [formField]="person.name.$field">
+        }
+      `,
+      imports: [FormField],
+    })
+    class Host {
+      people = array({
+        id: field(0),
+        name: field('', [minLength(2)]),
+      }, {
+        trackBy: 'id',
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const people = fixture.componentInstance.people;
+
+    people.push({ id: 1, name: 'Ada' });
+    people.push({ id: 2, name: 'Grace' });
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    const initialInputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    const graceInput = initialInputs[1]!;
+
+    graceInput.value = 'Grace Hopper';
+    dispatch(graceInput, 'input');
+    dispatch(graceInput, 'blur');
+    TestBed.flushEffects();
+    expect(people[1]!.name()).toBe('Grace Hopper');
+    expect(people[1]!.name.touched()).toBe(true);
+    expect(graceInput.minLength).toBe(2);
+
+    people.move(1, 0);
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    const movedInputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    expect(movedInputs[0]).toBe(graceInput);
+    expect(movedInputs[0]!.value).toBe('Grace Hopper');
+    expect(people[0]!.name.touched()).toBe(true);
+
+    graceInput.focus();
+    people.removeAt(0);
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    const remainingInput = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(graceInput.isConnected).toBe(false);
+    expect(remainingInput.value).toBe('Ada');
+    expect(people.length()).toBe(1);
+  });
+
   it('bridges a native form reset through formNode into formField controls', () => {
     @Component({
       template: `

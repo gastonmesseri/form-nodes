@@ -1,5 +1,5 @@
-import { assertInInjectionContext, computed, effect, inject, Injector, signal, untracked, type WritableSignal } from '@angular/core';
-import { disabled, form as createAngularForm, hidden, MAX, MAX_DATE, MAX_LENGTH, MAX_NUMBER, metadata, MIN, MIN_DATE, MIN_LENGTH, MIN_NUMBER, PATTERN, readonly as configureReadonly, required, validate, type FieldTree, type FormFieldBinding, type SchemaPath } from '@angular/forms/signals';
+import { assertInInjectionContext, computed, effect, inject, Injector, signal, untracked, type EffectRef, type WritableSignal } from '@angular/core';
+import { applyEach, disabled, form as createAngularForm, hidden, MAX, MAX_DATE, MAX_LENGTH, MAX_NUMBER, metadata, MIN, MIN_DATE, MIN_LENGTH, MIN_NUMBER, PATTERN, readonly as configureReadonly, required, validate, type FieldTree, type FormFieldBinding, type SchemaPath } from '@angular/forms/signals';
 
 import { shallowEqual } from '../utils/shallow-equal';
 import type { InternalNode, Node } from '../types/node.type';
@@ -10,6 +10,7 @@ import { registerExternalValidationErrors } from '../validation/external-validat
 type AngularFieldAdapter = {
   readonly fieldTree: FieldTree<any>;
   readonly model: WritableSignal<any>;
+  connect(node: Node, fieldTree: FieldTree<any>): void;
 };
 
 type AngularControlValueSnapshots = WeakMap<Node, unknown>;
@@ -32,9 +33,13 @@ type ConstraintNode = Node & {
   pattern(): readonly RegExp[];
 };
 
+type ArrayNodeWithSchemaSample = InternalNode & {
+  $api: InternalNode['$api'] & { _getSchemaSample(): Node };
+};
+
 const nodeInjectors = new WeakMap<Node, Injector>();
 const rootAdapters = new WeakMap<Node, AngularFieldAdapter>();
-const angularFieldNodes = new WeakMap<FieldTree<any>, Node>();
+const angularFieldNodes = new WeakMap<object, Node>();
 const angularFormNodeBindings = new WeakMap<FormFieldBinding, FormNodeBinding>();
 const adaptedAngularFormNodeBindings = new WeakSet<FormNodeBinding>();
 
@@ -67,31 +72,35 @@ const getChildren = (node: InternalNode): readonly Node[] => {
   return [];
 };
 
+const resolveConfiguredNode = (resolveNode: () => Node, fieldTree: object): Node => {
+  return angularFieldNodes.get(fieldTree) ?? resolveNode();
+};
+
 const configureConstraints = (path: SchemaPath<any>, resolveNode: () => Node) => {
-  const resolveConstraintNode = () => resolveNode() as ConstraintNode;
-  metadata(path, MIN_NUMBER, () => {
-    const value = resolveConstraintNode().min();
+  const resolveConstraintNode = (fieldTree: object) => resolveConfiguredNode(resolveNode, fieldTree) as ConstraintNode;
+  metadata(path, MIN_NUMBER, ({ fieldTree }) => {
+    const value = resolveConstraintNode(fieldTree).min();
     return typeof value === 'number' ? value : undefined;
   });
-  metadata(path, MIN_DATE, () => {
-    const value = resolveConstraintNode().min();
+  metadata(path, MIN_DATE, ({ fieldTree }) => {
+    const value = resolveConstraintNode(fieldTree).min();
     return value instanceof Date ? value : undefined;
   });
-  metadata(path, MIN, () => resolveConstraintNode().min() instanceof Date ? MIN_DATE : MIN_NUMBER);
-  metadata(path, MAX_NUMBER, () => {
-    const value = resolveConstraintNode().max();
+  metadata(path, MIN, ({ fieldTree }) => resolveConstraintNode(fieldTree).min() instanceof Date ? MIN_DATE : MIN_NUMBER);
+  metadata(path, MAX_NUMBER, ({ fieldTree }) => {
+    const value = resolveConstraintNode(fieldTree).max();
     return typeof value === 'number' ? value : undefined;
   });
-  metadata(path, MAX_DATE, () => {
-    const value = resolveConstraintNode().max();
+  metadata(path, MAX_DATE, ({ fieldTree }) => {
+    const value = resolveConstraintNode(fieldTree).max();
     return value instanceof Date ? value : undefined;
   });
-  metadata(path, MAX, () => resolveConstraintNode().max() instanceof Date ? MAX_DATE : MAX_NUMBER);
-  metadata(path, MIN_LENGTH, () => resolveConstraintNode().minLength() ?? undefined);
-  metadata(path, MAX_LENGTH, () => resolveConstraintNode().maxLength() ?? undefined);
-  const patternSlots = Math.max(resolveConstraintNode().pattern().length, 1);
+  metadata(path, MAX, ({ fieldTree }) => resolveConstraintNode(fieldTree).max() instanceof Date ? MAX_DATE : MAX_NUMBER);
+  metadata(path, MIN_LENGTH, ({ fieldTree }) => resolveConstraintNode(fieldTree).minLength() ?? undefined);
+  metadata(path, MAX_LENGTH, ({ fieldTree }) => resolveConstraintNode(fieldTree).maxLength() ?? undefined);
+  const patternSlots = Math.max((resolveNode() as ConstraintNode).pattern().length, 1);
   for (let index = 0; index < patternSlots; index++) {
-    metadata(path, PATTERN, () => resolveConstraintNode().pattern()[index]);
+    metadata(path, PATTERN, ({ fieldTree }) => resolveConstraintNode(fieldTree).pattern()[index]);
   }
 };
 
@@ -103,12 +112,12 @@ const toAngularValidationError = (error: ValidationError.WithTargetNode<Node>): 
 };
 
 const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: Node) => {
-  disabled(path, { when: () => resolveNode()!.$api.disabled() });
-  configureReadonly(path, { when: () => resolveNode()!.$api.readonly() });
-  hidden(path, { when: () => resolveNode()!.$api.hidden() });
-  required(path, { when: () => resolveNode()!.$api.required() });
-  validate(path, () => {
-    const targetNode = resolveNode();
+  disabled(path, { when: ({ fieldTree }) => resolveConfiguredNode(resolveNode, fieldTree).$api.disabled() });
+  configureReadonly(path, { when: ({ fieldTree }) => resolveConfiguredNode(resolveNode, fieldTree).$api.readonly() });
+  hidden(path, { when: ({ fieldTree }) => resolveConfiguredNode(resolveNode, fieldTree).$api.hidden() });
+  required(path, { when: ({ fieldTree }) => resolveConfiguredNode(resolveNode, fieldTree).$api.required() });
+  validate(path, ({ fieldTree }) => {
+    const targetNode = resolveConfiguredNode(resolveNode, fieldTree);
     return (getRootNode(targetNode).$api.allErrors() as readonly ValidationError.WithTargetNode<Node>[])
       .filter(error => error.targetNode === targetNode && (!error.formNode || !adaptedAngularFormNodeBindings.has(error.formNode)))
       .map(error => toAngularValidationError(error));
@@ -116,6 +125,12 @@ const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: N
 
   const internalSample = sample as InternalNode;
   if (internalSample.$api._nodeType === 'field') configureConstraints(path, resolveNode);
+  if (internalSample.$api._nodeType === 'array') {
+    const sampleItem = getChildren(internalSample)[0]
+      ?? (internalSample as ArrayNodeWithSchemaSample).$api._getSchemaSample();
+    applyEach(path, itemPath => configureNode(itemPath as unknown as SchemaPath<any>, () => sampleItem, sampleItem));
+    return;
+  }
   if (internalSample.$api._nodeType !== 'form' && internalSample.$api._nodeType !== 'group') return;
   const children = (internalSample.$api as typeof internalSample.$api & { children: Record<string, Node> }).children;
   Object.entries(children).forEach(([key, child]) => {
@@ -130,14 +145,14 @@ const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: N
   });
 };
 
-const synchronizeInteractionState = (node: Node, fieldTree: FieldTree<any>, injector: Injector) => {
+const synchronizeInteractionState = (node: Node, fieldTree: FieldTree<any>, injector: Injector): EffectRef => {
   const state = fieldTree() as AngularInteractionState;
   let previousNodeTouched = node.$api.touched();
   let previousFieldTouched = state.touched();
   let previousNodeDirty = node.$api.dirty();
   let previousFieldDirty = state.dirty();
 
-  effect(() => {
+  return effect(() => {
     const nodeTouched = node.$api.touched();
     const fieldTouched = state.touched();
     const nodeDirty = node.$api.dirty();
@@ -161,10 +176,10 @@ const synchronizeInteractionState = (node: Node, fieldTree: FieldTree<any>, inje
   }, { injector });
 };
 
-const synchronizeTreeState = (node: Node, fieldTree: FieldTree<any>, injector: Injector) => {
+const synchronizeNodeState = (node: Node, fieldTree: FieldTree<any>, injector: Injector): (() => void) => {
   angularFieldNodes.set(fieldTree, node);
-  synchronizeInteractionState(node, fieldTree, injector);
-  effect((onCleanup) => {
+  const interactionEffect = synchronizeInteractionState(node, fieldTree, injector);
+  const bindingEffect = effect((onCleanup) => {
     const unregister = fieldTree().formFieldBindings().flatMap((binding) => {
       const angularBinding = binding as AngularFieldBindingWithParseErrors;
       const adaptedBinding = getFormNodeBindingForAngularField(binding)!;
@@ -187,11 +202,42 @@ const synchronizeTreeState = (node: Node, fieldTree: FieldTree<any>, injector: I
     });
     onCleanup(() => unregister.forEach(cleanup => cleanup()));
   }, { injector });
-  const children = getChildren(node as InternalNode);
-  children.forEach((child) => {
-    const key = child.$api.keyInParent()!;
-    synchronizeTreeState(child, (fieldTree as unknown as Record<PropertyKey, FieldTree<any>>)[key]!, injector);
-  });
+  return () => {
+    angularFieldNodes.delete(fieldTree);
+    interactionEffect.destroy();
+    bindingEffect.destroy();
+  };
+};
+
+const createConnectedNodeSynchronizer = (root: Node, injector: Injector) => {
+  const synchronizedNodes = new Map<Node, { readonly fieldTree: FieldTree<any>; readonly cleanup: () => void }>();
+  const prune = () => {
+    synchronizedNodes.forEach((entry, node) => {
+      if (getRootNode(node) === root) return;
+      entry.cleanup();
+      synchronizedNodes.delete(node);
+    });
+  };
+  const connect = (node: Node, fieldTree: FieldTree<any>) => {
+    const current = synchronizedNodes.get(node);
+    if (current?.fieldTree === fieldTree) return;
+    current?.cleanup();
+    synchronizedNodes.set(node, {
+      fieldTree,
+      cleanup: untracked(() => synchronizeNodeState(node, fieldTree, injector)),
+    });
+  };
+  const reconcile = (rootFieldTree: FieldTree<any>) => {
+    prune();
+    synchronizedNodes.forEach((_entry, node) => {
+      const fieldTree = node.$api.path().reduce<FieldTree<any>>(
+        (current, key) => (current as unknown as Record<string, FieldTree<any>>)[key]!,
+        rootFieldTree,
+      );
+      connect(node, fieldTree);
+    });
+  };
+  return { connect, prune, reconcile };
 };
 
 const captureAngularControlValues = (node: Node, fieldTree: FieldTree<any>, snapshots: AngularControlValueSnapshots) => {
@@ -253,6 +299,7 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
   let previousAngularValue = model();
   const angularControlValues: AngularControlValueSnapshots = new WeakMap();
   captureAngularControlValues(root, fieldTree, angularControlValues);
+  const connectedNodeSynchronizer = createConnectedNodeSynchronizer(root, injector);
 
   effect(() => {
     const nodeValue = root();
@@ -261,6 +308,7 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
     const angularChanged = !shallowEqual(angularValue, previousAngularValue);
     let routedControlValue = false;
 
+    if (nodeChanged) untracked(() => connectedNodeSynchronizer.prune());
     if (angularChanged) {
       routedControlValue = untracked(() => routeAngularControlValues(root, fieldTree, angularControlValues));
     }
@@ -272,9 +320,10 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
     previousNodeValue = root();
     previousAngularValue = model();
     captureAngularControlValues(root, fieldTree, angularControlValues);
+    untracked(() => connectedNodeSynchronizer.reconcile(fieldTree));
   }, { injector });
-  synchronizeTreeState(root, fieldTree, injector);
-  return { fieldTree, model };
+  connectedNodeSynchronizer.connect(root, fieldTree);
+  return { fieldTree, model, connect: connectedNodeSynchronizer.connect };
 };
 
 export const getAngularField = <TValue>(node: Node): FieldTree<TValue> => {
@@ -288,10 +337,12 @@ export const getAngularField = <TValue>(node: Node): FieldTree<TValue> => {
     adapter = untracked(() => createAdapter(root, injector));
     rootAdapters.set(root, adapter);
   }
-  return node.$api.path().reduce<FieldTree<any>>(
+  const fieldTree = node.$api.path().reduce<FieldTree<any>>(
     (fieldTree, key) => (fieldTree as unknown as Record<string, FieldTree<any>>)[key]!,
     adapter.fieldTree,
-  ) as FieldTree<TValue>;
+  );
+  adapter.connect(node, fieldTree);
+  return fieldTree as FieldTree<TValue>;
 };
 
 export const registerAngularField = (node: Node, injector?: Injector) => {
