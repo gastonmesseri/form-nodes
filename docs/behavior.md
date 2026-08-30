@@ -1847,6 +1847,15 @@ intentionally directional: disabled, readonly, hidden, and required are derived 
 Angular, so the library node is their source and `[formField]` reflects them into Angular and the
 control. Angular does not expose reverse setters for those states.
 
+Interaction synchronization applies to the complete materialized tree, not only bound leaves. A
+touched or dirty descendant makes its Angular and library ancestors touched or dirty through their
+normal aggregation rules. Marking an aggregate as touched propagates to descendants unless
+`skipDescendants` is requested; marking an aggregate dirty affects only that aggregate. Reset
+clears both flags throughout the subtree. Disabled, readonly, and hidden nodes temporarily report
+untouched and pristine on both sides while retaining their underlying flags, which become visible
+again when the node returns to an interactive state. Existing array items follow the same rules;
+items added or reconciled after adapter creation are covered by the separate dynamic-array work.
+
 Independent clearing uses the runtime `FieldNode.markAsUntouched()` and
 `FieldNode.markAsPristine()` methods present in Angular 22.1.4. Angular omits those methods from its
 public `FieldState` type even though its implementation exposes them, so this access remains
