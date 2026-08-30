@@ -235,6 +235,8 @@ Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` imp
 | `provideFormNodePassThrough()` | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |
+| `injectBoundControl<T>()` | Reads normalized state from the form binding on a custom-component host. |
+| `BoundControl<T>` | Source-neutral signal facade returned by `injectBoundControl()`. |
 
 Configure binding classes once in the application providers for the common application-wide case:
 

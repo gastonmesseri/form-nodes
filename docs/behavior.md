@@ -2209,14 +2209,20 @@ errors normally.
 
 The first skipped write for each control instance and input name emits one descriptive console
 warning; subsequent reactive attempts do not repeat it. The warning confirms that the control
-remains connected and recommends accepting the bound node through a writable `node` signal and
-deriving optional state from it. It also mentions `ControlValueAccessor` as an alternative for
-value and disabled interoperability, not as a replacement for `readonly`, `required`, errors, or
-the rest of the optional state surface.
+remains connected and recommends `injectBoundControl()` as the stable way to consume bound state
+without writable state inputs, unless the component already consumes that facade. It also mentions
+`ControlValueAccessor` as an alternative for value and disabled interoperability, not as a
+replacement for `readonly`, `required`, errors, or the rest of the optional state surface.
 
 This adapter is intentionally a temporary compatibility boundary. Angular's relevant implementation is `packages/core/src/render3/instructions/write_to_directive_input.ts`, `packages/core/src/render3/features/ng_onchanges_feature.ts`, `packages/core/src/render3/apply_value_input_field.ts`, and `packages/core/src/render3/component_ref.ts`. Neither the structurally discovered input node, its `applyValueToInputSignal()` method, nor `ɵcmp.setInput` is covered by Angular's public compatibility guarantees.
 
-Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an existing component host has no public API for obtaining that `ComponentRef`. Public `getDebugNode()` safely exposes the component instance, not arbitrary directive or host-directive instances and not a supported input writer. Its component discovery is covered separately in a production-mode Chromium process using a component compiled with full AOT, so the automatic path does not rely on development-mode debug metadata. Signal-control discovery is therefore intentionally limited to components. Every Angular upgrade must re-evaluate whether public APIs can replace the input writer. Consumers that want to avoid the input-writing compatibility boundary can expose a writable `model()` for the edited value and a writable `node` signal, then derive status directly from `node()`.
+Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an existing component host has no public API for obtaining that `ComponentRef`. Public `getDebugNode()` safely exposes the component instance, not arbitrary directive or host-directive instances and not a supported input writer. Its component discovery is covered separately in a production-mode Chromium process using a component compiled with full AOT, so the automatic path does not rely on development-mode debug metadata. Signal-control discovery is therefore intentionally limited to components. Every Angular upgrade must re-evaluate whether public APIs can replace the input writer. Consumers that want to avoid the input-writing compatibility boundary can call `injectBoundControl()` in the custom component and read its normalized signals instead.
+
+### Universal bound-control state
+
+`injectBoundControl<TValue>()` returns a read-only `BoundControl<TValue>` facade from a custom-control component's injection context. The facade rendezvous with `[formNode]` through the shared host element without injecting `_FormNode` during component construction, avoiding a directive-creation cycle and avoiding Angular private APIs. It disconnects with the directive's `DestroyRef` and exposes neutral values when no supported binding is attached.
+
+The current source is only `'formNode'`; the stable source union reserves `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'` for future adapters. Every state member is a signal. It includes the committed value, disabled reasons, interaction and validation state, visibility, constraints, generated name, and patterns. Errors always use the normalized `readonly { kind: string; ... }[]` shape rather than exposing a source-specific error container. A later Reactive Forms adapter must convert each `ValidationErrors` record entry into one normalized error object.
 
 ## Internal structural behavior
 

@@ -36,6 +36,7 @@ export const connectSignalControlInputs = <TNode extends Node>(
   control: object,
   node: () => TNode,
   injector: Injector,
+  usesBoundControl = false,
 ): SignalControlInputConnection => {
   const appId = injector.get(APP_ID);
   let mirror: ReturnType<typeof reflectComponentType> = null;
@@ -66,7 +67,7 @@ export const connectSignalControlInputs = <TNode extends Node>(
       const written = mirror
         ? writeComponentInput(control, name, values[name], injector)
         : writeInputSignal((control as Record<PropertyKey, unknown>)[property], values[name]);
-      if (!written) warnFailedInputWrite(control, name);
+      if (!written) warnFailedInputWrite(control, name, usesBoundControl);
     }));
   }, { injector });
   return { inputNames };
