@@ -190,8 +190,9 @@ field('', [required], { disabled: false });
 
 `injector` is optional. An explicit or currently captured injector takes precedence and its
 `DestroyRef` deterministically owns the asynchronous validation watcher. Without an injector of its
-own, the field uses the nearest injector on its parent chain by default. Set
-`inheritInjector: false` to prevent that lookup.
+own, the field temporarily adopts a directly bound `[formNode]` host injector and then uses the
+nearest injector on its parent chain by default. Set `adoptBindingInjector: false` or
+`inheritInjector: false` to disable those independent lookup stages.
 
 In the separate-argument form, the validator array is the second argument and state options are the third argument. When no initial value is passed, the runtime value starts as `null`.
 
@@ -237,8 +238,8 @@ All options are optional, so form state can be configured without supplying vali
 form({ name: field('David') }, [validator], { hidden: false });
 ```
 
-`injector` and `inheritInjector` have the same asynchronous-validation ownership roles as they do
-for fields.
+`injector`, `adoptBindingInjector`, and `inheritInjector` have the same asynchronous-validation
+ownership roles as they do for fields.
 
 A definition can contain fields, groups, explicit nested forms, arrays, or shorthand nested objects.
 
@@ -685,13 +686,17 @@ Asynchronous validation behavior follows Angular 22 Signal Forms where applicabl
 Asynchronous validation is coordinated by a watcher built on Angular's public signals primitives. The initial callback invocation is scheduled in the next microtask, after the expression that created its field or form has completed. This makes it safe for a validator declared in a class property initializer to read another property through its owning form. The node becomes pending synchronously, before that callback starts. Signals read before the validator's first asynchronous boundary become dependencies and automatically trigger a new validation, including sibling fields or external signals captured by the validator.
 
 The watcher does not require dependency injection. A node first uses its explicit or currently
-captured injector. Without one, it uses the nearest ancestor injector by default, so descendants
+captured injector. Without one, it temporarily adopts the injector of a directly bound
+`[formNode]`, then uses the nearest ancestor injector by default, so descendants
 created later by an array template or factory join the array's lifecycle even when their factory
-runs outside an injection context. `inheritInjector: false` stops lookup at that node and forms a
-boundary for its whole subtree unless a descendant has an injector of its own. Moving a node
-between parents transfers inherited ownership; detaching it releases that ownership, and destroying
-an injector that no longer owns the node has no effect. Destroying the effective injector stops
-future reactive executions and cancels the current Promise or Observable operation.
+runs outside an injection context. Direct binding injectors are stable leases: the first active
+binding wins, and removing or rebinding it selects the next binding or falls back to an ancestor.
+`adoptBindingInjector: false` disables direct adoption. `inheritInjector: false` stops ancestor
+lookup at that node and forms a boundary for its whole subtree unless a descendant has an injector
+of its own or an allowed direct binding. Moving a node between parents transfers inherited
+ownership; detaching it releases that ownership. Releasing any transient owner cancels its pending
+Promise or Observable operation without disabling later validation. Destroying an explicit or
+currently captured injector permanently stops its watcher.
 
 With no effective injector, the watcher weakly references its node-owned target, and a
 `FinalizationRegistry` disconnects it if that target becomes unreachable. Garbage-collection

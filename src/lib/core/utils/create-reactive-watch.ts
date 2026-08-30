@@ -70,6 +70,7 @@ export const createReactiveWatch = (
   };
   const setInjector = (nextInjector: Injector | undefined) => {
     if (destroyed || nextInjector === owner) return;
+    if (owner) targetRef.deref()?.cleanup();
     owner = nextInjector;
     const version = ++ownerVersion;
     nextInjector?.get(DestroyRef).onDestroy(() => {

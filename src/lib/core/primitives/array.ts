@@ -687,7 +687,7 @@ export function array<TDefinition extends NodeDefinition>(
   }) as ArrayNode<TItem>;
   reparentItems();
   markAsNode(arrayNode);
-  registerNodeInjector(arrayNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false);
+  registerNodeInjector(arrayNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false, resolvedOptions?.adoptBindingInjector !== false);
   registerAngularField(arrayNode);
   registerNodeValidatorMessages(arrayNode, resolvedOptions?.validatorMessages, resolvedOptions?.injector);
   refreshInjector();

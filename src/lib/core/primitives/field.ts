@@ -331,7 +331,7 @@ export function field<TValue>(
     { api: internalApi, $api: internalApi },
   ) as unknown as Field<TValue>;
   markAsNode(fieldNode);
-  registerNodeInjector(fieldNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false);
+  registerNodeInjector(fieldNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false, resolvedOptions?.adoptBindingInjector !== false);
   registerAngularField(fieldNode);
   registerNodeValidatorMessages(fieldNode, undefined, resolvedOptions?.injector);
   ensureAsyncValidationWatch();

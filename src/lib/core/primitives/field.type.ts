@@ -65,6 +65,12 @@ export type FieldOptions<TValue = any> = {
    */
   inheritInjector?: boolean;
   /**
+   * Whether this node may temporarily adopt the injector of a directly bound `[formNode]` host
+   * when it has no injector of its own. Defaults to `true`. The binding injector takes precedence
+   * over an inherited ancestor injector and is released when the binding is destroyed or rebound.
+   */
+  adoptBindingInjector?: boolean;
+  /**
    * Delay strategy for control updates. A number waits in milliseconds, `'blur'` waits for focus
    * loss, and a function commits when its returned promise resolves. Overrides an inherited
    * debounce.
