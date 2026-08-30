@@ -10,6 +10,7 @@ import arrayOperationsSource from '!!raw-loader!../../examples/array-operations.
 import builtInValidatorsSource from '!!raw-loader!../../examples/built-in-validators.typecheck.ts';
 import choosingPrimitivesSource from '!!raw-loader!../../examples/choosing-primitives.example.ts';
 import debounceSource from '!!raw-loader!../../examples/debounce.example.ts';
+import dynamicFormChildrenSource from '!!raw-loader!../../examples/dynamic-form-children.example.ts';
 import firstFormSource from '!!raw-loader!../../examples/first-form.example.ts';
 import nativeFormBindingSource from '!!raw-loader!../../examples/native-form-binding.typecheck.ts';
 import reactiveConfigurationSource from '!!raw-loader!../../examples/reactive-configuration.example.ts';
@@ -53,6 +54,15 @@ The example deliberately combines an atomic object field, a nested form, and a d
 
 The assertions prove that `trackBy` preserves item nodes while complete values reorder, then cover
 positional patching, swapping, and insertion. Continue with [Dynamic arrays](../guides/dynamic-arrays.md).
+
+## Dynamic form children
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="dynamic-form-children.example.ts">{dynamicFormChildrenSource}</CodeBlock>
+
+The assertions cover typed insertion, shorthand-group normalization, lookup, aggregation, and
+detachment. Continue with [Dynamic object children](../guides/dynamic-object-children.md).
 
 ## Validation ownership
 

@@ -269,7 +269,7 @@ profile.$api.value(); // { api: 'domain value' }
 
 ## Groups and nested forms
 
-`group()` is the ordinary fixed-object aggregate. It has children, aggregate value and state,
+`group()` is the ordinary object-shaped aggregate. It has children, aggregate value and state,
 validators, configuration, and all common node operations, but it has no `submission` option or
 `submit()` method:
 
@@ -316,7 +316,7 @@ Changes to any descendant are reflected reactively in every ancestor value.
 - Validators receive a `FieldContext` whose `value` signal contains the inferred node value.
 - `set()` and `reset(value)` require complete values at compile time.
 - `patch()` accepts recursive partial form values.
-- Incorrect value types and unknown keys are rejected at compile time.
+- Incorrect value types and unknown keys in typed value updates are rejected at compile time.
 - Field and form errors use readonly arrays of `ValidationError.WithTargetNode`.
 
 ## Field nullability
@@ -477,6 +477,43 @@ Debouncer inheritance was verified against Angular Signal Forms `v22.1.4` at com
 At the type level, `set()` and the result of `update()` require every form key, while `patch()` rejects unknown keys. At runtime, unknown keys passed through an unsafe cast are ignored and produce an English console warning. The `update()` callback runs synchronously once in an untracked context and delegates its complete result to `set()`.
 
 Calling reset on a nested form only resets that subtree. State belonging to siblings is preserved.
+
+### Dynamic object children
+
+`form()` and `group()` accept named children after creation through `add(key, definition)` or an
+atomic `add(definitions)` call. A plain object definition is normalized to a `group()` exactly as
+it is during initial construction. The returned nodes retain their exact inferred types. Arbitrary
+direct child names are typed as `DynamicNode | undefined`; initially declared children keep their
+original precise and non-optional types. `DynamicNode` exposes the state and
+operations common to every primitive directly, including `value`, `disabled`, validation, and
+interaction state, while hiding native function members and omitting primitive-specific methods.
+
+New children immediately receive their parent, key, path, root form, inherited state, debounce,
+and injector. They participate in aggregate value, errors, validation status, pending, touched,
+dirty, focus, reset, and control operations as soon as the structural version changes. Duplicate
+keys and reserved `$api` or `$field` keys throw before any entry in a batch is attached. A node that
+already has a parent is rejected rather than silently stolen from another tree.
+
+`remove(key)` only detaches children introduced through `add()`. Initially declared children cannot
+be removed because their public types guarantee their presence. A removed node remains usable,
+loses its parent relationship, and no longer contributes to its former ancestor aggregates. A
+standalone removed field reports `form() === null`; a removed aggregate becomes its own root.
+
+The form's statically inferred value type remains based on its initial definition. Runtime values
+contain current dynamic properties, but callers should retain the typed result of `add()` or narrow
+a direct dynamic-property result when they need a dynamic value. Fixed-shape `set()`, `patch()`, `update()`, and
+`reset(value)` signatures remain unchanged. Runtime dynamic keys supplied through untyped data are
+updated; omitted dynamic keys retain their values. Reset operations still clear their interaction
+state.
+
+This intentionally differs from Angular Signal Forms `v22.1.4` at commit
+`898380974d49cf7976e9d89cc74a0801a26ce7b1`. Angular derives changing child structure from its
+writable model rather than exposing `add()` or `remove()` operations. The relevant implementation
+and identity behavior are in `packages/forms/signals/src/field/structure.ts`,
+`packages/forms/signals/src/field/proxy.ts`, and `packages/forms/signals/src/field/manager.ts`, with
+coverage in `packages/forms/signals/test/node/dynamic.spec.ts`,
+`packages/forms/signals/test/node/field_node.spec.ts`, and
+`packages/forms/signals/test/node/field_proxy.spec.ts`.
 
 ## Validators and errors
 

@@ -34,7 +34,13 @@ The map does not contain a second set of nodes: its entries are the exact nodes 
 directly. It is useful when code should be deliberately explicit about traversing children, or when
 generic infrastructure needs the complete named-child collection.
 
-Definition keys take precedence over node API members. This includes `children` itself:
+Every key supplied by the user in the initial `form()` definition takes precedence in the public
+type over ordinary node API and native callable members. This includes `value`, `reset`, `api`,
+`children`, `name`, and `apply`. The only reserved exceptions are `$api` and `$field`; neither can
+be declared as a child. `$api` always provides collision-safe API access, and `$field` remains the
+opaque Angular binding adapter.
+
+For example, a declared child takes precedence over `children` itself:
 
 ```ts
 const response = form({

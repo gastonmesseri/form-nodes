@@ -1,5 +1,6 @@
 import type { Signal } from '@angular/core';
 
+import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 
 export type MarkAsTouchedOptions = {
@@ -33,6 +34,8 @@ export type NodeControlBinding = {
 export type NodeApi = {
   /** Complete root node containing this node, or `null` when detached generic infrastructure cannot resolve one. */
   form: Signal<Node | null>;
+  /** Immediate structural parent of this node, or `null` when it is a root or has been detached. */
+  parent: Signal<Node | null>;
   /**
    * Property and array-index segments from the complete root to this node. Root nodes use `[]`.
    * Array indexes are represented as strings.
@@ -57,6 +60,8 @@ export type NodeApi = {
    * ```
    */
   value: Signal<any>;
+  /** Value represented by a control bound directly to this node, including input awaiting a debounced commit. */
+  controlValue: Signal<any>;
   /**
    * Property or array index under which this node is stored, or `null` when it is a root node.
    *
@@ -91,6 +96,8 @@ export type NodeApi = {
    * assigning a new complete value first.
    */
   reset(...args: [] | [value: any]): void;
+  /** Aggregated validation phase for this node and its subtree. */
+  validationStatus: Signal<'valid' | 'invalid' | 'unknown'>;
   /** Whether this node and its descendants have completed validation without errors. */
   valid: Signal<boolean>;
   /** Whether this node or any descendant currently contributes a validation error. */
@@ -270,6 +277,23 @@ export type Node = {
 export type PublicNode<TNode extends Node> = Node extends TNode
   ? TNode & HiddenFunctionMembers
   : TNode;
+
+/**
+ * A dynamically discovered node whose concrete primitive is not known statically.
+ *
+ * It exposes the state and operations shared by every node while keeping native callable
+ * members such as `apply`, `bind`, and `call` hidden. Primitive-specific operations require a
+ * statically known node type.
+ */
+export type DynamicNode =
+  & PublicNode<Node>
+  & Omit<NodeApi, 'patch'>
+  & {
+    /** Complete common node API. */
+    api: NodeApi;
+    /** Opaque terminal adapter for Angular's `[formField]` directive. */
+    readonly $field: OpaqueAngularField;
+  };
 type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown];
 
 export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = RootLookupDepth> =

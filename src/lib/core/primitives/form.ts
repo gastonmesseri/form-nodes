@@ -20,7 +20,7 @@ import { readStateSource, getInitialMutableState } from '../utils/read-state-sou
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { InternalNode, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
+import type { InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
@@ -28,7 +28,7 @@ import { notifyExternalValidationReset, readExternalValidationErrors } from '../
 import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes } from './form.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
-export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
+export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
 type FormDefinitions<TDefinitions extends NodeDefinitions> = {
   [TKey in keyof TDefinitions]: TKey extends '$api' | '$field'
@@ -51,12 +51,12 @@ type FormDefinitions<TDefinitions extends NodeDefinitions> = {
  * });
  * ```
  *
- * Creates a root form from a fixed object of node definitions and optional configuration.
+ * Creates a root form from an initially fixed object of node definitions and optional configuration.
  *
  * Plain nested objects are normalized to structural groups. Use the options object for form-level
  * validators, submission, state, debounce, and validator messages.
  *
- * @param definitions Fixed child-node definitions.
+ * @param definitions Initially declared child-node definitions.
  * @param options Form configuration.
  */
 export function form<TDefinitions extends NodeDefinitions>(
@@ -107,7 +107,13 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
   const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
   const createDefinitions = createNodeDefinitionFactory(definitions);
   const controls = mapObjectValues(definitions, definition => isNode(definition) ? definition : group(definition)) as TNodes;
-  const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
+  const controlsRecord = controls as Record<string, Node>;
+  const structureVersion = signal(0);
+  const dynamicKeys = new Set<string>();
+  const controlKeys = () => {
+    structureVersion();
+    return Object.keys(controls) as (keyof TNodes)[];
+  };
   const formSelfTouched = signal(false);
   const formSelfDirty = signal(false);
   const formControlBindings = new Set<NodeControlBinding>();
@@ -248,7 +254,14 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
       return;
     }
     const value = args[0];
-    controlKeys().forEach(key => controls[key]!.$api.reset(value[key]));
+    controlKeys().forEach((key) => {
+      const dynamicKey = String(key);
+      if (dynamicKeys.has(dynamicKey) && !Object.prototype.hasOwnProperty.call(value, key)) {
+        controls[key]!.$api.reset();
+        return;
+      }
+      controls[key]!.$api.reset(value[key]);
+    });
     formControlBindings.forEach(binding => binding.reset?.());
   };
   const getControlBindingForFocus = () => {
@@ -257,6 +270,66 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     return controlKeys()
       .map(key => (controls[key] as InternalNode).$api._getControlBindingForFocus())
       .reduce(firstControlBindingInDom, undefined);
+  };
+  const assertAvailableDynamicKey = (key: string) => {
+    if (key === '$api' || key === '$field') {
+      throw new Error(`${nodeType}: "${key}" is reserved and cannot be added as a dynamic child`);
+    }
+    if (Object.prototype.hasOwnProperty.call(controlsRecord, key)) {
+      throw new Error(`${nodeType}: child "${key}" already exists`);
+    }
+  };
+  const assertDetachedDefinition = (definition: Node | NodeDefinitions) => {
+    if (isNode(definition)) {
+      if ((definition as Node & { $api: { parent(): Node | null } }).$api.parent() === null) return;
+      throw new Error(`${nodeType}: a dynamic child must not already have a parent`);
+    }
+    if (!definition || typeof definition !== 'object') {
+      throw new Error(`${nodeType}: a dynamic child must be a node or object definition`);
+    }
+    Object.values(definition).forEach(child => assertDetachedDefinition(child));
+  };
+  const normalizeDynamicDefinition = (definition: Node | NodeDefinitions): Node => {
+    assertDetachedDefinition(definition);
+    return isNode(definition) ? definition : group(definition);
+  };
+  const addDynamicChildren = (entries: readonly (readonly [string, Node | NodeDefinitions])[]) => {
+    entries.forEach(([key]) => assertAvailableDynamicKey(key));
+    const nodes = entries.map(([key, definition]) => [key, normalizeDynamicDefinition(definition)] as const);
+    nodes.forEach(([key, node]) => {
+      controlsRecord[key] = node;
+      dynamicKeys.add(key);
+      (node as InternalNode).$api._setParent(formNode, key);
+      if (!Object.prototype.hasOwnProperty.call(formNode, key)) {
+        Object.defineProperty(formNode, key, {
+          configurable: true,
+          enumerable: true,
+          get: () => controlsRecord[key],
+        });
+      }
+    });
+    structureVersion.update(version => version + 1);
+    return Object.fromEntries(nodes);
+  };
+  const add = ((keyOrDefinitions: string | NodeDefinitions, definition?: Node | NodeDefinitions) => {
+    if (typeof keyOrDefinitions === 'string') {
+      const added = addDynamicChildren([[keyOrDefinitions, definition!]]);
+      return added[keyOrDefinitions];
+    }
+    return addDynamicChildren(Object.entries(keyOrDefinitions));
+  }) as FormApi<TNodes>['add'];
+  const remove = (key: string) => {
+    const node = controlsRecord[key];
+    if (!node) return undefined;
+    if (!dynamicKeys.has(key)) {
+      throw new Error(`${nodeType}: initially declared child "${key}" cannot be removed`);
+    }
+    dynamicKeys.delete(key);
+    delete controlsRecord[key];
+    if (Object.getOwnPropertyDescriptor(formNode, key)?.get) delete (formNode as unknown as Record<string, unknown>)[key];
+    (node as InternalNode).$api._setParent(null);
+    structureVersion.update(version => version + 1);
+    return node;
   };
   formControlValueBuffer = createControlValueBuffer(
     formValue,
@@ -285,6 +358,8 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
   };
   const api = {
     children: controls as FormChildren<TNodes, Node>,
+    add,
+    remove,
     form: rootForm,
     parent: formParent.asReadonly(),
     path: formPath,
@@ -292,11 +367,11 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     value: formValue,
     controlValue: formControlValueBuffer.controlValue,
     set,
-    update: updater => untracked(() => set(updater(formValue()))),
+    update: (updater: (value: TValue) => FormSet<TNodes>) => untracked(() => set(updater(formValue()))),
     patch,
     reset,
     validators: formValidators.asReadonly(),
-    setValidators: (next) => {
+    setValidators: (next: ValidatorSource<TValue>) => {
       formValidators.set(normalizeValidatorSource(next));
       ensureAsyncValidationWatch();
     },
@@ -321,7 +396,7 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     validationStatus: formValidationStatus,
     touched: formTouched,
     untouched: computed(() => !formTouched()),
-    markAsTouched: (options) => {
+    markAsTouched: (options?: MarkAsTouchedOptions) => {
       if (formNonInteractive()) return;
       formSelfTouched.set(true);
       formControlValueBuffer.flush();

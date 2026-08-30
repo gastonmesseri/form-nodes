@@ -1,9 +1,9 @@
 import type { Signal } from '@angular/core';
 
 import type { OpaqueAngularField } from '../interop/angular-field.type';
-import type { Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
+import type { DynamicNode, Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent } from './form.type';
+import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent } from './form.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
@@ -160,10 +160,18 @@ export type GroupChildren<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
-  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'getError' | 'submit' | 'submitting' | 'validationStatus'>
+  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'getError' | 'add' | 'remove' | 'submit' | 'submitting' | 'validationStatus'>
   & {
     /** Stable readonly map of this group's immediate child nodes. */
-    readonly children: GroupChildren<TNodes, TParent>;
+    readonly children: GroupChildren<TNodes, TParent> & DynamicFormChildren;
+    /** Adds one child at runtime and returns the attached node with its exact inferred type. */
+    add<TKey extends string, TDefinition extends NodeDefinitions | Node>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: TDefinition): AddedNode<TDefinition, Group<TNodes, TParent>>;
+    /** Adds several child definitions atomically and returns their attached live nodes. */
+    add<TDefinitions extends NodeDefinitions>(definitions: TDefinitions & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
+      readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Group<TNodes, TParent>>;
+    };
+    /** Detaches a dynamically added child. Initially declared children cannot be removed. */
+    remove(key: string): DynamicNode | undefined;
     /** Complete root node containing this group. A root group returns itself. */
     form: Signal<GroupRoot<TNodes, TParent>>;
     /**
@@ -236,7 +244,7 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
   readonly $field: OpaqueAngularField;
 };
 
-/** A fixed, object-shaped structural node without its own submission workflow. */
+/** An object-shaped structural node without its own submission workflow. */
 export type Group<TNodes extends Nodes, TParent extends Node = Node> =
   & {
     /** Returns the group's current aggregate committed value and participates in signal dependency tracking. */
@@ -245,4 +253,5 @@ export type Group<TNodes extends Nodes, TParent extends Node = Node> =
   & GroupApiProperty<TNodes, TParent>
   & Omit<GroupChildren<TNodes, TParent>, 'api'>
   & Omit<GroupApi<TNodes, TParent>, keyof TNodes>
+  & DynamicFormChildren
   & HiddenFunctionMembers<keyof TNodes | keyof GroupApi<TNodes, TParent>>;

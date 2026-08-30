@@ -1,11 +1,11 @@
 ---
 title: group()
-description: Reference for fixed object groups without an independent submission workflow.
+description: Reference for object groups without an independent submission workflow.
 ---
 
 # `group()`
 
-`group()` creates a fixed, typed object aggregate. It provides named children, value aggregation,
+`group()` creates a typed object aggregate. It provides named children, value aggregation,
 validation, state propagation, configuration, and the common node operations. It deliberately has
 no `submission` option and no `submit()` method.
 
@@ -77,7 +77,7 @@ A group exposes the same structural API as `form()` except for submission:
 | Area | Properties and methods |
 | --- | --- |
 | Values | `value()`, `controlValue()`, `set()`, `update()`, `patch()`, `reset()` |
-| Tree | direct children, `children`, `form()`, `parent()`, `path()`, `keyInParent()` |
+| Tree | direct children, `children`, `add()`, `remove()`, `form()`, `parent()`, `path()`, `keyInParent()` |
 | Validation | `validators()`, `setValidators()`, `errors()`, `allErrors()`, `getError()`, `valid()`, `invalid()`, `pending()` |
 | Interaction | `touched()`, `untouched()`, `markAsTouched()`, `markAsUntouched()`, `dirty()`, `pristine()`, `markAsDirty()`, `markAsPristine()` |
 | Availability | `disabled()`, `disabledReasons()`, `enabled()`, `disable()`, `enable()`, `readonly()`, `writable()`, `markAsReadonly()`, `markAsWritable()`, `hidden()`, `visible()`, `hide()`, `show()` |
@@ -126,3 +126,19 @@ Use that minimal structure when the nodes are genuinely independent. Choose a ro
 you need an aggregate callable value, parent and path relationships, recursive updates and reset,
 aggregate validity and interaction state, inherited availability or debounce, or validators for the
 complete object. The plain object itself has none of those node capabilities.
+
+## Dynamic children
+
+Groups support the same `add()`, direct dynamic properties, and `remove()` operations as forms:
+
+```ts
+const filters = group({ query: field('') });
+const category = filters.add('category', field('all'));
+
+category(); // 'all'
+filters.remove('category');
+```
+
+Initial children cannot be removed. Added children inherit the group's tree state and injector,
+and detached children remain usable independently. See
+[Dynamic object children](../guides/dynamic-object-children.md) for the complete contract.

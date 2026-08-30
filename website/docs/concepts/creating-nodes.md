@@ -216,7 +216,12 @@ profile.patch({
 
 Incorrect value types, missing complete-value properties, and unknown patch keys are compile-time
 errors. Validators receive the inferred value type too. Runtime warnings protect against unknown
-keys that enter through unsafe casts or untyped external data, but they do not add nodes dynamically.
+keys that enter through unsafe casts or untyped external data.
+
+When named controls genuinely enter or leave at runtime, use `add()`, direct property access, and `remove()` on a
+form or group. Initially declared children remain fixed and precisely typed; runtime names are
+`DynamicNode | undefined`, exposing the state and operations common to every node kind. See
+[Dynamic object children](../guides/dynamic-object-children.md).
 
 ## Using nodes outside Angular
 
@@ -268,6 +273,8 @@ export class ProfileEditor {
 
 ## Current structural boundaries
 
-The named children of a `form()` are fixed by its definition. Use `array()` when items must be added or removed at runtime. The library does not currently generate form trees from JSON schema definitions.
+Initially declared object children are fixed, while explicitly added runtime children can later be
+removed. Use `array()` when equivalent items form an ordered collection that can also be reordered.
+The library does not currently generate form trees from JSON schema definitions.
 
 See the [complete form example](../examples/complex-form.md) for a larger Angular component combining nested forms, dynamic arrays, validation, state, and submission.

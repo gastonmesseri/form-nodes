@@ -31,7 +31,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Configuration](./configuration.md#process-wide-fallback) |
 | Add reactive status classes to every binding | `provideFormNodeConfig()` | [Binding configuration](./configuration.md#binding-configuration) |
 | Integrate an unusual signal control | `provideFormNodeControl()` | [Custom controls](../guides/custom-controls.md) |
-| Inspect the API shared by all nodes | `Node` and `NodeApi` | [Node API](./node-api.md) |
+| Inspect the API shared by all nodes | `Node`, `DynamicNode`, and `NodeApi` | [Node API](./node-api.md) |
 | Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
 | Use Angular Material controls | `FormNode` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
 | Use PrimeNG controls | `FormNode` with PrimeNG's normal modules | [PrimeNG integration](../integrations/primeng.md) |
@@ -58,7 +58,7 @@ Main exports: `field`, `Field`, `FieldApi`, and `FieldOptions`.
 
 ### `form()`
 
-Creates the fixed object tree that owns a submission workflow. It has the same structural behavior
+Creates the typed object tree that owns a submission workflow. It has the same structural behavior
 as a group plus `submission` configuration and `submit()`. Root application workflows normally
 start with `form()`; explicit nested forms are reserved for independent subflows.
 
@@ -272,7 +272,7 @@ Every field, form, and array exposes common reactive state:
 | Validation | `errors()`, `allErrors()`, `getError()`, `valid()`, `invalid()`, `pending()` |
 | Interaction | `touched()`, `dirty()`, their complements, and marking methods |
 | Availability | `disabled()`, `readonly()`, `hidden()`, their complements, reasons, and actions |
-| Tree | `form()`, `parent()`, `path()`, `keyInParent()` |
+| Tree | `form()`, `parent()`, `path()`, `keyInParent()`, and object-node `add()`, direct properties, `remove()` |
 | Controls | `debouncing()`, `flush()`, `focus()` |
 
 Call the node itself for its committed value and use direct members for normal application code.

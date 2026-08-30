@@ -7,9 +7,9 @@ title: Choosing a primitive
 Choose a primitive from the shape and lifecycle of the value you need to model:
 
 - Use `field()` for one replaceable value.
-- Use `form()` for the fixed object tree that owns a submission workflow.
+- Use `form()` for the typed object tree that owns a submission workflow.
 - Use `array()` for a dynamic ordered collection of repeated nodes.
-- Use explicit `group()` only when a fixed object boundary needs its own configuration without submission; ordinary nested objects use shorthand.
+- Use explicit `group()` when an object boundary needs its own configuration without submission; ordinary nested objects use shorthand.
 
 Most application forms combine several primitives rather than choosing only one.
 
@@ -185,7 +185,7 @@ domain genuinely treat the object atomically.
 
 ## Use `form()` for a workflow boundary
 
-`form()` has the same fixed object behavior as a group and additionally exposes `submission` and
+`form()` has the same object-node behavior as a group and additionally exposes `submission` and
 `submit()`. Use it at the root of an application workflow. An explicit nested `form()` is useful
 only when that branch is independently submittable; ordinary nested structure should remain a
 group or shorthand object. Binding a group to a native `<form [formNode]>` is tolerated and retains
@@ -311,8 +311,9 @@ failures; `errors()` does not. Use `allErrors()` when a summary needs the comple
 ## Quick decision sequence
 
 1. Does the value need independently addressable child controls? If not, use `field()`.
-2. Are the children fixed and identified by names? Use `form()`.
-3. Can equivalent items be added, removed, or reordered? Use `array()`.
+2. Are heterogeneous children identified by meaningful names? Use `form()` or `group()`; dynamic
+   names can be managed with `add()` and `remove()`.
+3. Can equivalent ordered items be added, removed, or reordered? Use `array()`.
 4. Is an object or collection edited by one custom control as an atomic value? Go back to
    `field()` even though its value is structured.
 

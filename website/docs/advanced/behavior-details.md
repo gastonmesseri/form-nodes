@@ -210,10 +210,11 @@ that returns the same live node more than once also throws, preventing shared pa
 
 ## Current structural boundaries
 
-Form child keys are fixed when `form()` is created. Use `array()` for runtime addition, removal, and
-reordering of repeated nodes. Schema-driven generation from JSON definitions is not currently part
-of the public API.
+Initially declared form child keys remain fixed, while `add()` and `remove()` manage explicitly
+dynamic named children. Use `array()` for runtime addition, removal, and reordering of repeated
+nodes. Schema-driven generation from JSON definitions is not currently part of the public API.
 
 Continue with [Async validation](../guides/async-validation.md),
+[Dynamic object children](../guides/dynamic-object-children.md),
 [Dynamic arrays](../guides/dynamic-arrays.md), [Control binding](../guides/control-binding.md), or
 [Interaction and availability](../guides/interaction-and-availability.md) for task-oriented usage.
