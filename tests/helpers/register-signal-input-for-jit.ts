@@ -41,3 +41,13 @@ export const registerSignalModelForJit = (
   const outputName = `${publicName}Change`;
   definition.outputs = { ...definition.outputs, [outputName]: outputName };
 };
+
+/** Registers signal-output metadata omitted by plain Vitest TypeScript transpilation. */
+export const registerSignalOutputForJit = (
+  component: object,
+  publicName: string,
+  classPropertyName = publicName,
+) => {
+  const definition = getDefinition(component);
+  definition.outputs = { ...definition.outputs, [publicName]: classPropertyName };
+};

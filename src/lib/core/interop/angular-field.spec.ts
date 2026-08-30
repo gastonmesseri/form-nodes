@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
 import '@angular/compiler';
-import { Component, Injector, input, output, runInInjectionContext, signal } from '@angular/core';
+import { Component, Injector, input, model, output, runInInjectionContext, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { FormField, form as createAngularForm, provideSignalFormsConfig } from '@angular/forms/signals';
+import { FormField, form as createAngularForm, provideSignalFormsConfig, transformedValue, type FormValueControl } from '@angular/forms/signals';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
@@ -15,7 +15,7 @@ import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
-import { registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalModelForJit, registerSignalOutputForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -342,6 +342,117 @@ describe('Angular Signal Forms field adapter', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
     expect(input.value).toBe('Mark');
+  });
+
+  it('propagates native parsing errors into node validation and removes binding-owned errors', () => {
+    @Component({
+      template: `
+        <input id="first" [formField]="age.$field">
+        @if (showSecond()) {
+          <input id="second" [formField]="age.$field">
+        }
+      `,
+      imports: [FormField],
+    })
+    class Host {
+      age = field(5);
+      showSecond = signal(true);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const first = fixture.nativeElement.querySelector('#first') as HTMLInputElement;
+    const second = fixture.nativeElement.querySelector('#second') as HTMLInputElement;
+
+    first.value = 'invalid';
+    first.dispatchEvent(new Event('input'));
+    second.value = 'also invalid';
+    second.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+
+    const parseErrors = host.age.errors().filter(error => error.kind === 'parse');
+    expect(host.age()).toBe(5);
+    expect(host.age.invalid()).toBe(true);
+    expect(host.age.allErrors()).toHaveLength(2);
+    expect(parseErrors).toHaveLength(2);
+    expect(parseErrors.map(error => error.formNode?.element)).toEqual([first, second]);
+
+    host.showSecond.set(false);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    expect(host.age.errors().filter(error => error.kind === 'parse')).toHaveLength(1);
+
+    first.value = '12';
+    first.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+    expect(host.age()).toBe(12);
+    expect(host.age.errors().filter(error => error.kind === 'parse')).toEqual([]);
+    expect(host.age.valid()).toBe(true);
+  });
+
+  it('propagates custom-control parsing and touch through formField', async () => {
+    @Component({
+      selector: 'numeric-control',
+      template: `<input [value]="rawValue()" (input)="updateRawValue($event)" (blur)="touch.emit()">`,
+    })
+    class NumericControl implements FormValueControl<number | null> {
+      value = model<number | null>(null);
+      valueChange = output<number | null>();
+      touch = output<void>();
+      protected rawValue = transformedValue(this.value, {
+        parse: (rawValue) => {
+          const value = Number(rawValue);
+          return Number.isNaN(value)
+            ? { error: { kind: 'parse', message: `${rawValue} is not numeric` } }
+            : { value };
+        },
+        format: value => value?.toString() ?? '',
+      });
+
+      updateRawValue(event: Event) {
+        this.rawValue.set((event.target as HTMLInputElement).value);
+        if (this.rawValue.parseErrors().length === 0) this.valueChange.emit(this.value());
+      }
+    }
+    registerSignalModelForJit(NumericControl, 'value');
+    registerSignalOutputForJit(NumericControl, 'touch');
+
+    const action = vi.fn();
+    @Component({
+      template: `<numeric-control [formField]="profile.age.$field" />`,
+      imports: [NumericControl, FormField],
+    })
+    class Host {
+      profile = form({
+        age: field(5),
+      }, {
+        submission: { action },
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    inputElement.value = 'invalid';
+    inputElement.dispatchEvent(new Event('input'));
+    inputElement.dispatchEvent(new Event('blur'));
+    TestBed.flushEffects();
+
+    expect(fixture.componentInstance.profile.age()).toBe(5);
+    expect(fixture.componentInstance.profile.age.touched()).toBe(true);
+    expect(fixture.componentInstance.profile.age.getError('parse')?.message).toBe('invalid is not numeric');
+    expect(await fixture.componentInstance.profile.submit()).toBe(false);
+    expect(action).not.toHaveBeenCalled();
+
+    inputElement.value = '18';
+    inputElement.dispatchEvent(new Event('input'));
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.profile.age()).toBe(18);
+    expect(fixture.componentInstance.profile.age.getError('parse')).toBeUndefined();
+    expect(await fixture.componentInstance.profile.submit()).toBe(true);
+    expect(action).toHaveBeenCalledOnce();
   });
 
   it('registers formField controls for node focus in DOM order and unregisters destroyed bindings', () => {

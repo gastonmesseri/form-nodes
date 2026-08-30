@@ -87,6 +87,22 @@ For a bound leaf field, control interaction flows back naturally: input marks th
 dirty and blur marks it touched. Calls such as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so
 clearing one does not clear the other.
 
+Parsing errors also flow back into Gem Forms. This includes Angular's native parsing and custom
+controls built with `transformedValue()`. A failed parse keeps the last committed node value while
+making the node and its ancestors invalid:
+
+```ts
+profileForm.age();                   // 5
+profileForm.age.getError('parse');  // the control's parsing error
+profileForm.age.invalid();          // true
+profileForm.invalid();              // true
+```
+
+Correcting the control removes its parsing error. Resetting the Gem node also clears parsing state
+and restores the control to the committed value. With multiple controls bound to one node, each
+control owns its parsing error independently; destroying or rebinding a control removes only its
+contribution. Gem validator errors remain present alongside binding parsing errors.
+
 The same state remains consistent through materialized forms, groups, arrays, and their ancestors.
 Aggregate `markAsTouched()` reaches descendants unless `skipDescendants` is used, while
 `markAsDirty()` marks only the aggregate itself. Reset clears the complete subtree. A disabled,

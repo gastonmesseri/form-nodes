@@ -5,6 +5,7 @@ import { shallowEqual } from '../utils/shallow-equal';
 import type { InternalNode, Node } from '../types/node.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ValidationError } from '../validation/validation.type';
+import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 
 type AngularFieldAdapter = {
   readonly fieldTree: FieldTree<any>;
@@ -16,6 +17,11 @@ type AngularControlValueSnapshots = WeakMap<Node, unknown>;
 type AngularInteractionState = ReturnType<FieldTree<any>> & {
   markAsPristine(): void;
   markAsUntouched(): void;
+};
+
+type AngularParseError = ValidationError & Readonly<Record<string, unknown>>;
+type AngularFieldBindingWithParseErrors = FormFieldBinding & {
+  readonly parseErrors: () => readonly AngularParseError[];
 };
 
 const nodeInjectors = new WeakMap<Node, Injector>();
@@ -111,15 +117,26 @@ const synchronizeTreeState = (node: Node, fieldTree: FieldTree<any>, injector: I
   angularFieldNodes.set(fieldTree, node);
   synchronizeInteractionState(node, fieldTree, injector);
   effect((onCleanup) => {
-    const unregister = fieldTree().formFieldBindings().map(binding =>
-      (node as InternalNode).$api._registerControlBinding({
-        element: binding.element,
-        focus: options => binding.focus(options),
-        reset: () => {
-          if (fieldTree().formFieldBindings()[0] === binding) fieldTree().reset(node());
-        },
-      }),
-    );
+    const unregister = fieldTree().formFieldBindings().flatMap((binding) => {
+      const angularBinding = binding as AngularFieldBindingWithParseErrors;
+      const adaptedBinding = getFormNodeBindingForAngularField(binding)!;
+      const parseErrors = computed(() => angularBinding.parseErrors().map((error) => {
+        const { fieldTree: angularFieldTree, formField: angularFormField, ...parseError } = error;
+        void angularFieldTree;
+        void angularFormField;
+        return { ...parseError, formNode: adaptedBinding };
+      }));
+      return [
+        (node as InternalNode).$api._registerControlBinding({
+          element: binding.element,
+          focus: options => binding.focus(options),
+          reset: () => {
+            if (fieldTree().formFieldBindings()[0] === binding) fieldTree().reset(node());
+          },
+        }),
+        registerExternalValidationErrors(node, binding, parseErrors),
+      ];
+    });
     onCleanup(() => unregister.forEach(cleanup => cleanup()));
   }, { injector });
   const children = getChildren(node as InternalNode);

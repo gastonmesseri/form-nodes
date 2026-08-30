@@ -119,6 +119,51 @@ describe('FormNode in Chromium', () => {
     expect(input.disabled).toBe(false);
   });
 
+  it('propagates formField native parsing errors into Gem validation', () => {
+    @Component({
+      template: `<input [formField]="profile.age.$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      profile = form({
+        age: field(5),
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const profile = fixture.componentInstance.profile;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.value = 'invalid';
+    dispatch(input, 'input');
+    TestBed.flushEffects();
+
+    expect(profile.age()).toBe(5);
+    expect(profile.age.getError('parse')?.kind).toBe('parse');
+    expect(profile.age.invalid()).toBe(true);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.allErrors()).toHaveLength(1);
+
+    input.value = '12';
+    dispatch(input, 'input');
+    TestBed.flushEffects();
+
+    expect(profile.age()).toBe(12);
+    expect(profile.age.getError('parse')).toBeUndefined();
+    expect(profile.valid()).toBe(true);
+
+    input.value = 'pending invalid value';
+    dispatch(input, 'input');
+    TestBed.flushEffects();
+    profile.age.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(profile.age.getError('parse')).toBeUndefined();
+    expect(input.value).toBe('12');
+  });
+
   it('bridges a native form reset through formNode into formField controls', () => {
     @Component({
       template: `
