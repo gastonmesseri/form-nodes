@@ -25,7 +25,22 @@ error.kind; // 'blocked'
 error.targetNode === name; // true
 ```
 
-`targetNode` is the node whose validation owns the error. Binding-specific errors, such as a native parse failure, may additionally expose `formNode`, which identifies the concrete rendered binding that produced it.
+`targetNode` is the node whose validation owns the error. An aggregate validator can explicitly
+target a descendant for a cross-field rule; otherwise the validated node is assigned automatically.
+Binding-specific errors, such as a native parse failure, may additionally expose `formNode`, which
+identifies the concrete rendered binding that produced it.
+
+```ts
+const confirmation = field('');
+const myForm = form({
+  password: field(''),
+  confirmation,
+}, {
+  validators: ({ value }) => value().password === value().confirmation
+    ? null
+    : { kind: 'passwordMismatch', targetNode: confirmation },
+});
+```
 
 ## Own versus descendant errors
 

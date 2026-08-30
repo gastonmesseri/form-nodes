@@ -392,6 +392,47 @@ describe('Angular Signal Forms field adapter', () => {
     expect(control.pattern()).toEqual([]);
   });
 
+  it('preserves complete error data and maps cross-field target nodes to Angular fields', () => {
+    const confirmation = field('different');
+    const injector = TestBed.inject(Injector);
+    const profile = runInInjectionContext(injector, () => form({
+      password: field('secret'),
+      confirmation,
+    }, {
+      validators: ({ value }) => value().password === value().confirmation
+        ? null
+        : {
+          kind: 'passwordMismatch',
+          message: 'Passwords must match.',
+          expected: value().password,
+          actual: value().confirmation,
+          policy: { caseSensitive: true },
+          targetNode: confirmation,
+        },
+    }));
+    const angularProfile = getAngularField<{
+      password: string | null;
+      confirmation: string | null;
+    }>(profile);
+
+    expect(angularProfile().errors()).toEqual([]);
+    expect(angularProfile.confirmation().errors()).toEqual([expect.objectContaining({
+      kind: 'passwordMismatch',
+      message: 'Passwords must match.',
+      expected: 'secret',
+      actual: 'different',
+      policy: { caseSensitive: true },
+      fieldTree: angularProfile.confirmation,
+    })]);
+    expect(angularProfile.confirmation().errors()[0]).not.toHaveProperty('targetNode');
+    expect(angularProfile.confirmation().errors()[0]).not.toHaveProperty('formNode');
+
+    confirmation.set('secret');
+
+    expect(angularProfile.confirmation().errors()).toEqual([]);
+    expect(angularProfile().valid()).toBe(true);
+  });
+
   it('maps existing array item nodes into the shared Angular tree', () => {
     const injector = TestBed.inject(Injector);
     const tags = runInInjectionContext(injector, () => array(field(''), {
@@ -463,10 +504,12 @@ describe('Angular Signal Forms field adapter', () => {
     TestBed.flushEffects();
 
     const parseErrors = host.age.errors().filter(error => error.kind === 'parse');
+    const angularParseErrors = getAngularField(host.age)().errors().filter(error => error.kind === 'parse');
     expect(host.age()).toBe(5);
     expect(host.age.invalid()).toBe(true);
     expect(host.age.allErrors()).toHaveLength(2);
     expect(parseErrors).toHaveLength(2);
+    expect(angularParseErrors).toHaveLength(2);
     expect(parseErrors.map(error => error.formNode?.element)).toEqual([first, second]);
 
     host.showSecond.set(false);

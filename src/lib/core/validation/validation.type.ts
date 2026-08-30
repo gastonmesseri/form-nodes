@@ -167,6 +167,18 @@ export namespace ValidationError {
     readonly targetNode?: never;
     readonly formNode?: never;
   };
+
+  /** An error returned by a validator, optionally assigned to another node. */
+  export type ValidatorResult<TNode extends Node = Node> = ValidationError & {
+    /**
+     * Node that should own this error.
+     *
+     * Omit this property to target the node currently being validated. Set it for cross-field or
+     * aggregate validation whose error should be displayed by a specific descendant.
+     */
+    readonly targetNode?: TNode;
+    readonly formNode?: never;
+  };
 }
 
 /** Indicates that validation completed without errors. */
@@ -175,8 +187,8 @@ export type ValidationSuccess = null | undefined | void;
 /** A successful result, one validation error, or several validation errors. */
 export type ValidationResult =
   | ValidationSuccess
-  | ValidationError.WithoutTargetNode
-  | readonly ValidationError.WithoutTargetNode[];
+  | ValidationError.ValidatorResult
+  | readonly ValidationError.ValidatorResult[];
 
 /** Reactive context available to validation functions for the current field. */
 export type FieldContext<TValue> = {

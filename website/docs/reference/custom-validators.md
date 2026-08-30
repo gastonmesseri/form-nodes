@@ -102,9 +102,9 @@ value without changing dirty or touched state.
 
 ## Error ownership
 
-Validators return errors without `targetNode`. Before exposure, the node assigns itself as the
-target. `errors()` reads only errors owned by the current node; `allErrors()` additionally traverses
-descendants.
+Validators normally return errors without `targetNode`. Before exposure, the node assigns itself as
+the target. `errors()` reads only errors owned by the current node; `allErrors()` additionally
+traverses descendants.
 
 ```ts
 const error = myForm.age.errors()[0];
@@ -112,6 +112,28 @@ const error = myForm.age.errors()[0];
 error.kind;                       // 'adult'
 error.targetNode === myForm.age; // true
 ```
+
+For a cross-field rule, an aggregate validator can assign the error to the descendant that should
+display it:
+
+```ts
+const confirmation = field('');
+const myForm = form({
+  password: field(''),
+  confirmation,
+}, {
+  validators: ({ value }) => value().password === value().confirmation
+    ? null
+    : {
+      kind: 'passwordMismatch',
+      message: 'Passwords must match.',
+      targetNode: confirmation,
+    },
+});
+```
+
+Omit `targetNode` when the error belongs to the node being validated. `formNode` is reserved for
+errors created by a concrete rendered control binding.
 
 Use `getError(kind)` for the first own error of a kind. Applications and reusable packages can
 augment `ValidationErrorMap` so custom kinds expose strongly typed data. See
