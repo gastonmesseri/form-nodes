@@ -14,6 +14,36 @@ no `submission` option and no `submit()` method.
 Plain nested objects in `form()`, `group()`, and object templates in `array()` are shorthand for
 groups. Prefer shorthand until a branch needs its own options or validators.
 
+:::tip Prefer object shorthand when the group needs no configuration
+
+Use a plain object for an ordinary structural branch. Gem Forms normalizes it to the same group
+node that an explicit `group()` call would create:
+
+```ts
+const profileWithShorthand = form({
+  name: field(''),
+  address: {
+    city: field(''),
+    country: field(''),
+  },
+});
+
+const profileWithExplicitGroup = form({
+  name: field(''),
+  address: group({
+    city: field(''),
+    country: field(''),
+  }),
+});
+```
+
+Both `address` properties expose the same group API, child types, aggregate value, validation, and
+state propagation. Use explicit `group()` when that branch needs its own options or validators,
+such as `disabled`, `readonly`, `hidden`, `debounce`, or `validatorMessages`, or when the group is
+declared as a standalone root.
+
+:::
+
 A group can also be the root of a node tree. `form()` is not required when the model needs aggregate
 structure and state but does not own a submission workflow.
 
