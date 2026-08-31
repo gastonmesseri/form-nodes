@@ -80,6 +80,35 @@ body {
   width: 100%;
 }
 
+.theme-doc-markdown .api-member-reference h4 {
+  margin-top: 1.25rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.theme-doc-markdown .api-member-reference h4 + p {
+  margin-top: 0.75rem;
+}
+
+.theme-doc-markdown .api-member-reference h3 + h4 {
+  margin-top: 1.75rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.theme-doc-markdown .api-member-reference h3:not(:first-of-type) {
+  margin-top: 1.25rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.theme-doc-markdown .api-member-reference h2 + p + h3,
+.theme-doc-markdown .api-member-reference h2 + p + p + h3 {
+  margin-top: var(--ifm-heading-margin-top);
+  padding-top: 0;
+  border-top: 0;
+}
+
 .theme-code-block {
   border: 1px solid var(--docs-border);
   box-shadow: 0 14px 36px rgb(24 18 54 / 8%);
