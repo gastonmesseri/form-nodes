@@ -9,15 +9,16 @@ import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
-import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createAsyncValidation } from '../validation/create-async-validation';
-import type { InternalNode, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
+import type { InternalNode, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
+import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNode, NormalizedNodes } from './form.type';
 
 export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
@@ -64,7 +65,7 @@ export function form<TDefinitions extends NodeDefinitions>(
   const formSelfDirty = signal(false);
   const formControlBindings = new Set<NodeControlBinding>();
   const formSelfSubmitting = signal(false);
-  const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
+  const formSelfDisabled = signal<DisabledState>(getInitialDisabledState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
   const formKeyInParent = signal<string | number | null>(null);
   const formControlDebounce = computed(() =>
@@ -76,9 +77,17 @@ export function form<TDefinitions extends NodeDefinitions>(
     const key = formKeyInParent();
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
-  const formDisabled = computed(() =>
-    formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.$api.disabled() === true,
+  let formNode!: Form<TNodes>;
+  const formOwnDisabledReason = computed(() => createDisabledReason(formSelfDisabled(), formNode), { equal: shallowEqual });
+  const formConfiguredDisabledReason = computed(
+    () => createDisabledReason(readConfiguredDisabledState(resolvedOptions?.disabled), formNode),
+    { equal: shallowEqual },
   );
+  const formDisabledReasons = computed(() => [
+    ...(formParent()?.$api.disabledReasons() ?? []),
+    ...[formOwnDisabledReason(), formConfiguredDisabledReason()].filter((reason) => reason !== undefined),
+  ], { equal: shallowEqual });
+  const formDisabled = computed(() => formDisabledReasons().length > 0);
   const formSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const formReadonly = computed(() =>
     formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.$api.readonly() === true,
@@ -96,7 +105,6 @@ export function form<TDefinitions extends NodeDefinitions>(
   const formContext = markAsFieldContext({ value: formValue });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   const emptySyncMetadata = new Map();
-  let formNode!: Form<TNodes>;
   const rootForm = computed(() => formParent()?.$api.form() ?? formNode) as Signal<Form<TNodes>>;
   const formSyncValidation = computed(() => formNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
@@ -256,8 +264,9 @@ export function form<TDefinitions extends NodeDefinitions>(
     markAsDirty: () => formSelfDirty.set(true),
     markAsPristine: () => formSelfDirty.set(false),
     disabled: formDisabled,
+    disabledReasons: formDisabledReasons,
     enabled: computed(() => !formDisabled()),
-    disable: () => formSelfDisabled.set(true),
+    disable: (message?: string) => formSelfDisabled.set(message ?? true),
     enable: () => formSelfDisabled.set(false),
     readonly: formReadonly,
     writable: computed(() => !formReadonly()),

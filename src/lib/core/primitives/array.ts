@@ -10,16 +10,17 @@ import { form, type FormOptions, type NormalizedNode } from './form';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { REQUIRED_METADATA } from '../validation/validators/required';
-import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { InternalNode, Node, NodeControlBinding, NodeDefinition, NodeSet, NodeValue } from '../types/node.type';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
+import type { InternalNode, Node, NodeControlBinding, NodeDefinition, NodeSet, NodeValue } from '../types/node.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
+import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
 type ArrayFactory<TDefinition extends NodeDefinition> = () => TDefinition;
@@ -195,7 +196,7 @@ export function array<TDefinition extends NodeDefinition>(
   const arraySelfTouched = signal(false);
   const arraySelfDirty = signal(false);
   const arrayControlBindings = new Set<NodeControlBinding>();
-  const arraySelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
+  const arraySelfDisabled = signal<DisabledState>(getInitialDisabledState(resolvedOptions?.disabled));
   const arrayParent = signal<Node | null>(null);
   const arrayKeyInParent = signal<string | number | null>(null);
   const arrayControlDebounce = computed(() =>
@@ -207,9 +208,17 @@ export function array<TDefinition extends NodeDefinition>(
     const key = arrayKeyInParent();
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
-  const arrayDisabled = computed(() =>
-    arraySelfDisabled() || readStateSource(resolvedOptions?.disabled) || arrayParent()?.$api.disabled() === true,
+  let arrayNode!: ArrayNode<TItem>;
+  const arrayOwnDisabledReason = computed(() => createDisabledReason(arraySelfDisabled(), arrayNode), { equal: shallowEqual });
+  const arrayConfiguredDisabledReason = computed(
+    () => createDisabledReason(readConfiguredDisabledState(resolvedOptions?.disabled), arrayNode),
+    { equal: shallowEqual },
   );
+  const arrayDisabledReasons = computed(() => [
+    ...(arrayParent()?.$api.disabledReasons() ?? []),
+    ...[arrayOwnDisabledReason(), arrayConfiguredDisabledReason()].filter((reason) => reason !== undefined),
+  ], { equal: shallowEqual });
+  const arrayDisabled = computed(() => arrayDisabledReasons().length > 0);
   const arraySelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const arrayReadonly = computed(() =>
     arraySelfReadonly() || readStateSource(resolvedOptions?.readonly) || arrayParent()?.$api.readonly() === true,
@@ -223,7 +232,6 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayContext = markAsFieldContext({ value: arrayValue });
   const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource(validatorSource));
   const emptySyncMetadata = new Map();
-  let arrayNode!: ArrayNode<TItem>;
   const rootForm = computed(() => arrayParent()?.$api.form() ?? arrayNode) as Signal<ArrayNode<TItem>>;
   const arraySyncValidation = computed(() => arrayNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
@@ -480,8 +488,9 @@ export function array<TDefinition extends NodeDefinition>(
     markAsDirty: () => arraySelfDirty.set(true),
     markAsPristine: () => arraySelfDirty.set(false),
     disabled: arrayDisabled,
+    disabledReasons: arrayDisabledReasons,
     enabled: computed(() => !arrayDisabled()),
-    disable: () => arraySelfDisabled.set(true),
+    disable: (message?: string) => arraySelfDisabled.set(message ?? true),
     enable: () => arraySelfDisabled.set(false),
     readonly: arrayReadonly,
     writable: computed(() => !arrayReadonly()),

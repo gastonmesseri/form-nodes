@@ -11,7 +11,7 @@ export { maxLength } from './lib/core/validation/validators/max-length';
 export { minLength } from './lib/core/validation/validators/min-length';
 export { asyncValidator } from './lib/core/validation/async-validator';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
-export type { MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
+export type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export { required, type RequiredOptions } from './lib/core/validation/validators/required';
 export { FORM_NODE, FormNodeDirective } from './lib/core/directives/form-node/form-node.directive';
 export type { FormNodeBinding } from './lib/core/types/form-node-binding.type';

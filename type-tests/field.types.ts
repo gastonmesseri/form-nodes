@@ -1,4 +1,4 @@
-import { field, type FieldApi } from '../src/public-api';
+import { field, type DisabledReason, type FieldApi } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -17,6 +17,7 @@ type _MinimumLength = Expect<Equal<ReturnType<typeof nullable.minLength>, number
 type _MaximumLength = Expect<Equal<ReturnType<typeof nullable.maxLength>, number | null>>;
 type _Patterns = Expect<Equal<ReturnType<typeof nullable.pattern>, readonly RegExp[]>>;
 type _RootKeyInParent = Expect<Equal<ReturnType<typeof nullable.keyInParent>, string | number | null>>;
+type _DisabledReasons = Expect<Equal<ReturnType<typeof nullable.disabledReasons>, readonly DisabledReason[]>>;
 type _NoInternalParentSetter = Expect<Equal<HasKey<typeof nullable, '_setParent'>, false>>;
 type _NoInternalClone = Expect<Equal<HasKey<FieldApi<string | null>, '_clone'>, false>>;
 
@@ -27,6 +28,7 @@ nullable.update((value) => value?.toUpperCase() ?? null);
 nullable.reset();
 nullable.reset('Daniel');
 nullable.focus({ preventScroll: true });
+nullable.disable('Managed externally');
 nullable.errors()[0]?.formNode?.focus({ preventScroll: true });
 nullable.errors()[0]?.formNode?.element.focus();
 

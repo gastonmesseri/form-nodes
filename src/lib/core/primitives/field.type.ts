@@ -1,8 +1,8 @@
 import type { Injector, Signal } from '@angular/core';
 
-import type { MarkAsTouchedOptions, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 
 export type FieldOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the field value. */
@@ -15,8 +15,8 @@ export type FieldOptions<TValue = any> = {
   readonly debounce?: number;
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
-  /** Initial disabled state or a Signal, computed Signal, or function evaluated reactively. */
-  readonly disabled?: boolean | (() => boolean);
+  /** Initial or reactive disabled state. A string disables the field and describes the reason. */
+  readonly disabled?: DisabledStateSource;
   /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
   readonly readonly?: boolean | (() => boolean);
 };
@@ -107,8 +107,11 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   markAsDirty(): void;
   markAsPristine(): void;
   disabled: Signal<boolean>;
+  /** Active inherited and local causes of this field's disabled state. */
+  disabledReasons: Signal<readonly DisabledReason[]>;
   enabled: Signal<boolean>;
-  disable(): void;
+  /** Disables this field, optionally recording a user-facing reason. */
+  disable(message?: string): void;
   enable(): void;
   readonly: Signal<boolean>;
   writable: Signal<boolean>;

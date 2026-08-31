@@ -2,7 +2,7 @@ import type { Signal } from '@angular/core';
 
 import type { ObservableLike } from '../types/observable-like.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import type { MarkAsTouchedOptions, Node, PublicNode } from '../types/node.type';
+import type { DisabledReason, MarkAsTouchedOptions, Node, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -57,6 +57,7 @@ export type AsyncValidatorState = {
   readonly dirty: Signal<boolean>;
   readonly pristine: Signal<boolean>;
   readonly disabled: Signal<boolean>;
+  readonly disabledReasons: Signal<readonly DisabledReason[]>;
   readonly enabled: Signal<boolean>;
   readonly readonly: Signal<boolean>;
   readonly writable: Signal<boolean>;
@@ -87,7 +88,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   markAsUntouched(): void;
   markAsDirty(): void;
   markAsPristine(): void;
-  disable(): void;
+  disable(message?: string): void;
   enable(): void;
   markAsReadonly(): void;
   markAsWritable(): void;

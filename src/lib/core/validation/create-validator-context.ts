@@ -11,6 +11,7 @@ const readonlyApiKeys = [
   'dirty',
   'pristine',
   'disabled',
+  'disabledReasons',
   'enabled',
   'readonly',
   'writable',

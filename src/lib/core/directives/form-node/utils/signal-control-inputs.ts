@@ -12,6 +12,7 @@ const getBindingValues = (node: Node, appId: string) => {
   const field = node as unknown as Partial<Field<unknown>>;
   return {
     disabled: node.$api.disabled(),
+    disabledReasons: node.$api.disabledReasons(),
     dirty: node.$api.dirty(),
     errors: node.$api.errors(),
     hidden: node.$api.hidden(),

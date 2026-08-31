@@ -850,6 +850,31 @@ describe('array', () => {
     expect(added.enabled()).toBe(true);
   });
 
+  it('propagates array disabled reasons to items while retaining item reasons', () => {
+    const names = array(field('Marco'), 1);
+    const item = names[0]!;
+
+    item.disable('Item is fixed');
+    names.disable('Collection is locked');
+
+    expect(names.disabledReasons()).toEqual([{
+      sourceNode: names,
+      message: 'Collection is locked',
+    }]);
+    expect(item.disabledReasons()).toEqual([
+      { sourceNode: names, message: 'Collection is locked' },
+      { sourceNode: item, message: 'Item is fixed' },
+    ]);
+
+    names.enable();
+
+    expect(names.disabledReasons()).toEqual([]);
+    expect(item.disabledReasons()).toEqual([{
+      sourceNode: item,
+      message: 'Item is fixed',
+    }]);
+  });
+
   it('rejects invalid initial counts and mutation indexes', () => {
     expect(() => array(() => field(''), -1)).toThrow(RangeError);
     expect(() => array(() => field(''), 1.5)).toThrow(RangeError);
