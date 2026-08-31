@@ -26,7 +26,15 @@ export type FormNodeControl<TValue = any> = FormNodeValueControl<TValue> | ([TVa
 export const FORM_NODE_CONTROL = new InjectionToken<FormNodeControl>('FORM_NODE_CONTROL');
 
 /**
- * Provides the host component as a signal-based custom control for `[formNode]`.
+ * Explicitly registers the host component as the signal-based control used by `[formNode]`.
+ *
+ * Prefer this provider when the component must remain reliably discoverable independently of
+ * Angular's compiled component-metadata discovery. Standard `FormValueControl` and
+ * `FormCheckboxControl` components are otherwise discovered automatically.
+ *
+ * The optional `node` signal from `FormNodeValueControl` or `FormNodeCheckboxControl` can be used
+ * when the component needs direct access to the exact bound field and wants to derive its own UI
+ * state from that field.
  *
  * @example
  * `providers: [provideFormNodeControl(() => DatePicker)]`
