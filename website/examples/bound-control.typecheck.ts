@@ -7,7 +7,7 @@ import { FormNode, field, form, injectBoundControl } from '@gem/ng-forms';
 @Component({
   selector: 'app-date-picker',
   template: `
-    <button type="button" [disabled]="boundControl.disabled()">
+    <button type="button" [disabled]="boundControl.disabled()" (blur)="boundControl.markAsTouched()">
       Select date
     </button>
   `,

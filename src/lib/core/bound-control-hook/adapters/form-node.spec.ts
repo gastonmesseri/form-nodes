@@ -242,6 +242,14 @@ describe('formNode bound-control adapter', () => {
     expect(state.touched()).toBe(false);
   });
 
+  it('marks the node as touched', () => {
+    const { fixture, state } = createBoundControl(StringHost);
+    expect(fixture.componentInstance.name.touched()).toBe(false);
+    state.markAsTouched();
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+    expect(state.touched()).toBe(true);
+  });
+
   it('disconnects when its component is destroyed', () => {
     const { fixture, state } = createBoundControl(StringHost);
     expect(state.connected()).toBe(true);

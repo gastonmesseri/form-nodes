@@ -266,6 +266,15 @@ describe('formField bound-control adapter', () => {
     expect(state.touched()).toBe(false);
   });
 
+  it('marks the field as touched', async () => {
+    const { fixture, state } = await createBoundControl(StringHost);
+    expect(fixture.componentInstance.name.touched()).toBe(false);
+    state.markAsTouched();
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+    expect(state.touched()).toBe(true);
+  });
+
   it('disconnects when its component is destroyed', async () => {
     const { fixture, state } = await createBoundControl(StringHost);
     expect(state.connected()).toBe(true);
