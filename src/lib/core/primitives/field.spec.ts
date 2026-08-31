@@ -30,6 +30,12 @@ describe('field', () => {
     expect(fieldNode.value()).toBe('David');
   });
 
+  it('allows focusing safely when no UI control is bound', () => {
+    const fieldNode = field('David');
+
+    expect(() => fieldNode.focus()).not.toThrow();
+  });
+
   it('starts as null when no initial value is given', () => {
     const fieldNode = field<string>();
     expect(fieldNode()).toBeNull();

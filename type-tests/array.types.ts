@@ -45,6 +45,7 @@ people.insert(0, { id: 'zero', name: null, age: null });
 people.set([{ id: 'three', name: 'Ada', age: 37 }]);
 people.patch([{ name: 'Grace' }]);
 people.update((value) => [...value, { id: 'four', name: null, age: null }]);
+people.focus({ preventScroll: true });
 
 people.forEach((item, index, owner) => {
   const _name: string | null = item.name();

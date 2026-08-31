@@ -10,6 +10,7 @@ import { form, type FormOptions, type NormalizedNode } from './form';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { firstControlBindingInDom } from '../utils/node-control-binding';
 import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -352,6 +353,9 @@ export function array<TDefinition extends NodeDefinition>(
     arraySelfTouched.set(false);
     arraySelfDirty.set(false);
   };
+  const getControlBindingForFocus = () => arrayItems()
+    .map((item) => (item as InternalNode).api._getControlBindingForFocus())
+    .reduce(firstControlBindingInDom, undefined);
   const getItemSnapshot = () => [
     ...arrayItems(),
   ] as ArrayItemWithParent<TItem, ArrayNode<TItem>>[];
@@ -451,6 +455,7 @@ export function array<TDefinition extends NodeDefinition>(
     submitting: computed(() => arrayParent()?.api.submitting() === true),
     debouncing: arrayDebouncing,
     flush: () => arrayItems().forEach((item) => item.api.flush()),
+    focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: arrayValidationStatus,
     touched: arrayTouched,
     untouched: computed(() => !arrayTouched()),
@@ -485,6 +490,7 @@ export function array<TDefinition extends NodeDefinition>(
       arrayParent.set(parent);
       arrayKeyInParent.set(parent ? key ?? null : null);
     },
+    _getControlBindingForFocus: getControlBindingForFocus,
   };
   const callableNode = Object.defineProperties(
     () => arrayValue(),

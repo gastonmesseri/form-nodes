@@ -45,6 +45,19 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   debouncing: Signal<boolean>;
   /** Immediately commits the pending controlValue(), ending its configured debounce. Has no observable effect when no control update is pending. */
   flush(): void;
+  /**
+   * Focuses the first `[formNode]` control currently bound to this field in DOM order.
+   *
+   * - **Native controls:** calls `focus(options)` on the bound `input`, `select`, or `textarea`.
+   * - **Signal custom controls:** calls the component's optional `focus(options)` hook. When the
+   *   component does not implement that hook, focuses its host element instead.
+   * - **ControlValueAccessor controls:** focuses the component's host element.
+   * - **Multiple bindings:** focuses whichever bound element appears first in the DOM.
+   * - **No binding:** does nothing.
+   *
+   * `FocusOptions` are forwarded unchanged to the selected native element or custom focus hook.
+   */
+  focus(options?: FocusOptions): void;
   patch(value: TValue): void;
   reset(...args: [] | [value: TValue]): void;
   validators: Signal<Validators<TValue>>;

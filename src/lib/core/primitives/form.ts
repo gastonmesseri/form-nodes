@@ -9,6 +9,7 @@ import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { firstControlBindingInDom } from '../utils/node-control-binding';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import type { InternalNode, Node, NodeDefinitions } from '../types/node.type';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
@@ -172,6 +173,9 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     const value = args[0];
     controlKeys().forEach((key) => controls[key]!.api.reset(value[key]));
   };
+  const getControlBindingForFocus = () => controlKeys()
+    .map((key) => (controls[key] as InternalNode).api._getControlBindingForFocus())
+    .reduce(firstControlBindingInDom, undefined);
   const submit = async (): Promise<boolean> => {
     if (untracked(formSubmitting)) return false;
     const submission = resolvedOptions?.submission;
@@ -221,6 +225,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     submit,
     debouncing: formDebouncing,
     flush: () => controlKeys().forEach((key) => controls[key]!.api.flush()),
+    focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: formValidationStatus,
     touched: formTouched,
     untouched: computed(() => !formTouched()),
@@ -255,6 +260,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
       formParent.set(parent);
       formKeyInParent.set(parent ? key ?? null : null);
     },
+    _getControlBindingForFocus: getControlBindingForFocus,
   };
   formNode = Object.defineProperties(
     () => formValue(),

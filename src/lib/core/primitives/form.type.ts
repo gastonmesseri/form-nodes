@@ -106,6 +106,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   debouncing: Signal<boolean>;
   /** Immediately commits every pending control value in this form's subtree. */
   flush(): void;
+  /** Focuses the first bound UI control in this form's subtree, in DOM order. */
+  focus(options?: FocusOptions): void;
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;

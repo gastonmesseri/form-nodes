@@ -8,6 +8,12 @@ import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
 describe('array', () => {
+  it('allows focusing safely when no descendant UI control is bound', () => {
+    const names = array(field('Marco'), 1);
+
+    expect(() => names.focus()).not.toThrow();
+  });
+
   it('creates independent form items from a shorthand template', () => {
     const template = { name: field(''), age: field(23) };
     const sons = array(template, 2);

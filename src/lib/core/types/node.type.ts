@@ -7,6 +7,11 @@ export type MarkAsTouchedOptions = {
   skipDescendants?: boolean;
 };
 
+export type NodeControlBinding = {
+  readonly element: Element;
+  focus(options?: FocusOptions): void;
+};
+
 export type NodeApi = {
   form: Signal<Node | null>;
   path: Signal<readonly string[]>;
@@ -30,6 +35,8 @@ export type NodeApi = {
   submitting: Signal<boolean>;
   debouncing: Signal<boolean>;
   flush(): void;
+  /** Focuses the first control bound to this node or its descendants, when one exists. */
+  focus(options?: FocusOptions): void;
   touched: Signal<boolean>;
   markAsTouched(options?: MarkAsTouchedOptions): void;
   markAsUntouched(): void;
@@ -65,6 +72,8 @@ export type InternalNodeApi = NodeApi & {
   _controlDebounce: Signal<number | undefined>;
   _clone(): Node;
   _setParent(parent: Node | null, key?: string | number): void;
+  _registerControlBinding?(binding: NodeControlBinding): () => void;
+  _getControlBindingForFocus(): NodeControlBinding | undefined;
 };
 export type InternalNode = (() => any) & { api: InternalNodeApi };
 export type Nodes = Record<string, Node>;
