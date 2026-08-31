@@ -2,8 +2,11 @@ import { CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector,
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
+import { connectSignalControl } from './signal-control';
 import { FormNodeNgControl } from './form-node-ng-control';
+import { discoverSignalControl } from './discover-signal-control';
 import type { ValidationError } from '../../validation/validation.type';
+import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './native-input-validity';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control';
@@ -90,6 +93,10 @@ export class FormNodeDirective<TValue> implements OnInit {
 
   private lastViewValue: unknown = Symbol('unset');
 
+  private signalControl = inject(FORM_NODE_CONTROL, { optional: true, self: true });
+
+  private focuser = (options?: FocusOptions) => this.element.focus(options);
+
   /** Current bound field, exposed as a signal for custom integrations. */
   node = computed(() => this.field);
 
@@ -99,9 +106,11 @@ export class FormNodeDirective<TValue> implements OnInit {
 
   ngOnInit() {
     const accessor = selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
+    const signalControl = this.signalControl ?? discoverSignalControl(this.element);
     if (accessor) this.connectAccessor(accessor);
+    else if (signalControl) this.connectSignalCustomControl(signalControl as FormNodeControl<TValue>);
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
-    else throw new Error('formNode: the host must be a native form control or provide ControlValueAccessor');
+    else throw new Error('formNode: the host must be a native form control, provide a signal custom control, or provide ControlValueAccessor');
     this.bindNodeState();
   }
 
@@ -149,6 +158,11 @@ export class FormNodeDirective<TValue> implements OnInit {
       }, { injector: this.injector });
     }
     this.connectLegacyValidators();
+  }
+
+  private connectSignalCustomControl(control: FormNodeControl<TValue>) {
+    const connection = connectSignalControl(control, () => this.field, this.injector);
+    this.focuser = connection.focus ?? this.focuser;
   }
 
   private connectLegacyValidators() {
@@ -237,7 +251,7 @@ export class FormNodeDirective<TValue> implements OnInit {
   }
 
   focus(options?: FocusOptions) {
-    this.element.focus(options);
+    this.focuser(options);
   }
 
   flush() {

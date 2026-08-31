@@ -4,13 +4,15 @@ import { ApplicationRef, Component, destroyPlatform } from '@angular/core';
 import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
 
 import { field } from '../../primitives/field';
-import { required } from '../../validation/validators/required';
 import { FormNodeDirective } from './form-node.directive';
+import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 declare const __FORM_NODE_HYDRATION_HTML__: string;
+declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
+declare const __FORM_NODE_SIGNAL_CONTROL_HYDRATION_HTML__: string;
 
 @Component({
   selector: 'form-node-hydration-app',
@@ -22,12 +24,12 @@ class HydrationApp {
   readonly age = field(23, [required], { nullable: false });
 }
 
-const installServerDom = (): { host: HTMLElement; nodes: Node[] } => {
-  const serverDocument = new DOMParser().parseFromString(atob(__FORM_NODE_HYDRATION_HTML__), 'text/html');
+const installServerDom = (encodedHtml: string, selector: string): { host: HTMLElement; nodes: Node[] } => {
+  const serverDocument = new DOMParser().parseFromString(atob(encodedHtml), 'text/html');
   const nodes = Array.from(serverDocument.body.childNodes, (node) => document.importNode(node, true));
   document.body.append(...nodes);
   const host = nodes.find((node): node is HTMLElement =>
-    node instanceof HTMLElement && node.matches('form-node-hydration-app'),
+    node instanceof HTMLElement && node.matches(selector),
   );
   if (!host) throw new Error('The SSR fixture does not contain the hydration application host.');
   return { host, nodes };
@@ -38,7 +40,7 @@ describe('FormNodeDirective hydration in Chromium', () => {
     destroyPlatform();
     const error = vi.spyOn(console, 'error');
     const warn = vi.spyOn(console, 'warn');
-    const { host, nodes } = installServerDom();
+    const { host, nodes } = installServerDom(__FORM_NODE_HYDRATION_HTML__, 'form-node-hydration-app');
     const serverInput = host.querySelector('[data-age]') as HTMLInputElement;
 
     expect(serverInput.required).toBe(true);
@@ -78,6 +80,43 @@ describe('FormNodeDirective hydration in Chromium', () => {
       expect(instance.age.getError('parse')).toBeUndefined();
       expect(hydratedInput.getAttribute('aria-invalid')).toBe('false');
       expect(host.querySelector('[data-value]')?.textContent).toBe('42');
+    } finally {
+      application?.destroy();
+      error.mockRestore();
+      warn.mockRestore();
+      nodes.forEach((node) => node.parentNode?.removeChild(node));
+      destroyPlatform();
+    }
+  });
+
+  it('hydrates a full-AOT Angular FormValueControl without an adapter provider', async () => {
+    destroyPlatform();
+    const error = vi.spyOn(console, 'error');
+    const warn = vi.spyOn(console, 'warn');
+    const { host, nodes } = installServerDom(__FORM_NODE_SIGNAL_CONTROL_HYDRATION_HTML__, 'aot-signal-control-host');
+    const serverButton = host.querySelector('aot-signal-value-control button') as HTMLButtonElement;
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../../integration-tests/form-node-signal-control.fixture');
+
+    expect(serverButton.textContent).toContain('AOT initial');
+    let application: ApplicationRef | undefined;
+    try {
+      application = await bootstrapApplication(module.AotSignalControlHost, {
+        providers: [provideClientHydration()],
+      });
+      await application.whenStable();
+
+      const hydratedButton = host.querySelector('aot-signal-value-control button') as HTMLButtonElement;
+      const instance = application.components[0]!.instance as InstanceType<typeof module.AotSignalControlHost>;
+      expect(hydratedButton).toBe(serverButton);
+      expect(error).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+
+      hydratedButton.click();
+      hydratedButton.dispatchEvent(new Event('blur', { bubbles: true }));
+      await application.whenStable();
+      expect(instance.name()).toBe('AOT value');
+      expect(instance.name.dirty()).toBe(true);
+      expect(instance.name.touched()).toBe(true);
     } finally {
       application?.destroy();
       error.mockRestore();

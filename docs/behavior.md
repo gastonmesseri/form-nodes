@@ -1284,7 +1284,7 @@ interpret returned server-validation errors.
 
 ## Control binding with `[formNode]`
 
-`FormNodeDirective` binds a field node to a native form control or to a component that implements Angular's `ControlValueAccessor` contract:
+`FormNodeDirective` binds a field node to a native form control, an explicitly provided signal custom control, or a component that implements Angular's `ControlValueAccessor` contract:
 
 ```ts
 @Component({
@@ -1311,6 +1311,10 @@ The directive currently provides these behaviors:
 - `disabled`, `readonly`, `required`, and `aria-invalid` are synchronized from field state to applicable DOM properties.
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
+- Components implementing Angular's standard `FormValueControl<T>` (`value = model<T>()`) or `FormCheckboxControl` (`checked = model<boolean>()`) are discovered automatically from their compiled component metadata. They require no library-specific interface, provider, or registration. The model synchronizes in both directions and user changes follow the field's normal `setControlValue()` debounce behavior.
+- Standard Signal Forms state inputs implemented by the component are synchronized when this library has an equivalent field state: `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `name`, `pending`, `readonly`, `required`, and `touched`. Input transforms are honored. Angular-specific state without a library equivalent, including `disabledReasons` and validator constraint inputs such as `min`, is not synthesized.
+- The standard optional `touch` output marks the field touched; optional `focus()` and `reset()` hooks integrate with the directive and field reset lifecycle. A library-specific `node` signal remains available through the optional `FormNodeValueControl` extension, but is not required for Angular-compatible controls.
+- `provideFormNodeControl()` remains an explicit fallback for unusual controls whose model is not exposed in Angular component metadata. Binding precedence is deliberate: a matching `ControlValueAccessor` wins first for compatibility with established Angular controls, then an explicit signal-control provider, then an automatically discovered Signal Forms control, then native-control handling.
 - Model-to-view `writeValue()` calls are guarded against reentrant `onChange` callbacks. A legacy CVA that invokes its registered change callback from inside `writeValue()` therefore cannot mark the field dirty, write the value back, or create a feedback loop.
 - When several Angular accessors match, selection follows Angular's precedence: one custom accessor, then one specialized built-in accessor, then the default accessor. Multiple accessors within the selected category are rejected as ambiguous.
 - Synchronous validators provided by a CVA through `NG_VALIDATORS` participate in the field's real validation state. Their Angular validation key becomes `error.kind`, and `registerOnValidatorChange()` invalidates the reactive result. These binding-owned errors are suppressed with the field's other errors while it is disabled, readonly, or hidden and are removed when the binding is destroyed or changes field.
@@ -1344,7 +1348,7 @@ destroyed. No validity observer or style is installed during server rendering.
 
 This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
 
-The architecture follows Angular 22 Signal Forms `FormField` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), while keeping the public name and node model specific to this library. Configurable state classes and any future signal-based custom-control interoperability should remain adapter concerns rather than changing field semantics.
+The architecture follows Angular 22 Signal Forms `FormField`, `FormValueControl`, and `FormCheckboxControl` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), especially `packages/forms/signals/src/directive/form_field.ts` and `packages/forms/signals/src/api/types.ts`, while keeping the public name and node model specific to this library. Angular's compiler expansion is specifically tied to a `[formField]` binding, so `[formNode]` performs its own defensive discovery through the public `getDebugNode()` and `reflectComponentType()` APIs. Updating read-only `InputSignal` state uses a small isolated adapter around Angular's `ɵSIGNAL`/`InputSignalNode` mechanism; this compatibility boundary is covered by JIT, full-AOT, server-rendering, hydration, OnPush, and real-Chromium tests. Signal interoperability remains a directive concern and does not change field semantics.
 
 ## Internal structural behavior
 

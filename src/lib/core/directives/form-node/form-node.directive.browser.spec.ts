@@ -2,15 +2,18 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
-import { CSP_NONCE, Component, ViewEncapsulation, forwardRef, type OnDestroy } from '@angular/core';
+import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { CSP_NONCE, Component, ViewEncapsulation, forwardRef, input, model, output, type OnDestroy } from '@angular/core';
 
 import { field } from '../../primitives/field';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../../validation/validators/required';
-import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
+
+declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -360,6 +363,129 @@ describe('FormNodeDirective in Chromium', () => {
 
     fixture.destroy();
     expect(control.destroyed).toBe(true);
+  });
+
+  it('automatically integrates with Angular FormValueControl and FormCheckboxControl components', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-signal-value-control',
+      template: `<button type="button" [disabled]="disabled()" (click)="value.set('Mark')" (blur)="touch.emit()">{{ value() }}</button>`,
+    })
+    class BrowserSignalValueControl implements FormValueControl<string> {
+      value = model('');
+      touch = output<void>();
+      disabled = input(false);
+      required = input(false);
+      invalid = input(false);
+      touched = input(false);
+      dirty = input(false);
+      focusOptions: FocusOptions | undefined;
+      resetCalls = 0;
+      focus(options?: FocusOptions) { this.focusOptions = options; }
+      reset() { this.resetCalls += 1; }
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'browser-signal-checkbox-control',
+      template: `<button type="button" (click)="checked.update(value => !value)">{{ checked() }}</button>`,
+    })
+    class BrowserSignalCheckboxControl implements FormCheckboxControl {
+      checked = model(false);
+    }
+
+    registerSignalModelForJit(BrowserSignalValueControl, 'value');
+    registerSignalInputForJit(BrowserSignalValueControl, 'disabled', 'disabled');
+    registerSignalInputForJit(BrowserSignalValueControl, 'required', 'required');
+    registerSignalInputForJit(BrowserSignalValueControl, 'invalid', 'invalid');
+    registerSignalInputForJit(BrowserSignalValueControl, 'touched', 'touched');
+    registerSignalInputForJit(BrowserSignalValueControl, 'dirty', 'dirty');
+    registerSignalModelForJit(BrowserSignalCheckboxControl, 'checked');
+
+    @Component({
+      standalone: true,
+      selector: 'browser-signal-control-host',
+      imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNodeDirective],
+      template: `
+        <browser-signal-value-control #valueBinding="formNode" [formNode]="name" />
+        <browser-signal-checkbox-control [formNode]="active" />
+      `,
+    })
+    class Host {
+      name = field('David', [required], { nullable: false });
+      active = field(false, { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const valueDebugElement = fixture.debugElement.children[0]!;
+    const checkboxDebugElement = fixture.debugElement.children[1]!;
+    const valueControl = valueDebugElement.componentInstance as BrowserSignalValueControl;
+    const checkboxControl = checkboxDebugElement.componentInstance as BrowserSignalCheckboxControl;
+    const valueButton = valueDebugElement.nativeElement.querySelector('button') as HTMLButtonElement;
+    const checkboxButton = checkboxDebugElement.nativeElement.querySelector('button') as HTMLButtonElement;
+
+    expect(valueControl.value()).toBe('David');
+    expect(valueControl.required()).toBe(true);
+    expect(valueControl.invalid()).toBe(false);
+    expect(checkboxControl.checked()).toBe(false);
+
+    valueButton.click();
+    checkboxButton.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name()).toBe('Mark');
+    expect(fixture.componentInstance.name.dirty()).toBe(true);
+    expect(fixture.componentInstance.active()).toBe(true);
+
+    dispatch(valueButton, 'blur');
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+    expect(valueControl.touched()).toBe(true);
+    expect(valueControl.dirty()).toBe(true);
+
+    fixture.componentInstance.name.disable();
+    fixture.detectChanges();
+    expect(valueControl.disabled()).toBe(true);
+    expect(valueButton.disabled).toBe(true);
+
+    valueDebugElement.injector.get(FormNodeDirective).focus({ preventScroll: true });
+    expect(valueControl.focusOptions).toEqual({ preventScroll: true });
+
+    fixture.componentInstance.name.reset();
+    expect(valueControl.resetCalls).toBe(1);
+    fixture.destroy();
+  });
+
+  it('automatically integrates with production-style AOT signal controls', async () => {
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../../integration-tests/form-node-signal-control.fixture');
+    const fixture = TestBed.createComponent(module.AotSignalControlHost);
+    fixture.detectChanges();
+    const valueControl = fixture.debugElement.children[0]!.componentInstance as InstanceType<typeof module.AotSignalValueControl>;
+    const checkboxControl = fixture.debugElement.children[1]!.componentInstance as InstanceType<typeof module.AotSignalCheckboxControl>;
+    const valueButton = fixture.nativeElement.querySelector('aot-signal-value-control button') as HTMLButtonElement;
+    const checkboxButton = fixture.nativeElement.querySelector('aot-signal-checkbox-control button') as HTMLButtonElement;
+
+    expect(valueControl.value()).toBe('AOT initial');
+    expect(valueControl.required()).toBe(true);
+    expect(checkboxControl.checked()).toBe(false);
+
+    valueButton.click();
+    checkboxButton.click();
+    dispatch(valueButton, 'blur');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.name()).toBe('AOT value');
+    expect(fixture.componentInstance.name.dirty()).toBe(true);
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+    expect(fixture.componentInstance.active()).toBe(true);
+    expect(valueControl.dirty()).toBe(true);
+    expect(valueControl.touched()).toBe(true);
+
+    fixture.componentInstance.name.disable();
+    fixture.detectChanges();
+    expect(valueControl.disabled()).toBe(true);
+    expect(valueButton.disabled).toBe(true);
+    fixture.destroy();
   });
 
   it('ignores a reentrant onChange callback during a CVA model-to-view write', () => {

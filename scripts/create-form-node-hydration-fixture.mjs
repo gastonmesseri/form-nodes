@@ -8,7 +8,9 @@ import { provideServerRendering, renderApplication } from '@angular/platform-ser
 
 const workspace = process.cwd();
 const packageUrl = pathToFileURL(resolve(workspace, 'dist', 'fesm2022', 'gem-ng-forms.mjs')).href;
+const signalControlUrl = pathToFileURL(resolve(workspace, 'node_modules', '.cache', 'ng-forms', 'aot-signal-control', 'form-node-signal-control.fixture.mjs')).href;
 const { field, required, FormNodeDirective } = await import(packageUrl);
+const { AotSignalControlHost } = await import(signalControlUrl);
 
 class HydrationApp {
   age = field(23, [required], { nullable: false });
@@ -28,6 +30,14 @@ const hydrationHtml = await renderApplication(
   { document: '<form-node-hydration-app></form-node-hydration-app>', url: '/' },
 );
 
+const signalControlHydrationHtml = await renderApplication(
+  (context) => bootstrapApplication(AotSignalControlHost, {
+    providers: [provideServerRendering(), provideClientHydration()],
+  }, context),
+  { document: '<aot-signal-control-host></aot-signal-control-host>', url: '/' },
+);
+
 const fixtureDirectory = resolve(workspace, 'node_modules', '.cache', 'ng-forms');
 mkdirSync(fixtureDirectory, { recursive: true });
 writeFileSync(resolve(fixtureDirectory, 'form-node-hydration.html'), hydrationHtml);
+writeFileSync(resolve(fixtureDirectory, 'form-node-signal-control-hydration.html'), signalControlHydrationHtml);

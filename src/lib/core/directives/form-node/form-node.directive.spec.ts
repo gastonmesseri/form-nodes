@@ -2,7 +2,7 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, forwardRef, inject, signal } from '@angular/core';
+import { Component, forwardRef, inject, model, signal } from '@angular/core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
@@ -13,6 +13,7 @@ import type { Field } from '../../primitives/field';
 import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { required } from '../../validation/validators/required';
+import { provideFormNodeControl } from './form-node-control';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './native-control';
 
@@ -36,6 +37,38 @@ const accessorWithPrototype = (prototype: object): ControlValueAccessor & { writ
 };
 
 describe('FormNodeDirective', () => {
+  it('supports the explicit signal-control provider as a fallback', () => {
+    @Component({
+      standalone: true,
+      selector: 'explicit-signal-control',
+      providers: [provideFormNodeControl(() => ExplicitSignalControl)],
+      template: `<span>{{ value() }}</span>`,
+    })
+    class ExplicitSignalControl {
+      value = model('');
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'explicit-signal-control-host',
+      imports: [ExplicitSignalControl, FormNodeDirective],
+      template: `<explicit-signal-control [formNode]="name" />`,
+    })
+    class Host {
+      name = field('Marco', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as ExplicitSignalControl;
+
+    expect(control.value()).toBe('Marco');
+
+    control.value.set('Lia');
+
+    expect(fixture.componentInstance.name()).toBe('Lia');
+  });
+
   it('synchronizes native text values and interaction state in both directions', () => {
     @Component({
       standalone: true,
@@ -505,7 +538,7 @@ describe('FormNodeDirective', () => {
     }
 
     expect(() => TestBed.createComponent(Host).detectChanges())
-      .toThrowError('formNode: the host must be a native form control or provide ControlValueAccessor');
+      .toThrowError('formNode: the host must be a native form control, provide a signal custom control, or provide ControlValueAccessor');
   });
 
   it('rejects multiple custom ControlValueAccessors on the same host', () => {
