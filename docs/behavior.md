@@ -1015,17 +1015,41 @@ The explicit factory contract deliberately prevents node reuse. Returning the sa
 
 ### Constructor signatures
 
-Templates and factories support the same argument combinations:
+The recommended and most common declaration is a template followed by its initial value:
+
+```ts
+const people = array(
+  { name: field(''), age: field(0) },
+  [{ name: 'Marco', age: 23 }],
+);
+```
+
+This `array(template, initialValue)` form should be presented first in user-facing documentation. It keeps the array's structure and initial data immediately visible, matching the positional style of `field(initialValue)`. Use `array(template)` when the intended initial value is simply `[]`.
+
+Templates and factories also support these argument combinations:
 
 ```ts
 array(templateOrFactory);
-array(templateOrFactory, options);
-array(templateOrFactory, validators, options?);
+array(templateOrFactory, initialValue); // recommended when initial items exist
 array(templateOrFactory, initialValue, options?);
 array(templateOrFactory, initialValue, validators, options?);
+array(templateOrFactory, options);
+array(templateOrFactory, validators, options?);
 ```
 
-`initialValue` is either a non-negative item count or an array of item values. Validators can therefore retain the same shorthand style as fields and forms:
+`initialValue` is either a non-negative item count or an array of item values. Declaring it inside options is a secondary alternative when keeping all configuration in one object is more convenient:
+
+```ts
+const people = array(
+  { id: field(''), name: field('') },
+  {
+    initialValue: [{ id: 'marco', name: 'Marco' }],
+    trackBy: person => person.id,
+  },
+);
+```
+
+The positional and option forms are alternatives. Once a positional initial value is present, IntelliSense omits `options.initialValue` and TypeScript rejects attempts to specify both. Validators can retain the same shorthand style as fields and forms:
 
 ```ts
 const names = array(

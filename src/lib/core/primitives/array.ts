@@ -23,50 +23,111 @@ export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode
 type ArrayFactory<TDefinition extends NodeDefinition> = () => TDefinition;
 type ArraySource<TDefinition extends NodeDefinition> = TDefinition | ArrayFactory<TDefinition>;
 type ArrayInitial<TDefinition extends NodeDefinition> = number | ArraySet<NormalizedNode<TDefinition>>;
+type PositionalArrayOptions<TValue> = Omit<ArrayOptions<TValue>, 'initialValue'>;
+const omitInitialValue = <TValue>(options: ArrayOptions<TValue>): PositionalArrayOptions<TValue> => {
+  const { initialValue: _initialValue, ...remainingOptions } = options;
+  return remainingOptions;
+};
 const looksLikeValidatorSource = (value: unknown): boolean =>
   typeof value === 'function'
   || (Array.isArray(value)
     && value.some((entry) => typeof entry === 'function')
     && value.every((entry) => entry == null || typeof entry === 'function'));
 
-export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
-  initial: NoInfer<ArrayInitial<TDefinition>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
-  initial: NoInfer<ArrayInitial<TDefinition>>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a declarative node template.
+ *
+ * @param template Node definition cloned for every item.
+ * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
+ */
 export function array<TDefinition extends NodeDefinition>(
   template: TDefinition,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a declarative node template and positional initial contents.
+ *
+ * @param template Node definition cloned for every item.
+ * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the template defaults.
+ * @param options Additional array configuration.
+ */
+export function array<TDefinition extends NodeDefinition>(
+  template: TDefinition,
+  initial: NoInfer<ArrayInitial<TDefinition>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a template, positional initial contents, and validators.
+ *
+ * @param template Node definition cloned for every item.
+ * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the template defaults.
+ * @param validators Reactive validator source for the complete array value.
+ * @param options Additional array configuration.
+ */
+export function array<TDefinition extends NodeDefinition>(
+  template: TDefinition,
+  initial: NoInfer<ArrayInitial<TDefinition>>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a template and validators.
+ *
+ * @param template Node definition cloned for every item.
+ * @param validators Reactive validator source for the complete array value.
+ * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
+ */
+export function array<TDefinition extends NodeDefinition>(
+  template: TDefinition,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a node-definition factory.
+ *
+ * @param factory Called once for every item and must return a fresh node definition.
+ * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
+ */
+export function array<TDefinition extends NodeDefinition>(
+  factory: ArrayFactory<TDefinition>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a factory and positional initial contents.
+ *
+ * @param factory Called once for every item and must return a fresh node definition.
+ * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
+ * @param options Additional array configuration.
+ */
 export function array<TDefinition extends NodeDefinition>(
   factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a factory, positional initial contents, and validators.
+ *
+ * @param factory Called once for every item and must return a fresh node definition.
+ * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
+ * @param validators Reactive validator source for the complete array value.
+ * @param options Additional array configuration.
+ */
 export function array<TDefinition extends NodeDefinition>(
   factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a factory and validators.
+ *
+ * @param factory Called once for every item and must return a fresh node definition.
+ * @param validators Reactive validator source for the complete array value.
+ * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
+ */
 export function array<TDefinition extends NodeDefinition>(
   factory: ArrayFactory<TDefinition>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-export function array<TDefinition extends NodeDefinition>(
-  factory: ArrayFactory<TDefinition>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends NodeDefinition>(
@@ -84,10 +145,12 @@ export function array<TDefinition extends NodeDefinition>(
     || (Array.isArray(initialOrValidatorsOrOptions) && (
       !secondIsValidators || thirdIsValidators || separateOptions !== undefined
     ));
-  const initial = hasInitial ? initialOrValidatorsOrOptions as number | TSet : [] as TSet;
   const resolvedOptions = hasInitial
     ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue> | undefined
     : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue> | undefined;
+  const initial = hasInitial
+    ? initialOrValidatorsOrOptions as number | TSet
+    : (resolvedOptions?.initialValue ?? []) as number | TSet;
   const validatorSource = hasInitial
     ? thirdIsValidators ? validatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? []
     : secondIsValidators ? initialOrValidatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? [];
@@ -98,7 +161,7 @@ export function array<TDefinition extends NodeDefinition>(
   const factory = typeof source === 'function' && !isNode(source)
     ? source as ArrayFactory<TDefinition>
     : createNodeDefinitionFactory(source as TDefinition);
-  const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
+  const cloneOptions = resolvedOptions === undefined ? undefined : omitInitialValue(resolvedOptions);
   const cloneInitial = typeof initial === 'number' ? initial : [...initial] as TSet;
   const recreateArray = array as unknown as (
     initialSource: ArrayFactory<TDefinition>,
