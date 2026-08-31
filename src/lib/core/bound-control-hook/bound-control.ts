@@ -1,8 +1,10 @@
 import { APP_ID, DestroyRef, ElementRef, computed, inject, type Signal } from '@angular/core';
 
+import { injectNgModelBoundControl } from './adapters/ng-model';
 import { injectFormNodeBoundControl } from './adapters/form-node';
+import { injectFormFieldBoundControl } from './adapters/form-field';
 import { injectFormControlBoundControl } from './adapters/form-control';
-import type { DisabledReason } from '../types/node.type';
+import { injectFormControlNameBoundControl } from './adapters/form-control-name';
 
 /** Binding APIs that can supply a universal {@link BoundControl} state facade. */
 export type BoundControlSource = 'formNode' | 'formField' | 'formControl' | 'formControlName' | 'ngModel';
@@ -13,12 +15,17 @@ export type BoundControlError = {
   readonly [property: string]: unknown;
 };
 
+/** A source-neutral explanation for why the bound control is disabled. */
+export type BoundControlDisabledReason = {
+  readonly message?: string;
+};
+
 /**
  * Read-only state of the form binding attached to a custom-control component.
  *
  * Every member is a signal and remains safe to read when the component is not bound. The current
- * implementation supplies state from `[formNode]` and `[formControl]`; the source-neutral contract
- * is designed to support Angular's other form-binding APIs without changing custom controls.
+ * implementation supplies state from every supported Angular forms binding through one stable
+ * custom-control API.
  */
 export type BoundControl<TValue = unknown> = {
   /** Whether a supported form binding is attached to the component host. */
@@ -30,7 +37,7 @@ export type BoundControl<TValue = unknown> = {
   /** Whether the bound control is disabled. */
   readonly disabled: Signal<boolean>;
   /** Reasons currently disabling the bound control. */
-  readonly disabledReasons: Signal<readonly DisabledReason[]>;
+  readonly disabledReasons: Signal<readonly BoundControlDisabledReason[]>;
   /** Whether the user has changed the bound control. */
   readonly dirty: Signal<boolean>;
   /** Validation errors normalized to objects containing a `kind`. */
@@ -65,8 +72,7 @@ export type BoundControl<TValue = unknown> = {
  * Injects a source-neutral, read-only view of the form state bound to a custom-control component.
  *
  * Call this in a component injection context. When no supported binding exists on the host, the
- * returned signals expose neutral values. Future `formField`, `formControlName`, and `ngModel`
- * adapters can supply the same interface.
+ * returned signals expose neutral values.
  *
  * ```ts
  * export class DatePicker {
@@ -81,7 +87,10 @@ export const injectBoundControl = <TValue = unknown>(): BoundControl<TValue> => 
   const appId = inject(APP_ID);
   const adapters = [
     injectFormNodeBoundControl<TValue>(element, destroyRef, appId),
+    injectFormFieldBoundControl<TValue>(),
     injectFormControlBoundControl<TValue>(),
+    injectFormControlNameBoundControl<TValue>(),
+    injectNgModelBoundControl<TValue>(),
   ];
   const active = computed(() => adapters.find(adapter => adapter.connected()) ?? null);
 

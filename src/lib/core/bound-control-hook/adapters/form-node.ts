@@ -41,7 +41,7 @@ export const injectFormNodeBoundControl = <TValue>(element: HTMLElement, destroy
     connected: computed(() => binding() !== null),
     value: computed(() => node()() as TValue),
     disabled: computed(() => node().$api.disabled()),
-    disabledReasons: computed(() => node().$api.disabledReasons()),
+    disabledReasons: computed(() => node().$api.disabledReasons().map(({ message }) => message === undefined ? {} : { message })),
     dirty: computed(() => node().$api.dirty()),
     errors: computed(() => binding()!.errors().map(error => ({ ...error, kind: error.kind }))),
     hidden: computed(() => node().$api.hidden()),

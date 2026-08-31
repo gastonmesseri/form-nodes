@@ -111,9 +111,11 @@ describe('formNode bound-control adapter', () => {
     const { fixture, state } = createBoundControl(StringHost);
     expect(state.disabledReasons()).toEqual([]);
     fixture.componentInstance.name.disable('maintenance');
-    expect(state.disabledReasons()).toEqual([{ sourceNode: fixture.componentInstance.name, message: 'maintenance' }]);
+    expect(state.disabledReasons()).toEqual([{ message: 'maintenance' }]);
     fixture.componentInstance.name.enable();
     expect(state.disabledReasons()).toEqual([]);
+    fixture.componentInstance.name.disable();
+    expect(state.disabledReasons()).toEqual([{}]);
   });
 
   it('tracks dirty changes', () => {
