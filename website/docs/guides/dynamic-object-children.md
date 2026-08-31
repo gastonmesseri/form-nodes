@@ -48,6 +48,11 @@ added.address.city(); // 'Zurich'
 The operation validates every destination key before attaching anything. Existing keys, `$api`,
 and `$field` are rejected.
 
+Both `add()` signatures intentionally preserve the cardinality of their input. Adding one named
+definition returns that exact attached node; adding an object returns an exact keyed map containing
+all attached nodes. This keeps the common single-control call concise while retaining precise types
+for an atomic multi-control addition.
+
 Unlike keys in the initial `form()` definition, a dynamically added key does not replace an
 existing form or callable member. When such a name collides, read the child through `children`.
 
@@ -72,6 +77,10 @@ profile[key]; // DynamicNode | undefined
 
 When a dynamic name collides with an API operation such as `set`, or a native callable member such
 as `name`, access that child through `children`; the existing member remains available normally.
+
+Dynamic properties are readonly lookups. Assignment such as `profile.age = field(23)` is not an
+alternative spelling of `add()`: attaching or detaching a node changes tree structure, parentage,
+validation, and aggregate state, so it remains an explicit operation.
 
 ## Remove a dynamic child
 
@@ -100,7 +109,7 @@ children retain their current value. `reset()` still clears their interaction st
 
 ## Angular comparison
 
-Angular Signal Forms 22.1.4 derives object and array children from the shape of its writable model;
+Angular Signal Forms 22.1.5 derives object and array children from the shape of its writable model;
 it does not expose an `addControl()` operation on a field tree. Gem Forms owns explicit nodes, so
 `add()` and `remove()` are deliberate library-specific structural operations.
 
