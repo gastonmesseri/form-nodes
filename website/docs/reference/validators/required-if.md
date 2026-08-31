@@ -48,14 +48,14 @@ When the condition returns `false`, the validator passes and contributes
 [`required()`](./required.md): it rejects `null`, `undefined`, `''`, `false`, and `NaN`, while
 empty arrays, sets, maps, and objects remain present values.
 
-The condition may also depend on a sibling node:
+The condition may also depend on a sibling node declared in the same form:
 
 ```ts
-const accountType = field<'personal' | 'business'>('personal', { nullable: false });
-
 const myForm = form({
-  accountType,
-  companyName: field('', [requiredIf(() => accountType() === 'business')]),
+  accountType: field<'personal' | 'business'>('personal'),
+  companyName: field('', [
+    requiredIf(() => myForm.accountType() === 'business'),
+  ]),
 });
 ```
 
