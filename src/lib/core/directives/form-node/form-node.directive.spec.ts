@@ -1524,7 +1524,7 @@ describe('FormNodeNgControl', () => {
 
   it('reports pending when no terminal validation status is available', () => {
     const pendingNode = {
-      api: {
+      $api: {
         disabled: () => false,
         valid: () => false,
         invalid: () => false,

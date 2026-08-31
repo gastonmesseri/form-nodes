@@ -15,6 +15,12 @@ import { minLength } from '../validation/validators/min-length';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('exposes the same API through api and $api', () => {
+    const name = field('David');
+
+    expect(name.$api).toBe(name.api);
+  });
+
   it('exposes an empty path when it is a root node', () => {
     const name = field('David');
 

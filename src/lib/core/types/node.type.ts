@@ -61,7 +61,20 @@ export type NodeApi = {
   show(): void;
 };
 
-export type Node = (() => any) & { api: NodeApi };
+export type Node = (() => any) & {
+  /**
+   * Collision-safe access to the node API.
+   *
+   * Prefer `api` for normal application code. Use `$api` when a form declares a child named
+   * `api`, or when generic node code requires an access path that cannot collide with children.
+   *
+   * This property is not obsolete and is not planned for removal. It is marked as deprecated
+   * only to reduce its prominence in autocomplete and keep the usual `api` access easier to find.
+   *
+   * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+   */
+  $api: NodeApi;
+};
 export type PublicNode<TNode extends Node> = Node extends TNode
   ? TNode & HiddenFunctionMembers
   : TNode;
@@ -69,7 +82,7 @@ type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, un
 
 export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = RootLookupDepth> =
   TDepth extends readonly [unknown, ...infer TRest]
-    ? TNode extends { api: { parent: Signal<infer TParent | null> } }
+    ? TNode extends { $api: { parent: Signal<infer TParent | null> } }
       ? TParent extends Node
         ? Node extends TParent ? TNode : RootNode<TParent, TRest>
         : TNode
@@ -84,7 +97,7 @@ export type InternalNodeApi = NodeApi & {
   _registerControlBinding(binding: NodeControlBinding): () => void;
   _getControlBindingForFocus(): NodeControlBinding | undefined;
 };
-export type InternalNode = (() => any) & { api: InternalNodeApi };
+export type InternalNode = (() => any) & { $api: InternalNodeApi };
 export type Nodes = Record<string, Node>;
 export type NodeDefinition = Node | NodeDefinitions;
 export interface NodeDefinitions {
@@ -95,6 +108,6 @@ export type NodeKeyInParent<TParent extends Node> = Node extends TParent
   ? string | number | null
   : NodeValue<TParent> extends readonly unknown[] ? number | null : string;
 export type NodeSet<TNode> =
-  TNode extends { api: { set(value: infer TValue): void } } ? TValue : never;
+  TNode extends { $api: { set(value: infer TValue): void } } ? TValue : never;
 export type NodePatch<TNode> =
-  TNode extends { api: { patch(value: infer TValue): void } } ? TValue : never;
+  TNode extends { $api: { patch(value: infer TValue): void } } ? TValue : never;

@@ -19,12 +19,12 @@ export class FormRootDirective {
   /** Prevents native navigation and runs the form node's configured submission action. */
   submit(event: Event) {
     event.preventDefault();
-    this.form().api.submit();
+    this.form().$api.submit();
   }
 
   /** Resets the complete form tree instead of letting the browser reset only DOM controls. */
   reset(event: Event) {
     event.preventDefault();
-    this.form().api.reset();
+    this.form().$api.reset();
   }
 }

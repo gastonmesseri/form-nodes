@@ -27,9 +27,9 @@ export const connectSignalControl = <TNode extends Node>(
   connectSignalControlInputs(control, node, injector);
 
   const valueSubscription = model.subscribe((value) => {
-    if (!writingControlValue) (node() as unknown as InternalNode).api._setControlValue(value);
+    if (!writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);
   });
-  const touchSubscription = control.touch?.subscribe(() => node().api.markAsTouched());
+  const touchSubscription = control.touch?.subscribe(() => node().$api.markAsTouched());
 
   injector.get(DestroyRef).onDestroy(() => {
     valueSubscription.unsubscribe();
@@ -39,7 +39,7 @@ export const connectSignalControl = <TNode extends Node>(
 
   effect(() => {
     const currentNode = node();
-    const value = (currentNode as unknown as InternalNode).api._controlValue();
+    const value = (currentNode as unknown as InternalNode).$api._controlValue();
     untracked(() => {
       nodeInput?.set(currentNode);
       if (Object.is(model(), value)) return;

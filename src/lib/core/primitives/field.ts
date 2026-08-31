@@ -73,28 +73,28 @@ export function field<TValue>(
   const fieldKeyInParent = signal<string | number | null>(null);
   const fieldControlDebounce = computed(() =>
     resolvedOptions?.debounce
-    ?? (fieldParent() as InternalNode | null)?.api._controlDebounce(),
+    ?? (fieldParent() as InternalNode | null)?.$api._controlDebounce(),
   );
   const fieldPath = computed<readonly string[]>(() => {
     const parent = fieldParent();
     const key = fieldKeyInParent();
-    return parent && key !== null ? [...parent.api.path(), String(key)] : [];
+    return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
   const fieldDisabled = computed(() =>
-    fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.api.disabled() === true,
+    fieldSelfDisabled() || readStateSource(resolvedOptions?.disabled) || fieldParent()?.$api.disabled() === true,
   );
   const fieldSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const fieldReadonly = computed(() =>
-    fieldSelfReadonly() || readStateSource(resolvedOptions?.readonly) || fieldParent()?.api.readonly() === true,
+    fieldSelfReadonly() || readStateSource(resolvedOptions?.readonly) || fieldParent()?.$api.readonly() === true,
   );
   const fieldSelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const fieldHidden = computed(() =>
-    fieldSelfHidden() || readStateSource(resolvedOptions?.hidden) || fieldParent()?.api.hidden() === true,
+    fieldSelfHidden() || readStateSource(resolvedOptions?.hidden) || fieldParent()?.$api.hidden() === true,
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   let fieldNode!: Field<TValue>;
   const emptySyncMetadata = new Map();
-  const fieldForm = computed(() => fieldParent()?.api.form() ?? null);
+  const fieldForm = computed(() => fieldParent()?.$api.form() ?? null);
   const fieldSyncValidation = computed(() => fieldNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
@@ -210,7 +210,7 @@ export function field<TValue>(
       fieldErrors().some((error) => error.kind === 'required'),
     ),
     pending: computed(() => !fieldNonInteractive() && asyncValidation.pending()),
-    submitting: computed(() => fieldParent()?.api.submitting() === true),
+    submitting: computed(() => fieldParent()?.$api.submitting() === true),
     validationStatus: fieldValidationStatus,
     touched: computed(() => !fieldNonInteractive() && fieldTouched()),
     untouched: computed(() => fieldNonInteractive() || !fieldTouched()),
@@ -253,7 +253,7 @@ export function field<TValue>(
   fieldNode = Object.assign(
     () => fieldValue(),
     members,
-    { api: internalApi },
+    { api: internalApi, $api: internalApi },
   ) as unknown as Field<TValue>;
   markAsNode(fieldNode);
   ensureAsyncValidationWatch();

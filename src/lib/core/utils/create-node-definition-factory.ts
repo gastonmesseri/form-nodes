@@ -27,7 +27,7 @@ export const createNodeDefinitionFactory = <TDefinition extends NodeDefinition>(
   definition: TDefinition,
 ): (() => TDefinition) => {
   if (isNode(definition)) {
-    const clone = (definition as InternalNode).api._clone;
+    const clone = (definition as InternalNode).$api._clone;
     return (() => clone() as TDefinition);
   }
 

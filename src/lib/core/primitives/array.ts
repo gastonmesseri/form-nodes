@@ -188,7 +188,7 @@ export function array<TDefinition extends NodeDefinition>(
   const initialCount = typeof initial === 'number' ? initial : initial.length;
   const initialItems = Array.from({ length: initialCount }, (_, index) => {
     const item = createItem();
-    if (initialValues) item.api.reset(initialValues[index]!);
+    if (initialValues) item.$api.reset(initialValues[index]!);
     return item;
   });
   const arrayItems = signal<readonly TItem[]>(initialItems);
@@ -200,23 +200,23 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayKeyInParent = signal<string | number | null>(null);
   const arrayControlDebounce = computed(() =>
     resolvedOptions?.debounce
-    ?? (arrayParent() as InternalNode | null)?.api._controlDebounce(),
+    ?? (arrayParent() as InternalNode | null)?.$api._controlDebounce(),
   );
   const arrayPath = computed<readonly string[]>(() => {
     const parent = arrayParent();
     const key = arrayKeyInParent();
-    return parent && key !== null ? [...parent.api.path(), String(key)] : [];
+    return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
   const arrayDisabled = computed(() =>
-    arraySelfDisabled() || readStateSource(resolvedOptions?.disabled) || arrayParent()?.api.disabled() === true,
+    arraySelfDisabled() || readStateSource(resolvedOptions?.disabled) || arrayParent()?.$api.disabled() === true,
   );
   const arraySelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
   const arrayReadonly = computed(() =>
-    arraySelfReadonly() || readStateSource(resolvedOptions?.readonly) || arrayParent()?.api.readonly() === true,
+    arraySelfReadonly() || readStateSource(resolvedOptions?.readonly) || arrayParent()?.$api.readonly() === true,
   );
   const arraySelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
   const arrayHidden = computed(() =>
-    arraySelfHidden() || readStateSource(resolvedOptions?.hidden) || arrayParent()?.api.hidden() === true,
+    arraySelfHidden() || readStateSource(resolvedOptions?.hidden) || arrayParent()?.$api.hidden() === true,
   );
   const arrayNonInteractive = computed(() => arrayHidden() || arrayDisabled() || arrayReadonly());
   const arrayValue = computed<TValue>(() => arrayItems().map((item) => item()) as TValue);
@@ -224,7 +224,7 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource(validatorSource));
   const emptySyncMetadata = new Map();
   let arrayNode!: ArrayNode<TItem>;
-  const rootForm = computed(() => arrayParent()?.api.form() ?? arrayNode) as Signal<ArrayNode<TItem>>;
+  const rootForm = computed(() => arrayParent()?.$api.form() ?? arrayNode) as Signal<ArrayNode<TItem>>;
   const arraySyncValidation = computed(() => arrayNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(arrayContext, arrayValidators(), arrayNode));
@@ -244,7 +244,7 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayAllErrors = computed(
     () => [
       ...arrayErrors(),
-      ...arrayItems().flatMap((item) => item.api.allErrors()),
+      ...arrayItems().flatMap((item) => item.$api.allErrors()),
     ],
     { equal: shallowEqual },
   );
@@ -254,12 +254,12 @@ export function array<TDefinition extends NodeDefinition>(
   ) as ArrayApi<TItem>['getError'];
   const arrayPending = computed(() =>
     !arrayNonInteractive() && (
-      asyncValidation.pending() || arrayItems().some((item) => item.api.pending())
+      asyncValidation.pending() || arrayItems().some((item) => item.$api.pending())
     ),
   );
   const arrayValidationStatus = computed<ValidationStatus>(() => {
     if (arrayNonInteractive()) return 'valid';
-    if (arrayErrors().length > 0 || arrayItems().some((item) => item.api.invalid())) return 'invalid';
+    if (arrayErrors().length > 0 || arrayItems().some((item) => item.$api.invalid())) return 'invalid';
     if (arrayPending()) return 'unknown';
     return 'valid';
   });
@@ -270,13 +270,13 @@ export function array<TDefinition extends NodeDefinition>(
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const arrayTouched = computed(() =>
-    !arrayNonInteractive() && (arraySelfTouched() || arrayItems().some((item) => item.api.touched())),
+    !arrayNonInteractive() && (arraySelfTouched() || arrayItems().some((item) => item.$api.touched())),
   );
   const arrayDirty = computed(() =>
-    !arrayNonInteractive() && (arraySelfDirty() || arrayItems().some((item) => item.api.dirty())),
+    !arrayNonInteractive() && (arraySelfDirty() || arrayItems().some((item) => item.$api.dirty())),
   );
   const arrayDebouncing = computed(() =>
-    arrayItems().some((item) => item.api.debouncing()),
+    arrayItems().some((item) => item.$api.debouncing()),
   );
   const assertIndex = (index: number, allowEnd = false) => {
     const maximum = arrayItems().length - (allowEnd ? 0 : 1);
@@ -285,13 +285,13 @@ export function array<TDefinition extends NodeDefinition>(
     }
   };
   const reparentItems = () => {
-    arrayItems().forEach((item, index) => (item as InternalNode).api._setParent(arrayNode, index));
+    arrayItems().forEach((item, index) => (item as InternalNode).$api._setParent(arrayNode, index));
   };
-  const detachItem = (item: TItem) => (item as InternalNode).api._setParent(null);
+  const detachItem = (item: TItem) => (item as InternalNode).$api._setParent(null);
   const insert = (index: number, ...args: [] | [value: NodeSet<TItem>]) => {
     assertIndex(index, true);
     const item = createItem();
-    if (args.length === 1) item.api.reset(args[0]);
+    if (args.length === 1) item.$api.reset(args[0]);
     const next = [...arrayItems()];
     next.splice(index, 0, item);
     arrayItems.set(next);
@@ -311,13 +311,13 @@ export function array<TDefinition extends NodeDefinition>(
     const current = [...arrayItems()];
     const commonLength = Math.min(current.length, values.length);
     for (let index = 0; index < commonLength; index++) {
-      if (reset) current[index]!.api.reset(values[index]!);
-      else current[index]!.api.set(values[index]!);
+      if (reset) current[index]!.$api.reset(values[index]!);
+      else current[index]!.$api.set(values[index]!);
     }
     while (current.length > values.length) detachItem(current.pop()!);
     while (current.length < values.length) {
       const item = createItem();
-      item.api.reset(values[current.length]!);
+      item.$api.reset(values[current.length]!);
       current.push(item);
     }
     arrayItems.set(current);
@@ -343,8 +343,8 @@ export function array<TDefinition extends NodeDefinition>(
       const existing = currentByKey.get(keys[index]!);
       const item = existing ?? createItem();
       if (existing) currentByKey.delete(keys[index]!);
-      if (reset || !existing) item.api.reset(value);
-      else item.api.set(value);
+      if (reset || !existing) item.$api.reset(value);
+      else item.$api.set(value);
       return item;
     });
     currentByKey.forEach(detachItem);
@@ -353,7 +353,7 @@ export function array<TDefinition extends NodeDefinition>(
   };
   const reconcile = resolvedOptions?.trackBy ? reconcileByKey : reconcileByIndex;
   const reset = (...args: [] | [value: TSet]) => {
-    if (args.length === 0) arrayItems().forEach((item) => item.api.reset());
+    if (args.length === 0) arrayItems().forEach((item) => item.$api.reset());
     else reconcile(args[0], true);
     arraySelfTouched.set(false);
     arraySelfDirty.set(false);
@@ -363,7 +363,7 @@ export function array<TDefinition extends NodeDefinition>(
     const own = findFirstControlBindingInDom(arrayControlBindings);
     if (own) return own;
     return arrayItems()
-      .map((item) => (item as InternalNode).api._getControlBindingForFocus())
+      .map((item) => (item as InternalNode).$api._getControlBindingForFocus())
       .reduce(firstControlBindingInDom, undefined);
   };
   const getItemSnapshot = () => [
@@ -442,7 +442,7 @@ export function array<TDefinition extends NodeDefinition>(
     patch: (value) => {
       value.forEach((itemValue, index) => {
         const item = arrayItems()[index];
-        if (item) item.api.patch(itemValue);
+        if (item) item.$api.patch(itemValue);
         else console.warn(`array: unknown index ${index} ignored on patch`);
       });
     },
@@ -462,9 +462,9 @@ export function array<TDefinition extends NodeDefinition>(
       || arrayErrors().some((error) => error.kind === 'required')
     ),
     pending: arrayPending,
-    submitting: computed(() => arrayParent()?.api.submitting() === true),
+    submitting: computed(() => arrayParent()?.$api.submitting() === true),
     debouncing: arrayDebouncing,
-    flush: () => arrayItems().forEach((item) => item.api.flush()),
+    flush: () => arrayItems().forEach((item) => item.$api.flush()),
     focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: arrayValidationStatus,
     touched: arrayTouched,
@@ -472,7 +472,7 @@ export function array<TDefinition extends NodeDefinition>(
     markAsTouched: (options) => {
       if (arrayNonInteractive()) return;
       arraySelfTouched.set(true);
-      if (!options?.skipDescendants) arrayItems().forEach((item) => item.api.markAsTouched());
+      if (!options?.skipDescendants) arrayItems().forEach((item) => item.$api.markAsTouched());
     },
     markAsUntouched: () => arraySelfTouched.set(false),
     dirty: arrayDirty,
@@ -513,7 +513,7 @@ export function array<TDefinition extends NodeDefinition>(
   };
   const callableNode = Object.defineProperties(
     () => arrayValue(),
-    Object.getOwnPropertyDescriptors({ ...api, api: internalApi }),
+    Object.getOwnPropertyDescriptors({ ...api, api: internalApi, $api: internalApi }),
   );
   const readIndex = (property: PropertyKey): number | null => {
     if (typeof property !== 'string' || !/^(0|[1-9]\d*)$/.test(property)) return null;

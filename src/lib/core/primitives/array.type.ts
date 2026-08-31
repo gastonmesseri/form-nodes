@@ -179,7 +179,27 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
 };
 
 export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
-  & { (): TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]; api: ArrayApi<TItem, TParent> }
+  & {
+    (): TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[];
+    /**
+     * Complete array API and the recommended access path for application code.
+     *
+     * `$api` exposes the same API through the collision-safe convention shared by every node.
+     */
+    api: ArrayApi<TItem, TParent>;
+    /**
+     * Collision-safe access to the array API.
+     *
+     * Prefer `api` for normal application code. `$api` exists as the stable access convention
+     * shared by every node, including forms whose children may be named `api`.
+     *
+     * This property is not obsolete and is not planned for removal. It is marked as deprecated
+     * only to reduce its prominence in autocomplete and keep the usual `api` access easier to find.
+     *
+     * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+     */
+    $api: ArrayApi<TItem, TParent>;
+  }
   & ArrayIndexes<TItem, TParent>
   & ArrayApi<TItem, TParent>
   & HiddenFunctionMembers<keyof ArrayApi<TItem, TParent>>;

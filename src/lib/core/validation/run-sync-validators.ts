@@ -57,7 +57,7 @@ const resolveComposableValidator = <TValue>(
   metadata: Map<MetadataKey<unknown, unknown>, unknown[]>,
 ): ValidationResult => resolveComposableResult(validator, context, new Set(), 0, metadata);
 
-export const runSyncValidators = <TValue, TNode extends Node & { api: AsyncValidatorState }>(
+export const runSyncValidators = <TValue, TNode extends Node & { $api: AsyncValidatorState }>(
   context: FieldContext<TValue>,
   validators: Validators<TValue>,
   targetNode: TNode,

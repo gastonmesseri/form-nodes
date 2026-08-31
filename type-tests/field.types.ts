@@ -10,6 +10,7 @@ type _NullableValue = Expect<Equal<ReturnType<typeof nullable>, string | null>>;
 type _NonNullableValue = Expect<Equal<ReturnType<typeof nonNullable>, string>>;
 type _ExplicitValue = Expect<Equal<ReturnType<typeof explicit>, number | null>>;
 type _ApiValue = Expect<Equal<ReturnType<typeof nullable.api.value>, string | null>>;
+type _StableApiValue = Expect<Equal<ReturnType<typeof nullable.$api.value>, string | null>>;
 type _Minimum = Expect<Equal<ReturnType<typeof nullable.min>, string | null>>;
 type _Maximum = Expect<Equal<ReturnType<typeof nonNullable.max>, string | null>>;
 type _MinimumLength = Expect<Equal<ReturnType<typeof nullable.minLength>, number | null>>;

@@ -140,8 +140,33 @@ export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
   readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes, TParent>>;
 };
 
+type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
+  /**
+   * Complete form API and the recommended access path for application code.
+   *
+   * When a form declares a child named `api`, this property is that child instead. Use `$api`
+   * when collision-safe access to the form API is required.
+   */
+  api: TNodes extends { api: infer TApi extends Node }
+    ? NodeWithParent<TApi, Form<TNodes, TParent>>
+    : FormApi<TNodes, TParent>;
+  /**
+   * Collision-safe access to the form API.
+   *
+   * Prefer `api` for normal application code. Use `$api` when this form declares a child named
+   * `api`; the child takes precedence at `form.api`, while `form.$api` always remains the API.
+   *
+   * This property is not obsolete and is not planned for removal. It is marked as deprecated
+   * only to reduce its prominence in autocomplete and keep the usual `api` access easier to find.
+   *
+   * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+   */
+  $api: FormApi<TNodes, TParent>;
+};
+
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =
-  & { (): { [K in keyof TNodes]: NodeValue<TNodes[K]> }; api: FormApi<TNodes, TParent> }
-  & FormChildren<TNodes, TParent>
+  & { (): { [K in keyof TNodes]: NodeValue<TNodes[K]> } }
+  & FormApiProperty<TNodes, TParent>
+  & Omit<FormChildren<TNodes, TParent>, 'api'>
   & Omit<FormApi<TNodes, TParent>, keyof TNodes>
   & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;
