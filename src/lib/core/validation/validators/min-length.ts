@@ -1,11 +1,13 @@
 import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
+import { markValidatorMetadata } from '../validator-metadata';
+import { MIN_LENGTH_METADATA, type ConstraintSource } from '../constraint-metadata';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /** Requires a non-empty value whose length or size meets a static or reactive minimum. */
 export const minLength = (
-  minimum: number | (() => number | undefined),
-): Validator<ValueWithLengthOrSize | null> => ({ value }) => {
+  minimum: ConstraintSource<number>,
+): Validator<ValueWithLengthOrSize | null> => markValidatorMetadata(({ value }) => {
   const currentValue = value();
   if (isEmpty(currentValue)) return null;
   const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
@@ -14,4 +16,4 @@ export const minLength = (
   return actualLength < resolvedMinimum
     ? { kind: 'minLength', minLength: resolvedMinimum }
     : null;
-};
+}, MIN_LENGTH_METADATA, minimum);

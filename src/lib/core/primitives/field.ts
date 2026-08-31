@@ -17,6 +17,7 @@ import { isValidatorSource, normalizeValidatorSource } from '../validation/valid
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
+import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
 
 export type { Field, FieldApi, FieldOptions } from './field.type';
 
@@ -97,6 +98,14 @@ export function field<TValue>(
     : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
   const fieldSyncErrors = computed(() => fieldSyncValidation().errors);
   const fieldMetadata = createNodeMetadata(fieldValidators, computed(() => fieldSyncValidation().metadata));
+  const fieldMin = computed(() =>
+    readMetadata(fieldMetadata(), MIN_DATE_METADATA)
+    ?? readMetadata(fieldMetadata(), MIN_METADATA),
+  ) as FieldApi<TValue>['min'];
+  const fieldMax = computed(() =>
+    readMetadata(fieldMetadata(), MAX_DATE_METADATA)
+    ?? readMetadata(fieldMetadata(), MAX_METADATA),
+  ) as FieldApi<TValue>['max'];
   const asyncValidation = createAsyncValidation(
     fieldContext,
     fieldValidators,
@@ -185,6 +194,11 @@ export function field<TValue>(
     valid: computed(() => fieldValidationStatus() === 'valid'),
     invalid: computed(() => fieldValidationStatus() === 'invalid'),
     getError,
+    min: fieldMin,
+    max: fieldMax,
+    minLength: computed(() => readMetadata(fieldMetadata(), MIN_LENGTH_METADATA)),
+    maxLength: computed(() => readMetadata(fieldMetadata(), MAX_LENGTH_METADATA)),
+    pattern: computed(() => readMetadata(fieldMetadata(), PATTERN_METADATA)),
     required: computed(() =>
       readMetadata(fieldMetadata(), REQUIRED_METADATA) ||
       fieldErrors().some((error) => error.kind === 'required'),

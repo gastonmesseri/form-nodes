@@ -2,8 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { computed, signal, type Signal } from '@angular/core';
 
 import { field } from './field';
+import { max } from '../validation/validators/max';
+import { min } from '../validation/validators/min';
+import { pattern } from '../validation/validators/pattern';
+import { maxDate } from '../validation/validators/max-date';
+import { minDate } from '../validation/validators/min-date';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { maxLength } from '../validation/validators/max-length';
+import { minLength } from '../validation/validators/min-length';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -478,6 +485,59 @@ describe('field', () => {
     expect(withoutValidators.required()).toBe(false);
     expect(withoutValidators.api.required()).toBe(false);
     expect(unrelatedValidator.required()).toBe(false);
+  });
+
+  it('exposes the strictest active validator constraints as reactive field state', () => {
+    const reactiveMinimum = signal<number | undefined>(5);
+    const firstPattern = /^a/;
+    const secondPattern = /z$/;
+    const fieldNode = field('abz', [
+      minLength(2),
+      minLength(3),
+      maxLength(10),
+      maxLength(8),
+      pattern(firstPattern),
+      pattern(secondPattern),
+    ]);
+    const numericField = field(7, [min(Number.NaN), min(2), min(reactiveMinimum), max(Number.NaN), max(20), max(15)]);
+
+    expect(fieldNode.minLength()).toBe(3);
+    expect(fieldNode.maxLength()).toBe(8);
+    expect(fieldNode.pattern()).toEqual([firstPattern, secondPattern]);
+    expect(numericField.min()).toBe(5);
+    expect(numericField.max()).toBe(15);
+
+    reactiveMinimum.set(9);
+    expect(numericField.min()).toBe(9);
+
+    reactiveMinimum.set(undefined);
+    expect(numericField.min()).toBe(2);
+
+    const invalidDate = new Date(Number.NaN);
+    const dateField = field(new Date('2026-06-01T00:00:00.000Z'), [
+      minDate(invalidDate),
+      maxDate(invalidDate),
+    ]);
+    expect(dateField.min()).toBeUndefined();
+    expect(dateField.max()).toBeUndefined();
+  });
+
+  it('exposes date limits and removes conditionally composed constraints', () => {
+    const enabled = signal(true);
+    const earliest = new Date('2026-01-01T00:00:00.000Z');
+    const strictestEarliest = new Date('2026-02-01T00:00:00.000Z');
+    const latest = new Date('2026-12-31T00:00:00.000Z');
+    const fieldNode = field(new Date('2026-06-01T00:00:00.000Z'), [
+      minDate(earliest),
+      () => enabled() ? minDate(strictestEarliest) : null,
+      maxDate(latest),
+    ]);
+
+    expect(fieldNode.min()).toBe(strictestEarliest);
+    expect(fieldNode.max()).toBe(latest);
+
+    enabled.set(false);
+    expect(fieldNode.min()).toBe(earliest);
   });
 
   it('returns the first active error of a requested kind', () => {
