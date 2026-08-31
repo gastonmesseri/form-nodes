@@ -306,9 +306,14 @@ it in the component injection context and read its signals directly:
 
 <CodeBlock language="ts">{boundControlSource}</CodeBlock>
 
-The facade currently recognizes `[formNode]`. Its source-neutral API is also reserved for future
-`[formField]`, `formControl`, `formControlName`, and `ngModel` integration. `connected()` reports
-whether a supported binding is present, and `source()` currently returns `'formNode'` or `null`.
+The facade currently recognizes `[formNode]` and `[formControl]`. Its source-neutral API is also
+reserved for future `[formField]`, `formControlName`, and `ngModel` integration. `connected()`
+reports whether a supported binding is present, and `source()` identifies the active adapter.
+
+For `[formControl]`, the adapter observes the public `AbstractControl.events` stream. It provides
+value, disabled, dirty, touched, invalid, pending, and errors. Properties that Reactive Forms does
+not expose, including readonly, hidden, disabled reasons, and constraint metadata, retain their
+safe neutral defaults.
 
 All errors are exposed as `readonly { kind: string; ... }[]`, regardless of the source-specific
 error representation. The remaining signals include `value`, `disabled`, `disabledReasons`,
