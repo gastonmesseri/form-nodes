@@ -253,7 +253,7 @@ describe('profile submission', () => {
 When the action returns a controlled promise, assert that `submitting()` is true on the form and
 its descendants until that promise settles. See [Form submission](./submission.md).
 
-## Test a native `[formNode]` binding
+## Test a native [formNode] binding
 
 Use `TestBed` when the behavior starts in the DOM. Import the same standalone `FormNode` directive
 as production code:

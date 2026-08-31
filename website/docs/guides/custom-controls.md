@@ -3,7 +3,7 @@ title: Custom controls
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import boundControlSource from '!!raw-loader!../../examples/bound-control.typecheck.ts';
+import boundControlSource from '!!raw-loader!../../examples/bound-control-form-node.typecheck.ts';
 
 # Custom controls
 
@@ -11,7 +11,7 @@ import boundControlSource from '!!raw-loader!../../examples/bound-control.typech
 
 ## Angular API compatibility
 
-### Use Angular's own `[formField]` directive
+### Use Angular's own [formField] directive
 
 Every Gem Forms node exposes `$field`, a lazy view backed by an official Angular Signal Forms
 `FieldTree`. This lets an application opt into Angular's directive for a particular control while
@@ -36,7 +36,7 @@ export class ProfileComponent {
 }
 ```
 
-### Import `FormField` where the template is compiled
+### Import FormField where the template is compiled
 
 `$field` provides the compatible field tree, but Angular still needs its own `FormField` directive
 in the template's compilation scope. In a standalone component, import it directly from
@@ -299,6 +299,9 @@ changes. The optional `touch` output marks the node touched; `focus(options?)` i
 `node.focus()`, and `reset()` is called during the binding reset lifecycle.
 
 ## Read bound state without state inputs
+
+The [`injectBoundControl()` reference](../reference/bound-control.md) lists the complete API,
+defaults, source precedence, and lifecycle behavior.
 
 `injectBoundControl<T>()` is the stable alternative when a component does not want `[formNode]` to
 write optional `disabled`, `readonly`, `required`, or error inputs through Angular internals. Call

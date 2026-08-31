@@ -2,7 +2,7 @@
 title: array()
 ---
 
-# `array()`
+# array()
 
 `array()` creates a dynamic collection of independently cloned nodes. It is not required merely
 because a value is an array. When one control owns the complete array—for example, a multi-select—
@@ -250,7 +250,7 @@ Sparse patch entries are skipped, extra indexes are ignored with a warning, and 
 not recreated. Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying
 it to `reset(value)` clears the array.
 
-## Reconciliation and `trackBy`
+## Reconciliation and trackBy
 
 Without `trackBy`, complete updates reuse nodes by index. Use a stable domain key when server data
 can be reordered or replaced with new objects:

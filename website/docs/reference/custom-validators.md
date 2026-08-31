@@ -19,7 +19,7 @@ const myForm = form({
 });
 ```
 
-## `validator()`
+## validator()
 
 Use `validator<TValue>()` when declaring a reusable validator separately from its consuming node:
 

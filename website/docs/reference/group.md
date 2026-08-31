@@ -3,7 +3,7 @@ title: group()
 description: Reference for object groups without an independent submission workflow.
 ---
 
-# `group()`
+# group()
 
 `group()` creates a typed object aggregate. It provides named children, value aggregation,
 validation, state propagation, configuration, and the common node operations. It deliberately has

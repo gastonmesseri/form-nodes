@@ -2,7 +2,7 @@
 title: asyncValidator()
 ---
 
-# `asyncValidator()`
+# asyncValidator()
 
 `asyncValidator()` marks a Promise- or Observable-based validator so a node can manage its
 debounce, reactive dependencies, cancellation, pending state, and stale results explicitly.

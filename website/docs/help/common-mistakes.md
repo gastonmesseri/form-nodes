@@ -10,7 +10,7 @@ if they were user interaction. This page collects the mistakes that are easiest 
 using Gem Forms. If something already fails or produces an unexpected result, start with
 [Troubleshooting](./troubleshooting.md).
 
-## Using `array()` for every array value
+## Using array() for every array value
 
 An array-shaped value does not automatically need an array node.
 
@@ -93,7 +93,7 @@ const myForm = form({
 `form()` and `array()` are structural containers and remain non-null. See
 [`field()` nullability](../reference/field.md#nullability).
 
-## Reading `controlValue()` as the normal value
+## Reading controlValue() as the normal value
 
 `controlValue()` is the immediate representation owned by a directly bound control. It may contain
 a value that is still waiting for debounce.
@@ -112,7 +112,7 @@ myForm.search();              // '' until committed
 Call the node itself for normal application logic. Validators and ancestors also observe the
 committed node value. See [Value flow and debounce](../guides/value-flow-and-debounce.md).
 
-## Expecting `set()` or `patch()` to mark a node dirty
+## Expecting set() or patch() to mark a node dirty
 
 Programmatic writes represent application state changes, not user interaction:
 
@@ -131,7 +131,7 @@ myForm.displayName.set('Ada');
 myForm.displayName.markAsDirty();
 ```
 
-## Expecting `reset()` to restore the declaration value
+## Expecting reset() to restore the declaration value
 
 Calling `reset()` keeps the current committed value and clears interaction state:
 
@@ -152,7 +152,7 @@ myForm.displayName.reset('');
 
 Aggregate reset applies the same rule recursively. See [Values and state](../concepts/values-and-state.md#reset).
 
-## Using `errors()` for a complete form summary
+## Using errors() for a complete form summary
 
 `errors()` contains only errors owned directly by the node:
 
@@ -165,7 +165,7 @@ A form can be invalid because a child is invalid while `myForm.errors()` remains
 `allErrors()` for summaries and `errors()` for rules attached to that exact node. See
 [Errors and validation status](../guides/errors-and-status.md#own-versus-descendant-errors).
 
-## Assuming `pending()` means invalid
+## Assuming pending() means invalid
 
 Pending work without a completed error has an unknown result:
 
@@ -178,7 +178,7 @@ myForm.username.validationStatus(); // 'unknown'
 
 Do not derive `invalid` as `!valid` while async validation can be pending. Read the dedicated signals.
 
-## Expecting `enable()` to override every disabled cause
+## Expecting enable() to override every disabled cause
 
 Effective disabled state can come from local mutable state, reactive configuration, or an ancestor:
 
@@ -196,7 +196,7 @@ myForm.email.enable();
 `enable()` removes only the field's imperative `disable()` cause. Inspect `disabledReasons()` when
 the remaining source is unclear. Readonly and hidden state follow the same layered model.
 
-## Expecting `hidden()` to remove the control from the DOM
+## Expecting hidden() to remove the control from the DOM
 
 Hidden is form state, not a rendering instruction. Remove hidden UI explicitly:
 
@@ -209,7 +209,7 @@ Hidden is form state, not a rendering instruction. Remove hidden UI explicitly:
 Development builds warn when a hidden node remains bound to a rendered control. See
 [Interaction and availability](../guides/interaction-and-availability.md#non-interactive-behavior).
 
-## Reaching for `.api` in ordinary code
+## Reaching for .api in ordinary code
 
 Direct members are the normal, readable API:
 
@@ -251,7 +251,7 @@ track the node instance rather than `$index`:
 
 See [Dynamic arrays](../guides/dynamic-arrays.md#complete-reconciliation).
 
-## Returning `asyncValidator()` from a synchronous validator
+## Returning asyncValidator() from a synchronous validator
 
 Conditional synchronous composition cannot establish an async validator's lifecycle:
 
@@ -305,7 +305,7 @@ bind directly only to a custom signal control or CVA that represents its complet
 
 See [Custom controls](../guides/custom-controls.md#aggregate-value-models).
 
-## Using `NG_ASYNC_VALIDATORS` for node async validation
+## Using NG_ASYNC_VALIDATORS for node async validation
 
 Synchronous `NG_VALIDATORS` from a CVA participate in node validation. `NG_ASYNC_VALIDATORS` are not
 adapted because async work needs node-owned cancellation, debounce, dependency tracking, and stale

@@ -37,7 +37,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 
 ## Modeling primitives
 
-### `field()`
+### field()
 
 Creates one leaf node. Its value can be a string, number, date, object, array, or any other
 application type. Fields are nullable by default.
@@ -55,7 +55,7 @@ multi-select. It intentionally has no per-item nodes or structural operations.
 
 Main exports: `field`, `Field`, `FieldApi`, and `FieldOptions`.
 
-### `form()`
+### form()
 
 Creates the typed object tree that owns a submission workflow. It has the same structural behavior
 as a group plus `submission` configuration and `submit()`. Root application workflows normally
@@ -64,7 +64,7 @@ start with `form()`; explicit nested forms are reserved for independent subflows
 Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, `FormPatch`, and
 `FormSubmissionOptions`.
 
-### `array()`
+### array()
 
 Creates a dynamic collection by cloning one node template or invoking a factory. Use it when items
 need independent bindings, paths, validation, interaction state, or structural operations.
@@ -81,7 +81,7 @@ const myForm = form({
 Main exports: `array`, `ArrayNode`, `ArrayApi`, `ArrayOptions`, `ArrayValue`, `ArraySet`,
 `ArrayPatch`, `ArrayItems`, `ArrayIndexes`, and `ArrayItemWithParent`.
 
-### Explicit `group()`
+### Explicit group()
 
 Plain nested objects already create structural groups and are the preferred way to model ordinary
 fixed branches:
@@ -180,7 +180,7 @@ provideValidatorMessages(() => ({
 
 ## Angular integration
 
-### `[formNode]`
+### [formNode]
 
 Import `FormNode` into a standalone component and bind nodes directly:
 
@@ -238,6 +238,9 @@ Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` imp
 | `injectBoundControl<T>()` | Reads normalized state from `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`. |
 | `BoundControl<T>` | Source-neutral signal facade returned by `injectBoundControl()`. |
 | `BoundControlDisabledReason` | Source-neutral disabled reason containing an optional message. |
+
+See the [`injectBoundControl()` reference](./bound-control.md) for its complete signal surface,
+source precedence, normalization rules, lifecycle, and examples for every supported binding API.
 
 Configure binding classes once in the application providers for the common application-wide case:
 
