@@ -2,7 +2,7 @@ import { DestroyRef, effect, signal, untracked, type Injector, type ModelSignal,
 
 import type { Field } from '../../primitives/field';
 import type { FormNodeControl } from './form-node-control';
-import { connectSignalControlInputs } from './signal-control-inputs';
+import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 
 export type SignalControlConnection = {

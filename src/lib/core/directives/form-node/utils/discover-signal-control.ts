@@ -1,6 +1,6 @@
 import { getDebugNode, reflectComponentType, type Type } from '@angular/core';
 
-import type { FormNodeControl } from './form-node-control';
+import type { FormNodeControl } from '../form-node-control';
 
 type ComponentCandidate = Record<PropertyKey, unknown> & { constructor: Type<unknown> };
 

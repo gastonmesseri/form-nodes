@@ -1,6 +1,6 @@
 import { untracked } from '@angular/core';
 
-import type { ValidationError } from '../../validation/validation.type';
+import type { ValidationError } from '../../../validation/validation.type';
 
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 

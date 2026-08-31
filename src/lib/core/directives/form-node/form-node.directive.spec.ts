@@ -15,7 +15,7 @@ import { FormNodeNgControl } from './form-node-ng-control';
 import { required } from '../../validation/validators/required';
 import { provideFormNodeControl } from './form-node-control';
 import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
-import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './native-control';
+import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 

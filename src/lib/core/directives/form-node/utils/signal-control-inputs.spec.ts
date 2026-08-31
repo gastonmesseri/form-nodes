@@ -7,11 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { Component, Injector, booleanAttribute, input, model, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { form } from '../../primitives/form';
-import { field } from '../../primitives/field';
-import { required } from '../../validation/validators/required';
+import { form } from '../../../primitives/form';
+import { field } from '../../../primitives/field';
+import { required } from '../../../validation/validators/required';
 import { connectSignalControlInputs } from './signal-control-inputs';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../../testing/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
