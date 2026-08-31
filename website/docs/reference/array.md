@@ -2,6 +2,7 @@
 title: array()
 ---
 
+import CodeBlock from '@theme/CodeBlock';
 import arrayFocusSource from '!!raw-loader!../../examples/array-focus.typecheck.ts';
 
 # array()
@@ -1704,9 +1705,7 @@ usernames.debouncing(); // false
 Focuses the first bound UI control in the array subtree, following DOM order. Standard
 `FocusOptions` can be forwarded.
 
-```ts {19}
-{arrayFocusSource}
-```
+<CodeBlock language="ts">{arrayFocusSource}</CodeBlock>
 
 #### markAsTouched()
 

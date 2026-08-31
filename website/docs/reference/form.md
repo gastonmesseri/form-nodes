@@ -2,6 +2,7 @@
 title: form()
 ---
 
+import CodeBlock from '@theme/CodeBlock';
 import formFocusSource from '!!raw-loader!../../examples/form-focus.typecheck.ts';
 
 # form()
@@ -1291,9 +1292,7 @@ search.debouncing(); // false
 Focuses the first bound UI control in the form subtree in DOM order. A control bound directly to
 the form takes precedence over descendant bindings. Standard `FocusOptions` are forwarded.
 
-```ts {20}
-{formFocusSource}
-```
+<CodeBlock language="ts">{formFocusSource}</CodeBlock>
 
 ### Submission methods
 
