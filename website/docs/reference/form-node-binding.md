@@ -1,8 +1,8 @@
 ---
-title: FormNode binding API
+title: "[formNode] directive"
 ---
 
-# FormNode and control-binding APIs
+# [formNode] directive
 
 `FormNode` is the standalone Angular directive imported by components to make `[formNode]`
 available. The same symbol is also the public generic type returned by binding queries.
@@ -40,26 +40,195 @@ and linker infrastructure.
 | Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
 | Bind submit and reset on `<form>` | The same `FormNode` import | [Native form submission](#native-form-submission) |
 
+## Directive input
+
+Import `FormNode` in the component and bind a Gem node to the required `formNode` input:
+
+```ts
+@Component({
+  imports: [FormNode],
+  template: `<input [formNode]="myForm.email" />`,
+})
+export class EmailEditor {
+  myForm = form({
+    email: field(''),
+  });
+}
+```
+
+**Binding:** `[formNode]="node"`
+
+The directive accepts a field, form, group, or array node. Native controls require a `field()`;
+native `<form>` elements require a `form()` or `group()`. Aggregate nodes can also bind to a
+recognized custom component that models their complete value.
+
+| Host | Accepted node | Purpose |
+| --- | --- | --- |
+| Native input, select, or textarea | `field()` | Two-way value and state synchronization |
+| Signal custom-control component | Compatible field or aggregate node | Synchronizes its `value` or `checked` model |
+| CVA component | Compatible field or aggregate node | Uses `ControlValueAccessor` interoperability |
+| Native `<form>` | `form()` or `group()` | Handles submit and reset |
+| Pass-through wrapper | Any delegated node | Leaves synchronization to an inner binding |
+
 ## Binding instance
 
 | Member | Description |
 | --- | --- |
-| `node()` | Reactive reference to the node currently bound to the host. |
-| `errors()` | Node errors visible to this binding, excluding errors owned by another concrete binding. |
-| `element` | Host `HTMLElement`. |
-| `injector` | Injector belonging to the host element. |
-| `focus(options?)` | Focuses this concrete native or custom control. |
-| `flush()` | Commits pending control-originated values for the bound node. |
-| `reset()` | Resets node interaction state and control-specific parsing state. |
+| [`node()`](#node) | Reactive reference to the node currently bound to the host. |
+| [`errors()`](#errors) | Node errors visible to this binding, excluding errors owned by another concrete binding. |
+| [`element`](#element) | Host `HTMLElement`. |
+| [`injector`](#injector) | Injector belonging to the host element. |
+| [`focus(options?)`](#focus) | Focuses this concrete native or custom control. |
+| [`flush()`](#flush) | Commits pending control-originated values for the bound node. |
+| [`reset()`](#reset) | Resets node interaction state and control-specific parsing state. |
 
 `FormNodeBinding<TNode>` is the structural version of this instance type for provider callbacks and
 generic configuration code.
+
+<div className="api-member-reference">
+
+## Binding property reference
+
+### node
+
+**Signature:** `node: Signal<TNode>`
+
+Returns the node currently attached to this concrete host. It updates when a dynamic binding is
+reassigned.
+
+```ts
+const binding = this.emailBinding();
+
+binding.node() === this.myForm.email; // true
+```
+
+### errors
+
+**Signature:** `errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]>`
+
+Returns errors visible to this binding. Node errors without a concrete binding are included;
+binding-specific errors belonging to another rendered control are excluded.
+
+```ts
+const firstError = this.emailBinding().errors()[0];
+
+firstError?.targetNode === this.myForm.email; // true
+```
+
+This distinction matters when the same field is rendered by multiple controls and one binding has
+a native parsing error.
+
+### element
+
+**Signature:** `element: HTMLElement`
+
+The host DOM element carrying `[formNode]`.
+
+```ts
+this.emailBinding().element.focus();
+```
+
+Prefer `focus()` on the binding when a custom control may provide specialized focus behavior.
+
+### injector
+
+**Signature:** `injector: Injector`
+
+The Angular injector belonging to the host element. It is primarily useful to integration and
+configuration infrastructure.
+
+```ts
+const locale = this.emailBinding().injector.get(LOCALE_ID);
+```
+
+## Binding method reference
+
+### focus()
+
+**Signature:** `focus(options?: FocusOptions): void`
+
+Focuses the concrete binding. Native controls use `HTMLElement.focus()`; recognized custom
+controls can expose their own focus channel.
+
+```ts
+this.emailBinding().focus({ preventScroll: true });
+```
+
+This differs from `node.focus()`, which selects one registered binding for a node. Calling the
+binding directly targets this exact rendered control.
+
+### flush()
+
+**Signature:** `flush(): void`
+
+Immediately commits a control-originated value waiting for debounce or blur.
+
+```ts
+this.emailBinding().flush();
+
+this.myForm.email(); // latest control value
+```
+
+Programmatic `set()` calls are already immediate and do not require a flush.
+
+### reset()
+
+**Signature:** `reset(): void`
+
+Resets node interaction state and control-specific parsing state. It also restores the rendered
+control from the node when a rejected native value was being displayed.
+
+```ts
+this.emailBinding().reset();
+```
+
+</div>
 
 ## FORM_NODE
 
 `FORM_NODE` is the injection token for the binding on the current host. Most application code uses
 a template reference and `viewChild()` instead. Inject the token only when a directive or service
 co-located with the host genuinely needs the concrete binding.
+
+```ts
+@Directive({
+  selector: '[focusInvalidNode]',
+  host: {
+    '(click)': 'focusWhenInvalid()',
+  },
+})
+export class FocusInvalidNode {
+  private binding = inject(FORM_NODE, { self: true });
+
+  focusWhenInvalid() {
+    if (this.binding.node().$api.invalid()) this.binding.focus();
+  }
+}
+```
+
+Use `{ self: true }` when the directive must share the same host rather than accidentally resolving
+an ancestor binding.
+
+## Binding lifecycle and rebinding
+
+`[formNode]` may receive a computed or otherwise changing node. When it changes, the directive
+disconnects the previous node, releases its binding ownership, connects the new node, and updates
+`node()` reactively:
+
+```ts
+@Component({
+  imports: [FormNode],
+  template: `<input [formNode]="selectedField()" />`,
+})
+export class DynamicEditor {
+  firstName = field('');
+  lastName = field('');
+  selectedField = signal(this.firstName);
+}
+```
+
+Destroying the host removes listeners, class effects, external control errors, and its temporary
+injector ownership. A node can then remain in use or bind somewhere else.
 
 ## Automatic CSS classes
 
@@ -231,15 +400,14 @@ Use `FormNode` as the single root binding. Its controls may use either `[formNod
 
 ```ts
 import { Component } from '@angular/core';
-import { FormField } from '@angular/forms/signals';
 
 import { FormNode, field, form } from '@gem/ng-forms';
 
 @Component({
-  imports: [FormNode, FormField],
+  imports: [FormNode],
   template: `
     <form [formNode]="myForm">
-      <input [formField]="myForm.email.$field" />
+      <input [formNode]="myForm.email" />
       <button type="submit">Save</button>
       <button type="reset">Reset</button>
     </form>
