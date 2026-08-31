@@ -1351,6 +1351,7 @@ The directive currently provides these behaviors:
 - Destroying the directive removes DOM listeners, disconnects select observation, and destroys its reactive effects through Angular's `DestroyRef` ownership.
 - The directive supports server rendering for native controls and custom `ControlValueAccessor` components. Initial value and node-state bindings are rendered on the server, while browser-only select option observation is installed only in a browser environment. Native value conversion identifies controls structurally instead of depending on browser constructor globals.
 - Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
+- In development, `[formNode]` warns whenever its bound field is hidden while the control remains rendered. The warning identifies the reactive field path, using `<root>` for a standalone root field. `hidden` is form state and does not manipulate DOM visibility: templates should remove hidden controls with `@if`. No warning is installed in production.
 
 ### Explicit signal-control registration
 
