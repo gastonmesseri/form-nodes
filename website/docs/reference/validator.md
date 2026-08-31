@@ -8,14 +8,18 @@ Attach a synchronous validator directly to a field, form, or array. The consumin
 infers its value type:
 
 ```ts
-const myForm = form({
-  age: field<number>(null, [({ value }) => {
-    const age = value();
+import { field, form, required, validator } from '@gem/ng-forms';
 
-    return age !== null && age < 18
-      ? { kind: 'adult', minimumAge: 18, actual: age }
-      : null;
-  }]),
+const adult = validator<number | null>(({ value }) => {
+  const age = value();
+
+  return age !== null && age < 18
+    ? { kind: 'adult', minimumAge: 18, actual: age }
+    : null;
+});
+
+const myForm = form({
+  age: field<number>(null, [required, adult]),
 });
 ```
 
@@ -43,7 +47,7 @@ from which TypeScript can infer its value.
 Use `validator<TValue>()` when declaring a reusable validator separately from its consuming node:
 
 ```ts
-import { field, form, validator } from '@gem/ng-forms';
+import { field, form, required, validator } from '@gem/ng-forms';
 
 export const adult = validator<number | null>(({ value }) => {
   const age = value();
@@ -54,7 +58,7 @@ export const adult = validator<number | null>(({ value }) => {
 });
 
 const myForm = form({
-  age: field<number>(null, [adult]),
+  age: field<number>(null, [required, adult]),
 });
 ```
 
@@ -76,17 +80,45 @@ validator<TValue>(
 `TValue` is the exact committed value type of the field, form, group, or array. The return value is
 the original `validate` function by identity.
 
+### Value type and inference
+
+When `validator()` is declared separately, there is no consuming node from which TypeScript can
+infer `TValue`. If the generic is omitted, `value()` is therefore `unknown` and must be narrowed:
+
+```ts
+const notBlank = validator(({ value }) => {
+  const currentValue = value(); // unknown
+
+  return typeof currentValue === 'string' && currentValue.trim().length > 0
+    ? null
+    : { kind: 'blank' };
+});
+```
+
+Specify the exact node value type when the reusable rule belongs to a known domain:
+
+```ts
+const adult = validator<number | null>(({ value }) => {
+  const age = value(); // number | null
+
+  return age !== null && age < 18 ? { kind: 'adult' } : null;
+});
+```
+
+The type must include `null` for nullable fields. Contextual inference remains available when a
+callback is written directly inside a node's `validators` source.
+
 ## Validator context
 
 | Member | Description |
 | --- | --- |
-| `value()` | Current committed node value with its inferred type. |
-| `field` | Real callable node being validated, including when it is a form or array. |
-| `api` | Typed common API for validation, state, navigation, and node operations. |
-| `form()` | Root aggregate that owns the node, or `null` for a standalone field. |
-| `parent()` | Direct parent node, or `null` at the root. |
-| `path()` | Reactive path from the root. |
-| State signals | `touched`, `dirty`, `disabled`, `readonly`, `hidden`, `required`, `submitting`, and their complements. |
+| [`value()`](#custom-validator-context-value) | Current committed node value with its inferred type. |
+| [`field`](#custom-validator-context-field) | Real callable node being validated, including when it is a form or array. |
+| [`api`](#custom-validator-context-api) | Typed common API for validation, state, navigation, and node operations. |
+| [`form()`](#custom-validator-context-form) | Root aggregate that owns the node, or `null` for a standalone field. |
+| [`parent()`](#custom-validator-context-parent) | Direct parent node, or `null` at the root. |
+| [`path()`](#custom-validator-context-path) | Reactive path from the root. |
+| [State signals](#custom-validator-context-state) | `touched`, `dirty`, `disabled`, `readonly`, `hidden`, `required`, `submitting`, and their complements. |
 
 The context and its signals are stable. Any signal read while the validator executes becomes a
 reactive dependency.
@@ -101,7 +133,14 @@ reactive dependency.
 | [`form`](#custom-validator-context-form) | root-node signal | Root aggregate or `null` |
 | [`parent`](#custom-validator-context-parent) | parent-node signal | Direct parent or `null` |
 | [`path`](#custom-validator-context-path) | path signal | Location from the root |
-| [State signals](#custom-validator-context-state) | readonly signals | Interaction and availability state |
+| [`submitting`](#custom-validator-context-state) | `Signal<boolean>` | Submission state |
+| [`touched` / `untouched`](#custom-validator-context-state) | `Signal<boolean>` | Touched state and its complement |
+| [`dirty` / `pristine`](#custom-validator-context-state) | `Signal<boolean>` | Modification state and its complement |
+| [`disabled` / `enabled`](#custom-validator-context-state) | `Signal<boolean>` | Participation state and its complement |
+| [`disabledReasons`](#custom-validator-context-state) | `Signal<readonly DisabledReason[]>` | Active disabling causes |
+| [`readonly` / `writable`](#custom-validator-context-state) | `Signal<boolean>` | Editing state and its complement |
+| [`hidden` / `visible`](#custom-validator-context-state) | `Signal<boolean>` | Visibility state and its complement |
+| [`required`](#custom-validator-context-state) | `Signal<boolean>` | Whether current rules require a value |
 
 <div className="api-member-reference">
 
@@ -114,12 +153,20 @@ reactive dependency.
 Call `value()` to read the committed value. The read creates a dependency, so validation runs
 again when the value changes.
 
+```ts
+validator<string>(({ value }) => value().trim() ? null : { kind: 'blank' });
+```
+
 #### field {#custom-validator-context-field}
 
 **Signature:** `field: TField`
 
 The real callable node. The property retains the name `field` when the owner is a form, group, or
 array. Prefer `value()` unless node identity or a concrete node member is required.
+
+```ts
+validator<string>(({ field }) => field() ? null : { kind: 'blank' });
+```
 
 #### api {#custom-validator-context-api}
 
@@ -129,6 +176,10 @@ The common value, validation, navigation, state, and operations API. Reading one
 reactively tracked. Validators should normally remain pure rather than mutate through this API.
 See [Node API](./node-api.md).
 
+```ts
+validator<string>(({ api }) => api.dirty() && !api.value() ? { kind: 'blank' } : null);
+```
+
 ### Tree navigation
 
 #### form {#custom-validator-context-form}
@@ -137,11 +188,19 @@ See [Node API](./node-api.md).
 
 The root aggregate owning this node, or `null` for a standalone node.
 
+```ts
+validator<string>(({ form }) => form() === null ? { kind: 'mustBelongToForm' } : null);
+```
+
 #### parent {#custom-validator-context-parent}
 
 **Signature:** `parent: Signal<PublicNode<Node> | null>`
 
 The direct parent, or `null` when the validated node is a root.
+
+```ts
+validator<string>(({ parent }) => parent() ? null : { kind: 'mustHaveParent' });
+```
 
 #### path {#custom-validator-context-path}
 
@@ -150,20 +209,29 @@ The direct parent, or `null` when the validated node is a root.
 Property names and array indexes locating the node from its root. Array indexes are strings. A
 validator that reads the path can rerun when an array item moves.
 
+```ts
+validator<string>(({ path }) => path().length > 3 ? { kind: 'tooDeep' } : null);
+```
+
 ### State
 
 #### state signals {#custom-validator-context-state}
 
-| Signal | Meaning |
-| --- | --- |
-| `submitting()` | The node or root form is submitting |
-| `touched()` / `untouched()` | Whether interaction marked it touched |
-| `dirty()` / `pristine()` | Whether modification was recorded |
-| `disabled()` / `enabled()` | Whether it participates normally |
-| `disabledReasons()` | Active disabling causes |
-| `readonly()` / `writable()` | Whether consumers should permit editing |
-| `hidden()` / `visible()` | Whether consumers should display it |
-| `required()` | Whether current rules require a value |
+| Signal | Meaning | Example read |
+| --- | --- | --- |
+| `submitting()` | The node or root form is submitting | `validator<unknown>(({ submitting }) => { submitting(); return null; })` |
+| `touched()` | Interaction marked the node touched | `validator<unknown>(({ touched }) => { touched(); return null; })` |
+| `untouched()` | The node remains untouched | `validator<unknown>(({ untouched }) => { untouched(); return null; })` |
+| `dirty()` | Modification was recorded | `validator<unknown>(({ dirty }) => { dirty(); return null; })` |
+| `pristine()` | No modification was recorded | `validator<unknown>(({ pristine }) => { pristine(); return null; })` |
+| `disabled()` | The node is excluded | `validator<unknown>(({ disabled }) => { disabled(); return null; })` |
+| `enabled()` | The node participates normally | `validator<unknown>(({ enabled }) => { enabled(); return null; })` |
+| `disabledReasons()` | Active disabling causes | `validator<unknown>(({ disabledReasons }) => { disabledReasons(); return null; })` |
+| `readonly()` | Consumers should prevent editing | `validator<unknown>(({ readonly }) => { readonly(); return null; })` |
+| `writable()` | Consumers may permit editing | `validator<unknown>(({ writable }) => { writable(); return null; })` |
+| `hidden()` | Consumers should omit the node | `validator<unknown>(({ hidden }) => { hidden(); return null; })` |
+| `visible()` | Consumers should display the node | `validator<unknown>(({ visible }) => { visible(); return null; })` |
+| `required()` | Current rules require a value | `validator<unknown>(({ required }) => { required(); return null; })` |
 
 Any state signal read by the validator becomes a dependency.
 
@@ -195,10 +263,12 @@ validators and nullish entries:
 ```ts
 const requireAdult = signal(false);
 
+const adultWhenRequired = validator<number | null>(() => {
+  return requireAdult() ? min(18) : null;
+});
+
 const myForm = form({
-  age: field<number>(null, [
-    () => requireAdult() ? min(18) : null,
-  ]),
+  age: field<number>(null, [adultWhenRequired]),
 });
 ```
 
@@ -233,7 +303,9 @@ signal over time, return validators from a reactive validator instead:
 
 ```ts
 myForm.age.setValidators([
-  () => minimumAgeEnabled() ? [required, min(18)] : null,
+  validator<number | null>(() => {
+    return minimumAgeEnabled() ? [required, min(18)] : null;
+  }),
 ]);
 ```
 
@@ -258,17 +330,21 @@ display it:
 
 ```ts
 const confirmation = field('');
-const myForm = form({
-  password: field(''),
-  confirmation,
-}, {
-  validators: ({ value }) => value().password === value().confirmation
+const passwordsMatch = validator<{ password: string | null; confirmation: string | null }>(
+  ({ value }) => value().password === value().confirmation
     ? null
     : {
       kind: 'passwordMismatch',
       message: 'Passwords must match.',
       targetNode: confirmation,
     },
+);
+
+const myForm = form({
+  password: field(''),
+  confirmation,
+}, {
+  validators: passwordsMatch,
 });
 ```
 

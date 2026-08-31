@@ -63,6 +63,7 @@ const sidebars: SidebarsConfig = {
         'reference/field',
         'reference/array',
         'reference/group',
+        'reference/validation',
         {
           type: 'category',
           label: 'Built-in validators',

@@ -50,6 +50,34 @@ validator source. They differ only in how reactive dependencies are selected.
 | Callback | Signals read by `validate` and `when` | A concise validator with obvious dependencies |
 | Parameterized | Signals read by `params` and `when`; `validate` is untracked | A stable, explicit request snapshot |
 
+### Value type and inference
+
+An `asyncValidator()` declared separately has no consuming node from which TypeScript can infer
+`TValue`. Without an explicit generic, `value()` is `unknown`; narrow it before use:
+
+```ts
+const usernameAvailable = asyncValidator(({ value }) => {
+  const username = value(); // unknown
+
+  return typeof username === 'string'
+    ? checkUsername(username)
+    : Promise.resolve(null);
+});
+```
+
+Specify the exact value type when the validator is intended for a known node type:
+
+```ts
+const usernameAvailable = asyncValidator<string | null>(({ value }) => {
+  const username = value(); // string | null
+
+  return username ? checkUsername(username) : Promise.resolve(null);
+});
+```
+
+The same rule applies to the parameterized signature: its first generic is the validated value,
+and `params` provides inference for `TParams` from the snapshot it returns.
+
 ### Callback signature
 
 ```ts
@@ -258,7 +286,14 @@ executions, and `params` only to parameterized `validate`.
 | [`form`](#async-validator-context-form) | root-node signal | All callbacks |
 | [`parent`](#async-validator-context-parent) | parent-node signal | All callbacks |
 | [`path`](#async-validator-context-path) | path signal | All callbacks |
-| [State signals](#async-validator-context-state) | readonly signals | All callbacks |
+| [`submitting`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
+| [`touched` / `untouched`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
+| [`dirty` / `pristine`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
+| [`disabled` / `enabled`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
+| [`disabledReasons`](#async-validator-context-state) | `Signal<readonly DisabledReason[]>` | All callbacks |
+| [`readonly` / `writable`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
+| [`hidden` / `visible`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
+| [`required`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
 | [`abortSignal`](#async-validator-context-abortsignal) | `AbortSignal` | `validate` |
 | [`params`](#async-validator-context-params) | `TParams` | Parameterized `validate` |
 
@@ -273,12 +308,20 @@ executions, and `params` only to parameterized `validate`.
 The current committed value. Call it as `value()`. Reading it in the callback signature creates a
 dependency; reading it in `params` contributes to the derived snapshot.
 
+```ts
+asyncValidator(({ value }) => checkUsername(value()));
+```
+
 #### field {#async-validator-context-field}
 
 **Signature:** `field: TField`
 
 The real callable node. The name remains `field` even when the owner is a form, group, or array.
 Use it when node identity or a node-specific member is required.
+
+```ts
+asyncValidator(({ field }) => auditNode(field));
+```
 
 #### api {#async-validator-context-api}
 
@@ -288,11 +331,19 @@ The typed common node API, including value, validation, navigation, state, and o
 default is `AsyncValidatorApi<TValue>`; generics can provide a more exact API type. See
 [Node API](./node-api.md).
 
+```ts
+asyncValidator(({ api }) => api.dirty() ? checkValue(api.value()) : Promise.resolve(null));
+```
+
 #### form {#async-validator-context-form}
 
 **Signature:** `form: Signal<PublicNode<Node> | null>`
 
 The root aggregate owning this node, or `null` for a standalone node.
+
+```ts
+asyncValidator(({ form }) => form() ? validateInForm(form()!) : Promise.resolve(null));
+```
 
 #### parent {#async-validator-context-parent}
 
@@ -300,26 +351,39 @@ The root aggregate owning this node, or `null` for a standalone node.
 
 The direct parent, or `null` when the validated node is a root.
 
+```ts
+asyncValidator(({ parent }) => parent() ? validateWithParent(parent()!) : Promise.resolve(null));
+```
+
 #### path {#async-validator-context-path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
 Property names and array indexes locating the node from its root. Array indexes are strings.
 
+```ts
+asyncValidator(({ path }) => auditPath(path()));
+```
+
 ### State
 
 #### state signals {#async-validator-context-state}
 
-| Signal | Meaning |
-| --- | --- |
-| `submitting()` | The node or its root form is submitting |
-| `touched()` / `untouched()` | Whether interaction marked it touched |
-| `dirty()` / `pristine()` | Whether modification was recorded |
-| `disabled()` / `enabled()` | Whether it participates normally |
-| `disabledReasons()` | Active disabling causes |
-| `readonly()` / `writable()` | Whether consumers should permit editing |
-| `hidden()` / `visible()` | Whether consumers should display it |
-| `required()` | Whether current rules require a value |
+| Signal | Meaning | Example read |
+| --- | --- | --- |
+| `submitting()` | The node or root form is submitting | `const isSubmitting = submitting();` |
+| `touched()` | Interaction marked the node touched | `const wasTouched = touched();` |
+| `untouched()` | The node remains untouched | `const isUntouched = untouched();` |
+| `dirty()` | Modification was recorded | `const wasModified = dirty();` |
+| `pristine()` | No modification was recorded | `const isPristine = pristine();` |
+| `disabled()` | The node is excluded | `const isDisabled = disabled();` |
+| `enabled()` | The node participates normally | `const isEnabled = enabled();` |
+| `disabledReasons()` | Active disabling causes | `const reasons = disabledReasons();` |
+| `readonly()` | Consumers should prevent editing | `const isReadonly = readonly();` |
+| `writable()` | Consumers may permit editing | `const canEdit = writable();` |
+| `hidden()` | Consumers should omit the node | `const isHidden = hidden();` |
+| `visible()` | Consumers should display the node | `const isVisible = visible();` |
+| `required()` | Current rules require a value | `const isRequired = required();` |
 
 Reading one in the callback form or in `params` makes it a dependency.
 
@@ -348,6 +412,13 @@ Gem Forms discards stale results even when the underlying API ignores this signa
 
 The stable snapshot for this parameterized execution. It is absent from the callback signature,
 `when`, and `onError`.
+
+```ts
+asyncValidator({
+  params: ({ value }) => ({ username: value() }),
+  validate: ({ params }) => checkUsername(params.username),
+});
+```
 
 </div>
 
