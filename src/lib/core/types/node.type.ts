@@ -10,6 +10,13 @@ export type MarkAsTouchedOptions = {
 export type NodeApi = {
   form: Signal<Node | null>;
   path: Signal<readonly string[]>;
+  /**
+   * Property or array index under which this node is stored, or `null` when it is a root node.
+   *
+   * @example
+   * `myForm.age.keyInParent()` returns `'age'`.
+   */
+  keyInParent: Signal<string | number | null>;
   set(value: any): void;
   update(updater: (value: any) => any): void;
   patch(value: any): void;
@@ -57,7 +64,7 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
 export type InternalNodeApi = NodeApi & {
   _controlDebounce: Signal<number | undefined>;
   _clone(): Node;
-  _setParent(parent: Node | null, key?: string): void;
+  _setParent(parent: Node | null, key?: string | number): void;
 };
 export type InternalNode = (() => any) & { api: InternalNodeApi };
 export type Nodes = Record<string, Node>;
@@ -66,6 +73,9 @@ export interface NodeDefinitions {
   [key: string]: NodeDefinition;
 }
 export type NodeValue<TNode> = TNode extends () => infer TValue ? TValue : never;
+export type NodeKeyInParent<TParent extends Node> = Node extends TParent
+  ? string | number | null
+  : NodeValue<TParent> extends readonly unknown[] ? number | null : string;
 export type NodeSet<TNode> =
   TNode extends { api: { set(value: infer TValue): void } } ? TValue : never;
 export type NodePatch<TNode> =

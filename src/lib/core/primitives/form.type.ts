@@ -4,7 +4,7 @@ import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the aggregated form value. */
@@ -61,6 +61,13 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   form: Signal<FormRoot<TNodes, TParent>>;
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
+  /**
+   * Property or array index under which this form is stored, or `null` when it is a root form.
+   *
+   * @example
+   * `myForm.address.keyInParent()` returns `'address'`.
+   */
+  keyInParent: Signal<NodeKeyInParent<TParent>>;
   value: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
   set(value: FormSet<TNodes>): void;
   /** Computes and sets the complete form value from its current value without marking nodes dirty. */

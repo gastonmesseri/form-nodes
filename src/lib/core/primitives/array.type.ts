@@ -3,7 +3,7 @@ import type { Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { Form, FormOptions } from './form.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { MarkAsTouchedOptions, Node, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
+import type { MarkAsTouchedOptions, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
 export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
@@ -89,6 +89,16 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   form: Signal<ArrayRoot<TItem, TParent>>;
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
+  /**
+   * Property or array index under which this array is stored, or `null` when it is a root array.
+   *
+   * @example
+   * `myForm.items.keyInParent()` returns `'items'`.
+   *
+   * @example
+   * `myForm.items[0]?.keyInParent()` returns `0` for the first item.
+   */
+  keyInParent: Signal<NodeKeyInParent<TParent>>;
   value: Signal<TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]>;
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
   forEach(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => void): void;

@@ -21,6 +21,8 @@ type _ApiValue = Expect<Equal<ReturnType<typeof profile.api.value>, ProfileValue
 type _NestedValue = Expect<Equal<ReturnType<typeof profile.address.city>, string | null>>;
 type _ChildParent = Expect<Equal<ReturnType<typeof profile.name.parent>, typeof profile | null>>;
 type _NestedRoot = Expect<Equal<ReturnType<typeof profile.address.city.form>, typeof profile | null>>;
+type _ChildKeyInParent = Expect<Equal<ReturnType<typeof profile.name.keyInParent>, string>>;
+type _NestedKeyInParent = Expect<Equal<ReturnType<typeof profile.address.city.keyInParent>, string>>;
 
 profile.set({ name: 'Daniel', age: 43, address: { city: 'Bern' } });
 profile.patch({ address: { city: 'Geneva' } });

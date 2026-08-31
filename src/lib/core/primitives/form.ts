@@ -57,7 +57,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formSelfSubmitting = signal(false);
   const formSelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
-  const formKeyInParent = signal<string | null>(null);
+  const formKeyInParent = signal<string | number | null>(null);
   const formControlDebounce = computed(() =>
     resolvedOptions?.debounce
     ?? (formParent() as InternalNode | null)?.api._controlDebounce(),
@@ -65,7 +65,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
   const formPath = computed((): readonly string[] => {
     const parent = formParent();
     const key = formKeyInParent();
-    return parent && key !== null ? [...parent.api.path(), key] : [];
+    return parent && key !== null ? [...parent.api.path(), String(key)] : [];
   });
   const formDisabled = computed(() =>
     formSelfDisabled() || readStateSource(resolvedOptions?.disabled) || formParent()?.api.disabled() === true,
@@ -196,6 +196,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     form: rootForm,
     parent: formParent.asReadonly(),
     path: formPath,
+    keyInParent: formKeyInParent.asReadonly(),
     value: formValue,
     set,
     update: (updater) => untracked(() => set(updater(formValue()))),

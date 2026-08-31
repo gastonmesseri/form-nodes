@@ -1,6 +1,6 @@
 import type { Injector, Signal } from '@angular/core';
 
-import type { MarkAsTouchedOptions, Node, RootNode } from '../types/node.type';
+import type { MarkAsTouchedOptions, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
@@ -25,6 +25,13 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   form: Signal<RootNode<TParent> | null>;
   parent: Signal<TParent | null>;
   path: Signal<readonly string[]>;
+  /**
+   * Property or array index under which this field is stored, or `null` when it is a root field.
+   *
+   * @example
+   * `myForm.age.keyInParent()` returns `'age'`.
+   */
+  keyInParent: Signal<NodeKeyInParent<TParent>>;
   value: Signal<TValue>;
   /**
    * Immediate value buffered from the bound UI control before any configured debounce completes.

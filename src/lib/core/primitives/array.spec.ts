@@ -350,6 +350,8 @@ describe('array', () => {
       [{ name: 'Mono' }, { name: 'Lia' }],
     );
     const lia = sons.at(1)!;
+    expect(sons.keyInParent()).toBeNull();
+    expect(lia.keyInParent()).toBe(1);
     lia.name.markAsTouched();
 
     sons.move(1, 0);
@@ -359,6 +361,9 @@ describe('array', () => {
     expect(sons.at(0)!.path()).toEqual(['0']);
     expect(sons.at(1)!.path()).toEqual(['1']);
     expect(sons.at(0)!.name.path()).toEqual(['0', 'name']);
+    expect(lia.keyInParent()).toBe(0);
+    expect(sons.at(1)!.keyInParent()).toBe(1);
+    expect(lia.name.keyInParent()).toBe('name');
   });
 
   it('detaches removed items and reindexes the remaining items', () => {
@@ -367,8 +372,10 @@ describe('array', () => {
 
     expect(removed.parent()).toBeNull();
     expect(removed.path()).toEqual([]);
+    expect(removed.keyInParent()).toBeNull();
     expect(sons.length()).toBe(2);
     expect(sons.at(1)!.path()).toEqual(['1']);
+    expect(sons.at(1)!.keyInParent()).toBe(1);
     expect(sons.removeAt(99)).toBeUndefined();
   });
 
@@ -877,6 +884,10 @@ describe('array', () => {
     });
     expect(profile.sons.parent()).toBe(profile);
     expect(profile.sons.path()).toEqual(['sons']);
+    expect(profile.sons.keyInParent()).toBe('sons');
+    expect(profile.sons.at(0)!.keyInParent()).toBe(0);
+    expect(profile.sons.at(0)!.aliases.keyInParent()).toBe('aliases');
+    expect(profile.sons.at(0)!.aliases.at(0)!.keyInParent()).toBe(0);
     expect(profile.sons.at(0)!.name.path()).toEqual(['sons', '0', 'name']);
     expect(profile.sons.at(0)!.aliases.at(0)!.path()).toEqual(['sons', '0', 'aliases', '0']);
     expect(profile.sons.at(0)!.name.form()).toBe(profile);

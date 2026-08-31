@@ -24,6 +24,7 @@ const optionPeople = array({
   trackBy: value => value.id,
 });
 const optionNames = array(() => field(''), { initialValue: 2 });
+const directory = form({ people: array({ name: field('') }, 1) });
 
 type PersonValue = { id: string; name: string | null; age: number | null };
 type _PeopleValue = Expect<Equal<ReturnType<typeof people>, PersonValue[]>>;
@@ -33,6 +34,10 @@ type _FormTemplateValue = Expect<Equal<ReturnType<typeof forms>, { enabled: bool
 type _OptionPeopleValue = Expect<Equal<ReturnType<typeof optionPeople>, { id: string; name: string | null }[]>>;
 type _OptionNamesValue = Expect<Equal<ReturnType<typeof optionNames>, (string | null)[]>>;
 type _IndexedNameValue = Expect<Equal<ReturnType<NonNullable<typeof names[0]>>, string | null>>;
+type _ArrayItemKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof names[0]>['keyInParent']>, number | null>>;
+type _ArrayFormKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof people[0]>['keyInParent']>, number | null>>;
+type _NestedArrayKeyInParent = Expect<Equal<ReturnType<typeof directory.people.keyInParent>, string>>;
+type _NestedArrayItemKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof directory.people[0]>['keyInParent']>, number | null>>;
 type _MappedNames = Expect<Equal<ReturnType<typeof names.map<string | null>>, (string | null)[]>>;
 
 people.push({ id: 'two', name: 'Daniel', age: 35 });

@@ -10,6 +10,7 @@ type _NullableValue = Expect<Equal<ReturnType<typeof nullable>, string | null>>;
 type _NonNullableValue = Expect<Equal<ReturnType<typeof nonNullable>, string>>;
 type _ExplicitValue = Expect<Equal<ReturnType<typeof explicit>, number | null>>;
 type _ApiValue = Expect<Equal<ReturnType<typeof nullable.api.value>, string | null>>;
+type _RootKeyInParent = Expect<Equal<ReturnType<typeof nullable.keyInParent>, string | number | null>>;
 type _NoInternalParentSetter = Expect<Equal<HasKey<typeof nullable, '_setParent'>, false>>;
 type _NoInternalClone = Expect<Equal<HasKey<FieldApi<string | null>, '_clone'>, false>>;
 

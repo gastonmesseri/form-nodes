@@ -194,7 +194,7 @@ export function array<TDefinition extends NodeDefinition>(
   const arraySelfDirty = signal(false);
   const arraySelfDisabled = signal(getInitialMutableState(resolvedOptions?.disabled));
   const arrayParent = signal<Node | null>(null);
-  const arrayKeyInParent = signal<string | null>(null);
+  const arrayKeyInParent = signal<string | number | null>(null);
   const arrayControlDebounce = computed(() =>
     resolvedOptions?.debounce
     ?? (arrayParent() as InternalNode | null)?.api._controlDebounce(),
@@ -202,7 +202,7 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayPath = computed<readonly string[]>(() => {
     const parent = arrayParent();
     const key = arrayKeyInParent();
-    return parent && key !== null ? [...parent.api.path(), key] : [];
+    return parent && key !== null ? [...parent.api.path(), String(key)] : [];
   });
   const arrayDisabled = computed(() =>
     arraySelfDisabled() || readStateSource(resolvedOptions?.disabled) || arrayParent()?.api.disabled() === true,
@@ -279,7 +279,7 @@ export function array<TDefinition extends NodeDefinition>(
     }
   };
   const reparentItems = () => {
-    arrayItems().forEach((item, index) => (item as InternalNode).api._setParent(arrayNode, String(index)));
+    arrayItems().forEach((item, index) => (item as InternalNode).api._setParent(arrayNode, index));
   };
   const detachItem = (item: TItem) => (item as InternalNode).api._setParent(null);
   const insert = (index: number, ...args: [] | [value: NodeSet<TItem>]) => {
@@ -381,6 +381,7 @@ export function array<TDefinition extends NodeDefinition>(
     form: rootForm,
     parent: arrayParent.asReadonly(),
     path: arrayPath,
+    keyInParent: arrayKeyInParent.asReadonly(),
     value: arrayValue,
     at: (index) => arrayItems()[index] as ArrayItemWithParent<TItem, ArrayNode<TItem>> | undefined,
     forEach: (callback) => {
