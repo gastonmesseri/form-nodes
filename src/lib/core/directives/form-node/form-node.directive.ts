@@ -1,14 +1,15 @@
-import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit } from '@angular/core';
+import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
-import type { InternalNode, Node, NodeValue } from '../../types/node.type';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { discoverSignalControl } from './utils/discover-signal-control';
 import type { ValidationError } from '../../validation/validation.type';
+import type { InternalNode, Node, NodeValue } from '../../types/node.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
+import { FORM_NODE_CONFIG, type FormNodeBinding } from './form-node-config';
 import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
@@ -114,10 +115,19 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
 
   private signalControl = inject(FORM_NODE_CONTROL, { optional: true, self: true });
 
+  private config = inject(FORM_NODE_CONFIG, { optional: true });
+
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /** Current bound field, exposed as a signal for custom integrations. */
   node = computed(() => this.field);
+
+  private classBinding: FormNodeBinding = {
+    element: this.element,
+    injector: this.injector,
+    node: this.node as Signal<Node>,
+    focus: (options) => this.focus(options),
+  };
 
   constructor() {
     this.destroyRef.onDestroy(() => { this.destroyed = true; });
@@ -133,6 +143,28 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     this.bindNodeState();
     this.registerControlBinding();
     this.warnWhenHidden();
+    this.installClassBindingEffect();
+  }
+
+  private installClassBindingEffect() {
+    const classes = Object.entries(this.config?.classes ?? {}).map(([className, predicate]) => [
+      className,
+      computed(() => predicate(this.classBinding)),
+    ] as const);
+    if (classes.length === 0) return;
+    const appliedClasses = new Map<string, boolean>();
+
+    afterRenderEffect({
+      write: () => {
+        classes.forEach(([className, active]) => {
+          const isActive = active();
+          if (appliedClasses.get(className) === isActive) return;
+          appliedClasses.set(className, isActive);
+          if (isActive) this.renderer.addClass(this.element, className);
+          else this.renderer.removeClass(this.element, className);
+        });
+      },
+    }, { injector: this.injector });
   }
 
   /** Field, form, or array node bound to the host control. */

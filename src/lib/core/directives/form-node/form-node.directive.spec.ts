@@ -17,6 +17,7 @@ import { min } from '../../validation/validators/min';
 import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { provideFormNodeControl } from './form-node-control';
+import { provideFormNodeConfig, type FormNodeBinding } from './form-node-config';
 import { pattern } from '../../validation/validators/pattern';
 import { maxDate } from '../../validation/validators/max-date';
 import { minDate } from '../../validation/validators/min-date';
@@ -46,6 +47,64 @@ const accessorWithPrototype = (prototype: object): ControlValueAccessor & { writ
 };
 
 describe('FormNodeDirective', () => {
+  it('applies configured CSS classes reactively and independently', () => {
+    const externalState = signal(false);
+    const invalidPredicate = vi.fn((binding: FormNodeBinding) => binding.node().$api.invalid());
+    const touchedPredicate = vi.fn((binding: FormNodeBinding) => binding.node().$api.touched());
+    const externalPredicate = vi.fn(() => externalState());
+
+    @Component({
+      standalone: true,
+      imports: [FormNodeDirective],
+      providers: [provideFormNodeConfig({
+        classes: {
+          'form-invalid': invalidPredicate,
+          'form-touched': touchedPredicate,
+          highlighted: externalPredicate,
+        },
+      })],
+      template: `<input [formNode]="name">`,
+    })
+    class Host {
+      name = field('', [required], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(inputElement.classList.contains('form-invalid')).toBe(true);
+    expect(inputElement.classList.contains('form-touched')).toBe(false);
+    expect(inputElement.classList.contains('highlighted')).toBe(false);
+    expect(invalidPredicate).toHaveBeenCalledTimes(1);
+    expect(touchedPredicate).toHaveBeenCalledTimes(1);
+    expect(externalPredicate).toHaveBeenCalledTimes(1);
+    const binding = invalidPredicate.mock.calls[0]![0];
+    expect(binding.element).toBe(inputElement);
+    expect(binding.injector.get(FormNodeDirective)).toBeInstanceOf(FormNodeDirective);
+    expect(binding.node()).toBe(fixture.componentInstance.name);
+    binding.focus();
+    expect(document.activeElement).toBe(inputElement);
+
+    fixture.componentInstance.name.markAsTouched();
+    fixture.detectChanges();
+
+    expect(inputElement.classList.contains('form-touched')).toBe(true);
+    expect(touchedPredicate).toHaveBeenCalledTimes(2);
+    expect(invalidPredicate).toHaveBeenCalledTimes(1);
+    expect(externalPredicate).toHaveBeenCalledTimes(1);
+
+    fixture.componentInstance.name.set('Marco');
+    externalState.set(true);
+    fixture.detectChanges();
+
+    expect(inputElement.classList.contains('form-invalid')).toBe(false);
+    expect(inputElement.classList.contains('highlighted')).toBe(true);
+    expect(invalidPredicate).toHaveBeenCalledTimes(2);
+    expect(touchedPredicate).toHaveBeenCalledTimes(2);
+    expect(externalPredicate).toHaveBeenCalledTimes(2);
+  });
+
   it('supports the explicit signal-control provider as a fallback', () => {
     @Component({
       standalone: true,
