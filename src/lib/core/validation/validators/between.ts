@@ -1,9 +1,9 @@
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { MAX_METADATA, MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultBetweenMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 type ResolvedBounds = {
   minimum: number;
@@ -45,6 +45,8 @@ export const between = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<number | null>) => boolean;
   },
 ): Validator<number | null> => {
   const message = resolveValidatorMessageOption(options);
@@ -73,5 +75,8 @@ export const between = (
     };
   };
   markValidatorMetadata(validator, MIN_METADATA, () => resolveBounds()?.minimum);
-  return markValidatorMetadata(validator, MAX_METADATA, () => resolveBounds()?.maximum);
+  return applyValidatorWhen(
+    markValidatorMetadata(validator, MAX_METADATA, () => resolveBounds()?.maximum),
+    options,
+  );
 };

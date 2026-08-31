@@ -27,6 +27,24 @@ Returning `undefined` from a message function continues through form, provider, 
 
 Constraints passed as functions are reactive. Signals read by them are tracked, and returning `undefined` temporarily disables constraints that support optional sources.
 
+Every standard built-in factory also accepts a reactive `when` predicate in its options object.
+`requiredIf()` uses its condition argument for the same purpose instead. The
+predicate receives the complete validator context. While it returns `false`, the validator
+contributes neither an error nor constraint metadata:
+
+```ts
+const businessAccount = signal(false);
+
+const myForm = form({
+  companyName: field('', [required({
+    when: () => businessAccount(),
+  })]),
+});
+```
+
+Calls that pass a message string directly remain unchanged. Use the options object when `when` is
+needed.
+
 ## Validator map
 
 | Need | Validators |

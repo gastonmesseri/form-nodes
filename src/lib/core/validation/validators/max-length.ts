@@ -1,10 +1,10 @@
 import { isEmpty } from '../../utils/is-empty';
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { MAX_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMaxLengthMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /**
@@ -33,10 +33,12 @@ export const maxLength = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<ValueWithLengthOrSize | null>) => boolean;
   },
 ): Validator<ValueWithLengthOrSize | null> => {
   const message = resolveValidatorMessageOption(options);
-  return markValidatorMetadata(({ value }) => {
+  const validator: Validator<ValueWithLengthOrSize | null> = markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (isEmpty(currentValue)) return null;
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
@@ -46,4 +48,5 @@ export const maxLength = (
       ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: resolveValidatorMessage('maxLength', { maxLength: resolvedMaximum, actual: actualLength }, message, () => defaultMaxLengthMessage(resolvedMaximum)) }
       : null;
   }, MAX_LENGTH_METADATA, maximum);
+  return applyValidatorWhen(validator, options);
 };

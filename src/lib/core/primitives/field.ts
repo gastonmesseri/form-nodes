@@ -11,6 +11,7 @@ import type { Field, FieldApi, FieldOptions } from './field.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { createValidatorContext } from '../validation/create-validator-context';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
@@ -19,7 +20,7 @@ import { registerNodeValidatorMessages } from '../validation/validator-messages'
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
@@ -229,7 +230,11 @@ export function field<TValue>(
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
   const fieldSyncErrors = computed(() => fieldSyncValidation().errors);
-  const fieldMetadata = createNodeMetadata(fieldValidators, computed(() => fieldSyncValidation().metadata));
+  const fieldMetadata = createNodeMetadata(
+    fieldValidators,
+    computed(() => fieldSyncValidation().metadata),
+    () => createValidatorContext(fieldContext, fieldNode) as ValidatorContext<unknown>,
+  );
   const fieldMin = computed(() =>
     readMetadata(fieldMetadata(), MIN_DATE_METADATA)
     ?? readMetadata(fieldMetadata(), MIN_METADATA)

@@ -31,7 +31,7 @@ const resolveComposableResult = <TValue>(
     if (depth >= maximumCompositionDepth) {
       throw new Error(`Synchronous validator composition exceeded ${maximumCompositionDepth} levels.`);
     }
-    collectValidatorMetadata(result, metadata);
+    collectValidatorMetadata(result, metadata, context as ValidatorContext<unknown>);
     activeValidators.add(result);
     const resolved = resolveComposableResult(result(context), context, activeValidators, depth + 1, metadata);
     activeValidators.delete(result);

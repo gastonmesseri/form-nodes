@@ -1,10 +1,10 @@
 import { isEmpty } from '../../utils/is-empty';
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { PATTERN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultPatternMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a non-empty string to match a regular expression.
@@ -32,10 +32,12 @@ export const pattern = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<string | null>) => boolean;
   },
 ): Validator<string | null> => {
   const message = resolveValidatorMessageOption(options);
-  return markValidatorMetadata(({ value }) => {
+  const validator: Validator<string | null> = markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (isEmpty(currentValue)) return null;
     const resolvedExpression = typeof expression === 'function' ? expression() : expression;
@@ -45,4 +47,5 @@ export const pattern = (
       ? null
       : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage('pattern', { pattern: resolvedExpression, actual: currentValue! }, message, () => defaultPatternMessage(resolvedExpression)) };
   }, PATTERN_METADATA, expression);
+  return applyValidatorWhen(validator, options);
 };

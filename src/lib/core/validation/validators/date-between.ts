@@ -1,10 +1,10 @@
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { normalizeDateConstraintSource, type DateConstraintSource } from './date-constraint';
 import { markValidatorMetadata } from '../validator-metadata';
 import { MAX_DATE_METADATA, MIN_DATE_METADATA } from '../constraint-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultDateBetweenMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 type ResolvedDateBounds = {
   minimum: Date;
@@ -56,6 +56,8 @@ export const dateBetween = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<Date | null>) => boolean;
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
     parseAs?: 'utc' | 'local';
   },
@@ -89,5 +91,8 @@ export const dateBetween = (
     };
   };
   markValidatorMetadata(validator, MIN_DATE_METADATA, () => resolveBounds()?.minimum);
-  return markValidatorMetadata(validator, MAX_DATE_METADATA, () => resolveBounds()?.maximum);
+  return applyValidatorWhen(
+    markValidatorMetadata(validator, MAX_DATE_METADATA, () => resolveBounds()?.maximum),
+    options,
+  );
 };

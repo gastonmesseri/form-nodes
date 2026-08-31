@@ -1,6 +1,5 @@
-import { required, REQUIRED_METADATA } from './required';
+import { required } from './required';
 import type { Validator } from '../validation.type';
-import { markValidatorMetadata } from '../validator-metadata';
 
 /**
  * Requires a value only while a reactive condition is true.
@@ -25,13 +24,9 @@ export const requiredIf = (
   condition: () => boolean,
   options?: string | { message?: string | (() => string | undefined) },
 ): Validator<unknown> => {
-  const requiredValidator = options === undefined
-    ? required as Validator<unknown>
-    : required(options);
-
-  return markValidatorMetadata(
-    context => (condition() ? requiredValidator(context) : null),
-    REQUIRED_METADATA,
-    condition,
-  );
+  const message = typeof options === 'string' ? options : options?.message;
+  return required({
+    ...(message === undefined ? {} : { message }),
+    when: () => condition(),
+  });
 };

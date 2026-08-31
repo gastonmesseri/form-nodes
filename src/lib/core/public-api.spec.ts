@@ -5,6 +5,7 @@ import { form } from './primitives/form';
 import { field } from './primitives/field';
 import { group } from './primitives/group';
 import { array } from './primitives/array';
+import { min } from './validation/validators/min';
 import type { DynamicNode, Node } from './types/node.type';
 import { required } from './validation/validators/required';
 import { asyncValidator } from './validation/async-validator';
@@ -12,6 +13,17 @@ import { requiredIf } from './validation/validators/required-if';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
+  it('contextually types built-in validator when callbacks', () => {
+    min(18, {
+      when: ({ value, touched, path }) => {
+        expectTypeOf(value()).toEqualTypeOf<number | null>();
+        expectTypeOf(touched()).toEqualTypeOf<boolean>();
+        expectTypeOf(path()).toEqualTypeOf<readonly string[]>();
+        return true;
+      },
+    });
+  });
+
   it('types requiredIf as a reactive validator with message options', () => {
     const condition = signal(true);
     const validator = requiredIf(() => condition(), { message: () => 'Required now.' });

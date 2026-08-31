@@ -22,8 +22,8 @@ integer(message)
 integer(options)
 ```
 
-This validator has no configurable constraint value. Its options customize only the failure
-message, which may itself be reactive.
+This validator has no configurable constraint value. Its options customize the failure message,
+which may itself be reactive, and the reactive `when` condition.
 
 ## Usage and behavior
 
@@ -50,6 +50,16 @@ provider, process-wide, and built-in message fallbacks. See
 [Validator messages](../../guides/validator-messages.md).
 
 ## Reactive behavior
+
+The options object accepts a reactive `when` predicate. Signals read from its validator context are
+tracked; while it returns `false`, the rule contributes neither errors nor constraint metadata.
+
+```ts
+const wholeNumbersOnly = signal(false);
+const quantity = field(1.5, [integer({
+  when: () => wholeNumbersOnly(),
+})]);
+```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved
 constraint becomes unavailable, validators that support optional constraint sources temporarily

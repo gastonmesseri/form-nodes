@@ -50,6 +50,16 @@ provider, process-wide, and built-in message fallbacks. See
 
 ## Reactive behavior
 
+The options object accepts a reactive `when` predicate. Signals read from its validator context are
+tracked; while it returns `false`, the rule contributes neither errors nor constraint metadata.
+
+```ts
+const limitSummary = signal(false);
+const summary = field('One two three', [maxWords(2, {
+  when: () => limitSummary(),
+})]);
+```
+
 Reactive constraint functions and message functions track the signals they read. When a resolved
 constraint becomes unavailable, validators that support optional constraint sources temporarily
 stop contributing their error and metadata.

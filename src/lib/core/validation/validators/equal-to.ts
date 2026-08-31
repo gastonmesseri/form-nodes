@@ -1,7 +1,7 @@
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultEqualToMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a value to equal a static or reactive expected value using `Object.is()`.
@@ -35,13 +35,16 @@ export const equalTo = <TValue>(
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
   },
 ): Validator<TValue | null | undefined> => {
   const message = resolveValidatorMessageOption(options);
-  return ({ value }) => {
+  const validator: Validator<TValue | null | undefined> = ({ value }) => {
     const expectedValue = typeof expected === 'function' ? (expected as () => TValue)() : expected;
     return Object.is(value(), expectedValue)
       ? null
       : { kind: 'equalTo', message: resolveValidatorMessage('equalTo', {}, message, defaultEqualToMessage) };
   };
+  return applyValidatorWhen(validator, options);
 };

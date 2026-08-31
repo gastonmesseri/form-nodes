@@ -83,6 +83,20 @@ Use the options form when the node also needs configuration such as `disabled`, 
 | `asyncValidator()` result | `usernameAvailable` | Managed asynchronous validator |
 | `null` or `undefined` | `enabled ? required : null` | Ignored inside a source array |
 
+All standard built-in validator factories accept `when` in their options object. `requiredIf()`
+uses its condition argument for the same purpose:
+
+```ts
+const myForm = form({
+  newsletterEmail: field('', [email({
+    when: ({ value }) => value() !== '',
+  })]),
+});
+```
+
+Signals read by `when` are tracked. While it returns `false`, the validator contributes no errors
+or constraint metadata.
+
 Async validators must be direct source entries. Do not return an `asyncValidator()` from a
 synchronous validator.
 

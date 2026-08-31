@@ -1,9 +1,17 @@
 import type { MetadataContributions, MetadataKey } from '../metadata/metadata';
+import type { ValidatorContext } from './validation.type';
 
 export type ValidatorMetadata = MetadataContributions;
 
 type UntypedMetadataKey = MetadataKey<unknown, unknown>;
 type MutableValidatorMetadata = Map<UntypedMetadataKey, unknown[]>;
+
+type ConditionalMetadataContribution = {
+  readonly resolve: (context: ValidatorContext<unknown>) => { readonly active: boolean; readonly value: unknown };
+};
+
+const isConditionalMetadataContribution = (value: unknown): value is ConditionalMetadataContribution =>
+  typeof value === 'object' && value !== null && 'resolve' in value;
 
 const validatorMetadata = new WeakMap<Function, MutableValidatorMetadata>();
 
@@ -26,11 +34,45 @@ export const markValidatorMetadata = <TValidator extends Function, TWrite, TAccu
 };
 
 /** Appends every raw contribution attached to a validator to one node resolution store. */
-export const collectValidatorMetadata = (validator: Function, target: MutableValidatorMetadata) => {
+export const collectValidatorMetadata = (
+  validator: Function,
+  target: MutableValidatorMetadata,
+  context?: ValidatorContext<unknown>,
+) => {
   validatorMetadata.get(validator)?.forEach((contributions, key) => {
     const current = target.get(key) ?? [];
-    current.push(...contributions);
+    contributions.forEach((contribution) => {
+      if (!isConditionalMetadataContribution(contribution)) {
+        current.push(contribution);
+        return;
+      }
+      if (context === undefined) return;
+      const resolved = contribution.resolve(context);
+      if (resolved.active) current.push(resolved.value);
+    });
     target.set(key, current);
+  });
+};
+
+/** Copies metadata to a validator while making every contribution conditional. */
+export const copyConditionalValidatorMetadata = <TValue>(
+  source: Function,
+  target: Function,
+  when: (context: ValidatorContext<TValue>) => boolean,
+) => {
+  validatorMetadata.get(source)?.forEach((contributions, key) => {
+    const current = validatorMetadata.get(target) ?? new Map<UntypedMetadataKey, unknown[]>();
+    const targetContributions = current.get(key) ?? [];
+    contributions.forEach((contribution) => {
+      targetContributions.push({
+        resolve: (context: ValidatorContext<unknown>) => ({
+          active: when(context as ValidatorContext<TValue>),
+          value: contribution,
+        }),
+      } satisfies ConditionalMetadataContribution);
+    });
+    current.set(key, targetContributions);
+    validatorMetadata.set(target, current);
   });
 };
 

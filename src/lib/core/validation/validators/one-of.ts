@@ -1,8 +1,8 @@
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { isNil } from '../../utils/is-nil';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultOneOfMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a non-empty value to equal one of the allowed values.
@@ -38,10 +38,12 @@ export const oneOf = <TValue>(
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
   },
 ): Validator<TValue | null | undefined> => {
   const message = resolveValidatorMessageOption(options);
-  return ({ value }) => {
+  const validator: Validator<TValue | null | undefined> = ({ value }) => {
     const currentValue = value();
     if (isNil(currentValue) || currentValue === '') return null;
     const resolvedAllowedValues = typeof allowedValues === 'function' ? allowedValues() : allowedValues;
@@ -53,4 +55,5 @@ export const oneOf = <TValue>(
       message: resolveValidatorMessage('oneOf', { options: resolvedAllowedValues, actual: currentValue }, message, defaultOneOfMessage),
     };
   };
+  return applyValidatorWhen(validator, options);
 };
