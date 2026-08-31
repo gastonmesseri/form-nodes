@@ -16,6 +16,19 @@ import ngModelSource from '!!raw-loader!../../examples/control-state-ng-model.ty
 form binding attached to its host. The component can consume the same interface whether its caller
 uses `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`.
 
+:::info Optional convenience utility
+
+Using `useControlState()` is not required to create or bind a custom control. Value integration
+continues to work through a signal `model()`, `FormValueControl`, or `ControlValueAccessor` without
+this hook.
+
+Use it when the component also needs convenient, source-neutral access to control state such as
+`required`, `disabled`, `errors`, `touched`, or validation constraints. It avoids creating separate
+state inputs or adapters for each supported forms API, but it does not participate in value binding
+and does not replace the control's existing value contract.
+
+:::
+
 :::tip Signal-based by design
 
 `useControlState()` is designed for modern signal-based Angular components. Call the hook once as

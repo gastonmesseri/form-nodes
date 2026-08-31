@@ -58,11 +58,24 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         'reference/api-overview',
-        'reference/configuration',
         'reference/form',
         'reference/field',
         'reference/array',
         'reference/group',
+        'reference/control-state',
+        { type: 'doc', id: 'reference/form-node-binding', label: '[formNode]' },
+        'reference/configuration',
+        'reference/node-api',
+        {
+          type: 'category',
+          label: 'Other',
+          items: [
+            'reference/provide-form-node-config',
+            'reference/provide-form-node-pass-through',
+            'reference/provide-validator-messages',
+            'reference/configure-global-validator-messages',
+          ],
+        },
         {
           type: 'category',
           label: 'Validation',
@@ -97,9 +110,6 @@ const sidebars: SidebarsConfig = {
             },
           ],
         },
-        { type: 'doc', id: 'reference/form-node-binding', label: '[formNode]' },
-        'reference/control-state',
-        'reference/node-api',
       ],
     },
     {
