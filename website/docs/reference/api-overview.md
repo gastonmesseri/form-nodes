@@ -225,14 +225,14 @@ export class ProfileComponent {
 See [Custom controls](../guides/custom-controls.md#use-angulars-own-formfield-directive) for the
 standalone and NgModule import options and the complete synchronization behavior.
 
-Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` import supports native controls, custom controls, and native form roots.
+Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNode` import supports native controls, custom controls, and native form roots.
 
 ### Custom-control and binding configuration
 
 | API | Purpose |
 | --- | --- |
 | `provideFormNodeConfig()` | Configures reactive CSS classes for descendant `[formNode]` and `$field`-backed `[formField]` bindings. |
-| `ANGULAR_FORMS_STATUS_CLASSES` | Optional Angular Forms-compatible validity and interaction class preset. |
+| [`ANGULAR_FORMS_STATUS_CLASSES`](./angular-forms-status-classes.md) | Optional Angular Forms-compatible validity and interaction class preset. |
 | [`provideFormNodePassThrough()`](./provide-form-node-pass-through.md) | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |
