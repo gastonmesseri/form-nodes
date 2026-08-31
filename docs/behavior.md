@@ -439,7 +439,7 @@ ValidationError.WithoutTargetNode
 
 Field errors use their `Field<TValue>` as the target type. Form errors use their complete `Form<TNodes>` as the target type. The internal defaulting operation preserves a target that is already present, preparing the error model for future tree validators that can direct an error to a different node.
 
-This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but is named `targetNode` to match this library's field-and-form node model. Angular's optional `formField` reference is not implemented: it identifies a concrete `[formField]` directive binding and will only make sense once this library has an equivalent binding layer.
+This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but is named `targetNode` to match this library's field-and-form node model. An error produced by a concrete control binding may additionally expose `formNode: FormNodeBinding`. Node validators leave this property absent because their errors belong to the node rather than to one rendered control.
 
 Synchronous and asynchronous validators share one readonly validator array. Asynchronous validators must be explicitly wrapped with `asyncValidator()`; the library does not invoke a validator merely to detect whether it returns a Promise or Observable.
 
@@ -1422,8 +1422,10 @@ the field and ancestor validation state. A successful later parse clears the err
 normal control debounce rules.
 
 Parse errors belong to an individual `[formNode]` binding. Two controls bound to the same field may
-therefore contribute independent parse errors. A programmatic model update clears stale parse errors
-and writes the new value to every binding. `reset()` also clears each binding's parse state and forces
+therefore contribute independent parse errors. Each parse error exposes `formNode`, whose `element`,
+`injector`, reactive `node`, and `focus()` identify and operate on the exact binding that produced it.
+The error's `targetNode` continues to identify the validated field. A programmatic model update clears
+stale parse errors and writes the new value to every binding. `reset()` also clears each binding's parse state and forces
 its raw DOM value back to the current model, including when the model value itself is unchanged.
 Changing the directive's bound field or destroying the binding removes its previous error ownership.
 

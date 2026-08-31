@@ -2,14 +2,15 @@ import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, I
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
+import { FORM_NODE_CONFIG } from './form-node-config';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { discoverSignalControl } from './utils/discover-signal-control';
 import type { ValidationError } from '../../validation/validation.type';
+import type { FormNodeBinding } from '../../types/form-node-binding.type';
 import type { InternalNode, Node, NodeValue } from '../../types/node.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
-import { FORM_NODE_CONFIG, type FormNodeBinding } from './form-node-config';
 import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
@@ -243,6 +244,10 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
 
   private connectNativeControl(control: NativeFormNodeControl) {
     const parseErrors = signal<readonly ValidationError.WithoutTargetNode[]>([]);
+    const bindingParseErrors = computed(() => parseErrors().map((error) => ({
+      ...error,
+      formNode: this.classBinding,
+    })));
     const commit = () => {
       if (this.composing || this.destroyed) return;
       if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;
@@ -269,7 +274,7 @@ export class FormNodeDirective<TNode extends Node = Node> implements OnInit {
     });
     effect((onCleanup) => {
       const field = this.getNativeField();
-      onCleanup(registerExternalValidationErrors(field, this.nativeParsingOwner, parseErrors, {
+      onCleanup(registerExternalValidationErrors(field, this.nativeParsingOwner, bindingParseErrors, {
         onReset: () => {
           parseErrors.set([]);
           writeNativeControlValue(control, field.controlValue());
