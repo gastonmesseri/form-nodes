@@ -775,7 +775,9 @@ const age = field<number>(null, {
 
 Constraint functions execute during computed validation, so Angular signals read by them are tracked. Returning `undefined` temporarily disables that constraint. `pattern()` accepts a `RegExp` or a function returning a `RegExp | undefined`.
 
-Fields expose the active constraints as reactive `min()`, `max()`, `minLength()`, `maxLength()`, and `pattern()` state. This state describes configured validation rather than only current errors, so it remains available while the current value is valid. Multiple minimum constraints resolve to the strictest, largest minimum; multiple maximum constraints resolve to the strictest, smallest maximum. `pattern()` contains every active regular expression. Conditionally composed validators contribute their constraints only while that branch is active.
+Fields always expose the reactive constraint signals `min()`, `max()`, `minLength()`, `maxLength()`, and `pattern()`. This state describes configured validation rather than only current errors, so it remains available while the current value is valid. A scalar constraint signal returns `null` when no active validator contributes that constraint, while `pattern()` returns an empty array. Multiple minimum constraints resolve to the strictest, largest minimum; multiple maximum constraints resolve to the strictest, smallest maximum. `pattern()` contains every active regular expression. Conditionally composed validators contribute their constraints only while that branch is active.
+
+The `null` absence value intentionally differs from Angular 22.1.4 Signal Forms, whose corresponding limit signals use `undefined`. The `[formNode]` interoperability adapter translates `null` back to `undefined` when writing standard Angular custom-control constraint inputs.
 
 The email expression matches Angular's Signal Forms implementation, including its local-part, domain-label, and total-length restrictions.
 
@@ -1311,7 +1313,7 @@ interpret returned server-validation errors.
 
 ## Control binding with `[formNode]`
 
-`FormNodeDirective` binds a field node to a native form control, an explicitly provided signal custom control, or a component that implements Angular's `ControlValueAccessor` contract:
+`FormNodeDirective` binds a field node to a native form control, and binds field, form, or array nodes to an explicitly provided signal custom control or a component that implements Angular's `ControlValueAccessor` contract:
 
 ```ts
 @Component({
@@ -1340,6 +1342,7 @@ The directive currently provides these behaviors:
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - Components implementing Angular's standard `FormValueControl<T>` (`value = model<T>()`) or `FormCheckboxControl` (`checked = model<boolean>()`) are discovered automatically from their compiled component metadata. They require no library-specific interface, provider, or registration. The model synchronizes in both directions and user changes follow the field's normal `setControlValue()` debounce behavior.
+- A `FormValueControl<T>` may bind to an aggregate `form()` or `array()` when `T` matches the node's complete value. A control-originated aggregate value marks that aggregate node dirty and then uses its normal structural update path: forms distribute the complete object to their children, while arrays reconcile, create, move, or detach item nodes according to their configured index or `trackBy` identity. Descendants are not individually marked dirty merely because the aggregate control supplied their values. Programmatic `set()` remains pristine and updates the custom model in the opposite direction.
 - Standard Signal Forms state inputs implemented by the component are synchronized when this library has an equivalent field state: `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`, `readonly`, `required`, and `touched`. The `name` input receives the same stable, path-aware value used by native controls. Constraint inputs receive the same strictest limits and complete pattern list exposed by the field. Input transforms are honored. Angular-specific state without a library equivalent, including `disabledReasons`, is not synthesized.
 - The standard optional `touch` output marks the field touched; optional `focus()` and `reset()` hooks integrate with the directive and field reset lifecycle. A library-specific `node` signal remains available through the optional `FormNodeValueControl` extension, but is not required for Angular-compatible controls.
 - `provideFormNodeControl()` remains an explicit fallback for unusual controls whose model is not exposed in Angular component metadata. Binding precedence is deliberate: a matching `ControlValueAccessor` wins first for compatibility with established Angular controls, then an explicit signal-control provider, then an automatically discovered Signal Forms control, then native-control handling.
@@ -1398,7 +1401,7 @@ transitions using a small CSS animation hook, matching Angular Signal Forms. The
 document or Shadow Root, honors Angular's `CSP_NONCE`, and is removed when its last binding is
 destroyed. No validity observer or style is installed during server rendering.
 
-This first integration layer intentionally accepts `Field` nodes. Aggregate `form()` and `array()` nodes do not expose their own buffered `controlValue()`, so binding an aggregate custom control requires a separate aggregate-control protocol rather than pretending it is a leaf field.
+Native `input`, `select`, and `textarea` elements still require a `field()` because they edit scalar control representations. Aggregate nodes are accepted only through custom signal controls or CVAs capable of representing their complete object or array value. Aggregate control values are maintained internally by the binding adapter; this does not add a public leaf-style `controlValue()` or control debounce to `form()` and `array()`.
 
 The architecture follows Angular 22 Signal Forms `FormField`, `FormValueControl`, and `FormCheckboxControl` behavior as inspected at tag `22.1.4` (`898380974d49cf7976e9d89cc74a0801a26ce7b1`), especially `packages/forms/signals/src/directive/form_field.ts`, `packages/forms/signals/src/api/types.ts`, and the binding selection in `packages/forms/signals/src/field/node.ts`. Angular's compiler expansion is specifically tied to a `[formField]` binding, so `[formNode]` performs its own defensive discovery through the public `getDebugNode()` and `reflectComponentType()` APIs. Updating read-only `InputSignal` state uses a small isolated adapter around Angular's `ɵSIGNAL`/`InputSignalNode` mechanism; this compatibility boundary is covered by JIT, full-AOT, server-rendering, hydration, OnPush, and real-Chromium tests. Signal interoperability remains a directive concern and does not change field semantics.
 
@@ -1420,7 +1423,6 @@ These details are not public API, but explain current propagation behavior:
 
 The current implementation does not yet provide:
 
-- Aggregate custom-control binding and a first-class signal-control protocol.
 - Runtime addition or removal of named object children after a `form()` is created.
 - Schema-driven form generation from JSON definitions.
 

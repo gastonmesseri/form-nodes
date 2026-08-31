@@ -83,14 +83,14 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & { readonly kind: TKind }) | undefined;
-  /** Strictest minimum value contributed by the field's active numeric or date validators. */
-  min: Signal<NonNullable<TValue> | undefined>;
-  /** Strictest maximum value contributed by the field's active numeric or date validators. */
-  max: Signal<NonNullable<TValue> | undefined>;
-  /** Strictest minimum length contributed by the field's active length validators. */
-  minLength: Signal<number | undefined>;
-  /** Strictest maximum length contributed by the field's active length validators. */
-  maxLength: Signal<number | undefined>;
+  /** Strictest minimum value contributed by active numeric or date validators, or `null` when absent. */
+  min: Signal<NonNullable<TValue> | null>;
+  /** Strictest maximum value contributed by active numeric or date validators, or `null` when absent. */
+  max: Signal<NonNullable<TValue> | null>;
+  /** Strictest minimum length contributed by active length validators, or `null` when absent. */
+  minLength: Signal<number | null>;
+  /** Strictest maximum length contributed by active length validators, or `null` when absent. */
+  maxLength: Signal<number | null>;
   /** Every regular expression contributed by the field's active pattern validators. */
   pattern: Signal<readonly RegExp[]>;
   required: Signal<boolean>;

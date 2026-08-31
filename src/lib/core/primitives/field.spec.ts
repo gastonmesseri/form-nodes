@@ -524,8 +524,18 @@ describe('field', () => {
       minDate(invalidDate),
       maxDate(invalidDate),
     ]);
-    expect(dateField.min()).toBeUndefined();
-    expect(dateField.max()).toBeUndefined();
+    expect(dateField.min()).toBeNull();
+    expect(dateField.max()).toBeNull();
+  });
+
+  it('exposes stable empty constraint signals when no constraint validators are active', () => {
+    const fieldNode = field('David');
+
+    expect(fieldNode.min()).toBeNull();
+    expect(fieldNode.max()).toBeNull();
+    expect(fieldNode.minLength()).toBeNull();
+    expect(fieldNode.maxLength()).toBeNull();
+    expect(fieldNode.pattern()).toEqual([]);
   });
 
   it('exposes date limits and removes conditionally composed constraints', () => {

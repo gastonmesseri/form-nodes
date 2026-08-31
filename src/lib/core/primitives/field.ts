@@ -102,11 +102,13 @@ export function field<TValue>(
   const fieldMetadata = createNodeMetadata(fieldValidators, computed(() => fieldSyncValidation().metadata));
   const fieldMin = computed(() =>
     readMetadata(fieldMetadata(), MIN_DATE_METADATA)
-    ?? readMetadata(fieldMetadata(), MIN_METADATA),
+    ?? readMetadata(fieldMetadata(), MIN_METADATA)
+    ?? null,
   ) as FieldApi<TValue>['min'];
   const fieldMax = computed(() =>
     readMetadata(fieldMetadata(), MAX_DATE_METADATA)
-    ?? readMetadata(fieldMetadata(), MAX_METADATA),
+    ?? readMetadata(fieldMetadata(), MAX_METADATA)
+    ?? null,
   ) as FieldApi<TValue>['max'];
   const asyncValidation = createAsyncValidation(
     fieldContext,
@@ -200,8 +202,8 @@ export function field<TValue>(
     getError,
     min: fieldMin,
     max: fieldMax,
-    minLength: computed(() => readMetadata(fieldMetadata(), MIN_LENGTH_METADATA)),
-    maxLength: computed(() => readMetadata(fieldMetadata(), MAX_LENGTH_METADATA)),
+    minLength: computed(() => readMetadata(fieldMetadata(), MIN_LENGTH_METADATA) ?? null),
+    maxLength: computed(() => readMetadata(fieldMetadata(), MAX_LENGTH_METADATA) ?? null),
     pattern: computed(() => readMetadata(fieldMetadata(), PATTERN_METADATA)),
     required: computed(() =>
       readMetadata(fieldMetadata(), REQUIRED_METADATA) ||
@@ -235,6 +237,8 @@ export function field<TValue>(
   const internalApi = {
     ...api,
     _controlDebounce: fieldControlDebounce,
+    _controlValue: fieldControlValue.asReadonly(),
+    _setControlValue: setControlValue,
     _clone: () => recreateField(value, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       fieldParent.set(parent);

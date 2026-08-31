@@ -1,7 +1,7 @@
 import { DestroyRef, effect, signal, untracked, type Injector, type ModelSignal, type WritableSignal } from '@angular/core';
 
-import type { Field } from '../../primitives/field';
 import type { FormNodeControl } from './form-node-control';
+import type { InternalNode, Node, NodeValue } from '../../types/node.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 
@@ -9,39 +9,39 @@ export type SignalControlConnection = {
   focus?: (options?: FocusOptions) => void;
 };
 
-const getControlModel = <TValue>(control: FormNodeControl<TValue>): ModelSignal<TValue> =>
-  ('value' in control && control.value !== undefined ? control.value : control.checked) as ModelSignal<TValue>;
+const getControlModel = <TNode extends Node>(control: FormNodeControl<NodeValue<TNode>, TNode>): ModelSignal<NodeValue<TNode>> =>
+  ('value' in control && control.value !== undefined ? control.value : control.checked) as ModelSignal<NodeValue<TNode>>;
 
-/** Connects a provided signal-based custom control to a field node. */
-export const connectSignalControl = <TValue>(
-  control: FormNodeControl<TValue>,
-  field: () => Field<TValue>,
+/** Connects a provided signal-based custom control to a field, form, or array node. */
+export const connectSignalControl = <TNode extends Node>(
+  control: FormNodeControl<NodeValue<TNode>, TNode>,
+  node: () => TNode,
   injector: Injector,
 ): SignalControlConnection => {
   const model = getControlModel(control);
-  const node = control.node as WritableSignal<Field<TValue> | null> | undefined;
+  const nodeInput = control.node as WritableSignal<TNode | null> | undefined;
   const validationOwner = {};
   const noErrors = signal<readonly []>([]);
   let writingControlValue = false;
 
-  connectSignalControlInputs(control, field, injector);
+  connectSignalControlInputs(control, node, injector);
 
   const valueSubscription = model.subscribe((value) => {
-    if (!writingControlValue) field().setControlValue(value);
+    if (!writingControlValue) (node() as unknown as InternalNode).api._setControlValue(value);
   });
-  const touchSubscription = control.touch?.subscribe(() => field().markAsTouched());
+  const touchSubscription = control.touch?.subscribe(() => node().api.markAsTouched());
 
   injector.get(DestroyRef).onDestroy(() => {
     valueSubscription.unsubscribe();
     touchSubscription?.unsubscribe();
-    node?.set(null);
+    nodeInput?.set(null);
   });
 
   effect(() => {
-    const currentField = field();
-    const value = currentField.controlValue();
+    const currentNode = node();
+    const value = (currentNode as unknown as InternalNode).api._controlValue();
     untracked(() => {
-      node?.set(currentField);
+      nodeInput?.set(currentNode);
       if (Object.is(model(), value)) return;
       writingControlValue = true;
       try {
@@ -55,7 +55,7 @@ export const connectSignalControl = <TValue>(
   const reset = control.reset?.bind(control);
   if (reset) {
     effect((onCleanup) => {
-      onCleanup(registerExternalValidationErrors(field(), validationOwner, noErrors, { onReset: reset }));
+      onCleanup(registerExternalValidationErrors(node(), validationOwner, noErrors, { onReset: reset }));
     }, { injector });
   }
 

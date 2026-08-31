@@ -1,7 +1,7 @@
 import { Component, model } from '@angular/core';
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 
-import { field, form, FormNodeDirective } from '../../src/public-api';
+import { array, field, form, FormNodeDirective } from '../../src/public-api';
 
 @Component({
   standalone: true,
@@ -36,6 +36,24 @@ class ValidCheckboxControl implements FormCheckboxControl {
 
 @Component({
   standalone: true,
+  selector: 'valid-profile-control',
+  template: '',
+})
+class ValidProfileControl implements FormValueControl<{ name: string | null }> {
+  value = model({ name: null as string | null });
+}
+
+@Component({
+  standalone: true,
+  selector: 'valid-people-control',
+  template: '',
+})
+class ValidPeopleControl implements FormValueControl<{ name: string | null }[]> {
+  value = model<{ name: string | null }[]>([]);
+}
+
+@Component({
+  standalone: true,
   imports: [ValidValueControl, ValidCheckboxControl, FormNodeDirective],
   template: `
     <valid-value-control [formNode]="name" />
@@ -47,4 +65,17 @@ class ValidSignalControlHost {
   active = field(false, { nullable: false });
 }
 
-void [ValidFormNodeHost, ValidSignalControlHost];
+@Component({
+  standalone: true,
+  imports: [ValidProfileControl, ValidPeopleControl, FormNodeDirective],
+  template: `
+    <valid-profile-control [formNode]="profile" />
+    <valid-people-control [formNode]="people" />
+  `,
+})
+class ValidAggregateControlHost {
+  profile = form({ name: field('David') });
+  people = array({ name: field('') }, []);
+}
+
+void [ValidFormNodeHost, ValidSignalControlHost, ValidAggregateControlHost];

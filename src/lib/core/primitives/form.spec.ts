@@ -14,15 +14,16 @@ describe('form', () => {
     let resolve!: () => void;
     const pendingAction = new Promise<void>((done) => { resolve = done; });
     const action = vi.fn(() => pendingAction);
-    const profile = form({ name: field('Marco') }, { submission: { action } });
+    const profile = form({ name: field('Marco'), details: form({ age: field(42) }) }, { submission: { action } });
 
     const first = profile.submit();
 
     expect(profile.submitting()).toBe(true);
     expect(profile.name.submitting()).toBe(true);
+    expect(profile.details.submitting()).toBe(true);
     expect(profile.touched()).toBe(true);
     expect(profile.name.touched()).toBe(true);
-    expect(action).toHaveBeenCalledWith(profile, { name: 'Marco' });
+    expect(action).toHaveBeenCalledWith(profile, { name: 'Marco', details: { age: 42 } });
     expect(await profile.submit()).toBe(false);
     expect(action).toHaveBeenCalledTimes(1);
 
@@ -30,6 +31,7 @@ describe('form', () => {
     expect(await first).toBe(true);
     expect(profile.submitting()).toBe(false);
     expect(profile.name.submitting()).toBe(false);
+    expect(profile.details.submitting()).toBe(false);
   });
 
   it('blocks invalid submissions by default and supports validation override options', async () => {
