@@ -7,8 +7,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe } from 'vitest';
 import { FormControl, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { injectFormControlNameBoundControl } from './form-control-name';
-import { runAbstractControlAdapterContract } from '../../../../../tests/helpers/bound-control-adapter-contract';
+import { injectFormControlNameStateAdapter } from './form-control-name';
+import { runAbstractControlAdapterContract } from '../../../../../tests/helpers/control-state-adapter-contract';
 
 @Component({
   selector: 'control-name-adapter-control',
@@ -17,7 +17,7 @@ import { runAbstractControlAdapterContract } from '../../../../../tests/helpers/
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ControlNameAdapterControl), multi: true }],
 })
 class ControlNameAdapterControl implements ControlValueAccessor {
-  state = injectFormControlNameBoundControl<string>();
+  state = injectFormControlNameStateAdapter<string>();
   writeValue() {}
   registerOnChange() {}
   registerOnTouched() {}
@@ -33,7 +33,7 @@ class Host {
   form = new FormGroup({ name: this.name });
 }
 
-const createBoundControl = async () => {
+const createControlState = async () => {
   const fixture = TestBed.createComponent(Host);
   fixture.detectChanges();
   await fixture.whenStable();
@@ -45,8 +45,8 @@ const createBoundControl = async () => {
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('formControlName bound-control adapter', () => {
+describe('formControlName control-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
-  runAbstractControlAdapterContract('formControlName', createBoundControl, 'name');
+  runAbstractControlAdapterContract('formControlName', createControlState, 'name');
 });

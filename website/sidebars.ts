@@ -67,7 +67,7 @@ const sidebars: SidebarsConfig = {
         'reference/custom-validators',
         'reference/async-validator',
         'reference/form-node-binding',
-        'reference/bound-control',
+        'reference/control-state',
         'reference/node-api',
       ],
     },

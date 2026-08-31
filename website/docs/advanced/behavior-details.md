@@ -183,23 +183,23 @@ work. Errors thrown by an application-defined input transform are still reported
 
 Gem Forms emits one warning per affected control instance and input name when such a write is
 skipped. When the component does not already use it, the warning recommends
-`injectBoundControl()` as the source-neutral state facade. A component already consuming that
+`useControlState()` as the source-neutral state facade. A component already consuming that
 facade does not receive the redundant recommendation. A `ControlValueAccessor` is another option when only
 value and disabled interoperability are needed; it does not provide channels for every optional
 state such as `readonly`, `required`, or errors.
 
 The edited `value = model<T>()` or `checked = model<boolean>()` path does not need this adapter because
 models are publicly writable. A custom control can avoid read-only state-input writes through the
-stable bound-control facade:
+stable control-state facade:
 
 ```ts
 export class DatePicker {
   value = model<Date | null>(null);
-  boundControl = injectBoundControl<Date | null>();
+  controlState = useControlState<Date | null>();
 }
 ```
 
-`boundControl.disabled()`, `boundControl.readonly()`, and the other signals currently read
+`controlState.disabled()`, `controlState.readonly()`, and the other signals currently read
 `[formNode]` state. The same API is reserved for future `[formField]`, Reactive Forms, and `ngModel`
 adapters. See [Custom controls](../guides/custom-controls.md) for the complete contract.
 

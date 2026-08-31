@@ -1,27 +1,17 @@
 import { Component, forwardRef } from '@angular/core';
-import { FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
+import { FormsModule, NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 
-import { injectBoundControl } from '@gem/ng-forms';
+import { useControlState } from '@gem/ng-forms';
 
 // Custom control component
 
 @Component({
   selector: 'app-date-picker',
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DatePicker), multi: true }],
-  template: `
-    <button
-      type="button"
-      [disabled]="boundControl.disabled()"
-      (click)="select('2026-09-03')"
-      (blur)="markAsTouched()"
-      >
-      {{ value }}
-    </button>
-  `,
+  template: `<button type="button" [disabled]="controlState.disabled()" (click)="select('2026-09-03')" (blur)="markAsTouched()">{{ value }}</button>`,
 })
 export class DatePicker implements ControlValueAccessor {
-  boundControl = injectBoundControl<string | null>();
-
+  controlState = useControlState<string | null>();
   value: string | null = null;
 
   select(value: string | null) {
@@ -30,11 +20,11 @@ export class DatePicker implements ControlValueAccessor {
   }
 
   markAsTouched() {
-    this.boundControl.markAsTouched();
+    this.controlState.markAsTouched();
+    this.onTouched();
   }
 
   // ControlValueAccessor implementation
-
   onChange = (_value: string | null) => {};
   onTouched = () => {};
 
@@ -50,9 +40,9 @@ export class DatePicker implements ControlValueAccessor {
 // Parent form component
 
 @Component({
-  imports: [DatePicker, ReactiveFormsModule],
-  template: `<app-date-picker [formControl]="birthDate" />`,
+  imports: [DatePicker, FormsModule],
+  template: `<app-date-picker name="birthDate" [(ngModel)]="birthDate" />`,
 })
 export class ProfileEditor {
-  birthDate = new FormControl<string | null>(null);
+  birthDate: string | null = null;
 }

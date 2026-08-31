@@ -2,32 +2,36 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, input, output, resource, signal, type Type } from '@angular/core';
-import { FormField, disabled, form as createAngularForm, validateAsync } from '@angular/forms/signals';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { APP_ID, Component, DestroyRef, ElementRef, inject, model, signal, type Type } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { field } from '../../primitives/field';
+import { asyncValidator } from '../../validation/async-validator';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { required } from '../../validation/validators/required';
 import { pattern } from '../../validation/validators/pattern';
+import { FormNode } from '../../directives/form-node/form-node.directive';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
-import { injectFormFieldBoundControl } from './form-field';
-import { registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
+import { injectFormNodeControlStateAdapter } from './form-node';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
-@Component({ selector: 'form-field-adapter-control', template: '', standalone: true })
-class FormFieldAdapterControl {
-  value = input<unknown>(null);
-  valueChange = output<unknown>();
-  state = injectFormFieldBoundControl<unknown>();
+@Component({ selector: 'form-node-adapter-control', template: '', standalone: true })
+class FormNodeAdapterControl {
+  value = model<unknown>(null);
+  state = injectFormNodeControlStateAdapter<unknown>(
+    inject<ElementRef<HTMLElement>>(ElementRef).nativeElement,
+    inject(DestroyRef),
+    inject(APP_ID),
+  );
 }
 
 @Component({
-  template: `<form-field-adapter-control [formField]="name.$field" />`,
+  template: `<form-node-adapter-control [formNode]="name" />`,
   standalone: true,
-  imports: [FormFieldAdapterControl, FormField],
+  imports: [FormNodeAdapterControl, FormNode],
 })
 class StringHost {
   minimumLength = signal<number | undefined>(3);
@@ -42,9 +46,9 @@ class StringHost {
 }
 
 @Component({
-  template: `<form-field-adapter-control [formField]="amount.$field" />`,
+  template: `<form-node-adapter-control [formNode]="amount" />`,
   standalone: true,
-  imports: [FormFieldAdapterControl, FormField],
+  imports: [FormNodeAdapterControl, FormNode],
 })
 class NumericHost {
   minimum = signal<number | undefined>(1);
@@ -53,78 +57,49 @@ class NumericHost {
 }
 
 @Component({
-  template: `<form-field-adapter-control [formField]="amount" />`,
+  template: `<form-node-adapter-control [formNode]="amount" />`,
   standalone: true,
-  imports: [FormFieldAdapterControl, FormField],
+  imports: [FormNodeAdapterControl, FormNode],
 })
 class PendingHost {
   resolveValidation: (() => void) | undefined;
-  validationRuns = 0;
-  value = signal(5);
-  amount = createAngularForm(this.value, (path) => {
-    validateAsync(path, {
-      params: ({ value }) => value(),
-      factory: params => resource({
-        params,
-        loader: () => {
-          if (this.validationRuns++ === 0) return Promise.resolve(null);
-          return new Promise<null>((resolve) => {
-            this.resolveValidation = () => resolve(null);
-          });
-        },
-      }),
-      onSuccess: () => null,
-      onError: () => null,
-    });
-  });
+  amount = field(5, [asyncValidator(() => new Promise<null>((resolve) => {
+    this.resolveValidation = () => resolve(null);
+  }))], { nullable: false });
 }
 
-@Component({
-  template: `<form-field-adapter-control [formField]="name" />`,
-  standalone: true,
-  imports: [FormFieldAdapterControl, FormField],
-})
-class DisabledReasonHost {
-  value = signal('');
-  name = createAngularForm(this.value, (path) => {
-    disabled(path, { when: () => 'maintenance' });
-  });
-}
+registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalModelForJit(FormNodeAdapterControl, 'value');
 
-registerSignalModelForJit(FormFieldAdapterControl, 'value');
-
-const createBoundControl = async <THost>(host: Type<THost>) => {
+const createControlState = <THost>(host: Type<THost>) => {
   const fixture = TestBed.createComponent(host);
   fixture.detectChanges();
-  await fixture.whenStable();
-  fixture.detectChanges();
-  const state = (fixture.debugElement.children[0]!.componentInstance as FormFieldAdapterControl).state;
+  const state = (fixture.debugElement.children[0]!.componentInstance as FormNodeAdapterControl).state;
   return { fixture, state };
 };
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('formField bound-control adapter', () => {
+describe('formNode control-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
 
-  it('connects to a same-host FormField directive', async () => {
-    const { state } = await createBoundControl(StringHost);
-    expect(state.source).toBe('formField');
+  it('connects to a same-host FormNode directive', () => {
+    const { state } = createControlState(StringHost);
+    expect(state.source).toBe('formNode');
     expect(state.connected()).toBe(true);
   });
 
-  it('tracks value changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks value changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.value()).toBe('');
     fixture.componentInstance.name.set('Marco');
-    TestBed.flushEffects();
     expect(state.value()).toBe('Marco');
   });
 
-  it('tracks disabled changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks disabled changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.disabled()).toBe(false);
     fixture.componentInstance.name.disable();
     expect(state.disabled()).toBe(true);
@@ -132,58 +107,57 @@ describe('formField bound-control adapter', () => {
     expect(state.disabled()).toBe(false);
   });
 
-  it('tracks normalized disabled reason changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks disabled reason changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.disabledReasons()).toEqual([]);
     fixture.componentInstance.name.disable('maintenance');
-    expect(state.disabledReasons()).toEqual([{}]);
+    expect(state.disabledReasons()).toEqual([{ message: 'maintenance' }]);
     fixture.componentInstance.name.enable();
     expect(state.disabledReasons()).toEqual([]);
-
-    const angularBinding = await createBoundControl(DisabledReasonHost);
-    expect(angularBinding.state.disabledReasons()).toEqual([{ message: 'maintenance' }]);
+    fixture.componentInstance.name.disable();
+    expect(state.disabledReasons()).toEqual([{}]);
   });
 
-  it('tracks dirty changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks dirty changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.dirty()).toBe(false);
     fixture.componentInstance.name.markAsDirty();
-    TestBed.flushEffects();
     expect(state.dirty()).toBe(true);
     fixture.componentInstance.name.markAsPristine();
-    TestBed.flushEffects();
     expect(state.dirty()).toBe(false);
   });
 
-  it('tracks and normalizes error changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks error changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.errors()).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'required' })]));
-    expect(state.errors()[0]).not.toHaveProperty('fieldTree');
-    expect(state.errors()[0]).not.toHaveProperty('formField');
     fixture.componentInstance.name.set('Marco');
-    TestBed.flushEffects();
     expect(state.errors()).toEqual([]);
+    fixture.componentInstance.name.set('1');
+    expect(state.errors()).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'minLength' }), expect.objectContaining({ kind: 'pattern' })]));
   });
 
-  it('tracks hidden changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks hidden changes', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { fixture, state } = createControlState(StringHost);
     expect(state.hidden()).toBe(false);
     fixture.componentInstance.name.hide();
     expect(state.hidden()).toBe(true);
     fixture.componentInstance.name.show();
     expect(state.hidden()).toBe(false);
+    warning.mockRestore();
   });
 
-  it('tracks invalid changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks invalid changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.invalid()).toBe(true);
     fixture.componentInstance.name.set('Marco');
-    TestBed.flushEffects();
     expect(state.invalid()).toBe(false);
+    fixture.componentInstance.name.set('1');
+    expect(state.invalid()).toBe(true);
   });
 
-  it('tracks maximum constraint changes', async () => {
-    const { fixture, state } = await createBoundControl(NumericHost);
+  it('tracks maximum constraint changes', () => {
+    const { fixture, state } = createControlState(NumericHost);
     expect(state.max()).toBe(10);
     fixture.componentInstance.maximum.set(20);
     expect(state.max()).toBe(20);
@@ -191,8 +165,8 @@ describe('formField bound-control adapter', () => {
     expect(state.max()).toBeUndefined();
   });
 
-  it('tracks maximum-length constraint changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks maximum-length constraint changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.maxLength()).toBe(20);
     fixture.componentInstance.maximumLength.set(30);
     expect(state.maxLength()).toBe(30);
@@ -200,8 +174,8 @@ describe('formField bound-control adapter', () => {
     expect(state.maxLength()).toBeUndefined();
   });
 
-  it('tracks minimum constraint changes', async () => {
-    const { fixture, state } = await createBoundControl(NumericHost);
+  it('tracks minimum constraint changes', () => {
+    const { fixture, state } = createControlState(NumericHost);
     expect(state.min()).toBe(1);
     fixture.componentInstance.minimum.set(2);
     expect(state.min()).toBe(2);
@@ -209,8 +183,8 @@ describe('formField bound-control adapter', () => {
     expect(state.min()).toBeUndefined();
   });
 
-  it('tracks minimum-length constraint changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks minimum-length constraint changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.minLength()).toBe(3);
     fixture.componentInstance.minimumLength.set(5);
     expect(state.minLength()).toBe(5);
@@ -218,13 +192,13 @@ describe('formField bound-control adapter', () => {
     expect(state.minLength()).toBeUndefined();
   });
 
-  it('exposes the generated name', async () => {
-    const { state } = await createBoundControl(StringHost);
+  it('exposes the generated name', () => {
+    const { state } = createControlState(StringHost);
     expect(state.name()).toMatch(/^a\.form\d+$/);
   });
 
-  it('tracks pattern constraint changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks pattern constraint changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.pattern()).toEqual([/^[a-z]+$/i]);
     fixture.componentInstance.expression.set(/^\d+$/);
     expect(state.pattern()).toEqual([/^\d+$/]);
@@ -233,50 +207,51 @@ describe('formField bound-control adapter', () => {
   });
 
   it('tracks pending changes', async () => {
-    const { fixture, state } = await createBoundControl(PendingHost);
-    expect(state.pending()).toBe(false);
-    fixture.componentInstance.value.set(6);
-    await Promise.resolve();
+    const { fixture, state } = createControlState(PendingHost);
     expect(state.pending()).toBe(true);
-    fixture.destroy();
+    await Promise.resolve();
+    expect(fixture.componentInstance.resolveValidation).toBeTypeOf('function');
+    fixture.componentInstance.resolveValidation?.();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(state.pending()).toBe(false);
   });
 
-  it('tracks readonly changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks readonly changes', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { fixture, state } = createControlState(StringHost);
     expect(state.readonly()).toBe(false);
     fixture.componentInstance.name.markAsReadonly();
     expect(state.readonly()).toBe(true);
     fixture.componentInstance.name.markAsWritable();
     expect(state.readonly()).toBe(false);
+    warning.mockRestore();
   });
 
-  it('exposes required state', async () => {
-    const { state } = await createBoundControl(StringHost);
+  it('exposes required state', () => {
+    const { state } = createControlState(StringHost);
     expect(state.required()).toBe(true);
   });
 
-  it('tracks touched changes', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('tracks touched changes', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.touched()).toBe(false);
     fixture.componentInstance.name.markAsTouched();
-    TestBed.flushEffects();
     expect(state.touched()).toBe(true);
     fixture.componentInstance.name.markAsUntouched();
-    TestBed.flushEffects();
     expect(state.touched()).toBe(false);
   });
 
-  it('marks the field as touched', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('marks the node as touched', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(fixture.componentInstance.name.touched()).toBe(false);
     state.markAsTouched();
-    TestBed.flushEffects();
     expect(fixture.componentInstance.name.touched()).toBe(true);
     expect(state.touched()).toBe(true);
   });
 
-  it('disconnects when its component is destroyed', async () => {
-    const { fixture, state } = await createBoundControl(StringHost);
+  it('disconnects when its component is destroyed', () => {
+    const { fixture, state } = createControlState(StringHost);
     expect(state.connected()).toBe(true);
     fixture.destroy();
     expect(state.connected()).toBe(false);

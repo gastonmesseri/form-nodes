@@ -1,6 +1,6 @@
 import { Component, input, model } from '@angular/core';
 
-import { FormNode, field, form, injectBoundControl, required } from '@gem/ng-forms';
+import { FormNode, field, form, useControlState, required } from '@gem/ng-forms';
 
 // Custom control component
 
@@ -9,15 +9,15 @@ import { FormNode, field, form, injectBoundControl, required } from '@gem/ng-for
   template: `
     <label>
       {{ label() }}
-      @if (boundControl.required()) {
+      @if (controlState.required()) {
         <span aria-hidden="true">*</span>
       }
       <input
         [value]="value()"
-        [disabled]="boundControl.disabled()"
-        [required]="boundControl.required()"
+        [disabled]="controlState.disabled()"
+        [required]="controlState.required()"
         (input)="value.set($any($event.target).value)"
-        (blur)="boundControl.markAsTouched()"
+        (blur)="controlState.markAsTouched()"
       />
     </label>
   `,
@@ -27,7 +27,7 @@ export class MyTextInput {
 
   value = model('');
 
-  boundControl = injectBoundControl<string>();
+  controlState = useControlState<string>();
 }
 
 

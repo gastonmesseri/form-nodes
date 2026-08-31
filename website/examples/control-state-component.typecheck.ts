@@ -1,13 +1,13 @@
 import { Component, model } from '@angular/core';
 
-import { injectBoundControl } from '@gem/ng-forms';
+import { useControlState } from '@gem/ng-forms';
 
 @Component({
   selector: 'my-control-component',
   template: `
     <label for="my-control">
       Name
-      @if (boundControl.required()) {
+      @if (controlState.required()) {
         <span aria-hidden="true">*</span>
       }
     </label>
@@ -15,17 +15,17 @@ import { injectBoundControl } from '@gem/ng-forms';
     <input
       id="my-control"
       [value]="value() ?? ''"
-      [disabled]="boundControl.disabled()"
-      [readonly]="boundControl.readonly()"
-      [required]="boundControl.required()"
-      [attr.aria-invalid]="boundControl.invalid()"
+      [disabled]="controlState.disabled()"
+      [readonly]="controlState.readonly()"
+      [required]="controlState.required()"
+      [attr.aria-invalid]="controlState.invalid()"
       (input)="value.set($any($event.target).value)"
-      (blur)="boundControl.markAsTouched()"
+      (blur)="controlState.markAsTouched()"
     />
 
-    @if (boundControl.touched() && boundControl.errors().length) {
+    @if (controlState.touched() && controlState.errors().length) {
       <ul aria-live="polite">
-        @for (error of boundControl.errors(); track $index) {
+        @for (error of controlState.errors(); track $index) {
           <li>{{ error.kind }}</li>
         }
       </ul>
@@ -35,5 +35,5 @@ import { injectBoundControl } from '@gem/ng-forms';
 export class MyControlComponent {
   value = model<string | null>(null);
 
-  boundControl = injectBoundControl<string | null>();
+  controlState = useControlState();
 }

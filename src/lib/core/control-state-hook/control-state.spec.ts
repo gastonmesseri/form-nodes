@@ -17,9 +17,9 @@ import { pattern } from '../validation/validators/pattern';
 import { FormNode } from '../directives/form-node/form-node.directive';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
-import { injectBoundControl } from './bound-control';
+import { useControlState } from './control-state';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import { hasBoundControlConsumer, registerBoundControlBinding } from './adapters/form-node';
+import { hasControlStateConsumer, registerControlStateBinding } from './adapters/form-node';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 // Plain Vitest transpilation does not emit signal-input metadata for the directive.
@@ -28,7 +28,7 @@ registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('injectBoundControl', () => {
+describe('useControlState', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
 
@@ -36,9 +36,9 @@ describe('injectBoundControl', () => {
     const element = document.createElement('div');
     const first = {} as FormNodeBinding;
     const second = {} as FormNodeBinding;
-    expect(hasBoundControlConsumer(element)).toBe(false);
-    const disconnectFirst = registerBoundControlBinding(element, first);
-    const disconnectSecond = registerBoundControlBinding(element, second);
+    expect(hasControlStateConsumer(element)).toBe(false);
+    const disconnectFirst = registerControlStateBinding(element, first);
+    const disconnectSecond = registerControlStateBinding(element, second);
 
     expect(disconnectFirst).not.toThrow();
     expect(disconnectSecond).not.toThrow();
@@ -47,12 +47,12 @@ describe('injectBoundControl', () => {
   it('exposes reactive normalized state from a formNode binding', () => {
     @Component({
       selector: 'bound-state-control',
-      template: `{{ boundControl.disabled() }}`,
+      template: `{{ controlState.disabled() }}`,
       standalone: true,
     })
     class BoundStateControl {
       value = model<string | null>(null);
-      boundControl = injectBoundControl<string | null>();
+      controlState = useControlState<string | null>();
     }
     registerSignalModelForJit(BoundStateControl, 'value');
 
@@ -68,9 +68,9 @@ describe('injectBoundControl', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const control = fixture.debugElement.children[0]!.componentInstance as BoundStateControl;
-    const state = control.boundControl;
+    const state = control.controlState;
 
-    expect(hasBoundControlConsumer(fixture.debugElement.children[0]!.nativeElement)).toBe(true);
+    expect(hasControlStateConsumer(fixture.debugElement.children[0]!.nativeElement)).toBe(true);
     expect(state.connected()).toBe(true);
     expect(state.source()).toBe('formNode');
     expect(state.value()).toBe('');
@@ -126,7 +126,7 @@ describe('injectBoundControl', () => {
     })
     class BoundNumberControl {
       value = model(0);
-      boundControl = injectBoundControl<number>();
+      controlState = useControlState<number>();
     }
     registerSignalModelForJit(BoundNumberControl, 'value');
 
@@ -141,7 +141,7 @@ describe('injectBoundControl', () => {
 
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
-    const state = (fixture.debugElement.children[0]!.componentInstance as BoundNumberControl).boundControl;
+    const state = (fixture.debugElement.children[0]!.componentInstance as BoundNumberControl).controlState;
 
     expect(state.min()).toBe(1);
     expect(state.max()).toBe(10);
@@ -156,11 +156,11 @@ describe('injectBoundControl', () => {
       standalone: true,
     })
     class UnboundControl {
-      boundControl = injectBoundControl<string>();
+      controlState = useControlState<string>();
     }
 
     const fixture = TestBed.createComponent(UnboundControl);
-    const state = fixture.componentInstance.boundControl;
+    const state = fixture.componentInstance.controlState;
 
     expect(state.connected()).toBe(false);
     expect(state.source()).toBeNull();
@@ -186,22 +186,22 @@ describe('injectBoundControl', () => {
 
   it('normalizes state from a formControl binding', async () => {
     @Component({
-      selector: 'reactive-bound-control',
+      selector: 'reactive-control-state',
       template: '',
       standalone: true,
-      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ReactiveBoundControl), multi: true }],
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ReactiveControlState), multi: true }],
     })
-    class ReactiveBoundControl implements ControlValueAccessor {
-      boundControl = injectBoundControl<string>();
+    class ReactiveControlState implements ControlValueAccessor {
+      controlState = useControlState<string>();
       writeValue() {}
       registerOnChange() {}
       registerOnTouched() {}
     }
 
     @Component({
-      template: `<reactive-bound-control [formControl]="name" />`,
+      template: `<reactive-control-state [formControl]="name" />`,
       standalone: true,
-      imports: [ReactiveBoundControl, ReactiveFormsModule],
+      imports: [ReactiveControlState, ReactiveFormsModule],
     })
     class Host {
       name = new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3)] });
@@ -211,7 +211,7 @@ describe('injectBoundControl', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    const state = (fixture.debugElement.children[0]!.componentInstance as ReactiveBoundControl).boundControl;
+    const state = (fixture.debugElement.children[0]!.componentInstance as ReactiveControlState).controlState;
 
     expect(state.source()).toBe('formControl');
     expect(state.value()).toBe('');
@@ -240,22 +240,22 @@ describe('injectBoundControl', () => {
 
   it('selects the formField adapter', async () => {
     @Component({
-      selector: 'signal-forms-bound-control',
+      selector: 'signal-forms-control-state',
       template: '',
       standalone: true,
-      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SignalFormsBoundControl), multi: true }],
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SignalFormsControlState), multi: true }],
     })
-    class SignalFormsBoundControl implements ControlValueAccessor {
-      boundControl = injectBoundControl<string>();
+    class SignalFormsControlState implements ControlValueAccessor {
+      controlState = useControlState<string>();
       writeValue() {}
       registerOnChange() {}
       registerOnTouched() {}
     }
 
     @Component({
-      template: `<signal-forms-bound-control [formField]="name.$field" />`,
+      template: `<signal-forms-control-state [formField]="name.$field" />`,
       standalone: true,
-      imports: [SignalFormsBoundControl, FormField],
+      imports: [SignalFormsControlState, FormField],
     })
     class Host {
       name = field('Marco', { nullable: false });
@@ -265,7 +265,7 @@ describe('injectBoundControl', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    const state = (fixture.debugElement.children[0]!.componentInstance as SignalFormsBoundControl).boundControl;
+    const state = (fixture.debugElement.children[0]!.componentInstance as SignalFormsControlState).controlState;
 
     expect(state.source()).toBe('formField');
     expect(state.value()).toBe('Marco');
@@ -273,22 +273,22 @@ describe('injectBoundControl', () => {
 
   it('selects the formControlName adapter', async () => {
     @Component({
-      selector: 'control-name-bound-control',
+      selector: 'control-name-control-state',
       template: '',
       standalone: true,
-      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ControlNameBoundControl), multi: true }],
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ControlNameControlState), multi: true }],
     })
-    class ControlNameBoundControl implements ControlValueAccessor {
-      boundControl = injectBoundControl<string>();
+    class ControlNameControlState implements ControlValueAccessor {
+      controlState = useControlState<string>();
       writeValue() {}
       registerOnChange() {}
       registerOnTouched() {}
     }
 
     @Component({
-      template: `<form [formGroup]="form"><control-name-bound-control formControlName="name" /></form>`,
+      template: `<form [formGroup]="form"><control-name-control-state formControlName="name" /></form>`,
       standalone: true,
-      imports: [ControlNameBoundControl, ReactiveFormsModule],
+      imports: [ControlNameControlState, ReactiveFormsModule],
     })
     class Host {
       form = new FormGroup({ name: new FormControl('Marco', { nonNullable: true }) });
@@ -298,7 +298,7 @@ describe('injectBoundControl', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    const state = (fixture.debugElement.children[0]!.children[0]!.componentInstance as ControlNameBoundControl).boundControl;
+    const state = (fixture.debugElement.children[0]!.children[0]!.componentInstance as ControlNameControlState).controlState;
 
     expect(state.source()).toBe('formControlName');
     expect(state.value()).toBe('Marco');
@@ -306,22 +306,22 @@ describe('injectBoundControl', () => {
 
   it('selects the ngModel adapter', async () => {
     @Component({
-      selector: 'ng-model-bound-control',
+      selector: 'ng-model-control-state',
       template: '',
       standalone: true,
-      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => NgModelBoundControl), multi: true }],
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => NgModelControlState), multi: true }],
     })
-    class NgModelBoundControl implements ControlValueAccessor {
-      boundControl = injectBoundControl<string>();
+    class NgModelControlState implements ControlValueAccessor {
+      controlState = useControlState<string>();
       writeValue() {}
       registerOnChange() {}
       registerOnTouched() {}
     }
 
     @Component({
-      template: `<ng-model-bound-control [(ngModel)]="name" [ngModelOptions]="{ standalone: true }" />`,
+      template: `<ng-model-control-state [(ngModel)]="name" [ngModelOptions]="{ standalone: true }" />`,
       standalone: true,
-      imports: [FormsModule, NgModelBoundControl],
+      imports: [FormsModule, NgModelControlState],
     })
     class Host {
       name = 'Marco';
@@ -331,7 +331,7 @@ describe('injectBoundControl', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    const state = (fixture.debugElement.children[0]!.componentInstance as NgModelBoundControl).boundControl;
+    const state = (fixture.debugElement.children[0]!.componentInstance as NgModelControlState).controlState;
 
     expect(state.source()).toBe('ngModel');
     expect(state.value()).toBe('Marco');

@@ -1,7 +1,7 @@
 import { computed, signal, type DestroyRef, type Signal, type WritableSignal } from '@angular/core';
 
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
-import type { BoundControlAdapter } from '../bound-control-adapter';
+import type { ControlStateAdapter } from '../control-state-adapter';
 import { getFormNodeName } from '../../directives/form-node/utils/form-node-name';
 
 type FormNodeEntry = {
@@ -20,7 +20,7 @@ const getEntry = (element: HTMLElement): FormNodeEntry => {
   return entry;
 };
 
-export const injectFormNodeBoundControl = <TValue>(element: HTMLElement, destroyRef: DestroyRef, appId: string): BoundControlAdapter<TValue> => {
+export const injectFormNodeControlStateAdapter = <TValue>(element: HTMLElement, destroyRef: DestroyRef, appId: string): ControlStateAdapter<TValue> => {
   const entry = getEntry(element);
   const binding = signal<FormNodeBinding | null>(entry.binding);
   entry.consumers.add(binding);
@@ -66,7 +66,7 @@ export const injectFormNodeBoundControl = <TValue>(element: HTMLElement, destroy
   };
 };
 
-export const registerBoundControlBinding = (element: HTMLElement, binding: FormNodeBinding): (() => void) => {
+export const registerControlStateBinding = (element: HTMLElement, binding: FormNodeBinding): (() => void) => {
   const entry = getEntry(element);
   entry.binding = binding;
   entry.consumers.forEach(consumer => consumer.set(binding));
@@ -77,6 +77,6 @@ export const registerBoundControlBinding = (element: HTMLElement, binding: FormN
   };
 };
 
-export const hasBoundControlConsumer = (element: HTMLElement): boolean => {
+export const hasControlStateConsumer = (element: HTMLElement): boolean => {
   return (entries.get(element)?.consumers.size ?? 0) > 0;
 };

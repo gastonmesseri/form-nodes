@@ -1,7 +1,7 @@
 import { Component, model } from '@angular/core';
 import { FormField, type FormValueControl } from '@angular/forms/signals';
 
-import { field, form, injectBoundControl, required, type BoundControlError } from '@gem/ng-forms';
+import { field, form, useControlState, required, type ControlStateError } from '@gem/ng-forms';
 
 // Custom control component
 
@@ -10,13 +10,13 @@ import { field, form, injectBoundControl, required, type BoundControlError } fro
   template: `
     <input
       [value]="value() ?? ''"
-      [disabled]="boundControl.disabled()"
+      [disabled]="controlState.disabled()"
       (input)="value.set($any($event.target).value)"
-      (blur)="boundControl.markAsTouched()"
+      (blur)="controlState.markAsTouched()"
     />
-    @if (boundControl.touched() && boundControl.invalid()) {
+    @if (controlState.touched() && controlState.invalid()) {
       <ul aria-live="polite">
-        @for (error of boundControl.errors(); track $index) {
+        @for (error of controlState.errors(); track $index) {
           <li>{{ errorMessage(error) }}</li>
         }
       </ul>
@@ -26,9 +26,9 @@ import { field, form, injectBoundControl, required, type BoundControlError } fro
 export class DatePicker implements FormValueControl<string | null> {
   value = model<string | null>(null);
 
-  boundControl = injectBoundControl<string | null>();
+  controlState = useControlState<string | null>();
 
-  errorMessage(error: BoundControlError) {
+  errorMessage(error: ControlStateError) {
     return error.kind === 'required' ? 'Choose a date.' : 'The date is invalid.';
   }
 }

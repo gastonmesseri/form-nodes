@@ -15,6 +15,6 @@ exceptions thrown by consumer-authored input transforms.
 
 When a recognized input cannot be written, warn once per control instance and input name. The
 warning must state that the control remains connected, identify the potentially stale state, and
-recommend `injectBoundControl()` as the stable state channel unless that component already uses
+recommend `useControlState()` as the stable state channel unless that component already uses
 it. Mention `ControlValueAccessor` only as an alternative for value and disabled interoperability;
 it does not represent every optional state.
