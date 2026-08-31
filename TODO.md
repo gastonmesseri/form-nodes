@@ -12,9 +12,7 @@
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
 - Validators
-  - Implement getError() function in the node, similar to angular 22 signal forms
   - Consider changing 'kind' to 'type' in validators
-  - Implement other params in validator function (right now is only value)
   - Implement basic validators (get from lab)
     - And add default messages for each
     - Review required overload and make it work like in lab
@@ -24,7 +22,6 @@
   - Each validator should have a very descriptive behavior in is JSDoc
    - e.g. required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
   - Improve validators model, similar to Angular 22 signal forms, but also allow referencing other fields, and also de form tree (as arguments)
-  - In validator function, allow returning an object { kind: string; message: string }, but also allow not returning anything (undefined)
   - Consider maybe exporting something like "validator()" function, for users to define validator functions without needing to specify signature
     - make this the recommended way of creating a custom validator in a separated file (without type inference)
       - maybe pass a generic with the value model (for field() array() or form())
@@ -61,38 +58,26 @@
       partner: null as string | null,
       friend: field<string>(),
     })
-  V- Shortcut for group() // done
 - directive
-  - define name
-    - [formNode] // top, i am really passing a form-node to the directive
-    - [bindField]
-    - [fieldControl]
-    - [formBind]
-    - [ngField]
-    - [field]
-    - [gemField]
-  - Ensure that the angular "@for" in the template, supports iterating the myForm.myArray
-    - e.g. 
-      @for (house of form.houses) {
-        <input type="text" [formNode]="house.city">
-        <input type="text" [formNode]="house.country">
-      }
-      // maybe better name for the example "houseNode"
   - allow alternative predefined names for directive
   - allow dynamic name for directive (in case is possible for example creating a form)
     . e.g. providers: [MyFormField.withName('myCustomDirectiveName')]
   - Allow hooking to existing angular apis
-    - control value accesor
-    - new angular ways of defining custom controls (maybe [value] input? i don't remember)
+    - Add other Angular interoperability mechanisms if they become relevant
+  - Decide whether host attributes or inputs such as `[disabled]` should also update the node; node-to-control state synchronization is already implemented.
+  - Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
+  - Ensure whether we need to have angular forms as package dependency, or we can create an abstraction like we did with isObservableLike....
   - Make the directive sync disabled/readonly/required attributes like in angular signal forms 22.
     - maybe there are more attributes synced, check in angular implementation
     - (from angular docs) The [formField] directive also syncs field state for attributes like required, disabled, and readonly when appropriate.
     - Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
     - It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
-  - Control-value-accessor or template directives.
-  - Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
   - Ensure whether we need to have angular forms as package dependency, or we can create an abstraction like we did with isObservableLike....
-  - Ensure all types of defining custom controls are documented and handled by the directive
+  - Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
+- Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
+  both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
+  access the errors() or something like that
+- Re-evaluate `FormValueControl` interoperability on every Angular upgrade. Replace the isolated `ɵSIGNAL`/`InputSignalNode` adapter with a public Angular mechanism as soon as one exists (for example, public access to the host component's `ComponentRef.setInput()` or a dedicated Signal Forms interoperability protocol). Preserve the AOT, SSR, hydration, OnPush, and real-browser test matrix during that migration. Until then, recommend `provideFormNodeControl()` when consumers require the explicit compatibility path.
 - Add very descriptive intellisense for every property in public api, (options, calls, etc, properties)
 - Add keyInParent property to nodes
   - also add other missing properties (disabledReasons, etc)
@@ -105,16 +90,15 @@
   });
   // later in the template <input type="text" [formNode]="form.name">
   // 'form' is good for the instance? maybe formModel, maybe myForm? maybe personForm?
-- Request chat to implement or aim to a test coverage 100% at least in form() array() field()
+- Implement keyInParent
+- Allow creating a framework with predefined options (e.g. by default form() array() or field() has { nullable: true })
 - Implement shorthand for required in the field options similar to disbled
-- Investigate difference in angular 22 signal forms between controlValue and value properties
 - initial value should be null or undefined? (for field())
   - and for array?
 - Rename to something generic like @ng-tools/forms (maybe)
 - In the future allow something like dynamic forms from a JSON or object definition
   - Schema-driven form generation from JSON definitions.
 - Allow always myForm.$api in form()/group() in case the user wants to declare de property api (always user priority)
-- Submission state.
 - Runtime addition or removal of form nodes.
 - Consider allowing validator function returning false/true (for shorthands)
 - Try to simplify the "markers" concept, probably not needed that overengineering
@@ -128,9 +112,8 @@
   - example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
 - Add support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
   - If possible, typed strings
-- Document properly how to implement a custom control (preferably with angular native way)
-- Docuemnt that test coverability is high
 - Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project
+- Exponer un helper para obtener el valor del form(), e.g. (type MyFormValue = FormValue<typeof myFormInstance>)
 - Due to typescript limitations, try providing something similar to signal forms schemaPath api,
   so that in another callback, we can set validators properly typed or something like that.
   - e.g.
@@ -145,15 +128,12 @@
       return null;
     }),
   ]);
-- Consider implementing update() (like in signal.update) for the nodes
 - Consider an alternative name for ".api"
 - Add debounce to synchronous validators, probably also with a factory function validator(() => ...)
 - TRY TO MAKE ASYNC VALIDATORS ALSO BEING THE RESULT OF A COMPOSABLE VALIDATION FUNCTION.
   - at the moment this is not possible.
 - Consider cleaning the form() array() field() files, (maybe a class?)
 - Also consider exporting the main functions with the following names: ngForm, ngField, ngArray
-- Add support for submit in the form object, something like onSubmit. maybe look for the parent form with the directive formField (or my name of the directive)
-  - maybe allow another directive for setting the form in a <form [formField]="myForm">
 - In the framework, provide also a component (create and export an angular component) to display the validation errors
   - max validation errors
   - color, color by type
@@ -167,6 +147,33 @@
 - gpt tasks alignment:
 controlValue() en form() y array()
 Angular lo expone en todos los nodos. Nosotros solo en field(). Conviene esperar a definir cómo se agregan valores pendientes de descendientes.
+- Consider imports interface like the following:
+  import { form } from 'wherever';
+
+  const myForm = form({
+    name: form.field('Mark');
+    age: form.field(23),
+    houses: form.array({
+      city: form.field('Madrid'),
+      country: form.field('Spain'),
+    }),
+  });
+- Consider nullable api like this:
+  const name = field.nullable('Mark');
+  const age = field.nullable(23),
+- Consider the following (changing submission api):
+  // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmit, and onInvalidSubmit to allow easier api
+  // Same in case it has more options inside submission
+  const profile = form({
+    name: field('', [required]),
+  }, {
+    submission: {
+      action: async (_form, value) => saveProfile(value),
+      onInvalid: () => showValidationMessage(),
+    },
+  });
+
+  const submitted = await profile.submit();
 - Add ESLINt with vt rules
 
 Debounce más general
@@ -182,12 +189,6 @@ Nosotros reconciliamos por índice. Angular conserva automáticamente la identid
 
 Nodos eliminados
 Nosotros convertimos un nodo eliminado en un nodo raíz independiente y utilizable. Angular lo considera orphan. Hay que decidir qué comportamiento resulta más útil.
-
-errorSummary()
-Angular diferencia:
-errors();       // errores propios
-errorSummary(); // propios y descendientes
-Nosotros solo tenemos errors(), aunque invalid() sí agrega el estado descendiente.
 
 disabledReasons()
 Angular conserva las reglas y ancestros responsables del estado disabled. Nosotros solo exponemos el booleano.
@@ -212,8 +213,23 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 - [ ]
 
-## Completed
+## I think is finished
 
+- Implement `getError()` on every node.
+- Pass value, node API, path, parent, and root form context to validators.
+- Allow validator functions to return an error object or `undefined`.
+- Make `array()` nodes iterable so Angular `@for` can iterate their child nodes directly.
+- Choose `[formNode]` as the node-binding directive name.
+- Bind aggregate forms to native `<form [formNode]="form">` elements.
+- Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
+- Automatically support Angular `FormValueControl` and `FormCheckboxControl`, retaining `provideFormNodeControl()` as the explicit fallback.
+- Synchronize applicable native and signal-control state such as disabled, readonly, required, invalid, touched, and dirty.
+- Document the supported custom-control integration paths.
+- Reach and enforce high test coverage, including dedicated type, template, package-consumer, browser, SSR, AOT, and hydration tests.
+- Investigate and implement the distinction between `value()` and `controlValue()` for control-originated debounce.
+- Implement form submission state and native form submission integration.
+- Implement `update()` for field, form, and array nodes.
+- Implement `allErrors()` for own and descendant error aggregation while keeping `errors()` scoped to the current node.
 - Add Promise-based asynchronous validators with cancellation, debounce, pending state, and parent propagation.
 - Allow shorthand objects instead of explicit nested `form()` calls.
 - Store a parent node reference instead of manually propagating disabled and readonly state.
@@ -227,22 +243,13 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
   - also considering exposing as prefixed with $disabled() $markAsTouched (with dolar prefix)
 - Implement shortcut for required in field() form() para saber si es required o no, tomando en cuenta el validador por defecto con ese kind
 - Make Nodes have some property to recognize if it is a root of the tree
-- Implement debounce for the field value
+- Implement debounce for the field value.
 - rename variable name internalApi (i think it is not internal, but actually external exposed)
 - Separate types in validation.type, (e.g. observableLike should probably has its own file)
-- Add support for debounce in field()
-- normal validators
-  - when { value } is accesed, then revalidate
-  - pass parent
-  - think on way of passing the root form, typed
-  - pass path (string[])
-  - pass way of getting something from the siblings, or the form itself
-  - maybe allow passing a function to validators property (or array in arguments) that takes api as argument, and returns an array of validators, maybe... (this allows typing properly the asyncValidator for example)
-- to FieldContext PASS THE form() in the context, like the root, like passing the root node (thinking
-  that form() will not be the same as group())
+- Make synchronous validators reactive to every signal read from their callback, including the field value.
+- Allow `validators` to be a reactive function that returns validators conditionally.
 - In form() (or group()), allow also exposing all the .api properties, but giving priority to userDefined fields. 
   - Also provide a property called "controls" (or "fields") that contains only the sub-fields
-- form/group deberian llevar algo llamado controls/fields, para que uno pueda acceder, quiza como un proxy, a los controles de manera segura, cuando typescript pierde el tipado
 - Array
   - Dynamic array primitives.
   - in documentation (and in tests) ensure that passing a field directly is documented ( e.g. array([], field('Marco')) )
@@ -256,3 +263,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
     - maybe better in the second, so that it is optional, and initial value is empty array []
   - Being accesible by myFormArray[0] // index
   - implement map/filter etc methods, possibly implementing being an array by itself, all methods (without collision) [MAYBE NOT NEEDED, that is on the value, MAYBE YES NEEDED TO ITERATE THE FIELDS AND NOT THE VALUES]
+- migrar @input a input()
+- migrar @hostlistener a host: { ... }
+- Remove unnecessary explicit `void` return annotations and discarded-Promise `void` expressions.
+- quitar unnecessary readonly de members

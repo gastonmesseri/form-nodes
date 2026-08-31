@@ -1071,6 +1071,7 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 - Numeric properties are readonly. Structure must be changed through `push()`, `insert()`, `removeAt()`, `move()`, `clear()`, `set()`, or `reset()`.
 - `forEach()` iterates item nodes and receives `(item, index, arrayNode)` like the native array method.
 - Array nodes are iterable, so `for...of`, spread, and `Array.from()` also produce item nodes rather than item values.
+- Angular templates can iterate an array node directly with `@for (item of items; track item)`. Tracking the node preserves the rendered DOM and its `[formNode]` binding across structural `move()` operations; `push()` and `removeAt()` add and remove the corresponding views.
 - `map()` transforms nodes into a normal result array, while `filter()` returns a normal array containing the matching nodes and supports TypeScript type predicates.
 - `find()` returns the first matching node and supports TypeScript type predicates.
 - `findIndex()` returns the index of the first matching node or `-1`.
