@@ -2,7 +2,7 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, forwardRef, inject, model, signal } from '@angular/core';
+import { Component, forwardRef, inject, input, model, signal } from '@angular/core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
@@ -477,6 +477,7 @@ describe('FormNodeDirective', () => {
     })
     class TestCva implements ControlValueAccessor, Validator {
       readonly ngControl = inject(NgControl, { self: true });
+      name = input('');
       value: unknown;
       disabled = false;
       rejectValue = false;
@@ -492,6 +493,7 @@ describe('FormNodeDirective', () => {
       }
       registerOnValidatorChange(callback: () => void) { this.validatorChange = callback; }
     }
+    registerSignalInputForJit(TestCva, 'name', 'name');
 
     @Component({
       standalone: true,
@@ -510,6 +512,8 @@ describe('FormNodeDirective', () => {
     const cva = fixture.debugElement.children[0]!.componentInstance as TestCva;
 
     expect(cva.value).toBe('David');
+    expect(cva.name()).toMatch(/\.form\d+$/);
+    const firstName = cva.name();
     cva.change('Mark');
     expect(fixture.componentInstance.name()).toBe('Mark');
     cva.touch();
@@ -543,6 +547,8 @@ describe('FormNodeDirective', () => {
 
     fixture.componentInstance.active.set(fixture.componentInstance.alternative);
     fixture.detectChanges();
+    expect(cva.name()).toMatch(/\.form\d+$/);
+    expect(cva.name()).not.toBe(firstName);
     expect(fixture.debugElement.children[0]!.injector.get(FormNodeDirective).field)
       .toBe(fixture.componentInstance.alternative);
     expect(fixture.componentInstance.name.valid()).toBe(true);
