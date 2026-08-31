@@ -691,6 +691,8 @@ name.getError('missing'); // undefined
 
 The literal kind and exact target node are retained in TypeScript. A form searches only its own errors, not errors belonging to descendants. When several errors have the same kind, `getError()` returns the first and `errors()` remains the API for accessing every match. Each node internally memoizes a small, bounded set of per-kind computed selectors using shallow result equality, so a consumer of one kind does not propagate merely because an unrelated error kind changed. The method is available both directly and through `.api`; as usual, a form child named `getError` wins at the direct property and `form.api.getError(kind)` remains available.
 
+Parameterized public functions that participate in signal dependency tracking are marked with `@reactive` in IntelliSense. Ordinary signal properties do not need this marker because their `Signal` type already communicates reactivity.
+
 Validation behavior:
 
 - A node with no failing validators has `errors()` equal to `[]`.

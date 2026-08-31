@@ -109,6 +109,11 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  /**
+   * Returns the first validation error belonging directly to this array and matching `kind`.
+   *
+   * @reactive Maintains an independent reactive computation for each `kind`.
+   */
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;

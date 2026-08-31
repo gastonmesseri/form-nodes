@@ -32,6 +32,7 @@
 
 - Declare signals and other stateful values as properties in public object types.
 - Declare actions and operations with method syntax in public object types so editors distinguish state from behavior in IntelliSense.
+- Mark public parameterized functions that participate in signal dependency tracking with a JSDoc `@reactive` tag. Briefly describe the tracking or memoization semantics after the tag. Do not add the tag to ordinary `Signal` properties, whose type already communicates reactivity.
 
 ## Public API testing
 

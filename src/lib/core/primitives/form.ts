@@ -62,7 +62,7 @@ export function form<TDefinitions extends NodeDefinitions & { api?: never }>(
     resolvedOptions?.debounce
     ?? (formParent() as InternalNode | null)?.api._controlDebounce(),
   );
-  const formPath = computed<readonly string[]>(() => {
+  const formPath = computed((): readonly string[] => {
     const parent = formParent();
     const key = formKeyInParent();
     return parent && key !== null ? [...parent.api.path(), key] : [];

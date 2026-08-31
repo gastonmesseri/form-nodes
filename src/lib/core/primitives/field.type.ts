@@ -57,6 +57,11 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
   valid: Signal<boolean>;
   invalid: Signal<boolean>;
+  /**
+   * Returns the first validation error of this field matching `kind`.
+   *
+   * @reactive Maintains an independent reactive computation for each `kind`.
+   */
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & { readonly kind: TKind }) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
