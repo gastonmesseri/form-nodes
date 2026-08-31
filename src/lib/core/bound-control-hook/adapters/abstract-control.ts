@@ -1,34 +1,65 @@
 import { NgControl, type AbstractControl } from '@angular/forms';
-import { DestroyRef, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injector, afterEveryRender, computed, inject, signal } from '@angular/core';
 
 import type { BoundControlSource } from '../bound-control';
 import type { BoundControlAdapter } from '../bound-control-adapter';
 
 type AbstractControlSource = Extract<BoundControlSource, 'formControl' | 'formControlName' | 'ngModel'>;
 
+/** Normalizes directive names without leaking numeric FormArray keys into the common facade. */
+export const normalizeAbstractControlName = (name: string | number | null | undefined): string | undefined => {
+  return name === null || name === undefined ? undefined : String(name);
+};
+
 /** Creates normalized bound state for an Angular directive backed by an AbstractControl. */
-export const injectAbstractControlBoundControl = <TValue>(source: AbstractControlSource, accepts: (directive: NgControl) => boolean): BoundControlAdapter<TValue> => {
+export const injectAbstractControlBoundControl = <TValue>(
+  source: AbstractControlSource,
+  accepts: (directive: NgControl) => boolean,
+  resolveName: (directive: NgControl) => string | undefined = () => undefined,
+): BoundControlAdapter<TValue> => {
   const injector = inject(Injector);
   const destroyRef = inject(DestroyRef);
   const control = signal<AbstractControl | null>(null);
+  const name = signal<string | undefined>(undefined);
   const revision = signal(0);
+  let snapshot: readonly unknown[] = [];
+  let subscription: { unsubscribe(): void } | undefined;
+  const capture = (current: AbstractControl): readonly unknown[] => {
+    return [current.value, current.disabled, current.dirty, current.errors, current.invalid, current.pending, current.touched];
+  };
   const currentControl = () => {
     revision();
     return control()!;
   };
 
-  afterNextRender(() => {
+  afterEveryRender(() => {
     const directive = injector.get(NgControl, null, { optional: true, self: true });
-    if (!directive || !accepts(directive) || !directive.control) return;
-    control.set(directive.control);
-    const subscription = directive.control.events.subscribe(() => {
+    const acceptedDirective = directive && accepts(directive) ? directive : null;
+    const nextControl = acceptedDirective?.control ?? null;
+    name.set(acceptedDirective ? resolveName(acceptedDirective) : undefined);
+    if (nextControl === control()) {
+      if (!nextControl) return;
+      const nextSnapshot = capture(nextControl);
+      if (nextSnapshot.some((value, index) => !Object.is(value, snapshot[index]))) {
+        snapshot = nextSnapshot;
+        revision.update(value => value + 1);
+      }
+      return;
+    }
+    subscription?.unsubscribe();
+    subscription = undefined;
+    control.set(nextControl);
+    if (!nextControl) return;
+    snapshot = capture(nextControl);
+    subscription = nextControl.events.subscribe(() => {
+      snapshot = capture(nextControl);
       revision.update(value => value + 1);
     });
-    destroyRef.onDestroy(() => {
-      subscription.unsubscribe();
-      control.set(null);
-    });
   }, { injector });
+  destroyRef.onDestroy(() => {
+    subscription?.unsubscribe();
+    control.set(null);
+  });
 
   return {
     source,
@@ -46,7 +77,7 @@ export const injectAbstractControlBoundControl = <TValue>(source: AbstractContro
     maxLength: computed(() => undefined),
     min: computed(() => undefined),
     minLength: computed(() => undefined),
-    name: computed(() => undefined),
+    name: computed(() => name()),
     pattern: computed(() => []),
     pending: computed(() => currentControl().pending),
     readonly: computed(() => false),

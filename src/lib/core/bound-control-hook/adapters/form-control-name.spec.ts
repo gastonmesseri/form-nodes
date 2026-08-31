@@ -48,5 +48,5 @@ afterAll(() => TestBed.resetTestEnvironment());
 describe('formControlName bound-control adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
-  runAbstractControlAdapterContract('formControlName', createBoundControl);
+  runAbstractControlAdapterContract('formControlName', createBoundControl, 'name');
 });
