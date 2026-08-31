@@ -16,6 +16,21 @@ no `submission` option and no `submit()` method.
 Plain nested objects in `form()`, `group()`, and object templates in `array()` are shorthand for
 groups. Prefer shorthand until a branch needs its own options or validators.
 
+Primitive values, `Date`, `null`, and `undefined` can likewise stand in for `field()`:
+
+```ts
+const address = group({
+  city: 'Zurich',
+  postcode: 8000,
+}, {});
+
+address.city(); // 'Zurich'
+address.postcode(); // 8000
+```
+
+Object literals remain nested groups. Arrays must be wrapped explicitly with `field([...])` or
+declared with `array(...)`. Use an explicit `field()` when a child needs validators or options.
+
 :::tip Prefer object shorthand when the group needs no configuration
 
 Use a plain object for an ordinary structural branch. Gem Forms normalizes it to the same group

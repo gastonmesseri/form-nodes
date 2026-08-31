@@ -4,6 +4,7 @@ title: form()
 
 import CodeBlock from '@theme/CodeBlock';
 import formFocusSource from '!!raw-loader!../../examples/form-focus.typecheck.ts';
+import formFieldShorthandSource from '!!raw-loader!../../examples/form-field-shorthand.example.ts';
 
 # form()
 
@@ -61,6 +62,23 @@ form(definitions, validators, options?);
 Nested object definitions are normalized to groups. Use an explicit `group()` when that level needs
 validators, structural options, or validator messages. Use an explicit nested `form()` only when
 that branch needs an independent submission workflow.
+
+### Concise field definitions
+
+Primitive values, `Date`, `null`, and `undefined` are concise alternatives to calling `field()`.
+Nested object literals remain group shorthand:
+
+<CodeBlock language="ts">{formFieldShorthandSource}</CodeBlock>
+
+The equivalent explicit declarations are `field('')`, `field(null)`, `field(2)`,
+`field(new Date())`, and `field(undefined)`. As with those calls, `null` and `undefined` infer
+`Field&lt;unknown&gt;`; other values infer their widened value type plus `null`.
+Use an explicit `field()` when the child needs validators, state options, debounce, or a more
+specific generic than the initial value can provide.
+
+Arrays deliberately have no shorthand yet because `[]` cannot communicate whether it represents
+one field value or a dynamic node collection. Use `field([...])` for one array-valued field or
+`array(...)` for dynamic items.
 
 ```ts
 const myForm = form({
