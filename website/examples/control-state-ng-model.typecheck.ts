@@ -11,7 +11,7 @@ import { useControlState } from '@gem/ng-forms';
   template: `<button type="button" [disabled]="controlState.disabled()" (click)="select('2026-09-03')" (blur)="markAsTouched()">{{ value }}</button>`,
 })
 export class DatePicker implements ControlValueAccessor {
-  controlState = useControlState<string | null>();
+  controlState = useControlState();
   value: string | null = null;
 
   select(value: string | null) {

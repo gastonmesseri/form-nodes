@@ -195,7 +195,7 @@ stable control-state facade:
 ```ts
 export class DatePicker {
   value = model<Date | null>(null);
-  controlState = useControlState<Date | null>();
+  controlState = useControlState();
 }
 ```
 

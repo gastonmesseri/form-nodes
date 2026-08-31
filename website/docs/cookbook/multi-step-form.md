@@ -61,7 +61,13 @@ next() {
 }
 ```
 
-Do not mark non-rendered steps hidden merely to control the DOM: hidden node state suppresses their validation. Use template control flow for presentation and reserve `hidden` for branches that should genuinely stop participating.
+:::info Rendering and participation are independent
+
+An inactive step may remain part of form validity even when `@switch` does not render it. Apply
+Gem's hidden state only when the business rule says that step should stop contributing; do not use
+it merely to mirror whether the step is currently rendered.
+
+:::
 
 The complete value remains available through `myForm()` at every step.
 

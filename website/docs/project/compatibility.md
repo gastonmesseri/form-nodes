@@ -39,8 +39,12 @@ support policy.
 npm install --save @gem/ng-forms@^0.1 @angular/core@^22 @angular/forms@^22
 ```
 
-If npm reports a peer-dependency conflict, do not force the installation as a compatibility fix.
-Check the installed Angular versions and select a Gem Forms line listed above.
+:::warning Do not bypass peer-dependency conflicts
+
+`--force` can install an Angular combination the library has not verified. Align `@angular/core`
+and `@angular/forms` first, then select the matching Gem Forms release line.
+
+:::
 
 ## Unlisted Angular versions
 

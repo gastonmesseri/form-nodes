@@ -295,9 +295,13 @@ describe('profile input', () => {
 });
 ```
 
-Use a DOM-capable environment such as jsdom for ordinary binding tests. Use a real browser when
-browser constraint validation, focus ordering, selection behavior, hydration, or platform-specific
-events are part of the contract.
+:::tip Test at the lowest sufficient layer
+
+Keep node-state tests outside Angular, use `TestBed` or jsdom for directive integration, and reserve
+a real browser for constraint validation, focus ordering, selection behavior, hydration, or other
+platform-specific events. This keeps most tests fast without weakening the browser contract.
+
+:::
 
 ## Test native submit and reset
 

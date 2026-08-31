@@ -44,6 +44,13 @@ type ProfileValue = {
 
 You do not need to maintain that interface separately. TypeScript derives it from the declaration.
 
+:::tip Let the form declaration infer the value
+
+Start from fields and let `form()` derive the aggregate type. Add an explicit domain type only
+where it communicates a boundary or constrains a nullable/union value more precisely.
+
+:::
+
 ## Read and update values
 
 Call nodes directly to read their committed values:

@@ -259,10 +259,14 @@ export class Rating {
 }
 ```
 
-Do not make a separate `value` or `checked` input required. Angular's compiler has a special rule
-that lets its own `[formField]` directive satisfy a required model input, but third-party binding
-directives cannot participate in that rule. Give the input or model a sensible initial value; the
-bound node replaces it during initialization.
+:::caution Do not require the control model input
+
+A custom control intended for both `formField` and `formNode` must initialize its `value` or
+`checked` model itself. Making that model required can compile with Angular's directive while
+rejecting the equivalent third-party binding because third-party directives cannot participate in
+Angular's special required-model rule. The bound node replaces the initial value during setup.
+
+:::
 
 ### Aggregate value models
 
@@ -303,7 +307,7 @@ changes. The optional `touch` output marks the node touched; `focus(options?)` i
 The [`useControlState()` reference](../reference/control-state.md) lists the complete API,
 defaults, source precedence, and lifecycle behavior.
 
-`useControlState<T>()` is the stable alternative when a component does not want `[formNode]` to
+`useControlState()` is the stable alternative when a component does not want `[formNode]` to
 write optional `disabled`, `readonly`, `required`, or error inputs through Angular internals. Call
 it in the component injection context and read its signals directly:
 

@@ -149,6 +149,13 @@ people.set([
 
 Use a stable property or callback when values can be reordered or replaced from a server:
 
+:::warning Identity must be stable and unique
+
+Choose `trackBy` from immutable domain identity, not the current index or another editable value.
+Duplicate keys are rejected before the array mutates.
+
+:::
+
 ```ts
 const myForm = form({
   people: array(personTemplate, {

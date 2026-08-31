@@ -90,6 +90,13 @@ asyncValidator(({ value, abortSignal }) => {
 Unlike field control debounce, async-validator `debounce` accepts milliseconds only; `'blur'` and
 custom debounce functions are not async-validation options.
 
+:::info Control debounce and validation debounce are separate
+
+Use field `debounce: 'blur'` to decide when a control value commits. Use async-validator
+`debounce: 300` to delay expensive validation after that committed value changes.
+
+:::
+
 ## Return value
 
 The validation callback returns a Promise-like or Observable-like operation resolving or emitting:

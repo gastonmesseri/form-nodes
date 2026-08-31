@@ -102,8 +102,13 @@ Like every node, an array also adopts a directly bound `[formNode]` host injecto
 | `initialValue` | item-value array, non-negative count, or `null` | Creates the initial items |
 | `trackBy` | item property name or `(value, index) => key` | Preserves logical item identity during reconciliation |
 
-Do not provide `initialValue` both positionally and inside options; TypeScript intentionally rejects
-that ambiguity.
+:::caution Choose one initial-value signature
+
+Keep `initialValue` either as the positional argument or inside the options object. In multiline
+consumer examples, prefer `options.initialValue` so initialization and `trackBy` stay together.
+TypeScript intentionally rejects providing it in both places.
+
+:::
 
 ## Instance shape
 

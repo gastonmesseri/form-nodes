@@ -90,6 +90,13 @@ Resetting a nested node affects only that subtree. Validators remain configured 
 from a bound UI control, while the node call reads the committed model observed by validators and
 ancestors:
 
+:::info Two snapshots during debounce
+
+Read the node itself for application state. Reach for `controlValue()` only when control
+infrastructure specifically needs the uncommitted UI representation.
+
+:::
+
 ```ts
 const myForm = form({
   search: field('', { debounce: 300 }),

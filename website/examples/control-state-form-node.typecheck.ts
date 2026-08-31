@@ -27,7 +27,7 @@ export class MyTextInput {
 
   value = model('');
 
-  controlState = useControlState<string>();
+  controlState = useControlState();
 }
 
 

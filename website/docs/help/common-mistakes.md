@@ -176,7 +176,13 @@ myForm.username.invalid();          // false
 myForm.username.validationStatus(); // 'unknown'
 ```
 
-Do not derive `invalid` as `!valid` while async validation can be pending. Read the dedicated signals.
+:::info Validity has three observable outcomes
+
+While validation is pending, both `valid()` and `invalid()` can be false and
+`validationStatus()` is `'unknown'`. Treat `pending()` as its own state instead of forcing a binary
+interpretation or deriving `invalid` as `!valid`.
+
+:::
 
 ## Expecting enable() to override every disabled cause
 
