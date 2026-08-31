@@ -65,6 +65,7 @@ describe('FormNodeDirective server rendering', () => {
     expect(html).toContain('value=""');
     expect(html).toContain('required=""');
     expect(html).toContain('aria-invalid="true"');
+    expect(html).toMatch(/name="[^".]+\.form\d+"/);
   });
 
   it('renders select values without requiring MutationObserver', async () => {

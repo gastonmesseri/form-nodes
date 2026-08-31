@@ -1,5 +1,6 @@
-import { effect, reflectComponentType, untracked, ɵSIGNAL, type Injector, type Type, type ɵInputSignalNode } from '@angular/core';
+import { APP_ID, effect, reflectComponentType, untracked, ɵSIGNAL, type Injector, type Type, type ɵInputSignalNode } from '@angular/core';
 
+import { getFormNodeName } from './form-node-name';
 import type { Field } from '../../primitives/field';
 import type { FormNodeControl } from './form-node-control';
 
@@ -7,13 +8,13 @@ type InputSignal = ((...args: never[]) => unknown) & {
   [ɵSIGNAL]?: ɵInputSignalNode<unknown, unknown>;
 };
 
-const getBindingValues = <TValue>(field: Field<TValue>) => ({
+const getBindingValues = <TValue>(field: Field<TValue>, appId: string) => ({
   disabled: field.disabled(),
   dirty: field.dirty(),
   errors: field.errors(),
   hidden: field.hidden(),
   invalid: field.invalid(),
-  name: field.path().at(-1) ?? '',
+  name: getFormNodeName(field, appId),
   pending: field.pending(),
   readonly: field.readonly(),
   required: field.required(),
@@ -34,10 +35,11 @@ export const connectSignalControlInputs = <TValue>(
   field: () => Field<TValue>,
   injector: Injector,
 ) => {
+  const appId = injector.get(APP_ID);
   const mirror = reflectComponentType(control.constructor as Type<FormNodeControl<TValue>>);
   if (!mirror) return;
   const inputs = new Map(mirror.inputs.map((input) => [input.templateName, input.propName]));
-  const bindingNames = Object.keys(getBindingValues(field())) as (keyof ReturnType<typeof getBindingValues<TValue>>)[];
+  const bindingNames = Object.keys(getBindingValues(field(), appId)) as (keyof ReturnType<typeof getBindingValues<TValue>>)[];
   const bindings = bindingNames.flatMap((name) => {
     const property = inputs.get(name);
     return property ? [{ name, input: control[property as keyof typeof control] as InputSignal }] : [];
@@ -46,7 +48,7 @@ export const connectSignalControlInputs = <TValue>(
 
   effect(() => {
     const currentField = field();
-    const values = getBindingValues(currentField);
+    const values = getBindingValues(currentField, appId);
     untracked(() => bindings.forEach(({ name, input }) => writeInputSignal(input, values[name])));
   }, { injector });
 };

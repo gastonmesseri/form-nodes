@@ -45,7 +45,9 @@ describe('FormNodeDirective hydration in Chromium', () => {
 
     expect(serverInput.required).toBe(true);
     expect(serverInput.value).toBe('23');
+    expect(serverInput.name).toMatch(/\.form\d+$/);
     expect(serverInput.getAttribute('aria-invalid')).toBe('false');
+    const serverName = serverInput.name;
 
     let application: ApplicationRef | undefined;
     try {
@@ -58,6 +60,7 @@ describe('FormNodeDirective hydration in Chromium', () => {
       const instance = application.components[0]!.instance as HydrationApp;
 
       expect(hydratedInput).toBe(serverInput);
+      expect(hydratedInput.name).toBe(serverName);
       expect(error).not.toHaveBeenCalled();
       expect(warn).not.toHaveBeenCalled();
 

@@ -1,6 +1,7 @@
-import { CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit } from '@angular/core';
+import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit } from '@angular/core';
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
+import { getFormNodeName } from './form-node-name';
 import type { Field } from '../../primitives/field';
 import { connectSignalControl } from './signal-control';
 import { FormNodeNgControl } from './form-node-ng-control';
@@ -74,6 +75,8 @@ export class FormNodeDirective<TValue> implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   private cspNonce = inject(CSP_NONCE, { optional: true });
+
+  private appId = inject(APP_ID);
 
   private element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
@@ -243,6 +246,7 @@ export class FormNodeDirective<TValue> implements OnInit {
   private bindNodeState() {
     effect(() => {
       const field = this.node();
+      if (this.nativeControl) this.renderer.setProperty(this.nativeControl, 'name', getFormNodeName(field, this.appId));
       this.renderer.setProperty(this.element, 'disabled', field.disabled());
       if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', field.readonly());
       if ('required' in this.element) this.renderer.setProperty(this.element, 'required', field.required());
