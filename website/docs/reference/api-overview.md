@@ -23,7 +23,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Choose between a structured field, form, or array | — | [Choosing a primitive](../guides/choosing-a-primitive.md) |
 | Design a large domain-oriented form tree | Modeling boundaries and lifecycle | [Form modeling patterns](../guides/form-modeling-patterns.md) |
 | Add a built-in validation rule | `required`, `email`, `min`, and others | [Built-in validators](./built-in-validators.md) |
-| Author a reusable synchronous rule | `validator()` | [Custom validator reference](./custom-validators.md) |
+| Author a reusable synchronous rule | `validator()` | [`validator()` reference](./validator.md) |
 | Run Promise- or Observable-based validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
 | Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
 | Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
