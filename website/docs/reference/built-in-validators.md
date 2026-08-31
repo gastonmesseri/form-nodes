@@ -31,7 +31,7 @@ Constraints passed as functions are reactive. Signals read by them are tracked, 
 
 | Need | Validators |
 | --- | --- |
-| Presence | [`required`](./validators/required.md) |
+| Presence | [`required`](./validators/required.md), [`requiredIf`](./validators/required-if.md) |
 | Numeric limits and shape | [`min`](./validators/min.md), [`max`](./validators/max.md), [`between`](./validators/between.md), [`integer`](./validators/integer.md) |
 | Text or collection size | [`minLength`](./validators/min-length.md), [`maxLength`](./validators/max-length.md) |
 | Word count | [`minWords`](./validators/min-words.md), [`maxWords`](./validators/max-words.md) |
@@ -65,6 +65,22 @@ const myForm = form({
 ```
 
 A failure is `{ kind: 'required', message }`. The validator contributes `required() === true` metadata to its node.
+
+## requiredIf
+
+Requires a value only while a reactive condition is true:
+
+```ts
+const businessAccount = signal(false);
+
+const myForm = form({
+  companyName: field('', [requiredIf(() => businessAccount())]),
+});
+```
+
+Signals read by the condition are tracked. While it returns `false`, the rule contributes neither
+an error nor required metadata. While it returns `true`, `requiredIf()` has the same empty-value,
+message, and `{ kind: 'required' }` behavior as [`required`](./validators/required.md).
 
 ## min
 

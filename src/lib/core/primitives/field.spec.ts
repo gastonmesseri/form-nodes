@@ -18,6 +18,7 @@ import { minDate } from '../validation/validators/min-date';
 import { dateBetween } from '../validation/validators/date-between';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { requiredIf } from '../validation/validators/required-if';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 
@@ -886,6 +887,25 @@ describe('field', () => {
 
     enabled.set(false);
     expect(conditional.required()).toBe(false);
+  });
+
+  it('reactively applies requiredIf validation and required metadata', () => {
+    const enabled = signal(false);
+    const fieldNode = field('', [requiredIf(() => enabled())]);
+
+    expect(fieldNode.errors()).toEqual([]);
+    expect(fieldNode.required()).toBe(false);
+
+    enabled.set(true);
+    expect(fieldNode.getError('required')).toMatchObject({ kind: 'required' });
+    expect(fieldNode.required()).toBe(true);
+
+    fieldNode.set('David');
+    expect(fieldNode.errors()).toEqual([]);
+    expect(fieldNode.required()).toBe(true);
+
+    enabled.set(false);
+    expect(fieldNode.required()).toBe(false);
   });
 
   it('reacts to external signals read by a synchronous validator', () => {

@@ -7,9 +7,14 @@ import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultRequiredMessage } from './default-validator-messages';
 import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
 
-export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
+type RequiredMetadataSource = boolean | (() => boolean);
+
+export const REQUIRED_METADATA = createMetadataKey<RequiredMetadataSource, boolean>({
   getInitial: () => false,
-  reduce: (current, contribution) => current || contribution,
+  reduce: (current, contribution) => {
+    const active = typeof contribution === 'function' ? contribution() : contribution;
+    return current || active;
+  },
 });
 
 const validateRequired = (

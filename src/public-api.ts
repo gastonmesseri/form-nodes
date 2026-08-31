@@ -15,6 +15,7 @@ export { equalTo } from './lib/core/validation/validators/equal-to';
 export { maxDate } from './lib/core/validation/validators/max-date';
 export { minDate } from './lib/core/validation/validators/min-date';
 export { required } from './lib/core/validation/validators/required';
+export { requiredIf } from './lib/core/validation/validators/required-if';
 export { maxWords } from './lib/core/validation/validators/max-words';
 export { minWords } from './lib/core/validation/validators/min-words';
 export { asyncValidator } from './lib/core/validation/async-validator';
