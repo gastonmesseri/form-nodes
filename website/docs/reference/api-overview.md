@@ -20,8 +20,9 @@ symbols from `@gem/ng-forms`; do not import internal files or deep package paths
 | Author a reusable synchronous rule | `validator()` | [Custom validator reference](./custom-validators.md) |
 | Run Promise- or Observable-based validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
 | Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
-| Submit through a native `<form>` | `FormRootDirective` | [Form submission](../guides/submission.md) |
-| Configure translated validator messages | `provideValidatorMessages()` | [Validator messages and i18n](../guides/validator-messages.md) |
+| Submit through a native `<form>` | `FormRoot` | [Form submission](../guides/submission.md) |
+| Configure validator messages through Angular DI | `provideValidatorMessages()` | [Validator messages and i18n](../guides/validator-messages.md) |
+| Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Global configuration](../guides/validator-messages.md#global-configuration) |
 | Add reactive status classes to every binding | `provideFormNodeConfig()` | [`FormNode` binding API](./form-node-binding.md#automatic-css-classes) |
 | Integrate an unusual signal control | `provideFormNodeControl()` | [Custom controls](../guides/custom-controls.md) |
 | Inspect the API shared by all nodes | `Node` and `NodeApi` | [Node API](./node-api.md) |
@@ -140,6 +141,25 @@ Message configuration follows this precedence, from highest to lowest:
 Use provider or form scopes for request-specific SSR locales. Process-wide configuration is better
 suited to non-Angular usage or one immutable application default.
 
+```ts
+const restoreMessages = configureGlobalValidatorMessages({
+  required: 'This value is required.',
+  min: ({ min }) => `The minimum value is ${min}.`,
+});
+
+// Restore the previous global catalog when a temporary scope ends.
+restoreMessages();
+```
+
+In an Angular application, use `provideValidatorMessages()` when the catalog should follow an
+application, route, environment injector, or SSR request scope:
+
+```ts
+provideValidatorMessages(() => ({
+  required: () => translations().required,
+}));
+```
+
 ## Angular integration
 
 ### `[formNode]`
@@ -164,7 +184,7 @@ The binding supports native controls, `ControlValueAccessor`, Angular-compatible
 and input/output control pairs. Its public query type exposes `node()`, `errors()`, `element`,
 `injector`, `focus()`, `flush()`, and `reset()`.
 
-Main exports: `FormNode`, `FormNodeBinding`, `FORM_NODE`, and `FormRootDirective`.
+Main exports: `FormNode`, `FormNodeBinding`, `FORM_NODE`, and `FormRoot`.
 
 ### Custom-control and binding configuration
 
@@ -176,6 +196,26 @@ Main exports: `FormNode`, `FormNodeBinding`, `FORM_NODE`, and `FormRootDirective
 | `provideFormNodePassThrough()` | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |
+
+Configure binding classes once in the application providers for the common application-wide case:
+
+```ts
+import type { ApplicationConfig } from '@angular/core';
+
+import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFormNodeConfig({
+      classes: FORM_NODE_STATUS_CLASSES,
+    }),
+  ],
+};
+```
+
+The configuration applies to `[formNode]` bindings created below that injector. Put the same
+provider in a route, component, or NgModule `providers` array when only that subtree should use it;
+the nearest provider wins. No automatic classes are installed unless this provider is configured.
 
 Most ordinary signal components and CVAs require no explicit provider. See
 [Custom controls](../guides/custom-controls.md) before choosing a lower-level integration API.
