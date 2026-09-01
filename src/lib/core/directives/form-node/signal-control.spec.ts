@@ -2,13 +2,14 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Injector, model, output, runInInjectionContext, signal } from '@angular/core';
+import { Component, EventEmitter, Injector, Input, Output, input, model, output, runInInjectionContext, signal } from '@angular/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { connectSignalControl } from './signal-control';
 import { field, type Field } from '../../primitives/field';
 import { required } from '../../validation/validators/required';
+import { registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -66,5 +67,49 @@ describe('connectSignalControl', () => {
     TestBed.flushEffects();
     expect(node()).toBe(second);
     expect(control.checked()).toBe(true);
+  });
+
+  it('supports separate signal and decorator input-output pairs', () => {
+    @Component({ standalone: true, selector: 'signal-pair-control', template: '' })
+    class SignalPairControl {
+      value = input('');
+      valueChange = output<string>();
+    }
+    registerSignalModelForJit(SignalPairControl, 'value');
+
+    @Component({ standalone: true, selector: 'decorator-pair-control', template: '' })
+    class DecoratorPairControl {
+      @Input() checked = false;
+      @Output() checkedChange = new EventEmitter<boolean>();
+    }
+
+    const signalFixture = TestBed.createComponent(SignalPairControl);
+    const decoratorFixture = TestBed.createComponent(DecoratorPairControl);
+    const name = field('David', { nullable: false });
+    const active = field(false, { nullable: false });
+    connectSignalControl(signalFixture.componentInstance as never, () => name, signalFixture.debugElement.injector.get(Injector));
+    connectSignalControl(decoratorFixture.componentInstance as never, () => active, decoratorFixture.debugElement.injector.get(Injector));
+    TestBed.flushEffects();
+    expect(signalFixture.componentInstance.value()).toBe('David');
+    expect(decoratorFixture.componentInstance.checked).toBe(false);
+
+    signalFixture.componentInstance.valueChange.emit('Mark');
+    decoratorFixture.componentInstance.checkedChange.emit(true);
+    expect(name()).toBe('Mark');
+    expect(active()).toBe(true);
+
+    name.set('Ada');
+    active.set(false);
+    TestBed.flushEffects();
+    expect(signalFixture.componentInstance.value()).toBe('Ada');
+    expect(decoratorFixture.componentInstance.checked).toBe(false);
+  });
+
+  it('rejects an invalid explicit signal-control provider', () => {
+    const injector = TestBed.inject(Injector);
+    const name = field('', { nullable: false });
+    expect(() => connectSignalControl({ checked: undefined } as never, () => name, injector)).toThrowError(
+      "formNode: a signal custom control requires a 'checked' model or 'checked'/'checkedChange' input-output pair",
+    );
   });
 });

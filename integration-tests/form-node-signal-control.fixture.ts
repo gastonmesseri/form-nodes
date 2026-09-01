@@ -32,6 +32,17 @@ export class AotSignalCheckboxControl implements FormCheckboxControl {
 
 @Component({
   standalone: true,
+  selector: 'aot-paired-value-control',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<button type="button" (click)="valueChange.emit('AOT paired value')">{{ value() }}</button>`,
+})
+export class AotPairedValueControl {
+  value = input('');
+  valueChange = output<string>();
+}
+
+@Component({
+  standalone: true,
   selector: 'aot-delegating-control',
   imports: [FormNode],
   template: `<input [formNode]="formNode()">`,
@@ -53,13 +64,15 @@ export class AotPassThroughHost {
 @Component({
   standalone: true,
   selector: 'aot-signal-control-host',
-  imports: [AotSignalValueControl, AotSignalCheckboxControl, FormNode],
+  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, FormNode],
   template: `
     <aot-signal-value-control [formNode]="name" />
     <aot-signal-checkbox-control [formNode]="active" />
+    <aot-paired-value-control [formNode]="pairedName" />
   `,
 })
 export class AotSignalControlHost {
   name = field('AOT initial', [required], { nullable: false });
   active = field(false, { nullable: false });
+  pairedName = field('AOT paired initial', { nullable: false });
 }

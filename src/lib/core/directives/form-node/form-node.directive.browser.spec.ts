@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { CSP_NONCE, Component, ViewEncapsulation, forwardRef, input, model, output, type OnDestroy } from '@angular/core';
+import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, forwardRef, input, model, output, type OnDestroy } from '@angular/core';
 
 import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
@@ -562,6 +562,98 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('integrates with separate signal input-output control pairs', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-paired-value-control',
+      template: `<button type="button" (click)="valueChange.emit('Mark')">{{ value() }}</button>`,
+    })
+    class PairedValueControl {
+      value = input('');
+      valueChange = output<string>();
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'browser-paired-checkbox-control',
+      template: `<button type="button" (click)="checkedChange.emit(!checked())">{{ checked() }}</button>`,
+    })
+    class PairedCheckboxControl {
+      checked = input(false);
+      checkedChange = output<boolean>();
+    }
+
+    registerSignalModelForJit(PairedValueControl, 'value');
+    registerSignalModelForJit(PairedCheckboxControl, 'checked');
+
+    @Component({
+      standalone: true,
+      selector: 'browser-paired-control-host',
+      imports: [PairedValueControl, PairedCheckboxControl, FormNode],
+      template: `
+        <browser-paired-value-control [formNode]="name" />
+        <browser-paired-checkbox-control [formNode]="active" />
+      `,
+    })
+    class Host {
+      name = field('David', { nullable: false });
+      active = field(false, { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    expect(buttons[0]!.textContent).toContain('David');
+    expect(buttons[1]!.textContent).toContain('false');
+
+    buttons[0]!.click();
+    buttons[1]!.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name()).toBe('Mark');
+    expect(fixture.componentInstance.active()).toBe(true);
+
+    fixture.componentInstance.name.set('Ada');
+    fixture.componentInstance.active.set(false);
+    fixture.detectChanges();
+    expect(buttons[0]!.textContent).toContain('Ada');
+    expect(buttons[1]!.textContent).toContain('false');
+  });
+
+  it('integrates with separate decorator input-output control pairs', () => {
+    @Component({
+      standalone: true,
+      selector: 'browser-decorator-paired-control',
+      template: `<button type="button" (click)="valueChange.emit('Mark')">{{ value }}</button>`,
+    })
+    class DecoratorPairedControl {
+      @Input() value = '';
+      @Output() valueChange = new EventEmitter<string>();
+    }
+
+    @Component({
+      standalone: true,
+      selector: 'browser-decorator-paired-control-host',
+      imports: [DecoratorPairedControl, FormNode],
+      template: `<browser-decorator-paired-control [formNode]="name" />`,
+    })
+    class Host {
+      name = field('David', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.textContent).toContain('David');
+
+    button.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name()).toBe('Mark');
+
+    fixture.componentInstance.name.set('Ada');
+    fixture.detectChanges();
+    expect(button.textContent).toContain('Ada');
+  });
+
   it('binds an aggregate form to an Angular FormValueControl in Chromium', () => {
     type ProfileValue = { name: string | null; age: number | null };
 
@@ -614,15 +706,19 @@ describe('FormNode in Chromium', () => {
     fixture.detectChanges();
     const valueControl = fixture.debugElement.children[0]!.componentInstance as InstanceType<typeof module.AotSignalValueControl>;
     const checkboxControl = fixture.debugElement.children[1]!.componentInstance as InstanceType<typeof module.AotSignalCheckboxControl>;
+    const pairedControl = fixture.debugElement.children[2]!.componentInstance as InstanceType<typeof module.AotPairedValueControl>;
     const valueButton = fixture.nativeElement.querySelector('aot-signal-value-control button') as HTMLButtonElement;
     const checkboxButton = fixture.nativeElement.querySelector('aot-signal-checkbox-control button') as HTMLButtonElement;
+    const pairedButton = fixture.nativeElement.querySelector('aot-paired-value-control button') as HTMLButtonElement;
 
     expect(valueControl.value()).toBe('AOT initial');
     expect(valueControl.required()).toBe(true);
     expect(checkboxControl.checked()).toBe(false);
+    expect(pairedControl.value()).toBe('AOT paired initial');
 
     valueButton.click();
     checkboxButton.click();
+    pairedButton.click();
     dispatch(valueButton, 'blur');
     fixture.detectChanges();
 
@@ -630,6 +726,7 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.name.dirty()).toBe(true);
     expect(fixture.componentInstance.name.touched()).toBe(true);
     expect(fixture.componentInstance.active()).toBe(true);
+    expect(fixture.componentInstance.pairedName()).toBe('AOT paired value');
     expect(valueControl.dirty()).toBe(true);
     expect(valueControl.touched()).toBe(true);
 

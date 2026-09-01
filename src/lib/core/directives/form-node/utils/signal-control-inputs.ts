@@ -1,4 +1,4 @@
-import { APP_ID, effect, reflectComponentType, untracked, ɵSIGNAL, type Injector, type Type, type ɵInputSignalNode } from '@angular/core';
+import { APP_ID, ChangeDetectorRef, effect, reflectComponentType, untracked, ɵSIGNAL, type Injector, type Type, type ɵInputSignalNode } from '@angular/core';
 
 import { getFormNodeName } from './form-node-name';
 import type { Field } from '../../../primitives/field';
@@ -40,6 +40,19 @@ const writeInputSignal = (input: InputSignal, value: unknown) => {
   if (!node?.applyValueToInputSignal) return;
   const transformedValue = node.transformFn ? node.transformFn(value) : value;
   node.applyValueToInputSignal(node, transformedValue);
+};
+
+/** Writes a component input using public metadata while preserving signal-input transforms. */
+export const writeComponentInput = (control: object, name: string, value: unknown, injector: Injector): boolean => {
+  const mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
+  const inputMetadata = mirror?.inputs.find(({ templateName }) => templateName === name);
+  if (!inputMetadata) return false;
+  const record = control as Record<PropertyKey, unknown>;
+  const inputValue = record[inputMetadata.propName];
+  if (inputMetadata.isSignal) writeInputSignal(inputValue as InputSignal, value);
+  else record[inputMetadata.propName] = inputMetadata.transform ? inputMetadata.transform(value) : value;
+  injector.get(ChangeDetectorRef).markForCheck();
+  return true;
 };
 
 /** Synchronizes the standard Angular Signal Forms state inputs implemented by a custom control. */

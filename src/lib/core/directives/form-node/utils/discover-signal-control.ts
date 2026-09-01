@@ -10,23 +10,25 @@ const getComponentCandidate = (element: HTMLElement): ComponentCandidate | null 
   return candidate && debugNode?.providerTokens.includes(candidate.constructor) ? candidate : null;
 };
 
-const hasModel = (candidate: ComponentCandidate, name: 'value' | 'checked'): boolean => {
+const hasControlBinding = (candidate: ComponentCandidate, name: 'value' | 'checked'): boolean => {
   const mirror = reflectComponentType(candidate.constructor);
   if (!mirror) return false;
   const input = mirror.inputs.find(({ templateName }) => templateName === name);
   const output = mirror.outputs.find(({ templateName }) => templateName === `${name}Change`);
   if (!input || !output) return false;
-  const model = candidate[input.propName];
-  return typeof model === 'function'
-    && typeof (model as { set?: unknown }).set === 'function'
-    && typeof (model as { subscribe?: unknown }).subscribe === 'function';
+  const inputValue = candidate[input.propName];
+  const outputValue = candidate[output.propName];
+  const isModel = typeof inputValue === 'function'
+    && typeof (inputValue as { set?: unknown }).set === 'function'
+    && typeof (inputValue as { subscribe?: unknown }).subscribe === 'function';
+  return isModel || (typeof outputValue === 'object' && outputValue !== null && typeof (outputValue as { subscribe?: unknown }).subscribe === 'function');
 };
 
 /** Discovers an Angular Signal Forms compatible component hosted on an element. */
 export const discoverSignalControl = (element: HTMLElement): FormNodeControl | null => {
   const candidate = getComponentCandidate(element);
   if (!candidate) return null;
-  if (hasModel(candidate, 'value') || hasModel(candidate, 'checked')) return candidate as unknown as FormNodeControl;
+  if (hasControlBinding(candidate, 'value') || hasControlBinding(candidate, 'checked')) return candidate as unknown as FormNodeControl;
   return null;
 };
 

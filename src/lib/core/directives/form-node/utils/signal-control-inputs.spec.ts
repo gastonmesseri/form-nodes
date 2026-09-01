@@ -13,7 +13,7 @@ import { max } from '../../../validation/validators/max';
 import { min } from '../../../validation/validators/min';
 import { pattern } from '../../../validation/validators/pattern';
 import { required } from '../../../validation/validators/required';
-import { connectSignalControlInputs } from './signal-control-inputs';
+import { connectSignalControlInputs, writeComponentInput } from './signal-control-inputs';
 import { maxLength } from '../../../validation/validators/max-length';
 import { minLength } from '../../../validation/validators/min-length';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../../testing/register-signal-input-for-jit';
@@ -111,5 +111,6 @@ describe('connectSignalControlInputs', () => {
     expect(invalidConnection.inputNames).toEqual(new Set(['value', 'disabled', 'dirty']));
     expect(invalidFixture.componentInstance.disabled).toBe(false);
     expect(invalidFixture.componentInstance.dirty()).toBe(false);
+    expect(writeComponentInput({}, 'disabled', true, invalidFixture.debugElement.injector.get(Injector))).toBe(false);
   });
 });
