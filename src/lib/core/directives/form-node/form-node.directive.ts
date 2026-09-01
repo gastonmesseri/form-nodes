@@ -143,7 +143,9 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
       (this._field as unknown as InternalNode).$api._setControlValue(value);
     });
     accessor.registerOnTouched(() => {
-      if (!this.destroyed) this._field.$api.markAsTouched();
+      if (this.destroyed) return;
+      this._field.$api.markAsTouched();
+      (this._field as unknown as InternalNode).$api._flushControlValueOnBlur();
     });
     effect(() => {
       const value = (this.node() as unknown as InternalNode).$api._controlValue();
@@ -213,7 +215,10 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     };
     const unlistenInput = this.renderer.listen(control, 'input', commit);
     const unlistenChange = this.renderer.listen(control, 'change', commit);
-    const unlistenBlur = this.renderer.listen(control, 'blur', () => this._field.$api.markAsTouched());
+    const unlistenBlur = this.renderer.listen(control, 'blur', () => {
+      this._field.$api.markAsTouched();
+      (this._field as unknown as InternalNode).$api._flushControlValueOnBlur();
+    });
     const unlistenCompositionStart = this.renderer.listen(control, 'compositionstart', () => { this.composing = true; });
     const unlistenCompositionEnd = this.renderer.listen(control, 'compositionend', () => {
       this.composing = false;

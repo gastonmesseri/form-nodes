@@ -1,5 +1,7 @@
 import { array, field, form } from '../src/public-api';
 
+array(field(''), 1, { debounce: 'blur' });
+
 import type { Equal, Expect } from './assert.types';
 
 const people = array({

@@ -509,6 +509,7 @@ export function array<TDefinition extends NodeDefinition>(
       reconcile(value, false);
       arraySelfDirty.set(true);
     },
+    _flushControlValueOnBlur: api.flush,
     _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);

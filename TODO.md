@@ -3,7 +3,6 @@
 ## Up next
 
 - Array
-  - Add here topics to Array
   - Check if array() supports having a null value (check if anything breaks if setting the value to null or undefined, myArray.set(null))
   - Document properly in intellisense that the first param is the template or factory , with examples
   - Array should have "patch" method? (probably not)
@@ -11,6 +10,7 @@
   and then the form() framework will not work because it uses it on the internal system
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
+  - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
 - Validators
   - Consider changing 'kind' to 'type' in validators
   - Implement basic validators (get from lab)
@@ -61,26 +61,44 @@
 - directive
   - allow alternative predefined names for directive
   - allow dynamic name for directive (in case is possible for example creating a form)
-    . e.g. providers: [MyFormField.withName('myCustomDirectiveName')]
+    . e.g. providers: [FormNode.withName('myCustomDirectiveName')]
+  - Consider deliberately extending native `min`/`max` propagation beyond Angular 22 Signal Forms to `input[type=time]`, `input[type=week]`, and `input[type=datetime-local]`, which support those constraints in the HTML standard.
+    - Design the native serialization for `Date`, number, and string constraints before implementing it (`HH:mm[:ss]`, `YYYY-Www`, and local date-time strings without a time-zone offset).
+    - Define the time-zone semantics for `datetime-local` and avoid implicit `Date.toString()` conversion.
+    - Ensure the constraint representation agrees with the value representation supported by each native control.
+    - Cover browser validity, SSR, hydration, reset, rebinding, and clearing inactive constraints.
+    - Document this as a deliberate improvement over Angular 22.1.4, whose native propagation currently covers only `number`, `range`, `date`, and `month`.
   - Allow hooking to existing angular apis
     - Add other Angular interoperability mechanisms if they become relevant
   - Decide whether host attributes or inputs such as `[disabled]` should also update the node; node-to-control state synchronization is already implemented.
-  - Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
   - Ensure whether we need to have angular forms as package dependency, or we can create an abstraction like we did with isObservableLike....
   - Make the directive sync disabled/readonly/required attributes like in angular signal forms 22.
     - maybe there are more attributes synced, check in angular implementation
     - (from angular docs) The [formField] directive also syncs field state for attributes like required, disabled, and readonly when appropriate.
     - Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
     - It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
-  - Ensure whether we need to have angular forms as package dependency, or we can create an abstraction like we did with isObservableLike....
   - Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
+- Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
+- Investigate how other angular libraries perform versioning,
+  - e.g. do they use the version name as the same as angular current version?
+  - do they support previous versions?
+- Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
+- Implement ESLint
+- Ensure that disabledReasons also doesn't fail when it references self form root, when it is declared with a reactive function
+- Consider nesting disabledReasons in myForm.myField.disabled.reasons();
+- Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
+  - maybe other ones that are not required, min(), max(), etc
+- Add precise instructions on how to use the library (e.g. angular imports, etc)
+- Consider @gemgular/forms name for library
+- Add good docs about implementing a custom control (support for focus, etc, angular CVA, form value accessor, etc)
 - Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
   both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
   access the errors() or something like that
 - Re-evaluate `FormValueControl` interoperability on every Angular upgrade. Replace the isolated `ɵSIGNAL`/`InputSignalNode` adapter with a public Angular mechanism as soon as one exists (for example, public access to the host component's `ComponentRef.setInput()` or a dedicated Signal Forms interoperability protocol). Preserve the AOT, SSR, hydration, OnPush, and real-browser test matrix during that migration. Until then, recommend `provideFormNodeControl()` when consumers require the explicit compatibility path.
 - Add very descriptive intellisense for every property in public api, (options, calls, etc, properties)
-- Add keyInParent property to nodes
-  - also add other missing properties (disabledReasons, etc)
+- Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
+  - Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
+- also add other missing properties besides of keyInParent (disabledReasons, etc)
 - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
 - Think about what is a good name to use in the examples for the form instance
   - e.g.
@@ -90,8 +108,15 @@
   });
   // later in the template <input type="text" [formNode]="form.name">
   // 'form' is good for the instance? maybe formModel, maybe myForm? maybe personForm?
-- Implement keyInParent
+
+- Check if the submission state, has to be explicitly coming from <form [formNode]="myForm">
+  Maybe just binding a nested field with [formNode] could automatically detect the parent form (maybe not)
+- Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
+  - controlValue and setControlValue feel more like an internal thing
+  - also maybe hide disabledReasons
+- maybe add "novalidate" html property by default to the parent form of the fields? (maybe not)
 - Allow creating a framework with predefined options (e.g. by default form() array() or field() has { nullable: true })
+- code style: funciones "export const" "const" que devuelven algo directamente, hacer que abran brackets
 - Implement shorthand for required in the field options similar to disbled
 - initial value should be null or undefined? (for field())
   - and for array?
@@ -113,7 +138,7 @@
 - Add support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
   - If possible, typed strings
 - Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project
-- Exponer un helper para obtener el valor del form(), e.g. (type MyFormValue = FormValue<typeof myFormInstance>)
+- Exponer un helper para obtener el valor del form(), e.g. (type MyFormValue = FormValue<typeof myFormInstance>) (or FormNodeValue<typeof myFormInstance>)
 - Due to typescript limitations, try providing something similar to signal forms schemaPath api,
   so that in another callback, we can set validators properly typed or something like that.
   - e.g.
@@ -144,6 +169,13 @@
   - https://angular.dev/guide/forms/signals/form-logic?utm_source=chatgpt.com
 - Check what is the minimum Typescript version needed for the package (it uses NoInfer for example), and therefore check what minimum angular version is supported
 - Check OTHER LIBRARIES, to see how can i improve the api, adding more features, etc
+- Consider doing the following:
+  maybeName: field(null),
+  if field es initialized with null, then the inferred type of the field() value shouldn't 
+  be 'null', but 'any'
+- To make it safe to use (similar to what we did with self-referencing root in validators), ensure
+  that disabled, readonly, etc, also allow referencing safely something that hasn't been created yet
+  (e.g. referencing a signal that is at the bottom of the file [through a function]).
 - gpt tasks alignment:
 controlValue() en form() y array()
 Angular lo expone en todos los nodos. Nosotros solo en field(). Conviene esperar a definir cómo se agregan valores pendientes de descendientes.
@@ -184,19 +216,8 @@ Angular expone un WritableSignal; nosotros un Signal readonly más setControlVal
 field.set(value);             // aplicación
 field.setControlValue(value); // control
 
-Identidad en array.set()
-Nosotros reconciliamos por índice. Angular conserva automáticamente la identidad de elementos objeto cuando se reordenan.
-
 Nodos eliminados
 Nosotros convertimos un nodo eliminado en un nodo raíz independiente y utilizable. Angular lo considera orphan. Hay que decidir qué comportamiento resulta más útil.
-
-disabledReasons()
-Angular conserva las reglas y ancestros responsables del estado disabled. Nosotros solo exponemos el booleano.
-
-Debounce agregado en forms y arrays
-Relacionado con el primer punto. Si se implementa:
-form.flush();
-probablemente debería hacer flush sobre todos los descendientes, como ya dejamos planteado en behavior.md.
 
 Tracking estructural desde el modelo
 Angular crea y elimina nodos automáticamente según el array almacenado en el signal. Nosotros usamos template/factory y métodos estructurales. Es una diferencia arquitectónica deliberada que no intentaría eliminar.
@@ -267,3 +288,4 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 - migrar @hostlistener a host: { ... }
 - Remove unnecessary explicit `void` return annotations and discarded-Promise `void` expressions.
 - quitar unnecessary readonly de members
+- Add keyInParent property to nodes

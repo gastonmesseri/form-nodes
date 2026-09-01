@@ -16,7 +16,7 @@ import { readStateSource, getInitialMutableState } from '../utils/read-state-sou
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
+import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
@@ -147,9 +147,11 @@ export function field<TValue>(
   };
   const controlDebounce = {
     timer: null as ReturnType<typeof setTimeout> | null,
+    strategy: undefined as ControlDebounce | undefined,
     cancel: () => {
       if (controlDebounce.timer !== null) clearTimeout(controlDebounce.timer);
       controlDebounce.timer = null;
+      controlDebounce.strategy = undefined;
       fieldDebouncing.set(false);
     },
     commit: () => {
@@ -169,11 +171,13 @@ export function field<TValue>(
     fieldControlValue.set(next);
     fieldDirty.set(true);
     const debounce = fieldControlDebounce() ?? 0;
-    if (!Number.isFinite(debounce) || debounce <= 0 || Object.is(next, fieldValue())) {
+    if (Object.is(next, fieldValue()) || (debounce !== 'blur' && (!Number.isFinite(debounce) || debounce <= 0))) {
       fieldValue.set(next);
       return;
     }
     fieldDebouncing.set(true);
+    controlDebounce.strategy = debounce;
+    if (debounce === 'blur') return;
     controlDebounce.timer = setTimeout(() => controlDebounceRef.deref()?.commit(), debounce);
   };
   const reset = (...args: [] | [value: TValue]) => {
@@ -248,6 +252,9 @@ export function field<TValue>(
     _controlDebounce: fieldControlDebounce,
     _controlValue: fieldControlValue.asReadonly(),
     _setControlValue: setControlValue,
+    _flushControlValueOnBlur: () => {
+      if (controlDebounce.strategy === 'blur') controlDebounce.commit();
+    },
     _clone: () => recreateField(value, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       fieldParent.set(parent);

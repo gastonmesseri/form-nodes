@@ -2,7 +2,7 @@ import type { Injector, Signal } from '@angular/core';
 
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeKeyInParent, RootNode } from '../types/node.type';
+import type { DisabledReason, MarkAsTouchedOptions, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 
 export type FieldOptions<TValue = any> = {
   /** Synchronous and explicitly marked asynchronous validators applied to the field value. */
@@ -11,12 +11,12 @@ export type FieldOptions<TValue = any> = {
   readonly nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   readonly injector?: Injector;
-  /** Delay in milliseconds for updates received through setControlValue(). Overrides an inherited debounce. */
-  readonly debounce?: number;
+  /** Delay strategy for control updates. A number waits in milliseconds; `'blur'` commits when the control loses focus. Overrides an inherited debounce. */
+  readonly debounce?: number | 'blur';
   /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
   readonly hidden?: boolean | (() => boolean);
   /** Initial or reactive disabled state. A string disables the field and describes the reason. */
-  readonly disabled?: DisabledStateSource;
+  readonly disabled?: boolean | string | (() => boolean | string);
   /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
   readonly readonly?: boolean | (() => boolean);
 };

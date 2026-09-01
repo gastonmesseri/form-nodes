@@ -1,5 +1,7 @@
 import { field, form } from '../src/public-api';
 
+form({ name: field('') }, { debounce: 'blur' });
+
 import type { Equal, Expect } from './assert.types';
 
 const profile = form({

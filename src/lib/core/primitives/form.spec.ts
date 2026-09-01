@@ -4,6 +4,7 @@ import { Injector, signal, type Signal } from '@angular/core';
 import { form } from './form';
 import { field } from './field';
 import { array } from './array';
+import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
@@ -556,6 +557,18 @@ describe('form', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('inherits blur debounce and reports it through the form', () => {
+    const profile = form({ name: field('initial') }, { debounce: 'blur' });
+
+    profile.name.setControlValue('pending');
+    expect(profile.name()).toBe('initial');
+    expect(profile.debouncing()).toBe(true);
+
+    (profile.name as unknown as InternalNode).$api._flushControlValueOnBlur();
+    expect(profile()).toEqual({ name: 'pending' });
+    expect(profile.debouncing()).toBe(false);
   });
 
   it('includes the value of nested forms', () => {

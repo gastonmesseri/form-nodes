@@ -660,6 +660,20 @@ describe('array', () => {
     }
   });
 
+  it('inherits blur debounce into items and flushes them from the array', () => {
+    const names = array(field('initial'), 1, { debounce: 'blur' });
+    const first = names[0]!;
+
+    first.setControlValue('pending');
+    expect(first.controlValue()).toBe('pending');
+    expect(first()).toBe('initial');
+    expect(names.debouncing()).toBe(true);
+
+    names.flush();
+    expect(first()).toBe('pending');
+    expect(names.debouncing()).toBe(false);
+  });
+
   it('inherits a form control debounce through an array into future items', async () => {
     vi.useFakeTimers();
     try {

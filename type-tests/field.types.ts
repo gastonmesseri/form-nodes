@@ -1,5 +1,9 @@
 import { field, type DisabledReason, type FieldApi } from '../src/public-api';
 
+field('', { debounce: 'blur' });
+// @ts-expect-error Unsupported debounce strategy.
+field('', { debounce: 'change' });
+
 import type { Equal, Expect, HasKey } from './assert.types';
 
 const nullable = field('David');

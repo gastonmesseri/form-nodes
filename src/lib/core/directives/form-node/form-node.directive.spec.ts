@@ -3,7 +3,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Component, Directive, ViewContainerRef, forwardRef, inject, input, model, signal } from '@angular/core';
+import { Component, Directive, ViewContainerRef, forwardRef, inject, input, model, output, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
@@ -319,6 +319,44 @@ describe('FormNode', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('commits a blur-debounced signal control when it emits touch', () => {
+    @Component({
+      standalone: true,
+      selector: 'blur-debounce-signal-control',
+      providers: [provideFormNodeControl(() => BlurDebounceSignalControl)],
+      template: '',
+    })
+    class BlurDebounceSignalControl {
+      value = model('');
+      touch = output<void>();
+    }
+
+    @Component({
+      standalone: true,
+      imports: [BlurDebounceSignalControl, FormNode],
+      template: `<blur-debounce-signal-control [formNode]="name" />`,
+    })
+    class Host {
+      readonly profile = form({ name: field('initial', { nullable: false }) }, { debounce: 'blur' });
+      readonly name = this.profile.name;
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as BlurDebounceSignalControl;
+    const { name } = fixture.componentInstance;
+
+    control.value.set('pending');
+    expect(name.controlValue()).toBe('pending');
+    expect(name()).toBe('initial');
+    expect(name.debouncing()).toBe(true);
+
+    control.touch.emit();
+    expect(name()).toBe('pending');
+    expect(name.debouncing()).toBe(false);
+    expect(name.touched()).toBe(true);
   });
 
   it('binds a FormValueControl to an aggregate form node', () => {
@@ -1104,6 +1142,34 @@ describe('FormNode', () => {
     }
   });
 
+  it('commits a blur-debounced native control when it loses focus', () => {
+    @Component({
+      standalone: true,
+      selector: 'blur-debounce-form-node-host',
+      imports: [FormNode],
+      template: `<input [formNode]="name">`,
+    })
+    class Host {
+      readonly name = field('initial', { debounce: 'blur', nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const { name } = fixture.componentInstance;
+
+    inputElement.value = 'pending';
+    dispatch(inputElement, 'input');
+    expect(name.controlValue()).toBe('pending');
+    expect(name()).toBe('initial');
+    expect(name.debouncing()).toBe(true);
+
+    dispatch(inputElement, 'blur');
+    expect(name()).toBe('pending');
+    expect(name.debouncing()).toBe(false);
+    expect(name.touched()).toBe(true);
+  });
+
   it('restores a native control when a debounced update is reset locally or from its form', async () => {
     vi.useFakeTimers();
     try {
@@ -1345,6 +1411,45 @@ describe('FormNode', () => {
 
     fixture.destroy();
     expect(fixture.componentInstance.alternative.valid()).toBe(true);
+  });
+
+  it('commits a blur-debounced ControlValueAccessor through its touched callback', () => {
+    @Component({
+      standalone: true,
+      selector: 'blur-debounce-cva',
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => BlurDebounceCva), multi: true }],
+      template: '',
+    })
+    class BlurDebounceCva implements ControlValueAccessor {
+      change = (_value: string) => {};
+      touched = () => {};
+      writeValue() {}
+      registerOnChange(callback: (value: string) => void) { this.change = callback; }
+      registerOnTouched(callback: () => void) { this.touched = callback; }
+    }
+
+    @Component({
+      standalone: true,
+      imports: [BlurDebounceCva, FormNode],
+      template: `<blur-debounce-cva [formNode]="name" />`,
+    })
+    class Host {
+      readonly name = field('initial', { debounce: 'blur', nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as BlurDebounceCva;
+    const { name } = fixture.componentInstance;
+
+    control.change('pending');
+    expect(name.controlValue()).toBe('pending');
+    expect(name()).toBe('initial');
+
+    control.touched();
+    expect(name()).toBe('pending');
+    expect(name.debouncing()).toBe(false);
+    expect(name.touched()).toBe(true);
   });
 
   it('rejects a host that is neither a native control nor a ControlValueAccessor', () => {

@@ -329,7 +329,7 @@ search.value(); // '' until 300 ms elapse
 search.debouncing(); // true
 ```
 
-Every new control update restarts the complete delay. `flush()` commits the latest buffered value immediately and cancels its timer. A missing, non-finite, zero, or negative debounce commits control updates immediately.
+Every new control update restarts the complete delay. `debounce: 'blur'` instead keeps the latest control value buffered until the native control blurs, a Signal control emits `touch`, or a CVA invokes its touched callback. `flush()` commits the latest buffered value immediately for either strategy. A missing, non-finite, zero, or negative numeric debounce commits control updates immediately.
 
 Programmatic operations are never debounced. `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `controlValue()` and `value()` immediately. `reset()` without a value cancels the pending update, discards the buffered control value, and restores `controlValue()` from the currently committed value. This prevents a stale timer from overwriting a newer programmatic value. A control update marks the field dirty immediately; reset clears dirty and touched state as usual.
 
