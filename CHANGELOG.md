@@ -24,6 +24,8 @@ consumer migration guide.
 
 ### Changed
 
+- Form and group callable values now display their complete nested object shape in IntelliSense
+  instead of exposing internal `FormValue` and normalization helpers.
 - Plain nested object definitions and object templates passed to `array()` now normalize to
   `Group` rather than `Form`. Use an explicit nested `form()` only for an independent submission
   workflow.

@@ -1,7 +1,7 @@
 import type { Signal } from '@angular/core';
 
 import type { OpaqueAngularField } from '../interop/angular-field.type';
-import type { DynamicNode, Node, Nodes, RootNode } from '../types/node.type';
+import type { DynamicNode, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
@@ -279,7 +279,7 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
 export type Group<TNodes extends Nodes, TParent extends Node = Node> =
   & {
     /** Returns the group's current aggregate committed value and participates in signal dependency tracking. */
-    (): GroupValue<TNodes>;
+    (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };
   }
   & GroupApiProperty<TNodes, TParent>
   & Omit<GroupChildren<TNodes, TParent>, 'api'>

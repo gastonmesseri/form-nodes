@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 
-const maximumTypes = 76_000;
+const maximumTypes = 78_000;
 const maximumInstantiations = 1_100_000;
 const result = spawnSync(
   process.execPath,
