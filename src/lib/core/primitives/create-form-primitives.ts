@@ -19,7 +19,7 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
  * const { form, field } = createFormPrimitives({ nullable: false });
  * const profile = form({
  *   username: field(''),
- *   nickname: field('', { nullable: true }),
+ *   nickname: field.nullable(''),
  * });
  *
  * profile.username(); // ''
@@ -55,7 +55,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       nullable: validatorsOrOptions.nullable ?? (value === null || value === undefined ? true : defaultNullable),
     });
   }) as FormPrimitives<TNullable>['field'];
-  configuredField.notnull = field.notnull;
+  configuredField.strict = field.strict;
   configuredField.nullable = field.nullable;
 
   const normalizeDefinition = (definition: unknown): Node => {

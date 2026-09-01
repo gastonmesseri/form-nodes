@@ -36,7 +36,7 @@ const myForm = form({
 | I want to… | Start with | Details |
 | --- | --- | --- |
 | Decide whether a value should be one field | `field<T>()` | [Arrays and objects](#fields-can-hold-arrays-and-objects) |
-| Create a nullable or non-nullable field | `field.nullable(...)`, `field.notnull(...)` | [Signatures](#signatures) and [nullability](#nullability) |
+| Choose field nullability | Nullability shortcuts | [Nullability](#nullability) |
 | Configure validation, debounce, or state | `FieldOptions` | [Options](#options) |
 | Read value, parent, or path | `myField()`, `parent()`, `path()` | [Properties and methods](#properties-and-methods) |
 | Change or reset its value | `set()`, `update()`, `reset()` | [Method reference](#method-reference) |
@@ -75,15 +75,18 @@ field();
 field(initialValue);
 field(initialValue, options);
 field(initialValue, validators, options?);
-field.notnull(initialValue, options?);
-field.notnull(initialValue, validators, options?);
-field.nullable(initialValue?, options?);
-field.nullable(initialValue, validators, options?);
 ```
 
 A field with no initial value starts at `null`.
 
 ## Nullability
+
+```ts
+field.strict(initialValue, options?);
+field.strict(initialValue, validators, options?);
+field.nullable(initialValue?, options?);
+field.nullable(initialValue, validators, options?);
+```
 
 Fields are nullable by default. The initial value still determines the non-null part of the type:
 
@@ -103,15 +106,18 @@ nullable by default, and an explicit field option always takes precedence.
 Use the short methods when one declaration should be independent of that default:
 
 ```ts
-const username = field.notnull('');
+const username = field.strict('');
 // Field<string>
 
 const nickname = field.nullable('');
 // Field<string | null>
+
+const nickname = field('');
+// Field<string | null>
 ```
 
 Both methods are also available on the `field` returned by `createFormPrimitives()`. Their names
-describe the resulting field type: `notnull()` always excludes `null`, while `nullable()` always
+describe the resulting field type: `strict()` always excludes `null`, while `nullable()` always
 includes it.
 
 When the literal initial value is `null` or `undefined`, there is no concrete value from which
@@ -133,11 +139,11 @@ Use an explicit generic when the domain type is known. Although `Field<unknown>`
 TypeScript displays it as `unknown` because `unknown | null` simplifies to `unknown`; reads must be
 narrowed before use and therefore do not acquire `any`-like behavior.
 
-`field.notnull()` is the concise form when `null` is not a valid business value:
+`field.strict()` is the concise form when `null` is not a valid business value:
 
 ```ts
 const myForm = form({
-  countryCode: field.notnull('CH'),
+  countryCode: field.strict('CH'),
 });
 
 // myForm.countryCode.set(null); // TypeScript error
@@ -207,7 +213,7 @@ username.set('ada');
 // username.set(null); // TypeScript error
 ```
 
-For a local override, `field.notnull(value)` is equivalent to setting `nullable: false`, and
+For a local override, `field.strict(value)` is equivalent to setting `nullable: false`, and
 `field.nullable(value)` is equivalent to setting `nullable: true`.
 
 #### debounce {#field-debounce-option}

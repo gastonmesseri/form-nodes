@@ -14,7 +14,7 @@ const playgroundDeclaration = `const playgroundForm = form({
   }),
   email: field('', [required, email]),
   contacts: array({
-    id: field('', { nullable: false }),
+    id: field.strict(''),
     label: field(''),
     email: field('', [email]),
   }, {
@@ -32,7 +32,7 @@ const createPlaygroundForm = () => {
     }),
     email: field('', [required, email]),
     contacts: array({
-      id: field('', { nullable: false }),
+      id: field.strict(''),
       label: field(''),
       email: field('', [email]),
     }, {

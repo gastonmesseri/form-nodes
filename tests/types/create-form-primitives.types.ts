@@ -13,7 +13,7 @@ const emptyName = nonNullableForms.field<string>(null, { nullable: true });
 const modelNullableName = nonNullableForms.field<string | null>(null);
 const validatedName = nonNullableForms.field('', ({ value }) => value().length > 0 ? null : { kind: 'required' });
 const forcedNullableName = nonNullableForms.field.nullable('Marco');
-const forcedNonNullableName = nullableForms.field.notnull('Marco');
+const forcedNonNullableName = nullableForms.field.strict('Marco');
 
 type _Name = Expect<Equal<typeof name, Field<string>>>;
 type _NullableName = Expect<Equal<typeof nullableName, Field<string | null>>>;

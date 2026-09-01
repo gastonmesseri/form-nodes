@@ -37,8 +37,8 @@ explicitDefaultForms.field(''); // Field<string | null>
 
 <CodeBlock language="ts" title="create-form-primitives.typecheck.ts">{createFormPrimitivesSource}</CodeBlock>
 
-Here, `field('')` and the `city: ''` shorthand both produce `Field<string>`. An explicit
-`{ nullable: true }` continues to produce `Field<string | null>`.
+Here, `field('')` and the `city: ''` shorthand both produce `Field<string>`. A local
+`field.nullable('')` declaration still produces `Field<string | null>`.
 
 ## Precedence
 
@@ -48,13 +48,11 @@ An explicit field option takes precedence over the shared default:
 const { field } = createFormPrimitives({ nullable: false });
 
 field('');                            // Field<string>
-field('', { nullable: true });        // Field<string | null>
-field('', { nullable: false });       // Field<string>
+field.strict('');                     // Field<string>
 field.nullable('');                   // Field<string | null>
-field.notnull('');                    // Field<string>
 ```
 
-`field.nullable()` and `field.notnull()` always override the configured default, so local
+`field.nullable()` and `field.strict()` always override the configured default, so local
 exceptions remain concise in either direction.
 
 Passing `null` or `undefined` still creates a nullable field because there is no non-null initial
@@ -70,7 +68,7 @@ field(undefined); // Field<unknown>
 Provide the future type and opt into nullability when it is known:
 
 ```ts
-const nickname = field<string>(null, { nullable: true });
+const nickname = field.nullable<string>();
 
 nickname(); // null
 ```

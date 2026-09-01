@@ -27,9 +27,9 @@ type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
   it('creates explicit nullable and non-nullable fields through short factory methods', () => {
-    const nonNullableName = field.notnull('Marco');
-    const hiddenNonNullableName = field.notnull('Lia', { hidden: true });
-    const validatedNonNullableName = field.notnull('Ada', [required]);
+    const nonNullableName = field.strict('Marco');
+    const hiddenNonNullableName = field.strict('Lia', { hidden: true });
+    const validatedNonNullableName = field.strict('Ada', [required]);
     const nullableName = field.nullable('Marco');
     const hiddenNullableName = field.nullable('Lia', { hidden: true });
     const validatedNullableName = field.nullable('Ada', [required], { readonly: true });
@@ -49,7 +49,7 @@ describe('field', () => {
   it('exposes explicit field nullability overrides on configured primitives', () => {
     const nullableFields = createFormPrimitives({ nullable: true }).field;
     const nonNullableFields = createFormPrimitives({ nullable: false }).field;
-    const forcedNonNullable = nullableFields.notnull('Marco');
+    const forcedNonNullable = nullableFields.strict('Marco');
     const forcedNullable = nonNullableFields.nullable('Lia');
 
     forcedNullable.set(null);

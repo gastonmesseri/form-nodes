@@ -116,30 +116,26 @@ This keeps ordinary hierarchy visually obvious while making exceptional behavior
 :::tip Model absence deliberately
 
 Nullable is the default because empty controls commonly represent no value. Use
-`{ nullable: false }` only when `null` is invalid throughout the domain, not merely because the
+`field.strict()` only when `null` is invalid throughout the domain, not merely because the
 initial value happens to be present.
 
 :::
 
-Fields are nullable by default because an input can commonly represent no value:
+Fields are nullable by default because an input can commonly represent no value. Use
+`field.strict()` when the model must always contain a value:
 
 ```ts
-const bookingForm = form({
-  departureDate: field<Date>(), // Date | null
-  notes: field(''),             // string | null
+const accountForm = form({
+  username: field(''),       // string | null
+  email: field.strict(''),   // string
 });
 ```
 
-Use `{ nullable: false }` only when absence is not meaningful and every programmatic caller should
-be prevented from writing `null`:
-
-```ts
-const settingsForm = form({
-  notificationsEnabled: field(false, {
-    nullable: false,
-  }),
-});
-```
+Here, `username` may be absent from the domain model, so its complete API uses `string | null`.
+The application always represents `email` as a string, even while the control is empty, so
+`field.strict('')` preserves `string` without adding `null`. Strict nullability does not mean that
+the string is non-empty or valid; add `required`, `email`, or other validators separately when the
+UI needs those rules.
 
 Do not use a group for a nullable object merely to obtain child syntax. Groups, forms, and arrays
 are permanent containers. When the complete object can be missing, choose an object-valued

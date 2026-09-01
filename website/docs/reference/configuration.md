@@ -184,8 +184,8 @@ writes:
 
 ```ts
 const profileForm = form({
-  displayName: field(''),                         // string | null
-  countryCode: field('CH', { nullable: false }), // string
+  displayName: field(''),            // string | null
+  countryCode: field.strict('CH'),   // string
 });
 ```
 

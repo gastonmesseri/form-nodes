@@ -67,7 +67,7 @@ requirement, eager execution, or different reactivity.
 
 `TValue` must match the exact node value. Default fields normally include `null`; forms and arrays
 use their non-null aggregate values. A validator declared as `validator<number>()` therefore fits a
-field only when that field uses `{ nullable: false }`.
+field created with `field.strict()`.
 
 ### Signature
 

@@ -20,7 +20,7 @@ const configuredForms = createFormPrimitives({ nullable: false });
 })
 export class PackageConsumer {
   readonly nullableOverride: string | null = configuredForms.field.nullable('Marco')();
-  readonly nonNullableOverride: string = field.notnull('Marco')();
+  readonly nonNullableOverride: string = field.strict('Marco')();
   readonly configuredProfile = configuredForms.form({ name: configuredForms.field(''), city: '' });
   readonly configuredName: string = this.configuredProfile.name();
   readonly configuredCity: string = this.configuredProfile.city();

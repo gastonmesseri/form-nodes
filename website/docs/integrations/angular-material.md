@@ -98,7 +98,7 @@ export class MaterialProfileEditor {
     email: field('', [required, email]),
     countryCode: field('', [required]),
     birthDate: field<Date>(null, [maxDate(() => new Date())]),
-    acceptedTerms: field(false, [required], { nullable: false }),
+    acceptedTerms: field.strict(false, [required]),
   }, {
     submission: {
       action: (_form, value) => saveProfile(value),

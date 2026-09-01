@@ -12,9 +12,13 @@ type ForcedNonNullableFieldOptions<TValue> = Omit<FieldOptions<TValue>, 'nullabl
 
 interface FieldNullabilityOverrides {
   /** Creates a field that excludes `null`, independently of the configured default. */
-  notnull<TValue extends {}>(value: TValue, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
-  notnull<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
-  /** Creates a field that includes `null`, independently of the configured default. */
+  strict<TValue extends {}>(value: TValue, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  strict<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  /**
+   * Creates a field that includes `null`, independently of the configured default.
+   * The package-level `field<T>()` already returns `Field<T | null>` by default; this method is
+   * useful for an explicit declaration or for overriding `{ nullable: false }`.
+   */
   nullable(value: null | undefined, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;
   nullable<TValue>(value?: TValue | null, options?: ForcedNullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
   nullable(value: null | undefined, validators: ValidatorSource<unknown>, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;

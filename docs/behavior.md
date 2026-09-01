@@ -93,7 +93,7 @@ node attached to a configured form retains the policy of the factory that origin
 
 Nullish initial values remain nullable even in a non-nullable factory set because no non-null value
 exists to preserve. Consumers can declare the intended future type with an explicit nullable field,
-such as `field<string>(null, { nullable: true })`.
+such as `field.nullable<string>()`.
 
 Every runtime node exposes `nodeType()`, which returns the precise public discriminant `'field'`,
 `'group'`, `'form'`, or `'array'`. The literal is stable for the node's lifetime and is preserved by
@@ -193,7 +193,6 @@ The preferred signature accepts an optional initial value followed by an options
 const name = field('', {
   validators: [required],
   injector,
-  nullable: true,
   disabled: false,
   readonly: false,
   hidden: false,
@@ -408,21 +407,21 @@ const unspecifiedFromUndefined = field(undefined);
 
 The nullable type affects the complete field API. `value`, `set`, `patch`, `reset`, and validators all use `TValue | null`.
 
-Pass `nullable: false` to remove null from the field type:
+Use `field.strict()` to remove null from the field type:
 
 ```ts
-const name = field('David', { nullable: false });
+const name = field.strict('David');
 // Field<string>
 
 name.set('Ana');
 // name.set(null); // TypeScript error
 ```
 
-`field.notnull(value)` is the concise equivalent that always excludes `null`, while
+`field.strict(value)` is the concise equivalent that always excludes `null`, while
 `field.nullable(value)` always includes `null`. Both overrides remain available on field factories
 returned by `createFormPrimitives()`, independently of their configured default.
 
-A non-nullable field requires a non-null initial value. `field<string>(null, { nullable: false })` is rejected by TypeScript.
+A strict field requires a non-null initial value. `field.strict<string>(null)` is rejected by TypeScript.
 
 Nullability intentionally does not change reset behavior. In line with this library's Signal Forms-inspired reset model, `reset()` without a value preserves the current value and clears interaction state. It does not reset nullable fields to null or non-nullable fields to their initial value. `reset(value)` always uses the supplied value.
 
@@ -432,7 +431,7 @@ This differs from Angular Reactive Forms, where `nonNullable` also controls whet
 
 The current public nullability model deliberately distinguishes leaf values from structural containers:
 
-- `field()` is nullable by default. Pass `{ nullable: false }` when `null` is not a valid field value.
+- `field()` is nullable by default. Use `field.strict()` when `null` is not a valid field value.
 - `form()` and `group()` always expose non-null object values. A structural object node cannot itself be replaced with `null` or `undefined`.
 - `array()` always exposes a non-null array value. It accepts `null` or `undefined` through complete-value inputs as an absence shorthand and normalizes either value to `[]`.
 
@@ -1011,7 +1010,7 @@ export const positive = validator<number>(({ value }) => {
   return value() > 0 ? null : { kind: 'positive' };
 });
 
-const quantity = field(1, [positive], { nullable: false });
+const quantity = field.strict(1, [positive]);
 ```
 
 TypeScript rejects attaching `positive` to a default nullable field. Forms and arrays do not add
@@ -1815,7 +1814,7 @@ By default, reconciliation is positional. Applications that replace or reorder o
 ```ts
 const people = array(
   {
-    id: field('', { nullable: false }),
+    id: field.strict(''),
     name: field(''),
   },
   [
@@ -2160,8 +2159,8 @@ to an explicitly provided signal custom control or a component that implements A
   `,
 })
 class ProfileEditor {
-  readonly name = field('Marco', { debounce: 200, nullable: false });
-  readonly country = field('ch', { nullable: false });
+  name = field.strict('Marco', { debounce: 200 });
+  country = field.strict('ch');
 }
 ```
 
@@ -2214,7 +2213,7 @@ import { field, FormNode } from '@gem/ng-forms';
   template: `<input [formNode]="name">`,
 })
 class ProfileEditor {
-  readonly name = field('', { nullable: false });
+  name = field.strict('');
 }
 ```
 
@@ -2234,7 +2233,7 @@ import { field, FormNode } from '@gem/ng-forms';
   template: `<input #nameBinding="formNode" [formNode]="name">`,
 })
 class ProfileEditor {
-  readonly name = field('', { nullable: false });
+  name = field.strict('');
   readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
 
   focusName() {
