@@ -16,7 +16,9 @@ import { maxWords } from './max-words';
 import { minWords } from './min-words';
 import { maxLength } from './max-length';
 import { minLength } from './min-length';
+import { uniqueItems } from './unique-items';
 import { field } from '../../primitives/field';
+import { array } from '../../primitives/array';
 
 describe('reactive validator messages', () => {
   it('updates every built-in validator message and falls back when the source returns undefined', () => {
@@ -30,6 +32,7 @@ describe('reactive validator messages', () => {
       field(2, [max(1, { message })]),
       field(1.5, [integer({ message })]),
       field('actual', [equalTo('expected', { message })]),
+      array(field(''), ['duplicate', 'duplicate'], [uniqueItems({ message })]),
       field('a', [minLength(2, { message })]),
       field('ab', [maxLength(1, { message })]),
       field<Date>(new Date('2026-01-01'), [minDate('2026-02-01', { message })]),

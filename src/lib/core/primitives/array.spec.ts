@@ -9,6 +9,7 @@ import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { minLength } from '../validation/validators/min-length';
+import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
   it('exposes the same API through api and $api', () => {
@@ -902,6 +903,24 @@ describe('array', () => {
     expect(names.errors()).toEqual([]);
     minimum.set(3);
     expect(names.invalid()).toBe(true);
+  });
+
+  it('validates unique item keys while preserving the error on the array', () => {
+    const contacts = array(
+      { email: field(''), name: field('') },
+      [{ email: 'same@example.com', name: 'First' }, { email: 'same@example.com', name: 'Second' }],
+      [uniqueItems('email')],
+    );
+
+    expect(contacts.getError('uniqueItems')).toMatchObject({
+      duplicateIndexes: [0, 1],
+      targetNode: contacts,
+    });
+    expect(contacts[0]!.errors()).toEqual([]);
+    expect(contacts[1]!.errors()).toEqual([]);
+
+    contacts[1]!.email.set('different@example.com');
+    expect(contacts.errors()).toEqual([]);
   });
 
   it('exposes default built-in validator messages on aggregate nodes', () => {

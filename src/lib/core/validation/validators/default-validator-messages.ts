@@ -11,6 +11,9 @@ export const defaultValidatorMessages = {
   equalTo(): string {
     return 'Please enter the matching value.';
   },
+  uniqueItems(): string {
+    return 'Please ensure every item is unique.';
+  },
   oneOf(): string {
     return 'Please enter one of the allowed values.';
   },

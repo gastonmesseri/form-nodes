@@ -16,6 +16,7 @@
     - [x] Add `url()` for absolute WHATWG URLs, keeping HTTP-only validation as a possible separate validator.
     - [x] Add `integer()` using JavaScript's safe-integer range.
     - [x] Add reactive `equalTo()` for confirmation and cross-field equality without exposing compared values in errors.
+    - [x] Add `uniqueItems()` for arrays with identity, property-name, and reactive function selectors.
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.

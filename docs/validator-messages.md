@@ -170,6 +170,7 @@ parameters available to each callback:
 | `email` | none |
 | `url` | none |
 | `equalTo` | none; compared values are intentionally private |
+| `uniqueItems` | `{ duplicateIndexes: readonly number[] }` |
 | `min` | `{ min: number, actual: number }` |
 | `max` | `{ max: number, actual: number }` |
 | `integer` | `{ actual: number }` |

@@ -6,6 +6,7 @@ export { min } from './lib/core/validation/validators/min';
 export { url } from './lib/core/validation/validators/url';
 export { integer } from './lib/core/validation/validators/integer';
 export { equalTo } from './lib/core/validation/validators/equal-to';
+export { uniqueItems } from './lib/core/validation/validators/unique-items';
 export { email } from './lib/core/validation/validators/email';
 export { oneOf } from './lib/core/validation/validators/one-of';
 export { pattern } from './lib/core/validation/validators/pattern';

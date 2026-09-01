@@ -18,6 +18,11 @@ export interface BuiltInValidationErrorMap {
   readonly email: ValidationError & { readonly kind: 'email' };
   readonly url: ValidationError & { readonly kind: 'url' };
   readonly equalTo: ValidationError & { readonly kind: 'equalTo' };
+  readonly uniqueItems: ValidationError & {
+    readonly kind: 'uniqueItems';
+    /** Ascending indexes of every item participating in a duplicate group. */
+    readonly duplicateIndexes: readonly number[];
+  };
   readonly min: ValidationError & {
     readonly kind: 'min';
     /** Resolved minimum required by the validator. */
