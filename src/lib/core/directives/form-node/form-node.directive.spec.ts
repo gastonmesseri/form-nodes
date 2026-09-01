@@ -1544,6 +1544,53 @@ describe('FormNode', () => {
     expect(component.control.touched()).toBe(true);
   });
 
+  it('supports an explicitly provided signal control through transitive host directives', () => {
+    @Directive({
+      standalone: true,
+      providers: [provideFormNodeControl(() => TransitiveSignalControl)],
+    })
+    class TransitiveSignalControl {
+      value = model('');
+      required = input(false);
+    }
+
+    @Directive({
+      standalone: true,
+      hostDirectives: [TransitiveSignalControl],
+    })
+    class SignalControlBridge {}
+
+    @Component({
+      standalone: true,
+      selector: 'transitive-signal-control',
+      hostDirectives: [SignalControlBridge],
+      template: `<button type="button" (click)="control.value.set('Mark')">{{ control.value() }}</button>`,
+    })
+    class TransitiveControlComponent {
+      readonly control = inject(TransitiveSignalControl);
+    }
+
+    @Component({
+      standalone: true,
+      imports: [TransitiveControlComponent, FormNode],
+      template: `<transitive-signal-control [formNode]="name" />`,
+    })
+    class Host {
+      name = field('David', [required], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const component = fixture.debugElement.children[0]!.componentInstance as TransitiveControlComponent;
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.textContent).toContain('David');
+    expect(component.control.required()).toBe(true);
+
+    button.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.name()).toBe('Mark');
+  });
+
   it('prefers a ControlValueAccessor over an explicit signal-control provider', () => {
     @Component({
       standalone: true,

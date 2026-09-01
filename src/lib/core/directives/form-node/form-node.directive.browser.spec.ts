@@ -743,11 +743,13 @@ describe('FormNode in Chromium', () => {
     const pairedControl = fixture.debugElement.children[2]!.componentInstance as InstanceType<typeof module.AotPairedValueControl>;
     const directiveControl = fixture.debugElement.children[3]!.injector.get(module.AotDirectiveControl);
     const directiveCheckboxControl = fixture.debugElement.children[4]!.injector.get(module.AotDirectiveCheckbox);
+    const transitiveComponent = fixture.debugElement.children[5]!.componentInstance as InstanceType<typeof module.AotTransitiveControlComponent>;
     const valueButton = fixture.nativeElement.querySelector('aot-signal-value-control button') as HTMLButtonElement;
     const checkboxButton = fixture.nativeElement.querySelector('aot-signal-checkbox-control button') as HTMLButtonElement;
     const pairedButton = fixture.nativeElement.querySelector('aot-paired-value-control button') as HTMLButtonElement;
     const directiveInput = fixture.nativeElement.querySelector('input[aotDirectiveControl]') as HTMLInputElement;
     const directiveCheckbox = fixture.nativeElement.querySelector('input[aotDirectiveCheckbox]') as HTMLInputElement;
+    const transitiveButton = fixture.nativeElement.querySelector('aot-transitive-signal-control button') as HTMLButtonElement;
 
     expect(valueControl.value()).toBe('AOT initial');
     expect(valueControl.required()).toBe(true);
@@ -759,6 +761,8 @@ describe('FormNode in Chromium', () => {
     expect(directiveCheckboxControl.required()).toBe(true);
     expect(directiveCheckbox.required).toBe(false);
     expect(directiveCheckbox.checked).toBe(false);
+    expect(transitiveComponent.control.required()).toBe(true);
+    expect(transitiveButton.textContent).toContain('AOT transitive initial');
 
     valueButton.click();
     checkboxButton.click();
@@ -766,6 +770,7 @@ describe('FormNode in Chromium', () => {
     directiveInput.value = 'AOT directive value';
     dispatch(directiveInput, 'input');
     directiveCheckbox.click();
+    transitiveButton.click();
     dispatch(valueButton, 'blur');
     fixture.detectChanges();
 
@@ -776,6 +781,7 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.pairedName()).toBe('AOT paired value');
     expect(fixture.componentInstance.directiveName()).toBe('AOT directive value');
     expect(fixture.componentInstance.directiveActive()).toBe(true);
+    expect(fixture.componentInstance.transitiveName()).toBe('AOT transitive value');
     expect(valueControl.dirty()).toBe(true);
     expect(valueControl.touched()).toBe(true);
 
