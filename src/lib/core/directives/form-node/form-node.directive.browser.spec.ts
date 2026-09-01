@@ -10,6 +10,8 @@ import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
 import { form } from '../../primitives/form';
 import { FormNode } from './form-node.directive';
+import { max } from '../../validation/validators/max';
+import { min } from '../../validation/validators/min';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 
@@ -299,6 +301,47 @@ describe('FormNode in Chromium', () => {
     await optionMutation;
     expect(country.value).toBe('France');
     fixture.destroy();
+  });
+
+  it('uses native range clamping and reacts to validator constraints', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `<input type="range" [formNode]="amount">`,
+    })
+    class Host {
+      readonly minimum = signal<number | undefined>(undefined);
+      readonly maximum = signal<number | undefined>(undefined);
+      readonly amount = field(80, [min(() => this.minimum()), max(() => this.maximum())], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.value).toBe('80');
+
+    fixture.componentInstance.amount.set(150);
+    fixture.detectChanges();
+    expect(input.value).toBe('100');
+    expect(fixture.componentInstance.amount()).toBe(150);
+
+    fixture.componentInstance.minimum.set(0);
+    fixture.componentInstance.maximum.set(200);
+    fixture.detectChanges();
+    fixture.componentInstance.amount.set(101);
+    fixture.detectChanges();
+    expect(input.min).toBe('0');
+    expect(input.max).toBe('200');
+    expect(input.value).toBe('101');
+
+    fixture.componentInstance.amount.set(220);
+    fixture.detectChanges();
+    expect(input.value).toBe('200');
+
+    input.value = '42';
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.amount()).toBe(42);
   });
 
   it('restores explicit and implicit select values when a hidden field is rendered', async () => {
