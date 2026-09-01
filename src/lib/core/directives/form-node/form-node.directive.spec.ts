@@ -967,6 +967,36 @@ describe('FormNode', () => {
     });
   });
 
+  it('applies constraints when the native input type is bound during initialization', () => {
+    @Component({
+      standalone: true,
+      selector: 'late-bound-type-form-node-host',
+      imports: [FormNode],
+      template: `
+        <input data-numeric [type]="numericType()" [formNode]="amount">
+        <input data-textual [type]="textualType()" [formNode]="code">
+      `,
+    })
+    class Host {
+      readonly numericType = signal('number');
+      readonly textualType = signal('email');
+      readonly amount = field(15, [min(10), max(20)], { nullable: false });
+      readonly code = field('abc', [minLength(2), maxLength(10)], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const numeric = fixture.nativeElement.querySelector('[data-numeric]') as HTMLInputElement;
+    const textual = fixture.nativeElement.querySelector('[data-textual]') as HTMLInputElement;
+
+    expect(numeric.type).toBe('number');
+    expect(numeric.min).toBe('10');
+    expect(numeric.max).toBe('20');
+    expect(textual.type).toBe('email');
+    expect(textual.minLength).toBe(2);
+    expect(textual.maxLength).toBe(10);
+  });
+
   it('applies length constraints to inputs and textareas but not selects', () => {
     @Component({
       standalone: true,
