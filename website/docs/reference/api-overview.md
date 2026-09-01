@@ -20,7 +20,7 @@ symbols from `@gem/ng-forms`; do not import internal files or deep package paths
 | Author a reusable synchronous rule | `validator()` | [Custom validator reference](./custom-validators.md) |
 | Run Promise- or Observable-based validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
 | Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
-| Submit through a native `<form>` | `FormRoot` | [Form submission](../guides/submission.md) |
+| Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
 | Configure validator messages through Angular DI | `provideValidatorMessages()` | [Validator messages and i18n](../guides/validator-messages.md) |
 | Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Global configuration](../guides/validator-messages.md#global-configuration) |
 | Add reactive status classes to every binding | `provideFormNodeConfig()` | [`FormNode` binding API](./form-node-binding.md#automatic-css-classes) |
@@ -184,7 +184,7 @@ The binding supports native controls, `ControlValueAccessor`, Angular-compatible
 and input/output control pairs. Its public query type exposes `node()`, `errors()`, `element`,
 `injector`, `focus()`, `flush()`, and `reset()`.
 
-Main exports: `FormNode`, `FormNodeBinding`, `FORM_NODE`, and `FormRoot`.
+Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` import supports native controls, custom controls, and native form roots.
 
 ### Custom-control and binding configuration
 

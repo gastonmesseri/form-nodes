@@ -1690,8 +1690,7 @@ pending validation. Only one action may run at a time. Concurrent calls resolve 
 `submitting()` is `true` on the submitted form and inherited by every descendant. The state is
 cleared in a `finally` block if the action succeeds or rejects.
 
-`FormRoot` binds this behavior to a native form while retaining the `[formNode]` binding
-name:
+`FormNode` also binds this behavior when its `[formNode]` host is a native form:
 
 ```html
 <form [formNode]="profile">
@@ -1701,16 +1700,19 @@ name:
 </form>
 ```
 
-The directive applies `novalidate`, always prevents native submit navigation, and calls the
+The same directive imported for controls applies `novalidate`, always prevents native submit navigation, and calls the
 configured `submit()` operation. Native reset is also prevented and delegated to the form node so
 the complete reactive tree and its bindings reset consistently. `reset()` retains the library's
 existing semantics: without an explicit value it clears interaction state and pending control
 state while retaining current values.
 
 This behavior follows Angular Signal Forms 22.1.4 submission state and `FormRoot` behavior
-(`898380974d49cf7976e9d89cc74a0801a26ce7b1`). The public API differs intentionally: this library's
-submission action receives the exact form node and a typed value snapshot, and currently does not
-interpret returned server-validation errors.
+(`898380974d49cf7976e9d89cc74a0801a26ce7b1`). It was rechecked against the installed Angular
+22.1.3 `FormField` and `FormRoot` declarations and implementation in
+`@angular/forms/types/signals.d.ts` and `@angular/forms/fesm2022/signals.mjs`. The public API differs
+intentionally: Angular exposes two standalone directives, while this library requires only
+`FormNode`; its submission action also receives the exact form node and a typed value snapshot and
+currently does not interpret returned server-validation errors.
 
 ## Control binding with `[formNode]`
 

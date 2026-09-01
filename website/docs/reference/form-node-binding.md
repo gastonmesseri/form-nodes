@@ -140,11 +140,11 @@ export class FormNodeWrapperDirective {}
 
 ## Native form submission
 
-Import `FormRoot` alongside `FormNode` when binding a root node to a native form:
+The same `FormNode` import binds controls and a root node to a native form:
 
 ```ts
 @Component({
-  imports: [FormNode, FormRoot],
+  imports: [FormNode],
   template: `
     <form [formNode]="myForm">
       <input [formNode]="myForm.email" />
@@ -163,7 +163,7 @@ export class EmailEditor {
 }
 ```
 
-The directive prevents native navigation, applies `novalidate`, calls `submit()` on submit, and
+On a native `<form>`, the directive prevents native navigation, applies `novalidate`, calls `submit()` on submit, and
 maps native reset events to `form.reset()`.
 
 See [Control binding](../guides/control-binding.md), [Custom controls](../guides/custom-controls.md),
