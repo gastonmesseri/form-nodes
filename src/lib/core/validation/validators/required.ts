@@ -4,7 +4,7 @@ import type { ValidatorOptions } from './validator-options';
 import { markValidatorMetadata } from '../validator-metadata';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultRequiredMessage } from './default-validator-messages';
 import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
 
 export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
@@ -19,7 +19,7 @@ const validateRequired = (
   message?: string | (() => string | undefined),
 ): ValidationError | null => {
   if (!isEmpty(context.value())) return null;
-  return { kind: 'required', message: resolveValidatorMessage('required', {}, message, defaultValidatorMessages.required) };
+  return { kind: 'required', message: resolveValidatorMessage('required', {}, message, defaultRequiredMessage) };
 };
 
 /**

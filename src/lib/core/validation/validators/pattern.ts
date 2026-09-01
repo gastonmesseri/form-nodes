@@ -3,7 +3,7 @@ import type { Validator } from '../validation.type';
 import { PATTERN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultPatternMessage } from './default-validator-messages';
 
 /**
  * Requires a non-empty string to match a regular expression.
@@ -40,6 +40,6 @@ export const pattern = (
     resolvedExpression.lastIndex = 0;
     return resolvedExpression.test(currentValue!)
       ? null
-      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage('pattern', { pattern: resolvedExpression, actual: currentValue! }, options?.message, () => defaultValidatorMessages.pattern(resolvedExpression)) };
+      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage('pattern', { pattern: resolvedExpression, actual: currentValue! }, options?.message, () => defaultPatternMessage(resolvedExpression)) };
   }, PATTERN_METADATA, expression);
 };

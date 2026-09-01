@@ -2,7 +2,7 @@ import type { Validator } from '../validation.type';
 import { MAX_METADATA, MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultBetweenMessage } from './default-validator-messages';
 
 type ResolvedBounds = {
   minimum: number;
@@ -66,7 +66,7 @@ export const between = (
     return {
       kind: 'between',
       ...parameters,
-      message: resolveValidatorMessage('between', parameters, options?.message, () => defaultValidatorMessages.between(bounds.minimum, bounds.maximum)),
+      message: resolveValidatorMessage('between', parameters, options?.message, () => defaultBetweenMessage(bounds.minimum, bounds.maximum)),
     };
   };
   markValidatorMetadata(validator, MIN_METADATA, () => resolveBounds()?.minimum);

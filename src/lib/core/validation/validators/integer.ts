@@ -1,6 +1,6 @@
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultIntegerMessage } from './default-validator-messages';
 import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator } from '../validation.type';
 
 const validateInteger = (
@@ -12,7 +12,7 @@ const validateInteger = (
   return {
     kind: 'integer',
     actual: currentValue,
-    message: resolveValidatorMessage('integer', { actual: currentValue }, message, defaultValidatorMessages.integer),
+    message: resolveValidatorMessage('integer', { actual: currentValue }, message, defaultIntegerMessage),
   };
 };
 

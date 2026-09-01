@@ -3,7 +3,7 @@ import { parseDateConstraint } from './date-constraint';
 import { MIN_DATE_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMinDateMessage } from './default-validator-messages';
 
 /**
  * Requires a valid, non-empty date to be on or after a minimum date.
@@ -52,7 +52,7 @@ export const minDate = (
     const resolvedMinimum = typeof normalizedMinimum === 'function' ? normalizedMinimum() : normalizedMinimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum.getTime())) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('minDate', { minDate: resolvedMinimum, actual: currentValue }, options?.message, () => defaultValidatorMessages.minDate(resolvedMinimum)) }
+      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('minDate', { minDate: resolvedMinimum, actual: currentValue }, options?.message, () => defaultMinDateMessage(resolvedMinimum)) }
       : null;
   }, MIN_DATE_METADATA, normalizedMinimum);
 };

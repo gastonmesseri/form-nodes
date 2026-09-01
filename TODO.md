@@ -2,20 +2,20 @@
 
 ## Up next
 
+- Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
+- Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
+- Consider if nested form() should actually be a different type like group() by default and not another form() (the one inferred from the object)
+  - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
+
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
-    - [x] Inline built-in validator option objects so `message` and date `parseAs` choices are visible directly at each call site.
 - Validators
-  - required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
-  - being reactive or not by default (probably yes but optionally with option that reactive: false)
-    - in case is reactive, make it also tick when value has changed (in case i declared value as the value and not as a signal)
   - Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
     - Also handle cases like in lab, like addErrors, and those
   - Check what model of errors() other libraries return, and decide for the best system
-  - implement debounce for synchronous validators
   - Consider allowing defining a asyncValidator without asyncValidator function:
     e.g.
     field('Marco', {
@@ -64,13 +64,10 @@
     - (from angular docs) The [formField] directive also syncs field state for attributes like required, disabled, and readonly when appropriate.
     - Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
     - It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
-  - Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
 - Ensure that the library performs tree-shaking (e.g. not used validators )
-- Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
 - Investigate how other angular libraries perform versioning,
   - e.g. do they use the version name as the same as angular current version?
   - do they support previous versions?
-- Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
 - Audit `readonly` across all consumer-supplied option objects. Prefer mutable properties when `readonly` only adds IntelliSense clutter and does not protect library-owned state.
 - Audit every public options and source parameter from the consumer's IntelliSense perspective. Inline small accepted shapes and unions, clarify reactive source signatures, and retain named types only when they improve reuse or understanding.
 - Ensure that disabledReasons also doesn't fail when it references self form root, when it is declared with a reactive function
@@ -88,7 +85,6 @@
 - Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
   - Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
 - also add other missing properties besides of keyInParent (disabledReasons, etc)
-- Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
 - Think about what is a good name to use in the examples for the form instance
   - e.g.
   form = form({ 
@@ -227,8 +223,12 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 - [ ]
 
+## Discarded
+- discarded - implement debounce for synchronous validators
+
 ## Completed
 
+- [x] Verify consumer tree shaking removes validators and default messages that are not imported.
 - Implement ESLint
 - Document every built-in validator and structured built-in error for IntelliSense.
 - Add an extensible validation error registry and strongly typed `getError(kind)` overloads.
@@ -276,7 +276,10 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 - Implement debounce for the field value.
 - rename variable name internalApi (i think it is not internal, but actually external exposed)
 - Separate types in validation.type, (e.g. observableLike should probably has its own file)
-- Make synchronous validators reactive to every signal read from their callback, including the field value.
+- [x] Make validators reactive by default through automatic signal dependency tracking.
+  - [x] Revalidate built-in validators when the validated node value changes.
+  - [x] Treat plain value snapshots as intentionally static; use a signal-reading function for reactive constraints.
+  - [x] Do not add `reactive: false`; validators only track signals they actually read, while parameterized asynchronous validators provide explicit dependency control.
 - Allow `validators` to be a reactive function that returns validators conditionally.
 - In form() (or group()), allow also exposing all the .api properties, but giving priority to userDefined fields. 
   - Also provide a property called "controls" (or "fields") that contains only the sub-fields
@@ -324,3 +327,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
   - [x] Export `validator()` for users to define validator functions without manually specifying the callback signature.
     - [x] Make this the recommended way to create a custom validator in a separate file where node-level contextual inference is unavailable.
       - [x] Accept the value model as a generic for `field()`, `array()`, or `form()` validators.
+  - [x] Inline built-in validator option objects so `message` and date `parseAs` choices are visible directly at each call site.
+  - [x] required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
+- directive
+  - [x] Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods

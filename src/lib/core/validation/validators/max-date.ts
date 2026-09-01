@@ -3,7 +3,7 @@ import { parseDateConstraint } from './date-constraint';
 import { MAX_DATE_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultMaxDateMessage } from './default-validator-messages';
 
 /**
  * Requires a valid, non-empty date to be on or before a maximum date.
@@ -52,7 +52,7 @@ export const maxDate = (
     const resolvedMaximum = typeof normalizedMaximum === 'function' ? normalizedMaximum() : normalizedMaximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum.getTime())) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('maxDate', { maxDate: resolvedMaximum, actual: currentValue }, options?.message, () => defaultValidatorMessages.maxDate(resolvedMaximum)) }
+      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('maxDate', { maxDate: resolvedMaximum, actual: currentValue }, options?.message, () => defaultMaxDateMessage(resolvedMaximum)) }
       : null;
   }, MAX_DATE_METADATA, normalizedMaximum);
 };

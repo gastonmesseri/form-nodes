@@ -1,6 +1,6 @@
 import type { Validator } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultOneOfMessage } from './default-validator-messages';
 
 /**
  * Requires a non-empty value to equal one of the allowed values.
@@ -46,7 +46,7 @@ export const oneOf = <TValue>(
       kind: 'oneOf',
       options: resolvedAllowedValues,
       actual: currentValue,
-      message: resolveValidatorMessage('oneOf', { options: resolvedAllowedValues, actual: currentValue }, options?.message, defaultValidatorMessages.oneOf),
+      message: resolveValidatorMessage('oneOf', { options: resolvedAllowedValues, actual: currentValue }, options?.message, defaultOneOfMessage),
     };
   };
 };

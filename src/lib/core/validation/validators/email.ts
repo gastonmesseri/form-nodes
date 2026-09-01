@@ -1,7 +1,7 @@
 import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultValidatorMessages } from './default-validator-messages';
+import { defaultEmailMessage } from './default-validator-messages';
 import type { FieldContext, ValidationResult, Validator } from '../validation.type';
 
 const emailPattern = /^(?=.{1,254}$)(?=.{1,64}@)[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -14,7 +14,7 @@ const validateEmail = (
   if (isEmpty(currentValue)) return null;
   return emailPattern.test(currentValue!)
     ? null
-    : { kind: 'email', message: resolveValidatorMessage('email', {}, message, defaultValidatorMessages.email) };
+    : { kind: 'email', message: resolveValidatorMessage('email', {}, message, defaultEmailMessage) };
 };
 
 /**

@@ -110,6 +110,13 @@ The package exports:
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
 - Built-in `required`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, `maxDate`, and `dateBetween` validators.
 
+The published package uses ESM and declares `sideEffects: false`. Validators and their default
+messages are independent exports internally, allowing consumer bundlers to remove validators that
+the application does not import. The package-consumer verification builds a minified esbuild bundle
+that imports only `required` and asserts that representative unused validators and messages are
+absent. All public validators remain present in the published package itself; tree shaking reduces
+the consuming application's final bundle rather than removing available package exports.
+
 ## Creating fields
 
 `field()` creates a leaf node:
