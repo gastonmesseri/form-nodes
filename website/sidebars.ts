@@ -11,7 +11,32 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Core concepts',
-      items: ['concepts/form-nodes'],
+      items: [
+        'concepts/form-nodes',
+        'concepts/creating-nodes',
+        'concepts/values-and-state',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Guides',
+      items: [
+        'guides/validation',
+        'guides/async-validation',
+        'guides/dynamic-arrays',
+        'guides/control-binding',
+        'guides/custom-controls',
+        'guides/submission',
+        'guides/validator-messages',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Reference',
+      items: [
+        'reference/built-in-validators',
+        'reference/node-api',
+      ],
     },
   ],
 };

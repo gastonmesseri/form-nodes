@@ -1,0 +1,74 @@
+---
+title: Form submission
+---
+
+# Form submission
+
+Configure submission on the root `form()`:
+
+```ts
+const registration = form(
+  {
+    name: field('', [required], { nullable: false }),
+    email: field('', [required, email], { nullable: false }),
+  },
+  {
+    submission: {
+      action: async (form, value) => {
+        await api.register(value);
+        form.api.reset();
+      },
+      onInvalid: form => form.api.focus(),
+    },
+  },
+);
+```
+
+Call `submit()` programmatically:
+
+```ts
+const submitted = await registration.api.submit();
+```
+
+Submission marks the form subtree touched, which also commits pending control values, before deciding whether validation allows the action. It returns `true` when the action completes and `false` when validation blocks it or another action is already running. A rejected action rejects the returned promise and still clears submission state.
+
+## Native form elements
+
+Import `FormRootDirective` and bind the root node to a native form:
+
+```ts
+@Component({
+  imports: [FormNode, FormRootDirective],
+  template: `
+    <form [formNode]="registration">
+      <input [formNode]="registration.name" />
+      <input type="email" [formNode]="registration.email" />
+      <button type="submit" [disabled]="registration.api.submitting()">
+        Create account
+      </button>
+    </form>
+  `,
+})
+export class RegistrationPage {}
+```
+
+The directive prevents native navigation, calls the node's configured submission action, disables native constraint submission with `novalidate`, and maps a native reset event to `form.reset()`.
+
+## Submission state
+
+`submitting()` is true while an asynchronous action is running and is inherited by descendants. Repeated submissions do not start overlapping actions.
+
+By default, invalid validation blocks submission while pending validation alone does not. Configure `ignoreValidators` when a workflow needs different behavior:
+
+```ts
+submission: {
+  action: saveDraft,
+  ignoreValidators: 'pending', // 'none' | 'pending' | 'all'
+}
+```
+
+- `'none'` respects invalid and pending validation.
+- `'pending'` is the default behavior: it permits submission while validation is pending unless an error already makes the form invalid.
+- `'all'` runs the action regardless of validation state.
+
+Use `onInvalid` for UI behavior such as focusing the first invalid rendered control.
