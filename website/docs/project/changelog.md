@@ -32,6 +32,10 @@ canonical release record.
 - `array()` object templates and object-template factories accept field shorthands such as
   `{ name: '', age: 0 }`, producing independently cloned groups and fields with matching TypeScript
   inference.
+- Array values in `form()`, `group()`, dynamic `add()`, and `array()` object templates consistently
+  become atomic `Field` nodes. Only an explicit `array(...)` creates a dynamic collection, so the
+  inferred node never depends on array length or contents. Empty mutable array shorthands infer
+  `unknown[]` instead of `never[]`.
 
 ## 0.1.0
 

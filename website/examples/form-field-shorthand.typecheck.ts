@@ -24,6 +24,8 @@ const myForm = form({
     companyName: 'Google',
   },
   company: defaultCompany,
+  roles: ['admin'],
+  recentCompanies: [defaultCompany],
 });
 
 myForm.name(); // string | null
@@ -33,3 +35,7 @@ myForm.birthday(); // Date | null
 myForm.sister(); // unknown
 myForm.address.city(); // string | null
 myForm.company.companyId(); // number | null
+myForm.roles(); // string[] | null
+myForm.recentCompanies(); // Company[] | null
+myForm.roles.nodeType() === 'field'; // true
+myForm.recentCompanies.nodeType() === 'field'; // true

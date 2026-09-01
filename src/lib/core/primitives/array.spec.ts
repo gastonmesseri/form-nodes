@@ -132,9 +132,9 @@ describe('array', () => {
       'array: accessor shorthand is not supported at "name"; declare a data property with an explicit node or, if this object is intended as a field value, wrap it with field(value)',
     );
     expect(read).not.toHaveBeenCalled();
-    expect(() => array({ roles: [] } as never, 1)).toThrow(
-      'array: array shorthand is ambiguous at "roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
-    );
+    const rows = array({ roles: [] }, 1);
+    expect(rows[0]!.roles.nodeType()).toBe('field');
+    expect(rows[0]!.roles()).toEqual([]);
     expect(() => array([] as never, 1)).toThrow(
       'array: template must be a node or object definition; use field([...]) for an array-valued item',
     );

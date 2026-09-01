@@ -66,9 +66,9 @@ that branch needs an independent submission workflow.
 
 ### `field()` shorthand
 
-Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as class
-instances, are concise alternatives to calling `field()`. Nested plain object literals remain
-group shorthand:
+Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as arrays
+and class instances, are concise alternatives to calling `field()`. Nested plain object literals
+remain group shorthand:
 
 <CodeBlock language="ts">{formFieldShorthandSource}</CodeBlock>
 
@@ -79,6 +79,8 @@ myForm.name.nodeType() === 'field'; // true
 myForm.birthday.nodeType() === 'field'; // true
 myForm.address.nodeType() === 'group'; // true
 myForm.company.nodeType() === 'group'; // true
+myForm.roles.nodeType() === 'field'; // true
+myForm.recentCompanies.nodeType() === 'field'; // true
 ```
 
 The equivalent explicit declarations are `field('')`, `field(null)`, `field(2)`,
@@ -87,9 +89,12 @@ The equivalent explicit declarations are `field('')`, `field(null)`, `field(2)`,
 Use an explicit `field()` when the child needs validators, state options, debounce, or a more
 specific generic than the initial value can provide.
 
-Arrays deliberately have no shorthand yet because `[]` cannot communicate whether it represents
-one field value or a dynamic node collection. Use `field([...])` for one array-valued field or
-`array(...)` for dynamic items.
+Every array value, including an empty array, populated array, readonly tuple, or array of plain
+objects, becomes one `Field`. Its interpretation never depends on its length or first item. To
+create a dynamic `ArrayNode` with independently addressable item nodes, declare `array(...)`
+explicitly. Use `field([...])` when making the atomic array-value intent visually explicit or when
+the field needs configuration. An empty `[]` shorthand infers `Field<unknown[] | null>` instead of
+the unusably narrow `Field<never[] | null>`; use `field<Item[]>([])` when the item type is known.
 
 :::info Declaration property rules
 
@@ -101,7 +106,7 @@ as `constructor` and `prototype` remain valid children.
 
 :::
 
-Every other value becomes an implicit field. This includes ordinary functions and non-plain
+Every other value becomes an implicit field. This includes arrays, ordinary functions, and non-plain
 objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal or Moment-like values, and
 custom class instances. Only plain objects—with `Object.prototype` or a `null` prototype—are
 interpreted as nested groups.
@@ -1021,7 +1026,7 @@ Each entry includes its consumer-facing signature, behavior, and return value.
 
 Attaches one child or several children at runtime. A single definition returns its exact attached
 node; an object returns an exact keyed map. Plain nested objects become `group()` nodes.
-Concise values use the same `field()` shorthand as the initial declaration.
+Concise values, including arrays, use the same `field()` shorthand as the initial declaration.
 
 ```ts
 const profile = form({
@@ -1048,9 +1053,9 @@ profile.children['preferences'] === added.preferences; // true
 
 Keys must be new, definitions must be detached, and `$api` and `$field` are reserved. The object
 form is atomic: validation completes before any supplied child is attached. Keep the returned node
-for its exact type, or retrieve it later with `get()` or `children[key]`. Arrays require explicit
-`field([...])` or `array(...)`; wrap a plain application object with `field(value)` when it should
-remain one atomic value.
+for its exact type, or retrieve it later with `get()` or `children[key]`. Array values become
+fields; declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application
+object with `field(value)` when it should remain one atomic value.
 
 #### get()
 

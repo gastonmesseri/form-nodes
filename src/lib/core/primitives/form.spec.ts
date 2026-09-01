@@ -63,6 +63,7 @@ describe('form', () => {
     const uniqueValue = Symbol('value');
     const calculate = (value: number) => value * 2;
     const createdAt = new Date('2026-09-03T00:00:00.000Z');
+    const roles = ['admin'];
     const values = form({
       text: 'draft',
       count: 1,
@@ -73,6 +74,7 @@ describe('form', () => {
       missing: undefined,
       createdAt,
       calculate,
+      roles,
     });
 
     expect(values()).toEqual({
@@ -85,6 +87,7 @@ describe('form', () => {
       missing: null,
       createdAt,
       calculate,
+      roles,
     });
     expect([
       values.text,
@@ -96,7 +99,9 @@ describe('form', () => {
       values.missing,
       values.createdAt,
       values.calculate,
-    ].map(nodeTypeOf)).toEqual(Array.from({ length: 9 }, () => 'field'));
+      values.roles,
+    ].map(nodeTypeOf)).toEqual(Array.from({ length: 10 }, () => 'field'));
+    expect(values.roles()).toBe(roles);
   });
 
   it('normalizes a real Moment instance to a field and preserves its identity', () => {
@@ -108,10 +113,16 @@ describe('form', () => {
     expect(booking.appointment()?.toISOString()).toBe('2026-09-03T14:30:00.000Z');
   });
 
-  it('rejects ambiguous array shorthand', () => {
-    expect(() => form({ roles: [] } as never)).toThrow(
-      'form: array shorthand is ambiguous at "roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
-    );
+  it('normalizes empty, populated, tuple, and nested array values to fields', () => {
+    const coordinates = [47.37, 8.54] as const;
+    const companies = [{ companyId: 23, companyName: 'Apple' }];
+    const values = form({ empty: [], roles: ['admin'], coordinates, matrix: [[1, 2], [3, 4]], companies });
+
+    expect(values()).toEqual({ empty: [], roles: ['admin'], coordinates, matrix: [[1, 2], [3, 4]], companies });
+    expect([values.empty, values.roles, values.coordinates, values.matrix, values.companies].map(nodeTypeOf))
+      .toEqual(['field', 'field', 'field', 'field', 'field']);
+    expect(values.coordinates()).toBe(coordinates);
+    expect(values.companies()).toBe(companies);
   });
 
   it('preserves special atomic shorthand values at every nested depth', () => {
@@ -155,6 +166,9 @@ describe('form', () => {
     const accessorDefinition = {
       profile: Object.defineProperty({}, 'name', { enumerable: true, get: read }),
     };
+    const nonIdentifierAccessorDefinition = {
+      profile: Object.defineProperty({}, 'postal-code', { enumerable: true, get: read }),
+    };
     const symbolKey = Symbol('secret');
     const symbolDefinition = { [symbolKey]: field('hidden') };
     const prototypeDefinition = Object.fromEntries([['__proto__', field('unsafe')]]);
@@ -163,15 +177,18 @@ describe('form', () => {
       'form: accessor shorthand is not supported at "profile.name"; declare a data property with an explicit node or, if this object is intended as a field value, wrap it with field(value)',
     );
     expect(read).not.toHaveBeenCalled();
+    expect(() => form(nonIdentifierAccessorDefinition as never)).toThrow(
+      'form: accessor shorthand is not supported at "profile[\\"postal-code\\"]"; declare a data property with an explicit node or, if this object is intended as a field value, wrap it with field(value)',
+    );
+    expect(read).not.toHaveBeenCalled();
     expect(() => form(symbolDefinition as never)).toThrow(
       'form: symbol child key Symbol(secret) is not supported; use a string key, or if this object is intended as a field value, wrap it with field(value)',
     );
     expect(() => form(prototypeDefinition as never)).toThrow(
       'form: unsafe child key "__proto__" is not supported at "__proto__"; if this object is intended as a field value, wrap it with field(value)',
     );
-    expect(() => form({ profile: { 'postal-code': [] } } as never)).toThrow(
-      'form: array shorthand is ambiguous at "profile[\\"postal-code\\"]"; wrap the value with field([...]) or declare a dynamic array with array(...)',
-    );
+    const nestedArray = form({ profile: { 'postal-code': ['8000'] } });
+    expect(nestedArray.profile['postal-code'].nodeType()).toBe('field');
   });
 
   it('uses only own enumerable properties from a declaration', () => {
@@ -2649,6 +2666,8 @@ describe('form', () => {
     const accountValue = new Account();
     const account = profile.add('account', accountValue);
     const missing = profile.add('missing', undefined);
+    const rolesValue = ['admin'];
+    const roles = profile.add('roles', rolesValue);
 
     expect(age.nodeType()).toBe('field');
     expect(age()).toBe(23);
@@ -2656,7 +2675,9 @@ describe('form', () => {
     expect(account.nodeType()).toBe('field');
     expect(account()).toBe(accountValue);
     expect(missing()).toBeNull();
-    expect(profile()).toEqual({ name: 'David', age: 23, account: accountValue, missing: null });
+    expect(roles.nodeType()).toBe('field');
+    expect(roles()).toBe(rolesValue);
+    expect(profile()).toEqual({ name: 'David', age: 23, account: accountValue, missing: null, roles: ['admin'] });
   });
 
   it('adds several dynamic children atomically and normalizes shorthand groups', () => {
@@ -2725,14 +2746,13 @@ describe('form', () => {
     expect(target()).toEqual({ enabled: true, status: 'archived' });
   });
 
-  it('rejects an invalid shorthand batch before attaching any child', () => {
+  it('normalizes arrays in an atomic shorthand batch', () => {
     const profile = form({ name: 'David' });
 
-    expect(() => profile.add({ age: 23, roles: [] } as never)).toThrow(
-      'form: array shorthand is ambiguous at "roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
-    );
-    expect(profile.get('age')).toBeUndefined();
-    expect(profile()).toEqual({ name: 'David' });
+    const added = profile.add({ age: 23, roles: [] });
+
+    expect(added.roles.nodeType()).toBe('field');
+    expect(profile()).toEqual({ name: 'David', age: 23, roles: [] });
   });
 
   it('includes dynamic children in validation and interaction aggregation', () => {

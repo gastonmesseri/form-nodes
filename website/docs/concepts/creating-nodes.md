@@ -144,9 +144,9 @@ const profile = form({
 profile.address.city(); // ''
 ```
 
-Only plain objects are interpreted as structural groups. Functions and other object instances
-become fields automatically. Arrays still require an explicit choice between `field([...])` and
-`array(...)`.
+Only plain objects are interpreted as structural groups. Arrays, functions, and other object
+instances become fields automatically. An array's length and contents never determine node
+structure: declare `array(...)` explicitly when its items need independent nodes.
 
 Use an explicit `group()` when that level needs validators, state options, or validator messages:
 

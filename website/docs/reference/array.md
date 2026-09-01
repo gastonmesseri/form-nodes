@@ -116,9 +116,10 @@ The template above is equivalent to `array({ name: field(''), age: field(0) }, .
 receives fresh field and group nodes; only the declared initial values are shared. This also works
 for object templates returned by a factory.
 
-Arrays inside the object template remain ambiguous. Use `field([...])` for one array-valued field
-or `array(...)` for a nested dynamic collection. Use `field(objectValue)` when a plain object is an
-atomic application value rather than nested group structure.
+An array inside the object template becomes one array-valued `Field`; its length and contents do
+not affect that decision. Use an explicit nested `array(...)` when its items need independent
+nodes. Use `field(objectValue)` when a plain object is an atomic application value rather than
+nested group structure.
 
 ## Options
 

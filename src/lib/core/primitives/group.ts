@@ -20,8 +20,8 @@ type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDe
  * // { city: 'Zurich', country: 'Switzerland' }
  * ```
  *
- * Concise values are normalized to fields, and plain nested object definitions become groups.
- * Arrays remain explicit through `field([...])` or `array(...)`. Use an explicit group when the
+ * Concise values, including arrays, are normalized to fields, and plain nested object definitions
+ * become groups. Only an explicit `array(...)` creates a dynamic array node. Use an explicit group when the
  * object aggregate needs validators, state configuration, debounce, or validator messages. Use
  * `form()` instead when this exact node must own `submission` and `submit()`.
  * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
