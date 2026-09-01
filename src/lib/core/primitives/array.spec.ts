@@ -331,6 +331,7 @@ describe('array', () => {
     names.push('Lia');
     names.insert(1, 'Noa');
     names.move(2, 0);
+    names.swap(0, 1);
     names.removeAt(1);
     expect(names.dirty()).toBe(false);
 
@@ -377,6 +378,70 @@ describe('array', () => {
     expect(lia.keyInParent()).toBe(0);
     expect(sons.at(1)!.keyInParent()).toBe(1);
     expect(lia.name.keyInParent()).toBe('name');
+  });
+
+  it('moves items one position up or down while preserving identity and state', () => {
+    const names = array(field(''), ['Marco', 'Lia', 'Noa']);
+    const lia = names.at(1)!;
+    lia.markAsTouched();
+
+    names.moveUp(1);
+
+    expect(names()).toEqual(['Lia', 'Marco', 'Noa']);
+    expect(names.at(0)).toBe(lia);
+    expect(lia.touched()).toBe(true);
+    expect(lia.path()).toEqual(['0']);
+
+    names.moveDown(0);
+
+    expect(names()).toEqual(['Marco', 'Lia', 'Noa']);
+    expect(names.at(1)).toBe(lia);
+    expect(lia.touched()).toBe(true);
+    expect(lia.path()).toEqual(['1']);
+  });
+
+  it('keeps boundary items in place and rejects invalid move-step indexes', () => {
+    const names = array(field(''), ['Marco', 'Lia']);
+    const first = names.at(0);
+    const last = names.at(1);
+
+    names.moveUp(0);
+    names.moveDown(1);
+
+    expect(names()).toEqual(['Marco', 'Lia']);
+    expect(names.at(0)).toBe(first);
+    expect(names.at(1)).toBe(last);
+    expect(() => names.moveUp(-1)).toThrow(RangeError);
+    expect(() => names.moveDown(2)).toThrow(RangeError);
+  });
+
+  it('swaps item nodes while preserving identity and state', () => {
+    const names = array(field(''), ['Marco', 'Lia', 'Noa']);
+    const marco = names.at(0)!;
+    const noa = names.at(2)!;
+    marco.markAsDirty();
+    noa.markAsTouched();
+
+    names.swap(0, 2);
+
+    expect(names()).toEqual(['Noa', 'Lia', 'Marco']);
+    expect(names.at(0)).toBe(noa);
+    expect(names.at(2)).toBe(marco);
+    expect(noa.touched()).toBe(true);
+    expect(marco.dirty()).toBe(true);
+    expect(noa.path()).toEqual(['0']);
+    expect(marco.path()).toEqual(['2']);
+  });
+
+  it('keeps an item in place when swapping the same index and rejects invalid indexes', () => {
+    const names = array(field(''), ['Marco']);
+    const marco = names.at(0);
+
+    names.swap(0, 0);
+
+    expect(names.at(0)).toBe(marco);
+    expect(() => names.swap(-1, 0)).toThrow(RangeError);
+    expect(() => names.swap(0, 1)).toThrow(RangeError);
   });
 
   it('detaches removed items and reindexes the remaining items', () => {

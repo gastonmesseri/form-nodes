@@ -318,6 +318,16 @@ export function array<TDefinition extends NodeDefinition>(
     reparentItems();
     return removed as ArrayItemWithParent<TItem, ArrayNode<TItem>>;
   };
+  const move = (fromIndex: number, toIndex: number) => {
+    assertIndex(fromIndex);
+    assertIndex(toIndex);
+    if (fromIndex === toIndex) return;
+    const next = [...arrayItems()];
+    const [item] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, item!);
+    arrayItems.set(next);
+    reparentItems();
+  };
   const reconcileByIndex = (values: TSet, reset: boolean) => {
     const current = [...arrayItems()];
     const commonLength = Math.min(current.length, values.length);
@@ -443,13 +453,21 @@ export function array<TDefinition extends NodeDefinition>(
     push: (...args) => insert(arrayItems().length, ...args),
     insert,
     removeAt,
-    move: (fromIndex, toIndex) => {
-      assertIndex(fromIndex);
-      assertIndex(toIndex);
-      if (fromIndex === toIndex) return;
+    moveUp: (index) => {
+      assertIndex(index);
+      if (index > 0) move(index, index - 1);
+    },
+    moveDown: (index) => {
+      assertIndex(index);
+      if (index < arrayItems().length - 1) move(index, index + 1);
+    },
+    move,
+    swap: (firstIndex, secondIndex) => {
+      assertIndex(firstIndex);
+      assertIndex(secondIndex);
+      if (firstIndex === secondIndex) return;
       const next = [...arrayItems()];
-      const [item] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, item!);
+      [next[firstIndex], next[secondIndex]] = [next[secondIndex]!, next[firstIndex]!];
       arrayItems.set(next);
       reparentItems();
     },
