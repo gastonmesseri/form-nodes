@@ -54,4 +54,7 @@ export const defaultValidatorMessages = {
   maxDate(maximum: Date): string {
     return `Please enter a date on or before ${maximum.toISOString()}.`;
   },
+  dateBetween(minimum: Date, maximum: Date): string {
+    return `Please enter a date between ${minimum.toISOString()} and ${maximum.toISOString()}.`;
+  },
 } as const;

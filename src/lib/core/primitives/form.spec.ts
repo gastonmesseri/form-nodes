@@ -12,6 +12,7 @@ import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { between } from '../validation/validators/between';
+import { dateBetween } from '../validation/validators/date-between';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -30,6 +31,23 @@ describe('form', () => {
     }));
     reservation.guests.set(10);
     expect(reservation.valid()).toBe(true);
+  });
+
+  it('aggregates dateBetween errors from nested date fields', () => {
+    const booking = form({
+      departure: field<Date>(new Date('2027-01-01'), [dateBetween('2026-01-01', '2026-12-31')]),
+    });
+
+    expect(booking.invalid()).toBe(true);
+    expect(booking.allErrors()).toContainEqual(expect.objectContaining({
+      kind: 'dateBetween',
+      minDate: new Date('2026-01-01T00:00:00.000Z'),
+      maxDate: new Date('2026-12-31T00:00:00.000Z'),
+      actual: new Date('2027-01-01T00:00:00.000Z'),
+      targetNode: booking.departure,
+    }));
+    booking.departure.set(new Date('2026-06-01'));
+    expect(booking.valid()).toBe(true);
   });
 
   it('reactively validates a field against a sibling without exposing either value', () => {

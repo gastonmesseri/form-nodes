@@ -86,6 +86,15 @@ export interface BuiltInValidationErrorMap {
     /** Rejected date value. */
     readonly actual: Date;
   };
+  readonly dateBetween: ValidationError & {
+    readonly kind: 'dateBetween';
+    /** Resolved inclusive earliest date required by the validator. */
+    readonly minDate: Date;
+    /** Resolved inclusive latest date allowed by the validator. */
+    readonly maxDate: Date;
+    /** Rejected date value. */
+    readonly actual: Date;
+  };
   readonly oneOf: ValidationError & {
     readonly kind: 'oneOf';
     /** Resolved collection of allowed values. */

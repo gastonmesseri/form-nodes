@@ -108,7 +108,7 @@ The package exports:
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
-- Built-in `required`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
+- Built-in `required`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, `maxDate`, and `dateBetween` validators.
 
 ## Creating fields
 
@@ -826,6 +826,7 @@ const age = field<number>(null, {
 | `maxWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'maxWords', maxWords, actual, message }` |
 | `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, actual, message }` |
 | `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, actual, message }` |
+| `dateBetween(minimum, maximum)` | `Date | null` | Passes for `null` and invalid dates; disabled if either limit is absent or invalid | `{ kind: 'dateBetween', minDate, maxDate, actual, message }` |
 
 Date limits accept a `Date`, an ISO calendar-date string in `YYYY-MM-DD` format, or a reactive
 function returning either representation. Strings use UTC midnight by default so their behavior
@@ -842,7 +843,19 @@ Date-based after normalization.
 ```ts
 field<Date>(null, [minDate('2026-08-24')]);
 field<Date>(null, [maxDate('2026-12-31', { parseAs: 'local' })]);
+field<Date>(null, [dateBetween('2026-01-01', '2026-12-31')]);
 ```
+
+`dateBetween(minimum, maximum)` combines the inclusive comparisons of `minDate()` and `maxDate()`
+into one structured error. Both limits independently accept `Date`, `YYYY-MM-DD`, or a reactive
+source, and the inline `{ parseAs?: 'utc' | 'local'; message?: ... }` options apply consistently to
+both string limits. If either resolved limit is absent or invalid, validation and both date
+constraint metadata values are temporarily disabled together. Otherwise, `min()` and `max()`
+expose the normalized `Date` boundaries for native-control propagation.
+
+Angular 22.1.4 Signal Forms has separate `minDate` and `maxDate` schema rules but no combined
+`dateBetween` rule. This is a convenience API with the same inclusive date comparisons and
+optional-value behavior.
 
 `required` supports direct use and an options object with a message:
 

@@ -12,6 +12,7 @@ import { between } from './between';
 import { equalTo } from './equal-to';
 import { maxDate } from './max-date';
 import { minDate } from './min-date';
+import { dateBetween } from './date-between';
 import { required } from './required';
 import { maxWords } from './max-words';
 import { minWords } from './min-words';
@@ -39,6 +40,7 @@ describe('reactive validator messages', () => {
       field('ab', [maxLength(1, { message })]),
       field<Date>(new Date('2026-01-01'), [minDate('2026-02-01', { message })]),
       field<Date>(new Date('2026-02-01'), [maxDate('2026-01-01', { message })]),
+      field<Date>(new Date('2027-01-01'), [dateBetween('2026-01-01', '2026-12-31', { message })]),
       field('one', [minWords(2, { message })]),
       field('one two', [maxWords(1, { message })]),
       field('123', [pattern(/^[a-z]+$/, { message })]),

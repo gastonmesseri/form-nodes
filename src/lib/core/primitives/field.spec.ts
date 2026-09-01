@@ -14,6 +14,7 @@ import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
+import { dateBetween } from '../validation/validators/date-between';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { maxLength } from '../validation/validators/max-length';
@@ -30,6 +31,20 @@ describe('field', () => {
     expect(percentage.max()).toBe(100);
     percentage.set(100);
     expect(percentage.errors()).toEqual([]);
+  });
+
+  it('exposes inclusive dateBetween validation and both date constraint metadata values', () => {
+    const departure = field<Date>(new Date('2027-01-01'), [dateBetween('2026-01-01', '2026-12-31')]);
+
+    expect(departure.getError('dateBetween')).toMatchObject({
+      minDate: new Date('2026-01-01T00:00:00.000Z'),
+      maxDate: new Date('2026-12-31T00:00:00.000Z'),
+      actual: new Date('2027-01-01T00:00:00.000Z'),
+    });
+    expect(departure.min()).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+    expect(departure.max()).toEqual(new Date('2026-12-31T00:00:00.000Z'));
+    departure.set(new Date('2026-12-31'));
+    expect(departure.errors()).toEqual([]);
   });
 
   it('exposes the same API through api and $api', () => {

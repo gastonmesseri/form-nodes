@@ -180,6 +180,7 @@ parameters available to each callback:
 | `pattern` | `{ pattern: RegExp, actual: string }` |
 | `minDate` | `{ minDate: Date, actual: Date }` |
 | `maxDate` | `{ maxDate: Date, actual: Date }` |
+| `dateBetween` | `{ minDate: Date, maxDate: Date, actual: Date }` |
 | `oneOf` | `{ options: readonly unknown[], actual: unknown }` |
 | `minWords` | `{ minWords: number, actual: number }` |
 | `maxWords` | `{ maxWords: number, actual: number }` |
