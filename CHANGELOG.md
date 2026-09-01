@@ -11,6 +11,8 @@ consumer migration guide.
 
 ### Added
 
+- `createFormPrimitives()` for creating isolated `form`, `field`, `group`, and `array` factories with an
+  optional field-nullability default that also applies to shorthands and future array items.
 - `FormValueContract<TValue>` for checking an inferred form or group against a named aggregate value
   with `satisfies` while preserving concrete child-node types such as `ArrayNode`.
 - Consumer documentation website, including tutorials, reference pages, recipes, integrations,

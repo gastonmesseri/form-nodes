@@ -3,6 +3,7 @@ import { computed, Injector, signal, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
+import { createFormPrimitives } from './create-form-primitives';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
 import { url } from '../validation/validators/url';
@@ -25,6 +26,32 @@ import { minLength } from '../validation/validators/min-length';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('defaults createFormPrimitives and its nullable option to nullable fields', () => {
+    const defaultField = createFormPrimitives().field('Marco');
+    const emptyOptionsField = createFormPrimitives({}).field('Lia');
+
+    expect(defaultField()).toBe('Marco');
+    expect(emptyOptionsField()).toBe('Lia');
+  });
+
+  it('creates configured fields without an injection context', () => {
+    const { field: configuredField } = createFormPrimitives({ nullable: false });
+    const name = configuredField('Marco');
+    const nickname = configuredField('Marco', { nullable: true });
+    const hiddenName = configuredField('Marco', { hidden: true });
+    const validatedName = configuredField('Marco', [], { nullable: false });
+    const emptyName = configuredField(null);
+    const hiddenEmptyName = configuredField(null, { hidden: true });
+
+    expect(name()).toBe('Marco');
+    expect(name.nodeType()).toBe('field');
+    expect(nickname()).toBe('Marco');
+    expect(hiddenName.hidden()).toBe(true);
+    expect(validatedName()).toBe('Marco');
+    expect(emptyName()).toBeNull();
+    expect(hiddenEmptyName.hidden()).toBe(true);
+  });
+
   it('exposes its public node type', () => {
     const name = field('Marco');
 

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { form } from './form';
 import { array } from './array';
 import { field } from './field';
+import { createFormPrimitives } from './create-form-primitives';
 import { validator } from '../validation/validator';
 import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
@@ -12,6 +13,30 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('keeps configured defaults in shorthand templates and factories', () => {
+    const { array: configuredArray } = createFormPrimitives({ nullable: false });
+    const templates = configuredArray({ name: '' }, 1);
+    const factories = configuredArray(() => ({ name: '' }), 1);
+    const fields = configuredArray(field(''), 1);
+
+    expect(templates()).toEqual([{ name: '' }]);
+    expect(factories()).toEqual([{ name: '' }]);
+    expect(fields()).toEqual(['']);
+
+    templates.push({ name: 'Lia' });
+    factories.push({ name: 'Ada' });
+
+    expect(templates()).toEqual([{ name: '' }, { name: 'Lia' }]);
+    expect(factories()).toEqual([{ name: '' }, { name: 'Ada' }]);
+  });
+
+  it('keeps rejecting scalar shorthand templates in a configured factory set', () => {
+    const { array: configuredArray } = createFormPrimitives({ nullable: false });
+
+    expect(() => (configuredArray as any)('')).toThrow(/template must be a node or object definition/);
+    expect(() => (configuredArray as any)(() => '', 1)).toThrow(/factory must be a node or object definition/);
+  });
+
   it('exposes its public node type', () => {
     const names = array(field(''));
 

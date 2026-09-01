@@ -2,6 +2,7 @@ import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
 import { field } from './primitives/field';
+import { createFormPrimitives } from './primitives/create-form-primitives';
 import { group } from './primitives/group';
 import { array } from './primitives/array';
 import { form, type FormValueContract } from './primitives/form';
@@ -13,6 +14,13 @@ import { requiredIf } from './validation/validators/required-if';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
+  it('exposes configured form primitive factories', () => {
+    const configuredForms = createFormPrimitives({ nullable: false });
+    const profile = configuredForms.form({ name: configuredForms.field('') });
+
+    expectTypeOf(profile()).toEqualTypeOf<{ name: string }>();
+  });
+
   it('checks an aggregate value contract without replacing inferred child nodes', () => {
     type Profile = { username: string | null; items: (string | null)[] };
     const profile = form({

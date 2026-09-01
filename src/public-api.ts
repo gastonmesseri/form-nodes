@@ -33,6 +33,7 @@ export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } 
 export type { DisabledReason, DisabledStateSource, DynamicNode, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/core/validation/async-validator';
+export { createFormPrimitives, type ArrayFactory, type FieldFactory, type FormFactory, type FormPrimitives, type FormPrimitivesOptions, type GroupFactory, type NonNullableFieldFactory } from './lib/core/primitives/create-form-primitives';
 export {
   useControlState,
   type ControlState,

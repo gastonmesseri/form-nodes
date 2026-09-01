@@ -12,6 +12,8 @@ canonical release record.
 
 ### Added
 
+- `createFormPrimitives()` creates isolated form primitive factories with an optional field-nullability
+  default for direct fields, shorthands, dynamic children, and future array items.
 - `FormValueContract<TValue>` checks an inferred form or group against a named aggregate value with
   `satisfies` while preserving concrete child-node types such as `ArrayNode`.
 - A complete consumer documentation website with tutorials, API reference, recipes, integration

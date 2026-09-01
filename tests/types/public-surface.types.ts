@@ -1,7 +1,8 @@
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNode, field, useControlState, provideFormNodeConfig, type ControlState, type ControlStateError, type FormNodeBinding } from '../../src/public-api';
+import { FormNode, createFormPrimitives, field, useControlState, provideFormNodeConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
 
 const name = field('David', { nullable: false });
+const configuredForms: FormPrimitives<false> = createFormPrimitives({ nullable: false } satisfies FormPrimitivesOptions<false>);
 declare const nameBinding: FormNodeBinding<typeof name>;
 declare const nameDirective: FormNode<typeof name>;
 
@@ -48,4 +49,4 @@ const boundValue: string | null | undefined = controlState.value();
 const boundErrors: readonly ControlStateError[] = injectedControlState.errors();
 const boundErrorKind: string | undefined = boundErrors[0]?.kind;
 
-void [FormRoot, FormRootDirective, markAsAsyncValidator, createReactiveWatch, createNodeDefinitionFactory, appendMetadataContributions, boundValue, boundErrorKind];
+void [FormRoot, FormRootDirective, markAsAsyncValidator, createReactiveWatch, createNodeDefinitionFactory, appendMetadataContributions, boundValue, boundErrorKind, configuredForms];

@@ -6,6 +6,7 @@ import { form } from './form';
 import { field } from './field';
 import { array } from './array';
 import { group } from './group';
+import { createFormPrimitives } from './create-form-primitives';
 import { validator } from '../validation/validator';
 import type { InternalNode, Node, NodeType } from '../types/node.type';
 import { oneOf } from '../validation/validators/one-of';
@@ -24,6 +25,39 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('creates shorthand descendants with configured field defaults', () => {
+    const { form: configuredForm } = createFormPrimitives({ nullable: false });
+    const explicit = field('existing');
+    const birthday = new Date('1990-06-15T00:00:00.000Z');
+    const profile = configuredForm({
+      name: '',
+      birthday,
+      roles: ['admin'],
+      explicit,
+      address: { city: '' },
+    });
+
+    expect(profile()).toEqual({
+      name: '',
+      birthday,
+      roles: ['admin'],
+      explicit: 'existing',
+      address: { city: '' },
+    });
+    expect(profile.name.nodeType()).toBe('field');
+    expect(profile.address.nodeType()).toBe('group');
+  });
+
+  it('keeps configured defaults for dynamically added shorthand descendants', () => {
+    const { form: configuredForm } = createFormPrimitives({ nullable: false });
+    const profile = configuredForm({ name: '' });
+
+    const added = profile.add({ nickname: '', address: { city: '' } });
+
+    expect(added.nickname()).toBe('');
+    expect(added.address.city()).toBe('');
+  });
+
   it('exposes its public node type', () => {
     const profile = form({ name: field('') });
 

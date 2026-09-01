@@ -1,6 +1,8 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, field, form, group, required } from '@gem/ng-forms';
+import { FormNode, array, createFormPrimitives, field, form, group, required } from '@gem/ng-forms';
+
+const configuredForms = createFormPrimitives({ nullable: false });
 
 @Component({
   selector: 'package-consumer',
@@ -17,6 +19,9 @@ import { FormNode, array, field, form, group, required } from '@gem/ng-forms';
   `,
 })
 export class PackageConsumer {
+  readonly configuredProfile = configuredForms.form({ name: configuredForms.field(''), city: '' });
+  readonly configuredName: string = this.configuredProfile.name();
+  readonly configuredCity: string = this.configuredProfile.city();
   readonly profile = form({
     name: field('Marco', [required]),
     preferences: group({ theme: field('dark') }),

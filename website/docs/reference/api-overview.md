@@ -18,6 +18,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Model one logical value | `field()` | [`field()` reference](./field.md) |
 | Organize unrelated standalone nodes without aggregate behavior | Plain JavaScript object | [Creating nodes](../concepts/creating-nodes.md#a-container-is-optional) |
 | Define a submission workflow boundary | `form()` | [`form()` reference](./form.md) |
+| Choose the default field nullability for an application | `createFormPrimitives()` | [`createFormPrimitives()` reference](./create-form-primitives.md) |
 | Check an inferred aggregate against a named value model | `FormValueContract<TValue>` | [`FormValueContract` reference](./form-value-contract.md) |
 | Model a dynamic ordered collection of independent nodes | `array()` | [`array()` reference](./array.md) |
 | Give an object branch its own options without creating a submission workflow | Explicit `group()` | [`group()` reference](./group.md) |
@@ -56,6 +57,9 @@ An array-valued field is appropriate when one control owns the complete array, s
 multi-select. It intentionally has no per-item nodes or structural operations.
 
 Main exports: `field`, `Field`, `FieldApi`, and `FieldOptions`.
+
+Use `createFormPrimitives({ nullable: false })` to obtain application-scoped factories whose fields and
+shorthands are non-nullable by default. Explicit field options always take precedence.
 
 ### form()
 
