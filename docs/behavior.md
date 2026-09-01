@@ -775,6 +775,8 @@ const age = field<number>(null, {
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, message }` |
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
 | `oneOf(values)` | The allowed value type, `null`, or `undefined` | Passes for `null`, `undefined`, and `''` | `{ kind: 'oneOf', options, actual, message }` |
+| `minWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'minWords', minWords, actual, message }` |
+| `maxWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'maxWords', maxWords, actual, message }` |
 | `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, message }` |
 | `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, message }` |
 
@@ -806,6 +808,21 @@ const status = field<Status>('draft', [
 ```
 
 Unlike Angular 22.1.4 Signal Forms, which has no equivalent built-in rule, `oneOf()` is provided as a library-specific validator.
+
+`minWords()` and `maxWords()` count Unicode letter-or-number sequences. Apostrophes and hyphens inside a sequence remain part of the same word, so `L'été` and `well-known` each count as one word; punctuation without letters or numbers does not count. The error's `actual` property contains the observed word count. Limits can be static or reactive and support the common custom-message option:
+
+```ts
+const maximumBiographyWords = signal(100);
+
+const biography = field('', [
+  minWords(10),
+  maxWords(maximumBiographyWords, {
+    message: 'Keep the biography concise',
+  }),
+]);
+```
+
+These validators deliberately use a small internal Unicode tokenizer instead of Lodash or locale-dependent `Intl.Segmenter` behavior. Angular 22.1.4 Signal Forms has no equivalent built-in word-count validators.
 
 The required emptiness rules follow Angular 22 Signal Forms. Empty arrays, empty sets, and empty objects are not considered empty by `required`. Length validators inspect `length` or `size`, so `minLength(1)` can reject an empty array or set.
 

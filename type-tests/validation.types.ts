@@ -1,4 +1,4 @@
-import { asyncValidator, email, field, form, maxLength, min, oneOf, required, type AsyncValidatorContext, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
+import { asyncValidator, email, field, form, maxLength, maxWords, min, minWords, oneOf, required, type AsyncValidatorContext, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 
@@ -16,6 +16,7 @@ field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { me
 field(18, [min(18, { message: 'Too young' })]);
 field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
+field('', [minWords(2), maxWords(() => 100)]);
 
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
 void validatorOptions;
@@ -56,3 +57,6 @@ field(42, [nameValidator]);
 
 // @ts-expect-error numeric allowed values cannot validate a string field
 field('draft', [oneOf([1, 2])]);
+
+// @ts-expect-error word-count validators require string values
+field(42, [minWords(2)]);

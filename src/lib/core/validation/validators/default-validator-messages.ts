@@ -22,6 +22,14 @@ export const defaultValidatorMessages = {
     const unit = maximum === 1 ? 'character or item' : 'characters or items';
     return `Please provide no more than ${maximum} ${unit}.`;
   },
+  minWords(minimum: number): string {
+    const unit = minimum === 1 ? 'word' : 'words';
+    return `Please enter at least ${minimum} ${unit}.`;
+  },
+  maxWords(maximum: number): string {
+    const unit = maximum === 1 ? 'word' : 'words';
+    return `Please enter no more than ${maximum} ${unit}.`;
+  },
   pattern(expression: RegExp): string {
     return `Please enter a value that matches ${expression.toString()}.`;
   },

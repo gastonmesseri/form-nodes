@@ -10,6 +10,8 @@ export { maxDate } from './lib/core/validation/validators/max-date';
 export { minDate } from './lib/core/validation/validators/min-date';
 export { maxLength } from './lib/core/validation/validators/max-length';
 export { minLength } from './lib/core/validation/validators/min-length';
+export { maxWords } from './lib/core/validation/validators/max-words';
+export { minWords } from './lib/core/validation/validators/min-words';
 export { asyncValidator } from './lib/core/validation/async-validator';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
