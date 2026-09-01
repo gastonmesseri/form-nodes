@@ -10,7 +10,7 @@ Define a form by composing fields:
 import { email, field, form, minLength, required } from '@gem/ng-forms';
 
 const myForm = form({
-  name: field('Unknown', [required, minLength(2)]),
+  name: field('', [required, minLength(2)]),
   email: field('', [required, email]),
 });
 ```
@@ -18,9 +18,9 @@ const myForm = form({
 Every node is callable. Calling it is the preferred way to read its committed value:
 
 ```ts
-myForm.name(); // 'Unknown'
+myForm(); // { name: '', email: '' }
+myForm.name(); // ''
 myForm.email(); // ''
-myForm(); // { name: 'Unknown', email: '' }
 ```
 
 Validation state is exposed as signals too:

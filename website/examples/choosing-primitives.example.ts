@@ -14,7 +14,9 @@ const myForm = form({
   contacts: array({
     type: field<'email' | 'phone'>('email'),
     value: field(''),
-  }, 2),
+  }, {
+    initialValue: 1,
+  }),
 });
 
 myForm.location.set({ latitude: 47.3769, longitude: 8.5417 });
