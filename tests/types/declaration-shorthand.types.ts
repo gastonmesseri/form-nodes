@@ -35,6 +35,36 @@ type _Undefined = Expect<Equal<ReturnType<typeof shorthand.missing>, unknown>>;
 type _NestedObject = Expect<Equal<ReturnType<typeof shorthand.nested>, { city: string | null }>>;
 type _ClassInstance = Expect<Equal<ReturnType<typeof shorthand.user>, User | null>>;
 
+const dynamic = form({ fixed: '' });
+const dynamicCount = dynamic.add('count', 1);
+const dynamicEmpty = dynamic.add('empty', null);
+const dynamicUser = dynamic.add('user', new User());
+const dynamicBatch = dynamic.add({
+  enabled: false,
+  address: { city: 'Zurich' },
+});
+
+type _DynamicNumber = Expect<Equal<ReturnType<typeof dynamicCount>, number | null>>;
+type _DynamicNull = Expect<Equal<ReturnType<typeof dynamicEmpty>, unknown>>;
+type _DynamicClassInstance = Expect<Equal<ReturnType<typeof dynamicUser>, User | null>>;
+type _DynamicBoolean = Expect<Equal<ReturnType<typeof dynamicBatch.enabled>, boolean | null>>;
+type _DynamicGroup = Expect<Equal<ReturnType<typeof dynamicBatch.address>, { city: string | null }>>;
+
+const dynamicGroup = group({ fixed: '' });
+const dynamicCategory = dynamicGroup.add('category', 'all');
+const dynamicGroupBatch = dynamicGroup.add({ page: 1, range: { minimum: 0 } });
+
+type _DynamicGroupString = Expect<Equal<ReturnType<typeof dynamicCategory>, string | null>>;
+type _DynamicGroupNumber = Expect<Equal<ReturnType<typeof dynamicGroupBatch.page>, number | null>>;
+type _DynamicNestedGroup = Expect<Equal<ReturnType<typeof dynamicGroupBatch.range>, { minimum: number | null }>>;
+
+// @ts-expect-error array-valued dynamic fields must use field([...]) explicitly
+dynamic.add('roles', ['admin']);
+// @ts-expect-error arrays remain ambiguous inside dynamically added object definitions
+dynamic.add({ preferences: { roles: ['admin'] } });
+// @ts-expect-error group dynamic arrays require an explicit field() or array() node too
+dynamicGroup.add('roles', ['admin']);
+
 const explicitField = field('Ada');
 const explicitGroup = group({ city: field('Zurich') });
 const explicitForm = form({ step: field(1) });

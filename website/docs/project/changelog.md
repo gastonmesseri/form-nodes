@@ -26,6 +26,9 @@ canonical release record.
   paths, and rejects enumerable accessors, symbol child keys, and `__proto__`. Inherited and
   non-enumerable properties are ignored, and diagnostics recommend `field(value)` when an object
   was intended to remain an atomic field value.
+- `form.add()` and `group.add()` accept the same field and nested-group shorthands as initial
+  declarations through both the single-child and atomic batch signatures, with aligned runtime and
+  TypeScript normalization.
 
 ## 0.1.0
 

@@ -1,9 +1,9 @@
 import type { Signal } from '@angular/core';
 
 import type { OpaqueAngularField } from '../interop/angular-field.type';
-import type { DynamicNode, Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
+import type { DynamicNode, Node, Nodes, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitions } from './form.type';
+import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
@@ -175,7 +175,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * filters.children['category'] === category; // true
      * ```
      */
-    add<TKey extends string, TDefinition extends NodeDefinitions | Node>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: TDefinition): AddedNode<TDefinition, Group<TNodes, TParent>>;
+    add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Group<TNodes, TParent>>;
     /**
      * Adds several child definitions atomically and returns an exact keyed map of their attached
      * live nodes.
@@ -198,7 +198,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * filters.children['range'] === added.range; // true
      * ```
      */
-    add<TDefinitions extends NodeDefinitions>(definitions: TDefinitions & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
+    add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
       readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Group<TNodes, TParent>>;
     };
     /** Detaches a dynamically added child. Initially declared children cannot be removed. */

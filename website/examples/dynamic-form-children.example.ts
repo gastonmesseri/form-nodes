@@ -10,6 +10,10 @@ const added = profile.add({
   },
 });
 
+if (age.nodeType() !== 'field' || added.address.nodeType() !== 'group' || added.address.city.nodeType() !== 'field') {
+  throw new Error('Dynamic definitions should produce their expected node types.');
+}
+
 if (age.parent() !== profile || added.address.city.form() !== profile) {
   throw new Error('Dynamic children should join the form tree.');
 }

@@ -1,23 +1,11 @@
 import type { ValidatorSource } from '../validation/validation.type';
-import type { Node } from '../types/node.type';
 import { createObjectNode } from './form';
-import type { FieldShorthand, Form, FormOptions, ObjectNodeDefinitions } from './form.type';
+import type { Form, FormOptions, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
 
 export type { Group, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
 
-type GroupDefinition<TDefinition> =
-  TDefinition extends Node ? TDefinition
-    : TDefinition extends readonly unknown[] ? never
-      : TDefinition extends FieldShorthand ? TDefinition
-        : TDefinition extends ObjectNodeDefinitions ? GroupDefinitions<TDefinition> : TDefinition;
-
-type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends symbol ? never
-    : TKey extends '$api' | '$field' ? never
-      : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
-        : GroupDefinition<TDefinitions[TKey]>;
-};
+type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 
 /**
  * Creates an object-shaped structural node without an independent submission workflow.

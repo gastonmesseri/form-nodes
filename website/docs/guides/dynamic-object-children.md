@@ -12,7 +12,8 @@ verifies insertion, lookup, aggregate values, and detachment.
 
 ## Add one child
 
-`add(name, definition)` attaches a standalone node and returns it with its exact inferred type:
+`add(name, definition)` accepts the same shorthand as an initial `form()` or `group()` declaration,
+attaches the normalized node, and returns it with its exact inferred type:
 
 ```ts
 const profile = form({ name: field('Marco') });
@@ -31,7 +32,8 @@ disabled, readonly, hidden, debounce, focus, and injector inheritance.
 ## Add several children
 
 Pass an object to add several definitions in one structural update. Plain nested objects become
-`group()` nodes just as they do in the original `form()` declaration:
+`group()` nodes and concise values become `field()` nodes, just as they do in the original
+`form()` declaration:
 
 ```ts
 const added = profile.add({
@@ -45,8 +47,11 @@ added.nickname(); // 'Mark'
 added.address.city(); // 'Zurich'
 ```
 
-The operation validates every destination key before attaching anything. Existing keys, `$api`,
-and `$field` are rejected.
+The operation validates every destination key and definition before normalizing or attaching
+anything. Existing keys, `$api`, and `$field` are rejected. Arrays remain intentionally ambiguous:
+use `field([...])` for one array-valued field or `array(...)` for a dynamic collection. Use
+`field(objectValue)` whenever a plain object should remain one atomic value instead of becoming a
+group.
 
 Both `add()` signatures intentionally preserve the cardinality of their input. Adding one named
 definition returns that exact attached node; adding an object returns an exact keyed map containing
@@ -139,6 +144,18 @@ removed?.parent(); // null
 The detached node remains usable. It no longer contributes value, validation, interaction state,
 focus, or pending work to its former parent. Initially declared children cannot be removed because
 their presence is guaranteed by the form's static type.
+
+A removed node can be attached to another form or group. It then receives the new parent, path,
+root, inherited state, debounce, and injector ownership. Replace a runtime child explicitly by
+removing it and adding a new definition under the same key:
+
+```ts
+const previousAge = profile.remove('age');
+const age = profile.add('age', field(36));
+
+previousAge?.parent(); // null
+age(); // 36
+```
 
 ## Value typing
 

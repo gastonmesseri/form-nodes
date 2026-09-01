@@ -177,7 +177,7 @@ describe('group', () => {
 
   it('supports dynamic children without turning a group into a submission boundary', () => {
     const address = group({ city: field('Zurich') });
-    const zip = address.add('zip', field('8001'));
+    const zip = address.add('zip', '8001');
 
     expect(address()).toEqual({ city: 'Zurich', zip: '8001' });
     expect(address.get('zip')).toBe(zip);
@@ -191,5 +191,16 @@ describe('group', () => {
     expect(address.get('zip')).toBeUndefined();
     expect(address()).toEqual({ city: 'Zurich' });
     expect(zip.parent()).toBeNull();
+  });
+
+  it('normalizes batch field and group shorthands added dynamically', () => {
+    const filters = group({ query: '' });
+    const added = filters.add({ page: 1, range: { minimum: 0, maximum: 100 } });
+
+    expect(added.page.nodeType()).toBe('field');
+    expect(added.range.nodeType()).toBe('group');
+    expect(added.range.minimum.nodeType()).toBe('field');
+    expect(added.range.maximum.nodeType()).toBe('field');
+    expect(filters()).toEqual({ query: '', page: 1, range: { minimum: 0, maximum: 100 } });
   });
 });

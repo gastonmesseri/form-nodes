@@ -27,6 +27,9 @@ consumer migration guide.
   error paths, and rejects enumerable accessors, symbol child keys, and `__proto__`. It ignores
   inherited and non-enumerable properties, and diagnostics recommend `field(value)` when an object
   was intended to remain an atomic field value.
+- `form.add()` and `group.add()` now accept the same field and nested-group shorthands as initial
+  declarations in both their single-child and atomic batch signatures, with matching runtime and
+  TypeScript normalization.
 
 ## [0.1.0] - Unreleased
 
