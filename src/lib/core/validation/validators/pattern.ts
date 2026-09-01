@@ -1,7 +1,6 @@
 import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
 import { PATTERN_METADATA } from '../constraint-metadata';
-import type { ValidatorOptions } from './validator-options';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
@@ -28,7 +27,10 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const pattern = (
   expression: RegExp | (() => RegExp | undefined),
-  options?: ValidatorOptions,
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+  },
 ): Validator<string | null> => {
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
@@ -38,6 +40,6 @@ export const pattern = (
     resolvedExpression.lastIndex = 0;
     return resolvedExpression.test(currentValue!)
       ? null
-      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.pattern(resolvedExpression)) };
+      : { kind: 'pattern', pattern: resolvedExpression, actual: currentValue, message: resolveValidatorMessage('pattern', { pattern: resolvedExpression, actual: currentValue! }, options?.message, () => defaultValidatorMessages.pattern(resolvedExpression)) };
   }, PATTERN_METADATA, expression);
 };

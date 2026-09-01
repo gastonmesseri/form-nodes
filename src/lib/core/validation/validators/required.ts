@@ -19,7 +19,7 @@ const validateRequired = (
   message?: string | (() => string | undefined),
 ): ValidationError | null => {
   if (!isEmpty(context.value())) return null;
-  return { kind: 'required', message: resolveValidatorMessage(message, defaultValidatorMessages.required) };
+  return { kind: 'required', message: resolveValidatorMessage('required', {}, message, defaultValidatorMessages.required) };
 };
 
 /**
@@ -39,7 +39,10 @@ const validateRequired = (
  *
  * @param options Optional static or reactive custom validation message. Omitting `message`, or returning `undefined`, uses the default.
  */
-export function required(options: RequiredOptions): Validator<unknown>;
+export function required(options: {
+  /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+  message?: string | (() => string | undefined);
+}): Validator<unknown>;
 /**
  * Validates required presence when passed directly in a validators array.
  *

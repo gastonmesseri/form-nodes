@@ -1,5 +1,4 @@
 import type { Validator } from '../validation.type';
-import type { ValidatorOptions } from './validator-options';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
 
@@ -33,7 +32,10 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const oneOf = <TValue>(
   allowedValues: readonly TValue[] | (() => readonly TValue[] | undefined),
-  options?: ValidatorOptions,
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+  },
 ): Validator<TValue | null | undefined> => {
   return ({ value }) => {
     const currentValue = value();
@@ -44,7 +46,7 @@ export const oneOf = <TValue>(
       kind: 'oneOf',
       options: resolvedAllowedValues,
       actual: currentValue,
-      message: resolveValidatorMessage(options?.message, defaultValidatorMessages.oneOf),
+      message: resolveValidatorMessage('oneOf', { options: resolvedAllowedValues, actual: currentValue }, options?.message, defaultValidatorMessages.oneOf),
     };
   };
 };

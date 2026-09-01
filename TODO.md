@@ -7,16 +7,18 @@
   - [x] Improve every built-in validator's JSDoc with examples, empty-value behavior, reactive constraint semantics, custom-message options, and exact error shapes.
   - [x] Add a `validator()` authoring helper so reusable custom validators infer their context and validate their result without manually annotating the callback signature; only the value model generic is required for a standalone declaration.
   - [x] Support reactive custom validator messages, comparable to Angular 22 Signal Forms, while preserving static strings as the simplest option.
-  - Allow applications to customize or internationalize the centralized default validator messages reactively, both inside and outside Angular dependency injection.
+  - [x] Allow applications to customize or internationalize the centralized default validator messages reactively, both inside and outside Angular dependency injection.
+    - [x] Record a consumer-oriented internationalization guide covering global, provider, form/array, and validator-local configuration for reuse by the future documentation website.
   - Keep using the general `minLength()` and `maxLength()` validators for arrays instead of adding redundant `arrayMinLength()` and `arrayMaxLength()` variants.
   - Do not add `arrayMinMaxLength()` for now; composing `minLength()` and `maxLength()` preserves individual error details and avoids another error shape.
   - Keep individual validator exports instead of adding a `vtValidators` namespace object, preserving straightforward imports and tree shaking.
-  - Consider what other common validators could be useful by checking other libraries (any framekwork)
+  - Consider what other common use validators could be useful by checking other libraries (any framekwork)
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
+    - [x] Inline built-in validator option objects so `message` and date `parseAs` choices are visible directly at each call site.
 - Validators
-  X- Consider changing 'kind' to 'type' in validators
+  [x]- Consider changing 'kind' to 'type' in validators
   - Implement basic validators (get from lab)
     - Review required overload and make it work like in lab
   - being reactive or not by default (probably yes but optionally with option that reactive: false)
@@ -87,7 +89,8 @@
   - e.g. do they use the version name as the same as angular current version?
   - do they support previous versions?
 - Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
-- Implement ESLint
+- Audit `readonly` across all consumer-supplied option objects. Prefer mutable properties when `readonly` only adds IntelliSense clutter and does not protect library-owned state.
+- Audit every public options and source parameter from the consumer's IntelliSense perspective. Inline small accepted shapes and unions, clarify reactive source signatures, and retain named types only when they improve reuse or understanding.
 - Ensure that disabledReasons also doesn't fail when it references self form root, when it is declared with a reactive function
 - Consider nesting disabledReasons in myForm.myField.disabled.reasons();
 - Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
@@ -133,7 +136,7 @@
 - Try to simplify the "markers" concept, probably not needed that overengineering
 - Consider allowing optionally a schemaFunction (like in angular 22 signal forms)
   - maybe better a init: () => void, in the form() options
-- Add support for internationalization, (and also make it reactive) (e.g. also validator messages)
+- [x] Add reactive internationalization support for built-in validator messages. See `docs/validator-messages.md`.
 - Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
 - Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
 - Add isNil utility, and check all cases where it is applicable, (checking for x === null || x ===undefined)
@@ -244,6 +247,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- Implement ESLint
 - Document every built-in validator and structured built-in error for IntelliSense.
 - Add an extensible validation error registry and strongly typed `getError(kind)` overloads.
 - Include the rejected `actual` measurement or value in applicable built-in validation errors.

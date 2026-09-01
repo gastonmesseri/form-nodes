@@ -31,7 +31,12 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const maxDate = (
   maximum: Date | string | (() => Date | string | undefined),
-  options?: { readonly message?: string | (() => string | undefined); readonly parseAs?: 'utc' | 'local' },
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+    /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
+    parseAs?: 'utc' | 'local';
+  },
 ): Validator<Date | null> => {
   const parseAs = options?.parseAs ?? 'utc';
   const normalizedMaximum = typeof maximum === 'function'
@@ -47,7 +52,7 @@ export const maxDate = (
     const resolvedMaximum = typeof normalizedMaximum === 'function' ? normalizedMaximum() : normalizedMaximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum.getTime())) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.maxDate(resolvedMaximum)) }
+      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('maxDate', { maxDate: resolvedMaximum, actual: currentValue }, options?.message, () => defaultValidatorMessages.maxDate(resolvedMaximum)) }
       : null;
   }, MAX_DATE_METADATA, normalizedMaximum);
 };

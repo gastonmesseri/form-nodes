@@ -1,5 +1,4 @@
 import { isEmpty } from '../../utils/is-empty';
-import type { ValidatorOptions } from './validator-options';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
@@ -15,7 +14,7 @@ const validateEmail = (
   if (isEmpty(currentValue)) return null;
   return emailPattern.test(currentValue!)
     ? null
-    : { kind: 'email', message: resolveValidatorMessage(message, defaultValidatorMessages.email) };
+    : { kind: 'email', message: resolveValidatorMessage('email', {}, message, defaultValidatorMessages.email) };
 };
 
 /**
@@ -34,7 +33,10 @@ const validateEmail = (
  *
  * @param options Optional static or reactive custom validation message. Omitting `message`, or returning `undefined`, uses the default.
  */
-export function email(options: ValidatorOptions): Validator<string | null>;
+export function email(options: {
+  /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+  message?: string | (() => string | undefined);
+}): Validator<string | null>;
 /**
  * Validates email format when passed directly in a validators array.
  *
@@ -50,7 +52,7 @@ export function email(options: ValidatorOptions): Validator<string | null>;
  */
 export function email(context: FieldContext<string | null>): ValidationResult;
 export function email(
-  contextOrOptions: FieldContext<string | null> | ValidatorOptions,
+  contextOrOptions: FieldContext<string | null> | { message?: string | (() => string | undefined) },
 ): Validator<string | null> | ValidationResult {
   if (isFieldContext(contextOrOptions)) {
     return validateEmail(contextOrOptions);

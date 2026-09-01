@@ -1,6 +1,5 @@
 import type { Validator } from '../validation.type';
 import { MIN_METADATA } from '../constraint-metadata';
-import type { ValidatorOptions } from './validator-options';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
@@ -26,7 +25,10 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const min = (
   minimum: number | (() => number | undefined),
-  options?: ValidatorOptions,
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+  },
 ): Validator<number | null> => {
   return markValidatorMetadata(({ value }) => {
     const currentValue = value();
@@ -34,7 +36,7 @@ export const min = (
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.min(resolvedMinimum)) }
+      ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('min', { min: resolvedMinimum, actual: currentValue }, options?.message, () => defaultValidatorMessages.min(resolvedMinimum)) }
       : null;
   }, MIN_METADATA, minimum);
 };

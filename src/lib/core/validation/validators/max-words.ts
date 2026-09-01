@@ -1,6 +1,5 @@
 import { countWords } from './count-words';
 import type { Validator } from '../validation.type';
-import type { ValidatorOptions } from './validator-options';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
 
@@ -26,7 +25,10 @@ import { defaultValidatorMessages } from './default-validator-messages';
  */
 export const maxWords = (
   maximum: number | (() => number | undefined),
-  options?: ValidatorOptions,
+  options?: {
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+  },
 ): Validator<string | null> => {
   return ({ value }) => {
     const currentValue = value();
@@ -35,7 +37,7 @@ export const maxWords = (
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     const actual = countWords(currentValue);
     return actual > resolvedMaximum
-      ? { kind: 'maxWords', maxWords: resolvedMaximum, actual, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.maxWords(resolvedMaximum)) }
+      ? { kind: 'maxWords', maxWords: resolvedMaximum, actual, message: resolveValidatorMessage('maxWords', { maxWords: resolvedMaximum, actual }, options?.message, () => defaultValidatorMessages.maxWords(resolvedMaximum)) }
       : null;
   };
 };
