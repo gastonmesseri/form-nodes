@@ -15,37 +15,43 @@ import { email, FormNode, field, form, minLength, required } from '@gem/ng-forms
   selector: 'app-registration',
   imports: [FormNode],
   template: `
-    <input [formNode]="myForm.name" />
+    <input [formNode]="myForm.fullName" />
     <input type="email" [formNode]="myForm.email" />
 
-    <p>Current name: {{ myForm.name() }}</p>
+    <p>Current full name: {{ myForm.fullName() }}</p>
     <p>Current email: {{ myForm.email() }}</p>
   `,
 })
 export class RegistrationComponent {
   myForm = form({
-    name: field('', [required, minLength(2)]),
+    fullName: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   });
 }
 ```
 
+This already provides a fully inferred aggregate value, independently addressable field nodes,
+reactive validation state, and two-way Angular control binding. No `FormGroup`, `FormControl`,
+`formControlName`, string path, or manual subscription is required. The form model can also be
+created and used outside an Angular injection context; Angular is needed only when binding it to
+the view.
+
 Every node is callable. Calling it is the preferred way to read its committed value:
 
 ```ts
-myForm(); // { name: '', email: '' }
-myForm.name(); // ''
+myForm(); // { fullName: '', email: '' }
+myForm.fullName(); // ''
 myForm.email(); // ''
 ```
 
 Validation state is exposed as signals too:
 
 ```ts
-myForm.valid(); // false because name and email are required
+myForm.valid(); // false because fullName and email are required
 
 myForm.allErrors();
 // [
-//   { kind: 'required', message: 'This field is required.', targetNode: myForm.name },
+//   { kind: 'required', message: 'This field is required.', targetNode: myForm.fullName },
 //   { kind: 'required', message: 'This field is required.', targetNode: myForm.email },
 // ]
 ```
@@ -59,23 +65,23 @@ read it directly without subscriptions:
 myForm.valid(); // false
 myForm.disabled(); // false
 
-myForm.name.invalid(); // true
-myForm.name.touched(); // false
-myForm.name.dirty(); // false
+myForm.fullName.invalid(); // true
+myForm.fullName.touched(); // false
+myForm.fullName.dirty(); // false
 ```
 
-Angular tracks these reads automatically in the template:
+Angular tracks these reads automatically in templates:
 
 ```html
-@if (myForm.name.touched() && myForm.name.invalid()) {
-  <p>Please enter your name.</p>
+@if (myForm.fullName.touched() && myForm.fullName.invalid()) {
+  <p>Please enter your full name.</p>
 }
 ```
 
 Update a field programmatically with `set()`:
 
 ```ts
-myForm.name.set('Marco');
+myForm.fullName.set('Marco Polo');
 ```
 
 `FormNode` is imported by the standalone component so `[formNode]` is available in its template.

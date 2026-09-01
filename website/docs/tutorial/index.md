@@ -31,7 +31,7 @@ The tutorial uses standalone components and Angular's built-in control flow. The
 ## The progression
 
 1. [Declare the model](./01-model.md)
-2. [Bind native controls](./02-bind-controls.md)
+2. [Bind controls](./02-bind-controls.md)
 3. [Add validation](./03-validation.md)
 4. [Add nesting and reactive state](./04-nesting-and-state.md)
 5. [Manage a dynamic array](./05-dynamic-arrays.md)
