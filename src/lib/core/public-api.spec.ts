@@ -13,6 +13,37 @@ import { requiredIf } from './validation/validators/required-if';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
+  it('infers concise field definitions and nested groups', () => {
+    const profile = form({
+      name: '',
+      age: null,
+      siblings: 2,
+      birthday: new Date(),
+      sister: undefined,
+      address: { city: 'Zurich' },
+    });
+
+    expectTypeOf(profile.name()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile.age()).toEqualTypeOf<unknown>();
+    expectTypeOf(profile.siblings()).toEqualTypeOf<number | null>();
+    expectTypeOf(profile.birthday()).toEqualTypeOf<Date | null>();
+    expectTypeOf(profile.sister()).toEqualTypeOf<unknown>();
+    expectTypeOf(profile.address.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(profile()).toEqualTypeOf<{
+      name: string | null;
+      age: unknown;
+      siblings: number | null;
+      birthday: Date | null;
+      sister: unknown;
+      address: { city: string | null };
+    }>();
+
+    if (false) {
+      // @ts-expect-error arrays require an explicit field() or array() declaration
+      form({ roles: [] });
+    }
+  });
+
   it('contextually types built-in validator when callbacks', () => {
     min(18, {
       when: ({ value, touched, path }) => {

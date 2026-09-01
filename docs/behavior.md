@@ -298,6 +298,22 @@ Shorthand nesting works at any depth. Every shorthand object is normalized to an
 validators or structural options. Use an explicit nested `form()` only when the branch intentionally
 owns an independent submission workflow.
 
+Inside `form()` and `group()` definitions, strings, numbers, booleans, bigints, symbols, `Date`
+instances, `null`, and `undefined` are shorthand for `field(initialValue)`. Primitive literal types
+are widened in the same way as a direct `field()` call. `null` and `undefined` produce
+`Field<unknown>`, and `undefined` is normalized to the field's runtime `null` value. Arrays are
+intentionally rejected as ambiguous shorthand: use `field([...])` for one array-valued field or
+`array(...)` for a dynamic node collection. Every other value becomes an implicit field. This
+includes non-plain objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal or Moment-like
+values, custom class instances, and ordinary functions. Only objects whose prototype is
+`Object.prototype` or `null` become structural groups. Explicit nodes always retain their existing
+behavior.
+
+Angular 22.1.x Signal Forms derives its tree from an existing model signal and enumerates object
+keys in `packages/forms/signals/src/field/structure.ts`; it does not expose Gem's declaration
+shorthand boundary. Gem therefore intentionally uses the stricter rule above for its definition
+API while retaining comparable node-state behavior after the definition has been normalized.
+
 Groups and forms provide the same child access and value shape:
 
 ```ts
@@ -312,6 +328,8 @@ Changes to any descendant are reflected reactively in every ancestor value.
 
 - Field value types are inferred from their initial values or explicit generic arguments.
 - Form and group value types are recursively inferred from their descendants.
+- Concise field definitions infer the same widened nullable type as their equivalent `field()` call;
+  literal `null` and `undefined` infer `Field<unknown>`.
 - Shorthand objects infer the same values and nested field access as explicit groups.
 - Validators receive a `FieldContext` whose `value` signal contains the inferred node value.
 - `set()` and `reset(value)` require complete values at compile time.

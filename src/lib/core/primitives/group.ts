@@ -1,15 +1,17 @@
 import type { ValidatorSource } from '../validation/validation.type';
-import type { NodeDefinitions } from '../types/node.type';
-import { _createObjectNode } from './form';
-import type { Form, FormOptions } from './form.type';
+import type { Node } from '../types/node.type';
+import { createObjectNode } from './form';
+import type { Form, FormOptions, ObjectNodeDefinitions } from './form.type';
 import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
 
 export type { Group, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
 
-type GroupDefinitions<TDefinitions extends NodeDefinitions> = {
+type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
   [TKey in keyof TDefinitions]: TKey extends '$api' | '$field'
     ? never
-    : TDefinitions[TKey] extends NodeDefinitions ? GroupDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
+    : TDefinitions[TKey] extends Node ? TDefinitions[TKey]
+      : TDefinitions[TKey] extends readonly unknown[] ? never
+        : TDefinitions[TKey] extends ObjectNodeDefinitions ? GroupDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
 };
 
 /**
@@ -25,14 +27,15 @@ type GroupDefinitions<TDefinitions extends NodeDefinitions> = {
  * // { city: 'Zurich', country: 'Switzerland' }
  * ```
  *
- * Plain nested object definitions are equivalent shorthand. Use an explicit group when the
+ * Concise values are normalized to fields, and plain nested object definitions become groups.
+ * Arrays remain explicit through `field([...])` or `array(...)`. Use an explicit group when the
  * object aggregate needs validators, state configuration, debounce, or validator messages. Use
  * `form()` instead when this exact node must own `submission` and `submit()`.
  *
  * @param definitions Initially declared child-node definitions.
  * @param options Group configuration.
  */
-export function group<TDefinitions extends NodeDefinitions>(
+export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
 ): Group<NormalizedNodes<TDefinitions>>;
@@ -50,19 +53,19 @@ export function group<TDefinitions extends NodeDefinitions>(
  * @param validators Validators for the complete group value.
  * @param options Group configuration.
  */
-export function group<TDefinitions extends NodeDefinitions>(
+export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   validators?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
   options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
 ): Group<NormalizedNodes<TDefinitions>>;
-export function group<TDefinitions extends NodeDefinitions>(
+export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   validatorsOrOptions?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>> | GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
   separateOptions?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
 ): Group<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = GroupValue<TNodes>;
-  return _createObjectNode<TDefinitions>(
+  return createObjectNode<TDefinitions>(
     definitions,
     validatorsOrOptions as ValidatorSource<TValue> | FormOptions<TValue, Form<TNodes>> | undefined,
     separateOptions as FormOptions<TValue, Form<TNodes>> | undefined,

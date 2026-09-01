@@ -9,6 +9,25 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { DisabledReason, DynamicNode, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
+/** Values inferred as concise `field()` definitions inside an object node. */
+export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | RegExp | URL | Map<unknown, unknown> | Set<unknown> | ArrayBufferView | ((...args: any[]) => any);
+
+/** One child definition accepted by `form()` and `group()`. */
+export type ObjectNodeDefinition = unknown;
+
+/** Recursive definitions accepted by `form()` and `group()`. Arrays remain explicit. */
+export interface ObjectNodeDefinitions {
+  [key: string]: unknown;
+}
+
+type WidenFieldShorthand<TValue> =
+  TValue extends string ? string
+    : TValue extends number ? number
+      : TValue extends boolean ? boolean
+        : TValue extends bigint ? bigint
+          : TValue extends symbol ? symbol
+            : TValue;
+
 export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
   /**
    * One validator or an array of validators that validate the complete form value.
@@ -210,11 +229,15 @@ export type FormPatch<TNodes extends Nodes> = {
   [K in keyof TNodes]?: NodePatch<TNodes[K]>;
 };
 
-export type NormalizedNode<TNode extends NodeDefinition> =
+export type NormalizedNode<TNode> =
   TNode extends Node ? TNode
-    : TNode extends NodeDefinitions ? Group<NormalizedNodes<TNode>> : Node;
+    : [TNode] extends [null | undefined] ? Field<unknown>
+      : TNode extends readonly unknown[] ? never
+        : TNode extends FieldShorthand ? Field<WidenFieldShorthand<TNode> | null>
+          : TNode extends ObjectNodeDefinitions ? Group<NormalizedNodes<TNode>>
+            : Field<TNode | null>;
 
-export type NormalizedNodes<TNodes extends NodeDefinitions> = {
+export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
 };
 

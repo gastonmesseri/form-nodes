@@ -1,7 +1,9 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
+import { field } from './field';
 import { isNotNil } from '../utils/is-nil';
+import { isPlainObject } from '../utils/is-plain-object';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
@@ -26,15 +28,28 @@ import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } 
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes } from './form.type';
+import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitions } from './form.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
-type FormDefinitions<TDefinitions extends NodeDefinitions> = {
+type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
   [TKey in keyof TDefinitions]: TKey extends '$api' | '$field'
     ? never
-    : TDefinitions[TKey] extends NodeDefinitions ? FormDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
+    : TDefinitions[TKey] extends Node ? TDefinitions[TKey]
+      : TDefinitions[TKey] extends readonly unknown[] ? never
+        : TDefinitions[TKey] extends ObjectNodeDefinitions ? FormDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
+};
+
+const normalizeObjectDefinition = (definition: ObjectNodeDefinition): Node => {
+  if (isNode(definition)) return definition;
+  if (Array.isArray(definition)) {
+    throw new Error('Array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...).');
+  }
+  if (definition !== null && typeof definition === 'object') {
+    if (isPlainObject(definition)) return group(definition as ObjectNodeDefinitions);
+  }
+  return field(definition);
 };
 
 /**
@@ -54,13 +69,14 @@ type FormDefinitions<TDefinitions extends NodeDefinitions> = {
  *
  * Creates a root form from an initially fixed object of node definitions and optional configuration.
  *
- * Plain nested objects are normalized to structural groups. Use the options object for form-level
- * validators, submission, state, debounce, and validator messages.
+ * Concise values are normalized to fields, while plain nested objects become structural groups.
+ * Arrays remain explicit through `field([...])` or `array(...)`. Use the options object for
+ * form-level validators, submission, state, debounce, and validator messages.
  *
  * @param definitions Initially declared child-node definitions.
  * @param options Form configuration.
  */
-export function form<TDefinitions extends NodeDefinitions>(
+export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
@@ -77,20 +93,25 @@ export function form<TDefinitions extends NodeDefinitions>(
  * @param validators Validators for the complete form value.
  * @param options Form configuration.
  */
-export function form<TDefinitions extends NodeDefinitions>(
+export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
-export function form<TDefinitions extends NodeDefinitions>(
+export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
   separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>> {
-  return _createObjectNode<TDefinitions>(definitions, validatorsOrOptions, separateOptions, 'form') as Form<NormalizedNodes<TDefinitions>>;
+  return createObjectNode<TDefinitions>(
+    definitions,
+    validatorsOrOptions,
+    separateOptions,
+    'form',
+  ) as Form<NormalizedNodes<TDefinitions>>;
 }
 
-export function _createObjectNode<TDefinitions extends NodeDefinitions>(
+export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions,
   validatorsOrOptions: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
   separateOptions: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
@@ -106,8 +127,8 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     : resolvedOptions?.validators ?? [];
   const validators = normalizeValidatorSource(validatorSource);
   const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
-  const createDefinitions = createNodeDefinitionFactory(definitions);
-  const controls = mapObjectValues(definitions, definition => isNode(definition) ? definition : group(definition)) as TNodes;
+  const controls = mapObjectValues(definitions, normalizeObjectDefinition) as TNodes;
+  const createDefinitions = createNodeDefinitionFactory(controls as NodeDefinitions);
   const controlsRecord = controls as Record<string, Node>;
   const structureVersion = signal(0);
   const dynamicKeys = new Set<string>();
@@ -425,7 +446,7 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     visible: computed(() => !formHidden()),
     hide: () => formSelfHidden.set(true),
     show: () => formSelfHidden.set(false),
-  } as FormApi<TNodes>;
+  } as unknown as FormApi<TNodes>;
   const refreshInjector = () => {
     refreshNodeInjector(formNode);
     controlKeys().forEach(key => (controls[key] as InternalNode).$api._refreshInjector());
@@ -437,7 +458,12 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     _controlValue: api.controlValue,
     _setControlValue: formControlValueBuffer.set,
     _flushControlValueOnBlur: api.flush,
-    _clone: () => _createObjectNode(createDefinitions(), validatorSource, cloneOptions, nodeType),
+    _clone: () => createObjectNode<ObjectNodeDefinitions>(
+      createDefinitions() as ObjectNodeDefinitions,
+      validatorSource as ValidatorSource<any>,
+      cloneOptions as FormOptions<any> | undefined,
+      nodeType,
+    ),
     _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);
       formKeyInParent.set(parent ? key ?? null : null);

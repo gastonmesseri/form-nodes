@@ -3,7 +3,7 @@ import type { Signal } from '@angular/core';
 import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { DynamicNode, Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent } from './form.type';
+import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitions } from './form.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
@@ -143,13 +143,9 @@ export type GroupSet<TNodes extends Nodes> = FormSet<TNodes>;
 /** Partial object accepted by a group's `patch()`; omitted child properties remain unchanged. */
 export type GroupPatch<TNodes extends Nodes> = FormPatch<TNodes>;
 
-export type NormalizedNode<TNode extends Node | NodeDefinitions> =
-  TNode extends Node ? TNode
-    : TNode extends NodeDefinitions ? Group<NormalizedNodes<TNode>> : Node;
+export type NormalizedNode<TNode extends ObjectNodeDefinition> = FormNormalizedNode<TNode>;
 
-export type NormalizedNodes<TNodes extends NodeDefinitions> = {
-  [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
-};
+export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = FormNormalizedNodes<TNodes>;
 
 export type GroupRoot<TNodes extends Nodes, TParent extends Node> = Node extends TParent
   ? Group<TNodes, TParent>
