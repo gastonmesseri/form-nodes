@@ -3,9 +3,7 @@
 ## Up next
 
 - Array
-  - Check if array() supports having a null value (check if anything breaks if setting the value to null or undefined, myArray.set(null))
   - Document properly in intellisense that the first param is the template or factory , with examples
-  - Array should have "patch" method? (probably not)
 - <!> important. Consider including hidden access to .api that is not .api, (maybe $api, or _api) because user defined properties could collide with it
   and then the form() framework will not work because it uses it on the internal system
 - Public api
@@ -132,7 +130,9 @@
 - Add support for internationalization, (and also make it reactive) (e.g. also validator messages)
 - Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
 - Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
+- Add isNil utility, and check all cases where it is applicable, (checking for x === null || x ===undefined)
 - Restructure project folder structure, once project is solid and stable. think how to organize folders
+- Create repo to pass custom lintern rules in dlab
 - Allow defining global options
   - example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
 - Add support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
@@ -154,6 +154,7 @@
     }),
   ]);
 - Consider an alternative name for ".api"
+- Pick ideas from other form libraries (e.g. veevalidate, or other react, angular libraries)
 - Add debounce to synchronous validators, probably also with a factory function validator(() => ...)
 - TRY TO MAKE ASYNC VALIDATORS ALSO BEING THE RESULT OF A COMPOSABLE VALIDATION FUNCTION.
   - at the moment this is not possible.
@@ -176,9 +177,6 @@
 - To make it safe to use (similar to what we did with self-referencing root in validators), ensure
   that disabled, readonly, etc, also allow referencing safely something that hasn't been created yet
   (e.g. referencing a signal that is at the bottom of the file [through a function]).
-- gpt tasks alignment:
-controlValue() en form() y array()
-Angular lo expone en todos los nodos. Nosotros solo en field(). Conviene esperar a definir cómo se agregan valores pendientes de descendientes.
 - Consider imports interface like the following:
   import { form } from 'wherever';
 
@@ -222,6 +220,10 @@ Nosotros convertimos un nodo eliminado en un nodo raíz independiente y utilizab
 Tracking estructural desde el modelo
 Angular crea y elimina nodos automáticamente según el array almacenado en el signal. Nosotros usamos template/factory y métodos estructurales. Es una diferencia arquitectónica deliberada que no intentaría eliminar.
 
+## Later
+
+- Reconsider whether `array()` should expose `patch()`; its positional semantics may be confusing and the same updates can be expressed explicitly through item nodes or other array operations.
+
 ## Ideas
 
 -
@@ -234,8 +236,13 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 - [ ]
 
-## I think is finished
+## Completed
 
+- Decide and document nullable `array()` input behavior: normalize `null` and `undefined` container values to an empty array while keeping the observable value structurally non-null.
+- Add `swap()` to `array()` and document the structural reordering operations for IntelliSense.
+- Add `moveUp()` and `moveDown()` convenience operations to `array()` while preserving node identity and state.
+- Complete the observable `[formNode]` comparison against Angular Signal Forms 22.1.4, including native controls, custom controls, pass-through wrappers, binding state, control debounce, SSR, hydration, AOT, and real-browser behavior; retain documented differences where Angular relies on private or binding-name-specific compiler support.
+- Expose readonly `controlValue()` on forms and arrays without aggregating pending descendant buffers, including independent debounce for controls bound directly to aggregate nodes.
 - Implement `getError()` on every node.
 - Pass value, node API, path, parent, and root form context to validators.
 - Allow validator functions to return an error object or `undefined`.

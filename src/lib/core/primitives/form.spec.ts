@@ -125,6 +125,17 @@ describe('form', () => {
     expect(profile.dirty()).toBe(false);
   });
 
+  it('normalizes a null array branch passed through form.set', () => {
+    const profile = form({ sons: array(field(''), ['Marco']) });
+    const first = profile.sons[0]!;
+
+    profile.set({ sons: null });
+
+    expect(profile()).toEqual({ sons: [] });
+    expect(profile.sons.length()).toBe(0);
+    expect(first.parent()).toBeNull();
+  });
+
   it('shrinks and empties an array child through form.set while detaching removed nodes', () => {
     const profile = form({
       sons: array(

@@ -26,7 +26,7 @@ import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledSt
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
 type ArrayFactory<TDefinition extends NodeDefinition> = () => TDefinition;
 type ArraySource<TDefinition extends NodeDefinition> = TDefinition | ArrayFactory<TDefinition>;
-type ArrayInitial<TDefinition extends NodeDefinition> = number | ArraySet<NormalizedNode<TDefinition>>;
+type ArrayInitial<TDefinition extends NodeDefinition> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
 type PositionalArrayOptions<TValue> = Omit<ArrayOptions<TValue>, 'initialValue'>;
 const omitInitialValue = <TValue>(options: ArrayOptions<TValue>): PositionalArrayOptions<TValue> => {
   const { initialValue: _initialValue, ...remainingOptions } = options;
@@ -143,30 +143,34 @@ export function array<TDefinition extends NodeDefinition>(
   type TItem = NormalizedNode<TDefinition>;
   type TValue = ArrayValue<TItem>;
   type TSet = ArraySet<TItem>;
+  type TInput = TSet | null | undefined;
   const secondIsValidators = looksLikeValidatorSource(initialOrValidatorsOrOptions);
   const thirdIsValidators = looksLikeValidatorSource(validatorsOrOptions);
-  const hasInitial = typeof initialOrValidatorsOrOptions === 'number'
+  const hasInitial = initialOrValidatorsOrOptions === null
+    || typeof initialOrValidatorsOrOptions === 'number'
     || (Array.isArray(initialOrValidatorsOrOptions) && (
       !secondIsValidators || thirdIsValidators || separateOptions !== undefined
     ));
   const resolvedOptions = hasInitial
     ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue> | undefined
     : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue> | undefined;
+  const configuredInitial = resolvedOptions?.initialValue;
   const initial = hasInitial
-    ? initialOrValidatorsOrOptions as number | TSet
-    : (resolvedOptions?.initialValue ?? []) as number | TSet;
+    ? initialOrValidatorsOrOptions as number | TSet | null
+    : configuredInitial as number | TSet | null | undefined;
   const validatorSource = hasInitial
     ? thirdIsValidators ? validatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? []
     : secondIsValidators ? initialOrValidatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? [];
   if (typeof initial === 'number' && (!Number.isSafeInteger(initial) || initial < 0)) {
     throw new RangeError('array: initial count must be a non-negative safe integer');
   }
+  const normalizedInitial = initial ?? [];
 
   const factory = typeof source === 'function' && !isNode(source)
     ? source as ArrayFactory<TDefinition>
     : createNodeDefinitionFactory(source as TDefinition);
   const cloneOptions = resolvedOptions === undefined ? undefined : omitInitialValue(resolvedOptions);
-  const cloneInitial = typeof initial === 'number' ? initial : [...initial] as TSet;
+  const cloneInitial = typeof normalizedInitial === 'number' ? normalizedInitial : [...normalizedInitial] as TSet;
   const recreateArray = array as unknown as (
     initialSource: ArrayFactory<TDefinition>,
     initialValue: number | TSet,
@@ -186,8 +190,8 @@ export function array<TDefinition extends NodeDefinition>(
     trackDefinition(definition);
     return (isNode(definition) ? definition : form(definition)) as TItem;
   };
-  const initialValues = typeof initial === 'number' ? null : [...initial];
-  const initialCount = typeof initial === 'number' ? initial : initial.length;
+  const initialValues = typeof normalizedInitial === 'number' ? null : [...normalizedInitial];
+  const initialCount = typeof normalizedInitial === 'number' ? normalizedInitial : normalizedInitial.length;
   const initialItems = Array.from({ length: initialCount }, (_, index) => {
     const item = createItem();
     if (initialValues) item.$api.reset(initialValues[index]!);
@@ -375,10 +379,13 @@ export function array<TDefinition extends NodeDefinition>(
     reparentItems();
   };
   const reconcile = resolvedOptions?.trackBy ? reconcileByKey : reconcileByIndex;
-  const reset = (...args: [] | [value: TSet]) => {
+  const normalizeArrayValue = (value: TInput): TSet => {
+    return value ?? [];
+  };
+  const reset = (...args: [] | [value: TInput]) => {
     arrayControlValueBuffer?.cancel();
     if (args.length === 0) arrayItems().forEach(item => item.$api.reset());
-    else reconcile(args[0], true);
+    else reconcile(normalizeArrayValue(args[0]), true);
     arraySelfTouched.set(false);
     arraySelfDirty.set(false);
     notifyExternalValidationReset(arrayNode);
@@ -413,9 +420,9 @@ export function array<TDefinition extends NodeDefinition>(
     getItemSnapshot().some((item, index) => predicate(item, index, arrayNode));
   const every: ArrayApi<TItem>['every'] = predicate =>
     getItemSnapshot().every((item, index) => predicate(item, index, arrayNode));
-  const set = (value: TSet) => {
+  const set = (value: TInput) => {
     arrayControlValueBuffer?.cancel();
-    reconcile(value, false);
+    reconcile(normalizeArrayValue(value), false);
   };
   arrayControlValueBuffer = createControlValueBuffer(
     arrayValue,
@@ -543,7 +550,7 @@ export function array<TDefinition extends NodeDefinition>(
     ...api,
     _controlDebounce: arrayControlDebounce,
     _controlValue: api.controlValue,
-    _setControlValue: arrayControlValueBuffer.set,
+    _setControlValue: (value: TInput) => arrayControlValueBuffer.set(normalizeArrayValue(value)),
     _flushControlValueOnBlur: api.flush,
     _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
