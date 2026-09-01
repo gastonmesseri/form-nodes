@@ -3,7 +3,7 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Component, Directive, ViewContainerRef, forwardRef, inject, input, model, output, signal } from '@angular/core';
+import { Component, Directive, ViewContainerRef, booleanAttribute, forwardRef, inject, input, model, output, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
@@ -220,6 +220,40 @@ describe('FormNode', () => {
 
     fixture.componentInstance.name.focus({ preventScroll: true });
     expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
+  it('preserves Angular input transforms when synchronizing signal-control state', () => {
+    @Component({
+      standalone: true,
+      selector: 'transformed-state-control',
+      template: '',
+    })
+    class TransformedStateControl {
+      value = model('');
+      disabled = input(false, { transform: booleanAttribute });
+    }
+    registerSignalModelForJit(TransformedStateControl, 'value');
+    registerSignalInputForJit(TransformedStateControl, 'disabled', 'disabled');
+
+    @Component({
+      standalone: true,
+      imports: [TransformedStateControl, FormNode],
+      template: `<transformed-state-control [formNode]="name" />`,
+    })
+    class Host {
+      readonly name = field('Marco', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as TransformedStateControl;
+
+    expect(control.disabled()).toBe(false);
+
+    fixture.componentInstance.name.disable();
+    fixture.detectChanges();
+
+    expect(control.disabled()).toBe(true);
   });
 
   it('rebinds a signal custom control to a different field', () => {
