@@ -71,7 +71,9 @@ const profile = form({
 
 Structural shorthand reads only own enumerable string-keyed data properties. It ignores inherited
 and non-enumerable properties and rejects accessors, symbol keys, `__proto__`, and ambiguous array
-values before creating the tree. A normalization error reports the complete declaration path.
+values before creating the tree. A normalization error reports the complete declaration path and,
+when the object may be application data rather than structure, recommends wrapping it with
+`field(value)`.
 
 ## A container is optional
 

@@ -53,10 +53,10 @@ describe('group', () => {
     };
 
     expect(() => group({ account: { roles: [] } } as never)).toThrow(
-      'group: array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...) at "account.roles"',
+      'group: array shorthand is ambiguous at "account.roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
     );
     expect(() => group(accessorDefinition as never)).toThrow(
-      'group: accessor shorthand is not supported; declare a data property with an explicit node at "address.city"',
+      'group: accessor shorthand is not supported at "address.city"; declare a data property with an explicit node or, if this object is intended as a field value, wrap it with field(value)',
     );
     expect(read).not.toHaveBeenCalled();
   });

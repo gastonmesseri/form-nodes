@@ -7,6 +7,8 @@ import type { ObjectNodeDefinitions } from './form.type';
 
 type ObjectNodeKind = 'form' | 'group';
 
+const FIELD_VALUE_HINT = 'if this object is intended as a field value, wrap it with field(value)';
+
 const formatDefinitionPath = (path: readonly string[]): string => {
   return path.map((segment, index) => /^[A-Za-z_$][\w$]*$/.test(segment)
     ? `${index === 0 ? '' : '.'}${segment}`
@@ -14,8 +16,13 @@ const formatDefinitionPath = (path: readonly string[]): string => {
   ).join('');
 };
 
-const definitionError = (nodeType: ObjectNodeKind, path: readonly string[], message: string): Error => {
-  return new Error(`${nodeType}: ${message} at ${JSON.stringify(formatDefinitionPath(path))}`);
+const definitionError = (
+  nodeType: ObjectNodeKind,
+  path: readonly string[],
+  message: string,
+  resolution: string,
+): Error => {
+  return new Error(`${nodeType}: ${message} at ${JSON.stringify(formatDefinitionPath(path))}; ${resolution}`);
 };
 
 const assertDefinitionValue = (definition: unknown, nodeType: ObjectNodeKind, path: readonly string[]) => {
@@ -24,7 +31,8 @@ const assertDefinitionValue = (definition: unknown, nodeType: ObjectNodeKind, pa
     throw definitionError(
       nodeType,
       path,
-      'array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...)',
+      'array shorthand is ambiguous',
+      'wrap the value with field([...]) or declare a dynamic array with array(...)',
     );
   }
   if (definition !== null && typeof definition === 'object' && isPlainObject(definition)) {
@@ -42,17 +50,25 @@ export const assertValidObjectDefinition = (
     const descriptor = Object.getOwnPropertyDescriptor(definitions, key)!;
     if (!descriptor.enumerable) return;
     if (typeof key === 'symbol') {
-      throw new Error(`${nodeType}: symbol child key ${String(key)} is not supported; use a string key`);
+      throw new Error(
+        `${nodeType}: symbol child key ${String(key)} is not supported; use a string key, or ${FIELD_VALUE_HINT}`,
+      );
     }
     const path = [...parentPath, key];
     if (key === '__proto__') {
-      throw definitionError(nodeType, path, 'unsafe child key "__proto__" is not supported');
+      throw definitionError(
+        nodeType,
+        path,
+        'unsafe child key "__proto__" is not supported',
+        FIELD_VALUE_HINT,
+      );
     }
     if (!('value' in descriptor)) {
       throw definitionError(
         nodeType,
         path,
-        'accessor shorthand is not supported; declare a data property with an explicit node',
+        'accessor shorthand is not supported',
+        `declare a data property with an explicit node or, ${FIELD_VALUE_HINT}`,
       );
     }
     assertDefinitionValue(descriptor.value, nodeType, path);

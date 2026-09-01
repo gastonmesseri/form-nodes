@@ -24,7 +24,8 @@ canonical release record.
   `Form` is reserved for explicit submission workflow boundaries.
 - Object shorthand validates the complete declaration before construction, reports nested error
   paths, and rejects enumerable accessors, symbol child keys, and `__proto__`. Inherited and
-  non-enumerable properties are ignored.
+  non-enumerable properties are ignored, and diagnostics recommend `field(value)` when an object
+  was intended to remain an atomic field value.
 
 ## 0.1.0
 

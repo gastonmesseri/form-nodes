@@ -25,7 +25,8 @@ consumer migration guide.
   workflow.
 - Object shorthand now validates its complete declaration before construction, reports nested
   error paths, and rejects enumerable accessors, symbol child keys, and `__proto__`. It ignores
-  inherited and non-enumerable properties.
+  inherited and non-enumerable properties, and diagnostics recommend `field(value)` when an object
+  was intended to remain an atomic field value.
 
 ## [0.1.0] - Unreleased
 
