@@ -6,13 +6,18 @@ title: Node API
 
 This reference groups the public signals and operations available on fields, forms, and arrays. Exact value and parent types remain inferred from the node tree.
 
+Calling a node directly—such as `profile.name()` or `profile()`—is the preferred committed-value
+read. Direct `value()` and `api.value()` access are equivalent alternatives. Use `controlValue()`
+only when the immediate, potentially debounced value owned by a bound control is specifically
+needed.
+
 ## Shared value and tree API
 
 | Member | Description |
 | --- | --- |
-| `node()` | Reads the current committed value by calling the node |
-| `value()` | Current committed value signal |
-| `controlValue()` | Immediate value of a directly bound control |
+| `myNode()` | Preferred read of the current committed value |
+| `myNode.value()` / `myNode.api.value()` | Equivalent explicit access to the committed value signal |
+| `controlValue()` | Immediate value of a directly bound control; it may differ during debounce |
 | `set(value)` | Assigns a complete value |
 | `update(updater)` | Computes and assigns a complete value |
 | `reset()` / `reset(value)` | Clears interaction state, optionally replacing the value |

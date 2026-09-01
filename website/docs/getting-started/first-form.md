@@ -15,11 +15,21 @@ const registration = form({
 });
 ```
 
-Every node is callable and exposes reactive/signal-based state:
+Every node is callable. Calling it is the preferred way to read its committed value:
 
 ```ts
-registration.name();
+registration.name(); // preferred field value read
+registration(); // preferred complete form value read
+```
+
+The same values remain available through the explicit `value()` signal and `.api`:
+
+```ts
+registration.name.value();
+registration.name.api.value();
 registration.value();
+registration.api.value();
+
 registration.valid();
 registration.allErrors();
 ```

@@ -1,0 +1,76 @@
+---
+slug: /
+title: Gem Forms
+sidebar_label: Overview
+hide_title: true
+hide_table_of_contents: true
+description: Typed, signal-based form primitives for Angular 22.
+---
+
+import Link from '@docusaurus/Link';
+
+<header className="docs-hero">
+  <div className="docs-hero__content">
+    <div className="docs-hero__eyebrow">Forms designed for Angular signals</div>
+    <h1>Typed forms that stay close to your model.</h1>
+    <p>
+      Compose fields, nested objects, and dynamic arrays with precise TypeScript inference,
+      reactive validation, and one binding for native and custom controls.
+    </p>
+    <div className="docs-hero__actions">
+      <Link className="button button--primary button--lg" to="/getting-started/installation">Get started</Link>
+      <Link className="button button--secondary button--lg" to="/getting-started/first-form">Build your first form</Link>
+    </div>
+  </div>
+  <div className="docs-hero__example" aria-label="Gem Forms example">
+
+```ts
+const profile = form({
+  name: field('', [required]),
+  age: field(23, [min(18)]),
+});
+
+profile.name.set('Ada');
+profile.valid(); // true
+profile(); // { name: 'Ada', age: 23 }
+```
+
+  </div>
+</header>
+
+<section className="docs-value-grid" aria-label="Why Gem Forms">
+  <article className="docs-value-card">
+    <span className="docs-value-card__index">01</span>
+    <h2>Inferred end to end</h2>
+    <p>Values, patches, validators, children, and array items retain the shape of the form you declared.</p>
+  </article>
+  <article className="docs-value-card">
+    <span className="docs-value-card__index">02</span>
+    <h2>Reactive by construction</h2>
+    <p>Values and state are signals. Validators track the dependencies they read without extra wiring.</p>
+  </article>
+  <article className="docs-value-card">
+    <span className="docs-value-card__index">03</span>
+    <h2>Angular when you need it</h2>
+    <p>Use the model outside injection context, then connect native, signal, or CVA controls with <code>[formNode]</code>.</p>
+  </article>
+</section>
+
+## Learn by task
+
+<div className="docs-link-grid">
+  <Link className="docs-link-card" to="/concepts/creating-nodes"><span className="docs-link-card__label">Model</span><strong>Create a form tree</strong><span>Fields, nested forms, nullability, arrays, and inferred values.</span></Link>
+  <Link className="docs-link-card" to="/guides/validation"><span className="docs-link-card__label">Validate</span><strong>Express validation rules</strong><span>Built-in, custom, conditional, cross-field, and asynchronous validation.</span></Link>
+  <Link className="docs-link-card" to="/guides/control-binding"><span className="docs-link-card__label">Connect</span><strong>Bind Angular controls</strong><span>Native elements, custom signal controls, CVAs, focus, and state classes.</span></Link>
+  <Link className="docs-link-card" to="/guides/dynamic-arrays"><span className="docs-link-card__label">Repeat</span><strong>Manage dynamic arrays</strong><span>Stable identity, reconciliation, insertion, removal, movement, and patching.</span></Link>
+  <Link className="docs-link-card" to="/guides/submission"><span className="docs-link-card__label">Submit</span><strong>Run submission workflows</strong><span>Validation policy, native forms, pending actions, reset, and focus.</span></Link>
+  <Link className="docs-link-card" to="/guides/validator-messages"><span className="docs-link-card__label">Localize</span><strong>Configure messages once</strong><span>Reactive messages at global, provider, form-tree, and validator scope.</span></Link>
+</div>
+
+<section className="docs-next-step">
+  <div>
+    <span className="docs-next-step__eyebrow">Start with the essentials</span>
+    <h2>From installation to a bound form in minutes.</h2>
+  </div>
+  <Link className="button button--primary button--lg" to="/getting-started/installation">Read the quick start</Link>
+</section>
