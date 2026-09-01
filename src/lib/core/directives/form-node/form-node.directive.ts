@@ -65,6 +65,8 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private signalControl = inject(FORM_NODE_CONTROL, { optional: true, self: true });
 
+  private customControlInputNames: ReadonlySet<string> = new Set();
+
   private explicitPassThrough = inject(FORM_NODE_PASS_THROUGH, { optional: true, self: true }) ?? false;
 
   private config = inject(FORM_NODE_CONFIG, { optional: true });
@@ -163,12 +165,13 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
       }, { injector: this.injector });
     }
     this.connectLegacyValidators();
-    connectSignalControlInputs(accessor, () => this._field, this.injector);
+    this.customControlInputNames = connectSignalControlInputs(accessor, () => this._field, this.injector).inputNames;
   }
 
   private connectSignalCustomControl(control: FormNodeControl<NodeValue<TNode>, TNode>) {
     const connection = connectSignalControl(control, () => this._field, this.injector);
     this.focuser = connection.focus ?? this.focuser;
+    this.customControlInputNames = connection.inputNames;
   }
 
   private connectLegacyValidators() {
@@ -254,23 +257,27 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     effect(() => {
       const node = this.node();
       const field = node as unknown as Partial<Field<NodeValue<TNode>>>;
-      if (this.nativeControl) this.renderer.setProperty(this.nativeControl, 'name', getFormNodeName(node, this.appId));
-      this.renderer.setProperty(this.element, 'disabled', node.$api.disabled());
-      if ('readOnly' in this.element) this.renderer.setProperty(this.element, 'readOnly', node.$api.readonly());
-      if ('required' in this.element) this.renderer.setProperty(this.element, 'required', node.$api.required());
+      if (this.nativeControl && !this.customControlInputNames.has('name')) this.renderer.setProperty(this.nativeControl, 'name', getFormNodeName(node, this.appId));
+      if (this.nativeControl && !this.customControlInputNames.has('disabled')) this.renderer.setProperty(this.nativeControl, 'disabled', node.$api.disabled());
+      if (this.nativeControl && !this.customControlInputNames.has('readonly') && 'readOnly' in this.nativeControl) this.renderer.setProperty(this.nativeControl, 'readOnly', node.$api.readonly());
+      if (this.nativeControl && !this.customControlInputNames.has('required') && 'required' in this.nativeControl) this.renderer.setProperty(this.nativeControl, 'required', node.$api.required());
       if (elementAcceptsMinMax(this.element)) {
-        this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min?.(), this.element.type) ?? '');
-        this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max?.(), this.element.type) ?? '');
+        if (!this.customControlInputNames.has('min')) this.renderer.setProperty(this.element, 'min', formatNativeLimit(field.min?.(), this.element.type) ?? '');
+        if (!this.customControlInputNames.has('max')) this.renderer.setProperty(this.element, 'max', formatNativeLimit(field.max?.(), this.element.type) ?? '');
       }
       if (isTextualFormElement(this.element)) {
         const value = field.minLength?.();
-        if (value === null) this.renderer.removeAttribute(this.element, 'minlength');
-        else this.renderer.setProperty(this.element, 'minLength', value);
+        if (!this.customControlInputNames.has('minLength')) {
+          if (value === null) this.renderer.removeAttribute(this.element, 'minlength');
+          else this.renderer.setProperty(this.element, 'minLength', value);
+        }
         const maximumValue = field.maxLength?.();
-        if (maximumValue === null) this.renderer.removeAttribute(this.element, 'maxlength');
-        else this.renderer.setProperty(this.element, 'maxLength', maximumValue);
+        if (!this.customControlInputNames.has('maxLength')) {
+          if (maximumValue === null) this.renderer.removeAttribute(this.element, 'maxlength');
+          else this.renderer.setProperty(this.element, 'maxLength', maximumValue);
+        }
       }
-      if ('pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern?.() ?? []));
+      if (!this.customControlInputNames.has('pattern') && 'pattern' in this.element) this.renderer.setProperty(this.element, 'pattern', formatNativePattern(field.pattern?.() ?? []));
       this.renderer.setAttribute(this.element, 'aria-invalid', String(node.$api.invalid()));
     }, { injector: this.injector });
   }

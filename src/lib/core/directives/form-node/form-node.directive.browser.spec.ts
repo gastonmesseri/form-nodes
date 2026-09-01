@@ -524,6 +524,7 @@ describe('FormNode in Chromium', () => {
     const checkboxDebugElement = fixture.debugElement.children[1]!;
     const valueControl = valueDebugElement.componentInstance as BrowserSignalValueControl;
     const checkboxControl = checkboxDebugElement.componentInstance as BrowserSignalCheckboxControl;
+    const valueHost = valueDebugElement.nativeElement as HTMLElement;
     const valueButton = valueDebugElement.nativeElement.querySelector('button') as HTMLButtonElement;
     const checkboxButton = checkboxDebugElement.nativeElement.querySelector('button') as HTMLButtonElement;
 
@@ -531,6 +532,8 @@ describe('FormNode in Chromium', () => {
     expect(valueControl.required()).toBe(true);
     expect(valueControl.invalid()).toBe(false);
     expect(checkboxControl.checked()).toBe(false);
+    expect('disabled' in valueHost).toBe(false);
+    expect('required' in valueHost).toBe(false);
 
     valueButton.click();
     checkboxButton.click();
@@ -549,6 +552,7 @@ describe('FormNode in Chromium', () => {
     fixture.detectChanges();
     expect(valueControl.disabled()).toBe(true);
     expect(valueButton.disabled).toBe(true);
+    expect('disabled' in valueHost).toBe(false);
 
     valueDebugElement.injector.get(FormNode).focus({ preventScroll: true });
     expect(valueControl.focusOptions).toEqual({ preventScroll: true });

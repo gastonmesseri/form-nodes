@@ -8,6 +8,10 @@ type InputSignal = ((...args: never[]) => unknown) & {
   [ɵSIGNAL]?: ɵInputSignalNode<unknown, unknown>;
 };
 
+export type SignalControlInputConnection = {
+  inputNames: ReadonlySet<string>;
+};
+
 const getBindingValues = (node: Node, appId: string) => {
   const field = node as unknown as Partial<Field<unknown>>;
   return {
@@ -43,21 +47,23 @@ export const connectSignalControlInputs = <TNode extends Node>(
   control: object,
   node: () => TNode,
   injector: Injector,
-) => {
+): SignalControlInputConnection => {
   const appId = injector.get(APP_ID);
   const mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
-  if (!mirror) return;
+  if (!mirror) return { inputNames: new Set() };
   const inputs = new Map(mirror.inputs.map((input) => [input.templateName, input.propName]));
+  const inputNames = new Set(inputs.keys());
   const bindingNames = Object.keys(getBindingValues(node(), appId)) as (keyof ReturnType<typeof getBindingValues>)[];
   const bindings = bindingNames.flatMap((name) => {
     const property = inputs.get(name);
     return property ? [{ name, input: (control as Record<PropertyKey, unknown>)[property] as InputSignal }] : [];
   });
-  if (!bindings.length) return;
+  if (!bindings.length) return { inputNames };
 
   effect(() => {
     const currentNode = node();
     const values = getBindingValues(currentNode, appId);
     untracked(() => bindings.forEach(({ name, input }) => writeInputSignal(input, values[name])));
   }, { injector });
+  return { inputNames };
 };
