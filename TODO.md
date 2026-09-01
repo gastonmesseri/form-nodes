@@ -14,6 +14,7 @@
   - Keep individual validator exports instead of adding a `vtValidators` namespace object, preserving straightforward imports and tree shaking.
   - Consider what other common use validators could be useful by checking other libraries (any framekwork)
     - [x] Add `url()` for absolute WHATWG URLs, keeping HTTP-only validation as a possible separate validator.
+    - [x] Add `integer()` using JavaScript's safe-integer range.
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.

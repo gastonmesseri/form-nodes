@@ -17,6 +17,9 @@ export const defaultValidatorMessages = {
   max(maximum: number): string {
     return `Please enter a value less than or equal to ${maximum}.`;
   },
+  integer(): string {
+    return 'Please enter a safe integer.';
+  },
   minLength(minimum: number): string {
     const unit = minimum === 1 ? 'character or item' : 'characters or items';
     return `Please provide at least ${minimum} ${unit}.`;

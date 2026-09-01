@@ -31,6 +31,11 @@ export interface BuiltInValidationErrorMap {
     /** Rejected numeric value. */
     readonly actual: number;
   };
+  readonly integer: ValidationError & {
+    readonly kind: 'integer';
+    /** Rejected numeric value. */
+    readonly actual: number;
+  };
   readonly minLength: ValidationError & {
     readonly kind: 'minLength';
     /** Resolved minimum length or size required by the validator. */

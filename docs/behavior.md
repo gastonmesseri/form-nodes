@@ -108,7 +108,7 @@ The package exports:
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
-- Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
+- Built-in `required`, `min`, `max`, `integer`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
 
@@ -812,6 +812,7 @@ const age = field<number>(null, {
 | `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ kind: 'required', message }` |
 | `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, actual, message }` |
 | `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, actual, message }` |
+| `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
 | `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, actual, message }` |
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
@@ -848,8 +849,15 @@ field('David', [required({ message: 'Name is required' })]);
 field('David', [required({ message: () => translatedRequiredMessage() })]);
 field('', [email({ message: 'Enter a work email' })]);
 field('', [url({ message: 'Enter a complete URL' })]);
+field(1.5, [integer({ message: 'Enter a whole number' })]);
 field(16, [min(18, { message: 'You must be at least 18' })]);
 ```
+
+`integer` uses `Number.isSafeInteger()`. It rejects decimals, `NaN`, positive and negative
+infinity, and integers outside `Number.MIN_SAFE_INTEGER` through `Number.MAX_SAFE_INTEGER`, where
+JavaScript can no longer guarantee exact representation. `null` passes for composition with
+`required`. Angular 22.1.4 Signal Forms has no built-in integer validator; this safe-range behavior
+matches Zod's `int()` rather than the broader `Number.isInteger()` predicate.
 
 `url` uses the platform WHATWG `URL` constructor without a base URL. It therefore accepts valid
 absolute URLs with any scheme, such as `https://example.com`, `mailto:user@example.com`, and

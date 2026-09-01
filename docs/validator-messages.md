@@ -171,6 +171,7 @@ parameters available to each callback:
 | `url` | none |
 | `min` | `{ min: number, actual: number }` |
 | `max` | `{ max: number, actual: number }` |
+| `integer` | `{ actual: number }` |
 | `minLength` | `{ minLength: number, actual: number }` |
 | `maxLength` | `{ maxLength: number, actual: number }` |
 | `pattern` | `{ pattern: RegExp, actual: string }` |
