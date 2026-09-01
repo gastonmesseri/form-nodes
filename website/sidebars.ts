@@ -71,6 +71,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Help',
+      items: ['help/common-mistakes'],
+    },
+    {
+      type: 'category',
       label: 'Examples',
       items: ['examples/executable-examples', 'examples/complex-form'],
     },

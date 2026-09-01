@@ -4,7 +4,7 @@
 
 - Website documentation roadmap (implement in this order)
   - [x] Create an API overview page that maps common needs to the relevant public APIs.
-  - [ ] Add a Common mistakes page with incorrect and corrected examples.
+  - [x] Add a Common mistakes page with incorrect and corrected examples.
   - [ ] Add a Troubleshooting page organized around symptoms and concrete solutions.
   - [ ] Add a configuration reference covering scopes, reactivity, precedence, inheritance, and providers.
   - [ ] Add a consumer testing guide for nodes, validators, arrays, bindings, and submission.

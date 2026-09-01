@@ -1,16 +1,18 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, field, form, required } from '@gem/ng-forms';
+import { FormNode, FormRoot, array, field, form, required } from '@gem/ng-forms';
 
 @Component({
   selector: 'package-consumer',
   standalone: true,
-  imports: [FormNode],
+  imports: [FormNode, FormRoot],
   template: `
-    <input #nameBinding="formNode" [formNode]="profile.name">
-    @for (address of profile.addresses; track address) {
-      <input [formNode]="address.city">
-    }
+    <form [formNode]="profile">
+      <input #nameBinding="formNode" [formNode]="profile.name">
+      @for (address of profile.addresses; track address) {
+        <input [formNode]="address.city">
+      }
+    </form>
   `,
 })
 export class PackageConsumer {
