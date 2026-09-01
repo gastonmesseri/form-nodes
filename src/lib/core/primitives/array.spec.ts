@@ -707,6 +707,25 @@ describe('array', () => {
     expect(names.debouncing()).toBe(false);
   });
 
+  it('aborts and restores a pending direct control value on reset', () => {
+    let abortSignal!: AbortSignal;
+    const names = array(field(''), ['Marco'], {
+      debounce: (signal) => {
+        abortSignal = signal;
+        return new Promise<void>(() => {});
+      },
+    });
+    (names as unknown as InternalNode).$api._setControlValue(['pending']);
+
+    names.reset();
+
+    expect(abortSignal.aborted).toBe(true);
+    expect(names.controlValue()).toEqual(['Marco']);
+    expect(names()).toEqual(['Marco']);
+    expect(names.pristine()).toBe(true);
+    expect(names.debouncing()).toBe(false);
+  });
+
   it('inherits a form control debounce through an array into future items', async () => {
     vi.useFakeTimers();
     try {

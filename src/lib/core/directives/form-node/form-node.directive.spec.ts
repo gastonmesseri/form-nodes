@@ -454,6 +454,7 @@ describe('FormNode', () => {
     class DebouncedAggregateControl {
       value = model<ProfileValue>({ name: '' });
       touch = output<void>();
+      reset = vi.fn();
     }
     registerSignalModelForJit(DebouncedAggregateControl, 'value');
 
@@ -481,6 +482,17 @@ describe('FormNode', () => {
 
     expect(profile()).toEqual({ name: 'Lia' });
     expect(profile.touched()).toBe(true);
+    expect(profile.debouncing()).toBe(false);
+
+    control.value.set({ name: 'pending' });
+    profile.reset();
+    TestBed.flushEffects();
+
+    expect(control.reset).toHaveBeenCalledOnce();
+    expect(control.value()).toEqual({ name: 'Lia' });
+    expect(profile.controlValue()).toEqual({ name: 'Lia' });
+    expect(profile()).toEqual({ name: 'Lia' });
+    expect(profile.pristine()).toBe(true);
     expect(profile.debouncing()).toBe(false);
   });
 
