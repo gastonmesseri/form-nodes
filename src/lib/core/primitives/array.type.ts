@@ -31,8 +31,9 @@ export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
    */
   readonly initialValue?: TValue | number | null;
   /**
-   * Returns the stable identity of an item when `set()`, `update()`, or `reset(value)`
-   * reconciles incoming values with the array's current nodes.
+   * Selects the stable identity of an item when `set()`, `update()`, or `reset(value)` reconciles
+   * incoming values with the array's current nodes. Pass either a typed property name such as
+   * `'id'` or a callback for computed or non-property keys.
    *
    * Items with matching keys reuse and, when necessary, move their existing nodes. This
    * preserves node identity and state such as touched, dirty, and pending validation while
@@ -48,12 +49,20 @@ export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
    * @example
    * ```ts
    * array(personTemplate, initialPeople, {
+   *   trackBy: 'id',
+   * });
+   * ```
+   *
+   * @example
+   * ```ts
+   * array(personTemplate, initialPeople, {
    *   trackBy: person => person.id,
    * });
    * ```
-   */
+  */
   readonly trackBy?: TValue extends readonly (infer TItemValue)[]
-    ? (value: TItemValue, index: number) => unknown
+    ? ((value: TItemValue, index: number) => unknown)
+      | (TItemValue extends object ? Extract<keyof TItemValue, string> : never)
     : never;
 };
 

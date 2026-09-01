@@ -28,7 +28,7 @@ const optionPeople = array({
   name: field(''),
 }, {
   initialValue: [{ id: 'one', name: 'David' }],
-  trackBy: value => value.id,
+  trackBy: 'id',
 });
 const optionNames = array(() => field(''), { initialValue: 2 });
 const directory = form({ people: array({ name: field('') }, 1) });
@@ -63,6 +63,11 @@ people.reset(undefined);
 people.update(() => null);
 array(field(''), { initialValue: null });
 array(field(''), null);
+
+// @ts-expect-error trackBy property names must exist on the item value
+array({ id: field('', { nullable: false }) }, { trackBy: 'missing' });
+// @ts-expect-error primitive item values require a trackBy callback
+array(field('', { nullable: false }), { trackBy: 'length' });
 
 people.forEach((item, index, owner) => {
   const _name: string | null = item.name();

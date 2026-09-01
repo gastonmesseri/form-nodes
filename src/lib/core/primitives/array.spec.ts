@@ -550,6 +550,27 @@ describe('array', () => {
     expect(sons[1]!.name.touched()).toBe(true);
   });
 
+  it('accepts a property name as a trackBy shorthand', () => {
+    const people = array(
+      { id: field('', { nullable: false }), name: field('') },
+      [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
+      { trackBy: 'id' },
+    );
+    const alex = people[0]!;
+    const kirill = people[1]!;
+    alex.markAsTouched();
+
+    people.set([
+      { id: 'kirill', name: 'Kirill updated' },
+      { id: 'alex', name: 'Alex updated' },
+    ]);
+
+    expect(people[0]).toBe(kirill);
+    expect(people[1]).toBe(alex);
+    expect(alex.touched()).toBe(true);
+    expect(alex.path()).toEqual(['1']);
+  });
+
   it('updates programmatically through keyed reconciliation', () => {
     const people = array(
       { id: field('', { nullable: false }), name: field('') },
