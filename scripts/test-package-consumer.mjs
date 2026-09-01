@@ -77,13 +77,15 @@ try {
 
   writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
     import '@angular/compiler';
-    import { array, field, form, required } from '@gem/ng-forms';
+    import { array, field, form, group, required } from '@gem/ng-forms';
     const profile = form({
       name: field('', [required]),
+      preferences: group({ theme: field('dark') }),
       addresses: array({ city: field('') }, [{ city: 'Zurich' }]),
     });
     if (profile.name.valid()) throw new Error('Required validation was not preserved in the package.');
     if (profile.addresses[0].city() !== 'Zurich') throw new Error('Array values were not preserved in the package.');
+    if (profile.preferences.theme() !== 'dark') throw new Error('Group values were not preserved in the package.');
   `);
   run(process.execPath, [join(temporaryDirectory, 'runtime.mjs')]);
 

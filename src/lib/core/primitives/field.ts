@@ -298,6 +298,7 @@ export function field<TValue>(
   const api: FieldApi<TValue> = { ...members, patch: set };
   const internalApi = {
     ...api,
+    _nodeType: 'field' as const,
     _controlDebounce: fieldControlDebounce,
     _controlValue: fieldControlValue.asReadonly(),
     _setControlValue: setControlValue,

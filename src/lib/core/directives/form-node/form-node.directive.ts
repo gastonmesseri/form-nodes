@@ -10,7 +10,7 @@ import { FormNodeNgControl } from './form-node-ng-control';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import type { ValidationError } from '../../validation/validation.type';
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
-import type { InternalNode, Node, NodeValue } from '../../types/node.type';
+import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../../types/node.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
@@ -94,7 +94,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   ngOnInit() {
     if (this.nativeForm) {
-      this.requireFormNode();
+      this.requireObjectNode();
       this.renderer.setAttribute(this.element, 'novalidate', '');
       return;
     }
@@ -115,20 +115,28 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   _submitNativeForm(event: Event) {
     if (!this.nativeForm) return;
     event.preventDefault();
-    this.requireFormNode().submit();
+    const api = this.requireObjectNode();
+    if (api._nodeType === 'form') {
+      void (api as typeof api & { submit(): Promise<boolean> }).submit();
+      return;
+    }
+    api.markAsTouched();
+    api.flush();
   }
 
   /** @internal Handles reset only when this binding is hosted by a native form. */
   _resetNativeForm(event: Event) {
     if (!this.nativeForm) return;
     event.preventDefault();
-    this.requireFormNode().reset();
+    this.requireObjectNode().reset();
   }
 
-  private requireFormNode(): { submit(): Promise<boolean>; reset(): void } {
-    const api = this._field.$api as Partial<{ submit(): Promise<boolean>; reset(): void }>;
-    if (typeof api.submit !== 'function') throw new Error('formNode: a native form requires a form() node');
-    return api as { submit(): Promise<boolean>; reset(): void };
+  private requireObjectNode(): InternalNodeApi {
+    const api = (this._field as unknown as InternalNode).$api;
+    if (api._nodeType !== 'form' && api._nodeType !== 'group') {
+      throw new Error('formNode: a native form requires a form() or group() node');
+    }
+    return api;
   }
 
   private installClassBindingEffect() {

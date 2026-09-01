@@ -4,7 +4,8 @@ title: Creating nodes
 
 # Creating nodes
 
-Gem Forms models a form as a tree of `field()`, `form()`, and `array()` nodes. TypeScript infers the complete value shape from that tree.
+Gem Forms models a workflow as a tree of `field()`, `group()`, `form()`, and `array()` nodes.
+TypeScript infers the complete value shape from that tree.
 
 ## Fields
 
@@ -55,12 +56,50 @@ that edit a structured value atomically, such as a multi-select editing `string[
 `form()` or `array()` nodes only when the value's parts need independent bindings and state. See
 [Choosing a primitive](../guides/choosing-a-primitive.md).
 
+## A container is optional
+
+You do not have to place fields inside `form()` or `group()`. A normal JavaScript object can organize
+independent nodes when no aggregate node behavior is needed:
+
+```ts
+const profileFields = {
+  displayName: field(''),
+  emailAddress: field(''),
+};
+
+profileFields.displayName(); // ''
+profileFields.emailAddress.set('marco@example.com');
+```
+
+These fields remain fully usable and bindable, but the object itself is not a node. It cannot be
+called to read one aggregate value, does not expose aggregate validation or interaction state, and
+cannot provide `set()`, `patch()`, `reset()`, inherited configuration, child paths, or parent/root
+navigation. Each field is an independent root.
+
+Wrap the same structure in `group()` when those tree capabilities are useful but the root does not
+own submission:
+
+```ts
+const profileGroup = group({
+  displayName: field(''),
+  emailAddress: field(''),
+});
+
+profileGroup();      // { displayName: '', emailAddress: '' }
+profileGroup.valid();
+profileGroup.reset();
+```
+
+Use `form()` when the root additionally represents a submission workflow or binds to a native
+`<form>` element. A root `group()` is therefore a normal and reasonable choice for settings panels,
+reusable editors, filter models, and other structured UI that has no independent submit action.
+
 ## Forms
 
 Use `form()` to combine named nodes into an object:
 
 ```ts
-import { field, form } from '@gem/ng-forms';
+import { field, form, group } from '@gem/ng-forms';
 
 const profile = form({
   name: field(''),
@@ -72,7 +111,7 @@ profile.name(); // ''
 profile.age(); // null
 ```
 
-Nested objects are shorthand for nested forms:
+Nested objects are shorthand for groups:
 
 ```ts
 const profile = form({
@@ -86,11 +125,11 @@ const profile = form({
 profile.address.city(); // ''
 ```
 
-Use an explicit nested `form()` when that level needs validators, state options, submission behavior, or validator messages:
+Use an explicit `group()` when that level needs validators, state options, or validator messages:
 
 ```ts
 const profile = form({
-  address: form({
+  address: group({
     city: field(''),
     country: field(''),
   }, {
@@ -99,7 +138,9 @@ const profile = form({
 });
 ```
 
-Forms always have a non-null object value. Use a field containing an object when the object itself must be nullable.
+Groups and forms always have non-null object values. Use a field containing an object when the
+object itself must be nullable. Use an explicit nested `form()` only when that branch owns an
+independent submission action.
 
 An empty form is valid, enabled, writable, visible, untouched, and pristine by default and has the
 value `{}`, unless a form-level validator or state option changes that result.

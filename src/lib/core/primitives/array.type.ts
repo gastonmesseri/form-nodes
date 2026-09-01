@@ -2,11 +2,12 @@ import type { Signal } from '@angular/core';
 
 import type { Field } from './field.type';
 import type { Form, FormOptions } from './form.type';
+import type { Group } from './group.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { DisabledReason, MarkAsTouchedOptions, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 
-export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
+export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission'> & {
   /**
    * **Initial array contents.** Accepts either:
    *
@@ -69,12 +70,15 @@ export type ArrayOptions<TValue = any> = FormOptions<TValue> & {
 export type ArrayItemWithParent<TItem extends Node, TParent extends Node> =
   TItem extends Field<infer TValue, Node> ? Field<TValue, TParent>
     : TItem extends Form<infer TNodes, Node> ? Form<TNodes, TParent>
-      : TItem extends ArrayNode<infer TNestedItem, Node> ? ArrayNode<TNestedItem, TParent> : TItem;
+      : TItem extends Group<infer TNodes, Node> ? Group<TNodes, TParent>
+        : TItem extends ArrayNode<infer TNestedItem, Node> ? ArrayNode<TNestedItem, TParent> : TItem;
 
 export type ArrayValue<TItem extends Node> =
   TItem extends Form<infer TNodes, Node>
     ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
-    : NodeValue<TItem>[];
+    : TItem extends Group<infer TNodes, Node>
+      ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
+      : NodeValue<TItem>[];
 export type ArraySet<TItem extends Node> = readonly NodeSet<TItem>[];
 export type ArrayPatch<TItem extends Node> = readonly NodePatch<TItem>[];
 
@@ -111,9 +115,9 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * `myForm.items[0]?.keyInParent()` returns `0` for the first item.
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
-  value: Signal<TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]>;
+  value: Signal<ArrayValue<TItem>>;
   /** Complete value represented by a control bound directly to this array. Pending descendant control values are not aggregated. */
-  controlValue: Signal<TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[]>;
+  controlValue: Signal<ArrayValue<TItem>>;
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
   forEach(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => void): void;
   map<TResult>(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => TResult): TResult[];
@@ -266,7 +270,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
 
 export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
   & {
-    (): TItem extends Form<infer TNodes, Node> ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[] : NodeValue<TItem>[];
+    (): ArrayValue<TItem>;
     /**
      * Complete array API and the recommended access path for application code.
      *

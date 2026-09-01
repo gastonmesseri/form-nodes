@@ -4,7 +4,8 @@ title: 4. Add nesting and state
 
 # 4. Add nesting and reactive state
 
-Group related fields with shorthand objects. Use an explicit nested `form()` when that branch needs its own configuration.
+Group related fields with shorthand objects. Use an explicit `group()` when that branch needs its
+own configuration.
 
 The validators from the previous step are omitted here so the nested structure remains easy to
 scan. They can stay on the same fields in the complete application without changing how nesting
@@ -24,7 +25,7 @@ myForm = form({
     postalCode: field(''),
   },
 
-  billingAddress: form({
+  billingAddress: group({
     street: field(''),
     city: field(''),
     postalCode: field(''),
@@ -36,10 +37,11 @@ myForm = form({
 });
 ```
 
-Add `signal` to the Angular import:
+Add `signal` to the Angular import and `group` to the Gem Forms import:
 
 ```ts
 import { Component, signal } from '@angular/core';
+import { group } from '@gem/ng-forms';
 ```
 
 The billing branch reacts to `useShippingAddress()` automatically. While disabled:
@@ -68,6 +70,6 @@ this.myForm.patch({
 - [Tree navigation and API access](../concepts/tree-and-api.md) explains direct children, paths,
   parents, roots, and name collisions.
 - [Values and state](../concepts/values-and-state.md) covers nested updates and aggregate state.
-- [`form()` reference](../reference/form.md) documents nested shorthand and explicit form options.
+- [`group()` reference](../reference/group.md) documents nested shorthand and explicit group options.
 
 Continue with [Step 5: Manage a dynamic array](./05-dynamic-arrays.md).

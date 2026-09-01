@@ -1,6 +1,6 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, field, form, required } from '@gem/ng-forms';
+import { FormNode, array, field, form, group, required } from '@gem/ng-forms';
 
 @Component({
   selector: 'package-consumer',
@@ -18,11 +18,13 @@ import { FormNode, array, field, form, required } from '@gem/ng-forms';
 export class PackageConsumer {
   readonly profile = form({
     name: field('Marco', [required]),
+    preferences: group({ theme: field('dark') }),
     addresses: array({ city: field('Zurich') }, [{ city: 'Madrid' }]),
   });
 
   readonly name: string | null = this.profile.name();
   readonly city: string | null = this.profile.addresses[0]!.city();
+  readonly theme: string | null = this.profile.preferences.theme();
   readonly nameBinding = viewChild.required<FormNode<typeof this.profile.name>>('nameBinding');
 
   focusName() {

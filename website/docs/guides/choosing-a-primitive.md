@@ -2,21 +2,26 @@
 title: Choosing a primitive
 ---
 
-# Choosing between `field()`, `form()`, and `array()`
+# Choosing between `field()`, `group()`, `form()`, and `array()`
 
 Choose a primitive from the shape and lifecycle of the value you need to model:
 
 - Use `field()` for one replaceable value.
-- Use `form()` for a fixed set of named child nodes.
+- Use `group()` or nested shorthand for a fixed set of named child nodes.
+- Use `form()` for the fixed object tree that owns a submission workflow.
 - Use `array()` for a dynamic ordered collection of repeated nodes.
 
-Most application forms combine all three rather than choosing only one.
+Most application forms combine several primitives rather than choosing only one.
+
+The container itself is optional. Independent fields may live in a normal JavaScript object. Use a
+root `group()` when they should form one aggregate tree without submission, and use `form()` when
+that tree owns a submission workflow.
 
 For broader domain and UI design decisions after choosing a primitive, continue with
 [Form modeling patterns](./form-modeling-patterns.md).
 
 ```ts
-import { array, field, form, uniqueItems } from '@gem/ng-forms';
+import { array, field, form, group, uniqueItems } from '@gem/ng-forms';
 
 const myForm = form({
   name: field(''),
@@ -33,18 +38,45 @@ const myForm = form({
 
 ## At a glance
 
-| Question | `field()` | `form()` | `array()` |
-| --- | --- | --- | --- |
-| Value shape | Any single value | Non-null object | Non-null array |
-| Structure | Leaf | Fixed named children | Dynamic repeated items |
-| Direct child access | No | `profile.name` | `people[0]`, `at(0)` |
-| Complete assignment | `set(value)` | `api.set(object)` | `set(values)` |
-| Partial update | Leaf replacement through `api.patch()` | Recursive `api.patch(partial)` | Positional `patch(partials)` |
-| Structural operations | None | None | `push`, `insert`, `removeAt`, `move`, `swap`, `clear` |
-| Nullable by default | Yes | No | No |
-| Validator receives | Field value | Complete object value | Complete array value |
-| Descendant state aggregation | No descendants | Named descendants | Current item descendants |
-| Typical use | Name, date, selection, optional object | Address, profile, settings | Contacts, line items, attendees |
+| Question | `field()` | `group()` | `form()` | `array()` |
+| --- | --- | --- | --- | --- |
+| Value shape | Any single value | Non-null object | Non-null object | Non-null array |
+| Structure | Leaf | Fixed named children | Fixed workflow tree | Dynamic repeated items |
+| Submission | No | Inherited state only | Own `submit()` action | Inherited state only |
+| Nullable by default | Yes | No | No | No |
+| Typical use | Name, selection, optional object | Address, settings branch | Registration, checkout, subflow | Contacts, line items |
+
+## Plain object, root group, or form?
+
+All three declarations are valid, but they provide different capabilities:
+
+```ts
+const independentFields = {
+  query: field(''),
+  category: field(''),
+};
+
+const filters = group({
+  query: field(''),
+  category: field(''),
+});
+
+const searchForm = form({
+  query: field(''),
+  category: field(''),
+}, {
+  submission: { action: runSearch },
+});
+```
+
+| Declaration | What it adds |
+| --- | --- |
+| Plain object | Organization only; every field remains an independent root node |
+| Root `group()` | Aggregate value, tree navigation, propagation, validation, configuration, updates, and reset |
+| `form()` | All group-like structural behavior plus an owned submission workflow |
+
+Choose the smallest capability boundary that matches the UI. A root group is particularly useful
+for reusable editors, filters, and settings sections that need aggregate state without submission.
 
 ## Use `field()` for one replaceable value
 
@@ -77,9 +109,9 @@ Use a field for an object when:
 - the object itself must be nullable; or
 - individual properties do not need their own errors, touched state, or bindings.
 
-## Use `form()` for named children
+## Use `group()` for named children
 
-A form gives each property its own node while aggregating them into a typed object value.
+A group gives each property its own node while aggregating them into a typed object value.
 
 ```ts
 const myForm = form({
@@ -97,7 +129,7 @@ Choose this representation when properties need independent controls, validation
 reactive access. The set of named children is fixed by the definition; `patch()` changes their
 values, not the structure.
 
-A plain object in a form definition is shorthand for a nested `form()`:
+A plain object in a form definition is shorthand for a `group()`:
 
 ```ts
 const myForm = form({
@@ -108,8 +140,8 @@ const myForm = form({
 });
 ```
 
-Use explicit `form({...}, options)` when the nested object itself needs validators, state options,
-validator messages, or submission behavior.
+Use explicit `group({...}, options)` when the nested object itself needs validators, state options,
+or validator messages. Use an explicit nested `form()` only for an independent submission workflow.
 
 ## Use `array()` for repeated dynamic nodes
 
@@ -139,10 +171,10 @@ myForm.contacts.push({
 Choose `array()` when users or application code can add, remove, or reorder items. Each item is an
 independent node tree with its own path, validation, touched state, and dirty state.
 
-If the collection has a fixed number of semantically named positions, a form is usually clearer:
+If the collection has a fixed number of semantically named positions, a group is usually clearer:
 
 ```ts
-const period = form({
+const period = group({
   start: field<Date>(),
   end: field<Date>(),
 });
@@ -156,7 +188,7 @@ const milestones = array(field<Date>(), {
 });
 ```
 
-## Object field or nested form?
+## Object field or group?
 
 The same TypeScript value shape can represent different UI behavior.
 
@@ -182,8 +214,16 @@ const asChildNodes = form({
 replaced as a unit. `asChildNodes.address` always has an object value and exposes separately
 bindable `city` and `country` nodes.
 
-Prefer the nested form for ordinary groups of HTML inputs. Prefer the object field when the UI and
+Prefer the group for ordinary groups of HTML inputs. Prefer the object field when the UI and
 domain genuinely treat the object atomically.
+
+## Use `form()` for a workflow boundary
+
+`form()` has the same fixed object behavior as a group and additionally exposes `submission` and
+`submit()`. Use it at the root of an application workflow. An explicit nested `form()` is useful
+only when that branch is independently submittable; ordinary nested structure should remain a
+group or shorthand object. Binding a group to a native `<form [formNode]>` is tolerated and retains
+touch, flush, and reset behavior, but only a form can configure and run a submission action.
 
 ## Array field or `array()`?
 

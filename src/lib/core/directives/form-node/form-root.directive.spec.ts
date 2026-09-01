@@ -8,6 +8,7 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
+import { group } from '../../primitives/group';
 import { FormNode } from './form-node.directive';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
@@ -18,6 +19,56 @@ beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platfor
 afterAll(() => TestBed.resetTestEnvironment());
 
 describe('FormNode on a native form', () => {
+  it('binds a group without submission behavior and preserves touch and reset behavior', () => {
+    @Component({
+      template: `<form [formNode]="address"><input [formNode]="address.city"></form>`,
+      standalone: true,
+      imports: [FormNode],
+    })
+    class Host {
+      readonly address = group({ city: field('Zurich', { debounce: 'blur' }) });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const element = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+
+    input.value = 'Bern';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(fixture.componentInstance.address.city()).toBe('Zurich');
+
+    element.dispatchEvent(submitEvent);
+
+    expect(element.noValidate).toBe(true);
+    expect(submitEvent.defaultPrevented).toBe(true);
+    expect(fixture.componentInstance.address.touched()).toBe(true);
+    expect(fixture.componentInstance.address.city.touched()).toBe(true);
+    expect(fixture.componentInstance.address.city()).toBe('Bern');
+
+    const resetEvent = new Event('reset', { bubbles: true, cancelable: true });
+    element.dispatchEvent(resetEvent);
+
+    expect(resetEvent.defaultPrevented).toBe(true);
+    expect(fixture.componentInstance.address.touched()).toBe(false);
+  });
+
+  it('still rejects scalar nodes as native form roots', () => {
+    @Component({
+      template: `<form [formNode]="name"></form>`,
+      standalone: true,
+      imports: [FormNode],
+    })
+    class Host {
+      readonly name = field('Marco');
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    expect(() => fixture.detectChanges())
+      .toThrowError('formNode: a native form requires a form() or group() node');
+  });
+
   it('sets novalidate and submits the bound form node', async () => {
     const action = vi.fn();
 

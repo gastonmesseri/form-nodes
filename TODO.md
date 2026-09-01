@@ -2,6 +2,17 @@
 
 ## Up next
 
+- Decide the exact semantics and naming of object-node ancestry lookups.
+  - Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
+    an explicit nested form the workflow owner observed by all of its descendants.
+  - Consider adding a separate `root()` or `rootForm()` signal for retrieving the actual root of the
+    complete node tree instead of overloading `form()` with both workflow ownership and root lookup.
+  - Define whether `root()` returns any root node (`Field`, `Group`, `Form`, or `ArrayNode`) while
+    `rootForm()` returns only a `Form | null`, and choose names that remain clear in IntelliSense.
+  - Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
+    groups inside arrays, detached array items, and nodes that are reparented at runtime.
+  - Review validator contexts, public root-type inference, async dependency tracking, submission
+    inheritance, documentation, and migration impact before changing the current behavior.
 - website docs
   - add some sort of modifiable example (maybe open external web or something) to allow user
     to interact with the example
@@ -10,16 +21,14 @@
   - check what colors for documentation are the most recognize as good by people
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
-- Consider if nested form() should sactually be a different type like group() by default and not another form() (the one inferred from the object)
-  - i think this makes sense because form should be linked conceptually to a <form> (even if not).
-    maybe check other libraries.
-    maybe still allow nested forms
-  - a new type of node similar to form
-  - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
+  - explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
+    e.g. myField = field(); myField() para tomar valor; myField.set() para definir valor, como una signal
 - Consider including dynamic controls in form() (like in reactive forms)
   - update docs if required, check all docs
-  - myForm.add('age', field<number>(2));
-  - handle typing properly for this
+  - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
+  - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
+- Think about how to better structure project folders given current knowledge and existing files
+- Consider arrayToObject utility, and replace Object.fromEntries(array.map(e => [something, something])); // in case it helps reducing complexity
 
 - [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
@@ -284,6 +293,14 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Introduce `group()` as the default fixed-object aggregate while reserving `form()` for a submission/workflow boundary.
+  - Research found Angular Reactive Forms reuses `FormGroup`, Angular 22 Signal Forms separates its uniform `FieldTree` from `FormRoot`, path-based libraries avoid nested form instances, and TanStack uses groups beneath a submission-owning form.
+  - `group()` is a fixed, non-null object node with children, aggregate value/state, validators, inherited configuration, updates, reset, and common node operations.
+  - `group()` omits `submission` and `submit()` while inheriting `submitting()` from an ancestor workflow.
+  - `form()` remains the explicit workflow boundary and the only node accepted by native `<form [formNode]>`.
+  - Plain nested objects and object templates inside `array()` normalize to `group()`; explicit nested `form()` remains available for independent subflows.
+  - Both primitives share the same internal object-node engine, with capability-specific public types and runtime surfaces.
+  - The inference decision is recorded in behavior docs, website reference, the development changelog, and type tests. No consumer migration entry is needed before the first publication.
 - [x] Consolidate root-level `integration-tests`, `type-tests`, and `testing` infrastructure under `tests/integration`, `tests/types`, and `tests/helpers`.
 - [x] Determine whether accessing `mySignal[ɵSIGNAL]` is a supported Angular API.
   - It is exported from `@angular/core`, but Angular explicitly excludes every `ɵ`-prefixed symbol from its supported public API and compatibility guarantees.

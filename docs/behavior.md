@@ -4,7 +4,12 @@ This document records the behavior currently implemented by the library. It is a
 
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.4` at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
-Every `field()`, `form()`, and `array()` exposes its complete API through `.api`, which is the recommended access for application code. Every node also exposes the reserved `$api` escape hatch. `$api` always provides collision-safe access to the node API, including when a form declares a child named `api`. Internal library code uses `$api`, so user-defined children cannot interfere with node operations. `$api` is annotated with `@deprecated` only to reduce its prominence in autocomplete; it is not actually obsolete, remains supported, and is not planned for removal.
+Every `field()`, `group()`, `form()`, and `array()` exposes its complete API through `.api`, which
+is the recommended access for application code. Every node also exposes the reserved `$api` escape
+hatch. `$api` always provides collision-safe access to the node API, including when an object node
+declares a child named `api`. Internal library code uses `$api`, so user-defined children cannot
+interfere with node operations. `$api` is annotated with `@deprecated` only to reduce its prominence
+in autocomplete; it is not actually obsolete, remains supported, and is not planned for removal.
 
 ```ts
 const profile = form({ age: field(23) });
@@ -16,7 +21,9 @@ profile.api.disabled(); // recommended API access
 profile.$api.disabled(); // equivalent reserved escape hatch
 ```
 
-A form also exposes its children as direct properties. When a child name collides with a direct API member, the child always wins in both runtime behavior and TypeScript. Continue using `.api` in the common case; use `$api` when guaranteed collision-free access is needed:
+A group or form also exposes its children as direct properties. When a child name collides with a
+direct API member, the child always wins in both runtime behavior and TypeScript. Continue using
+`.api` in the common case; use `$api` when guaranteed collision-free access is needed:
 
 ```ts
 const profile = form({
@@ -28,7 +35,9 @@ profile.readonly(); // false
 profile.api.readonly(); // readonly state of the form
 ```
 
-Every form also exposes a stable, readonly `children` map for explicit tree navigation. Its entries are the same node instances exposed directly on the form, and nested forms provide their own `children` map:
+Every group and form also exposes a stable, readonly `children` map for explicit tree navigation.
+Its entries are the same node instances exposed directly on the aggregate, and nested groups and
+forms provide their own `children` maps:
 
 ```ts
 const profile = form({
@@ -50,7 +59,10 @@ profile.children(); // 'value'
 profile.api.children.children(); // 'value'
 ```
 
-Native function members such as `name`, `apply`, `arguments`, `call`, and `length` are hidden from the public `field()` and `form()` types. If a form declares a child with one of those names, that child is intentionally exposed instead and takes precedence in both TypeScript and runtime behavior:
+Native function members such as `name`, `apply`, `arguments`, `call`, and `length` are hidden from
+the public `field()`, `group()`, and `form()` types. If an object node declares a child with one of
+those names, that child is intentionally exposed instead and takes precedence in both TypeScript
+and runtime behavior:
 
 ```ts
 const example = form({
@@ -64,12 +76,19 @@ example.apply(); // 'value'
 
 ## Design guarantees
 
-- The library provides small, typed, signal-based `field()` and `form()` primitives.
-- `field()` and `form()` can be created and used anywhere without an Angular injection context.
+- The library provides small, typed, signal-based `field()`, `group()`, `form()`, and `array()` primitives.
+- Every primitive can be created and used anywhere without an Angular injection context.
 - Synchronous behavior and node-driven asynchronous validation do not require dependency injection.
 - Asynchronous validators always use an Angular reactive watcher, including outside an injection context.
 - Signals expose reactive state while actions are declared as methods in public types, allowing editors to distinguish state from behavior in IntelliSense.
 - Values remain programmatically readable and writable regardless of disabled, readonly, or hidden state.
+
+Every runtime node carries an internal readonly discriminant at `$api._nodeType`. Its value is one
+of `'field'`, `'group'`, `'form'`, or `'array'` and is preserved by template cloning. The property is
+intentionally absent from public node API types: it supports internal capability checks, debugging,
+and implementation selection without making structural checks such as the presence of `submit()`
+the source of truth. The separate private symbol used by `isNode()` remains responsible only for
+answering whether an arbitrary value is a library node.
 
 ## Public API documentation conventions
 
@@ -211,7 +230,7 @@ form({ name: field('David') }, [validator], { hidden: false });
 
 `injector` has the same optional asynchronous-validation role as it does for fields.
 
-A definition can contain fields, explicit nested forms, or shorthand nested objects.
+A definition can contain fields, groups, explicit nested forms, arrays, or shorthand nested objects.
 
 A form is callable and returns its aggregated value:
 
@@ -233,20 +252,22 @@ profile.api(); // 'domain value'
 profile.$api.value(); // { api: 'domain value' }
 ```
 
-## Nested forms
+## Groups and nested forms
 
-Nested containers can be explicit:
+`group()` is the ordinary fixed-object aggregate. It has children, aggregate value and state,
+validators, configuration, and all common node operations, but it has no `submission` option or
+`submit()` method:
 
 ```ts
 const profile = form({
-  address: form({
+  address: group({
     city: field('Moscow'),
     country: field('Russia'),
   }),
 });
 ```
 
-They can also use shorthand objects:
+Plain nested objects are shorthand for groups:
 
 ```ts
 const profile = form({
@@ -257,9 +278,12 @@ const profile = form({
 });
 ```
 
-Shorthand nesting works at any depth. Every shorthand object is normalized to an ordinary nested form without validators or options. Use an explicit `form()` when that level needs its own validators or options.
+Shorthand nesting works at any depth. Every shorthand object is normalized to an ordinary
+`group()` without validators or options. Use an explicit `group()` when that branch needs its own
+validators or structural options. Use an explicit nested `form()` only when the branch intentionally
+owns an independent submission workflow.
 
-Both forms provide the same child access and value shape:
+Groups and forms provide the same child access and value shape:
 
 ```ts
 profile.address.city(); // 'Moscow'
@@ -272,8 +296,8 @@ Changes to any descendant are reflected reactively in every ancestor value.
 ## Type inference
 
 - Field value types are inferred from their initial values or explicit generic arguments.
-- Form value types are recursively inferred from their fields and nested forms.
-- Shorthand objects infer the same values and nested field access as explicit forms.
+- Form and group value types are recursively inferred from their descendants.
+- Shorthand objects infer the same values and nested field access as explicit groups.
 - Validators receive a `FieldContext` whose `value` signal contains the inferred node value.
 - `set()` and `reset(value)` require complete values at compile time.
 - `patch()` accepts recursive partial form values.
@@ -318,10 +342,12 @@ This differs from Angular Reactive Forms, where `nonNullable` also controls whet
 The current public nullability model deliberately distinguishes leaf values from structural containers:
 
 - `field()` is nullable by default. Pass `{ nullable: false }` when `null` is not a valid field value.
-- `form()` always exposes a non-null object value. This applies to root forms, explicit nested forms, and shorthand nested objects; a nested form cannot itself be replaced with `null` or `undefined`.
+- `form()` and `group()` always expose non-null object values. A structural object node cannot itself be replaced with `null` or `undefined`.
 - `array()` always exposes a non-null array value. It accepts `null` or `undefined` through complete-value inputs as an absence shorthand and normalizes either value to `[]`.
 
-Consequently, nullable business values belong naturally in fields, including fields whose value is an object. `form()` and `array()` represent live structural containers whose children, aggregation, state propagation, and paths remain available at all times. This is the library's current deliberate API decision and may be revisited only as an explicit public behavior change.
+Consequently, nullable business values belong naturally in fields, including fields whose value is
+an object. `form()`, `group()`, and `array()` represent live structural containers whose children,
+aggregation, state propagation, and paths remain available at all times.
 
 ## Value operations
 
@@ -595,7 +621,15 @@ Every API also exposes `parent: Signal<Node | null>`, which returns the complete
 
 Nodes returned by the common validator API's `parent()` and `form()` remain callable, but native JavaScript function members such as `apply`, `bind`, `call`, `name`, and `prototype` are intentionally hidden from the public type and IntelliSense. Exact `Field` and `Form` return types apply the same hiding while preserving form keys that intentionally use one of those names.
 
-`api.form` resolves the root form for the current node. A root form returns itself, every nested form and field returns the same root form, and a standalone field returns `null`. Nodes reached through a form refine the signal to that exact root form type, including across nested forms. Because it is reactive, inserting a standalone field into a form updates `form()` and retriggers automatic async validators that read it. Validator callbacks can use the flat `context.form()` or the equivalent `context.api.form()`. A validator declared before its owner is known retains `Node | null`; supplying the refined field API explicitly, such as `asyncValidator<TValue, typeof profile.age.api>(...)`, exposes `typeof profile | null` through both surfaces inside the callback.
+`api.form` resolves the root object node for the current node. A root form or standalone group
+returns itself; every nested group, form, array, and field returns the same root object node; and a
+standalone field returns `null`. Nodes reached through a form refine the signal to that exact root
+form type, including across groups and nested forms. Because it is reactive, inserting a standalone
+field into a form updates `form()` and retriggers automatic async validators that read it. Validator
+callbacks can use the flat `context.form()` or the equivalent `context.api.form()`. A validator
+declared before its owner is known retains `Node | null`; supplying the refined field API explicitly,
+such as `asyncValidator<TValue, typeof profile.age.api>(...)`, exposes `typeof profile | null`
+through both surfaces inside the callback.
 
 Root-form type resolution follows at most ten parent links. This limit affects TypeScript inference only: paths within ten levels retain the exact root form type, while deeper paths safely fall back to `Node`. Runtime parent and root traversal remains correct and has no depth limit.
 
@@ -1382,7 +1416,9 @@ const profile = form({
 });
 ```
 
-A plain object returned by a factory or used as a template is normalized to a `form()` node. Both forms may also define a `field()`, an explicit `form()`, or another `array()`:
+A plain object returned by a factory or used as a template is normalized to a `group()` node.
+Templates may also define a `field()`, an explicit `group()`, an explicit `form()`, or another
+`array()`:
 
 ```ts
 const tags = array(() => field(''), ['angular', 'signals']);
@@ -1416,7 +1452,9 @@ const twoDefaultSons = array(
 );
 ```
 
-The explicit factory contract deliberately prevents node reuse. Returning the same live `field()`, `form()`, or `array()` instance more than once throws because items must not share values, parents, interaction state, validation state, or asynchronous watchers.
+The explicit factory contract deliberately prevents node reuse. Returning the same live `field()`,
+`group()`, `form()`, or `array()` instance more than once throws because items must not share values,
+parents, interaction state, validation state, or asynchronous watchers.
 
 ### Constructor signatures
 
@@ -1708,6 +1746,10 @@ pending validation. Only one action may run at a time. Concurrent calls resolve 
 `submitting()` is `true` on the submitted form and inherited by every descendant. The state is
 cleared in a `finally` block if the action succeeds or rejects.
 
+Calling `submit()` on a form without a configured action is non-destructive: it marks and flushes
+the subtree and resolves to `false`. It does not throw. This keeps an explicit `form()` usable where
+a structural `group()` would also have been sufficient.
+
 `FormNode` also binds this behavior when its `[formNode]` host is a native form:
 
 ```html
@@ -1718,11 +1760,13 @@ cleared in a `finally` block if the action succeeds or rejects.
 </form>
 ```
 
-The same directive imported for controls applies `novalidate`, always prevents native submit navigation, and calls the
-configured `submit()` operation. Native reset is also prevented and delegated to the form node so
-the complete reactive tree and its bindings reset consistently. `reset()` retains the library's
-existing semantics: without an explicit value it clears interaction state and pending control
-state while retaining current values.
+The same directive imported for controls applies `novalidate` and always prevents native submit
+navigation. A bound `form()` calls its `submit()` operation. A bound `group()` is deliberately
+tolerated: submit marks the complete group subtree touched and flushes pending control values but
+runs no application action. Native reset is prevented and delegated to either object node so its
+complete reactive tree and bindings reset consistently. A field or array remains invalid as the
+root binding of a native `<form>`. `reset()` retains the library's existing semantics: without an
+explicit value it clears interaction state and pending control state while retaining current values.
 
 This behavior follows Angular Signal Forms 22.1.4 submission state and `FormRoot` behavior
 (`898380974d49cf7976e9d89cc74a0801a26ce7b1`). It was rechecked against the installed Angular
@@ -1731,10 +1775,15 @@ This behavior follows Angular Signal Forms 22.1.4 submission state and `FormRoot
 intentionally: Angular exposes two standalone directives, while this library requires only
 `FormNode`; its submission action also receives the exact form node and a typed value snapshot and
 currently does not interpret returned server-validation errors.
+The tolerant `group()` native-form binding is a deliberate library extension: Angular's `FormRoot`
+does not expose an equivalent public distinction between this library's structural group and
+submission-owning form.
 
 ## Control binding with `[formNode]`
 
-`FormNode` binds a field node to a native form control, and binds field, form, or array nodes to an explicitly provided signal custom control or a component that implements Angular's `ControlValueAccessor` contract:
+`FormNode` binds a field node to a native form control, and binds field, group, form, or array nodes
+to an explicitly provided signal custom control or a component that implements Angular's
+`ControlValueAccessor` contract:
 
 ```ts
 @Component({

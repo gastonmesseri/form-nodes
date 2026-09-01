@@ -7,7 +7,8 @@ import { computedFunction } from '../utils/computed-function';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import { form, type NormalizedNode } from './form';
+import { group } from './group';
+import type { NormalizedNode } from './form';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
@@ -254,7 +255,7 @@ export function array<TDefinition extends NodeDefinition>(
   const createItem = (): TItem => {
     const definition = factory();
     trackDefinition(definition);
-    return (isNode(definition) ? definition : form(definition)) as TItem;
+    return (isNode(definition) ? definition : group(definition)) as TItem;
   };
   const initialValues = typeof normalizedInitial === 'number' ? null : [...normalizedInitial];
   const initialCount = typeof normalizedInitial === 'number' ? normalizedInitial : normalizedInitial.length;
@@ -618,6 +619,7 @@ export function array<TDefinition extends NodeDefinition>(
   };
   const internalApi = {
     ...api,
+    _nodeType: 'array' as const,
     _controlDebounce: arrayControlDebounce,
     _controlValue: api.controlValue,
     _setControlValue: (value: TInput) => arrayControlValueBuffer.set(normalizeArrayValue(value)),
