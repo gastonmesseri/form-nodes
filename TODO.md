@@ -234,6 +234,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- Include the rejected `actual` measurement or value in applicable built-in validation errors.
 - Implement `minWords()` and `maxWords()` with deterministic Unicode word counting.
 - Implement the `oneOf()` validator with static or reactive allowed values.
 - Add centralized default messages and common custom-message options to the built-in validators.

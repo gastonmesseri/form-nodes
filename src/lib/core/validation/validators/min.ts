@@ -15,7 +15,7 @@ export const min = (
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'min', min: resolvedMinimum, message: options?.message ?? defaultValidatorMessages.min(resolvedMinimum) }
+      ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.min(resolvedMinimum) }
       : null;
   }, MIN_METADATA, minimum);
 };

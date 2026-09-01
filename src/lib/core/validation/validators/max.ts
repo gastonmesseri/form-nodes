@@ -15,7 +15,7 @@ export const max = (
     const resolvedMaximum = typeof maximum === 'function' ? maximum() : maximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'max', max: resolvedMaximum, message: options?.message ?? defaultValidatorMessages.max(resolvedMaximum) }
+      ? { kind: 'max', max: resolvedMaximum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.max(resolvedMaximum) }
       : null;
   }, MAX_METADATA, maximum);
 };
