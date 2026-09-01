@@ -16,16 +16,76 @@ export interface ValidationError {
 export interface BuiltInValidationErrorMap {
   readonly required: ValidationError & { readonly kind: 'required' };
   readonly email: ValidationError & { readonly kind: 'email' };
-  readonly min: ValidationError & { readonly kind: 'min'; readonly min: number; readonly actual: number };
-  readonly max: ValidationError & { readonly kind: 'max'; readonly max: number; readonly actual: number };
-  readonly minLength: ValidationError & { readonly kind: 'minLength'; readonly minLength: number; readonly actual: number };
-  readonly maxLength: ValidationError & { readonly kind: 'maxLength'; readonly maxLength: number; readonly actual: number };
-  readonly pattern: ValidationError & { readonly kind: 'pattern'; readonly pattern: RegExp; readonly actual: string };
-  readonly minDate: ValidationError & { readonly kind: 'minDate'; readonly minDate: Date; readonly actual: Date };
-  readonly maxDate: ValidationError & { readonly kind: 'maxDate'; readonly maxDate: Date; readonly actual: Date };
-  readonly oneOf: ValidationError & { readonly kind: 'oneOf'; readonly options: readonly unknown[]; readonly actual: unknown };
-  readonly minWords: ValidationError & { readonly kind: 'minWords'; readonly minWords: number; readonly actual: number };
-  readonly maxWords: ValidationError & { readonly kind: 'maxWords'; readonly maxWords: number; readonly actual: number };
+  readonly min: ValidationError & {
+    readonly kind: 'min';
+    /** Resolved minimum required by the validator. */
+    readonly min: number;
+    /** Rejected numeric value. */
+    readonly actual: number;
+  };
+  readonly max: ValidationError & {
+    readonly kind: 'max';
+    /** Resolved maximum allowed by the validator. */
+    readonly max: number;
+    /** Rejected numeric value. */
+    readonly actual: number;
+  };
+  readonly minLength: ValidationError & {
+    readonly kind: 'minLength';
+    /** Resolved minimum length or size required by the validator. */
+    readonly minLength: number;
+    /** Observed length or size of the rejected value. */
+    readonly actual: number;
+  };
+  readonly maxLength: ValidationError & {
+    readonly kind: 'maxLength';
+    /** Resolved maximum length or size allowed by the validator. */
+    readonly maxLength: number;
+    /** Observed length or size of the rejected value. */
+    readonly actual: number;
+  };
+  readonly pattern: ValidationError & {
+    readonly kind: 'pattern';
+    /** Resolved regular expression required by the validator. */
+    readonly pattern: RegExp;
+    /** Rejected string value. */
+    readonly actual: string;
+  };
+  readonly minDate: ValidationError & {
+    readonly kind: 'minDate';
+    /** Resolved earliest date allowed by the validator. */
+    readonly minDate: Date;
+    /** Rejected date value. */
+    readonly actual: Date;
+  };
+  readonly maxDate: ValidationError & {
+    readonly kind: 'maxDate';
+    /** Resolved latest date allowed by the validator. */
+    readonly maxDate: Date;
+    /** Rejected date value. */
+    readonly actual: Date;
+  };
+  readonly oneOf: ValidationError & {
+    readonly kind: 'oneOf';
+    /** Resolved collection of allowed values. */
+    readonly options: readonly unknown[];
+    /** Rejected value that was absent from `options`. */
+    readonly actual: unknown;
+  };
+  readonly minWords: ValidationError & {
+    readonly kind: 'minWords';
+    /** Resolved minimum word count required by the validator. */
+    readonly minWords: number;
+    /** Observed word count. */
+    readonly actual: number;
+  };
+  readonly maxWords: ValidationError & {
+    readonly kind: 'maxWords';
+    /** Resolved maximum word count allowed by the validator. */
+    readonly maxWords: number;
+    /** Observed word count. */
+    readonly actual: number;
+  };
 }
 
 /** Extensible registry used to resolve structured errors by their discriminating `kind`. */

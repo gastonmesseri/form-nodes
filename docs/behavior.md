@@ -780,6 +780,23 @@ const age = field<number>(null, {
 | `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, actual, message }` |
 | `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, actual, message }` |
 
+Date limits accept a `Date`, an ISO calendar-date string in `YYYY-MM-DD` format, or a reactive
+function returning either representation. Strings use UTC midnight by default so their behavior
+matches `new Date('YYYY-MM-DD')` and Angular's native date-input constraint formatting. Pass
+`{ parseAs: 'local' }` to use midnight in the consumer's local time zone instead. Invalid calendar
+dates and other string formats disable the constraint, just like an invalid `Date`. Regardless of
+the input representation, validation errors and the public `min()`/`max()` metadata signals expose
+the normalized `Date`.
+
+This is an intentional public-API extension over Angular 22.1.3 Signal Forms, whose `minDate` and
+`maxDate` rules accept `Date` constraints only. Validation and constraint propagation remain
+Date-based after normalization.
+
+```ts
+field<Date>(null, [minDate('2026-08-24')]);
+field<Date>(null, [maxDate('2026-12-31', { parseAs: 'local' })]);
+```
+
 `required` supports direct use and an options object with a message:
 
 ```ts

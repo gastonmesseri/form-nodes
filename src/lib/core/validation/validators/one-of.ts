@@ -8,13 +8,23 @@ import type { ValidatorOptions } from './validator-options';
  * `null`, `undefined`, and the empty string are accepted so this validator can be composed with
  * `required`. Values use `Array.prototype.includes` equality, including reference equality for
  * objects. A source function is evaluated reactively and may return `undefined` to disable the
- * constraint temporarily.
+ * constraint temporarily. A failure produces
+ * `{ kind: 'oneOf', options, actual, message }`, where `options` contains the resolved allowed
+ * values and `actual` contains the rejected value.
+ *
+ * @reactive Tracks signals read by the allowed-values source and revalidates when they change.
  *
  * @example
  * ```ts
  * const myForm = form({
- *   status: field<string>('a', [oneOf(['a', 'b', 'c'])]);
- * })
+ *   status: field<string>('a', [oneOf(['a', 'b', 'c'])]),
+ * });
+ *
+ * const reactiveForm = form({
+ *   status: field('draft', [
+ *     oneOf(() => availableStatuses(), { message: 'Choose an available status' }),
+ *   ]),
+ * });
  * ```
  *
  * @param allowedValues Static allowed values or a reactive function returning them.

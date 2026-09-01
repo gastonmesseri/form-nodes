@@ -664,6 +664,22 @@ describe('field', () => {
     expect(fieldNode.min()).toBe(earliest);
   });
 
+  it('normalizes string date constraints in validation errors and constraint metadata', () => {
+    const latest = signal<string | undefined>('2026-08-24');
+    const fieldNode = field(new Date('2026-08-25T00:00:00.000Z'), [
+      minDate('2026-01-01'),
+      maxDate(() => latest()),
+    ]);
+
+    expect(fieldNode.min()).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+    expect(fieldNode.max()).toEqual(new Date('2026-08-24T00:00:00.000Z'));
+    expect(fieldNode.getError('maxDate')?.maxDate).toEqual(new Date('2026-08-24T00:00:00.000Z'));
+
+    latest.set('2026-12-31');
+    expect(fieldNode.max()).toEqual(new Date('2026-12-31T00:00:00.000Z'));
+    expect(fieldNode.getError('maxDate')).toBeUndefined();
+  });
+
   it('returns the first active error of a requested kind', () => {
     const fieldNode = field('', [
       () => ({ kind: 'duplicate', message: 'First' }),

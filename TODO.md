@@ -4,13 +4,14 @@
 
 - Validator framework roadmap (implement in this order)
   - [x] Add strongly typed built-in validation errors so `getError(kind)` exposes each error's structured properties in IntelliSense, while retaining an extensible fallback for custom error kinds.
-  - Improve every built-in validator's JSDoc with examples, empty-value behavior, reactive constraint semantics, custom-message options, and exact error shapes.
+  - [x] Improve every built-in validator's JSDoc with examples, empty-value behavior, reactive constraint semantics, custom-message options, and exact error shapes.
   - Add a `validator()` authoring helper so reusable custom validators can infer their context and result types without manually spelling generic signatures.
   - Support reactive custom validator messages, comparable to Angular 22 Signal Forms, while preserving static strings as the simplest option.
   - Allow applications to customize or internationalize the centralized default validator messages reactively, both inside and outside Angular dependency injection.
   - Keep using the general `minLength()` and `maxLength()` validators for arrays instead of adding redundant `arrayMinLength()` and `arrayMaxLength()` variants.
   - Do not add `arrayMinMaxLength()` for now; composing `minLength()` and `maxLength()` preserves individual error details and avoids another error shape.
   - Keep individual validator exports instead of adding a `vtValidators` namespace object, preserving straightforward imports and tree shaking.
+  - Consider what other common validators could be useful by checking other libraries (any framekwork)
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
@@ -243,6 +244,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- Document every built-in validator and structured built-in error for IntelliSense.
 - Add an extensible validation error registry and strongly typed `getError(kind)` overloads.
 - Include the rejected `actual` measurement or value in applicable built-in validation errors.
 - Implement `minWords()` and `maxWords()` with deterministic Unicode word counting.

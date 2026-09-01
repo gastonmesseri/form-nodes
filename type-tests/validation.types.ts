@@ -1,4 +1,4 @@
-import { asyncValidator, email, field, form, maxLength, maxWords, min, minWords, oneOf, required, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
+import { asyncValidator, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, required, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -19,6 +19,7 @@ field(18, [min(18, { message: 'Too young' })]);
 field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);
+field<Date>(null, [minDate('2026-08-24'), maxDate(() => '2026-12-31', { parseAs: 'local' })]);
 
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
 const builtInError: BuiltInValidationError = { kind: 'min', min: 2, actual: 1 };
@@ -72,3 +73,6 @@ field('draft', [oneOf([1, 2])]);
 
 // @ts-expect-error word-count validators require string values
 field(42, [minWords(2)]);
+
+// @ts-expect-error date strings only support explicit UTC or local parsing
+minDate('2026-08-24', { parseAs: 'browser' });

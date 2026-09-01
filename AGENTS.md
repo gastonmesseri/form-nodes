@@ -36,7 +36,7 @@
 
 - Declare signals and other stateful values as properties in public object types.
 - Declare actions and operations with method syntax in public object types so editors distinguish state from behavior in IntelliSense.
-- In public configuration types, especially options such as `FieldOptions`, `FormOptions`, and `ArrayOptions`, prefer inline unions when they make the accepted values immediately visible in IntelliSense. Do not hide a small, consumer-relevant union such as `number | 'blur'` or `boolean | string | (() => boolean | string)` behind a named alias merely for reuse; an alias may still exist for consumers or internal contracts when independently useful.
+- In public API signatures and configuration types, especially function parameters and options such as `FieldOptions`, `FormOptions`, and `ArrayOptions`, prefer inline unions when they make the accepted values immediately visible in IntelliSense. Do not hide a small, consumer-relevant union such as `number | 'blur'`, `number | (() => number | undefined)`, or `boolean | string | (() => boolean | string)` behind a named alias merely for reuse; an alias may still exist for consumers or internal contracts when independently useful.
 - Mark public parameterized functions that participate in signal dependency tracking with a JSDoc `@reactive` tag. Briefly describe the tracking or memoization semantics after the tag. Do not add the tag to ordinary `Signal` properties, whose type already communicates reactivity.
 
 ## Public API testing
