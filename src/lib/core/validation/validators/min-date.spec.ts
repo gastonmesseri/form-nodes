@@ -12,7 +12,9 @@ describe('minDate', () => {
     expect(minDate(minimum)(context(middle))).toEqual({
       kind: 'minDate',
       minDate: minimum,
+      message: 'Please enter a date on or after 2026-07-01T00:00:00.000Z.',
     });
+    expect(minDate(minimum, { message: 'Too early' })(context(middle))).toMatchObject({ message: 'Too early' });
     expect(minDate(minimum)(context(minimum))).toBeNull();
     expect(minDate(minimum)(context(null))).toBeNull();
     expect(minDate(minimum)(context(new Date(Number.NaN)))).toBeNull();

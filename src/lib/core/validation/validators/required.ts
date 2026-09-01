@@ -3,22 +3,22 @@ import { createMetadataKey } from '../../metadata/metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { isFieldContext } from '../../utils/field-context-marker';
 import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
+import { defaultValidatorMessages } from './default-validator-messages';
+import type { ValidatorOptions } from './validator-options';
 
 export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
   getInitial: () => false,
   reduce: (current, contribution) => current || contribution,
 });
 
-export type RequiredOptions = {
-  readonly message: string;
-};
+export type RequiredOptions = ValidatorOptions;
 
 const validateRequired = (
   context: FieldContext<unknown>,
   message?: string,
 ): ValidationError | null => {
   if (!isEmpty(context.value())) return null;
-  return message === undefined ? { kind: 'required' } : { kind: 'required', message };
+  return { kind: 'required', message: message ?? defaultValidatorMessages.required() };
 };
 
 /** Creates a required validator with custom options. */

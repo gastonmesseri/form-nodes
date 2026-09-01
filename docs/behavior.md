@@ -767,24 +767,28 @@ const age = field<number>(null, {
 
 | Validator | Accepted value | Empty value behavior | Error shape |
 | --- | --- | --- | --- |
-| `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ kind: 'required' }` |
-| `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min }` |
-| `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max }` |
-| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength }` |
-| `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength }` |
-| `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern }` |
-| `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email' }` |
-| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate }` |
-| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate }` |
+| `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ kind: 'required', message }` |
+| `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, message }` |
+| `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, message }` |
+| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, message }` |
+| `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, message }` |
+| `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, message }` |
+| `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
+| `minDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'minDate', minDate, message }` |
+| `maxDate(limit)` | `Date | null` | Passes for `null` and invalid dates | `{ kind: 'maxDate', maxDate, message }` |
 
 `required` supports direct use and an options object with a message:
 
 ```ts
 field('David', [required]);
 field('David', [required({ message: 'Name is required' })]);
+field('', [email({ message: 'Enter a work email' })]);
+field(16, [min(18, { message: 'You must be at least 18' })]);
 ```
 
-The direct validator produces `{ kind: 'required' }`. The options form adds the message as `{ kind: 'required', message }`. Passing a string directly is intentionally rejected. Field contexts carry a non-enumerable internal symbol marker, allowing overloaded validators to recognize genuine contexts without relying on their structural shape or exposing the marker in the public `FieldContext` type.
+Every built-in validator returns an English default message with its error. The common optional `{ message }` argument replaces that default without changing the error kind or constraint data. `required` and `email` support direct use in a validators array and an options factory; validators that require a constraint accept options as their final argument. Passing a string directly to `required` is intentionally rejected. Field contexts carry a non-enumerable internal symbol marker, allowing overloaded validators to recognize genuine contexts without relying on their structural shape or exposing the marker in the public `FieldContext` type.
+
+Default messages are centralized within the validation package rather than duplicated across validators. This is a deliberate extension over Angular 22.1.4 Signal Forms, which supports static or reactive custom messages but leaves the default message undefined. The current public override is a static string and remains safe outside Angular dependency injection. A future internationalization layer can replace the centralized defaults without changing the structured error contract.
 
 Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
 

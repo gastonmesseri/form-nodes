@@ -2,15 +2,12 @@
 
 ## Up next
 
-- <!> important. Consider including hidden access to .api that is not .api, (maybe $api, or _api) because user defined properties could collide with it
-  and then the form() framework will not work because it uses it on the internal system
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
 - Validators
-  - Consider changing 'kind' to 'type' in validators
+  X- Consider changing 'kind' to 'type' in validators
   - Implement basic validators (get from lab)
-    - And add default messages for each
     - Review required overload and make it work like in lab
   - being reactive or not by default (probably yes but optionally with option that reactive: false)
     - in case is reactive, make it also tick when value has changed (in case i declared value as the value and not as a signal)
@@ -74,6 +71,7 @@
     - Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
     - It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
   - Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
+- Ensure that the library performs tree-shaking (e.g. not used validators )
 - Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
 - Investigate how other angular libraries perform versioning,
   - e.g. do they use the version name as the same as angular current version?
@@ -236,6 +234,9 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- Add centralized default messages and common custom-message options to the built-in validators.
+- <!> important. Consider including hidden access to .api that is not .api, (maybe $api, or _api) because user defined properties could collide with it
+  and then the form() framework will not work because it uses it on the internal system
 - Allow `array()` `trackBy` to accept a typed string property name in addition to a callback.
 - Document the `array()` template and factory first parameter in IntelliSense, including cloning semantics, fresh-definition requirements, and examples.
 - Decide and document nullable `array()` input behavior: normalize `null` and `undefined` container values to an empty array while keeping the observable value structurally non-null.

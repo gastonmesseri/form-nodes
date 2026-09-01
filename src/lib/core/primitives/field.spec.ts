@@ -4,6 +4,7 @@ import { computed, signal, type Signal } from '@angular/core';
 import { field } from './field';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import { email } from '../validation/validators/email';
 import type { InternalNode } from '../types/node.type';
 import { pattern } from '../validation/validators/pattern';
 import { maxDate } from '../validation/validators/max-date';
@@ -353,6 +354,14 @@ describe('field', () => {
     expect(fieldNode.invalid()).toBe(true);
   });
 
+  it('supports direct built-in validators with default messages', () => {
+    const emailField = field('not-an-email', [email]);
+
+    expect(emailField.errors()).toMatchObject([
+      { kind: 'email', message: 'Please enter a valid email address.' },
+    ]);
+  });
+
   it('derives validationStatus from synchronous validation', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const fieldNode = field('', [required]);
@@ -696,11 +705,11 @@ describe('field', () => {
       return fieldNode.getError('required')?.message;
     });
 
-    expect(requiredMessage()).toBeUndefined();
+    expect(requiredMessage()).toBe('This field is required.');
     expect(downstreamRuns).toBe(1);
 
     unrelated.set(true);
-    expect(requiredMessage()).toBeUndefined();
+    expect(requiredMessage()).toBe('This field is required.');
     expect(downstreamRuns).toBe(1);
   });
 

@@ -7,6 +7,7 @@ import { form } from './form';
 import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { minLength } from '../validation/validators/min-length';
 
 describe('array', () => {
   it('exposes the same API through api and $api', () => {
@@ -897,6 +898,14 @@ describe('array', () => {
     expect(names.errors()).toEqual([]);
     minimum.set(3);
     expect(names.invalid()).toBe(true);
+  });
+
+  it('exposes default built-in validator messages on aggregate nodes', () => {
+    const names = array(field(''), [], [minLength(1)]);
+
+    expect(names.errors()).toMatchObject([
+      { kind: 'minLength', minLength: 1, message: 'Please provide at least 1 character or item.' },
+    ]);
   });
 
   it('accepts validator shorthand with the default empty initial value', () => {

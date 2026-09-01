@@ -13,6 +13,7 @@ export { asyncValidator } from './lib/core/validation/async-validator';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export { required, type RequiredOptions } from './lib/core/validation/validators/required';
+export type { ValidatorOptions } from './lib/core/validation/validators/validator-options';
 export { FORM_NODE, FormNode, _FormNode } from './lib/core/directives/form-node/form-node.directive';
 export type { FormNodeBinding } from './lib/core/types/form-node-binding.type';
 export { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';

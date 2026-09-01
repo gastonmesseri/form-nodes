@@ -31,6 +31,7 @@ describe('required', () => {
       { kind: 'required', message: 'Name is required' },
     ]);
     expect(directField.errors()[0]!.targetNode).toBe(directField);
+    expect(directField.errors()[0]!.message).toBe('This field is required.');
     expect(optionsField.errors()[0]!.targetNode).toBe(optionsField);
   });
 
