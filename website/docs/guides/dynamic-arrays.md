@@ -7,33 +7,38 @@ title: Dynamic arrays
 An `array()` owns an ordered collection of cloned node templates:
 
 ```ts
-const people = array(
-  {
-    id: field(''),
-    name: field(''),
-  },
-  [{ id: '1', name: 'Ada' }],
-  { trackBy: 'id' },
-);
+const people = array({
+  id: field(''),
+  name: field(''),
+}, {
+  initialValue: [{ id: '1', name: 'Ada' }],
+  trackBy: 'id',
+});
 ```
 
-The recommended signature places initial data immediately after the template. A non-negative number creates that many items from template defaults:
+The options-object form keeps initial data and reconciliation configuration together. A non-negative number creates that many items from template defaults:
 
 ```ts
 array(personTemplate);
-array(personTemplate, initialPeople);
-array(personTemplate, 3);
-array(personTemplate, initialPeople, validators, options);
+array(personTemplate, {
+  initialValue: initialPeople,
+  trackBy: 'id',
+});
+array(personTemplate, {
+  initialValue: 3,
+});
 ```
 
-`initialValue` may alternatively live in the options object. TypeScript prevents specifying both positional and option-based initial values.
+The positional `array(template, initialValue)` signature remains available for concise declarations. Positional and option-based initial values are alternatives; TypeScript prevents specifying both.
 
 ## Templates and factories
 
 A template may be a field, form, nested array, shorthand object, or explicit factory:
 
 ```ts
-const tags = array(field(''), ['angular', 'signals']);
+const tags = array(field(''), {
+  initialValue: ['angular', 'signals'],
+});
 
 const people = array(() => ({
   name: field(''),
@@ -117,9 +122,13 @@ people.set([
 Use a stable property or callback when values can be reordered or replaced from a server:
 
 ```ts
-const people = array(personTemplate, initialPeople, { trackBy: 'id' });
+const people = array(personTemplate, {
+  initialValue: initialPeople,
+  trackBy: 'id',
+});
 
-const keyed = array(personTemplate, initialPeople, {
+const keyed = array(personTemplate, {
+  initialValue: initialPeople,
   trackBy: person => person.id,
 });
 ```
