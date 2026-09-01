@@ -1,4 +1,4 @@
-import { asyncValidator, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, required, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, email, field, form, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, required, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -20,6 +20,33 @@ field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);
 field<Date>(null, [minDate('2026-08-24'), maxDate(() => '2026-12-31', { parseAs: 'local' })]);
+
+const adult = validator<number | null>(({ value, api, field: targetField }) => {
+  type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;
+  type _ApiValue = Expect<Equal<ReturnType<typeof api.value>, number | null>>;
+  void targetField;
+  return value() !== null && value()! < 18
+    ? { kind: 'adult', minimumAge: 18, actual: value() }
+    : null;
+});
+field<number>(null, [adult]);
+
+const positive = validator<number>(({ value }) => {
+  type _Value = Expect<Equal<ReturnType<typeof value>, number>>;
+  return value() > 0 ? null : { kind: 'positive' };
+});
+field(1, [positive], { nullable: false });
+
+const completeProfile = validator<{ name: string | null; age: number | null }>(({ value }) => {
+  type _Profile = Expect<Equal<ReturnType<typeof value>, { name: string | null; age: number | null }>>;
+  return value().name === null ? { kind: 'incompleteProfile' } : null;
+});
+form({ name: field('David'), age: field(42) }, [completeProfile]);
+
+const atLeastOneItem = validator<readonly (string | null)[]>(({ value }) => {
+  return value().length > 0 ? null : { kind: 'emptyArray' };
+});
+array(field(''), [], [atLeastOneItem]);
 
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
 const builtInError: BuiltInValidationError = { kind: 'min', min: 2, actual: 1 };
@@ -76,3 +103,9 @@ field(42, [minWords(2)]);
 
 // @ts-expect-error date strings only support explicit UTC or local parsing
 minDate('2026-08-24', { parseAs: 'browser' });
+
+// @ts-expect-error synchronous validators must return a supported validation result
+validator<string>(() => 'invalid');
+
+// @ts-expect-error a non-nullable validator cannot observe a field that is nullable by default
+field(1, [positive]);

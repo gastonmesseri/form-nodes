@@ -5,7 +5,7 @@
 - Validator framework roadmap (implement in this order)
   - [x] Add strongly typed built-in validation errors so `getError(kind)` exposes each error's structured properties in IntelliSense, while retaining an extensible fallback for custom error kinds.
   - [x] Improve every built-in validator's JSDoc with examples, empty-value behavior, reactive constraint semantics, custom-message options, and exact error shapes.
-  - Add a `validator()` authoring helper so reusable custom validators can infer their context and result types without manually spelling generic signatures.
+  - [x] Add a `validator()` authoring helper so reusable custom validators infer their context and validate their result without manually annotating the callback signature; only the value model generic is required for a standalone declaration.
   - Support reactive custom validator messages, comparable to Angular 22 Signal Forms, while preserving static strings as the simplest option.
   - Allow applications to customize or internationalize the centralized default validator messages reactively, both inside and outside Angular dependency injection.
   - Keep using the general `minLength()` and `maxLength()` validators for arrays instead of adding redundant `arrayMinLength()` and `arrayMaxLength()` variants.
@@ -25,9 +25,9 @@
   - Each validator should have a very descriptive behavior in is JSDoc
    - e.g. required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
   - Improve validators model, similar to Angular 22 signal forms, but also allow referencing other fields, and also de form tree (as arguments)
-  - Consider maybe exporting something like "validator()" function, for users to define validator functions without needing to specify signature
-    - make this the recommended way of creating a custom validator in a separated file (without type inference)
-      - maybe pass a generic with the value model (for field() array() or form())
+  - [x] Export `validator()` for users to define validator functions without manually specifying the callback signature.
+    - [x] Make this the recommended way to create a custom validator in a separate file where node-level contextual inference is unavailable.
+      - [x] Accept the value model as a generic for `field()`, `array()`, or `form()` validators.
   - Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
    .  Also handle cases like in lab, like addErrors, and those
   - Check what model of errors() other libraries return, and decide for the best system

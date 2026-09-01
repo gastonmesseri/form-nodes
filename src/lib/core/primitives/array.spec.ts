@@ -1,9 +1,10 @@
 import { Injector, signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
+import { form } from './form';
 import { array } from './array';
 import { field } from './field';
-import { form } from './form';
+import { validator } from '../validation/validator';
 import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
@@ -889,8 +890,11 @@ describe('array', () => {
 
   it('runs reactive validators on the array value', () => {
     const minimum = signal(2);
+    const minimumItems = validator<readonly (string | null)[]>(({ value }) => {
+      return value().length < minimum() ? { kind: 'minimumItems' } : null;
+    });
     const names = array(() => field('Mono'), 1, {
-      validators: [({ value }) => value().length < minimum() ? { kind: 'minimumItems' } : null],
+      validators: [minimumItems],
     });
 
     expect(names.getError('minimumItems')).toMatchObject({ kind: 'minimumItems' });
