@@ -37,6 +37,7 @@ const sidebars: SidebarsConfig = {
       label: 'Guides',
       items: [
         'guides/choosing-a-primitive',
+        'guides/form-modeling-patterns',
         'guides/validation',
         'guides/errors-and-status',
         'guides/async-validation',
@@ -47,6 +48,7 @@ const sidebars: SidebarsConfig = {
         'guides/custom-controls',
         'guides/submission',
         'guides/validator-messages',
+        'guides/testing',
       ],
     },
     {
@@ -54,6 +56,7 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         'reference/api-overview',
+        'reference/configuration',
         'reference/form',
         'reference/field',
         'reference/array',
@@ -71,8 +74,13 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Integrations',
+      items: ['integrations/angular-material', 'integrations/primeng'],
+    },
+    {
+      type: 'category',
       label: 'Help',
-      items: ['help/common-mistakes'],
+      items: ['help/common-mistakes', 'help/troubleshooting'],
     },
     {
       type: 'category',

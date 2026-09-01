@@ -18,6 +18,17 @@ Use direct members for actions and state on every node: `name.set()`, `items.pus
 `profile.patch()`, and `profile.valid()`. The [Tree navigation and API access](../concepts/tree-and-api.md)
 guide documents `.api` only for name collisions and generic infrastructure.
 
+## API map
+
+| Node concern | Details |
+| --- | --- |
+| Values, reset, parent, and path | [Shared value and tree API](#shared-value-and-tree-api) |
+| Errors, validity, constraints, and pending state | [Validation API](#validation-api) |
+| Touched, dirty, disabled, readonly, and hidden | [Interaction and availability API](#interaction-and-availability-api) |
+| Form children, patching, debounce, focus, and submission | [Form-specific API](#form-specific-api) |
+| Array items, collection helpers, and structural operations | [Array-specific API](#array-specific-api) |
+| Concrete rendered controls | [Binding API](#binding-api) |
+
 ## Shared value and tree API
 
 | Member | Description |

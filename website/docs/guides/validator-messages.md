@@ -6,6 +6,9 @@ title: Validator messages and i18n
 
 Built-in validators include English fallback messages. Applications can override them globally, through Angular dependency injection, for one form tree, or for one validator.
 
+For all node and binding options—not only messages—see the
+[Configuration reference](../reference/configuration.md).
+
 ## Precedence
 
 The closest definition wins:
@@ -40,7 +43,10 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-Provider factories may call `inject()`. A closer route or environment injector overrides matching entries while missing entries retain outer fallbacks.
+Provider factories may call `inject()`. A closer route or environment injector supplies the
+complete catalog captured in that scope; Angular does not merge it with an outer provider catalog.
+Missing entries continue through any different catalog captured by an ancestor node, followed by
+the global and built-in fallbacks.
 
 ## Global configuration
 

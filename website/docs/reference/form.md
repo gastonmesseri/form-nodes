@@ -22,6 +22,20 @@ const myForm = form({
 });
 ```
 
+## API map
+
+| I want to… | Start with | Details |
+| --- | --- | --- |
+| Create or configure a form | `form(...)`, `FormOptions` | [Signatures](#signatures) and [options](#options) |
+| Read its value or navigate children | `myForm()`, direct children, `children` | [Instance shape](#instance-shape) and [value and tree properties](#value-and-tree-properties) |
+| Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Value update methods](#value-update-methods) |
+| Inspect or replace validation | `errors()`, `allErrors()`, `valid()`, `setValidators()` | [Validation](#validation-properties-and-methods) |
+| Manage touched and dirty state | `markAsTouched()`, `markAsDirty()`, `reset()` | [Interaction](#interaction-properties-and-methods) |
+| Manage disabled, readonly, or hidden state | `disable()`, `markAsReadonly()`, `hide()` | [Availability](#availability-properties-and-methods) |
+| Commit or focus bound controls | `flush()`, `focus()` | [Control integration](#control-integration) |
+| Run a configured action | `submit()`, `submitting()` | [Submission](#submission) |
+| Handle a child/API name collision | `$api` | [Name collisions](#name-collisions-and-generic-code) |
+
 ## Signatures
 
 ```ts

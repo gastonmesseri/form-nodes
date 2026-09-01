@@ -5,13 +5,13 @@
 - Website documentation roadmap (implement in this order)
   - [x] Create an API overview page that maps common needs to the relevant public APIs.
   - [x] Add a Common mistakes page with incorrect and corrected examples.
-  - [ ] Add a Troubleshooting page organized around symptoms and concrete solutions.
-  - [ ] Add a configuration reference covering scopes, reactivity, precedence, inheritance, and providers.
-  - [ ] Add a consumer testing guide for nodes, validators, arrays, bindings, and submission.
-  - [ ] Improve navigation within long reference pages with summaries and on-page API maps.
-  - [ ] Add complete Angular Material and PrimeNG integration examples.
-  - [ ] Convert more behavior-defining documentation examples into executable, type-checked examples.
-  - [ ] Add a form-modeling patterns guide for common domain and UI design decisions.
+  - [x] Add a Troubleshooting page organized around symptoms and concrete solutions.
+  - [x] Add a configuration reference covering scopes, reactivity, precedence, inheritance, and providers.
+  - [x] Add a consumer testing guide for nodes, validators, arrays, bindings, and submission.
+  - [x] Improve navigation within long reference pages with summaries and on-page API maps.
+  - [x] Add complete Angular Material and PrimeNG integration examples.
+  - [x] Convert more behavior-defining documentation examples into executable, type-checked examples.
+  - [x] Add a form-modeling patterns guide for common domain and UI design decisions.
   - [ ] Add an interactive playground for values, state, validation, debounce, and arrays.
   - [ ] Add versioning, Angular compatibility, changelog, and migration documentation.
 - Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
