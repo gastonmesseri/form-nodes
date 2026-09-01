@@ -28,11 +28,10 @@
   - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
   - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
 - Think about how to better structure project folders given current knowledge and existing files
-- Consider arrayToObject utility, and replace Object.fromEntries(array.map(e => [something, something])); // in case it helps reducing complexity
-
-- [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
   - as an optional signature. check what other validators i can use with this signature (maybe not posible in required, although i think it is marked and maybe it is safe?)
+
+- [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api
@@ -293,6 +292,15 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Add `mapObjectValues(object, mapper)` for value transformations that preserve an object's keys.
+  - Use it for object-node normalization and recursive node-definition cloning.
+  - Keep `arrayToObject()` for transformations whose source is genuinely an array and whose mapper
+    derives each output key.
+- [x] Add a general `arrayToObject(items, mapper)` utility and replace the existing
+  `Object.fromEntries(array.map(...))` patterns.
+  - The mapper receives the item, index, and readonly source array and returns a key/value tuple.
+  - Property keys preserve their inferred string, number, or symbol union.
+  - Duplicate keys deliberately follow `Object.fromEntries()` semantics: the last value wins.
 - [x] Introduce `group()` as the default fixed-object aggregate while reserving `form()` for a submission/workflow boundary.
   - Research found Angular Reactive Forms reuses `FormGroup`, Angular 22 Signal Forms separates its uniform `FieldTree` from `FormRoot`, path-based libraries avoid nested form instances, and TanStack uses groups beneath a submission-owning form.
   - `group()` is a fixed, non-null object node with children, aggregate value/state, validators, inherited configuration, updates, reset, and common node operations.

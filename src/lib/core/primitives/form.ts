@@ -1,28 +1,29 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
+import { group } from './group';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
+import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
-import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
-import type { InternalNode, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
+import type { InternalNode, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import { group } from './group';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
+import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes } from './form.type';
+import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
@@ -66,12 +67,7 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
   const validators = normalizeValidatorSource(validatorSource);
   const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
   const createDefinitions = createNodeDefinitionFactory(definitions);
-  const controls = Object.fromEntries(
-    Object.entries(definitions).map(([key, definition]) => [
-      key,
-      isNode(definition) ? definition : group(definition),
-    ]),
-  ) as TNodes;
+  const controls = mapObjectValues(definitions, definition => isNode(definition) ? definition : group(definition)) as TNodes;
   const controlKeys = () => Object.keys(controls) as (keyof TNodes)[];
   const formSelfTouched = signal(false);
   const formSelfDirty = signal(false);

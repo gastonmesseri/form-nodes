@@ -1,5 +1,6 @@
 import { isNode } from './node-marker';
-import type { InternalNode, NodeDefinition } from '../types/node.type';
+import { mapObjectValues } from './map-object-values';
+import type { InternalNode, NodeDefinition, NodeDefinitions } from '../types/node.type';
 
 /**
  * Compiles a node definition into a reusable factory without retaining the live definition tree.
@@ -31,11 +32,6 @@ export const createNodeDefinitionFactory = <TDefinition extends NodeDefinition>(
     return (() => clone() as TDefinition);
   }
 
-  const entries = (Object.entries(definition) as [string, NodeDefinition][]).map(([key, child]) => [
-    key,
-    createNodeDefinitionFactory(child),
-  ] as const);
-  return (() => Object.fromEntries(
-    entries.map(([key, createChild]) => [key, createChild()]),
-  ) as TDefinition);
+  const childFactories = mapObjectValues(definition as NodeDefinitions, child => createNodeDefinitionFactory(child));
+  return (() => mapObjectValues(childFactories, createChild => createChild()) as TDefinition);
 };
