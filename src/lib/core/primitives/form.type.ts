@@ -45,8 +45,8 @@ export type FormPatch<TNodes extends Nodes> = {
 };
 
 export type NormalizedNode<TNode extends NodeDefinition> =
-  TNode extends Node ? TNode :
-  TNode extends NodeDefinitions ? Form<NormalizedNodes<TNode>> : Node;
+  TNode extends Node ? TNode
+    : TNode extends NodeDefinitions ? Form<NormalizedNodes<TNode>> : Node;
 
 export type NormalizedNodes<TNodes extends NodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
@@ -137,9 +137,9 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
 };
 
 export type NodeWithParent<TNode extends Node, TParent extends Node> =
-  TNode extends Field<infer TValue, Node> ? Field<TValue, TParent> :
-  TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent> :
-  TNode extends ArrayNode<infer TItem, Node> ? ArrayNode<TItem, TParent> : TNode;
+  TNode extends Field<infer TValue, Node> ? Field<TValue, TParent>
+    : TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent>
+      : TNode extends ArrayNode<infer TItem, Node> ? ArrayNode<TItem, TParent> : TNode;
 
 export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
   readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes, TParent>>;

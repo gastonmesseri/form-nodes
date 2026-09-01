@@ -18,7 +18,7 @@ export type NativeControlParseResult =
   | { readonly value?: never; readonly error: ValidationError.WithoutTargetNode };
 
 const readSelectedValues = (select: HTMLSelectElement): string[] =>
-  Array.from(select.selectedOptions, (option) => option.value);
+  Array.from(select.selectedOptions, option => option.value);
 
 export const readNativeControlValue = (
   element: NativeFormNodeControl,
@@ -94,7 +94,7 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
     return;
   }
   if (!isNativeInput(element)) {
-    element.value = value == null ? '' : String(value);
+    element.value = value === null || value === undefined ? '' : String(value);
     return;
   }
 
@@ -109,7 +109,7 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
     case 'range':
     case 'datetime-local':
       if (typeof value === 'number') writeNumber(element, value);
-      else element.value = value == null ? '' : String(value);
+      else element.value = value === null || value === undefined ? '' : String(value);
       return;
     case 'date':
     case 'month':
@@ -117,9 +117,9 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
     case 'week':
       if (value === null || value instanceof Date) element.valueAsDate = value;
       else if (typeof value === 'number') writeNumber(element, value);
-      else element.value = value == null ? '' : String(value);
+      else element.value = value === null || value === undefined ? '' : String(value);
       return;
     default:
-      element.value = value == null ? '' : String(value);
+      element.value = value === null || value === undefined ? '' : String(value);
   }
 };

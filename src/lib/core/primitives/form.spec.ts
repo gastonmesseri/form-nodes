@@ -166,7 +166,7 @@ describe('form', () => {
     });
     expect(profile.sons[0]!.path()).toEqual(['sons', '0']);
     expect(profile.sons[1]!.path()).toEqual(['sons', '1']);
-    expect(profile.sons.every((son) => son.parent() === profile.sons)).toBe(true);
+    expect(profile.sons.every(son => son.parent() === profile.sons)).toBe(true);
   });
 
   it('exposes its public api directly on the form', () => {
@@ -390,7 +390,7 @@ describe('form', () => {
     let validatorPath: readonly string[] = [];
     const profile = form({
       address: {
-        city: field('Zurich', [context => {
+        city: field('Zurich', [(context) => {
           validatorApi = context.api;
           validatorField = context.field;
           validatorForm = context.form();
@@ -415,7 +415,7 @@ describe('form', () => {
   it('exposes the root form api to synchronous form validators', () => {
     let validatorApi: unknown;
     let validatorField: unknown;
-    const profile = form({ name: field('David') }, [context => {
+    const profile = form({ name: field('David') }, [(context) => {
       validatorApi = context.api;
       validatorField = context.field;
       return null;
@@ -772,7 +772,7 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
 
-    formGroup.update((value) => ({
+    formGroup.update(value => ({
       ...value,
       name: 'Mark',
       address: { ...value.address, city: 'Bern' },
@@ -972,14 +972,14 @@ describe('form', () => {
       }, [() => ({ kind: 'addressError' })]),
     }, [() => ({ kind: 'formError' })]);
 
-    expect(formGroup.errors().map((error) => error.kind)).toEqual(['formError']);
-    expect(formGroup.allErrors().map((error) => error.kind)).toEqual([
+    expect(formGroup.errors().map(error => error.kind)).toEqual(['formError']);
+    expect(formGroup.allErrors().map(error => error.kind)).toEqual([
       'formError',
       'required',
       'addressError',
       'cityError',
     ]);
-    expect(formGroup.allErrors().map((error) => error.targetNode)).toEqual([
+    expect(formGroup.allErrors().map(error => error.targetNode)).toEqual([
       formGroup,
       formGroup.name,
       formGroup.address,
@@ -988,7 +988,7 @@ describe('form', () => {
 
     formGroup.name.set('David');
 
-    expect(formGroup.allErrors().map((error) => error.kind)).toEqual([
+    expect(formGroup.allErrors().map(error => error.kind)).toEqual([
       'formError',
       'addressError',
       'cityError',
@@ -1011,7 +1011,7 @@ describe('form', () => {
 
     expect(formGroup.allErrors).toBe(allErrorsField);
     expect(formGroup.allErrors()).toBe('child');
-    expect(formGroup.api.allErrors().map((error) => error.kind)).toEqual(['formError']);
+    expect(formGroup.api.allErrors().map(error => error.kind)).toEqual(['formError']);
   });
 
   it('gives a child named required precedence over the form required signal', () => {

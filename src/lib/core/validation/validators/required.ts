@@ -32,7 +32,7 @@ export function required(
     return validateRequired(contextOrOptions);
   }
   return markValidatorMetadata(
-    (context) => validateRequired(context, contextOrOptions.message),
+    context => validateRequired(context, contextOrOptions.message),
     REQUIRED_METADATA,
     true,
   );

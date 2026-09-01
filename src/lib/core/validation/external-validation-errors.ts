@@ -26,7 +26,7 @@ export const readExternalValidationErrors = <TNode extends Node>(
   node: TNode,
 ): readonly ValidationError.WithTargetNode<TNode>[] =>
   Array.from(getRegistry(node)().values()).flatMap(({ source }) =>
-    (source() as readonly ValidationError.WithOptionalTargetNode<TNode>[]).map((error) =>
+    (source() as readonly ValidationError.WithOptionalTargetNode<TNode>[]).map(error =>
       ({ ...error, targetNode: error.targetNode ?? node }),
     ),
   );

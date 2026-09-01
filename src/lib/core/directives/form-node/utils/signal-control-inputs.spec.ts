@@ -26,7 +26,11 @@ describe('connectSignalControlInputs', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   it('synchronizes every equivalent field state and applies input transforms', () => {
-    @Component({ standalone: true, selector: 'all-state-control', template: '' })
+    @Component({
+      selector: 'all-state-control',
+      template: '',
+      standalone: true,
+    })
     class AllStateControl {
       value = model('');
       disabled = input(false, { transform: booleanAttribute });
@@ -88,7 +92,11 @@ describe('connectSignalControlInputs', () => {
   });
 
   it('ignores components without state inputs and metadata entries that are not input signals', () => {
-    @Component({ standalone: true, selector: 'model-only-control', template: '' })
+    @Component({
+      selector: 'model-only-control',
+      template: '',
+      standalone: true,
+    })
     class ModelOnlyControl { value = model(''); }
     registerSignalModelForJit(ModelOnlyControl, 'value');
     const modelFixture = TestBed.createComponent(ModelOnlyControl);
@@ -96,7 +104,11 @@ describe('connectSignalControlInputs', () => {
     const modelConnection = connectSignalControlInputs(modelFixture.componentInstance, () => name, modelFixture.debugElement.injector.get(Injector));
     expect(modelConnection.inputNames).toEqual(new Set(['value']));
 
-    @Component({ standalone: true, selector: 'non-signal-input-control', template: '' })
+    @Component({
+      selector: 'non-signal-input-control',
+      template: '',
+      standalone: true,
+    })
     class NonSignalInputControl {
       value = model('');
       disabled: unknown = false;

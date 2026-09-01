@@ -35,6 +35,7 @@ const getBindingValues = (node: Node, appId: string) => {
 };
 
 const writeInputSignal = (input: InputSignal, value: unknown) => {
+  // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the signal input before accessing its internal node.
   if (typeof input !== 'function') return;
   const node = input[ɵSIGNAL];
   if (!node?.applyValueToInputSignal) return;
@@ -65,7 +66,7 @@ export const connectSignalControlInputs = <TNode extends Node>(
   const mirror = reflectComponentType((control as { constructor: Type<unknown> }).constructor);
   const bindingValues = getBindingValues(node(), appId);
   const inputs = mirror
-    ? new Map(mirror.inputs.map((input) => [input.templateName, input.propName]))
+    ? new Map(mirror.inputs.map(input => [input.templateName, input.propName]))
     : new Map(Object.keys(bindingValues).flatMap((name) => {
       const candidate = (control as Record<PropertyKey, unknown>)[name];
       return typeof candidate === 'function' && (candidate as InputSignal)[ɵSIGNAL]?.applyValueToInputSignal ? [[name, name]] : [];

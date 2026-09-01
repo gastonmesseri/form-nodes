@@ -27,16 +27,16 @@ describe('runSyncValidators', () => {
       { kind: 'name', message: 'Second error' },
       { kind: 'name', message: 'Third error' },
     ]);
-    expect(fieldNode.errors().every((error) => error.targetNode === fieldNode)).toBe(true);
+    expect(fieldNode.errors().every(error => error.targetNode === fieldNode)).toBe(true);
   });
 
   it('resolves nested synchronous validators with the same context', () => {
     const contexts: unknown[] = [];
-    const nested: ComposableValidator<string | null> = context => {
+    const nested: ComposableValidator<string | null> = (context) => {
       contexts.push(context);
       return { kind: 'nested' };
     };
-    const fieldNode = field('David', [context => {
+    const fieldNode = field('David', [(context) => {
       contexts.push(context);
       return nested;
     }]);
@@ -47,8 +47,10 @@ describe('runSyncValidators', () => {
   });
 
   it('rejects circular synchronous validator composition', () => {
+    /* eslint-disable prefer-const -- The validator deliberately closes over itself to test circular composition. */
     let circular!: ComposableValidator<string | null>;
     circular = () => circular;
+    /* eslint-enable prefer-const */
     const fieldNode = field('David', [circular]);
 
     expect(() => fieldNode.errors()).toThrow('Circular synchronous validator composition detected.');

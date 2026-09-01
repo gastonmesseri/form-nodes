@@ -5,7 +5,7 @@ import type { InternalNode, Node } from '../../types/node.type';
 const toValidationErrors = (node: Node): ValidationErrors | null => {
   const errors = node.$api.errors();
   if (errors.length === 0) return null;
-  return Object.fromEntries(errors.map((error) => [error.kind, error]));
+  return Object.fromEntries(errors.map(error => [error.kind, error]));
 };
 
 export class FormNodeNgControl {

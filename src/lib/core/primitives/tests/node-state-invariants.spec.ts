@@ -58,7 +58,7 @@ describe.each(stateFixtures)('%s shared node-state invariants', (_kind, createFi
 
     root.$api.markAsDirty();
     expect(root.$api.dirty()).toBe(true);
-    descendants.forEach((node) => expect(node.$api.dirty()).toBe(false));
+    descendants.forEach(node => expect(node.$api.dirty()).toBe(false));
 
     root.$api.markAsPristine();
     expect(root.$api.dirty()).toBe(false);
@@ -69,12 +69,12 @@ describe.each(stateFixtures)('%s shared node-state invariants', (_kind, createFi
 
     root.$api.markAsTouched({ skipDescendants: true });
     expect(root.$api.touched()).toBe(true);
-    descendants.forEach((node) => expect(node.$api.touched()).toBe(false));
+    descendants.forEach(node => expect(node.$api.touched()).toBe(false));
 
     root.$api.markAsUntouched();
     root.$api.markAsTouched();
     expect(root.$api.touched()).toBe(true);
-    descendants.forEach((node) => expect(node.$api.touched()).toBe(true));
+    descendants.forEach(node => expect(node.$api.touched()).toBe(true));
   });
 
   it('inherits disabled state and restores stored interaction and validation state when enabled', () => {
@@ -84,7 +84,7 @@ describe.each(stateFixtures)('%s shared node-state invariants', (_kind, createFi
 
     root.$api.disable();
     expect(root.$api.disabled()).toBe(true);
-    descendants.forEach((node) => expect(node.$api.disabled()).toBe(true));
+    descendants.forEach(node => expect(node.$api.disabled()).toBe(true));
     expect(root.$api.valid()).toBe(true);
     expect(root.$api.invalid()).toBe(false);
     expect(root.$api.allErrors()).toEqual([]);
@@ -93,7 +93,7 @@ describe.each(stateFixtures)('%s shared node-state invariants', (_kind, createFi
 
     root.$api.enable();
     expect(root.$api.disabled()).toBe(false);
-    descendants.forEach((node) => expect(node.$api.disabled()).toBe(false));
+    descendants.forEach(node => expect(node.$api.disabled()).toBe(false));
     expect(root.$api.invalid()).toBe(true);
     expect(root.$api.dirty()).toBe(true);
     expect(root.$api.touched()).toBe(true);
@@ -106,7 +106,7 @@ describe.each(stateFixtures)('%s shared node-state invariants', (_kind, createFi
 
     root.$api.markAsReadonly();
     expect(root.$api.readonly()).toBe(true);
-    descendants.forEach((node) => expect(node.$api.readonly()).toBe(true));
+    descendants.forEach(node => expect(node.$api.readonly()).toBe(true));
     expect(root.$api.valid()).toBe(true);
     expect(root.$api.dirty()).toBe(false);
     expect(root.$api.touched()).toBe(false);
@@ -118,7 +118,7 @@ describe.each(stateFixtures)('%s shared node-state invariants', (_kind, createFi
 
     root.$api.hide();
     expect(root.$api.hidden()).toBe(true);
-    descendants.forEach((node) => expect(node.$api.hidden()).toBe(true));
+    descendants.forEach(node => expect(node.$api.hidden()).toBe(true));
     expect(root.$api.valid()).toBe(true);
     expect(root.$api.dirty()).toBe(false);
     expect(root.$api.touched()).toBe(false);

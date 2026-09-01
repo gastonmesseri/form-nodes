@@ -7,7 +7,7 @@ import { computedFunction } from '../utils/computed-function';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
-import { form, type FormOptions, type NormalizedNode } from './form';
+import { form, type NormalizedNode } from './form';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { REQUIRED_METADATA } from '../validation/validators/required';
@@ -35,8 +35,8 @@ const omitInitialValue = <TValue>(options: ArrayOptions<TValue>): PositionalArra
 const looksLikeValidatorSource = (value: unknown): boolean =>
   typeof value === 'function'
   || (Array.isArray(value)
-    && value.some((entry) => typeof entry === 'function')
-    && value.every((entry) => entry == null || typeof entry === 'function'));
+    && value.some(entry => typeof entry === 'function')
+    && value.every(entry => entry === null || entry === undefined || typeof entry === 'function'));
 
 /**
  * Creates an array node from a declarative node template.
@@ -209,6 +209,7 @@ export function array<TDefinition extends NodeDefinition>(
     const key = arrayKeyInParent();
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
+  // eslint-disable-next-line prefer-const -- Assigned after self-referencing computed state has been declared.
   let arrayNode!: ArrayNode<TItem>;
   const arrayOwnDisabledReason = computed(() => createDisabledReason(arraySelfDisabled(), arrayNode), { equal: shallowEqual });
   const arrayConfiguredDisabledReason = computed(
@@ -217,7 +218,7 @@ export function array<TDefinition extends NodeDefinition>(
   );
   const arrayDisabledReasons = computed(() => [
     ...(arrayParent()?.$api.disabledReasons() ?? []),
-    ...[arrayOwnDisabledReason(), arrayConfiguredDisabledReason()].filter((reason) => reason !== undefined),
+    ...[arrayOwnDisabledReason(), arrayConfiguredDisabledReason()].filter(reason => reason !== undefined),
   ], { equal: shallowEqual });
   const arrayDisabled = computed(() => arrayDisabledReasons().length > 0);
   const arraySelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
@@ -229,7 +230,7 @@ export function array<TDefinition extends NodeDefinition>(
     arraySelfHidden() || readStateSource(resolvedOptions?.hidden) || arrayParent()?.$api.hidden() === true,
   );
   const arrayNonInteractive = computed(() => arrayHidden() || arrayDisabled() || arrayReadonly());
-  const arrayValue = computed<TValue>(() => arrayItems().map((item) => item()) as TValue);
+  const arrayValue = computed<TValue>(() => arrayItems().map(item => item()) as TValue);
   const arrayContext = markAsFieldContext({ value: arrayValue });
   const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource(validatorSource));
   const emptySyncMetadata = new Map();
@@ -253,22 +254,22 @@ export function array<TDefinition extends NodeDefinition>(
   const arrayAllErrors = computed(
     () => [
       ...arrayErrors(),
-      ...arrayItems().flatMap((item) => item.$api.allErrors()),
+      ...arrayItems().flatMap(item => item.$api.allErrors()),
     ],
     { equal: shallowEqual },
   );
   const getError = computedFunction(
-    (kind: string) => arrayErrors().find((error) => error.kind === kind),
+    (kind: string) => arrayErrors().find(error => error.kind === kind),
     { equal: shallowEqual, max: 20 },
   ) as ArrayApi<TItem>['getError'];
   const arrayPending = computed(() =>
     !arrayNonInteractive() && (
-      asyncValidation.pending() || arrayItems().some((item) => item.$api.pending())
+      asyncValidation.pending() || arrayItems().some(item => item.$api.pending())
     ),
   );
   const arrayValidationStatus = computed<ValidationStatus>(() => {
     if (arrayNonInteractive()) return 'valid';
-    if (arrayErrors().length > 0 || arrayItems().some((item) => item.$api.invalid())) return 'invalid';
+    if (arrayErrors().length > 0 || arrayItems().some(item => item.$api.invalid())) return 'invalid';
     if (arrayPending()) return 'unknown';
     return 'valid';
   });
@@ -279,15 +280,16 @@ export function array<TDefinition extends NodeDefinition>(
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const arrayTouched = computed(() =>
-    !arrayNonInteractive() && (arraySelfTouched() || arrayItems().some((item) => item.$api.touched())),
+    !arrayNonInteractive() && (arraySelfTouched() || arrayItems().some(item => item.$api.touched())),
   );
   const arrayDirty = computed(() =>
-    !arrayNonInteractive() && (arraySelfDirty() || arrayItems().some((item) => item.$api.dirty())),
+    !arrayNonInteractive() && (arraySelfDirty() || arrayItems().some(item => item.$api.dirty())),
   );
+  // eslint-disable-next-line prefer-const -- Assigned after computed state that reads the buffer has been declared.
   let arrayControlValueBuffer!: ControlValueBuffer<TValue, TSet>;
   const arrayDebouncing = computed(() =>
     arrayControlValueBuffer.debouncing()
-    || arrayItems().some((item) => item.$api.debouncing()),
+    || arrayItems().some(item => item.$api.debouncing()),
   );
   const assertIndex = (index: number, allowEnd = false) => {
     const maximum = arrayItems().length - (allowEnd ? 0 : 1);
@@ -375,7 +377,7 @@ export function array<TDefinition extends NodeDefinition>(
   const reconcile = resolvedOptions?.trackBy ? reconcileByKey : reconcileByIndex;
   const reset = (...args: [] | [value: TSet]) => {
     arrayControlValueBuffer?.cancel();
-    if (args.length === 0) arrayItems().forEach((item) => item.$api.reset());
+    if (args.length === 0) arrayItems().forEach(item => item.$api.reset());
     else reconcile(args[0], true);
     arraySelfTouched.set(false);
     arraySelfDirty.set(false);
@@ -385,13 +387,13 @@ export function array<TDefinition extends NodeDefinition>(
     const own = findFirstControlBindingInDom(arrayControlBindings);
     if (own) return own;
     return arrayItems()
-      .map((item) => (item as InternalNode).$api._getControlBindingForFocus())
+      .map(item => (item as InternalNode).$api._getControlBindingForFocus())
       .reduce(firstControlBindingInDom, undefined);
   };
   const getItemSnapshot = () => [
     ...arrayItems(),
   ] as ArrayItemWithParent<TItem, ArrayNode<TItem>>[];
-  const map: ArrayApi<TItem>['map'] = (callback) =>
+  const map: ArrayApi<TItem>['map'] = callback =>
     getItemSnapshot().map((item, index) => callback(item, index, arrayNode));
   const filter = ((predicate: (
     item: ArrayItemWithParent<TItem, ArrayNode<TItem>>,
@@ -405,11 +407,11 @@ export function array<TDefinition extends NodeDefinition>(
     array: ArrayNode<TItem>,
   ) => unknown) =>
     getItemSnapshot().find((item, index) => predicate(item, index, arrayNode))) as ArrayApi<TItem>['find'];
-  const findIndex: ArrayApi<TItem>['findIndex'] = (predicate) =>
+  const findIndex: ArrayApi<TItem>['findIndex'] = predicate =>
     getItemSnapshot().findIndex((item, index) => predicate(item, index, arrayNode));
-  const some: ArrayApi<TItem>['some'] = (predicate) =>
+  const some: ArrayApi<TItem>['some'] = predicate =>
     getItemSnapshot().some((item, index) => predicate(item, index, arrayNode));
-  const every: ArrayApi<TItem>['every'] = (predicate) =>
+  const every: ArrayApi<TItem>['every'] = predicate =>
     getItemSnapshot().every((item, index) => predicate(item, index, arrayNode));
   const set = (value: TSet) => {
     arrayControlValueBuffer?.cancel();
@@ -430,7 +432,7 @@ export function array<TDefinition extends NodeDefinition>(
     keyInParent: arrayKeyInParent.asReadonly(),
     value: arrayValue,
     controlValue: arrayControlValueBuffer.controlValue,
-    at: (index) => arrayItems()[index] as ArrayItemWithParent<TItem, ArrayNode<TItem>> | undefined,
+    at: index => arrayItems()[index] as ArrayItemWithParent<TItem, ArrayNode<TItem>> | undefined,
     forEach: (callback) => {
       const snapshot = arrayItems();
       snapshot.forEach((item, index) => callback(
@@ -477,7 +479,7 @@ export function array<TDefinition extends NodeDefinition>(
       arrayItems.set([]);
     },
     set,
-    update: (updater) => untracked(() => set(updater(arrayValue()))),
+    update: updater => untracked(() => set(updater(arrayValue()))),
     patch: (value) => {
       arrayControlValueBuffer.cancel();
       value.forEach((itemValue, index) => {
@@ -499,14 +501,14 @@ export function array<TDefinition extends NodeDefinition>(
     getError,
     required: computed(() =>
       readMetadata(arrayMetadata(), REQUIRED_METADATA)
-      || arrayErrors().some((error) => error.kind === 'required')
+      || arrayErrors().some(error => error.kind === 'required')
     ),
     pending: arrayPending,
     submitting: computed(() => arrayParent()?.$api.submitting() === true),
     debouncing: arrayDebouncing,
     flush: () => {
       arrayControlValueBuffer.flush();
-      arrayItems().forEach((item) => item.$api.flush());
+      arrayItems().forEach(item => item.$api.flush());
     },
     focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: arrayValidationStatus,
@@ -516,7 +518,7 @@ export function array<TDefinition extends NodeDefinition>(
       if (arrayNonInteractive()) return;
       arraySelfTouched.set(true);
       arrayControlValueBuffer.flush();
-      if (!options?.skipDescendants) arrayItems().forEach((item) => item.$api.markAsTouched());
+      if (!options?.skipDescendants) arrayItems().forEach(item => item.$api.markAsTouched());
     },
     markAsUntouched: () => arraySelfTouched.set(false),
     dirty: arrayDirty,

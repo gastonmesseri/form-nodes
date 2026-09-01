@@ -20,11 +20,11 @@ const createValidityStyle = (root: ValidityRoot, nonce?: string): HTMLStyleEleme
 
 /** Whether the native control can change bad-input validity without dispatching an input event. */
 export const nativeInputRequiresValidityTracking = (input: HTMLInputElement): boolean =>
-  input.type === 'date' ||
-  input.type === 'datetime-local' ||
-  input.type === 'month' ||
-  input.type === 'time' ||
-  input.type === 'week';
+  input.type === 'date'
+  || input.type === 'datetime-local'
+  || input.type === 'month'
+  || input.type === 'time'
+  || input.type === 'week';
 
 /** Observes browser validity transitions that may happen without a native input event. */
 export const watchNativeInputValidity = (

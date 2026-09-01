@@ -41,12 +41,12 @@ describe('types', () => {
       expectTypeOf(owner).toEqualTypeOf<typeof profile.sons>();
     });
     expectTypeOf([...profile.sons]).toEqualTypeOf<(typeof son)[]>();
-    expectTypeOf(profile.sons.map((item) => item.name())).toEqualTypeOf<(string | null)[]>();
-    expectTypeOf(profile.sons.filter((item) => item.age()! > 18)).toEqualTypeOf<(typeof son)[]>();
-    expectTypeOf(profile.sons.find((item) => item.age()! > 18)).toEqualTypeOf<typeof son | undefined>();
-    expectTypeOf(profile.sons.findIndex((item) => item.age()! > 18)).toEqualTypeOf<number>();
-    expectTypeOf(profile.sons.some((item) => item.invalid())).toEqualTypeOf<boolean>();
-    expectTypeOf(profile.sons.every((item) => item.valid())).toEqualTypeOf<boolean>();
+    expectTypeOf(profile.sons.map(item => item.name())).toEqualTypeOf<(string | null)[]>();
+    expectTypeOf(profile.sons.filter(item => item.age()! > 18)).toEqualTypeOf<(typeof son)[]>();
+    expectTypeOf(profile.sons.find(item => item.age()! > 18)).toEqualTypeOf<typeof son | undefined>();
+    expectTypeOf(profile.sons.findIndex(item => item.age()! > 18)).toEqualTypeOf<number>();
+    expectTypeOf(profile.sons.some(item => item.invalid())).toEqualTypeOf<boolean>();
+    expectTypeOf(profile.sons.every(item => item.valid())).toEqualTypeOf<boolean>();
     expectTypeOf(profile.sons.includes(son)).toEqualTypeOf<boolean>();
     expectTypeOf(profile.sons.indexOf(son)).toEqualTypeOf<number>();
     if (false) {
@@ -98,7 +98,7 @@ describe('types', () => {
     array(
       { city: field(''), country: field('') },
       [],
-      { trackBy: (value) => value.city },
+      { trackBy: value => value.city },
     );
   });
 
@@ -435,7 +435,7 @@ describe('types', () => {
 
   it('types validators inside field options', () => {
     field('David', {
-      validators: [context => {
+      validators: [(context) => {
         expectTypeOf(context).toEqualTypeOf<ValidatorContext<string>>();
         expectTypeOf(context.value()).toEqualTypeOf<string>();
         expectTypeOf(context.api).toEqualTypeOf<ValidatorApi<string>>();
@@ -476,7 +476,7 @@ describe('types', () => {
       age: field(23),
     });
     formGroup.api.setValidators([
-      context => {
+      (context) => {
         expectTypeOf(context.value()).toEqualTypeOf<{
           city: string | null;
           age: number | null;
@@ -490,7 +490,7 @@ describe('types', () => {
     form(
       { city: field('Moscow'), age: field(23) },
       {
-        validators: [context => {
+        validators: [(context) => {
           expectTypeOf(context.value()).toEqualTypeOf<{
             city: string | null;
             age: number | null;

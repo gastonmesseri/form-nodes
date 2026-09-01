@@ -20,7 +20,7 @@ import type { ValidationStatus, ValidatorSource, Validators } from '../validatio
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
-import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNode, NormalizedNodes } from './form.type';
+import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes } from './form.type';
 
 export type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
@@ -78,6 +78,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     const key = formKeyInParent();
     return parent && key !== null ? [...parent.$api.path(), String(key)] : [];
   });
+  // eslint-disable-next-line prefer-const -- Assigned after self-referencing computed state has been declared.
   let formNode!: Form<TNodes>;
   const formOwnDisabledReason = computed(() => createDisabledReason(formSelfDisabled(), formNode), { equal: shallowEqual });
   const formConfiguredDisabledReason = computed(
@@ -86,7 +87,7 @@ export function form<TDefinitions extends NodeDefinitions>(
   );
   const formDisabledReasons = computed(() => [
     ...(formParent()?.$api.disabledReasons() ?? []),
-    ...[formOwnDisabledReason(), formConfiguredDisabledReason()].filter((reason) => reason !== undefined),
+    ...[formOwnDisabledReason(), formConfiguredDisabledReason()].filter(reason => reason !== undefined),
   ], { equal: shallowEqual });
   const formDisabled = computed(() => formDisabledReasons().length > 0);
   const formSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
@@ -126,17 +127,17 @@ export function form<TDefinitions extends NodeDefinitions>(
   const formAllErrors = computed(
     () => [
       ...formErrors(),
-      ...controlKeys().flatMap((key) => controls[key]!.$api.allErrors()),
+      ...controlKeys().flatMap(key => controls[key]!.$api.allErrors()),
     ],
     { equal: shallowEqual },
   );
   const getError = computedFunction(
-    (kind: string) => formErrors().find((error) => error.kind === kind),
+    (kind: string) => formErrors().find(error => error.kind === kind),
     { equal: shallowEqual, max: 20 },
   ) as FormApi<TNodes>['getError'];
   const formPending = computed(() =>
     !formNonInteractive() && (
-      asyncValidation.pending() || controlKeys().some((key) => controls[key]!.$api.pending())
+      asyncValidation.pending() || controlKeys().some(key => controls[key]!.$api.pending())
     ),
   );
   const formSubmitting = computed(() =>
@@ -144,7 +145,7 @@ export function form<TDefinitions extends NodeDefinitions>(
   );
   const formValidationStatus = computed<ValidationStatus>(() => {
     if (formNonInteractive()) return 'valid';
-    if (formErrors().length > 0 || controlKeys().some((key) => controls[key]!.$api.invalid())) return 'invalid';
+    if (formErrors().length > 0 || controlKeys().some(key => controls[key]!.$api.invalid())) return 'invalid';
     if (formPending()) return 'unknown';
     return 'valid';
   });
@@ -155,15 +156,16 @@ export function form<TDefinitions extends NodeDefinitions>(
     createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
   };
   const formTouched = computed(() =>
-    !formNonInteractive() && (formSelfTouched() || controlKeys().some((key) => controls[key]!.$api.touched())),
+    !formNonInteractive() && (formSelfTouched() || controlKeys().some(key => controls[key]!.$api.touched())),
   );
   const formDirty = computed(() =>
-    !formNonInteractive() && (formSelfDirty() || controlKeys().some((key) => controls[key]!.$api.dirty())),
+    !formNonInteractive() && (formSelfDirty() || controlKeys().some(key => controls[key]!.$api.dirty())),
   );
+  // eslint-disable-next-line prefer-const -- Assigned after computed state that reads the buffer has been declared.
   let formControlValueBuffer!: ControlValueBuffer<FormValue<TNodes>, FormSet<TNodes>>;
   const formDebouncing = computed(() =>
     formControlValueBuffer.debouncing()
-    || controlKeys().some((key) => controls[key]!.$api.debouncing()),
+    || controlKeys().some(key => controls[key]!.$api.debouncing()),
   );
   const set = (value: FormSet<TNodes>) => {
     formControlValueBuffer?.cancel();
@@ -193,17 +195,17 @@ export function form<TDefinitions extends NodeDefinitions>(
     formSelfDirty.set(false);
     notifyExternalValidationReset(formNode);
     if (args.length === 0) {
-      controlKeys().forEach((key) => controls[key]!.$api.reset());
+      controlKeys().forEach(key => controls[key]!.$api.reset());
       return;
     }
     const value = args[0];
-    controlKeys().forEach((key) => controls[key]!.$api.reset(value[key]));
+    controlKeys().forEach(key => controls[key]!.$api.reset(value[key]));
   };
   const getControlBindingForFocus = () => {
     const own = findFirstControlBindingInDom(formControlBindings);
     if (own) return own;
     return controlKeys()
-      .map((key) => (controls[key] as InternalNode).$api._getControlBindingForFocus())
+      .map(key => (controls[key] as InternalNode).$api._getControlBindingForFocus())
       .reduce(firstControlBindingInDom, undefined);
   };
   formControlValueBuffer = createControlValueBuffer(
@@ -240,7 +242,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     value: formValue,
     controlValue: formControlValueBuffer.controlValue,
     set,
-    update: (updater) => untracked(() => set(updater(formValue()))),
+    update: updater => untracked(() => set(updater(formValue()))),
     patch,
     reset,
     validators: formValidators.asReadonly(),
@@ -255,7 +257,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     getError,
     required: computed(() =>
       readMetadata(formMetadata(), REQUIRED_METADATA)
-      || formErrors().some((error) => error.kind === 'required')
+      || formErrors().some(error => error.kind === 'required')
     ),
     pending: formPending,
     submitting: formSubmitting,
@@ -263,7 +265,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     debouncing: formDebouncing,
     flush: () => {
       formControlValueBuffer.flush();
-      controlKeys().forEach((key) => controls[key]!.$api.flush());
+      controlKeys().forEach(key => controls[key]!.$api.flush());
     },
     focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     validationStatus: formValidationStatus,
@@ -273,7 +275,7 @@ export function form<TDefinitions extends NodeDefinitions>(
       if (formNonInteractive()) return;
       formSelfTouched.set(true);
       formControlValueBuffer.flush();
-      if (!options?.skipDescendants) controlKeys().forEach((key) => controls[key]!.$api.markAsTouched());
+      if (!options?.skipDescendants) controlKeys().forEach(key => controls[key]!.$api.markAsTouched());
     },
     markAsUntouched: () => formSelfTouched.set(false),
     dirty: formDirty,
@@ -315,7 +317,7 @@ export function form<TDefinitions extends NodeDefinitions>(
     () => formValue(),
     Object.getOwnPropertyDescriptors({ ...api, api: internalApi, ...controls, $api: internalApi }),
   ) as Form<TNodes>;
-  controlKeys().forEach((key) => (controls[key] as InternalNode).$api._setParent(formNode, String(key)));
+  controlKeys().forEach(key => (controls[key] as InternalNode).$api._setParent(formNode, String(key)));
   markAsNode(formNode);
   ensureAsyncValidationWatch();
   return formNode;

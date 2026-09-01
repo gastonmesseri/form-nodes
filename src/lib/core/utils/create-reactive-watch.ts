@@ -17,7 +17,7 @@ type TrackedRunnerTarget = {
   notify(): void;
 };
 
-const finalizationRegistry = new FinalizationRegistry<Watch>((watch) => watch.destroy());
+const finalizationRegistry = new FinalizationRegistry<Watch>(watch => watch.destroy());
 
 const getDestroyRef = (injector?: Injector): DestroyRef | null => {
   if (injector) return injector.get(DestroyRef);
