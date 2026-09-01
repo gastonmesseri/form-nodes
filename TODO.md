@@ -9,20 +9,11 @@
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
     - [x] Inline built-in validator option objects so `message` and date `parseAs` choices are visible directly at each call site.
 - Validators
-  [x]- Consider changing 'kind' to 'type' in validators
-  - Implement basic validators (get from lab)
-    - Review required overload and make it work like in lab
+  - required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
   - being reactive or not by default (probably yes but optionally with option that reactive: false)
     - in case is reactive, make it also tick when value has changed (in case i declared value as the value and not as a signal)
-  - value probably is simpler to make it directly the value, and not a signal() wrapping the value
-  - Each validator should have a very descriptive behavior in is JSDoc
-   - e.g. required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
-  - Improve validators model, similar to Angular 22 signal forms, but also allow referencing other fields, and also de form tree (as arguments)
-  - [x] Export `validator()` for users to define validator functions without manually specifying the callback signature.
-    - [x] Make this the recommended way to create a custom validator in a separate file where node-level contextual inference is unavailable.
-      - [x] Accept the value model as a generic for `field()`, `array()`, or `form()` validators.
   - Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
-   .  Also handle cases like in lab, like addErrors, and those
+    - Also handle cases like in lab, like addErrors, and those
   - Check what model of errors() other libraries return, and decide for the best system
   - implement debounce for synchronous validators
   - Consider allowing defining a asyncValidator without asyncValidator function:
@@ -324,3 +315,12 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
     - [x] Add `uniqueItems()` for arrays with identity, property-name, and reactive function selectors.
     - [x] Add inclusive `between()` with reactive numeric bounds and native constraint metadata.
     - [x] Add inclusive `dateBetween()` with parsed reactive date bounds and native constraint metadata.
+  - [x] Consider changing 'kind' to 'type' in validators
+  - [x] Implement basic validators (get from lab)
+    - [x] Review required overload and make it work like in lab
+  - [x] discarded - value probably is simpler to make it directly the value, and not a signal() wrapping the value
+  - [x] Each validator should have a very descriptive behavior in is JSDoc
+  - Improve validators model, similar to Angular 22 signal forms, but also allow referencing other fields, and also de form tree (as arguments)
+  - [x] Export `validator()` for users to define validator functions without manually specifying the callback signature.
+    - [x] Make this the recommended way to create a custom validator in a separate file where node-level contextual inference is unavailable.
+      - [x] Accept the value model as a generic for `field()`, `array()`, or `form()` validators.
