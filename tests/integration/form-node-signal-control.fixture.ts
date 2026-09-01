@@ -1,7 +1,10 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, type OnChanges, type SimpleChanges } from '@angular/core';
 
-import { field, FormNode, useControlState, required, type Field } from '../../src/public-api';
+import { field, form, FormNode, useControlState, required, type Field } from '../../src/public-api';
+
+type Company = { companyId: number; companyName: string };
+type CompanyValue = { companyId: number | null; companyName: string | null };
 
 @Component({
   standalone: true,
@@ -65,6 +68,33 @@ export class AotDelegatingControl {
 })
 export class AotPassThroughHost {
   readonly name = field('AOT wrapper initial', { nullable: false });
+}
+
+@Component({
+  standalone: true,
+  selector: 'aot-company-selector',
+  template: `<button type="button" [disabled]="disabled()" (click)="value.set({ companyId: 24, companyName: 'Microsoft' })" (blur)="touch.emit()">{{ value().companyName }}</button>`,
+})
+export class AotCompanySelector implements FormValueControl<CompanyValue> {
+  value = model<CompanyValue>({ companyId: null, companyName: null });
+  touch = output<void>();
+  disabled = input(false);
+  dirty = input(false);
+  touched = input(false);
+}
+
+@Component({
+  standalone: true,
+  selector: 'aot-company-selector-host',
+  imports: [AotCompanySelector, FormNode],
+  template: `<aot-company-selector [formNode]="myForm.company" />`,
+})
+export class AotCompanySelectorHost {
+  private initialCompany: Company = { companyId: 23, companyName: 'Apple' };
+
+  myForm = form({
+    company: this.initialCompany,
+  });
 }
 
 @Component({
