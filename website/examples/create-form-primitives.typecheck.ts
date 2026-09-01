@@ -4,7 +4,8 @@ const { form, field, array } = createFormPrimitives({ nullable: false });
 
 const profile = form({
   username: field(''),
-  nickname: field('', { nullable: true }),
+  nickname: field.nullable(''),
+  reference: field.notnull('REF-1'),
   address: {
     city: '',
   },
@@ -15,8 +16,9 @@ const profile = form({
 
 const username: Field<string> = profile.username;
 const nickname: Field<string | null> = profile.nickname;
+const reference: Field<string> = profile.reference;
 
 profile();
-// Expected output: { username: '', nickname: '', address: { city: '' }, tags: ['angular'] }
+// Expected output: { username: '', nickname: '', reference: 'REF-1', address: { city: '' }, tags: ['angular'] }
 
-void [username, nickname];
+void [username, nickname, reference];

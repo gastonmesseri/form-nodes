@@ -418,6 +418,10 @@ name.set('Ana');
 // name.set(null); // TypeScript error
 ```
 
+`field.notnull(value)` is the concise equivalent that always excludes `null`, while
+`field.nullable(value)` always includes `null`. Both overrides remain available on field factories
+returned by `createFormPrimitives()`, independently of their configured default.
+
 A non-nullable field requires a non-null initial value. `field<string>(null, { nullable: false })` is rejected by TypeScript.
 
 Nullability intentionally does not change reset behavior. In line with this library's Signal Forms-inspired reset model, `reset()` without a value preserves the current value and clears interaction state. It does not reset nullable fields to null or non-nullable fields to their initial value. `reset(value)` always uses the supplied value.

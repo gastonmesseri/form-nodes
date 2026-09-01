@@ -30,6 +30,8 @@ export type { Field, FieldApi, FieldOptions } from './field.type';
 
 type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { nullable?: true };
 type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { nullable: false };
+type ForcedNullableFieldOptions<TValue> = Omit<FieldOptions<TValue | null>, 'nullable'>;
+type ForcedNonNullableFieldOptions<TValue> = Omit<FieldOptions<TValue>, 'nullable'>;
 
 /**
  * Creates a nullable field whose future value type is not yet known.
@@ -444,4 +446,90 @@ export function field<TValue>(
   registerNodeValidatorMessages(fieldNode, undefined, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return fieldNode;
+}
+
+export namespace field {
+  /**
+   * Creates a field that excludes `null`, independently of the configured default.
+   *
+   * ```ts
+   * const name = field.notnull('Marco');
+   *
+   * name(); // 'Marco'
+   * ```
+   *
+   * @param value Initial committed value.
+   * @param options Field configuration.
+   */
+  export function notnull<TValue extends {}>(value: TValue, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  /**
+   * Creates a non-nullable field with positional validators.
+   *
+   * ```ts
+   * const name = field.notnull('Marco', [required]);
+   * ```
+   *
+   * @param value Initial committed value.
+   * @param validators Validators for the field value.
+   * @param options Field configuration.
+   */
+  export function notnull<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  export function notnull<TValue extends {}>(
+    value: TValue,
+    validatorsOrOptions?: ValidatorSource<NoInfer<TValue>> | ForcedNonNullableFieldOptions<NoInfer<TValue>>,
+    separateOptions?: ForcedNonNullableFieldOptions<NoInfer<TValue>>,
+  ): Field<TValue> {
+    const createField = field as unknown as (
+      initialValue: TValue,
+      initialValidatorsOrOptions?: ValidatorSource<TValue> | FieldOptions<TValue>,
+      initialOptions?: FieldOptions<TValue>,
+    ) => Field<TValue>;
+    if (isValidatorSource<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined) {
+      return createField(value, validatorsOrOptions, { ...separateOptions, nullable: false });
+    }
+    return createField(value, { ...validatorsOrOptions, nullable: false });
+  }
+
+  /**
+   * Creates a field that includes `null`, independently of the configured default.
+   *
+   * ```ts
+   * const nickname = field.nullable('Marco');
+   *
+   * nickname.set(null);
+   * ```
+   *
+   * @param value Initial committed value.
+   * @param options Field configuration.
+   */
+  export function nullable(value: null | undefined, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;
+  export function nullable<TValue>(value?: TValue | null, options?: ForcedNullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  /**
+   * Creates a nullable field with positional validators.
+   *
+   * ```ts
+   * const nickname = field.nullable('', [required]);
+   * ```
+   *
+   * @param value Initial committed value.
+   * @param validators Validators for the nullable field value.
+   * @param options Field configuration.
+   */
+  export function nullable(value: null | undefined, validators: ValidatorSource<unknown>, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;
+  export function nullable<TValue>(value: TValue | null | undefined, validators: ValidatorSource<NoInfer<TValue | null>>, options?: ForcedNullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  export function nullable<TValue>(
+    value: TValue | null = null,
+    validatorsOrOptions?: ValidatorSource<NoInfer<TValue | null>> | ForcedNullableFieldOptions<NoInfer<TValue>>,
+    separateOptions?: ForcedNullableFieldOptions<NoInfer<TValue>>,
+  ): Field<TValue | null> {
+    const createField = field as unknown as (
+      initialValue: TValue | null,
+      initialValidatorsOrOptions?: ValidatorSource<TValue | null> | FieldOptions<TValue | null>,
+      initialOptions?: FieldOptions<TValue | null>,
+    ) => Field<TValue | null>;
+    if (isValidatorSource<TValue | null>(validatorsOrOptions) || validatorsOrOptions === undefined) {
+      return createField(value, validatorsOrOptions, { ...separateOptions, nullable: true });
+    }
+    return createField(value, { ...validatorsOrOptions, nullable: true });
+  }
 }
