@@ -101,7 +101,7 @@ Angular templates can iterate the node directly. Track the node instance to reta
 
 Array traversal helpers snapshot `items()` when the operation begins. Structural changes made inside a callback do not alter that active traversal.
 
-`items()` is a signal whose array reference changes when structure changes. Its nodes are live and readonly as a collection.
+`items()` is a signal whose array reference changes when structure changes. Its nodes are live and readonly as a collection. Calling the array also produces a new value-array reference after a structural change, so `computed()` and `effect()` consumers react to `push()` and the other structural operations. Previously read item and value snapshots remain unchanged.
 
 ## Add and remove items
 
