@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { max } from './max';
 import { min } from './min';
+import { url } from './url';
 import { email } from './email';
 import { oneOf } from './one-of';
 import { pattern } from './pattern';
@@ -22,6 +23,7 @@ describe('reactive validator messages', () => {
     const invalidNodes = [
       field('', [required({ message })]),
       field('invalid', [email({ message })]),
+      field('invalid', [url({ message })]),
       field(1, [min(2, { message })]),
       field(2, [max(1, { message })]),
       field('a', [minLength(2, { message })]),

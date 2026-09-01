@@ -108,7 +108,7 @@ The package exports:
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
-- Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `minDate`, and `maxDate` validators.
+- Built-in `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
 
@@ -816,6 +816,7 @@ const age = field<number>(null, {
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
+| `url` | `string | null` | Passes for `null` and `''` | `{ kind: 'url', message }` |
 | `oneOf(values)` | The allowed value type, `null`, or `undefined` | Passes for `null`, `undefined`, and `''` | `{ kind: 'oneOf', options, actual, message }` |
 | `minWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'minWords', minWords, actual, message }` |
 | `maxWords(limit)` | `string | null` | Passes for `null` and `''` | `{ kind: 'maxWords', maxWords, actual, message }` |
@@ -846,8 +847,16 @@ field('David', [required]);
 field('David', [required({ message: 'Name is required' })]);
 field('David', [required({ message: () => translatedRequiredMessage() })]);
 field('', [email({ message: 'Enter a work email' })]);
+field('', [url({ message: 'Enter a complete URL' })]);
 field(16, [min(18, { message: 'You must be at least 18' })]);
 ```
+
+`url` uses the platform WHATWG `URL` constructor without a base URL. It therefore accepts valid
+absolute URLs with any scheme, such as `https://example.com`, `mailto:user@example.com`, and
+`custom:value`, while rejecting relative references such as `/account`. This deliberately follows
+the broad URL semantics also used by Zod rather than silently restricting the validator to HTTP.
+Angular 22.1.4 Signal Forms has no built-in URL validator. A future HTTP-only validator should use
+a distinct name such as `httpUrl()`.
 
 Every built-in validator returns an English default message with its error. The common optional
 `message` accepts either a static string or a function returning `string | undefined`. A message
@@ -855,7 +864,7 @@ function is evaluated only while its validator is failing; signals read by it ar
 changes update the exposed error reactively. Returning `undefined` continues through the configured
 fallback chain. This works inside and outside Angular dependency injection.
 
-`required` and `email` support direct use in a validators array and an options factory; validators
+`required`, `email`, and `url` support direct use in a validators array and an options factory; validators
 that require a constraint accept options as their final argument. Passing a string directly to
 `required` is intentionally rejected. Field contexts carry a non-enumerable internal symbol
 marker, allowing overloaded validators to recognize genuine contexts without relying on their
@@ -946,7 +955,7 @@ const profile = form({
 Nested forms and arrays inherit the closest catalog. A validator-specific `message` remains the
 highest-priority override for wording tied to one business rule.
 
-Constraint errors also expose `actual`: the rejected number for `min` and `max`, the observed length or size for length validators, the rejected string for `pattern`, and the rejected `Date` for date validators. `oneOf()` and the word-count validators follow the same convention. `required` and `email` omit `actual` because reflecting the entire submitted value adds little diagnostic value and can expose user input unnecessarily. Angular 22.1.4's built-in constraint errors expose the configured constraint but not the actual value, so this is a deliberate diagnostic extension.
+Constraint errors also expose `actual`: the rejected number for `min` and `max`, the observed length or size for length validators, the rejected string for `pattern`, and the rejected `Date` for date validators. `oneOf()` and the word-count validators follow the same convention. `required`, `email`, and `url` omit `actual` because reflecting the entire submitted value adds little diagnostic value and can expose user input unnecessarily. Angular 22.1.4's built-in constraint errors expose the configured constraint but not the actual value, so this is a deliberate diagnostic extension.
 
 `getError()` resolves built-in literal kinds to their complete structured types. Editors therefore expose `min`, `actual`, `message`, and `targetNode` without a cast:
 
@@ -977,7 +986,7 @@ username.getError('unavailableUsername')?.suggestion; // string | undefined
 `BuiltInValidationError` remains the union of errors shipped by the library and does not absorb application augmentations. `ValidationErrorMap` is the deliberately extensible lookup registry.
 `CustomValidationError` represents the permissive fallback shape.
 
-Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `email` validates format only when a value exists; `[required, email]` validates both presence and format.
+Optional-value validators deliberately accept empty values so they can be composed with `required`. For example, `url` validates format only when a value exists; `[required, url]` validates both presence and format.
 
 `oneOf()` validates membership with `Array.prototype.includes`, so `NaN` matches `NaN` and objects match by reference rather than by structure. Its error includes the resolved allowed `options` and the rejected `actual` value. The allowed values can be static or returned by a reactive function; returning `undefined` temporarily disables the constraint:
 

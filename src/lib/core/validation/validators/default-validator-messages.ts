@@ -5,6 +5,9 @@ export const defaultValidatorMessages = {
   email(): string {
     return 'Please enter a valid email address.';
   },
+  url(): string {
+    return 'Please enter a valid absolute URL.';
+  },
   oneOf(): string {
     return 'Please enter one of the allowed values.';
   },
