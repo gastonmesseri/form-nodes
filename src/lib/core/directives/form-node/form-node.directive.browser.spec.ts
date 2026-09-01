@@ -742,10 +742,12 @@ describe('FormNode in Chromium', () => {
     const checkboxControl = fixture.debugElement.children[1]!.componentInstance as InstanceType<typeof module.AotSignalCheckboxControl>;
     const pairedControl = fixture.debugElement.children[2]!.componentInstance as InstanceType<typeof module.AotPairedValueControl>;
     const directiveControl = fixture.debugElement.children[3]!.injector.get(module.AotDirectiveControl);
+    const directiveCheckboxControl = fixture.debugElement.children[4]!.injector.get(module.AotDirectiveCheckbox);
     const valueButton = fixture.nativeElement.querySelector('aot-signal-value-control button') as HTMLButtonElement;
     const checkboxButton = fixture.nativeElement.querySelector('aot-signal-checkbox-control button') as HTMLButtonElement;
     const pairedButton = fixture.nativeElement.querySelector('aot-paired-value-control button') as HTMLButtonElement;
     const directiveInput = fixture.nativeElement.querySelector('input[aotDirectiveControl]') as HTMLInputElement;
+    const directiveCheckbox = fixture.nativeElement.querySelector('input[aotDirectiveCheckbox]') as HTMLInputElement;
 
     expect(valueControl.value()).toBe('AOT initial');
     expect(valueControl.required()).toBe(true);
@@ -754,12 +756,16 @@ describe('FormNode in Chromium', () => {
     expect(directiveControl.required()).toBe(true);
     expect(directiveInput.required).toBe(false);
     expect(directiveInput.value).toBe('AOT directive initial');
+    expect(directiveCheckboxControl.required()).toBe(true);
+    expect(directiveCheckbox.required).toBe(false);
+    expect(directiveCheckbox.checked).toBe(false);
 
     valueButton.click();
     checkboxButton.click();
     pairedButton.click();
     directiveInput.value = 'AOT directive value';
     dispatch(directiveInput, 'input');
+    directiveCheckbox.click();
     dispatch(valueButton, 'blur');
     fixture.detectChanges();
 
@@ -769,6 +775,7 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.active()).toBe(true);
     expect(fixture.componentInstance.pairedName()).toBe('AOT paired value');
     expect(fixture.componentInstance.directiveName()).toBe('AOT directive value');
+    expect(fixture.componentInstance.directiveActive()).toBe(true);
     expect(valueControl.dirty()).toBe(true);
     expect(valueControl.touched()).toBe(true);
 
