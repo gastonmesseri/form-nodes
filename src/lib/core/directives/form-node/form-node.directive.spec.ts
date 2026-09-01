@@ -1057,6 +1057,50 @@ describe('FormNode', () => {
     }
   });
 
+  it('restores a native control when a debounced update is reset locally or from its form', async () => {
+    vi.useFakeTimers();
+    try {
+      @Component({
+        standalone: true,
+        selector: 'reset-debounce-form-node-host',
+        imports: [FormNode],
+        template: `<input [formNode]="profile.name">`,
+      })
+      class Host {
+        readonly profile = form({ name: field('initial', { nullable: false }) }, { debounce: 100 });
+      }
+
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+      const { profile } = fixture.componentInstance;
+      expect(inputElement.value).toBe('initial');
+
+      inputElement.value = 'local pending';
+      dispatch(inputElement, 'input');
+      expect(profile.name.controlValue()).toBe('local pending');
+      expect(profile.name()).toBe('initial');
+
+      profile.name.reset();
+      expect(inputElement.value).toBe('initial');
+      await vi.runAllTimersAsync();
+      expect(profile.name()).toBe('initial');
+      expect(inputElement.value).toBe('initial');
+
+      inputElement.value = 'form pending';
+      dispatch(inputElement, 'input');
+      expect(profile.name.controlValue()).toBe('form pending');
+
+      profile.reset();
+      expect(inputElement.value).toBe('initial');
+      await vi.runAllTimersAsync();
+      expect(profile()).toEqual({ name: 'initial' });
+      expect(inputElement.value).toBe('initial');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('parses number and checkbox controls using their native value types', () => {
     @Component({
       standalone: true,
