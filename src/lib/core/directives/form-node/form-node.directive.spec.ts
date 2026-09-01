@@ -308,6 +308,58 @@ describe('FormNode', () => {
     expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 
+  it('rebinds an aggregate custom control without transferring node-owned debounce work', async () => {
+    vi.useFakeTimers();
+    try {
+      type ProfileValue = { name: string };
+
+      @Component({ standalone: true, selector: 'rebound-aggregate-control', template: '' })
+      class ReboundAggregateControl {
+        value = model<ProfileValue>({ name: '' });
+      }
+      registerSignalModelForJit(ReboundAggregateControl, 'value');
+
+      @Component({
+        standalone: true,
+        imports: [ReboundAggregateControl, FormNode],
+        template: `<rebound-aggregate-control [formNode]="selected()" />`,
+      })
+      class Host {
+        readonly first = form({ name: field('first', { nullable: false }) }, { debounce: 100 });
+        readonly second = form({ name: field('second', { nullable: false }) }, { debounce: 100 });
+        readonly selected = signal(this.first);
+      }
+
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const control = fixture.debugElement.children[0]!.componentInstance as ReboundAggregateControl;
+      const { first, second, selected } = fixture.componentInstance;
+
+      control.value.set({ name: 'pending first' });
+      expect(first.controlValue()).toEqual({ name: 'pending first' });
+      expect(first()).toEqual({ name: 'first' });
+
+      selected.set(second);
+      fixture.detectChanges();
+      expect(control.value()).toEqual({ name: 'second' });
+
+      control.value.set({ name: 'pending second' });
+      expect(second.controlValue()).toEqual({ name: 'pending second' });
+      expect(second()).toEqual({ name: 'second' });
+
+      await vi.advanceTimersByTimeAsync(100);
+      fixture.detectChanges();
+
+      expect(first()).toEqual({ name: 'pending first' });
+      expect(second()).toEqual({ name: 'pending second' });
+      expect(control.value()).toEqual({ name: 'pending second' });
+      expect(first.name.pristine()).toBe(true);
+      expect(second.name.pristine()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('restores a signal custom control when its debounced update is reset', async () => {
     vi.useFakeTimers();
     try {
