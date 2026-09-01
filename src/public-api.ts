@@ -13,7 +13,7 @@ export { asyncValidator } from './lib/core/validation/async-validator';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export { required, type RequiredOptions } from './lib/core/validation/validators/required';
-export { FORM_NODE, FormNodeDirective } from './lib/core/directives/form-node/form-node.directive';
+export { FORM_NODE, FormNode, _FormNode } from './lib/core/directives/form-node/form-node.directive';
 export type { FormNodeBinding } from './lib/core/types/form-node-binding.type';
 export { provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
 export { FORM_NODE_CONTROL, provideFormNodeControl, type FormNodeCheckboxControl, type FormNodeControl, type FormNodeUiControl, type FormNodeValueControl } from './lib/core/directives/form-node/form-node-control';

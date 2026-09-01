@@ -14,7 +14,7 @@ import type { Node } from '../../types/node.type';
 import type { Field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
-import { FormNodeDirective } from './form-node.directive';
+import { FormNode } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { provideFormNodeConfig } from './form-node-config';
 import { provideFormNodeControl } from './form-node-control';
@@ -28,7 +28,7 @@ import type { FormNodeBinding } from '../../types/form-node-binding.type';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
+registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -47,7 +47,7 @@ const accessorWithPrototype = (prototype: object): ControlValueAccessor & { writ
   return accessor;
 };
 
-describe('FormNodeDirective', () => {
+describe('FormNode', () => {
   it('applies configured CSS classes reactively and independently', () => {
     const externalState = signal(false);
     const invalidPredicate = vi.fn((binding: FormNodeBinding) => binding.node().$api.invalid());
@@ -56,7 +56,7 @@ describe('FormNodeDirective', () => {
 
     @Component({
       standalone: true,
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       providers: [provideFormNodeConfig({
         classes: {
           'form-invalid': invalidPredicate,
@@ -82,7 +82,7 @@ describe('FormNodeDirective', () => {
     expect(externalPredicate).toHaveBeenCalledTimes(1);
     const binding = invalidPredicate.mock.calls[0]![0];
     expect(binding.element).toBe(inputElement);
-    expect(binding.injector.get(FormNodeDirective)).toBeInstanceOf(FormNodeDirective);
+    expect(binding.injector.get(FormNode)).toBeInstanceOf(FormNode);
     expect(binding.node()).toBe(fixture.componentInstance.name);
     binding.focus();
     expect(document.activeElement).toBe(inputElement);
@@ -121,7 +121,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'explicit-signal-control-host',
-      imports: [ExplicitSignalControl, FormNodeDirective],
+      imports: [ExplicitSignalControl, FormNode],
       template: `<explicit-signal-control [formNode]="name" />`,
     })
     class Host {
@@ -160,7 +160,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'aggregate-form-control-host',
-      imports: [AggregateFormControl, FormNodeDirective],
+      imports: [AggregateFormControl, FormNode],
       template: `<aggregate-form-control [formNode]="profile" />`,
     })
     class Host {
@@ -210,7 +210,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'aggregate-array-control-host',
-      imports: [AggregateArrayControl, FormNodeDirective],
+      imports: [AggregateArrayControl, FormNode],
       template: `<aggregate-array-control [formNode]="people" />`,
     })
     class Host {
@@ -249,7 +249,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'native-aggregate-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="profile">`,
     })
     class Host {
@@ -265,7 +265,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'text-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="name">`,
     })
     class Host {
@@ -292,7 +292,7 @@ describe('FormNodeDirective', () => {
     fixture.detectChanges();
     expect(input.value).toBe('Lia');
 
-    const binding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
+    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
     const focus = vi.spyOn(input, 'focus');
     binding.focus({ preventScroll: true });
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
@@ -319,7 +319,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'aggregate-focus-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input data-second [formNode]="profile.second">
         <input data-first [formNode]="profile.first">
@@ -353,7 +353,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'multiple-focus-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input data-first [formNode]="name">
         <input data-second [formNode]="name">
@@ -383,7 +383,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'dynamic-focus-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="active()">`,
     })
     class Host {
@@ -413,7 +413,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'nested-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="profile.address.city">`,
     })
     class Host {
@@ -449,7 +449,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'root-field-names-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input [formNode]="first">
         <input [formNode]="second">
@@ -473,7 +473,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'numeric-parse-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input type="text" [formNode]="profile.age">`,
     })
     class Host {
@@ -520,7 +520,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'multiple-parse-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input data-first type="text" [formNode]="age">
         <input data-second type="text" [formNode]="age">
@@ -534,7 +534,12 @@ describe('FormNodeDirective', () => {
     fixture.detectChanges();
     const first = fixture.nativeElement.querySelector('[data-first]') as HTMLInputElement;
     const second = fixture.nativeElement.querySelector('[data-second]') as HTMLInputElement;
+    const firstBinding = fixture.debugElement.children[0]!.injector.get(FormNode);
+    const secondBinding = fixture.debugElement.children[1]!.injector.get(FormNode);
     const { age } = fixture.componentInstance;
+
+    expect(firstBinding.node()).toBe(age);
+    expect(firstBinding.errors()).toEqual([]);
 
     first.value = 'first-invalid';
     dispatch(first, 'input');
@@ -547,6 +552,10 @@ describe('FormNodeDirective', () => {
     expect(parseErrors).toHaveLength(2);
     expect(parseErrors.map((error) => error.formNode?.element)).toEqual([first, second]);
     expect(parseErrors[0]!.formNode).not.toBe(parseErrors[1]!.formNode);
+    expect(parseErrors[0]!.formNode).toBe(firstBinding);
+    expect(parseErrors[1]!.formNode).toBe(secondBinding);
+    expect(firstBinding.errors().filter((error) => error.kind === 'parse')).toEqual([parseErrors[0]]);
+    expect(secondBinding.errors().filter((error) => error.kind === 'parse')).toEqual([parseErrors[1]]);
     expect(first.value).toBe('first-invalid');
     expect(second.value).toBe('second-invalid');
 
@@ -554,16 +563,50 @@ describe('FormNodeDirective', () => {
     fixture.detectChanges();
 
     expect(age.getError('parse')).toBeUndefined();
+    expect(firstBinding.errors()).toEqual([]);
+    expect(secondBinding.errors()).toEqual([]);
     expect(age.pristine()).toBe(true);
     expect(first.value).toBe('23');
     expect(second.value).toBe('23');
+  });
+
+  it('exposes node errors through every binding while filtering binding-owned errors', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `
+        <input type="text" [formNode]="age">
+        <input type="text" [formNode]="age">
+      `,
+    })
+    class Host {
+      readonly age = field(23, [min(30)], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const first = fixture.nativeElement.querySelectorAll('input')[0] as HTMLInputElement;
+    const firstBinding = fixture.debugElement.children[0]!.injector.get(FormNode);
+    const secondBinding = fixture.debugElement.children[1]!.injector.get(FormNode);
+
+    expect(firstBinding.errors().map((error) => error.kind)).toEqual(['min']);
+    expect(secondBinding.errors().map((error) => error.kind)).toEqual(['min']);
+    const secondErrors = secondBinding.errors();
+
+    first.value = 'invalid';
+    dispatch(first, 'input');
+    fixture.detectChanges();
+
+    expect(firstBinding.errors().map((error) => error.kind)).toEqual(['min', 'parse']);
+    expect(secondBinding.errors().map((error) => error.kind)).toEqual(['min']);
+    expect(secondBinding.errors()).toBe(secondErrors);
   });
 
   it('moves native parse-error ownership when the bound field changes', () => {
     @Component({
       standalone: true,
       selector: 'dynamic-parse-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input type="text" [formNode]="selected()">`,
     })
     class Host {
@@ -575,23 +618,29 @@ describe('FormNodeDirective', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
     const { first, second, selected } = fixture.componentInstance;
 
     input.value = 'invalid';
     dispatch(input, 'input');
     fixture.detectChanges();
     expect(first.getError('parse')?.kind).toBe('parse');
+    expect(binding.node()).toBe(first);
+    expect(binding.errors().map((error) => error.kind)).toEqual(['parse']);
 
     selected.set(second);
     fixture.detectChanges();
     expect(first.getError('parse')).toBeUndefined();
     expect(second.getError('parse')).toBeUndefined();
+    expect(binding.node()).toBe(second);
+    expect(binding.errors()).toEqual([]);
     expect(input.value).toBe('42');
 
     input.value = 'still-invalid';
     dispatch(input, 'input');
     fixture.detectChanges();
     expect(second.getError('parse')?.kind).toBe('parse');
+    expect(binding.errors().map((error) => error.kind)).toEqual(['parse']);
 
     fixture.destroy();
     expect(second.getError('parse')).toBeUndefined();
@@ -601,7 +650,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'state-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="name">`,
     })
     class Host {
@@ -631,7 +680,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'hidden-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="profile.name">`,
     })
     class Host {
@@ -657,7 +706,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'reactive-hidden-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="name">`,
     })
     class Host {
@@ -687,7 +736,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'production-hidden-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="name">`,
     })
     class Host {
@@ -712,7 +761,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'constraint-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input type="number" [formNode]="age">
         <input [formNode]="code">
@@ -757,7 +806,7 @@ describe('FormNodeDirective', () => {
       @Component({
         standalone: true,
         selector: 'debounce-form-node-host',
-        imports: [FormNodeDirective],
+        imports: [FormNode],
         template: `<input [formNode]="name">`,
       })
       class Host {
@@ -786,7 +835,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'typed-native-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input type="number" [formNode]="age">
         <input type="checkbox" [formNode]="active">
@@ -814,7 +863,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'radio-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input type="radio" name="city" value="Madrid" [formNode]="city">
         <input type="radio" name="city" value="Zurich" [formNode]="city">
@@ -849,7 +898,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'select-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <select [formNode]="city"><option>Madrid</option><option>Zurich</option></select>
         <select multiple [formNode]="cities"><option>Madrid</option><option>Zurich</option></select>
@@ -920,7 +969,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'cva-form-node-host',
-      imports: [FormNodeDirective, TestCva],
+      imports: [FormNode, TestCva],
       template: `<test-cva [formNode]="active()" />`,
     })
     class Host {
@@ -971,7 +1020,7 @@ describe('FormNodeDirective', () => {
     fixture.detectChanges();
     expect(cva.name()).toMatch(/\.form\d+$/);
     expect(cva.name()).not.toBe(firstName);
-    expect(fixture.debugElement.children[0]!.injector.get(FormNodeDirective).field)
+    expect(fixture.debugElement.children[0]!.injector.get(FormNode).node())
       .toBe(fixture.componentInstance.alternative);
     expect(fixture.componentInstance.name.valid()).toBe(true);
     expect(fixture.componentInstance.alternative.getError('customCva')?.targetNode)
@@ -985,7 +1034,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'invalid-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<div [formNode]="name"></div>`,
     })
     class Host {
@@ -1017,7 +1066,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'ambiguous-cva-host',
-      imports: [AmbiguousCva, FormNodeDirective],
+      imports: [AmbiguousCva, FormNode],
       template: `<ambiguous-cva [formNode]="name" />`,
     })
     class Host {
@@ -1051,7 +1100,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'accessor-priority-host',
-      imports: [FormNodeDirective, PriorityControl],
+      imports: [FormNode, PriorityControl],
       template: `<accessor-priority-control [formNode]="name" />`,
     })
     class Host {
@@ -1086,7 +1135,7 @@ describe('FormNodeDirective', () => {
       standalone: true,
       selector: 'single-angular-accessor-host',
       host: { 'data-accessor-kind': _kind },
-      imports: [FormNodeDirective, SingleAccessorControl],
+      imports: [FormNode, SingleAccessorControl],
       template: `<single-angular-accessor [formNode]="name" />`,
     })
     class Host {
@@ -1118,7 +1167,7 @@ describe('FormNodeDirective', () => {
       standalone: true,
       selector: 'duplicate-angular-accessor-host',
       host: { 'data-accessor-kind': _kind },
-      imports: [DuplicateAccessorControl, FormNodeDirective],
+      imports: [DuplicateAccessorControl, FormNode],
       template: `<duplicate-angular-accessor [formNode]="name" />`,
     })
     class Host {
@@ -1132,14 +1181,13 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'missing-field-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input formNode>`,
     })
     class Host {}
 
     const fixture = TestBed.createComponent(Host);
-    const binding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
-    expect(() => binding.field).toThrowError('formNode: a field, form, or array node is required');
+    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
     expect(() => binding.node()).toThrowError('formNode: a field, form, or array node is required');
     fixture.destroy();
   });
@@ -1163,7 +1211,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'minimal-cva-host',
-      imports: [FormNodeDirective, MinimalCva],
+      imports: [FormNode, MinimalCva],
       template: `<minimal-cva [formNode]="name" />`,
     })
     class Host {
@@ -1201,7 +1249,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'echoing-cva-host',
-      imports: [FormNodeDirective, EchoingCva],
+      imports: [FormNode, EchoingCva],
       template: `<echoing-cva [formNode]="name" />`,
     })
     class Host {
@@ -1243,7 +1291,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'signal-cva-host',
-      imports: [FormNodeDirective, SignalCva],
+      imports: [FormNode, SignalCva],
       template: `<signal-cva [formNode]="name" />`,
     })
     class Host {
@@ -1282,7 +1330,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'recreated-cva-host',
-      imports: [FormNodeDirective, RecreatedCva],
+      imports: [FormNode, RecreatedCva],
       template: `@if (visible()) { <recreated-cva [formNode]="name" /> }`,
     })
     class Host {
@@ -1337,7 +1385,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'dynamic-validator-host',
-      imports: [FormNodeDirective, DynamicValidatorCva],
+      imports: [FormNode, DynamicValidatorCva],
       template: `<dynamic-validator-cva [formNode]="name" />`,
     })
     class Host {
@@ -1385,7 +1433,7 @@ describe('FormNodeDirective', () => {
     @Component({
       standalone: true,
       selector: 'function-validator-host',
-      imports: [FormNodeDirective, FunctionValidatorCva],
+      imports: [FormNode, FunctionValidatorCva],
       template: `<function-validator-cva [formNode]="name" />`,
     })
     class Host {

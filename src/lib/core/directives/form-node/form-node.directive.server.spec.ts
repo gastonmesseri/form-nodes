@@ -7,11 +7,11 @@ import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 
 import { field } from '../../primitives/field';
-import { FormNodeDirective } from './form-node.directive';
+import { FormNode } from './form-node.directive';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
+registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
 @Component({
   selector: 'test-control',
@@ -50,12 +50,12 @@ const render = (component: Parameters<typeof bootstrapApplication>[0]): Promise<
     { document: '<app-root></app-root>', url: '/' },
   );
 
-describe('FormNodeDirective server rendering', () => {
+describe('FormNode server rendering', () => {
   it('renders a native input value and node state without browser globals', async () => {
     @Component({
       selector: 'app-root',
       standalone: true,
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: '<input [formNode]="name">',
     })
     class App {
@@ -74,7 +74,7 @@ describe('FormNodeDirective server rendering', () => {
     @Component({
       selector: 'app-root',
       standalone: true,
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: '<select [formNode]="country"><option value="ES">Spain</option><option value="CH">Switzerland</option></select>',
     })
     class App {
@@ -91,7 +91,7 @@ describe('FormNodeDirective server rendering', () => {
     @Component({
       selector: 'app-root',
       standalone: true,
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: '<input type="date" [formNode]="date">',
     })
     class App {
@@ -108,7 +108,7 @@ describe('FormNodeDirective server rendering', () => {
     @Component({
       selector: 'app-root',
       standalone: true,
-      imports: [TestControl, FormNodeDirective],
+      imports: [TestControl, FormNode],
       template: '<test-control [formNode]="name"></test-control>',
     })
     class App {
@@ -125,7 +125,7 @@ describe('FormNodeDirective server rendering', () => {
     @Component({
       selector: 'app-root',
       standalone: true,
-      imports: [TestSignalControl, FormNodeDirective],
+      imports: [TestSignalControl, FormNode],
       template: '<test-signal-control [formNode]="name"></test-signal-control>',
     })
     class App {

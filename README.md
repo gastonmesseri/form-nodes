@@ -23,7 +23,34 @@ profile.api.patch({ address: { city: 'London' } });
 profile(); // { name: 'Ada', address: { city: 'London' } }
 ```
 
-The package exposes only its public entry point. Internal code is organized by role:
+### Angular control binding
+
+Import `FormNode`, add it to the component's `imports`, and bind a node with `[formNode]`:
+
+```ts
+import { Component, viewChild } from '@angular/core';
+
+import { field, FormNode } from '@gem/ng-forms';
+
+@Component({
+  imports: [FormNode],
+  template: `
+    <input #nameBinding="formNode" [formNode]="name">
+  `,
+})
+export class ProfileEditor {
+  readonly name = field('', { nullable: false });
+  readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
+
+  focusName() {
+    this.nameBinding().focus();
+  }
+}
+```
+
+`FormNode` is both the directive value used in `imports` and the clean public type used by `viewChild()`. The template reference must export `formNode`, while the string passed to `viewChild.required()` must match the local reference name (`nameBinding` in this example). Call `nameBinding()` to obtain the binding and `nameBinding().node()` to obtain its current form node.
+
+Consumers should import from the package entry point. Internal code is organized by role:
 
 ```text
 src/

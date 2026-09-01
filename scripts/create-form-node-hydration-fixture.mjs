@@ -9,7 +9,7 @@ import { provideServerRendering, renderApplication } from '@angular/platform-ser
 const workspace = process.cwd();
 const packageUrl = pathToFileURL(resolve(workspace, 'dist', 'fesm2022', 'gem-ng-forms.mjs')).href;
 const signalControlUrl = pathToFileURL(resolve(workspace, 'node_modules', '.cache', 'ng-forms', 'aot-signal-control', 'form-node-signal-control.fixture.mjs')).href;
-const { field, required, FormNodeDirective } = await import(packageUrl);
+const { field, required, FormNode } = await import(packageUrl);
 const { AotSignalControlHost } = await import(signalControlUrl);
 
 class HydrationApp {
@@ -19,7 +19,7 @@ class HydrationApp {
 Component({
   selector: 'form-node-hydration-app',
   standalone: true,
-  imports: [FormNodeDirective],
+  imports: [FormNode],
   template: '<input data-age type="text" [formNode]="age"><span data-value>{{ age() }}</span>',
 })(HydrationApp);
 

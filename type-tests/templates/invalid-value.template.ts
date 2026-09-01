@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 
-import { FormNodeDirective } from '../../src/public-api';
+import { FormNode } from '../../src/public-api';
 
 @Component({
   standalone: true,
-  imports: [FormNodeDirective],
+  imports: [FormNode],
   template: `<input [formNode]="name">`,
 })
 class InvalidValueHost {

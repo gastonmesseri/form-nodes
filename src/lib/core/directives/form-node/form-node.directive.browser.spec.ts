@@ -9,11 +9,11 @@ import { CSP_NONCE, Component, ViewEncapsulation, forwardRef, input, model, outp
 import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
 import { form } from '../../primitives/form';
-import { FormNodeDirective } from './form-node.directive';
+import { FormNode } from './form-node.directive';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
+registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
@@ -24,12 +24,42 @@ const dispatch = (element: HTMLElement, type: string) => {
   element.dispatchEvent(new Event(type, { bubbles: true }));
 };
 
-describe('FormNodeDirective in Chromium', () => {
+describe('FormNode in Chromium', () => {
+  it('exposes binding-scoped errors through the exported template reference', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `
+        <input #binding="formNode" type="text" [formNode]="age">
+        <output data-errors>{{ binding.errors().length }}</output>
+      `,
+    })
+    class Host {
+      readonly age = field(23, { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const output = fixture.nativeElement.querySelector('[data-errors]') as HTMLOutputElement;
+    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
+
+    expect(output.textContent).toBe('0');
+
+    input.value = 'invalid';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+
+    expect(output.textContent).toBe('1');
+    expect(binding.errors().map((error) => error.kind)).toEqual(['parse']);
+    expect(binding.errors()[0]!.formNode).toBe(binding);
+  });
+
   it('renders and structurally updates array nodes directly through Angular @for', () => {
     @Component({
       standalone: true,
       selector: 'browser-array-for-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         @for (address of addresses; track address) {
           <input [attr.data-id]="address.id()" [formNode]="address.city">
@@ -96,7 +126,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-text-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="name">`,
     })
     class Host {
@@ -136,7 +166,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-state-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="name">`,
     })
     class Host {
@@ -165,7 +195,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-native-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `
         <input data-age type="number" [formNode]="age">
         <input data-active type="checkbox" [formNode]="active">
@@ -238,7 +268,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-debounce-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input [formNode]="name">`,
     })
     class Host {
@@ -265,7 +295,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-parse-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       template: `<input type="text" [formNode]="age">`,
     })
     class Host {
@@ -303,7 +333,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-validity-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       providers: [{ provide: CSP_NONCE, useValue: 'test-nonce' }],
       template: `
         <input data-date type="date" [formNode]="date">
@@ -366,7 +396,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-shadow-validity-form-node-host',
-      imports: [FormNodeDirective],
+      imports: [FormNode],
       encapsulation: ViewEncapsulation.ShadowDom,
       template: `<input type="date" [formNode]="date">`,
     })
@@ -411,7 +441,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-cva-form-node-host',
-      imports: [BrowserCva, FormNodeDirective],
+      imports: [BrowserCva, FormNode],
       template: `<browser-cva [formNode]="name" />`,
     })
     class Host {
@@ -477,7 +507,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-signal-control-host',
-      imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNodeDirective],
+      imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNode],
       template: `
         <browser-signal-value-control #valueBinding="formNode" [formNode]="name" />
         <browser-signal-checkbox-control [formNode]="active" />
@@ -520,7 +550,7 @@ describe('FormNodeDirective in Chromium', () => {
     expect(valueControl.disabled()).toBe(true);
     expect(valueButton.disabled).toBe(true);
 
-    valueDebugElement.injector.get(FormNodeDirective).focus({ preventScroll: true });
+    valueDebugElement.injector.get(FormNode).focus({ preventScroll: true });
     expect(valueControl.focusOptions).toEqual({ preventScroll: true });
 
     fixture.componentInstance.name.reset();
@@ -545,7 +575,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-profile-control-host',
-      imports: [BrowserProfileControl, FormNodeDirective],
+      imports: [BrowserProfileControl, FormNode],
       template: `<browser-profile-control [formNode]="profile" />`,
     })
     class Host {
@@ -627,7 +657,7 @@ describe('FormNodeDirective in Chromium', () => {
     @Component({
       standalone: true,
       selector: 'browser-echoing-cva-host',
-      imports: [EchoingCva, FormNodeDirective],
+      imports: [EchoingCva, FormNode],
       template: `<browser-echoing-cva [formNode]="name" />`,
     })
     class Host {
