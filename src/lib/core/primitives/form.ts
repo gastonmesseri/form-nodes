@@ -2,7 +2,7 @@ import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
 import { isNotNil } from '../utils/is-nil';
-import { normalizeObjectDefinition } from './form.utils';
+import { assertValidObjectDefinition, normalizeObjectDefinition } from './form.utils';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
@@ -39,9 +39,10 @@ type FormDefinition<TDefinition> =
         : TDefinition extends ObjectNodeDefinitions ? FormDefinitions<TDefinition> : TDefinition;
 
 type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field' ? never
-    : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
-      : FormDefinition<TDefinitions[TKey]>;
+  [TKey in keyof TDefinitions]: TKey extends symbol ? never
+    : TKey extends '$api' | '$field' ? never
+      : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
+        : FormDefinition<TDefinitions[TKey]>;
 };
 
 /**
@@ -64,6 +65,9 @@ type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
  * Concise values are normalized to fields, while plain nested objects become structural groups.
  * Arrays remain explicit through `field([...])` or `array(...)`. Use the options object for
  * form-level validators, submission, state, debounce, and validator messages.
+ * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
+ * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
+ * created, with the complete declaration path included in the error.
  *
  * @param definitions Initially declared child-node definitions.
  * @param options Form configuration.
@@ -119,6 +123,7 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     : resolvedOptions?.validators ?? [];
   const validators = normalizeValidatorSource(validatorSource);
   const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
+  assertValidObjectDefinition(definitions, nodeType);
   const controls = mapObjectValues(definitions, normalizeObjectDefinition) as TNodes;
   const createDefinitions = createNodeDefinitionFactory(controls as NodeDefinitions);
   const controlsRecord = controls as Record<string, Node>;

@@ -23,6 +23,9 @@ consumer migration guide.
 - Plain nested object definitions and object templates passed to `array()` now normalize to
   `Group` rather than `Form`. Use an explicit nested `form()` only for an independent submission
   workflow.
+- Object shorthand now validates its complete declaration before construction, reports nested
+  error paths, and rejects enumerable accessors, symbol child keys, and `__proto__`. It ignores
+  inherited and non-enumerable properties.
 
 ## [0.1.0] - Unreleased
 

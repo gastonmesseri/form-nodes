@@ -22,6 +22,9 @@ canonical release record.
 
 - Nested object shorthand and object templates in `array()` now create structural `Group` nodes.
   `Form` is reserved for explicit submission workflow boundaries.
+- Object shorthand validates the complete declaration before construction, reports nested error
+  paths, and rejects enumerable accessors, symbol child keys, and `__proto__`. Inherited and
+  non-enumerable properties are ignored.
 
 ## 0.1.0
 

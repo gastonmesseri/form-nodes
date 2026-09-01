@@ -13,9 +13,10 @@ type GroupDefinition<TDefinition> =
         : TDefinition extends ObjectNodeDefinitions ? GroupDefinitions<TDefinition> : TDefinition;
 
 type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field' ? never
-    : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
-      : GroupDefinition<TDefinitions[TKey]>;
+  [TKey in keyof TDefinitions]: TKey extends symbol ? never
+    : TKey extends '$api' | '$field' ? never
+      : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
+        : GroupDefinition<TDefinitions[TKey]>;
 };
 
 /**
@@ -35,6 +36,9 @@ type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
  * Arrays remain explicit through `field([...])` or `array(...)`. Use an explicit group when the
  * object aggregate needs validators, state configuration, debounce, or validator messages. Use
  * `form()` instead when this exact node must own `submission` and `submit()`.
+ * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
+ * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
+ * created, with the complete declaration path included in the error.
  *
  * @param definitions Initially declared child-node definitions.
  * @param options Group configuration.
