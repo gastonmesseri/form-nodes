@@ -4,7 +4,7 @@ import type { Equal, Expect } from './assert.types';
 
 const fieldWithShorthand = field('David', [required, null]);
 const fieldWithOptions = field('David', { validators: [required], readonly: true });
-const fieldWithSeparateOptions = field('David', [required], { nullable: false, hidden: true });
+const fieldWithSeparateOptions = field.strict('David', [required], { hidden: true });
 
 type _ShorthandField = Expect<Equal<ReturnType<typeof fieldWithShorthand>, string | null>>;
 type _OptionsField = Expect<Equal<ReturnType<typeof fieldWithOptions>, string | null>>;

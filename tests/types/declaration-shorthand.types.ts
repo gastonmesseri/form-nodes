@@ -194,7 +194,7 @@ group({
 const nestedValueForm = form({
   name: field(''),
   address: {
-    city: field('', { nullable: false }),
+    city: field.strict(''),
     details: {
       country: field(''),
     },

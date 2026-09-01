@@ -44,6 +44,14 @@ Every breaking migration will identify:
 from. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
 
+### Field nullability options
+
+Per-field `nullable` options were removed before the initial release. Replace
+`field(value, { nullable: false })` with `field.strict(value)`, and replace
+`field(value, { nullable: true })` with `field.nullable(value)`. Preserve any other options as the
+last argument. The `nullable` option on `createFormPrimitives()` is unchanged because it defines a
+factory-wide default rather than one field's local choice.
+
 ### Declaration shorthand contract
 
 The initial `0.1.0` contract accepts primitive values, `Date`, functions, class instances, other

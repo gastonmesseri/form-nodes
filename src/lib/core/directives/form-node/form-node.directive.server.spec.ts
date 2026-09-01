@@ -129,7 +129,7 @@ describe('FormNode server rendering', () => {
       imports: [TestSignalControl, FormNode],
     })
     class App {
-      name = field('Marco', [required], { nullable: false });
+      name = field.strict('Marco', [required]);
     }
 
     const html = await render(App);

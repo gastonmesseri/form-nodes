@@ -18,8 +18,8 @@ import { array, field, form, group, FormNode } from '../../../src/public-api';
   `,
 })
 class ValidFormNodeHost {
-  readonly name = field('David', { nullable: false });
-  readonly profile = form({ age: field(42, { nullable: false }) });
+  readonly name = field.strict('David');
+  readonly profile = form({ age: field.strict(42) });
   readonly dynamicName = this.profile.add('dynamicName', field('Ada'));
   readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('binding');
 
@@ -74,8 +74,8 @@ class ValidPeopleControl implements FormValueControl<{ name: string | null }[]> 
   `,
 })
 class ValidSignalControlHost {
-  name = field('David', { nullable: false });
-  active = field(false, { nullable: false });
+  name = field.strict('David');
+  active = field.strict(false);
 }
 
 @Component({
@@ -104,7 +104,7 @@ class ValidAggregateControlHost {
 })
 class ValidAngularFormFieldHost {
   name = field('David');
-  customName = field('David', { nullable: false });
+  customName = field.strict('David');
   profile = form({ name: field('David') });
   profileGroup = group({ name: field('David') });
   people = array({ name: field('') }, []);

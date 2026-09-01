@@ -89,7 +89,7 @@ Its optional defaults include `nullable`, `validatorMessages`, `inheritInjector`
 `adoptBindingInjector`; the boolean policies retain their ordinary `true` defaults when omitted.
 The package-level factories retain their nullable-by-default behavior. A nullability default applies
 to direct fields, object field shorthands, dynamically added children, and nodes created later from
-array templates or factories. An explicit field `nullable` option takes precedence, and an existing
+array templates or factories. An explicit `field.strict()` or `field.nullable()` call takes precedence, and an existing
 node attached to a configured form retains the policy of the factory that originally created it.
 
 Nullish initial values remain nullable even in a non-nullable factory set because no non-null value
@@ -192,7 +192,7 @@ const known = field<string>(null);
 ```
 
 `unknown` is used instead of `any` so reads cannot silently bypass type checking. TypeScript reduces
-`unknown | null` to `unknown`; the field remains nullable at runtime and in its options, but consumers
+`unknown | null` to `unknown`; the field remains nullable at runtime, but consumers
 should supply an explicit generic when the eventual non-null type is known.
 
 The preferred signature accepts an optional initial value followed by an options object:
@@ -425,9 +425,11 @@ name.set('Ana');
 // name.set(null); // TypeScript error
 ```
 
-`field.strict(value)` is the concise equivalent that always excludes `null`, while
+`field.strict(value)` always excludes `null`, while
 `field.nullable(value)` always includes `null`. Both overrides remain available on field factories
 returned by `createFormPrimitives()`, independently of their configured default.
+
+Per-field options do not include `nullable`; these methods are the only local nullability overrides.
 
 A strict field requires a non-null initial value. `field.strict<string>(null)` is rejected by TypeScript.
 

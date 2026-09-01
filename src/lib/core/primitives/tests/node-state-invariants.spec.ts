@@ -15,20 +15,20 @@ type StateFixture = {
 
 const stateFixtures: readonly [string, () => StateFixture][] = [
   ['field', () => {
-    const root = field('', [required], { nullable: false });
+    const root = field.strict('', [required]);
     return { root, leaf: root, descendants: [] };
   }],
   ['form', () => {
     const root = form({
       nested: form({
-        value: field('', [required], { nullable: false }),
+        value: field.strict('', [required]),
       }),
     });
     return { root, leaf: root.nested.value, descendants: [root.nested, root.nested.value] };
   }],
   ['array', () => {
     const root = array(() => form({
-      value: field('', [required], { nullable: false }),
+      value: field.strict('', [required]),
     }), 1);
     const item = root.at(0)!;
     return { root, leaf: item.value, descendants: [item, item.value] };
@@ -184,19 +184,19 @@ describe('shared asynchronous aggregate-state invariants', () => {
     ['field', () => {
       let resolve!: () => void;
       const completion = new Promise<void>((done) => { resolve = done; });
-      const root = field('value', [asyncValidator(async () => { await completion; })], { nullable: false });
+      const root = field.strict('value', [asyncValidator(async () => { await completion; })]);
       return { root: root as Node, resolve };
     }],
     ['form', () => {
       let resolve!: () => void;
       const completion = new Promise<void>((done) => { resolve = done; });
-      const root = form({ value: field('value', [asyncValidator(async () => { await completion; })], { nullable: false }) });
+      const root = form({ value: field.strict('value', [asyncValidator(async () => { await completion; })]) });
       return { root: root as Node, resolve };
     }],
     ['array', () => {
       let resolve!: () => void;
       const completion = new Promise<void>((done) => { resolve = done; });
-      const root = array(() => field('value', [asyncValidator(async () => { await completion; })], { nullable: false }), 1);
+      const root = array(() => field.strict('value', [asyncValidator(async () => { await completion; })]), 1);
       return { root: root as Node, resolve };
     }],
   ] as const)('aggregates pending state for %s until descendant validation settles', async (_kind, createFixture) => {

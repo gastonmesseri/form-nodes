@@ -26,6 +26,8 @@ consumer migration guide.
 
 ### Changed
 
+- Field-level `nullable` options have been removed. Use `field.strict()` or `field.nullable()` for
+  local nullability choices; `createFormPrimitives({ nullable })` remains the factory-wide default.
 - Form and group callable values now display their complete nested object shape in IntelliSense
   instead of exposing internal `FormValue` and normalization helpers.
 - Plain nested object definitions and object templates passed to `array()` now normalize to

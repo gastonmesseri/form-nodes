@@ -6,6 +6,8 @@ field('', { inheritInjector: false });
 field('', { adoptBindingInjector: false });
 // @ts-expect-error Unsupported debounce strategy.
 field('', { debounce: 'change' });
+// @ts-expect-error nullability is selected with field.strict() or field.nullable()
+field('', { nullable: false });
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -14,7 +16,7 @@ const explicitlyNullable = field.nullable('David');
 const explicitlyNonNullable = field.strict('David');
 const emptyExplicitlyNullable = field.nullable<string>();
 type _FieldNodeType = Expect<Equal<ReturnType<typeof nullable.nodeType>, 'field'>>;
-const nonNullable = field('David', { nullable: false });
+const nonNullable = field.strict('David');
 const explicit = field<number>(undefined);
 const explicitNull = field<string>(null);
 const unknownNullable = field(null);
@@ -66,12 +68,10 @@ nullable.errors()[0]?.formNode?.element.focus();
 nullable.set(42);
 // @ts-expect-error a non-nullable field cannot receive null
 nonNullable.set(null);
-// @ts-expect-error a null initial value cannot create a non-nullable field
-field(null, { nullable: false });
 // @ts-expect-error field.strict requires a non-null initial value
 field.strict(null);
 // @ts-expect-error an undefined initial value cannot create a non-nullable field
-field(undefined, { nullable: false });
+field.strict(undefined);
 // @ts-expect-error field patching is intentionally exposed only through api
 nullable.patch('Daniel');
 // @ts-expect-error native callable members are intentionally hidden

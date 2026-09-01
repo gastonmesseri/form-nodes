@@ -8,9 +8,9 @@ import { asyncValidator } from '../../validation/async-validator';
 
 const createDeepTree = () => form({
   teams: array(() => form({
-    name: field('', [required], { nullable: false }),
+    name: field.strict('', [required]),
     members: array(() => form({
-      email: field('', [required], { nullable: false }),
+      email: field.strict('', [required]),
     }), 1),
   }), 2),
 });
@@ -142,7 +142,7 @@ describe('deep mixed form trees', () => {
       const root = form({
         groups: array(() => form({
           members: array(() => form({
-            name: field('David', { nullable: false }),
+            name: field.strict('David'),
           }), 1),
         }), 1),
       }, { debounce: 100 });
@@ -210,9 +210,9 @@ describe('deep mixed form trees', () => {
     const root = form({
       groups: array(() => form({
         members: array(() => form({
-          name: field('David', [
+          name: field.strict('David', [
             asyncValidator(() => new Promise<{ kind: string }>((done) => { resolve = done; })),
-          ], { nullable: false }),
+          ]),
         }), 1),
       }), 1),
     });

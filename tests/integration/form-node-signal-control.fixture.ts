@@ -67,7 +67,7 @@ export class AotDelegatingControl {
   template: `<aot-delegating-control [formNode]="name" />`,
 })
 export class AotPassThroughHost {
-  readonly name = field('AOT wrapper initial', { nullable: false });
+  readonly name = field.strict('AOT wrapper initial');
 }
 
 @Component({
@@ -108,7 +108,7 @@ export class AotCompanySelectorHost {
   `,
 })
 export class AotSignalControlHost {
-  name = field('AOT initial', [required], { nullable: false });
-  active = field(false, { nullable: false });
-  pairedName = field('AOT paired initial', { nullable: false });
+  name = field.strict('AOT initial', [required]);
+  active = field.strict(false);
+  pairedName = field.strict('AOT paired initial');
 }

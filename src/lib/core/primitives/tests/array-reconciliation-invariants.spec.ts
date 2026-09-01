@@ -5,8 +5,8 @@ import { field } from '../field';
 import { asyncValidator } from '../../validation/async-validator';
 
 const createPeople = () => array({
-  id: field('', { nullable: false }),
-  name: field('', { nullable: false }),
+  id: field.strict(''),
+  name: field.strict(''),
 }, [
   { id: 'alex', name: 'Alex' },
   { id: 'kirill', name: 'Kirill' },
@@ -79,8 +79,8 @@ describe('array keyed reconciliation invariants', () => {
     vi.useFakeTimers();
     try {
       const people = array({
-        id: field('', { nullable: false }),
-        name: field('', { nullable: false }),
+        id: field.strict(''),
+        name: field.strict(''),
       }, [
         { id: 'alex', name: 'Alex' },
         { id: 'kirill', name: 'Kirill' },
@@ -115,12 +115,12 @@ describe('array keyed reconciliation invariants', () => {
     const people = array(() => {
       const isAlex = createdIndex++ === 0;
       return {
-        id: field('', { nullable: false }),
-        name: field('', [
+        id: field.strict(''),
+        name: field.strict('', [
           asyncValidator(() => isAlex
             ? new Promise<{ kind: string }>((resolve) => { resolveAlex = resolve; })
             : new Promise<null>(() => {})),
-        ], { nullable: false }),
+        ]),
       };
     }, [
       { id: 'alex', name: 'Alex' },
@@ -197,8 +197,8 @@ describe('array keyed reconciliation invariants', () => {
       return person.id;
     });
     const people = array({
-      id: field('', { nullable: false }),
-      name: field('', { nullable: false }),
+      id: field.strict(''),
+      name: field.strict(''),
     }, [
       { id: 'alex', name: 'Alex' },
       { id: 'kirill', name: 'Kirill' },

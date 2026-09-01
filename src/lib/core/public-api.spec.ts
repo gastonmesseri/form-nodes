@@ -159,7 +159,7 @@ describe('types', () => {
 
   it('contextually types array trackBy values from the template', () => {
     array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }],
       {
         trackBy: (value, index) => {
@@ -216,7 +216,7 @@ describe('types', () => {
   });
 
   it('hides native function members from validator tree nodes', () => {
-    field('David', {
+    field.strict('David', {
       validators: [({ api }) => {
         const parent = api.parent();
         const rootForm = api.form();
@@ -230,7 +230,6 @@ describe('types', () => {
         }
         return null;
       }],
-      nullable: false,
     });
   });
 
@@ -484,7 +483,7 @@ describe('types', () => {
   it('types field errors as a readonly error array', () => {
     const required = ({ value }: FieldContext<string>) =>
       value() === '' ? { kind: 'required' } : null;
-    const fieldNode = field('', [required], { nullable: false });
+    const fieldNode = field.strict('', [required]);
     expectTypeOf(fieldNode.errors()).toEqualTypeOf<
       readonly ValidationError.WithTargetNode<typeof fieldNode>[]
     >();
@@ -500,14 +499,14 @@ describe('types', () => {
   it('accepts validators on a field declared without them', () => {
     const required = ({ value }: FieldContext<string>) =>
       value() === '' ? { kind: 'required' } : null;
-    const fieldNode = field('David', { nullable: false });
+    const fieldNode = field.strict('David');
     expectTypeOf(fieldNode.setValidators).toBeCallableWith([required]);
     expectTypeOf(fieldNode.setValidators).toBeCallableWith(required);
   });
 
   it('accepts one validator or a validator returning an array', () => {
     const required = ({ value }: FieldContext<string>) => value() === '' ? { kind: 'required' } : null;
-    const fieldNode = field('', { validators: required, nullable: false });
+    const fieldNode = field.strict('', { validators: required });
 
     fieldNode.setValidators(() => [required, () => ({ kind: 'second' })]);
     fieldNode.setValidators(() => [required, null, undefined]);
@@ -516,7 +515,7 @@ describe('types', () => {
   });
 
   it('types validators inside field options', () => {
-    field('David', {
+    field.strict('David', {
       validators: [(context) => {
         expectTypeOf(context).toEqualTypeOf<ValidatorContext<string>>();
         expectTypeOf(context.value()).toEqualTypeOf<string>();
@@ -529,15 +528,13 @@ describe('types', () => {
         expectTypeOf(context.disabled()).toEqualTypeOf<boolean>();
         return null;
       }],
-      nullable: false,
       disabled: false,
     });
   });
 
   it('accepts a synchronous validator returned by another validator', () => {
-    field('David', {
+    field.strict('David', {
       validators: [context => context.dirty() ? required : null],
-      nullable: false,
     });
   });
 
@@ -723,13 +720,13 @@ describe('types', () => {
   });
 
   it('removes null from the field type when nullable is false', () => {
-    const fieldNode = field('David', { nullable: false });
+    const fieldNode = field.strict('David');
     expectTypeOf(fieldNode()).toEqualTypeOf<string>();
     expectTypeOf(fieldNode.set).toBeCallableWith('Ana');
     // @ts-expect-error a non-nullable field cannot be set to null
     expectTypeOf(fieldNode.set).toBeCallableWith(null);
     // @ts-expect-error a non-nullable field cannot be initialized with null
-    field<string>(null, { nullable: false });
+    field.strict<string>(null);
   });
 
   it('accepts initial disabled options', () => {
@@ -770,7 +767,7 @@ describe('types', () => {
 
   it('allows typed state functions to reference their containing form', () => {
     const formGroup = form({
-      age: field(17, { nullable: false }),
+      age: field.strict(17),
       guardian: field('', undefined, {
         hidden: (): boolean => formGroup.age() >= 18,
       }),

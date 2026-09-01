@@ -8,7 +8,7 @@ array(field(''), 1, { adoptBindingInjector: false });
 import type { Equal, Expect } from './assert.types';
 
 const people = array({
-  id: field('', { nullable: false }),
+  id: field.strict(''),
   name: field(''),
   age: field(0),
 }, [{ id: 'one', name: 'David', age: 42 }], {
@@ -25,9 +25,9 @@ type _StableApiValue = Expect<Equal<ReturnType<typeof names.$api.value>, (string
 type _ControlValue = Expect<Equal<ReturnType<typeof names.controlValue>, (string | null)[]>>;
 lockedNames.disable('Temporarily unavailable');
 const matrix = array(array(field(0), []), [[1, 2]]);
-const forms = array(form({ enabled: field(true, { nullable: false }) }), [{ enabled: true }]);
+const forms = array(form({ enabled: field.strict(true) }), [{ enabled: true }]);
 const optionPeople = array({
-  id: field('', { nullable: false }),
+  id: field.strict(''),
   name: field(''),
 }, {
   initialValue: [{ id: 'one', name: 'David' }],
@@ -70,9 +70,9 @@ array(field(''), null);
 // @ts-expect-error arrays inherit submission state but cannot own submission behavior
 array(field(''), { submission: { action: () => undefined } });
 // @ts-expect-error trackBy property names must exist on the item value
-array({ id: field('', { nullable: false }) }, { trackBy: 'missing' });
+array({ id: field.strict('') }, { trackBy: 'missing' });
 // @ts-expect-error primitive item values require a trackBy callback
-array(field('', { nullable: false }), { trackBy: 'length' });
+array(field.strict(''), { trackBy: 'length' });
 
 people.forEach((item, index, owner) => {
   const _name: string | null = item.name();

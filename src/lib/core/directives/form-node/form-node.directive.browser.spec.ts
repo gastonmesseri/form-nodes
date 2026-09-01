@@ -468,7 +468,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly age = field(23, { nullable: false });
+      readonly age = field.strict(23);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -563,7 +563,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -602,7 +602,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly password = field('', { nullable: false });
+      readonly password = field.strict('');
       readonly passwordVisible = signal(false);
     }
 
@@ -639,7 +639,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly notes = field('', { nullable: false });
+      readonly notes = field.strict('');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -666,7 +666,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('', [required], { nullable: false });
+      readonly name = field.strict('', [required]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -708,11 +708,11 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly age = field(23, { nullable: false });
-      readonly active = field(false, { nullable: false });
-      readonly city = field('Zurich', { nullable: false });
-      readonly country = field('Switzerland', { nullable: false });
-      readonly cities = field<string[]>(['Madrid'], { nullable: false });
+      readonly age = field.strict(23);
+      readonly active = field.strict(false);
+      readonly city = field.strict('Zurich');
+      readonly country = field.strict('Switzerland');
+      readonly cities = field.strict<string[]>(['Madrid']);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -767,7 +767,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly color = field('#ff0000', { nullable: false });
+      readonly color = field.strict('#ff0000');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -794,7 +794,7 @@ describe('FormNode in Chromium', () => {
     class Host {
       readonly minimum = signal<number | undefined>(undefined);
       readonly maximum = signal<number | undefined>(undefined);
-      readonly amount = field(80, [min(() => this.minimum()), max(() => this.maximum())], { nullable: false });
+      readonly amount = field.strict(80, [min(() => this.minimum()), max(() => this.maximum())]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -835,7 +835,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly appointment = field(initial, { nullable: false });
+      readonly appointment = field.strict(initial);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -864,7 +864,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly birthday = field(new Date('2024-01-01T12:00:00.000Z'), { nullable: false });
+      readonly birthday = field.strict(new Date('2024-01-01T12:00:00.000Z'));
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -893,7 +893,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly birthday = field(initial, { nullable: false });
+      readonly birthday = field.strict(initial);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -934,7 +934,7 @@ describe('FormNode in Chromium', () => {
     })
     class Host {
       readonly visible = signal(false);
-      readonly country = field('Spain', { hidden: () => !this.visible(), nullable: false });
+      readonly country = field.strict('Spain', { hidden: () => !this.visible() });
       readonly options = ['Switzerland', 'Spain'];
     }
 
@@ -965,7 +965,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      selected = field('selected', { nullable: false });
+      selected = field.strict('selected');
       options = signal<readonly RadioOption[]>([
         { id: 'shared', value: 'other' },
         { id: 'old', value: 'selected' },
@@ -994,7 +994,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('David', { debounce: 20, nullable: false });
+      readonly name = field.strict('David', { debounce: 20 });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1021,7 +1021,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('David', { debounce: 'blur', nullable: false });
+      readonly name = field.strict('David', { debounce: 'blur' });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1049,7 +1049,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly age = field(23, { nullable: false });
+      readonly age = field.strict(23);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1094,11 +1094,11 @@ describe('FormNode in Chromium', () => {
       providers: [{ provide: CSP_NONCE, useValue: 'test-nonce' }],
     })
     class Host {
-      readonly date = field('2026-08-29', { nullable: false });
-      readonly datetime = field('2026-08-29T12:30', { nullable: false });
-      readonly month = field('2026-08', { nullable: false });
-      readonly time = field('12:30', { nullable: false });
-      readonly week = field('2026-W35', { nullable: false });
+      readonly date = field.strict('2026-08-29');
+      readonly datetime = field.strict('2026-08-29T12:30');
+      readonly month = field.strict('2026-08');
+      readonly time = field.strict('12:30');
+      readonly week = field.strict('2026-W35');
     }
 
     const stylesBefore = document.head.querySelectorAll('style').length;
@@ -1151,7 +1151,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly date = field('2026-08-29', { nullable: false });
+      readonly date = field.strict('2026-08-29');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1212,7 +1212,7 @@ describe('FormNode in Chromium', () => {
       imports: [BrowserCva, FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1281,8 +1281,8 @@ describe('FormNode in Chromium', () => {
       imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNode],
     })
     class Host {
-      name = field('David', [required], { nullable: false });
-      active = field(false, { nullable: false });
+      name = field.strict('David', [required]);
+      active = field.strict(false);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1363,8 +1363,8 @@ describe('FormNode in Chromium', () => {
       imports: [PairedValueControl, PairedCheckboxControl, FormNode],
     })
     class Host {
-      name = field('David', { nullable: false });
-      active = field(false, { nullable: false });
+      name = field.strict('David');
+      active = field.strict(false);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1405,7 +1405,7 @@ describe('FormNode in Chromium', () => {
       imports: [DecoratorPairedControl, FormNode],
     })
     class Host {
-      name = field('David', { nullable: false });
+      name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1954,7 +1954,7 @@ describe('FormNode in Chromium', () => {
       imports: [EchoingCva, FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
