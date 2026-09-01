@@ -107,7 +107,7 @@ describe('form', () => {
       age: null,
       siblings: 2,
       birthday,
-      sister: null,
+      sister: undefined,
       address: { city: 'Zurich' },
     });
     profile.name.set('Marco');
@@ -142,7 +142,7 @@ describe('form', () => {
       largeCount: 1n,
       uniqueValue,
       empty: null,
-      missing: null,
+      missing: undefined,
       createdAt,
       calculate,
       roles,
@@ -214,7 +214,7 @@ describe('form', () => {
     expect(values.marker()).toBe(marker);
     expect(values.invalidDate()).toBe(invalidDate);
     expect(values.empty()).toBeNull();
-    expect(values.missing()).toBeNull();
+    expect(values.missing()).toBeUndefined();
     expect(values.nested.invalidDate()).toBe(invalidDate);
     expect(Object.is(values.nested.negativeZero(), -0)).toBe(true);
   });
@@ -823,8 +823,8 @@ describe('form', () => {
   });
 
   it('allows an asynchronous field validator to read its owning class form on its first execution', async () => {
-    const validate = vi.fn(async (name: string | null) =>
-      name === null ? { kind: 'missingSiblingName' } : null,
+    const validate = vi.fn(async (name: string | null | undefined) =>
+      name === null || name === undefined ? { kind: 'missingSiblingName' } : null,
     );
     class ProfileComponent {
       readonly profile = form({
@@ -2732,10 +2732,10 @@ describe('form', () => {
     expect(age.parent()).toBe(profile);
     expect(account.nodeType()).toBe('field');
     expect(account()).toBe(accountValue);
-    expect(missing()).toBeNull();
+    expect(missing()).toBeUndefined();
     expect(roles.nodeType()).toBe('field');
     expect(roles()).toBe(rolesValue);
-    expect(profile()).toEqual({ name: 'David', age: 23, account: accountValue, missing: null, roles: ['admin'] });
+    expect(profile()).toEqual({ name: 'David', age: 23, account: accountValue, missing: undefined, roles: ['admin'] });
   });
 
   it('adds several dynamic children atomically and normalizes shorthand groups', () => {
@@ -2752,7 +2752,7 @@ describe('form', () => {
     expect(added.age.nodeType()).toBe('field');
     expect(added.nickname.nodeType()).toBe('field');
     expect(added.missing.nodeType()).toBe('field');
-    expect(added.missing()).toBeNull();
+    expect(added.missing()).toBeUndefined();
     expect(added.address).toBe(profile.get('address'));
     expect(added.address.nodeType()).toBe('group');
     expect(added.address.city.nodeType()).toBe('field');
@@ -2762,7 +2762,7 @@ describe('form', () => {
       name: 'David',
       age: 23,
       nickname: null,
-      missing: null,
+      missing: undefined,
       address: { city: 'Zurich' },
     });
   });

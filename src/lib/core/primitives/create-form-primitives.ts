@@ -50,11 +50,10 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     registerNodeDefaultValidatorMessages(node, options.validatorMessages);
     return node;
   };
-  const configuredField = ((
-    value: unknown,
-    validatorsOrOptions?: ValidatorSource<unknown> | FieldOptions<unknown>,
-    separateOptions?: FieldOptions<unknown>,
-  ) => {
+  const configuredField = ((...args: unknown[]) => {
+    const value = args.length === 0 ? null : args[0];
+    const validatorsOrOptions = args[1] as ValidatorSource<unknown> | FieldOptions<unknown> | undefined;
+    const separateOptions = args[2] as FieldOptions<unknown> | undefined;
     const createField = value === null || value === undefined || defaultNullable
       ? field.nullable as (...args: any[]) => Node
       : field.strict as (...args: any[]) => Node;

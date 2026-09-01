@@ -140,11 +140,24 @@ describe('field', () => {
     expect(name.$api.nodeType()).toBe('field');
   });
 
-  it('normalizes an explicit undefined initial value to null', () => {
+  it('distinguishes an omitted initial value from an explicit undefined value', () => {
+    const omitted = field();
     const fieldNode = field(undefined);
+    const typedField = field<string>(undefined);
+    const explicitNullable = field.nullable<string>(undefined);
+    const { field: configuredFactory } = createFormPrimitives({ nullable: false });
+    const configuredOmitted = configuredFactory();
+    const configuredNullableOmitted = configuredFactory.nullable<string>();
+    const configuredField = configuredFactory(undefined);
 
-    expect(fieldNode()).toBeNull();
-    expect(fieldNode.controlValue()).toBeNull();
+    expect(omitted()).toBeNull();
+    expect(fieldNode()).toBeUndefined();
+    expect(fieldNode.controlValue()).toBeUndefined();
+    expect(typedField()).toBeUndefined();
+    expect(explicitNullable()).toBeUndefined();
+    expect(configuredOmitted()).toBeNull();
+    expect(configuredNullableOmitted()).toBeNull();
+    expect(configuredField()).toBeUndefined();
   });
 
   it('inherits async-validation ownership from its parent injector by default', async () => {

@@ -4,6 +4,7 @@ title: field()
 
 import CodeBlock from '@theme/CodeBlock';
 import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.ts';
+import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.example.ts';
 
 # field()
 
@@ -125,19 +126,24 @@ describe the resulting field type: `strict()` always excludes `null`, while `nul
 includes it.
 
 When the literal initial value is `null` or `undefined`, there is no concrete value from which
-TypeScript can infer a future type. Gem Forms uses `unknown`, rather than the unsafe `any`. An
-explicit `undefined` initial value is normalized to `null`, like an omitted initial value:
+TypeScript can infer a future type. Gem Forms uses `unknown`, rather than the unsafe `any`.
+Omitting the initial value starts at `null`, while an explicit `undefined` is preserved:
 
 ```ts
 const myForm = form({
   unspecified: field(null),         // Field<unknown>
-  deferred: field(undefined),       // Field<unknown>; starts at null
+  deferred: field(undefined),       // Field<unknown>; starts at undefined
   nickname: field<string>(null),    // Field<string | null>
 });
 
 myForm.unspecified.set('Marco');
 myForm.unspecified.set(42);
 ```
+
+With an explicit generic, `field<T>(undefined)` includes both the default nullable value and the
+explicit initial value, producing `Field<T | null | undefined>`.
+
+<CodeBlock language="ts" title="undefined-field.example.ts">{undefinedFieldSource}</CodeBlock>
 
 Use an explicit generic when the domain type is known. Although `Field<unknown>` accepts `null`,
 TypeScript displays it as `unknown` because `unknown | null` simplifies to `unknown`; reads must be

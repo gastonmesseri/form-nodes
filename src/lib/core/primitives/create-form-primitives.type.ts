@@ -19,9 +19,12 @@ interface FieldNullabilityOverrides {
    * useful for an explicit declaration or for overriding a non-nullable factory default.
    */
   nullable(value: null | undefined, options?: NullableFieldOptions<unknown>): Field<unknown>;
-  nullable<TValue>(value?: TValue | null, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  nullable<TValue>(value: undefined, options?: FieldOptions<NoInfer<TValue | null | undefined>>): Field<TValue | null | undefined>;
+  nullable<TValue>(value: TValue | null, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  nullable<TValue>(): Field<TValue | null>;
   nullable(value: null | undefined, validators: ValidatorSource<unknown>, options?: NullableFieldOptions<unknown>): Field<unknown>;
-  nullable<TValue>(value: TValue | null | undefined, validators: ValidatorSource<NoInfer<TValue | null>>, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  nullable<TValue>(value: undefined, validators: ValidatorSource<NoInfer<TValue | null | undefined>>, options?: FieldOptions<NoInfer<TValue | null | undefined>>): Field<TValue | null | undefined>;
+  nullable<TValue>(value: TValue | null, validators: ValidatorSource<NoInfer<TValue | null>>, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
 }
 
 export interface NonNullableFieldFactory extends FieldNullabilityOverrides {
