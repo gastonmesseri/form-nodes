@@ -62,8 +62,9 @@ const config: Config = {
       },
       items: [
         { type: 'docSidebar', sidebarId: 'consumerDocs', position: 'left', label: 'Docs' },
-        { to: '/guides/validation', position: 'left', label: 'Guides' },
-        { to: '/reference/node-api', position: 'left', label: 'API' },
+        { to: '/tutorial', position: 'left', label: 'Tutorial' },
+        { to: '/guides/choosing-a-primitive', position: 'left', label: 'Guides' },
+        { to: '/reference/api-overview', position: 'left', label: 'API' },
         { to: '/playground', position: 'left', label: 'Playground' },
         { href: 'https://github.com/gastonmesseri/ng-forms', position: 'right', label: 'GitHub' },
       ],
