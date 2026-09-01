@@ -2,7 +2,9 @@ import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
 import type { NormalizedNode } from './form';
+import { assertValidObjectDefinition } from './form.utils';
 import { isNil, isNotNil } from '../utils/is-nil';
+import { isPlainObject } from '../utils/is-plain-object';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
@@ -24,16 +26,20 @@ import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } 
 import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
-import type { InternalNode, Node, NodeControlBinding, NodeDefinition, NodeSet, NodeValue } from '../types/node.type';
+import type { InternalNode, Node, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
+import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
 
-type ArrayFactory<TDefinition extends NodeDefinition> = () => TDefinition;
-type ArraySource<TDefinition extends NodeDefinition> = TDefinition | ArrayFactory<TDefinition>;
-type ArrayInitial<TDefinition extends NodeDefinition> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
+type ArrayTemplate = Node | ObjectNodeDefinitions;
+type ArrayTemplateInput<TDefinition extends ArrayTemplate> =
+  TDefinition extends Node ? TDefinition : ObjectNodeDefinitionInputs<Extract<TDefinition, ObjectNodeDefinitions>>;
+type ArrayFactory<TDefinition extends ArrayTemplate> = () => TDefinition & ArrayTemplateInput<TDefinition>;
+type ArraySource<TDefinition extends ArrayTemplate> = (TDefinition & ArrayTemplateInput<TDefinition>) | ArrayFactory<TDefinition>;
+type ArrayInitial<TDefinition extends ArrayTemplate> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
 type PositionalArrayOptions<TValue> = Omit<ArrayOptions<TValue>, 'initialValue'>;
 
 const omitInitialValue = <TValue>(options: ArrayOptions<TValue>): PositionalArrayOptions<TValue> => {
@@ -46,6 +52,15 @@ const looksLikeValidatorSource = (value: unknown): boolean => {
     || (Array.isArray(value)
     && value.some(entry => typeof entry === 'function')
     && value.every(entry => isNil(entry) || typeof entry === 'function'));
+};
+
+const assertArrayObjectTemplate = (definition: unknown, source: 'factory' | 'template') => {
+  if (definition === null || typeof definition !== 'object' || Array.isArray(definition)) {
+    throw new Error(
+      `array: ${source} must be a node or object definition; use field([...]) for an array-valued item`,
+    );
+  }
+  assertValidObjectDefinition(definition as ObjectNodeDefinitions, 'array');
 };
 
 /**
@@ -83,8 +98,8 @@ const looksLikeValidatorSource = (value: unknown): boolean => {
  * inserted directly into this array.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
  */
-export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  template: TDefinition & ArrayTemplateInput<TDefinition>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
@@ -99,8 +114,8 @@ export function array<TDefinition extends NodeDefinition>(
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the template defaults.
  * @param options Additional array configuration.
  */
-export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  template: TDefinition & ArrayTemplateInput<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
   options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
@@ -117,8 +132,8 @@ export function array<TDefinition extends NodeDefinition>(
  * @param validators Reactive validator source for the complete array value.
  * @param options Additional array configuration.
  */
-export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  template: TDefinition & ArrayTemplateInput<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
@@ -135,8 +150,8 @@ export function array<TDefinition extends NodeDefinition>(
  * @param validators Reactive validator source for the complete array value.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
  */
-export function array<TDefinition extends NodeDefinition>(
-  template: TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  template: TDefinition & ArrayTemplateInput<TDefinition>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
@@ -156,8 +171,8 @@ export function array<TDefinition extends NodeDefinition>(
  * or shorthand object; returning the same definition twice throws.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
  */
-export function array<TDefinition extends NodeDefinition>(
-  factory: () => TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  factory: ArrayFactory<TDefinition>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
@@ -172,8 +187,8 @@ export function array<TDefinition extends NodeDefinition>(
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
  * @param options Additional array configuration.
  */
-export function array<TDefinition extends NodeDefinition>(
-  factory: () => TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
   options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
@@ -190,8 +205,8 @@ export function array<TDefinition extends NodeDefinition>(
  * @param validators Reactive validator source for the complete array value.
  * @param options Additional array configuration.
  */
-export function array<TDefinition extends NodeDefinition>(
-  factory: () => TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
@@ -208,12 +223,12 @@ export function array<TDefinition extends NodeDefinition>(
  * @param validators Reactive validator source for the complete array value.
  * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
  */
-export function array<TDefinition extends NodeDefinition>(
-  factory: () => TDefinition,
+export function array<TDefinition extends ArrayTemplate>(
+  factory: ArrayFactory<TDefinition>,
   validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
   options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
-export function array<TDefinition extends NodeDefinition>(
+export function array<TDefinition extends ArrayTemplate>(
   source: ArraySource<TDefinition>,
   initialOrValidatorsOrOptions?: ArrayInitial<TDefinition> | ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
   validatorsOrOptions?: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
@@ -245,9 +260,13 @@ export function array<TDefinition extends NodeDefinition>(
   }
   const normalizedInitial = initial ?? [];
 
-  const factory = typeof source === 'function' && !isNode(source)
+  const sourceIsFactory = typeof source === 'function' && !isNode(source);
+  if (!sourceIsFactory && !isNode(source)) {
+    assertArrayObjectTemplate(source, 'template');
+  }
+  const factory = sourceIsFactory
     ? source as ArrayFactory<TDefinition>
-    : createNodeDefinitionFactory(source as TDefinition);
+    : createNodeDefinitionFactory(source);
   const cloneOptions = resolvedOptions === undefined ? undefined : omitInitialValue(resolvedOptions);
   const cloneInitial = typeof normalizedInitial === 'number' ? normalizedInitial : [...normalizedInitial] as TSet;
   const recreateArray = array as unknown as (
@@ -257,17 +276,24 @@ export function array<TDefinition extends NodeDefinition>(
     initialOptions?: ArrayOptions<TValue>,
   ) => ArrayNode<TItem>;
   const createdDefinitions = new WeakSet<object>();
-  const trackDefinition = (definition: NodeDefinition) => {
+  const trackDefinition = (definition: unknown, root = false) => {
+    if (definition === null || (typeof definition !== 'object' && typeof definition !== 'function')) return;
+    const structural = root || isNode(definition) || isPlainObject(definition);
+    if (!structural) return;
     if (createdDefinitions.has(definition)) {
       throw new Error('array: factory must return a fresh node definition for every item');
     }
     createdDefinitions.add(definition);
-    if (!isNode(definition)) (Object.values(definition) as NodeDefinition[]).forEach(trackDefinition);
+    if (!isNode(definition) && (root || isPlainObject(definition))) {
+      Object.values(definition).forEach(child => trackDefinition(child));
+    }
   };
   const instantiateItem = (): TItem => {
     const definition = factory();
-    trackDefinition(definition);
-    return (isNode(definition) ? definition : group(definition)) as TItem;
+    trackDefinition(definition, true);
+    if (isNode(definition)) return definition as TItem;
+    assertArrayObjectTemplate(definition, 'factory');
+    return group(definition as ObjectNodeDefinitions) as TItem;
   };
   let preparedItem: TItem | undefined;
   const createItem = (): TItem => {
@@ -659,7 +685,7 @@ export function array<TDefinition extends NodeDefinition>(
     _setControlValue: (value: TInput) => arrayControlValueBuffer.set(normalizeArrayValue(value)),
     _flushControlValueOnBlur: api.flush,
     _getSchemaSample: getSchemaSample,
-    _clone: () => recreateArray(factory, cloneInitial, validatorSource, cloneOptions),
+    _clone: () => recreateArray(factory as ArrayFactory<TDefinition>, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);
       arrayKeyInParent.set(parent ? key ?? null : null);

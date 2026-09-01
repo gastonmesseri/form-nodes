@@ -65,6 +65,10 @@ const myForm = form({
 });
 ```
 
+Object templates can also use field-value shorthand. Keep ordinary examples explicit and see
+[`field()` shorthands in object templates](../reference/array.md#field-shorthands-in-object-templates)
+for the concise syntax, inference, and ambiguity rules.
+
 Declarative templates are compiled into a clone recipe. Every item receives fresh signals, descendants, validators, state, debounce ownership, and async watchers. Runtime values, touched/dirty flags, errors, pending work, parents, and paths are never shared.
 
 The template node itself is not inserted. If application code retains it, it remains an independent live node. Use a factory when template construction itself must not start independent asynchronous work.

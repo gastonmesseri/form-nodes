@@ -29,6 +29,9 @@ canonical release record.
 - `form.add()` and `group.add()` accept the same field and nested-group shorthands as initial
   declarations through both the single-child and atomic batch signatures, with aligned runtime and
   TypeScript normalization.
+- `array()` object templates and object-template factories accept field shorthands such as
+  `{ name: '', age: 0 }`, producing independently cloned groups and fields with matching TypeScript
+  inference.
 
 ## 0.1.0
 

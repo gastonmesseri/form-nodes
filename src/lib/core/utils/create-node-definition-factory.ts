@@ -1,4 +1,6 @@
 import { isNode } from './node-marker';
+import { field } from '../primitives/field';
+import { isPlainObject } from './is-plain-object';
 import { mapObjectValues } from './map-object-values';
 import type { InternalNode, NodeDefinition, NodeDefinitions } from '../types/node.type';
 
@@ -24,14 +26,16 @@ import type { InternalNode, NodeDefinition, NodeDefinitions } from '../types/nod
  * retains it. An inline source that becomes unreachable is not retained by the compiled factory
  * and can be garbage-collected together with its independently owned reactive resources.
  */
-export const createNodeDefinitionFactory = <TDefinition extends NodeDefinition>(
-  definition: TDefinition,
-): (() => TDefinition) => {
+export const createNodeDefinitionFactory = (definition: unknown): (() => NodeDefinition) => {
   if (isNode(definition)) {
     const clone = (definition as InternalNode).$api._clone;
-    return (() => clone() as TDefinition);
+    return clone;
   }
 
-  const childFactories = mapObjectValues(definition as NodeDefinitions, child => createNodeDefinitionFactory(child));
-  return (() => mapObjectValues(childFactories, createChild => createChild()) as TDefinition);
+  if (definition !== null && typeof definition === 'object' && isPlainObject(definition)) {
+    const childFactories = mapObjectValues(definition, child => createNodeDefinitionFactory(child));
+    return (() => mapObjectValues(childFactories, createChild => createChild()) as NodeDefinitions);
+  }
+
+  return (() => field(definition));
 };

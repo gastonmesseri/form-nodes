@@ -5,7 +5,7 @@ import { isPlainObject } from '../utils/is-plain-object';
 import type { Node } from '../types/node.type';
 import type { ObjectNodeDefinitions } from './form.type';
 
-type ObjectNodeKind = 'form' | 'group';
+type ObjectNodeKind = 'array' | 'form' | 'group';
 
 const FIELD_VALUE_HINT = 'if this object is intended as a field value, wrap it with field(value)';
 

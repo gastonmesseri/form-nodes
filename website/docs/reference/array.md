@@ -4,6 +4,7 @@ title: array()
 
 import CodeBlock from '@theme/CodeBlock';
 import arrayFocusSource from '!!raw-loader!../../examples/array-focus.typecheck.ts';
+import arrayTemplateFieldShorthandSource from '!!raw-loader!../../examples/array-template-field-shorthand.example.ts';
 
 # array()
 
@@ -102,6 +103,22 @@ const myForm = form({
 ```
 
 The factory must return a fresh node each time.
+
+### `field()` shorthands in object templates
+
+Inside an object template, field-value shorthands use the same normalization and TypeScript
+inference as `form()` and `group()`. The object itself becomes a `group()`, while its concise leaf
+values become independently cloned `field()` nodes:
+
+<CodeBlock language="ts">{arrayTemplateFieldShorthandSource}</CodeBlock>
+
+The template above is equivalent to `array({ name: field(''), age: field(0) }, ...)`. Every item
+receives fresh field and group nodes; only the declared initial values are shared. This also works
+for object templates returned by a factory.
+
+Arrays inside the object template remain ambiguous. Use `field([...])` for one array-valued field
+or `array(...)` for a nested dynamic collection. Use `field(objectValue)` when a plain object is an
+atomic application value rather than nested group structure.
 
 ## Options
 

@@ -21,11 +21,14 @@ export class PackageConsumer {
     name: field('Marco', [required]),
     preferences: group({ theme: field('dark') }),
     addresses: array({ city: field('Zurich') }, [{ city: 'Madrid' }]),
+    shorthandAddresses: array({ city: '', postcode: 0 }, [{ city: 'Bern', postcode: 3000 }]),
   });
 
   readonly name: string | null = this.profile.name();
   readonly city: string | null = this.profile.addresses[0]!.city();
   readonly theme: string | null = this.profile.preferences.theme();
+  readonly shorthandCity: string | null = this.profile.shorthandAddresses[0]!.city();
+  readonly shorthandPostcode: number | null = this.profile.shorthandAddresses[0]!.postcode();
   readonly dynamicAge = this.profile.add('age', 36);
   readonly dynamic = this.profile.add({ nickname: '', location: { city: 'Zurich' } });
   readonly dynamicAgeValue: number | null = this.dynamicAge();

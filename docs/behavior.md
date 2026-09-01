@@ -1585,6 +1585,12 @@ const profile = form({
 ```
 
 A plain object returned by a factory or used as a template is normalized to a `group()` node.
+Object templates may contain the same field shorthands as `form()` and `group()` declarations.
+For example, `array({ name: '', age: 0 })` is normalized and inferred like
+`array({ name: field(''), age: field(0) })`: every item is a fresh group containing independent
+field nodes. Static templates are validated before any item is created, while factory results are
+validated on each invocation. Ambiguous array-valued children still require explicit `field([...])`
+or `array(...)` declarations.
 Templates may also define a `field()`, an explicit `group()`, an explicit `form()`, or another
 `array()`:
 

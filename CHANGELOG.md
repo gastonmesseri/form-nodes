@@ -30,6 +30,9 @@ consumer migration guide.
 - `form.add()` and `group.add()` now accept the same field and nested-group shorthands as initial
   declarations in both their single-child and atomic batch signatures, with matching runtime and
   TypeScript normalization.
+- `array()` object templates and object-template factories now accept field shorthands such as
+  `{ name: '', age: 0 }`, producing independently cloned groups and fields with matching TypeScript
+  inference.
 
 ## [0.1.0] - Unreleased
 
