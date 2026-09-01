@@ -289,6 +289,7 @@ state API. Signal properties must be called to read their current value.
 | [`myField()`](#callable-value) | Returns the current committed value. This is the preferred value-reading form. |
 | [`value()`](#value) | Current committed value. Equivalent to calling the field directly. |
 | [`controlValue()`](#controlvalue) | Immediate value received from a bound control; it can differ during debounce. |
+| [`nodeType()`](#nodetype) | Returns the literal `'field'`. |
 | [`form()`](#form) | Root node that owns the field, or `null` for a standalone field. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
@@ -403,6 +404,18 @@ username.controlValue(); // 'ada'
 
 During debounce, `controlValue()` contains the pending control value while `username()` still
 contains the last committed value.
+
+#### nodeType()
+
+**Signature:** `nodeType(): 'field'`
+
+Returns the stable primitive discriminant for this node.
+
+```ts
+const username = field('ada');
+
+username.nodeType(); // 'field'
+```
 
 #### form()
 

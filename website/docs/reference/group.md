@@ -6,6 +6,7 @@ description: Reference for object groups without an independent submission workf
 import CodeBlock from '@theme/CodeBlock';
 import groupRootSource from '!!raw-loader!../../examples/group-root.typecheck.ts';
 import groupFocusSource from '!!raw-loader!../../examples/group-focus.typecheck.ts';
+import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-shorthand-form-node.typecheck.ts';
 
 # group()
 
@@ -15,22 +16,6 @@ no `submission` option and no `submit()` method.
 
 Plain nested objects in `form()`, `group()`, and object templates in `array()` are shorthand for
 groups. Prefer shorthand until a branch needs its own options or validators.
-
-Primitive values, `Date`, `null`, and `undefined` can likewise stand in for `field()`:
-
-```ts
-const address = group({
-  city: 'Zurich',
-  postcode: 8000,
-}, {});
-
-address.city(); // 'Zurich'
-address.postcode(); // 8000
-```
-
-Object literals remain nested groups. Arrays must be wrapped explicitly with `field([...])` or
-declared with `array(...)`. Every other value—including non-plain objects and functions—becomes an
-implicit field. Use an explicit `field()` when a child needs validators or options.
 
 :::tip Prefer object shorthand when the group needs no configuration
 
@@ -122,6 +107,53 @@ const myForm = form({
 group(definitions, options?);
 group(definitions, validators, options?);
 ```
+
+### `field()` shorthand
+
+Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as class
+instances, can stand in for `field()` when defining a group:
+
+```ts
+const address = group({
+  city: 'Zurich',
+  postcode: 8000,
+});
+
+address.city(); // 'Zurich'
+address.postcode(); // 8000
+```
+
+This shorthand is especially convenient and unambiguous for strings, numbers, booleans, and
+dates. Arrays must be wrapped explicitly with `field([...])` or declared with `array(...)`.
+
+Take more care with object values. Plain objects are interpreted as nested groups, whereas
+functions, class instances, and other non-plain objects become atomic fields. If an object is
+intended to be one field value, prefer an explicit `field(myObject)`. This makes the intended node
+shape clear and avoids surprises if its construction or type annotation changes:
+
+```ts
+const defaultCompany = { companyId: 23, companyName: 'Apple' };
+
+const profile = group({
+  name: '',
+  company: field(defaultCompany),
+});
+```
+
+If a plain `company` object is inferred as a `Group`, `[formNode]` binding still works. Aggregate
+nodes can bind to a custom control as one complete value; changes from the control are distributed
+to the group's child nodes:
+
+<CodeBlock language="ts">{objectShorthandFormNodeSource}</CodeBlock>
+
+The bound value has the expected company object shape, but the node remains a group with
+`companyId` and `companyName` children, group validation, and aggregated state. Use
+`field(defaultCompany)` when the object should instead be one atomic field.
+
+The runtime classification is deterministic, but TypeScript's structural types cannot always
+retain whether an annotated object originated as a plain object or a class instance. Explicit
+`field()` is the safest choice at factory, deserialization, and other broadly typed boundaries. It
+is also required when the child needs validators or field options.
 
 ## Options
 
@@ -340,6 +372,7 @@ their value; `children` is a stable readonly map rather than a signal.
 | [`children`](#children) | Stable readonly map of every current named child. |
 | [`value()`](#value) | Current committed aggregate value. Equivalent to calling the group directly. |
 | [`controlValue()`](#controlvalue) | Complete value from a control bound directly to the group. |
+| [`nodeType()`](#nodetype) | Returns the literal `'group'`. |
 | [`form()`](#form) | Complete root node; a root group returns itself. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
@@ -560,6 +593,21 @@ address.controlValue(); // { city: 'Zurich' }
 
 Pending descendant control values are not aggregated into this signal. Read a descendant's
 `controlValue()` when its immediate buffered value is needed.
+
+#### nodeType()
+
+**Signature:** `nodeType(): 'group'`
+
+Returns the stable primitive discriminant for this node. If a child named `nodeType` shadows the
+direct method, use `myGroup.$api.nodeType()`.
+
+```ts
+const address = group({
+  city: field('Zurich'),
+});
+
+address.nodeType(); // 'group'
+```
 
 #### form()
 

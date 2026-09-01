@@ -34,6 +34,7 @@ guide documents `.api` only for name collisions and generic infrastructure.
 | Member | Description |
 | --- | --- |
 | `myNode()` | Preferred read of the current committed value |
+| `nodeType()` | Stable primitive discriminant: `'field'`, `'group'`, `'form'`, or `'array'` |
 | `controlValue()` | Immediate value of a directly bound control; it may differ during debounce |
 | `set(value)` | Assigns a complete value |
 | `update(updater)` | Computes and assigns a complete value |
@@ -46,6 +47,19 @@ guide documents `.api` only for name collisions and generic infrastructure.
 
 Forms and arrays additionally expose `patch()`, aggregate `flush()`, `debouncing()`, and subtree
 `focus()`. Use `set()` rather than patching a leaf field.
+
+`nodeType()` returns a precise literal for statically known nodes and the complete union for a
+generic node. This is useful when generic infrastructure needs to branch by primitive without
+testing for incidental members:
+
+```ts
+if (node.nodeType() === 'array') {
+  // Handle an array node.
+}
+```
+
+On forms and groups, a child named `nodeType` can shadow the direct method. Use
+`myForm.$api.nodeType()` when code must be collision-safe.
 
 ## Validation API
 

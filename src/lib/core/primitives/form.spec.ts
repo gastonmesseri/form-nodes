@@ -1,11 +1,13 @@
+import moment from 'moment';
 import { describe, expect, it, vi } from 'vitest';
 import { Injector, signal, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
 import { array } from './array';
+import { group } from './group';
 import { validator } from '../validation/validator';
-import type { InternalNode } from '../types/node.type';
+import type { InternalNode, Node, NodeType } from '../types/node.type';
 import { oneOf } from '../validation/validators/one-of';
 import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
@@ -17,7 +19,18 @@ import { dateBetween } from '../validation/validators/date-between';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+const nodeTypeOf = (node: Node): NodeType => {
+  return node.$api.nodeType();
+};
+
 describe('form', () => {
+  it('exposes its public node type', () => {
+    const profile = form({ name: field('') });
+
+    expect(profile.nodeType()).toBe('form');
+    expect(profile.$api.nodeType()).toBe('form');
+  });
+
   it('normalizes concise values to fields and plain objects to groups', () => {
     const birthday = new Date('1990-06-15T00:00:00.000Z');
     const profile = form({
@@ -46,6 +59,55 @@ describe('form', () => {
     expect(profile.address.city()).toBe('Bern');
   });
 
+  it('normalizes every supported atomic shorthand category consistently', () => {
+    const uniqueValue = Symbol('value');
+    const calculate = (value: number) => value * 2;
+    const createdAt = new Date('2026-09-03T00:00:00.000Z');
+    const values = form({
+      text: 'draft',
+      count: 1,
+      enabled: false,
+      largeCount: 1n,
+      uniqueValue,
+      empty: null,
+      missing: undefined,
+      createdAt,
+      calculate,
+    });
+
+    expect(values()).toEqual({
+      text: 'draft',
+      count: 1,
+      enabled: false,
+      largeCount: 1n,
+      uniqueValue,
+      empty: null,
+      missing: null,
+      createdAt,
+      calculate,
+    });
+    expect([
+      values.text,
+      values.count,
+      values.enabled,
+      values.largeCount,
+      values.uniqueValue,
+      values.empty,
+      values.missing,
+      values.createdAt,
+      values.calculate,
+    ].map(nodeTypeOf)).toEqual(Array.from({ length: 9 }, () => 'field'));
+  });
+
+  it('normalizes a real Moment instance to a field and preserves its identity', () => {
+    const appointment = moment('2026-09-03T14:30:00Z');
+    const booking = form({ appointment });
+
+    expect(nodeTypeOf(booking.appointment)).toBe('field');
+    expect(booking.appointment()).toBe(appointment);
+    expect(booking.appointment()?.toISOString()).toBe('2026-09-03T14:30:00.000Z');
+  });
+
   it('rejects ambiguous array shorthand', () => {
     expect(() => form({ roles: [] } as never)).toThrow(
       'Array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...).',
@@ -58,10 +120,12 @@ describe('form', () => {
     new Map([['name', 'Marco']]),
     new Set(['admin']),
     new Uint8Array([1, 2]),
+    new (class {})(),
     new (class Account { name = 'Marco'; })(),
     () => 'computed',
   ])('normalizes non-plain objects and functions to fields', (value) => {
     const concise = form({ value });
+    expect(nodeTypeOf(concise.value)).toBe('field');
     expect(concise.value()).toBe(value);
   });
 
@@ -69,8 +133,59 @@ describe('form', () => {
     const address = Object.assign(Object.create(null), { city: 'Zurich' }) as { city: string };
     const profile = form({ address });
 
+    expect(nodeTypeOf(profile.address)).toBe('group');
     expect(profile.address.city()).toBe('Zurich');
     expect(profile()).toEqual({ address: { city: 'Zurich' } });
+  });
+
+  it('normalizes inline and pretyped plain objects to equivalent groups', () => {
+    type Company = { companyId: number; companyName: string };
+    const defaultCompany: Company = { companyId: 23, companyName: 'Apple' };
+    const profile = form({
+      inlineCompany: { companyId: 7, companyName: 'Google' },
+      company: defaultCompany,
+    });
+
+    expect(profile()).toEqual({
+      inlineCompany: { companyId: 7, companyName: 'Google' },
+      company: { companyId: 23, companyName: 'Apple' },
+    });
+    expect(nodeTypeOf(profile.inlineCompany)).toBe('group');
+    expect(nodeTypeOf(profile.company)).toBe('group');
+    expect(profile.inlineCompany.companyName()).toBe('Google');
+    expect(profile.company.companyName()).toBe('Apple');
+  });
+
+  it('uses the runtime prototype when a structural annotation hides a class instance', () => {
+    type Company = { companyId: number; companyName: string };
+    class CompanyModel implements Company {
+      companyId = 23;
+      companyName = 'Apple';
+    }
+    const company: Company = new CompanyModel();
+
+    const profile = form({ company });
+    expect(profile.company()).toBe(company);
+    expect(profile.company.nodeType()).toBe('field');
+  });
+
+  it('preserves every explicit node definition without wrapping it', () => {
+    const explicitField = field('Marco');
+    const explicitGroup = group({ city: field('Zurich') });
+    const explicitForm = form({ step: field(1) });
+    const explicitArray = array(field(''));
+    const root = form({ explicitField, explicitGroup, explicitForm, explicitArray });
+
+    expect(root.explicitField).toBe(explicitField);
+    expect(root.explicitGroup).toBe(explicitGroup);
+    expect(root.explicitForm).toBe(explicitForm);
+    expect(root.explicitArray).toBe(explicitArray);
+    expect([
+      nodeTypeOf(root.explicitField),
+      nodeTypeOf(root.explicitGroup),
+      nodeTypeOf(root.explicitForm),
+      nodeTypeOf(root.explicitArray),
+    ]).toEqual(['field', 'group', 'form', 'array']);
   });
 
   it('aggregates between errors from nested numeric fields', () => {

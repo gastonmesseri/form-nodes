@@ -378,6 +378,7 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`controlValue()`](#controlvalue) | Immediate value from a control bound directly to the array; it can differ during debounce. |
 | [`items()`](#items) | Readonly array of current live item nodes. Its reference changes with the structure. |
 | [`length()`](#length) | Current number of item nodes. |
+| [`nodeType()`](#nodetype) | Returns the literal `'array'`. |
 | [`form()`](#form) | Root form that owns the array, or the array itself when it is a root. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
@@ -730,6 +731,18 @@ const usernames = array(field(''), {
 });
 
 usernames.length(); // 2
+```
+
+#### nodeType()
+
+**Signature:** `nodeType(): 'array'`
+
+Returns the stable primitive discriminant for this node.
+
+```ts
+const usernames = array(field(''));
+
+usernames.nodeType(); // 'array'
 ```
 
 #### form()

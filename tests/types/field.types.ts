@@ -10,6 +10,7 @@ field('', { debounce: 'change' });
 import type { Equal, Expect, HasKey } from './assert.types';
 
 const nullable = field('David');
+type _FieldNodeType = Expect<Equal<ReturnType<typeof nullable.nodeType>, 'field'>>;
 const nonNullable = field('David', { nullable: false });
 const explicit = field<number>(undefined);
 const explicitNull = field<string>(null);

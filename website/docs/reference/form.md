@@ -4,7 +4,8 @@ title: form()
 
 import CodeBlock from '@theme/CodeBlock';
 import formFocusSource from '!!raw-loader!../../examples/form-focus.typecheck.ts';
-import formFieldShorthandSource from '!!raw-loader!../../examples/form-field-shorthand.example.ts';
+import formFieldShorthandSource from '!!raw-loader!../../examples/form-field-shorthand.typecheck.ts';
+import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-shorthand-form-node.typecheck.ts';
 
 # form()
 
@@ -63,12 +64,22 @@ Nested object definitions are normalized to groups. Use an explicit `group()` wh
 validators, structural options, or validator messages. Use an explicit nested `form()` only when
 that branch needs an independent submission workflow.
 
-### Concise field definitions
+### `field()` shorthand
 
-Primitive values, `Date`, `null`, and `undefined` are concise alternatives to calling `field()`.
-Nested object literals remain group shorthand:
+Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as class
+instances, are concise alternatives to calling `field()`. Nested plain object literals remain
+group shorthand:
 
 <CodeBlock language="ts">{formFieldShorthandSource}</CodeBlock>
+
+You can inspect how each shorthand was normalized with `nodeType()`:
+
+```ts
+myForm.name.nodeType() === 'field'; // true
+myForm.birthday.nodeType() === 'field'; // true
+myForm.address.nodeType() === 'group'; // true
+myForm.company.nodeType() === 'group'; // true
+```
 
 The equivalent explicit declarations are `field('')`, `field(null)`, `field(2)`,
 `field(new Date())`, and `field(undefined)`. As with those calls, `null` and `undefined` infer
@@ -80,9 +91,48 @@ Arrays deliberately have no shorthand yet because `[]` cannot communicate whethe
 one field value or a dynamic node collection. Use `field([...])` for one array-valued field or
 `array(...)` for dynamic items.
 
-Every other value becomes an implicit field. This includes `RegExp`, `URL`, maps, sets, typed
-arrays, Temporal or Moment-like values, custom class instances, and ordinary functions. Only plain
-objects—with `Object.prototype` or a `null` prototype—are interpreted as nested groups.
+Every other value becomes an implicit field. This includes ordinary functions and non-plain
+objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal or Moment-like values, and
+custom class instances. Only plain objects—with `Object.prototype` or a `null` prototype—are
+interpreted as nested groups.
+
+Primitive shorthand is therefore a convenient and unambiguous choice for values such as strings,
+numbers, booleans, and dates. Be more deliberate with object values: a plain object means a nested
+group, while a class instance or another non-plain object means one atomic field. When the object
+itself is the field value, prefer an explicit `field(myObject)` so that the intended node shape is
+obvious and remains stable if the value's construction or type annotation changes:
+
+```ts
+const defaultCompany = { companyId: 23, companyName: 'Apple' };
+
+const myForm = form({
+  name: '',
+  company: field(defaultCompany),
+});
+```
+
+If `company` is accidentally written as a plain object instead, it becomes a `Group`, but it can
+still be bound as one value to a custom control with `[formNode]`. Aggregate nodes support control
+binding, so the component's `value` model receives the complete company object and updates are
+distributed to the group's children:
+
+<CodeBlock language="ts">{objectShorthandFormNodeSource}</CodeBlock>
+
+This makes the binding usable, but it does not turn `company` into a `Field`: it still exposes
+`companyId` and `companyName` child nodes and uses group validation and state aggregation. Prefer
+`field(defaultCompany)` when the company is conceptually one atomic field value.
+
+Inline objects and values declared with an object `type` alias infer as groups. TypeScript
+interfaces do not guarantee the string-keyed definition contract: use `{ ...value }` when an
+interface value should become a group, or `field(value)` when it should remain atomic. The explicit
+choice prevents TypeScript's interface/index-signature rules from disagreeing with the runtime
+prototype classification.
+
+Type annotations cannot preserve runtime prototype information after a concrete value is widened.
+Use explicit `field()` at factory, deserialization, or other broadly typed boundaries when a value
+may be a class instance despite being annotated as a plain object shape. The runtime rule is
+deterministic, but `field(myObject)` avoids surprising results at these structurally typed
+boundaries.
 
 ```ts
 const myForm = form({
@@ -316,6 +366,7 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`children`](#children) | Stable readonly map of every current named child. |
 | [`value()`](#value) | Current committed aggregate value. Equivalent to calling the form directly. |
 | [`controlValue()`](#controlvalue) | Complete value from a control bound directly to the form. |
+| [`nodeType()`](#nodetype) | Returns the literal `'form'`. |
 | [`form()`](#form-1) | Complete root node; a root form returns itself. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
@@ -481,6 +532,21 @@ profile.controlValue(); // { username: 'ada' }
 
 Pending descendant control values are not aggregated into this signal; read each descendant's
 `controlValue()` when that immediate buffered value is needed.
+
+#### nodeType()
+
+**Signature:** `nodeType(): 'form'`
+
+Returns the stable primitive discriminant for this node. If a child named `nodeType` shadows the
+direct method, use `myForm.$api.nodeType()`.
+
+```ts
+const profile = form({
+  username: field('ada'),
+});
+
+profile.nodeType(); // 'form'
+```
 
 #### form()
 

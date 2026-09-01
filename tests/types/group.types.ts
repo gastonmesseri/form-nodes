@@ -39,3 +39,17 @@ profile.address.submit();
 profile.independentWorkflow.submit();
 
 type _RootThroughGroup = Expect<Equal<ReturnType<typeof profile.address.city.form>, typeof profile | null>>;
+
+type Company = { companyId: number; companyName: string };
+const company: Company = { companyId: 23, companyName: 'Apple' };
+const companyGroup = group({ company });
+type _TypedObjectGroup = Expect<Equal<ReturnType<typeof companyGroup.company>, { companyId: number | null; companyName: string | null }>>;
+
+class CompanyModel {
+  companyId = 23;
+}
+const companyModel = new CompanyModel();
+const atomicCompanyGroup = group({ company: companyModel });
+type _ExplicitClassField = Expect<Equal<ReturnType<typeof atomicCompanyGroup.company>, CompanyModel | null>>;
+type _GroupNodeType = Expect<Equal<ReturnType<typeof atomicCompanyGroup.nodeType>, 'group'>>;
+type _ClassFieldNodeType = Expect<Equal<ReturnType<typeof atomicCompanyGroup.company.nodeType>, 'field'>>;

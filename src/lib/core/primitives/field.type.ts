@@ -138,6 +138,8 @@ export type FieldOptions<TValue = any> = {
 };
 
 export type FieldApi<TValue, TParent extends Node = Node> = {
+  /** Returns the concrete primitive represented by this node. */
+  nodeType(): 'field';
   /** Complete root node containing this field, or `null` while the field is a detached root. */
   form: Signal<RootNode<TParent> | null>;
   /** Immediate structural parent of this field, or `null` when it is a root or has been detached. */
