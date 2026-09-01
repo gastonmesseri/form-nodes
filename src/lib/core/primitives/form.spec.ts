@@ -536,6 +536,47 @@ describe('form', () => {
     }
   });
 
+  it('debounces a control bound directly to the form independently from its children', async () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({ name: field('Marco', { debounce: 0 }) }, { debounce: 100 });
+      const internal = profile as unknown as InternalNode;
+
+      internal.$api._setControlValue({ name: 'Mark' });
+
+      expect(profile.controlValue()).toEqual({ name: 'Mark' });
+      expect(profile()).toEqual({ name: 'Marco' });
+      expect(profile.name.controlValue()).toBe('Marco');
+      expect(profile.debouncing()).toBe(true);
+      expect(profile.dirty()).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(profile()).toEqual({ name: 'Mark' });
+      expect(profile.name.dirty()).toBe(false);
+      expect(profile.debouncing()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('discards a pending direct form control value after a descendant changes', async () => {
+    vi.useFakeTimers();
+    try {
+      const profile = form({ name: field('Marco') }, { debounce: 100 });
+      (profile as unknown as InternalNode).$api._setControlValue({ name: 'stale' });
+
+      profile.name.set('current');
+
+      expect(profile.controlValue()).toEqual({ name: 'current' });
+      expect(profile.debouncing()).toBe(false);
+      await vi.runAllTimersAsync();
+      expect(profile()).toEqual({ name: 'current' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('uses the nearest configured ancestor control debounce', async () => {
     vi.useFakeTimers();
     try {

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { array } from './array';
 import { field } from './field';
 import { form } from './form';
+import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
@@ -673,6 +674,24 @@ describe('array', () => {
     names.flush();
     expect(first()).toBe('pending');
     expect(names.controlValue()).toEqual(['pending']);
+    expect(names.debouncing()).toBe(false);
+  });
+
+  it('buffers and flushes a control value bound directly to the array', () => {
+    const names = array(field(''), ['Marco'], { debounce: 'blur' });
+
+    (names as unknown as InternalNode).$api._setControlValue(['Mark', 'Lia']);
+
+    expect(names.controlValue()).toEqual(['Mark', 'Lia']);
+    expect(names()).toEqual(['Marco']);
+    expect(names.debouncing()).toBe(true);
+    expect(names.dirty()).toBe(true);
+
+    names.flush();
+
+    expect(names()).toEqual(['Mark', 'Lia']);
+    expect(names.at(0)!.dirty()).toBe(false);
+    expect(names.at(1)!.dirty()).toBe(false);
     expect(names.debouncing()).toBe(false);
   });
 
