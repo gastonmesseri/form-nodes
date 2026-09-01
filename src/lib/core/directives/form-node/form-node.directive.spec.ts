@@ -274,6 +274,53 @@ describe('FormNode', () => {
     expect(control.focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 
+  it('restores a signal custom control when its debounced update is reset', async () => {
+    vi.useFakeTimers();
+    try {
+      @Component({
+        standalone: true,
+        selector: 'reset-debounce-signal-control',
+        providers: [provideFormNodeControl(() => ResetDebounceSignalControl)],
+        template: `{{ value() }}`,
+      })
+      class ResetDebounceSignalControl {
+        value = model('');
+        reset = vi.fn();
+      }
+
+      @Component({
+        standalone: true,
+        imports: [ResetDebounceSignalControl, FormNode],
+        template: `<reset-debounce-signal-control [formNode]="name" />`,
+      })
+      class Host {
+        readonly name = field('initial', { debounce: 100, nullable: false });
+      }
+
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const control = fixture.debugElement.children[0]!.componentInstance as ResetDebounceSignalControl;
+      const { name } = fixture.componentInstance;
+      expect(control.value()).toBe('initial');
+
+      control.value.set('pending');
+      expect(name.controlValue()).toBe('pending');
+      expect(name()).toBe('initial');
+
+      name.reset();
+      TestBed.flushEffects();
+      expect(control.reset).toHaveBeenCalledOnce();
+      expect(control.value()).toBe('initial');
+      expect(name.controlValue()).toBe('initial');
+
+      await vi.runAllTimersAsync();
+      expect(name()).toBe('initial');
+      expect(control.value()).toBe('initial');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('binds a FormValueControl to an aggregate form node', () => {
     type ProfileValue = { name: string | null; age: number | null };
 
