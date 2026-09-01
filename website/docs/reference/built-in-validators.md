@@ -13,11 +13,14 @@ Most format and constraint validators accept an empty value so they compose clea
 field('', [required, email]);
 ```
 
-Every built-in failure includes a default English `message`. An options object can replace it with a static or reactive message:
+Every built-in failure includes a default English `message`. A static message can be passed directly
+as the last argument. Use the options object when the message is reactive or when another option is
+needed:
 
 ```ts
-min(18, { message: 'You must be an adult.' });
+min(18, 'You must be an adult.');
 min(18, { message: () => translations().minimumAge });
+minDate('2026-08-24', { parseAs: 'local', message: 'Choose a later date.' });
 ```
 
 Returning `undefined` from a message function continues through form, provider, global, and built-in message fallbacks. See [Validator messages and i18n](../guides/validator-messages.md).
@@ -46,7 +49,7 @@ Requires a value to be present. It can be passed directly or called with message
 ```ts
 const myForm = form({
   name: field('', [required]),
-  surname: field('', [required({ message: 'Enter your surname.' })]),
+  surname: field('', [required('Enter your surname.')]),
 });
 ```
 
@@ -71,7 +74,7 @@ Requires a number greater than or equal to an inclusive minimum:
 const myForm = form({
   age: field(16, [min(18)]),
   dependentAge: field(16, [min(() => minimumAge())]),
-  employeeAge: field(16, [min(18, { message: 'You must be an adult.' })]),
+  employeeAge: field(16, [min(18, 'You must be an adult.')]),
 });
 ```
 
@@ -85,7 +88,7 @@ Requires a number less than or equal to an inclusive maximum:
 const myForm = form({
   age: field(130, [max(120)]),
   dependentAge: field(130, [max(() => maximumAge())]),
-  employeeAge: field(130, [max(120, { message: 'Enter a realistic age.' })]),
+  employeeAge: field(130, [max(120, 'Enter a realistic age.')]),
 });
 ```
 
@@ -105,7 +108,7 @@ const myForm = form({
     ),
   ]),
   employeeAge: field(70, [
-    between(18, 65, { message: 'Enter an age within the supported range.' }),
+    between(18, 65, 'Enter an age within the supported range.'),
   ]),
 });
 ```
@@ -120,7 +123,7 @@ Requires a JavaScript safe integer. It can be passed directly or called with mes
 const myForm = form({
   quantity: field(1.5, [integer]),
   attempts: field(1.5, [
-    integer({ message: 'Enter a whole number.' }),
+    integer('Enter a whole number.'),
   ]),
 });
 ```
@@ -137,7 +140,7 @@ const myForm = form({
   dependentPassword: field('', [minLength(() => minimumPasswordLength())]),
   tags: array(field(''), {
     initialValue: [],
-    validators: [minLength(2, { message: 'Choose more tags.' })],
+    validators: [minLength(2, 'Choose more tags.')],
   }),
 });
 ```
@@ -154,7 +157,7 @@ const myForm = form({
   dependentBiography: field('', [maxLength(() => biographyLimit())]),
   tags: array(field(''), {
     initialValue: ['angular'],
-    validators: [maxLength(10, { message: 'Choose at most 10 tags.' })],
+    validators: [maxLength(10, 'Choose at most 10 tags.')],
   }),
 });
 ```
@@ -169,7 +172,7 @@ Requires a non-empty string to contain at least a number of words:
 const myForm = form({
   summary: field('', [required, minWords(3)]),
   description: field('', [minWords(() => minimumWords())]),
-  biography: field('', [minWords(3, { message: 'Add more detail.' })]),
+  biography: field('', [minWords(3, 'Add more detail.')]),
 });
 ```
 
@@ -183,7 +186,7 @@ Requires a non-empty string to contain no more than a number of words:
 const myForm = form({
   biography: field('', [maxWords(100)]),
   description: field('', [maxWords(() => maximumWords())]),
-  summary: field('', [maxWords(100, { message: 'Keep it concise.' })]),
+  summary: field('', [maxWords(100, 'Keep it concise.')]),
 });
 ```
 
@@ -197,7 +200,7 @@ Requires a non-empty string to match a regular expression:
 const myForm = form({
   code: field('', [pattern(/^[A-Z]{3}-\d{4}$/)]),
   username: field('', [pattern(() => configuredPattern())]),
-  countryCode: field('', [pattern(/^[A-Z]+$/, { message: 'Use letters only.' })]),
+  countryCode: field('', [pattern(/^[A-Z]+$/, 'Use letters only.')]),
 });
 ```
 
@@ -211,7 +214,7 @@ Validates Angular's standard email-address format. It can be passed directly or 
 const myForm = form({
   email: field('', [required, email]),
   workEmail: field('', [
-    email({ message: 'Enter a valid work email.' }),
+    email('Enter a valid work email.'),
   ]),
 });
 ```
@@ -226,7 +229,7 @@ Validates an absolute WHATWG URL. It can be passed directly or called with messa
 const myForm = form({
   website: field('', [required, url]),
   documentationUrl: field('', [
-    url({ message: 'Enter a complete URL.' }),
+    url('Enter a complete URL.'),
   ]),
 });
 ```
@@ -247,7 +250,7 @@ const myForm = form({
     }),
   ]),
   messagedAppointment: field<Date>(null, [
-    minDate('2026-08-24', { message: 'Choose a later date.' }),
+    minDate('2026-08-24', 'Choose a later date.'),
   ]),
   momentAppointment: field<Date>(null, [
     minDate(moment('2026-08-24').toDate()),
@@ -269,7 +272,7 @@ const myForm = form({
     maxDate('2026-12-31', { parseAs: 'local' }),
   ]),
   messagedAppointment: field<Date>(null, [
-    maxDate('2026-12-31', { message: 'Choose an earlier date.' }),
+    maxDate('2026-12-31', 'Choose an earlier date.'),
   ]),
   momentAppointment: field<Date>(null, [
     maxDate(moment('2026-12-31').toDate()),
@@ -316,7 +319,7 @@ const myForm = form({
   status: field('draft', [oneOf(['draft', 'published'])]),
   reactiveStatus: field('draft', [oneOf(() => availableStatuses())]),
   publicationStatus: field('draft', [
-    oneOf(['draft', 'published'], { message: 'Choose an available status.' }),
+    oneOf(['draft', 'published'], 'Choose an available status.'),
   ]),
 });
 ```
@@ -334,7 +337,7 @@ const myForm = form({
   password,
   confirmation: field('', [equalTo(() => password())]),
   confirmedTerms: field(false, [
-    equalTo(true, { message: 'You must accept the terms.' }),
+    equalTo(true, 'You must accept the terms.'),
   ]),
 });
 ```

@@ -1,6 +1,7 @@
 import type { Validator } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultEqualToMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a value to equal a static or reactive expected value using `Object.is()`.
@@ -23,23 +24,24 @@ import { defaultEqualToMessage } from './default-validator-messages';
  *   ]),
  * });
  *
- * field(true, [equalTo(true, { message: 'You must accept the terms' })]);
+ * field(true, [equalTo(true, 'You must accept the terms')]);
  * ```
  *
  * @param expected Static expected value or a reactive function returning it.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const equalTo = <TValue>(
   expected: TValue | (() => TValue),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<TValue | null | undefined> => {
+  const message = resolveValidatorMessageOption(options);
   return ({ value }) => {
     const expectedValue = typeof expected === 'function' ? (expected as () => TValue)() : expected;
     return Object.is(value(), expectedValue)
       ? null
-      : { kind: 'equalTo', message: resolveValidatorMessage('equalTo', {}, options?.message, defaultEqualToMessage) };
+      : { kind: 'equalTo', message: resolveValidatorMessage('equalTo', {}, message, defaultEqualToMessage) };
   };
 };

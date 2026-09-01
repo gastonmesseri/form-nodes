@@ -590,9 +590,8 @@ describe('types', () => {
     expectTypeOf(fieldNode.reset).toBeCallableWith(null);
   });
 
-  it('rejects a direct string as required configuration', () => {
+  it('accepts a direct string as required configuration', () => {
     if (false) {
-      // @ts-expect-error required messages must use the options object
       field('David', [required('Name is required')]);
     }
   });

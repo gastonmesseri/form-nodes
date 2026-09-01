@@ -1,6 +1,7 @@
 import type { Validator } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultOneOfMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a non-empty value to equal one of the allowed values.
@@ -18,6 +19,7 @@ import { defaultOneOfMessage } from './default-validator-messages';
  * ```ts
  * const myForm = form({
  *   status: field<string>('a', [oneOf(['a', 'b', 'c'])]),
+ *   role: field('guest', [oneOf(['admin', 'editor'], 'Choose an allowed role')]),
  * });
  *
  * const reactiveForm = form({
@@ -28,15 +30,16 @@ import { defaultOneOfMessage } from './default-validator-messages';
  * ```
  *
  * @param allowedValues Static allowed values or a reactive function returning them.
- * @param options Optional static or reactive custom validation message.
+ * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const oneOf = <TValue>(
   allowedValues: readonly TValue[] | (() => readonly TValue[] | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<TValue | null | undefined> => {
+  const message = resolveValidatorMessageOption(options);
   return ({ value }) => {
     const currentValue = value();
     if (currentValue === null || currentValue === undefined || currentValue === '') return null;
@@ -46,7 +49,7 @@ export const oneOf = <TValue>(
       kind: 'oneOf',
       options: resolvedAllowedValues,
       actual: currentValue,
-      message: resolveValidatorMessage('oneOf', { options: resolvedAllowedValues, actual: currentValue }, options?.message, defaultOneOfMessage),
+      message: resolveValidatorMessage('oneOf', { options: resolvedAllowedValues, actual: currentValue }, message, defaultOneOfMessage),
     };
   };
 };

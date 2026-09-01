@@ -4,6 +4,7 @@ import { MAX_DATE_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMaxDateMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a valid, non-empty date to be on or before a maximum date.
@@ -21,24 +22,26 @@ import { defaultMaxDateMessage } from './default-validator-messages';
  * ```ts
  * field<Date>(null, [maxDate(new Date('2026-12-31'))]);
  * field<Date>(null, [maxDate('2026-12-31')]);
+ * field<Date>(null, [maxDate('2026-12-31', 'Choose an earlier date')]);
  * field<Date>(null, [maxDate('2026-12-31', { parseAs: 'local' })]);
  * field<Date>(null, [maxDate(moment('2026-12-31').toDate())]);
  * field<Date>(null, [maxDate(() => bookingWindowEnd(), { message: 'Choose an earlier date' })]);
  * ```
  *
  * @param maximum Static maximum date or ISO calendar-date string, or a reactive function returning one.
- * @param options Optional static or reactive custom message and string parsing mode. `parseAs` defaults to `'utc'`.
+ * @param options Optional static message string, or an object containing a message and string parsing mode. `parseAs` defaults to `'utc'`.
  */
 export const maxDate = (
   maximum: Date | string | (() => Date | string | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
     parseAs?: 'utc' | 'local';
   },
 ): Validator<Date | null> => {
-  const parseAs = options?.parseAs ?? 'utc';
+  const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
+  const message = resolveValidatorMessageOption(options);
   const normalizedMaximum = typeof maximum === 'function'
     ? () => {
       const value = maximum();
@@ -52,7 +55,7 @@ export const maxDate = (
     const resolvedMaximum = typeof normalizedMaximum === 'function' ? normalizedMaximum() : normalizedMaximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum.getTime())) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('maxDate', { maxDate: resolvedMaximum, actual: currentValue }, options?.message, () => defaultMaxDateMessage(resolvedMaximum)) }
+      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('maxDate', { maxDate: resolvedMaximum, actual: currentValue }, message, () => defaultMaxDateMessage(resolvedMaximum)) }
       : null;
   }, MAX_DATE_METADATA, normalizedMaximum);
 };

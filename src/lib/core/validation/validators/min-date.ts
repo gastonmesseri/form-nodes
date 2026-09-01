@@ -4,6 +4,7 @@ import { MIN_DATE_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMinDateMessage } from './default-validator-messages';
+import { resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a valid, non-empty date to be on or after a minimum date.
@@ -21,24 +22,26 @@ import { defaultMinDateMessage } from './default-validator-messages';
  * ```ts
  * field<Date>(null, [minDate(new Date('2026-01-01'))]);
  * field<Date>(null, [minDate('2026-01-01')]);
+ * field<Date>(null, [minDate('2026-01-01', 'Choose a later date')]);
  * field<Date>(null, [minDate('2026-01-01', { parseAs: 'local' })]);
  * field<Date>(null, [minDate(moment('2026-01-01').toDate())]);
  * field<Date>(null, [minDate(() => bookingWindowStart())]);
  * ```
  *
  * @param minimum Static minimum date or ISO calendar-date string, or a reactive function returning one.
- * @param options Optional static or reactive custom message and string parsing mode. `parseAs` defaults to `'utc'`.
+ * @param options Optional static message string, or an object containing a message and string parsing mode. `parseAs` defaults to `'utc'`.
  */
 export const minDate = (
   minimum: Date | string | (() => Date | string | undefined),
-  options?: {
+  options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
     parseAs?: 'utc' | 'local';
   },
 ): Validator<Date | null> => {
-  const parseAs = options?.parseAs ?? 'utc';
+  const parseAs = typeof options === 'object' ? options.parseAs ?? 'utc' : 'utc';
+  const message = resolveValidatorMessageOption(options);
   const normalizedMinimum = typeof minimum === 'function'
     ? () => {
       const value = minimum();
@@ -52,7 +55,7 @@ export const minDate = (
     const resolvedMinimum = typeof normalizedMinimum === 'function' ? normalizedMinimum() : normalizedMinimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum.getTime())) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('minDate', { minDate: resolvedMinimum, actual: currentValue }, options?.message, () => defaultMinDateMessage(resolvedMinimum)) }
+      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('minDate', { minDate: resolvedMinimum, actual: currentValue }, message, () => defaultMinDateMessage(resolvedMinimum)) }
       : null;
   }, MIN_DATE_METADATA, normalizedMinimum);
 };

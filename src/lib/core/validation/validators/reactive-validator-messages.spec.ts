@@ -23,6 +23,33 @@ import { field } from '../../primitives/field';
 import { array } from '../../primitives/array';
 
 describe('reactive validator messages', () => {
+  it('accepts a static message string through every unambiguous shorthand', () => {
+    const invalidNodes = [
+      field('', [required('Custom error')]),
+      field('invalid', [email('Custom error')]),
+      field('invalid', [url('Custom error')]),
+      field(1, [min(2, 'Custom error')]),
+      field(2, [max(1, 'Custom error')]),
+      field(3, [between(4, 5, 'Custom error')]),
+      field(1.5, [integer('Custom error')]),
+      field('actual', [equalTo('expected', 'Custom error')]),
+      array({ id: field(1) }, [{ id: 1 }, { id: 1 }], [uniqueItems('id', 'Custom error')]),
+      field('a', [minLength(2, 'Custom error')]),
+      field('ab', [maxLength(1, 'Custom error')]),
+      field<Date>(new Date('2026-01-01'), [minDate('2026-02-01', 'Custom error')]),
+      field<Date>(new Date('2026-02-01'), [maxDate('2026-01-01', 'Custom error')]),
+      field<Date>(new Date('2027-01-01'), [dateBetween('2026-01-01', '2026-12-31', 'Custom error')]),
+      field('one', [minWords(2, 'Custom error')]),
+      field('one two', [maxWords(1, 'Custom error')]),
+      field('123', [pattern(/^[a-z]+$/, 'Custom error')]),
+      field('archived', [oneOf(['draft', 'published'], 'Custom error')]),
+    ];
+
+    expect(invalidNodes.map(node => node.errors()[0]?.message)).toEqual(
+      Array.from({ length: invalidNodes.length }, () => 'Custom error'),
+    );
+  });
+
   it('updates every built-in validator message and falls back when the source returns undefined', () => {
     const translatedMessage = signal<string | undefined>('Translated error');
     const message = () => translatedMessage();

@@ -1,4 +1,4 @@
-import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
+import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -15,18 +15,26 @@ const name = field('David', [required, nameValidator]);
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
+field('', [required('Required'), email('Invalid email'), url('Invalid URL')]);
+field(1.5, [integer('Enter a whole number')]);
 field(18, [min(18, { message: 'Too young' })]);
+field(18, [min(21, 'Too young'), between(21, 65, 'Unsupported age')]);
 field(18, [between(18, 65, { message: 'Unsupported age' })]);
 field(18, [between(() => 18, () => 65)]);
 field('', [pattern(/^[a-z]+$/, { message: () => 'Use letters only' })]);
+field('', [pattern(/^[a-z]+$/, 'Use letters only'), minLength(3, 'Too short'), maxLength(30, 'Too long')]);
 field('', [url, url({ message: 'Enter an absolute URL' })]);
 field(1, [integer, integer({ message: 'Enter a whole number' })]);
 field('confirmed', [equalTo('confirmed'), equalTo(() => 'confirmed')]);
+field('confirmed', [equalTo('pending', 'Values must match')]);
 field<'draft' | 'published'>('draft', [oneOf(['draft', 'published'])]);
 field(2, [oneOf(() => [1, 2, 3])]);
 field('', [minWords(2), maxWords(() => 100)]);
+field('', [minWords(2, 'Too few words'), maxWords(100, 'Too many words')]);
 field<Date>(null, [minDate('2026-08-24'), maxDate(() => '2026-12-31', { parseAs: 'local' })]);
+field<Date>(null, [minDate('2026-08-24', 'Too early'), maxDate('2026-12-31', 'Too late')]);
 field<Date>(null, [dateBetween('2026-01-01', () => '2026-12-31', { parseAs: 'local', message: 'Outside range' })]);
+field<Date>(null, [dateBetween('2026-01-01', '2026-12-31', 'Outside range')]);
 
 const adult = validator<number | null>(({ value, api, field: targetField }) => {
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;
@@ -59,6 +67,7 @@ array(field(''), ['one', 'two'], [uniqueItems]);
 field<readonly string[]>(null, [uniqueItems()]);
 field<readonly string[] | undefined>(undefined, [uniqueItems()]);
 array({ id: field(1), name: field('') }, [{ id: 1, name: 'One' }], [uniqueItems('id')]);
+array({ id: field(1), name: field('') }, [{ id: 1, name: 'One' }], [uniqueItems('id', 'IDs must be unique')]);
 array({ id: field(1), name: field('') }, [{ id: 1, name: 'One' }], [
   uniqueItems<{ id: number | null; name: string | null }>(item => item.id),
 ]);

@@ -14,7 +14,7 @@
   - Review validator contexts, public root-type inference, async dependency tracking, submission
     inheritance, documentation, and migration impact before changing the current behavior.
 - website docs
-  - add some sort of modifiable example (maybe open external web or something) to allow user
+  - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
   - add playground to play with states, and etc, and with the code
   - check what font-size would be ideal for the code examples
@@ -28,9 +28,6 @@
   - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
   - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
 - Think about how to better structure project folders given current knowledge and existing files
-- in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
-  - as an optional signature. check what other validators i can use with this signature (maybe not posible in required, although i think it is marked and maybe it is safe?)
-
 - [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
@@ -291,6 +288,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - discarded - implement debounce for synchronous validators
 
 ## Completed
+
+- [x] Allow built-in validators to accept a static message string directly when the signature is unambiguous.
+  - Preserve the options object for reactive messages and date parsing configuration.
+  - Preserve `uniqueItems('property')` as the property-selector shorthand; use an options object for a no-selector message or pass the message after a selector.
 
 - [x] Add `mapObjectValues(object, mapper)` for value transformations that preserve an object's keys.
   - Use it for object-node normalization and recursive node-definition cloning.
