@@ -1,13 +1,10 @@
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultUniqueItemsMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption, type ValidatorOptions } from './validator-options';
 import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
-type UniqueItemsOptions<TItem = unknown> = {
-  message?: string | (() => string | undefined);
-  when?: (context: ValidatorContext<readonly TItem[] | null | undefined>) => boolean;
-};
+type UniqueItemsOptions<TItem = unknown> = ValidatorOptions<readonly TItem[] | null | undefined>;
 
 type UniqueItemsKeySelector<TItem> = keyof TItem | ((item: TItem, index: number) => unknown);
 
@@ -62,9 +59,15 @@ const validateUniqueItems = <TItem>(
  *
  * @param options Optional static or reactive custom validation message.
  */
-export function uniqueItems(options?: {
+export function uniqueItems(options?: ({
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
+  error?: never;
+} | {
+  message?: never;
+  /** Custom error or errors returned instead of the built-in error. */
+  error?: ValidationResult | ((context: ValidatorContext<readonly unknown[] | null | undefined>) => ValidationResult);
+}) & {
   /** Reactive predicate deciding whether this validator is active. */
   when?: (context: ValidatorContext<readonly unknown[] | null | undefined>) => boolean;
 }): Validator<readonly unknown[] | null | undefined>;
@@ -107,11 +110,17 @@ export function uniqueItems(context: FieldContext<readonly unknown[] | null | un
  * @param keySelector Property name or function selecting the comparable key for each item.
  * @param options Optional static message string, or an object containing a static or reactive message.
  */
-export function uniqueItems<TItem>(
+export function uniqueItems<TItem = unknown>(
   keySelector: keyof TItem | ((item: TItem, index: number) => unknown),
-  options?: string | {
+  options?: string | ({
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<readonly TItem[] | null | undefined>) => ValidationResult);
+  }) & {
     /** Reactive predicate deciding whether this validator is active. */
     when?: (context: ValidatorContext<readonly TItem[] | null | undefined>) => boolean;
   },

@@ -12,6 +12,8 @@ canonical release record.
 
 ### Added
 
+- An `error` option on every built-in validator for replacing a failed rule's standard error with
+  one or more static or reactively produced custom errors.
 - `field.strict()` and `field.nullable()` provide concise local nullability overrides on package
   and configured field factories.
 - `createFormPrimitives()` creates isolated form primitive factories with optional defaults for field

@@ -56,9 +56,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const wholeNumbersOnly = signal(false);
-const quantity = field(1.5, [integer({
-  when: () => wholeNumbersOnly(),
-})]);
+const quantity = field(1.5, [
+  integer({ when: () => wholeNumbersOnly() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

@@ -8,6 +8,7 @@ import angularBindingSource from '!!raw-loader!../../examples/angular-binding.ty
 import asyncValidationSource from '!!raw-loader!../../examples/async-validation.example.ts';
 import arrayOperationsSource from '!!raw-loader!../../examples/array-operations.example.ts';
 import builtInValidatorsSource from '!!raw-loader!../../examples/built-in-validators.typecheck.ts';
+import builtInValidatorErrorSource from '!!raw-loader!../../examples/built-in-validator-error.example.ts';
 import choosingPrimitivesSource from '!!raw-loader!../../examples/choosing-primitives.example.ts';
 import debounceSource from '!!raw-loader!../../examples/debounce.example.ts';
 import dynamicFormChildrenSource from '!!raw-loader!../../examples/dynamic-form-children.example.ts';
@@ -72,6 +73,15 @@ detachment. Continue with [Dynamic object children](../guides/dynamic-object-chi
 
 This combines field-level built-ins with a form-level cross-field rule and checks both failure and
 recovery. See [Validation](../guides/validation.md) for composition and reactive dependencies.
+
+## Built-in validator error overrides
+
+**Type-checked · Executed**
+
+<CodeBlock language="ts" title="built-in-validator-error.example.ts">{builtInValidatorErrorSource}</CodeBlock>
+
+This verifies static failure detection, reactive custom-error replacement, and suppression through
+an empty error list. See [Built-in validators](../reference/built-in-validators.md#custom-errors).
 
 ## Submission
 

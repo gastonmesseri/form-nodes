@@ -55,9 +55,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const limitBiography = signal(false);
-const biography = field('A'.repeat(200), [maxLength(160, {
-  when: () => limitBiography(),
-})]);
+const biography = field('A'.repeat(200), [
+  maxLength(160, { when: () => limitBiography() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

@@ -55,9 +55,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const validateReference = signal(false);
-const reference = field('123', [pattern(/^REF-\d+$/, {
-  when: () => validateReference(),
-})]);
+const reference = field('123', [
+  pattern(/^REF-\d+$/, { when: () => validateReference() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

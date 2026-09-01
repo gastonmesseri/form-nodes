@@ -1,4 +1,4 @@
-import type { Validator, ValidatorContext } from '../validation.type';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { normalizeDateConstraintSource, type DateConstraintSource } from './date-constraint';
 import { markValidatorMetadata } from '../validator-metadata';
 import { MAX_DATE_METADATA, MIN_DATE_METADATA } from '../constraint-metadata';
@@ -53,9 +53,15 @@ const resolveDateSource = (source: Date | (() => Date | undefined)): Date | unde
 export const dateBetween = (
   minimum: Date | 'today' | (string & {}) | (() => Date | 'today' | (string & {}) | undefined),
   maximum: Date | 'today' | (string & {}) | (() => Date | 'today' | (string & {}) | undefined),
-  options?: string | {
+  options?: string | ({
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<Date | null>) => ValidationResult);
+  }) & {
     /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
     when?: (context: ValidatorContext<Date | null>) => boolean;
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */

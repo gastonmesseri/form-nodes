@@ -1,4 +1,4 @@
-import type { Validator, ValidatorContext } from '../validation.type';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { MAX_METADATA, MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
@@ -30,9 +30,9 @@ const resolveBound = (source: number | (() => number | undefined)): number | und
  * ```ts
  * field(17, [between(18, 65)]);
  * field(70, [between(18, 65, 'Enter a supported age')]);
- * field(70, [between(() => minimumAge(), () => maximumAge(), {
- *   message: 'Enter an age within the supported range',
- * })]);
+ * field(70, [
+ *   between(() => minimumAge(), () => maximumAge(), { message: 'Enter an age within the supported range' })
+ * ]);
  * ```
  *
  * @param minimum Static inclusive minimum or a reactive function returning it.
@@ -42,9 +42,15 @@ const resolveBound = (source: number | (() => number | undefined)): number | und
 export const between = (
   minimum: number | (() => number | undefined),
   maximum: number | (() => number | undefined),
-  options?: string | {
+  options?: string | ({
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<number | null>) => ValidationResult);
+  }) & {
     /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
     when?: (context: ValidatorContext<number | null>) => boolean;
   },

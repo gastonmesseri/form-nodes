@@ -1,5 +1,5 @@
 import { countWords } from './count-words';
-import type { Validator, ValidatorContext } from '../validation.type';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMinWordsMessage } from './default-validator-messages';
 import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
@@ -27,9 +27,15 @@ import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-o
  */
 export const minWords = (
   minimum: number | (() => number | undefined),
-  options?: string | {
+  options?: string | ({
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<string | null>) => ValidationResult);
+  }) & {
     /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
     when?: (context: ValidatorContext<string | null>) => boolean;
   },

@@ -72,9 +72,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const enforceBookingWindow = signal(false);
-const departure = field(new Date('2027-01-01'), [dateBetween('2026-06-01', '2026-12-31', {
-  when: () => enforceBookingWindow(),
-})]);
+const departure = field(new Date('2027-01-01'), [
+  dateBetween('2026-06-01', '2026-12-31', { when: () => enforceBookingWindow() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

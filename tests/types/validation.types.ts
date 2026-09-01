@@ -1,4 +1,4 @@
-import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
+import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 import type { Equal, Expect, HasKey } from './assert.types';
 
 type IsAny<TValue> = 0 extends (1 & TValue) ? true : false;
@@ -92,6 +92,13 @@ array({ id: field(1), name: field('') }, [{ id: 1, name: 'One' }], [
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
 validatorOptions.message = () => 'Updated invalid value';
 const reactiveValidatorOptions: ValidatorOptions = { message: () => undefined };
+const customErrorOptions: ValidatorOptions<number | null> = {
+  error: ({ value }) => ({ kind: 'minimum', actual: value() }),
+};
+min(18, { error: ({ value }) => [{ kind: 'minimum', actual: value() }] });
+requiredIf(() => true, { error: { kind: 'conditionallyRequired' } });
+// @ts-expect-error a custom error replaces the built-in error and cannot be combined with a message
+min(18, { error: { kind: 'minimum' }, message: 'Too small' });
 const validatorMessages: ValidatorMessages = {
   min: ({ min: minimum, actual }) => {
     type _Minimum = Expect<Equal<typeof minimum, number>>;
@@ -104,7 +111,7 @@ validatorMessages.required = 'Required';
 const restoreValidatorMessages = configureGlobalValidatorMessages(() => validatorMessages);
 const validatorMessageProviders = provideValidatorMessages(() => validatorMessages);
 const builtInError: BuiltInValidationError = { kind: 'min', min: 2, actual: 1 };
-void [validatorOptions, reactiveValidatorOptions, restoreValidatorMessages, validatorMessageProviders, builtInError];
+void [validatorOptions, reactiveValidatorOptions, customErrorOptions, restoreValidatorMessages, validatorMessageProviders, builtInError];
 
 const constrainedAge = field(16, [min(18)]);
 const minimumError = constrainedAge.getError('min');

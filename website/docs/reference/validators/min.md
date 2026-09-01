@@ -55,9 +55,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const enforceMinimumAge = signal(false);
-const age = field(16, [min(18, {
-  when: () => enforceMinimumAge(),
-})]);
+const age = field(16, [
+  min(18, { when: () => enforceMinimumAge() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

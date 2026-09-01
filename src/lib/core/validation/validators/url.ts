@@ -39,9 +39,15 @@ const validateUrl = (
  *
  * @param options Optional static message string, or an object containing a static or reactive message. Omitting `message`, or returning `undefined`, uses the configured fallback.
  */
-export function url(options: string | {
+export function url(options: string | ({
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
+  error?: never;
+} | {
+  message?: never;
+  /** Custom error or errors returned instead of the built-in error. */
+  error?: ValidationResult | ((context: ValidatorContext<string | null>) => ValidationResult);
+}) & {
   /** Reactive predicate deciding whether this validator is active. */
   when?: (context: ValidatorContext<string | null>) => boolean;
 }): Validator<string | null>;

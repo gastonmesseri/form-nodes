@@ -55,9 +55,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const enforceCapacity = signal(false);
-const guests = field(12, [max(10, {
-  when: () => enforceCapacity(),
-})]);
+const guests = field(12, [
+  max(10, { when: () => enforceCapacity() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

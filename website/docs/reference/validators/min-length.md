@@ -55,9 +55,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const requireLongCode = signal(false);
-const code = field('ABC', [minLength(8, {
-  when: () => requireLongCode(),
-})]);
+const code = field('ABC', [
+  minLength(8, { when: () => requireLongCode() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved
