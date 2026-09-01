@@ -19,7 +19,7 @@
     "test:coverage": "vitest run --coverage --coverage.include='src/lib/**/*.ts' --coverage.exclude='src/**/*.spec.ts' --coverage.exclude='src/**/*.type.ts' --coverage.thresholds.statements=100 --coverage.thresholds.branches=99 --coverage.thresholds.functions=100 --coverage.thresholds.lines=100",
     "test:package": "npm run build && node scripts/test-package-consumer.mjs",
     "test:templates": "node scripts/test-template-types.mjs",
-    "test:types": "tsc -p tsconfig.type-tests.json --noEmit",
+    "test:types": "tsc -p tsconfig.type-tests.json --noEmit && node scripts/test-shorthand-type-performance.mjs",
     "test:watch": "vitest",
     "typecheck": "npm run lint && tsc -p tsconfig.spec.json --noEmit && npm run test:types && npm run test:templates"
   },
