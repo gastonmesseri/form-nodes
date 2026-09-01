@@ -1,6 +1,6 @@
 ---
 title: createFormPrimitives()
-description: Create form primitives with a shared field-nullability default.
+description: Create form primitives with shared application defaults.
 ---
 
 import CodeBlock from '@theme/CodeBlock';
@@ -9,9 +9,9 @@ import createFormPrimitivesSource from '!!raw-loader!../../examples/create-form-
 
 # `createFormPrimitives()`
 
-`createFormPrimitives()` creates an isolated set of `form`, `field`, `group`, and `array` factories with a
-shared default for field nullability. Use it when an application wants fields to be non-nullable
-unless a declaration explicitly opts into `null`.
+`createFormPrimitives()` creates an isolated set of `form`, `field`, `group`, and `array` factories
+with shared defaults. Use it to establish field nullability, translated validator messages, and
+injector inheritance policies once for an application or feature.
 
 The package-level factories remain nullable by default. Creating a configured set does not change
 them or any other configured set.
@@ -23,7 +23,8 @@ createFormPrimitives();
 createFormPrimitives(options?);
 ```
 
-The options object and its `nullable` property are optional. Omitting either uses `nullable: true`:
+The options object and every property are optional. Omitting `nullable` uses `true`; omitting either
+injector policy preserves its normal `true` default:
 
 ```ts
 const defaultForms = createFormPrimitives();
@@ -39,6 +40,44 @@ explicitDefaultForms.field(''); // Field<string | null>
 
 Here, `field('')` and the `city: ''` shorthand both produce `Field<string>`. A local
 `field.nullable('')` declaration still produces `Field<string | null>`.
+
+## Configure validator messages
+
+Pass a partial static or reactive catalog to localize built-in validator messages for every node
+created by the configured factories:
+
+```ts
+const { form, field } = createFormPrimitives({
+  validatorMessages: () => ({
+    required: translate('validation.required'),
+    minLength: ({ minLength }) => translate('validation.minLength', { minLength }),
+  }),
+});
+
+const profile = form({
+  username: field('', [required]),
+}, {});
+```
+
+A validator's own `message` has highest priority. An explicit `validatorMessages` catalog on a
+form, group, or array overrides the configured default for that subtree. The configured catalog is
+then considered before Angular provider and process-wide catalogs.
+
+## Configure injector policies
+
+`inheritInjector` and `adoptBindingInjector` can also be defaulted for every created node:
+
+```ts
+const isolatedForms = createFormPrimitives({
+  inheritInjector: false,
+  adoptBindingInjector: false,
+});
+```
+
+These options are useful for deliberate ownership boundaries. Their defaults remain `true`, and a
+node-level option overrides the configured value. `injector` is intentionally not a factory
+default: assigning it to every node would turn inherited ownership into explicit ownership. Pass
+an injector to the relevant root or boundary node instead.
 
 ## Precedence
 

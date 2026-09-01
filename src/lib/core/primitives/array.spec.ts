@@ -30,6 +30,28 @@ describe('array', () => {
     expect(factories()).toEqual([{ name: '' }, { name: 'Ada' }]);
   });
 
+  it('preserves every array argument shape while applying configured defaults', () => {
+    const { array: configuredArray } = createFormPrimitives({
+      validatorMessages: { minLength: 'Add at least one item.' },
+    });
+    const arrays = [
+      configuredArray(field(''), { validators: minLength(1) }),
+      configuredArray(field(''), [], { validators: minLength(1) }),
+      configuredArray(field(''), [], minLength(1)),
+      configuredArray(field(''), minLength(1)),
+      configuredArray(() => field(''), { validators: minLength(1) }),
+      configuredArray(() => field(''), [], { validators: minLength(1) }),
+      configuredArray(() => field(''), [], minLength(1)),
+      configuredArray(() => field(''), minLength(1)),
+      configuredArray(field(''), [null, minLength(1)]),
+      configuredArray(field(''), [], [undefined, minLength(1)]),
+    ];
+
+    expect(arrays.map(node => node.getError('minLength')?.message)).toEqual(
+      Array.from({ length: arrays.length }, () => 'Add at least one item.'),
+    );
+  });
+
   it('keeps rejecting scalar shorthand templates in a configured factory set', () => {
     const { array: configuredArray } = createFormPrimitives({ nullable: false });
 

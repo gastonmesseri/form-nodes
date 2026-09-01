@@ -2,6 +2,7 @@ import type { Node } from '../types/node.type';
 import type { Field, FieldOptions } from './field.type';
 import type { Group, GroupOptions } from './group.type';
 import type { ValidatorSource } from '../validation/validation.type';
+import type { ValidatorMessages } from '../validation/validator-messages';
 import type { ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
 import type { AddedNode, Form, FormOptions, FormValue, NormalizedNodeWithDefault, NormalizedNodesWithDefault, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
@@ -105,6 +106,12 @@ export interface ArrayFactory<TNullable extends boolean> {
 export type FormPrimitivesOptions<TNullable extends boolean = true> = {
   /** Default nullability for fields without an explicit `nullable` option. Defaults to `true`. */
   nullable?: TNullable;
+  /** Default built-in validator messages for nodes created by these factories. */
+  validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
+  /** Default injector-inheritance policy for nodes created by these factories. Defaults to `true`. */
+  inheritInjector?: boolean;
+  /** Default host-injector adoption policy for nodes created by these factories. Defaults to `true`. */
+  adoptBindingInjector?: boolean;
 };
 
 export type FormPrimitives<TNullable extends boolean = boolean> = {

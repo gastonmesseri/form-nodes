@@ -28,6 +28,7 @@ type ValidatorMessageResolver = <TKind extends keyof BuiltInValidationErrorMap>(
 const VALIDATOR_MESSAGES = new InjectionToken<ValidatorMessages>('ValidatorMessages');
 const globalValidatorMessages = signal<ValidatorMessagesSource>({});
 const nodeValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
+const nodeDefaultValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
 const nodeProvidedValidatorMessages = new WeakMap<Node, ValidatorMessages>();
 let activeValidatorMessageResolver: ValidatorMessageResolver | undefined;
 
@@ -102,11 +103,26 @@ export const registerNodeValidatorMessages = (
   if (providedMessages !== undefined) nodeProvidedValidatorMessages.set(node, providedMessages);
 };
 
+export const registerNodeDefaultValidatorMessages = (
+  node: Node,
+  messages: ValidatorMessagesSource | undefined,
+) => {
+  if (messages !== undefined) nodeDefaultValidatorMessages.set(node, messages);
+};
+
 const createNodeValidatorMessageResolver = (targetNode: Node): ValidatorMessageResolver => {
   return (kind, parameters) => {
     let currentNode: Node | null = targetNode;
     while (currentNode !== null) {
       const source = nodeValidatorMessages.get(currentNode);
+      const message = source === undefined ? undefined : resolveFromMessages(readMessages(source), kind, parameters);
+      if (message !== undefined) return message;
+      currentNode = getParent(currentNode);
+    }
+
+    currentNode = targetNode;
+    while (currentNode !== null) {
+      const source = nodeDefaultValidatorMessages.get(currentNode);
       const message = source === undefined ? undefined : resolveFromMessages(readMessages(source), kind, parameters);
       if (message !== undefined) return message;
       currentNode = getParent(currentNode);

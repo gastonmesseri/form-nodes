@@ -4,7 +4,9 @@ title: Validator messages and i18n
 
 # Validator messages and i18n
 
-Built-in validators include English fallback messages. Applications can override them globally, through Angular dependency injection, for one form tree, or for one validator.
+Built-in validators include English fallback messages. Applications can override them through a
+configured primitive set, Angular dependency injection, one form tree, one validator, or a global
+fallback.
 
 For all node and binding options—not only messages—see the
 [Configuration reference](../reference/configuration.md).
@@ -15,11 +17,28 @@ The closest definition wins:
 
 1. Validator-local `message` option.
 2. Closest form or array `validatorMessages` catalog.
-3. Closest Angular `provideValidatorMessages()` catalog.
-4. Process-wide `configureGlobalValidatorMessages()` catalog.
-5. Built-in English message.
+3. Closest `createFormPrimitives()` validator-message default.
+4. Closest Angular `provideValidatorMessages()` catalog.
+5. Process-wide `configureGlobalValidatorMessages()` catalog.
+6. Built-in English message.
 
 Missing entries and message functions returning `undefined` continue through the fallback chain.
+
+## Configured primitive defaults
+
+Use one isolated factory set when application forms import their primitives from a shared module:
+
+```ts
+export const { form, group, array, field } = createFormPrimitives({
+  validatorMessages: () => ({
+    required: translations().required,
+    min: ({ min, actual }) => translations().min({ min, actual }),
+  }),
+});
+```
+
+This also covers standalone fields created by that `field()` factory. A closer form, group, or
+array catalog can override individual messages.
 
 ## Angular application configuration
 

@@ -48,6 +48,30 @@ describe('form', () => {
     expect(profile.address.nodeType()).toBe('group');
   });
 
+  it('lets explicit subtree messages override configured primitive defaults', () => {
+    const { form: configuredForm } = createFormPrimitives({
+      validatorMessages: { required: 'Configured required.' },
+    });
+    const profile = configuredForm({
+      name: field('', [required]),
+    }, {
+      validatorMessages: { required: 'Profile required.' },
+    });
+
+    expect(profile.name.getError('required')?.message).toBe('Profile required.');
+  });
+
+  it('accepts positional validators and options on configured forms', () => {
+    const { form: configuredForm } = createFormPrimitives({ inheritInjector: false });
+    const profile = configuredForm(
+      { name: field('') },
+      [required],
+      { inheritInjector: true },
+    );
+
+    expect(profile.invalid()).toBe(false);
+  });
+
   it('keeps configured defaults for dynamically added shorthand descendants', () => {
     const { form: configuredForm } = createFormPrimitives({ nullable: false });
     const profile = configuredForm({ name: '' });

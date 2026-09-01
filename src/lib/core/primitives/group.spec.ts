@@ -18,6 +18,22 @@ describe('group', () => {
     expect(added.postcode()).toBe('');
   });
 
+  it('accepts positional validators and options on configured groups', () => {
+    const { group: configuredGroup } = createFormPrimitives({ inheritInjector: false });
+    const address = configuredGroup(
+      { city: field('') },
+      [required],
+      { inheritInjector: true },
+    );
+    const locallyConfigured = configuredGroup(
+      { city: field('Zurich') },
+      { inheritInjector: true },
+    );
+
+    expect(address.invalid()).toBe(false);
+    expect(locallyConfigured()).toEqual({ city: 'Zurich' });
+  });
+
   it('normalizes concise values to fields', () => {
     const address = group({ city: 'Zurich', postcode: 8000 });
 

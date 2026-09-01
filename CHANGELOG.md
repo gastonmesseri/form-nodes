@@ -13,8 +13,8 @@ consumer migration guide.
 
 - `field.strict()` and `field.nullable()` shortcuts for forcing one field's nullability regardless
   of the package or `createFormPrimitives()` default.
-- `createFormPrimitives()` for creating isolated `form`, `field`, `group`, and `array` factories with an
-  optional field-nullability default that also applies to shorthands and future array items.
+- `createFormPrimitives()` for creating isolated `form`, `field`, `group`, and `array` factories with
+  optional defaults for field nullability, validator messages, and injector inheritance policies.
 - `FormValueContract<TValue>` for checking an inferred form or group against a named aggregate value
   with `satisfies` while preserving concrete child-node types such as `ArrayNode`.
 - Consumer documentation website, including tutorials, reference pages, recipes, integrations,

@@ -14,8 +14,8 @@ canonical release record.
 
 - `field.strict()` and `field.nullable()` provide concise local nullability overrides on package
   and configured field factories.
-- `createFormPrimitives()` creates isolated form primitive factories with an optional field-nullability
-  default for direct fields, shorthands, dynamic children, and future array items.
+- `createFormPrimitives()` creates isolated form primitive factories with optional defaults for field
+  nullability, validator messages, and injector inheritance policies.
 - `FormValueContract<TValue>` checks an inferred form or group against a named aggregate value with
   `satisfies` while preserving concrete child-node types such as `ArrayNode`.
 - A complete consumer documentation website with tutorials, API reference, recipes, integration

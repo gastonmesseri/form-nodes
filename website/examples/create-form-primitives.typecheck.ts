@@ -1,6 +1,13 @@
 import { createFormPrimitives, type Field } from '@gem/ng-forms';
 
-const { form, field, array } = createFormPrimitives({ nullable: false });
+const { form, field, array } = createFormPrimitives({
+  nullable: false,
+  validatorMessages: {
+    required: 'This value is required.',
+  },
+  inheritInjector: true,
+  adoptBindingInjector: true,
+});
 
 const profile = form({
   username: field(''),

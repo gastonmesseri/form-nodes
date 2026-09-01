@@ -84,9 +84,10 @@ example.apply(); // 'value'
 
 ## Configured primitive factories
 
-`createFormPrimitives({ nullable })` returns an isolated `field`, `form`, `group`, and `array` factory set.
-The options object and `nullable` property are optional; both default to `true`. The package-level
-factories retain their nullable-by-default behavior. A configured default applies
+`createFormPrimitives()` returns an isolated `field`, `form`, `group`, and `array` factory set.
+Its optional defaults include `nullable`, `validatorMessages`, `inheritInjector`, and
+`adoptBindingInjector`; the boolean policies retain their ordinary `true` defaults when omitted.
+The package-level factories retain their nullable-by-default behavior. A nullability default applies
 to direct fields, object field shorthands, dynamically added children, and nodes created later from
 array templates or factories. An explicit field `nullable` option takes precedence, and an existing
 node attached to a configured form retains the policy of the factory that originally created it.
@@ -94,6 +95,13 @@ node attached to a configured form retains the policy of the factory that origin
 Nullish initial values remain nullable even in a non-nullable factory set because no non-null value
 exists to preserve. Consumers can declare the intended future type with an explicit nullable field,
 such as `field.nullable<string>()`.
+
+The configured validator catalog is a fallback for every node created by the set, including a
+standalone field. Explicit node and ancestor catalogs take precedence, followed by the configured
+factory catalog, captured Angular provider catalogs, the process-wide catalog, and built-in text.
+Configured injector policies apply to each newly created node, while a node-local option takes
+precedence. The factory does not accept an injector because doing so would make that injector an
+explicit owner of every created node instead of preserving hierarchical ownership.
 
 Every runtime node exposes `nodeType()`, which returns the precise public discriminant `'field'`,
 `'group'`, `'form'`, or `'array'`. The literal is stable for the node's lifetime and is preserved by
@@ -1232,8 +1240,9 @@ Built-in messages resolve from lowest to highest priority as follows:
 1. The English message included with the library.
 2. The process-wide catalog installed by `configureGlobalValidatorMessages()`.
 3. The closest Angular catalog captured from `provideValidatorMessages()`.
-4. The closest ancestor form or array `validatorMessages` option.
-5. The validator's own `message` option.
+4. The closest fallback catalog from the node's `createFormPrimitives()` factory set.
+5. The closest ancestor form or array `validatorMessages` option.
+6. The validator's own `message` option.
 
 Each catalog is partial. An absent entry, or a message function that returns `undefined`, continues
 to the next lower-priority layer.
