@@ -4,16 +4,34 @@ title: Dynamic arrays
 
 # Dynamic arrays
 
+For a complete program whose assertions verify keyed reconciliation and structural operations, see
+the [executable array example](../examples/executable-examples.mdx#array-reconciliation-and-operations).
+
 An `array()` owns an ordered collection of cloned node templates:
 
 ```ts
-const people = array({
-  id: field(''),
-  name: field(''),
-}, {
-  initialValue: [{ id: '1', name: 'Ada' }],
-  trackBy: 'id',
+const myForm = form({
+  people: array({
+    name: field(''),
+    age: field(18),
+  }, {
+    initialValue: 3,
+  }),
 });
+
+const people = myForm.people;
+```
+
+`initialValue: 3` creates three independent form items from the template defaults. The initial value is:
+
+```ts
+myForm.people();
+// Expected output:
+// [
+//   { name: '', age: 18 },
+//   { name: '', age: 18 },
+//   { name: '', age: 18 },
+// ]
 ```
 
 The options-object form keeps initial data and reconciliation configuration together. A non-negative number creates that many items from template defaults:
@@ -36,14 +54,15 @@ The positional `array(template, initialValue)` signature remains available for c
 A template may be a field, form, nested array, shorthand object, or explicit factory:
 
 ```ts
-const tags = array(field(''), {
-  initialValue: ['angular', 'signals'],
+const myForm = form({
+  tags: array(field(''), {
+    initialValue: ['angular', 'signals'],
+  }),
+  people: array(() => ({
+    name: field(''),
+    age: field(0),
+  })),
 });
-
-const people = array(() => ({
-  name: field(''),
-  age: field(0),
-}));
 ```
 
 Declarative templates are compiled into a clone recipe. Every item receives fresh signals, descendants, validators, state, debounce ownership, and async watchers. Runtime values, touched/dirty flags, errors, pending work, parents, and paths are never shared.
@@ -57,11 +76,11 @@ A factory must return a fresh tree. Returning the same live node more than once 
 Read values by calling the array and nodes through indexes, `at()`, `items()`, iteration, or familiar helpers:
 
 ```ts
-people();
-people[0]?.name();
-people.at(0)?.name();
+people(); // [{ name: '', age: 18 }, { name: '', age: 18 }, { name: '', age: 18 }]
+people[0]?.name(); // ''
+people.at(0)?.name(); // ''
 people.items();
-people.map(person => person.name());
+people.map(person => person.name()); // ['', '', '']
 
 for (const person of people) {
   console.log(person.name());
@@ -122,14 +141,15 @@ people.set([
 Use a stable property or callback when values can be reordered or replaced from a server:
 
 ```ts
-const people = array(personTemplate, {
-  initialValue: initialPeople,
-  trackBy: 'id',
-});
-
-const keyed = array(personTemplate, {
-  initialValue: initialPeople,
-  trackBy: person => person.id,
+const myForm = form({
+  people: array(personTemplate, {
+    initialValue: initialPeople,
+    trackBy: 'id',
+  }),
+  keyedPeople: array(personTemplate, {
+    initialValue: initialPeople,
+    trackBy: person => person.id,
+  }),
 });
 ```
 

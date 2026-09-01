@@ -11,12 +11,14 @@ Gem Forms distinguishes programmatic model updates from values originating in a 
 Calling a node is the preferred committed-value read:
 
 ```ts
-search();
-search.value();
-search.api.value();
+const search = field('');
+
+search(); // ''
 ```
 
-All three expressions read the same committed signal. Synchronous and asynchronous validators, forms, and arrays observe committed values only.
+Synchronous and asynchronous validators, forms, and arrays observe committed values only. See
+[Alternative value access](../concepts/values-and-state.md#alternative-value-access) for the
+equivalent explicit signal paths used by generic infrastructure.
 
 ## Programmatic operations
 
@@ -37,14 +39,16 @@ An `update()` callback runs once, synchronously and untracked, and receives the 
 `setControlValue()` represents a UI edit:
 
 ```ts
-const search = field('', { debounce: 300 });
+const myForm = form({
+  search: field('', { debounce: 300 }),
+});
 
-search.setControlValue('angular');
+myForm.search.setControlValue('angular');
 
-search.controlValue(); // 'angular' immediately
-search(); // '' until committed
-search.debouncing(); // true
-search.dirty(); // true immediately
+myForm.search.controlValue(); // 'angular' immediately
+myForm.search(); // '' until committed
+myForm.search.debouncing(); // true
+myForm.search.dirty(); // true immediately
 ```
 
 It marks the directly bound node dirty even when the reported value equals the existing value. It does not mark the node touched; blur, a custom-control touch event, or `markAsTouched()` does that.
@@ -80,15 +84,14 @@ Marking an interactive node touched commits its pending control value for every 
 Forms and arrays can establish a default for their subtree:
 
 ```ts
-const profile = form(
-  {
-    name: field(''),
-    address: {
-      city: field('', { debounce: 100 }),
-    },
+const profile = form({
+  name: field(''),
+  address: {
+    city: field('', { debounce: 100 }),
   },
-  { debounce: 300 },
-);
+}, {
+  debounce: 300,
+});
 ```
 
 `name` inherits 300 ms and `address.city` overrides it with 100 ms. The nearest configured node wins, including an explicit zero that disables an inherited delay. New array items resolve inherited debounce after attachment.
@@ -97,7 +100,8 @@ const profile = form(
 
 `form.debouncing()` and `array.debouncing()` are true while any current descendant has buffered control work. Their `flush()` recursively commits only their current subtree.
 
-Pending descendant values do not compose into an ancestor's `controlValue()`. Both the aggregate `value()` and `controlValue()` keep their last committed representation until descendants commit.
+Pending descendant values do not compose into an ancestor's `controlValue()`. Both the aggregate
+node call and `controlValue()` keep their last committed representation until descendants commit.
 
 A custom control bound directly to a form or array has its own aggregate control buffer. Its update marks the aggregate node dirty, then distributes or reconciles the complete value when committed; descendants are not individually marked dirty.
 

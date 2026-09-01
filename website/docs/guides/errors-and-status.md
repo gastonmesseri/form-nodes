@@ -30,8 +30,8 @@ error.targetNode === name; // true
 ## Own versus descendant errors
 
 ```ts
-profile.api.errors();
-profile.api.allErrors();
+profile.errors();
+profile.allErrors();
 ```
 
 - `errors()` contains only errors owned directly by the current node.
@@ -46,8 +46,10 @@ Use `errors()` to render a group-level rule and `allErrors()` for summaries or d
 `getError(kind)` returns the first own error of that kind. Built-in kinds infer their complete payload:
 
 ```ts
-const age = field(16, [min(18)]);
-const error = age.getError('min');
+const myForm = form({
+  age: field(16, [min(18)]),
+});
+const error = myForm.age.getError('min');
 
 error?.min; // number | undefined
 error?.actual; // number | undefined

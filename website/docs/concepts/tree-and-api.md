@@ -8,7 +8,8 @@ A form is both a callable value signal and a typed tree of child nodes. Gem Form
 
 ## Direct child access
 
-Every form child is exposed under its definition key:
+Every form child is exposed directly on the form under its definition key. This is the normal and
+preferred way to navigate the tree:
 
 ```ts
 const profile = form({
@@ -18,55 +19,65 @@ const profile = form({
   },
 });
 
-profile.name();
-profile.address.city();
+profile.name(); // 'Marco'
+profile.address.city(); // 'Madrid'
 ```
 
-The form also exposes a stable readonly `children` map for explicit traversal:
+The same children are also available through a stable readonly `children` map:
 
 ```ts
 profile.children.name === profile.name; // true
 profile.children.address.children.city === profile.address.city; // true
-profile.api.children === profile.children; // true
 ```
 
-## The `.api` convention
+The map does not contain a second set of nodes: its entries are the exact nodes already exposed
+directly. It is useful when code should be deliberately explicit about traversing children, or when
+generic infrastructure needs the complete named-child collection.
 
-Use this access convention in application code:
+Definition keys take precedence over node API members. This includes `children` itself:
+
+```ts
+const response = form({
+  children: field('domain value'),
+  status: field(200),
+});
+
+response.children(); // 'domain value'
+response.api.children.children(); // 'domain value'
+response.api.children.status(); // 200
+```
+
+In ordinary application code, continue to prefer `profile.name` and `profile.address.city` over
+their longer `children` paths.
+
+## Direct members by default
+
+Use node members directly in application code:
 
 | Situation | Preferred style | Reason |
 | --- | --- | --- |
 | Read any node value | `myNode()` | Nodes are callable value signals |
 | Read field or array state | `myField.valid()`, `myArray.length()` | The direct API is concise and unambiguous |
 | Run a field or array operation | `myField.set(value)`, `myArray.push(value)` | Prefer the operation directly on the node |
-| Read form state or run a form operation | `myForm.api.valid()`, `myForm.api.patch(value)` | Form children can collide with direct API names |
-| Write generic node infrastructure | `node.api` | Provides one consistent API surface for every node kind |
-| Guarantee access despite an `api` child | `myForm.$api` | `$api` is reserved and collision-safe |
+| Read form state or run a form operation | `myForm.valid()`, `myForm.patch(value)` | Forms expose their API directly too |
 
-Calling a form remains the preferred way to read its complete value. For other form state and
-operations, form children and API members share the same property space, so prefer `.api`:
+Calling a form remains the preferred way to read its complete value. Call its operations and state
+directly as well:
 
 ```ts
-profile(); // preferred value read
-profile.api.patch({ name: 'Ada' });
-profile.api.reset();
-profile.api.valid();
+profile(); // { name: 'Marco', address: { city: 'Madrid' } }
+profile.patch({ name: 'Ada' });
+profile.reset();
+profile.valid();
 ```
 
-Fields and arrays also expose `.api`, but their direct members are normally clearer:
+## `.api` for collisions and generic code
 
-```ts
-profile.name.set('Ada'); // preferred
-profile.name.api.set('Ada'); // equivalent
+Every node also exposes the same members through `.api`, but ordinary application examples should
+not use that longer path. It exists for two specific situations:
 
-people.push({ name: 'Grace' }); // preferred
-people.api.push({ name: 'Grace' }); // equivalent
-```
-
-One intentional field exception is `patch()`, which is available only as `field.api.patch()` because
-patching a leaf is rarely needed and behaves exactly like `set()`.
-
-## Name collisions
+- a form child has the same name as an API member; or
+- generic infrastructure needs one uniform object API for fields, forms, and arrays.
 
 Domain names take precedence over direct form API members:
 
@@ -76,25 +87,36 @@ const settings = form({
   value: field('domain value'),
 });
 
-settings.readonly(); // child value
-settings.value(); // child value
+settings.readonly(); // false
+settings.value(); // 'domain value'
 settings.api.readonly(); // form state
-settings.api.value(); // complete form value
+settings(); // { readonly: false, value: 'domain value' }
 ```
+
+Generic code can use `.api` without first narrowing the node kind:
+
+```ts
+const isNodeValid = (node: Node): boolean => {
+  return node.api.valid();
+};
+```
+
+A field's rarely needed leaf `patch()` is also available only through this uniform API and behaves
+like `set()`; application code should normally call `field.set(value)`.
 
 The name `api` is also a valid child name. `$api` is the reserved, collision-safe escape hatch:
 
 ```ts
 const response = form({ api: field('v2') });
 
-response.api(); // child named api
-response.$api.value(); // complete form value
+response.api(); // 'v2'
+response(); // { api: 'v2' }
+response.$api.valid(); // collision-safe form state
 ```
 
-Use `.api` normally. Do not use `$api` merely because it exists: reserve it for generic code that
-requires a guaranteed path or for a form that actually declares an `api` child. The `$api` property
-is supported and not scheduled for removal; its deprecation annotation only keeps it less
-prominent in autocomplete.
+Do not use `$api` merely because it exists. Reserve it for infrastructure requiring a guaranteed
+path or for a form that actually declares an `api` child. The `$api` property is supported and not
+scheduled for removal; its deprecation annotation only keeps it less prominent in autocomplete.
 
 ## Parent, root, and path
 
@@ -125,8 +147,8 @@ const command = form({
   apply: field(false),
 });
 
-command.name();
-command.apply();
+command.name(); // 'deploy'
+command.apply(); // false
 ```
 
 This hiding affects the public type only; node callability and the documented API remain unchanged.

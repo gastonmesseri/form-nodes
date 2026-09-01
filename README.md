@@ -5,7 +5,7 @@ A small, typed, signal-based forms library for Angular.
 ## Install
 
 ```sh
-npm install @gem/ng-forms
+npm install --save @gem/ng-forms
 ```
 
 ## Usage
@@ -15,11 +15,11 @@ import { field, form } from '@gem/ng-forms';
 
 const profile = form({
   name: field('', [({ value }) => value() ? null : { kind: 'required' }]),
-  address: form({ city: field('') }),
+  address: { city: field('') },
 });
 
 profile.name.set('Ada');
-profile.api.patch({ address: { city: 'London' } });
+profile.patch({ address: { city: 'London' } });
 profile(); // { name: 'Ada', address: { city: 'London' } }
 ```
 

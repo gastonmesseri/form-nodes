@@ -12,6 +12,12 @@
   be 'null', but 'any'
   - probably only in the case that it is { nullable: true }
 
+- in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
+- website docs
+  - add playground to play with states, and etc, and with the code
+  - change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
+  - check what colors for documentation are the most recognize as good by people
+  - check what font-size would be ideal for the code examples
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api

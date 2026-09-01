@@ -4,30 +4,30 @@ title: Form submission
 
 # Form submission
 
+The [executable submission example](../examples/executable-examples.mdx#submission) runs both the
+invalid callback and the successful asynchronous action.
+
 Configure submission on the root `form()`:
 
 ```ts
-const registration = form(
-  {
-    name: field('', [required]),
-    email: field('', [required, email]),
-  },
-  {
-    submission: {
-      action: async (form, value) => {
-        await api.register(value);
-        form.api.reset();
-      },
-      onInvalid: form => form.api.focus(),
+const registration = form({
+  name: field('', [required]),
+  email: field('', [required, email]),
+}, {
+  submission: {
+    action: async (form, value) => {
+      await api.register(value);
+      form.reset();
     },
+    onInvalid: form => form.focus(),
   },
-);
+});
 ```
 
 Call `submit()` programmatically:
 
 ```ts
-const submitted = await registration.api.submit();
+const submitted = await registration.submit();
 ```
 
 Submission marks the form subtree touched, which also commits pending control values, before deciding whether validation allows the action. It returns `true` when the action completes and `false` when validation blocks it or another action is already running. A rejected action rejects the returned promise and still clears submission state.
@@ -43,7 +43,7 @@ Import `FormRootDirective` and bind the root node to a native form:
     <form [formNode]="registration">
       <input [formNode]="registration.name" />
       <input type="email" [formNode]="registration.email" />
-      <button type="submit" [disabled]="registration.api.submitting()">
+      <button type="submit" [disabled]="registration.submitting()">
         Create account
       </button>
     </form>

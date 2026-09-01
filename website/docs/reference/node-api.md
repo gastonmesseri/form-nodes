@@ -6,23 +6,23 @@ title: Node API
 
 This reference groups the public signals and operations available on fields, forms, and arrays. Exact value and parent types remain inferred from the node tree.
 
-Calling a node directly—such as `profile.name()` or `profile()`—is the preferred committed-value
-read. Direct `value()` and `api.value()` access are equivalent alternatives. Use `controlValue()`
-only when the immediate, potentially debounced value owned by a bound control is specifically
-needed.
+For constructor signatures, options, and primitive-specific examples, see [`form()`](./form.md),
+[`field()`](./field.md), and [`array()`](./array.md).
 
-For actions and state, prefer direct members on fields and arrays (`name.set()`, `items.push()`) but
-use `.api` for form-level members (`profile.api.patch()`, `profile.api.valid()`) because a named form
-child may take precedence over a direct API member. `.api` remains available on every node for
-generic code. Use `$api` only when a form has a child named `api` or infrastructure needs a
-guaranteed collision-safe path. See [Tree navigation and API access](../concepts/tree-and-api.md).
+Calling a node directly—such as `profile.name()` or `profile()`—is the preferred committed-value
+read. Use `controlValue()` only when the immediate, potentially debounced value owned by a bound
+control is specifically needed. The [Values and state](../concepts/values-and-state.md#alternative-value-access)
+page documents the explicit alternative paths for generic infrastructure.
+
+Use direct members for actions and state on every node: `name.set()`, `items.push()`,
+`profile.patch()`, and `profile.valid()`. The [Tree navigation and API access](../concepts/tree-and-api.md)
+guide documents `.api` only for name collisions and generic infrastructure.
 
 ## Shared value and tree API
 
 | Member | Description |
 | --- | --- |
 | `myNode()` | Preferred read of the current committed value |
-| `myNode.value()` / `myNode.api.value()` | Equivalent explicit access to the committed value signal |
 | `controlValue()` | Immediate value of a directly bound control; it may differ during debounce |
 | `set(value)` | Assigns a complete value |
 | `update(updater)` | Computes and assigns a complete value |
@@ -32,7 +32,8 @@ guaranteed collision-safe path. See [Tree navigation and API access](../concepts
 | `path()` | Reactive string path from the root |
 | `keyInParent()` | Property name, array index, or null |
 
-Forms and arrays additionally expose `patch()`, aggregate `flush()`, `debouncing()`, and subtree `focus()`. A field exposes its leaf `patch()` through `field.api`.
+Forms and arrays additionally expose `patch()`, aggregate `flush()`, `debouncing()`, and subtree
+`focus()`. Use `set()` rather than patching a leaf field.
 
 ## Validation API
 
@@ -72,7 +73,8 @@ Fields also expose constraint metadata through `min()`, `max()`, `minLength()`, 
 | `patch(value)` | Recursively updates supplied branches |
 | `submit()` | Runs configured submission behavior and returns `Promise<boolean>` |
 
-Form children are also direct properties. Prefer `form.api` for form operations. If a child is named `api`, use the guaranteed collision-safe `form.$api` path.
+Form children are also direct properties. Use these operations directly unless a child has the
+same name; the collision behavior is documented in [Tree navigation and API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code).
 
 ## Array-specific API
 
@@ -103,3 +105,6 @@ A `FormNode<TNode>` obtained through `viewChild()` exposes:
 | `reset()` | Resets this binding and its current node |
 
 Import public APIs only from `@gem/ng-forms`. `_FormNode` is exported solely for Angular AOT/linker infrastructure and is not an application API.
+
+For compatibility with Angular `model()`, input/output pairs, `ControlValueAccessor`, `NgControl`,
+and native controls, see [Custom controls](../guides/custom-controls.md#angular-api-compatibility).

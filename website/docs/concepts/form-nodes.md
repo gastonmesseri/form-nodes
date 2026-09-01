@@ -15,20 +15,19 @@ value.** Nodes also provide actions such as `set()`, `update()`, `reset()`, `mar
 `disable()`.
 
 ```ts
-const name = field('Marco');
+const myForm = form({
+  name: field('Marco'),
+});
 
-name();
-name.value();
-name.api.value();
-name.set('David');
-name.touched();
-name.markAsTouched();
+myForm.name(); // 'Marco'
+myForm.name.set('David');
+myForm.name.touched();
+myForm.name.markAsTouched();
 ```
 
-The three value reads are equivalent. Prefer `name()` in ordinary application code; use
-`name.value()` or `name.api.value()` when explicitly naming the signal makes generic code easier to
-understand. `controlValue()` has different semantics and represents an immediate value buffered
-from a bound UI control before debounce completes.
+`controlValue()` has different semantics and represents an immediate value buffered from a bound
+UI control before debounce completes. The [Values and state](./values-and-state.md) page documents
+the explicit alternative value paths for generic infrastructure.
 
 Aggregate state is derived from descendants. A form becomes invalid when one of its descendants
 is invalid, while `errors()` remains scoped to errors owned directly by the current node. Use
