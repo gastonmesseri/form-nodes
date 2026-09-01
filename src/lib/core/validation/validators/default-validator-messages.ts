@@ -8,6 +8,9 @@ export const defaultValidatorMessages = {
   url(): string {
     return 'Please enter a valid absolute URL.';
   },
+  equalTo(): string {
+    return 'Please enter the matching value.';
+  },
   oneOf(): string {
     return 'Please enter one of the allowed values.';
   },
