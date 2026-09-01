@@ -12,6 +12,7 @@
   be 'null', but 'any'
   - probably only in the case that it is { nullable: true }
 
+- important: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
 - website docs
   - add playground to play with states, and etc, and with the code

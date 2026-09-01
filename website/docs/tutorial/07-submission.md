@@ -73,6 +73,9 @@ Native reset delegates to the form tree. It clears touched and dirty state, canc
 
 You now have a typed form that scales from local fields to nested and repeated data without changing its core access pattern.
 
+- Read the complete [submission guide](../guides/submission.md) for policies, invalid callbacks,
+  native events, reset behavior, and concurrent submissions.
+- Review [errors and status](../guides/errors-and-status.md) when building submission summaries.
 - Study the larger [complete form example](../examples/complex-form.md).
 - Browse every [built-in validator](../reference/built-in-validators.md).
 - Learn the exact [value and debounce flow](../guides/value-flow-and-debounce.md).

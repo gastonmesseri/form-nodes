@@ -32,9 +32,7 @@ export class PasswordEditor {
   myForm = form({
     password: this.password,
     confirmation: field('', [
-      equalTo(() => this.password(), {
-        message: 'Passwords must match.',
-      }),
+      equalTo(() => this.password(), { message: 'Passwords must match.' }),
     ]),
   });
 }

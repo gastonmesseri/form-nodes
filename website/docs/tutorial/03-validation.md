@@ -54,4 +54,15 @@ this.myForm.allErrors();
 
 A field error makes every interactive ancestor invalid. The error remains owned by its field through `targetNode`.
 
+## Related guides and reference
+
+- [Validation](../guides/validation.md) covers custom validators, cross-field rules, reactive
+  constraints, and validator metadata.
+- [Errors and status](../guides/errors-and-status.md) explains `errors()`, `allErrors()`,
+  `getError()`, ownership, `targetNode`, and aggregate validity.
+- [Built-in validators](../reference/built-in-validators.md) documents every signature, error
+  shape, empty-value rule, and concrete example.
+- [Validator messages and i18n](../guides/validator-messages.md) covers default messages and global,
+  provider, form-tree, and validator-local overrides.
+
 Continue with [Step 4: Add nesting and reactive state](./04-nesting-and-state.md).

@@ -19,6 +19,30 @@ const myForm = form({
 });
 ```
 
+## Fields can hold arrays and objects
+
+`field()` means “one leaf node,” not “one scalar.” A field can hold an array when the complete
+array is edited as one value—for example, by a native multi-select or a multi-select component:
+
+```ts
+const myForm = form({
+  selectedRoles: field<string[]>([]),
+});
+```
+
+```html
+<select multiple [formNode]="myForm.selectedRoles">
+  <option value="admin">Administrator</option>
+  <option value="editor">Editor</option>
+  <option value="viewer">Viewer</option>
+</select>
+```
+
+This field has one validation and interaction state for the complete `string[]`. Use `array()` only
+when items need independent nodes, bindings, errors, paths, or structural operations. See
+[Array field or `array()`](../guides/choosing-a-primitive.md#array-field-or-array) for a complete
+comparison.
+
 ## Signatures
 
 ```ts
@@ -68,7 +92,55 @@ const myForm = form({
 State and debounce options inherit from ancestors. A local option can add a state cause or override
 the inherited debounce.
 
-## Reading and writing
+## Instance shape
+
+A field node is both a callable value reader and an object with reactive signals and operations:
+
+| Member | Description |
+| --- | --- |
+| `myField()` | Returns the current committed value. This is the preferred value read. |
+| `api` | Exposes the complete field API. Direct members such as `myField.set()` are preferred in application code. |
+| `$api` | Collision-safe alias of `api`, shared by every node kind. Prefer `api` normally. |
+
+Unlike a form, a field has no named children, so its direct API members cannot collide with child
+names.
+
+## Value and tree properties
+
+Every property in this section is a reactive signal and must be called to read its current value.
+
+| Property | Description |
+| --- | --- |
+| `value()` | Current committed value. Equivalent to calling the field, but the callable form is preferred. |
+| `controlValue()` | Immediate value most recently received from a bound control. It can differ from the committed value during debounce. |
+| `form()` | Root form that owns the field, or `null` for a standalone field. |
+| `parent()` | Direct parent node, or `null` for a standalone field. |
+| `path()` | Reactive property path from the root. Array indexes appear as string segments. |
+| `keyInParent()` | Property name or array index under which this field is stored, or `null` when standalone. |
+
+```ts
+myForm.name();            // ''
+myForm.name.parent();     // myForm
+myForm.name.form();       // myForm
+myForm.name.path();       // ['name']
+myForm.name.keyInParent(); // 'name'
+```
+
+## Value and control methods
+
+| Method | Description |
+| --- | --- |
+| `set(value)` | Immediately assigns both the committed value and `controlValue()`. It cancels pending debounce. |
+| `update(updater)` | Passes the current committed value to `updater`, then assigns its result immediately. |
+| `setControlValue(value)` | Handles a control-originated value, marks the field dirty, and applies the configured debounce before committing it. Bindings normally call this for you. |
+| `reset()` | Keeps the current value, cancels pending debounce, and clears touched and dirty state. |
+| `reset(value)` | Assigns `value`, cancels pending debounce, and clears touched and dirty state. |
+| `debouncing()` | Whether a control-originated value is waiting for its debounce strategy to complete. |
+| `flush()` | Immediately commits a pending `controlValue()` and ends its debounce. It has no observable effect when nothing is pending. |
+| `focus(options?)` | Focuses the first `[formNode]` control bound to this field in DOM order. Accepts standard `FocusOptions`; it does nothing without a binding. |
+
+`api.patch(value)` also exists so aggregate nodes can patch children through a uniform API. For a
+field it is equivalent to `set(value)`; application code should use `set()` directly.
 
 ```ts
 myForm.name(); // ''
@@ -95,7 +167,33 @@ myForm.query.debouncing();
 myForm.query.flush();
 ```
 
-## Validation and constraints
+## Validation properties and methods
+
+| Member | Description |
+| --- | --- |
+| `validators()` | Current normalized validator collection. |
+| `setValidators(source)` | Replaces the validator source and re-evaluates validation. The source can be static or reactive. |
+| `errors()` | Current validation errors owned by this field. |
+| `allErrors()` | The same errors as `errors()` because a field has no descendants. |
+| `getError(kind)` | Returns the first error with `kind`, or `undefined`. Known built-in kinds retain their inferred error type. |
+| `valid()` | Whether the field is currently valid. |
+| `invalid()` | Whether the field is currently invalid. |
+| `pending()` | Whether asynchronous validation is currently pending. |
+| `validationStatus()` | Current status: `'valid'`, `'invalid'`, or `'unknown'` while validation is pending without an existing error. |
+| `required()` | Whether an active validator marks the field as required. |
+
+### Constraint metadata
+
+Built-in validators expose reactive metadata used by `[formNode]` to synchronize native control
+constraints:
+
+| Property | Description |
+| --- | --- |
+| `min()` | Strictest minimum contributed by active numeric or date validators, or `null`. |
+| `max()` | Strictest maximum contributed by active numeric or date validators, or `null`. |
+| `minLength()` | Strictest minimum length contributed by active validators, or `null`. |
+| `maxLength()` | Strictest maximum length contributed by active validators, or `null`. |
+| `pattern()` | Every regular expression contributed by active pattern validators. |
 
 ```ts
 const myForm = form({
@@ -117,7 +215,39 @@ validators also contribute native-control metadata through `required()`, `min()`
 Use `setValidators(source)` to replace the current validator collection. See the
 [built-in validator reference](./built-in-validators.md) for every signature and error shape.
 
-## Interaction and availability
+## Interaction properties and methods
+
+| Member | Description |
+| --- | --- |
+| `touched()` | Whether the field has been touched and is currently interactive. |
+| `untouched()` | Inverse of `touched()`. |
+| `markAsTouched()` | Marks the field touched and commits a pending control value. It is ignored while non-interactive. |
+| `markAsUntouched()` | Clears stored touched state. |
+| `dirty()` | Whether a control-originated value has made the field dirty and it is currently interactive. |
+| `pristine()` | Inverse of `dirty()`. |
+| `markAsDirty()` | Marks the field's stored state as dirty. |
+| `markAsPristine()` | Clears stored dirty state without changing the value. |
+
+Programmatic `set()` and `update()` do not mark a field dirty. `setControlValue()` does.
+
+## Availability properties and methods
+
+| Member | Description |
+| --- | --- |
+| `disabled()` | Whether the field is disabled by its own state, configuration, or an ancestor. |
+| `disabledReasons()` | Active local and inherited disabled causes, including source nodes and optional messages. |
+| `enabled()` | Inverse of `disabled()`. |
+| `disable(message?)` | Disables the field and optionally records a user-facing reason. |
+| `enable()` | Removes the imperative disabled state; configured or inherited causes can keep it disabled. |
+| `readonly()` | Whether the field is readonly through its own state, configuration, or an ancestor. |
+| `writable()` | Inverse of `readonly()`. |
+| `markAsReadonly()` | Marks the field as readonly. |
+| `markAsWritable()` | Removes the imperative readonly state; other causes can keep it readonly. |
+| `hidden()` | Whether the field is hidden through its own state, configuration, or an ancestor. |
+| `visible()` | Inverse of `hidden()`. |
+| `hide()` | Hides the field. |
+| `show()` | Removes the imperative hidden state; other causes can keep it hidden. |
+| `submitting()` | Whether an ancestor form is currently running its submission action. |
 
 ```ts
 myForm.name.markAsTouched();
@@ -126,10 +256,6 @@ myForm.name.disable('Editing is unavailable');
 myForm.name.markAsReadonly();
 myForm.name.hide();
 ```
-
-The paired signals are `touched()` / `untouched()`, `dirty()` / `pristine()`, `disabled()` /
-`enabled()`, `readonly()` / `writable()`, and `hidden()` / `visible()`. `disabledReasons()` exposes
-both inherited and local causes.
 
 ## Binding in Angular
 

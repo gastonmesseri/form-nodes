@@ -41,10 +41,7 @@ export class UsernameEditor {
 
         return result.available
           ? null
-          : {
-              kind: 'usernameTaken',
-              message: 'This username is already in use.',
-            };
+          : { kind: 'usernameTaken', message: 'This username is already in use.' };
       }, {
         debounce: 300,
         when: ({ value }) => (value()?.length ?? 0) >= 3,
