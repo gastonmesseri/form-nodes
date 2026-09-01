@@ -1,8 +1,12 @@
 import { signal } from '@angular/core';
 
-import { array, asyncValidator, field, form, minLength, required } from './src/public-api';
+import { FormNode } from './dist/types/gem-ng-forms';
+import { array, asyncValidator, field, form, minLength, oneOf, required } from './src/public-api';
+
 
 const myForm = form({
+  api: field('something'),
+  // $api: field('somethong'),
   name: field<string>('David'),
   age: field<number>(23),
   address: {
@@ -19,9 +23,51 @@ const myForm = form({
   //   city: field(''),
   //   country: field(''),
   // }],
+  maybeName: field(null),
+  sons1: array({
+    name: field(''),
+    age: field(0),
+  }, {
+    debounce: 200,
+  }),
+  sons2: array({
+    name: field('', [required, oneOf(['a', 'b', 'c'])]),
+    age: field(0),
+  }, [], {
+    // initialValue: 2,
+    // trac
+    // ini
+    // initi
+    // initialValue: [],
+    trackBy: (_, i) => i,
+    disabled: true,
+    // submission: 
+    
+  }),
+  // a: array()
+  items: array({
+    name: field(''),
+    age: field(0),
+  }, {
+    initialValue: [{ name: 'Marco', age: 30 }],
+    validators: [minLength(1)],
+    trackBy: 'name',
+  })
 });
 
-const no = myForm.name
+myForm.sons1[0]?.getError('')
+
+const directiveInstance: FormNode<typeof myForm.age> = {} as any;
+const nodeFromDirective = directiveInstance.node();
+// directiveInstance.
+
+myForm.name.focus;
+
+myForm.address.city();
+
+const maybeNameKeyInParent = myForm.maybeName.keyInParent();
+
+const myFormKeyInParent = myForm.keyInParent();
 
 const teto = null as string | null;
 
@@ -68,7 +114,7 @@ const myForm2SonsItem = myForm2.sons[0];
 myForm2.sons.forEach(node => {
   node.age;
 });
-myForm2.name
+myForm2.name.disable;
 
 myForm2.address.city.disabled();
 myForm2.address.subaddress.city.disabled();
