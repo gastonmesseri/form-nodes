@@ -14,11 +14,11 @@
 
 - in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
 - website docs
-  - try to color the template: in the components declaration
   - add playground to play with states, and etc, and with the code
-  - change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
-  - check what colors for documentation are the most recognize as good by people
   - check what font-size would be ideal for the code examples
+  - check what colors for documentation are the most recognize as good by people
+  - [x] try to color the template: in the components declaration
+  - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api

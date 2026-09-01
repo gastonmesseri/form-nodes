@@ -9,12 +9,18 @@ Start with a component-owned form tree. `field()` creates leaf values and `form(
 ```ts
 import { Component } from '@angular/core';
 
-import { field, form } from '@gem/ng-forms';
+import { field, FormNode, form } from '@gem/ng-forms';
 
 @Component({
   selector: 'app-profile-editor',
+  imports: [FormNode],
   template: `
-    <p>{{ myForm.name() }}</p>
+    <label>
+      Name
+      <input [formNode]="myForm.name" />
+    </label>
+
+    <p>Current name: {{ myForm.name() }}</p>
   `,
 })
 export class ProfileEditor {
@@ -59,6 +65,8 @@ this.myForm.patch({
 });
 ```
 
-At this point, the form works without any Angular template integration. Next, connect it to native controls.
+The model itself also works outside Angular and does not require dependency injection. The first
+field is already connected to a native input; next, bind the remaining fields and examine the
+control interaction behavior.
 
 Continue with [Step 2: Bind native controls](./02-bind-controls.md).
