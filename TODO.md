@@ -5,7 +5,11 @@
 - website docs
   - add some sort of modifiable example (maybe open external web or something) to allow user
     to interact with the example
-- Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
+  - add playground to play with states, and etc, and with the code
+  - check what font-size would be ideal for the code examples
+  - check what colors for documentation are the most recognize as good by people
+  - [x] try to color the template: in the components declaration
+  - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 - Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
 - Consider if nested form() should sactually be a different type like group() by default and not another form() (the one inferred from the object)
   - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
@@ -13,14 +17,10 @@
   - update docs if required, check all docs
   - myForm.add('age', field<number>(2));
   - handle typing properly for this
-- important: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
+
+- [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
-- website docs
-  - add playground to play with states, and etc, and with the code
-  - check what font-size would be ideal for the code examples
-  - check what colors for documentation are the most recognize as good by people
-  - [x] try to color the template: in the components declaration
-  - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
+  - as an optional signature. check what other validators i can use with this signature (maybe not posible in required, although i think it is marked and maybe it is safe?)
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api
@@ -96,7 +96,6 @@
 - Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
   both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
   access the errors() or something like that
-- Re-evaluate `FormValueControl` interoperability on every Angular upgrade. Replace the isolated `ɵSIGNAL`/`InputSignalNode` adapter with a public Angular mechanism as soon as one exists (for example, public access to the host component's `ComponentRef.setInput()` or a dedicated Signal Forms interoperability protocol). Preserve the AOT, SSR, hydration, OnPush, and real-browser test matrix during that migration. Until then, recommend `provideFormNodeControl()` when consumers require the explicit compatibility path.
 - Add very descriptive intellisense for every property in public api, (options, calls, etc, properties)
 - Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
   - Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
@@ -219,6 +218,48 @@ Nosotros convertimos un nodo eliminado en un nodo raíz independiente y utilizab
 Tracking estructural desde el modelo
 Angular crea y elimina nodos automáticamente según el array almacenado en el signal. Nosotros usamos template/factory y métodos estructurales. Es una diferencia arquitectónica deliberada que no intentaría eliminar.
 
+## Angular upgrade checklist
+
+Run this checklist for every Angular update. Keep it in `TODO.md` permanently and reset its checkboxes for the next update.
+
+- Release baseline and public API
+  - [ ] Resolve the latest maintenance release or tag for every supported Angular major; record the inspected tag, commit, source paths, and relevant test paths.
+  - [ ] Read the Angular release notes, changelog, deprecations, breaking changes, migrations, supported public API policy, and Signal Forms documentation for the complete version interval being adopted.
+  - [ ] Compare the exported `@angular/core` and `@angular/forms` public types used by the library, including `Signal`, `InputSignal`, `ModelSignal`, `ComponentRef`, `ControlValueAccessor`, `NgControl`, validator tokens, reflection, debug-node, and rendering APIs.
+  - [ ] Re-check whether `mySignal[ɵSIGNAL]`, `ɵInputSignalNode`, and `applyValueToInputSignal()` still exist and whether their runtime and type shapes changed.
+  - [ ] Re-check whether a public replacement now exists, such as supported access to the host component's `ComponentRef.setInput()` or a dedicated Signal Forms interoperability protocol.
+  - [ ] Keep the private signal-input adapter isolated; do not expand `ɵSIGNAL` usage while no public replacement exists.
+- Angular Signal Forms behavioral parity
+  - [ ] Inspect the latest Signal Forms implementation and tests rather than relying only on documentation or previous-version behavior.
+  - [ ] Compare node creation, parent/root ownership, paths and keys, removed/orphan nodes, array identity and reconciliation, and structural model changes.
+  - [ ] Compare committed value and control-value flow, programmatic versus control-originated writes, equality rules, reset semantics, and debounce inheritance, blur behavior, cancellation, and flushing.
+  - [ ] Compare touched, dirty, hidden, readonly, disabled reasons, required state, interaction propagation, and which ancestors or descendants each operation affects.
+  - [ ] Compare synchronous and asynchronous validation, laziness and reactive dependencies, pending propagation, cancellation and stale results, error ownership and aggregation, validator metadata, and native constraint metadata.
+  - [ ] Compare submission, invalid submission, concurrent submission, submitted/submitting state, native submit/reset events, focus behavior, and disabled or hidden descendants.
+  - [ ] Re-audit every intentional difference recorded in `docs/behavior.md`; update, remove, or add differences and regression tests as Angular changes.
+- `[formNode]` and control interoperability
+  - [ ] Compare Angular `FormField`, form-root binding, binding selection, pass-through wrappers, the control-creation hook, directive exports, and supported host elements.
+  - [ ] Verify native `input`, `select`, `textarea`, checkbox, radio, multi-select, number, range, date, month, time, week, and datetime-local value parsing and serialization.
+  - [ ] Verify native `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, disabled, readonly, name, accessibility, validity, parse-error, focus, and event synchronization.
+  - [ ] Verify signal controls using `model()` or input/output pairs, `value` versus `checked`, input aliases and transforms, optional state inputs, reset and touch hooks, explicit `provideFormNodeControl()`, and node pass-through.
+  - [ ] Verify `ControlValueAccessor`, accessor precedence, `NgControl`, synchronous `NG_VALIDATORS`, disabled propagation, touch/change callbacks, and custom-control focus behavior.
+  - [ ] Verify multiple bindings to one node, binding-owned errors, rebinding, destruction cleanup, DOM-order focus, and preservation of node-owned debounce work.
+  - [ ] Re-check whether `getDebugNode()` and `reflectComponentType()` remain public, stable, sufficient for discovery, and unchanged in the information they expose.
+- Angular runtime and rendering environments
+  - [ ] Verify creation and synchronous behavior outside an injection context, explicit asynchronous validation outside DI, injector ownership, `DestroyRef` cleanup, weak ownership, and garbage-collection assumptions.
+  - [ ] Verify zone-based and zoneless change detection, OnPush controls, effect scheduling, signal dependency tracking, and absence of expression-changed errors.
+  - [ ] Verify JIT, partial AOT compilation, full-AOT consumer fixtures, Angular template type checking, server rendering, hydration, event replay when applicable, and browser-only observers.
+  - [ ] Verify CSP nonce handling, Shadow DOM, document cleanup, server globals, and platform guards used by native validity observation.
+- Packaging and supported toolchain
+  - [ ] Review Angular's supported Node.js, TypeScript, RxJS, Zone.js, compiler, CLI, and `ng-packagr` ranges and update the development matrix without unnecessarily constraining consumers.
+  - [ ] Verify Angular Package Format output, partial compilation, ESM exports, side-effect metadata, tree shaking, declaration bundling, and installation as a real package consumer.
+  - [ ] Review peer dependencies and confirm every advertised Angular range is actually covered by the build, type, template, server, and browser matrix; do not force unsupported peer ranges.
+- Required verification and documentation
+  - [ ] Run lint, public type tests, template compilation, package-consumer tests, unit and coverage tests, AOT, SSR, hydration, OnPush, and real-browser tests with nonzero expected test counts.
+  - [ ] Add focused regression tests for every detected Angular change and for every private compatibility assumption retained by the library.
+  - [ ] Update the compatibility table, installation requirements, changelog, migration guide, consumer website, and `docs/behavior.md` only after the supported matrix passes.
+  - [ ] Record commands, versions, inspected Angular sources, intentional differences, failures, and any unverified scope in the upgrade handoff.
+
 ## Later
 
 - Reconsider whether `array()` should expose `patch()`; its positional semantics may be confusing and the same updates can be expressed explicitly through item nodes or other array operations.
@@ -240,6 +281,9 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- [x] Determine whether accessing `mySignal[ɵSIGNAL]` is a supported Angular API.
+  - It is exported from `@angular/core`, but Angular explicitly excludes every `ɵ`-prefixed symbol from its supported public API and compatibility guarantees.
+  - Keep the current `ɵSIGNAL`/`ɵInputSignalNode` adapter isolated and covered by AOT, SSR, hydration, OnPush, and browser tests until Angular provides a public host-component input-writing mechanism.
 - [x] Infer `field(null)` as `Field<unknown>` instead of `Field<null>`, while preserving explicit generic inference such as `field<string>(null)` as `Field<string | null>`.
 - [x] Complete the consumer website documentation roadmap.
   - [x] Create an API overview page that maps common needs to the relevant public APIs.
