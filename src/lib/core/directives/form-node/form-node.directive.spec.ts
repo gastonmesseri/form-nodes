@@ -16,7 +16,7 @@ import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { FormNode } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { provideFormNodeConfig } from './form-node-config';
+import { FORM_NODE_STATUS_CLASSES, provideFormNodeConfig } from './form-node-config';
 import { provideFormNodeControl } from './form-node-control';
 import { provideFormNodePassThrough } from './form-node-pass-through';
 import { pattern } from '../../validation/validators/pattern';
@@ -159,6 +159,31 @@ describe('FormNode', () => {
     expect(invalidPredicate).toHaveBeenCalledTimes(2);
     expect(touchedPredicate).toHaveBeenCalledTimes(2);
     expect(externalPredicate).toHaveBeenCalledTimes(2);
+  });
+
+  it('applies the predefined form-node status classes', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      providers: [provideFormNodeConfig({ classes: FORM_NODE_STATUS_CLASSES })],
+      template: `<input [formNode]="name">`,
+    })
+    class Host {
+      name = field('', [required], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(Array.from(inputElement.classList)).toEqual(expect.arrayContaining(['ng-invalid', 'ng-pristine', 'ng-untouched']));
+    expect(Array.from(inputElement.classList)).not.toEqual(expect.arrayContaining(['ng-valid', 'ng-dirty', 'ng-touched', 'ng-pending']));
+
+    inputElement.value = 'David';
+    inputElement.dispatchEvent(new Event('input'));
+    inputElement.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    expect(Array.from(inputElement.classList)).toEqual(expect.arrayContaining(['ng-valid', 'ng-dirty', 'ng-touched']));
+    expect(Array.from(inputElement.classList)).not.toEqual(expect.arrayContaining(['ng-invalid', 'ng-pristine', 'ng-untouched', 'ng-pending']));
   });
 
   it('supports the explicit signal-control provider as a fallback', () => {
