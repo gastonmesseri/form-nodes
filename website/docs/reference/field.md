@@ -68,6 +68,10 @@ when items need independent nodes, bindings, errors, paths, or structural operat
 [Array field or `array()`](../guides/choosing-a-primitive.md#array-field-or-array) for a complete
 comparison.
 
+When a value appears directly inside an object-node definition, consult the
+[declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix) to see
+whether it becomes an implicit field or structural group.
+
 ## Signatures
 
 ```ts

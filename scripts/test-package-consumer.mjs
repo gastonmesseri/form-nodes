@@ -78,6 +78,9 @@ try {
   writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
     import '@angular/compiler';
     import { array, createFormPrimitives, field, form, group, required } from '@gem/ng-forms';
+    class Company {
+      constructor(name) { this.name = name; }
+    }
     const configuredForms = createFormPrimitives({ nullable: false });
     const configuredProfile = configuredForms.form({ name: '' });
     if (configuredProfile.name() !== '') throw new Error('Configured form factories were not preserved in the package.');
@@ -86,11 +89,17 @@ try {
       preferences: group({ theme: field('dark') }),
       addresses: array({ city: field('') }, [{ city: 'Zurich' }]),
       roles: ['admin'],
+      birthday: new Date('1990-06-15T00:00:00.000Z'),
+      company: new Company('Gem'),
+      atomicAddress: field({ city: 'Bern' }),
     });
     if (profile.name.valid()) throw new Error('Required validation was not preserved in the package.');
     if (profile.addresses[0].city() !== 'Zurich') throw new Error('Array values were not preserved in the package.');
     if (profile.preferences.theme() !== 'dark') throw new Error('Group values were not preserved in the package.');
     if (profile.roles.nodeType() !== 'field' || profile.roles()[0] !== 'admin') throw new Error('Array-valued field shorthand was not preserved in the package.');
+    if (profile.birthday.nodeType() !== 'field' || !(profile.birthday() instanceof Date)) throw new Error('Date field shorthand was not preserved in the package.');
+    if (profile.company.nodeType() !== 'field' || !(profile.company() instanceof Company)) throw new Error('Class-instance field shorthand was not preserved in the package.');
+    if (profile.atomicAddress.nodeType() !== 'field' || profile.atomicAddress().city !== 'Bern') throw new Error('Explicit atomic object fields were not preserved in the package.');
     const shorthandRows = array({ name: '', age: 0 }, [{ name: 'Marco', age: 36 }]);
     if (shorthandRows[0].name.nodeType() !== 'field' || shorthandRows[0].age() !== 36) throw new Error('Array object-template shorthand was not preserved in the package.');
     const age = profile.add('age', 36);

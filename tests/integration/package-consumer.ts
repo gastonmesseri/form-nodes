@@ -4,6 +4,10 @@ import { FormNode, array, createFormPrimitives, field, form, group, required } f
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
+class Company {
+  constructor(readonly name: string) {}
+}
+
 @Component({
   selector: 'package-consumer',
   standalone: true,
@@ -30,6 +34,9 @@ export class PackageConsumer {
     addresses: array({ city: field('Zurich') }, [{ city: 'Madrid' }]),
     shorthandAddresses: array({ city: '', postcode: 0 }, [{ city: 'Bern', postcode: 3000 }]),
     roles: ['admin'],
+    birthday: new Date('1990-06-15T00:00:00.000Z'),
+    company: new Company('Gem'),
+    atomicAddress: field({ city: 'Bern' }),
   });
 
   readonly name: string | null = this.profile.name();
@@ -38,6 +45,9 @@ export class PackageConsumer {
   readonly shorthandCity: string | null = this.profile.shorthandAddresses[0]!.city();
   readonly shorthandPostcode: number | null = this.profile.shorthandAddresses[0]!.postcode();
   readonly roles: string[] | null = this.profile.roles();
+  readonly birthday: Date | null = this.profile.birthday();
+  readonly company: Company | null = this.profile.company();
+  readonly atomicAddress: { city: string } | null = this.profile.atomicAddress();
   readonly dynamicAge = this.profile.add('age', 36);
   readonly dynamic = this.profile.add({ nickname: '', location: { city: 'Zurich' } });
   readonly dynamicAgeValue: number | null = this.dynamicAge();

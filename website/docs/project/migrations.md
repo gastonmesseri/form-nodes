@@ -44,6 +44,24 @@ Every breaking migration will identify:
 from. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
 
+### Declaration shorthand contract
+
+The initial `0.1.0` contract accepts primitive values, `Date`, functions, class instances, other
+non-plain objects, and arrays as atomic field shorthand inside `form()`, `group()`, dynamic
+`add()`, and object templates passed to `array()`. Plain objects create structural groups. Existing
+nodes are attached unchanged.
+
+Arrays are always atomic fields when used as object properties; their length and contents never
+select the node kind. Replace an array property with `array(template)` only when its items need
+independent nodes. Wrap a plain application-data object with `field(value)` when it must remain one
+atomic value, or use `group({...})` when the structural branch needs options or validators.
+
+Definition objects reject enumerable accessors, symbol child keys, and `__proto__`. Replace an
+accessor with a data property before constructing the form, use a supported string child key, or
+wrap the complete object with `field(value)` when it represents one leaf value. See the
+[declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix) for exact
+equivalents and inferred types.
+
 When migrating from Angular Reactive Forms or Angular 22 Signal Forms, use the
 [form-modeling patterns](../guides/form-modeling-patterns.md) and
 [control-binding guide](../guides/control-binding.md). These are conceptual migrations rather than
