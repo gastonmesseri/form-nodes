@@ -741,18 +741,25 @@ describe('FormNode in Chromium', () => {
     const valueControl = fixture.debugElement.children[0]!.componentInstance as InstanceType<typeof module.AotSignalValueControl>;
     const checkboxControl = fixture.debugElement.children[1]!.componentInstance as InstanceType<typeof module.AotSignalCheckboxControl>;
     const pairedControl = fixture.debugElement.children[2]!.componentInstance as InstanceType<typeof module.AotPairedValueControl>;
+    const directiveControl = fixture.debugElement.children[3]!.injector.get(module.AotDirectiveControl);
     const valueButton = fixture.nativeElement.querySelector('aot-signal-value-control button') as HTMLButtonElement;
     const checkboxButton = fixture.nativeElement.querySelector('aot-signal-checkbox-control button') as HTMLButtonElement;
     const pairedButton = fixture.nativeElement.querySelector('aot-paired-value-control button') as HTMLButtonElement;
+    const directiveInput = fixture.nativeElement.querySelector('input[aotDirectiveControl]') as HTMLInputElement;
 
     expect(valueControl.value()).toBe('AOT initial');
     expect(valueControl.required()).toBe(true);
     expect(checkboxControl.checked()).toBe(false);
     expect(pairedControl.value()).toBe('AOT paired initial');
+    expect(directiveControl.required()).toBe(true);
+    expect(directiveInput.required).toBe(false);
+    expect(directiveInput.value).toBe('AOT directive initial');
 
     valueButton.click();
     checkboxButton.click();
     pairedButton.click();
+    directiveInput.value = 'AOT directive value';
+    dispatch(directiveInput, 'input');
     dispatch(valueButton, 'blur');
     fixture.detectChanges();
 
@@ -761,6 +768,7 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.name.touched()).toBe(true);
     expect(fixture.componentInstance.active()).toBe(true);
     expect(fixture.componentInstance.pairedName()).toBe('AOT paired value');
+    expect(fixture.componentInstance.directiveName()).toBe('AOT directive value');
     expect(valueControl.dirty()).toBe(true);
     expect(valueControl.touched()).toBe(true);
 

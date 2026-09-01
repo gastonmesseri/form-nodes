@@ -1,7 +1,7 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
-import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, input, model, output } from '@angular/core';
 
-import { field, FormNode, required, type Field } from '../src/public-api';
+import { field, FormNode, provideFormNodeControl, required, type Field } from '../src/public-api';
 
 @Component({
   standalone: true,
@@ -41,6 +41,21 @@ export class AotPairedValueControl {
   valueChange = output<string>();
 }
 
+@Directive({
+  standalone: true,
+  selector: 'input[aotDirectiveControl]',
+  providers: [provideFormNodeControl(() => AotDirectiveControl)],
+  host: {
+    '[value]': 'value()',
+    '(input)': 'onInput($event)',
+  },
+})
+export class AotDirectiveControl {
+  value = model('');
+  required = input(false);
+  onInput(event: Event) { this.value.set((event.target as HTMLInputElement).value); }
+}
+
 @Component({
   standalone: true,
   selector: 'aot-delegating-control',
@@ -64,15 +79,17 @@ export class AotPassThroughHost {
 @Component({
   standalone: true,
   selector: 'aot-signal-control-host',
-  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, FormNode],
+  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, AotDirectiveControl, FormNode],
   template: `
     <aot-signal-value-control [formNode]="name" />
     <aot-signal-checkbox-control [formNode]="active" />
     <aot-paired-value-control [formNode]="pairedName" />
+    <input aotDirectiveControl [formNode]="directiveName">
   `,
 })
 export class AotSignalControlHost {
   name = field('AOT initial', [required], { nullable: false });
   active = field(false, { nullable: false });
   pairedName = field('AOT paired initial', { nullable: false });
+  directiveName = field('AOT directive initial', [required], { nullable: false });
 }
