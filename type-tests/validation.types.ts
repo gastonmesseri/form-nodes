@@ -1,4 +1,4 @@
-import { array, asyncValidator, configureGlobalValidatorMessages, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
+import { array, asyncValidator, between, configureGlobalValidatorMessages, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../src/public-api';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 
@@ -16,6 +16,8 @@ name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
 field(18, [min(18, { message: 'Too young' })]);
+field(18, [between(18, 65, { message: 'Unsupported age' })]);
+field(18, [between(() => 18, () => 65)]);
 field('', [pattern(/^[a-z]+$/, { message: () => 'Use letters only' })]);
 field('', [url, url({ message: 'Enter an absolute URL' })]);
 field(1, [integer, integer({ message: 'Enter a whole number' })]);
@@ -89,6 +91,10 @@ const integerError = field(1.5, [integer]).getError('integer');
 const _integerActual: number | undefined = integerError?.actual;
 void _integerActual;
 
+const betweenError = field(70, [between(18, 65)]).getError('between');
+const _betweenBounds: [number | undefined, number | undefined] = [betweenError?.min, betweenError?.max];
+void _betweenBounds;
+
 const uniqueError = array(field(''), ['same', 'same'], [uniqueItems()]).getError('uniqueItems');
 const _duplicateIndexes: readonly number[] | undefined = uniqueError?.duplicateIndexes;
 void _duplicateIndexes;
@@ -139,6 +145,9 @@ field(1, [equalTo('1')]);
 
 // @ts-expect-error word-count validators require string values
 field(42, [minWords(2)]);
+
+// @ts-expect-error between validators require numeric values
+field('42', [between(1, 100)]);
 
 // @ts-expect-error uniqueItems validators require array values
 field('', [uniqueItems]);

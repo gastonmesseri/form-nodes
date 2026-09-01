@@ -108,7 +108,7 @@ The package exports:
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
-- Built-in `required`, `min`, `max`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
+- Built-in `required`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, and `maxDate` validators.
 
 ## Creating fields
 
@@ -812,6 +812,7 @@ const age = field<number>(null, {
 | `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ kind: 'required', message }` |
 | `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, actual, message }` |
 | `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, actual, message }` |
+| `between(minimum, maximum)` | `number | null` | Passes for `null` and `NaN`; disabled if either bound is absent or `NaN` | `{ kind: 'between', min, max, actual, message }` |
 | `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
 | `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
 | `uniqueItems(selector?)` | A readonly array, `null`, or `undefined` | Absent, empty, and one-item arrays pass | `{ kind: 'uniqueItems', duplicateIndexes, message }` |
@@ -854,7 +855,24 @@ field('', [url({ message: 'Enter a complete URL' })]);
 field(1.5, [integer({ message: 'Enter a whole number' })]);
 field('yes', [equalTo('yes', { message: 'Values must match' })]);
 field(16, [min(18, { message: 'You must be at least 18' })]);
+field(70, [between(18, 65, { message: 'Enter a supported age' })]);
 ```
+
+`between(minimum, maximum)` validates an inclusive numeric range and reports one structured error
+instead of exposing separate `min` and `max` failures. Both boundaries may be static or reactive.
+The range is temporarily disabled when either reactive source returns `undefined` or either resolved
+boundary is `NaN`, keeping its validation and metadata behavior consistent. It contributes both
+limits to the field's `min()` and `max()` metadata, so `[formNode]` can propagate them to compatible
+native controls:
+
+```ts
+field(50, [between(0, 100)]);
+field(50, [between(() => allowedRange().min, () => allowedRange().max)]);
+```
+
+Angular 22.1.4 Signal Forms has separate `min` and `max` schema rules but no combined `between`
+rule. This helper deliberately preserves their inclusive comparisons and optional-value behavior
+while providing a single consumer-facing error.
 
 `equalTo` compares with `Object.is()` and accepts either a static expected value or a reactive
 function. Unlike optional format validators, it does not skip `null` or `undefined`: both are real

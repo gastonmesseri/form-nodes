@@ -11,10 +11,27 @@ import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { uniqueItems } from '../validation/validators/unique-items';
+import { between } from '../validation/validators/between';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('aggregates between errors from nested numeric fields', () => {
+    const reservation = form({ guests: field(11, [between(1, 10)]) });
+
+    expect(reservation.invalid()).toBe(true);
+    expect(reservation.errors()).toEqual([]);
+    expect(reservation.allErrors()).toContainEqual(expect.objectContaining({
+      kind: 'between',
+      min: 1,
+      max: 10,
+      actual: 11,
+      targetNode: reservation.guests,
+    }));
+    reservation.guests.set(10);
+    expect(reservation.valid()).toBe(true);
+  });
+
   it('reactively validates a field against a sibling without exposing either value', () => {
     const password = field('secret');
     const profile = form({

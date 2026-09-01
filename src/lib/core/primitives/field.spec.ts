@@ -10,6 +10,7 @@ import { email } from '../validation/validators/email';
 import type { InternalNode } from '../types/node.type';
 import { pattern } from '../validation/validators/pattern';
 import { integer } from '../validation/validators/integer';
+import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
@@ -21,6 +22,16 @@ import { minLength } from '../validation/validators/min-length';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('exposes inclusive between validation and both constraint metadata values', () => {
+    const percentage = field(101, [between(0, 100)]);
+
+    expect(percentage.getError('between')).toMatchObject({ min: 0, max: 100, actual: 101 });
+    expect(percentage.min()).toBe(0);
+    expect(percentage.max()).toBe(100);
+    percentage.set(100);
+    expect(percentage.errors()).toEqual([]);
+  });
+
   it('exposes the same API through api and $api', () => {
     const name = field('David');
 

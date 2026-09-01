@@ -8,6 +8,7 @@ import { email } from './email';
 import { oneOf } from './one-of';
 import { pattern } from './pattern';
 import { integer } from './integer';
+import { between } from './between';
 import { equalTo } from './equal-to';
 import { maxDate } from './max-date';
 import { minDate } from './min-date';
@@ -30,6 +31,7 @@ describe('reactive validator messages', () => {
       field('invalid', [url({ message })]),
       field(1, [min(2, { message })]),
       field(2, [max(1, { message })]),
+      field(3, [between(4, 5, { message })]),
       field(1.5, [integer({ message })]),
       field('actual', [equalTo('expected', { message })]),
       array(field(''), ['duplicate', 'duplicate'], [uniqueItems({ message })]),
