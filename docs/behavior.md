@@ -787,6 +787,14 @@ Fields always expose the reactive constraint signals `min()`, `max()`, `minLengt
 
 The `null` absence value intentionally differs from Angular 22.1.4 Signal Forms, whose corresponding limit signals use `undefined`. The `[formNode]` interoperability adapter translates `null` back to `undefined` when writing standard Angular custom-control constraint inputs.
 
+### Native constraint applicability and Angular differences
+
+`[formNode]` currently follows Angular Signal Forms 22.1.4 when deciding which native elements receive validator constraints. `min` and `max` are written only to `input[type=number]`, `input[type=range]`, `input[type=date]`, and `input[type=month]`. `minLength` and `maxLength` are written to every `<input>` and `<textarea>`, but never to `<select>`. Checking the element's actual supported category prevents properties present on the generic `HTMLInputElement` interface from being written to input types for which Angular considers them inapplicable.
+
+This matches Angular 22.1.4 exactly, including its omission of `time`, `week`, and `datetime-local` from native `min`/`max` propagation. The HTML standard gives those input types minimum and maximum semantics, so supporting them may be a useful future deliberate extension. Until that decision is made and covered across value representations and browsers, this library retains Angular parity. The other tracked difference remains the absence sentinel: this library's constraint signals use `null`, while Angular uses `undefined`.
+
+The reference implementation was inspected at Angular tag `22.1.4`, commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, specifically `packages/forms/src/directives/native.ts`, `packages/forms/signals/src/directive/native.ts`, `packages/forms/signals/src/directive/form_field.ts`, and the native constraint tests in `packages/forms/signals/test/web/form_field.spec.ts`.
+
 The email expression matches Angular's Signal Forms implementation, including its local-part, domain-label, and total-length restrictions.
 
 ## Touched state

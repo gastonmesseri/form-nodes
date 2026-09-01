@@ -855,6 +855,70 @@ describe('FormNode', () => {
     expect(age!.min).toBe('');
   });
 
+  it('applies min and max only to the native input types accepted by Angular Signal Forms', () => {
+    @Component({
+      standalone: true,
+      selector: 'native-min-max-form-node-host',
+      imports: [FormNode],
+      template: `
+        <input data-type="number" type="number" [formNode]="value">
+        <input data-type="range" type="range" [formNode]="value">
+        <input data-type="date" type="date" [formNode]="value">
+        <input data-type="month" type="month" [formNode]="value">
+        <input data-type="text" type="text" [formNode]="value">
+        <input data-type="email" type="email" [formNode]="value">
+        <input data-type="time" type="time" [formNode]="value">
+        <input data-type="week" type="week" [formNode]="value">
+        <input data-type="datetime-local" type="datetime-local" [formNode]="value">
+      `,
+    })
+    class Host {
+      readonly value = field(5, [min(1), max(9)], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = (type: string) => fixture.nativeElement.querySelector(`[data-type="${type}"]`) as HTMLInputElement;
+
+    ['number', 'range', 'date', 'month'].forEach((type) => {
+      expect(input(type).min).toBe('1');
+      expect(input(type).max).toBe('9');
+    });
+    ['text', 'email', 'time', 'week', 'datetime-local'].forEach((type) => {
+      expect(input(type).getAttribute('min')).toBeNull();
+      expect(input(type).getAttribute('max')).toBeNull();
+    });
+  });
+
+  it('applies length constraints to inputs and textareas but not selects', () => {
+    @Component({
+      standalone: true,
+      selector: 'native-length-form-node-host',
+      imports: [FormNode],
+      template: `
+        <input type="number" [formNode]="value">
+        <textarea [formNode]="value"></textarea>
+        <select [formNode]="value"><option>abc</option></select>
+      `,
+    })
+    class Host {
+      readonly value = field('abc', [minLength(2), maxLength(5)], { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+
+    expect(input.minLength).toBe(2);
+    expect(input.maxLength).toBe(5);
+    expect(textarea.minLength).toBe(2);
+    expect(textarea.maxLength).toBe(5);
+    expect(select.getAttribute('minlength')).toBeNull();
+    expect(select.getAttribute('maxlength')).toBeNull();
+  });
+
   it('buffers native input through the field control debounce', async () => {
     vi.useFakeTimers();
     try {
