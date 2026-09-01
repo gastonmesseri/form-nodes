@@ -97,3 +97,6 @@ A node is non-interactive while hidden, disabled, or readonly. During that time:
 When the node becomes interactive again, validation runs against its current value and previously stored touched or dirty state becomes observable again.
 
 Hidden state does not manipulate the DOM. Use `@if` to remove hidden UI controls.
+
+See [Advanced behavior and edge cases](../advanced/behavior-details.md#stored-state-while-non-interactive)
+for retained state, async cancellation, and what becomes observable after interaction is restored.

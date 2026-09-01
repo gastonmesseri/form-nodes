@@ -112,6 +112,11 @@ Omit the value from `push()` or `insert()` to use the template defaults.
 
 New items start pristine and untouched. Structural mutations are programmatic and preserve the array's current dirty state. Removed nodes detach from parent state and validation; a retained reference remains usable as a standalone tree.
 
+Detachment is immediate and observable. A removed node has `parent() === null`, a root path of `[]`,
+and no longer contributes value, errors, pending work, touched state, or dirty state to its former
+array. If the removed item is itself a form or array, its descendants remain attached to that
+removed root and continue working normally.
+
 ## Reorder items
 
 Structural operations preserve node identity, interaction state, validation state, and pending work:
@@ -126,6 +131,10 @@ people.swap(0, 2);
 Paths and indexes update after each operation.
 
 Boundary moves and same-index operations are no-ops. An index that does not identify an existing item throws `RangeError` for movement and swap operations.
+
+Because moves preserve nodes rather than values alone, in-flight validation and current rendered
+bindings remain owned by the moved item. Angular templates should continue tracking the item node,
+not its current index.
 
 ## Complete reconciliation
 
@@ -171,3 +180,6 @@ Sparse positions are skipped. Values beyond the current structure are ignored wi
 ## State aggregation
 
 Array validity, errors, dirty, touched, disabled, readonly, hidden, pending, debouncing, focus, and reset behavior aggregate or propagate like forms. Removed items detach from that aggregation immediately.
+
+See [Advanced behavior and edge cases](../advanced/behavior-details.md#ownership-and-lifetime) for
+retained removed nodes, stale async reconciliation work, and identity-related edge cases.

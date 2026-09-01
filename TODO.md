@@ -12,6 +12,11 @@
   be 'null', but 'any'
   - probably only in the case that it is { nullable: true }
 
+
+- Consider including dynamic controls in form() (like in reactive forms)
+  - update docs if required, check all docs
+  - myForm.add('age', field<number>(2));
+  - handle typing properly for this
 - important: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - in validators like min/max, consider just passing a string for the message, instead of having to pass the { message: string } options object
 - website docs

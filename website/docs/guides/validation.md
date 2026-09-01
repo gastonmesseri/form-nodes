@@ -21,6 +21,7 @@ const myForm = form({
 ```
 
 Validators may be a single validator or an array. `null` and `undefined` array entries are ignored.
+The normalized `validators()` signal always returns only the effective validator functions.
 
 ## Reading validation state
 
@@ -117,6 +118,27 @@ const myForm = form({
 ```
 
 Use `setValidators()` when the configured validator collection itself must be replaced.
+
+Returned validators can be nested and all receive the same stable context. Signals read by the
+outer condition or any returned validator remain reactive dependencies. A returned array must
+contain validators or validation errors after nullish entries are removed; mixing both is rejected
+as ambiguous.
+
+Configure `asyncValidator()` directly in the node's validator list. It cannot be returned from a
+synchronous validator because the node must establish its cancellation and ownership lifecycle
+without executing arbitrary synchronous callbacks.
+
+## Evaluation model
+
+Synchronous validation is lazy. Signal changes invalidate its result, and validators rerun when
+`errors()`, `valid()`, `invalid()`, or `validationStatus()` is next consumed. Templates and other
+reactive consumers observe that recomputation automatically.
+
+The context and its signal properties remain stable between executions. Reading application
+signals directly inside the callback is sufficient; an extra `computed()` wrapper is unnecessary.
+
+See [Advanced behavior and edge cases](../advanced/behavior-details.md#reactive-validation-execution)
+for composition limits, execution timing, and async dependency details.
 
 ## Constraint metadata
 

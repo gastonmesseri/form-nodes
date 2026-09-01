@@ -130,3 +130,5 @@ It adds `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng
 Initial native and custom-control state renders on the server. Browser-only observation is deferred until the browser, and hydration reuses the rendered controls while reconnecting events and reactive state.
 
 See [Custom controls](./custom-controls.md) for component integration.
+For multiple bindings, control-owned error filtering, accessor precedence, and SSR edge cases, see
+[Advanced behavior and edge cases](../advanced/behavior-details.md#multiple-bindings-and-control-owned-errors).

@@ -50,7 +50,10 @@ const availability = asyncValidator(
 );
 ```
 
-`onError` converts a rejected promise or observable error into a validation result. Without it, the failure is surfaced according to the validator pipeline rather than treated as a successful validation.
+`onError` converts a rejected promise or observable error into a validation result. Without it, a
+rejected operation contributes no validation error. Its pending state ends and
+the rejection is not confused with a domain-validation failure. Use `onError` when service failure
+must block the form or produce a visible message.
 
 ## Reactive dependencies
 
@@ -71,6 +74,36 @@ const usernameAvailable = asyncValidator({
 });
 ```
 
+With explicit `params`, the returned snapshot is compared shallowly with the previous one. A newly
+allocated object does not restart validation when its property values are unchanged. The
+`validate` callback runs untracked, so put every dependency in `params` rather than reading signals
+only after asynchronous work begins.
+
+Without `params`, signals read before the callback's first asynchronous boundary are discovered as
+dependencies automatically. Prefer `params` for reusable validators because it makes the service
+inputs and restart conditions explicit.
+
+## Execution order
+
+- The node becomes pending synchronously; the first callback begins in the next microtask.
+- Synchronous validation runs first. Async validators do not run while synchronous errors exist.
+- A dependency change cancels stale work and restarts the validator's complete debounce.
+- Synchronous changes to several tracked dependencies are coalesced into one run with their latest
+  values.
+- Promise results are ignored after cancellation even when the service ignores `abortSignal`.
+- Observable-like results use the first emitted validation result and unsubscribe afterward.
+- Multiple validators run independently, while exposed errors remain in declaration order.
+
+When some async validators have completed with errors and others remain pending, `invalid()` is
+already true and `pending()` remains true. Pending work produces `'unknown'` only while no completed
+error makes the node invalid.
+
 ## Lifecycle
 
 Async validation works inside and outside Angular injection contexts. When a node is created with an explicit or current injector, that injector's `DestroyRef` owns its watcher. Outside dependency injection, the library uses weak ownership so unreachable form trees can be garbage-collected.
+
+Disabling, hiding, or marking a node readonly cancels its active async work. Returning it to an
+interactive state starts validation again against the current committed value.
+
+See [Advanced behavior and edge cases](../advanced/behavior-details.md#asynchronous-scheduling-and-dependencies)
+for exact dependency, scheduling, ownership, and stale-result semantics.

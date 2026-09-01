@@ -62,6 +62,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Advanced',
+      items: ['advanced/behavior-details'],
+    },
+    {
+      type: 'category',
       label: 'Examples',
       items: ['examples/executable-examples', 'examples/complex-form'],
     },
