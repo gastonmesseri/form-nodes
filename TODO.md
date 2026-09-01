@@ -10,8 +10,11 @@
   - check what colors for documentation are the most recognize as good by people
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
-- Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
 - Consider if nested form() should sactually be a different type like group() by default and not another form() (the one inferred from the object)
+  - i think this makes sense because form should be linked conceptually to a <form> (even if not).
+    maybe check other libraries.
+    maybe still allow nested forms
+  - a new type of node similar to form
   - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
 - Consider including dynamic controls in form() (like in reactive forms)
   - update docs if required, check all docs
@@ -281,6 +284,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Consolidate root-level `integration-tests`, `type-tests`, and `testing` infrastructure under `tests/integration`, `tests/types`, and `tests/helpers`.
 - [x] Determine whether accessing `mySignal[ɵSIGNAL]` is a supported Angular API.
   - It is exported from `@angular/core`, but Angular explicitly excludes every `ɵ`-prefixed symbol from its supported public API and compatibility guarantees.
   - Keep the current `ɵSIGNAL`/`ɵInputSignalNode` adapter isolated and covered by AOT, SSR, hydration, OnPush, and browser tests until Angular provides a public host-component input-writing mechanism.

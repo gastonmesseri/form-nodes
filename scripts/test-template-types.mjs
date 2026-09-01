@@ -14,8 +14,8 @@ try {
   for (const [index, fixture] of fixtures.entries()) {
     const config = join(temporaryDirectory, `tsconfig.${index}.json`);
     writeFileSync(config, JSON.stringify({
-      extends: resolve('type-tests/templates/tsconfig.base.json'),
-      files: [resolve('type-tests/templates', fixture.file)],
+      extends: resolve('tests/types/templates/tsconfig.base.json'),
+      files: [resolve('tests/types/templates', fixture.file)],
     }));
     const result = spawnSync(process.execPath, [ngc, '-p', config], {
       cwd: process.cwd(),

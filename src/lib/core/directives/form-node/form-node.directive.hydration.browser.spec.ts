@@ -6,7 +6,7 @@ import { bootstrapApplication, provideClientHydration } from '@angular/platform-
 import { field } from '../../primitives/field';
 import { FormNode } from './form-node.directive';
 import { required } from '../../validation/validators/required';
-import { registerSignalInputForJit } from '../../../../../testing/register-signal-input-for-jit';
+import { registerSignalInputForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
@@ -98,7 +98,7 @@ describe('FormNode hydration in Chromium', () => {
     const warn = vi.spyOn(console, 'warn');
     const { host, nodes } = installServerDom(__FORM_NODE_SIGNAL_CONTROL_HYDRATION_HTML__, 'aot-signal-control-host');
     const serverButton = host.querySelector('aot-signal-value-control button') as HTMLButtonElement;
-    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../../integration-tests/form-node-signal-control.fixture');
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../../tests/integration/form-node-signal-control.fixture');
 
     expect(serverButton.textContent).toContain('AOT initial');
     let application: ApplicationRef | undefined;

@@ -1,7 +1,7 @@
 import { Component, model, viewChild } from '@angular/core';
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 
-import { array, field, form, FormNode } from '../../src/public-api';
+import { array, field, form, FormNode } from '../../../src/public-api';
 
 @Component({
   standalone: true,

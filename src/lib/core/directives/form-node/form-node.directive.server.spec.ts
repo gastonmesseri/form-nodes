@@ -9,7 +9,7 @@ import { provideServerRendering, renderApplication } from '@angular/platform-ser
 import { field } from '../../primitives/field';
 import { FormNode } from './form-node.directive';
 import { required } from '../../validation/validators/required';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../testing/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 

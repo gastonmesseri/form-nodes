@@ -1,4 +1,4 @@
-import { array, field, form, required } from '../src/public-api';
+import { array, field, form, required } from '../../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 

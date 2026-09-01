@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { FormNode } from '../../src/public-api';
+import { FormNode } from '../../../src/public-api';
 
 @Component({
   standalone: true,

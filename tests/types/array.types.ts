@@ -1,4 +1,4 @@
-import { array, field, form } from '../src/public-api';
+import { array, field, form } from '../../src/public-api';
 
 array(field(''), 1, { debounce: 'blur' });
 array(field(''), 1, { debounce: abortSignal => Promise.resolve(void abortSignal.aborted) });

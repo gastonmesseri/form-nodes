@@ -52,7 +52,7 @@ try {
     symlinkSync(resolve(workspace, 'node_modules', '@angular', dependency), join(angularDirectory, dependency), 'dir');
   }
 
-  const source = readFileSync(resolve(workspace, 'integration-tests/package-consumer.ts'), 'utf8');
+  const source = readFileSync(resolve(workspace, 'tests/integration/package-consumer.ts'), 'utf8');
   writeFileSync(join(temporaryDirectory, 'package-consumer.ts'), source);
   writeFileSync(join(temporaryDirectory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
