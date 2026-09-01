@@ -3,7 +3,7 @@
 ## Up next
 
 - Array
-  - Document properly in intellisense that the first param is the template or factory , with examples
+  - Make array trackBy also accept a property name (string and typed)
 - <!> important. Consider including hidden access to .api that is not .api, (maybe $api, or _api) because user defined properties could collide with it
   and then the form() framework will not work because it uses it on the internal system
 - Public api
@@ -238,6 +238,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- Document the `array()` template and factory first parameter in IntelliSense, including cloning semantics, fresh-definition requirements, and examples.
 - Decide and document nullable `array()` input behavior: normalize `null` and `undefined` container values to an empty array while keeping the observable value structurally non-null.
 - Add `swap()` to `array()` and document the structural reordering operations for IntelliSense.
 - Add `moveUp()` and `moveDown()` convenience operations to `array()` while preserving node identity and state.
