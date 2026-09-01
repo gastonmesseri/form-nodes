@@ -1,6 +1,7 @@
 import type { Validator } from '../validation.type';
-import { defaultValidatorMessages } from './default-validator-messages';
 import type { ValidatorOptions } from './validator-options';
+import { resolveValidatorMessage } from './resolve-validator-message';
+import { defaultValidatorMessages } from './default-validator-messages';
 
 /**
  * Requires a non-empty value to equal one of the allowed values.
@@ -12,7 +13,7 @@ import type { ValidatorOptions } from './validator-options';
  * `{ kind: 'oneOf', options, actual, message }`, where `options` contains the resolved allowed
  * values and `actual` contains the rejected value.
  *
- * @reactive Tracks signals read by the allowed-values source and revalidates when they change.
+ * @reactive Tracks signals read by the allowed-values and message sources while they are active.
  *
  * @example
  * ```ts
@@ -28,7 +29,7 @@ import type { ValidatorOptions } from './validator-options';
  * ```
  *
  * @param allowedValues Static allowed values or a reactive function returning them.
- * @param options Optional custom validation message.
+ * @param options Optional static or reactive custom validation message.
  */
 export const oneOf = <TValue>(
   allowedValues: readonly TValue[] | (() => readonly TValue[] | undefined),
@@ -43,7 +44,7 @@ export const oneOf = <TValue>(
       kind: 'oneOf',
       options: resolvedAllowedValues,
       actual: currentValue,
-      message: options?.message ?? defaultValidatorMessages.oneOf(),
+      message: resolveValidatorMessage(options?.message, defaultValidatorMessages.oneOf),
     };
   };
 };

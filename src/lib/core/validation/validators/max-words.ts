@@ -1,7 +1,8 @@
-import type { Validator } from '../validation.type';
 import { countWords } from './count-words';
-import { defaultValidatorMessages } from './default-validator-messages';
+import type { Validator } from '../validation.type';
 import type { ValidatorOptions } from './validator-options';
+import { resolveValidatorMessage } from './resolve-validator-message';
+import { defaultValidatorMessages } from './default-validator-messages';
 
 /**
  * Requires a non-empty string to contain no more than the configured number of words.
@@ -12,7 +13,7 @@ import type { ValidatorOptions } from './validator-options';
  * failure produces `{ kind: 'maxWords', maxWords, actual, message }`, where `actual` is the
  * observed word count.
  *
- * @reactive Tracks signals read by the maximum source and revalidates when they change.
+ * @reactive Tracks signals read by the maximum and message sources while they are active.
  *
  * @example
  * ```ts
@@ -21,7 +22,7 @@ import type { ValidatorOptions } from './validator-options';
  * ```
  *
  * @param maximum Static maximum word count or a reactive function returning it.
- * @param options Optional custom validation message.
+ * @param options Optional static or reactive custom validation message.
  */
 export const maxWords = (
   maximum: number | (() => number | undefined),
@@ -34,7 +35,7 @@ export const maxWords = (
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum)) return null;
     const actual = countWords(currentValue);
     return actual > resolvedMaximum
-      ? { kind: 'maxWords', maxWords: resolvedMaximum, actual, message: options?.message ?? defaultValidatorMessages.maxWords(resolvedMaximum) }
+      ? { kind: 'maxWords', maxWords: resolvedMaximum, actual, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.maxWords(resolvedMaximum)) }
       : null;
   };
 };

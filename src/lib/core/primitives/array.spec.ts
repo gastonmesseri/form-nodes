@@ -912,6 +912,16 @@ describe('array', () => {
     ]);
   });
 
+  it('updates a reactive built-in validator message on the array value', () => {
+    const message = signal('Add a name');
+    const names = array(field(''), [], [minLength(1, { message: () => message() })]);
+
+    expect(names.getError('minLength')?.message).toBe('Add a name');
+
+    message.set('At least one name is required');
+    expect(names.getError('minLength')?.message).toBe('At least one name is required');
+  });
+
   it('accepts validator shorthand with the default empty initial value', () => {
     const names = array(field(''), [
       ({ value }) => value().length === 0 ? { kind: 'emptyArray' } : null,

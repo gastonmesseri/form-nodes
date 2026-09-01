@@ -1,8 +1,9 @@
 import type { Validator } from '../validation.type';
-import { markValidatorMetadata } from '../validator-metadata';
 import { MIN_METADATA } from '../constraint-metadata';
-import { defaultValidatorMessages } from './default-validator-messages';
 import type { ValidatorOptions } from './validator-options';
+import { markValidatorMetadata } from '../validator-metadata';
+import { resolveValidatorMessage } from './resolve-validator-message';
+import { defaultValidatorMessages } from './default-validator-messages';
 
 /**
  * Requires a non-empty number to be greater than or equal to a minimum.
@@ -12,7 +13,7 @@ import type { ValidatorOptions } from './validator-options';
  * the constraint temporarily. A failure produces
  * `{ kind: 'min', min, actual, message }`.
  *
- * @reactive Tracks signals read by the minimum source and revalidates when they change.
+ * @reactive Tracks signals read by the minimum and message sources while they are active.
  *
  * @example
  * ```ts
@@ -21,7 +22,7 @@ import type { ValidatorOptions } from './validator-options';
  * ```
  *
  * @param minimum Static minimum or a reactive function returning it.
- * @param options Optional custom validation message.
+ * @param options Optional static or reactive custom validation message.
  */
 export const min = (
   minimum: number | (() => number | undefined),
@@ -33,7 +34,7 @@ export const min = (
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum)) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.min(resolvedMinimum) }
+      ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.min(resolvedMinimum)) }
       : null;
   }, MIN_METADATA, minimum);
 };

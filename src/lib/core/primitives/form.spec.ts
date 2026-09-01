@@ -6,6 +6,7 @@ import { field } from './field';
 import { array } from './array';
 import { validator } from '../validation/validator';
 import type { InternalNode } from '../types/node.type';
+import { oneOf } from '../validation/validators/one-of';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 
@@ -1353,6 +1354,19 @@ describe('form', () => {
     expect(formGroup.getError('citiesDoNotMatch')).toMatchObject({ kind: 'citiesDoNotMatch' });
     formGroup.billingCity.set('Zurich');
     expect(formGroup.getError('citiesDoNotMatch')).toBeUndefined();
+  });
+
+  it('updates a reactive built-in validator message on the aggregate value', () => {
+    const message = signal('Choose the expected profile');
+    const formGroup = form(
+      { name: field('David') },
+      [oneOf([{ name: 'Marco' as string | null }], { message: () => message() })],
+    );
+
+    expect(formGroup.getError('oneOf')?.message).toBe('Choose the expected profile');
+
+    message.set('Select another profile');
+    expect(formGroup.getError('oneOf')?.message).toBe('Select another profile');
   });
 
   it('accepts validators and state in a second-argument options object', () => {

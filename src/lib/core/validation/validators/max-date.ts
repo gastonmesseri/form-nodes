@@ -1,7 +1,8 @@
 import type { Validator } from '../validation.type';
-import { markValidatorMetadata } from '../validator-metadata';
-import { MAX_DATE_METADATA } from '../constraint-metadata';
 import { parseDateConstraint } from './date-constraint';
+import { MAX_DATE_METADATA } from '../constraint-metadata';
+import { markValidatorMetadata } from '../validator-metadata';
+import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
 
 /**
@@ -14,7 +15,7 @@ import { defaultValidatorMessages } from './default-validator-messages';
  * temporarily. A failure produces
  * `{ kind: 'maxDate', maxDate, actual, message }` with the rejected `Date` as `actual`.
  *
- * @reactive Tracks signals read by the maximum source and revalidates when they change.
+ * @reactive Tracks signals read by the maximum and message sources while they are active.
  *
  * @example
  * ```ts
@@ -26,11 +27,11 @@ import { defaultValidatorMessages } from './default-validator-messages';
  * ```
  *
  * @param maximum Static maximum date or ISO calendar-date string, or a reactive function returning one.
- * @param options Optional custom validation message and string parsing mode. `parseAs` defaults to `'utc'`.
+ * @param options Optional static or reactive custom message and string parsing mode. `parseAs` defaults to `'utc'`.
  */
 export const maxDate = (
   maximum: Date | string | (() => Date | string | undefined),
-  options?: { readonly message?: string; readonly parseAs?: 'utc' | 'local' },
+  options?: { readonly message?: string | (() => string | undefined); readonly parseAs?: 'utc' | 'local' },
 ): Validator<Date | null> => {
   const parseAs = options?.parseAs ?? 'utc';
   const normalizedMaximum = typeof maximum === 'function'
@@ -46,7 +47,7 @@ export const maxDate = (
     const resolvedMaximum = typeof normalizedMaximum === 'function' ? normalizedMaximum() : normalizedMaximum;
     if (resolvedMaximum === undefined || Number.isNaN(resolvedMaximum.getTime())) return null;
     return currentValue > resolvedMaximum
-      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.maxDate(resolvedMaximum) }
+      ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.maxDate(resolvedMaximum)) }
       : null;
   }, MAX_DATE_METADATA, normalizedMaximum);
 };

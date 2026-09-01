@@ -1,7 +1,8 @@
 import type { Validator } from '../validation.type';
-import { markValidatorMetadata } from '../validator-metadata';
-import { MIN_DATE_METADATA } from '../constraint-metadata';
 import { parseDateConstraint } from './date-constraint';
+import { MIN_DATE_METADATA } from '../constraint-metadata';
+import { markValidatorMetadata } from '../validator-metadata';
+import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultValidatorMessages } from './default-validator-messages';
 
 /**
@@ -14,7 +15,7 @@ import { defaultValidatorMessages } from './default-validator-messages';
  * temporarily. A failure produces
  * `{ kind: 'minDate', minDate, actual, message }` with the rejected `Date` as `actual`.
  *
- * @reactive Tracks signals read by the minimum source and revalidates when they change.
+ * @reactive Tracks signals read by the minimum and message sources while they are active.
  *
  * @example
  * ```ts
@@ -26,11 +27,11 @@ import { defaultValidatorMessages } from './default-validator-messages';
  * ```
  *
  * @param minimum Static minimum date or ISO calendar-date string, or a reactive function returning one.
- * @param options Optional custom validation message and string parsing mode. `parseAs` defaults to `'utc'`.
+ * @param options Optional static or reactive custom message and string parsing mode. `parseAs` defaults to `'utc'`.
  */
 export const minDate = (
   minimum: Date | string | (() => Date | string | undefined),
-  options?: { readonly message?: string; readonly parseAs?: 'utc' | 'local' },
+  options?: { readonly message?: string | (() => string | undefined); readonly parseAs?: 'utc' | 'local' },
 ): Validator<Date | null> => {
   const parseAs = options?.parseAs ?? 'utc';
   const normalizedMinimum = typeof minimum === 'function'
@@ -46,7 +47,7 @@ export const minDate = (
     const resolvedMinimum = typeof normalizedMinimum === 'function' ? normalizedMinimum() : normalizedMinimum;
     if (resolvedMinimum === undefined || Number.isNaN(resolvedMinimum.getTime())) return null;
     return currentValue < resolvedMinimum
-      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: options?.message ?? defaultValidatorMessages.minDate(resolvedMinimum) }
+      ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.minDate(resolvedMinimum)) }
       : null;
   }, MIN_DATE_METADATA, normalizedMinimum);
 };

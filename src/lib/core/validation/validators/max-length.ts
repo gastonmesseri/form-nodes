@@ -1,10 +1,11 @@
 import { isEmpty } from '../../utils/is-empty';
 import type { Validator } from '../validation.type';
-import { markValidatorMetadata } from '../validator-metadata';
-import { MAX_LENGTH_METADATA } from '../constraint-metadata';
-import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
-import { defaultValidatorMessages } from './default-validator-messages';
 import type { ValidatorOptions } from './validator-options';
+import { MAX_LENGTH_METADATA } from '../constraint-metadata';
+import { markValidatorMetadata } from '../validator-metadata';
+import { resolveValidatorMessage } from './resolve-validator-message';
+import { defaultValidatorMessages } from './default-validator-messages';
+import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 
 /**
  * Requires a non-empty value's numeric `length` or `size` not to exceed a maximum.
@@ -15,7 +16,7 @@ import type { ValidatorOptions } from './validator-options';
  * A failure produces `{ kind: 'maxLength', maxLength, actual, message }`, where `actual` is the
  * observed length or size.
  *
- * @reactive Tracks signals read by the maximum source and revalidates when they change.
+ * @reactive Tracks signals read by the maximum and message sources while they are active.
  *
  * @example
  * ```ts
@@ -24,7 +25,7 @@ import type { ValidatorOptions } from './validator-options';
  * ```
  *
  * @param maximum Static maximum length or size, or a reactive function returning it.
- * @param options Optional custom validation message.
+ * @param options Optional static or reactive custom validation message.
  */
 export const maxLength = (
   maximum: number | (() => number | undefined),
@@ -37,7 +38,7 @@ export const maxLength = (
     if (resolvedMaximum === undefined) return null;
     const actualLength = getLengthOrSize(currentValue!);
     return actualLength > resolvedMaximum
-      ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: options?.message ?? defaultValidatorMessages.maxLength(resolvedMaximum) }
+      ? { kind: 'maxLength', maxLength: resolvedMaximum, actual: actualLength, message: resolveValidatorMessage(options?.message, () => defaultValidatorMessages.maxLength(resolvedMaximum)) }
       : null;
   }, MAX_LENGTH_METADATA, maximum);
 };

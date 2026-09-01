@@ -49,8 +49,9 @@ const atLeastOneItem = validator<readonly (string | null)[]>(({ value }) => {
 array(field(''), [], [atLeastOneItem]);
 
 const validatorOptions: ValidatorOptions = { message: 'Invalid value' };
+const reactiveValidatorOptions: ValidatorOptions = { message: () => undefined };
 const builtInError: BuiltInValidationError = { kind: 'min', min: 2, actual: 1 };
-void [validatorOptions, builtInError];
+void [validatorOptions, reactiveValidatorOptions, builtInError];
 
 const constrainedAge = field(16, [min(18)]);
 const minimumError = constrainedAge.getError('min');
