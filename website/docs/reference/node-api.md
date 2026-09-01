@@ -96,11 +96,14 @@ Fields also expose constraint metadata through `min()`, `max()`, `minLength()`, 
 | Member | Description |
 | --- | --- |
 | `children` | Stable readonly map of named child nodes |
+| `get(key)` | Reads a child by runtime key, or returns `undefined` |
+| `add(...)` / `remove(key)` | Explicitly attaches or detaches runtime children |
 | `patch(value)` | Recursively updates supplied branches |
 | `submit()` | Runs configured submission behavior and returns `Promise<boolean>` |
 
-Form children are also direct properties. Use these operations directly unless a child has the
-same name; the collision behavior is documented in [Tree navigation and API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code).
+Initially declared children are also direct properties. Runtime children are deliberately
+available only through the node returned by `add()`, `get(key)`, or `children[key]`, which lets
+TypeScript and Angular reject misspelled direct properties.
 
 ## Array-specific API
 

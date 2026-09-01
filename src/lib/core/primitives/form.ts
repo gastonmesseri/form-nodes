@@ -22,7 +22,7 @@ import { readStateSource, getInitialMutableState } from '../utils/read-state-sou
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
+import type { DynamicNode, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
@@ -318,13 +318,6 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
       controlsRecord[key] = node;
       dynamicKeys.add(key);
       (node as InternalNode).$api._setParent(formNode, key);
-      if (!Object.prototype.hasOwnProperty.call(formNode, key)) {
-        Object.defineProperty(formNode, key, {
-          configurable: true,
-          enumerable: true,
-          get: () => controlsRecord[key],
-        });
-      }
     });
     structureVersion.update(version => version + 1);
     return Object.fromEntries(nodes);
@@ -344,7 +337,6 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     }
     dynamicKeys.delete(key);
     delete controlsRecord[key];
-    if (Object.getOwnPropertyDescriptor(formNode, key)?.get) delete (formNode as unknown as Record<string, unknown>)[key];
     (node as InternalNode).$api._setParent(null);
     structureVersion.update(version => version + 1);
     return node;
@@ -377,6 +369,7 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   const api = {
     nodeType: () => nodeType,
     children: controls as FormChildren<TNodes, Node>,
+    get: (key: string) => controlsRecord[key] as DynamicNode | undefined,
     add,
     remove,
     form: rootForm,

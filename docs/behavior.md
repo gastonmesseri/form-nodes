@@ -2,7 +2,7 @@
 
 This document records the behavior currently implemented by the library. It is an evolving specification and the source material for future user-facing documentation.
 
-The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.4` at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
+The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.5` at commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
 Every `field()`, `group()`, `form()`, and `array()` exposes its complete API through `.api`, which
 is the recommended access for application code. Every node also exposes the reserved `$api` escape
@@ -20,7 +20,7 @@ profile.api.disabled(); // recommended API access
 profile.$api.disabled(); // equivalent reserved escape hatch
 ```
 
-A group or form also exposes its children as direct properties. When a child name collides with a
+A group or form also exposes its initially declared children as direct properties. When a child name collides with a
 direct API member, the child always wins in both runtime behavior and TypeScript. Continue using
 `.api` in the common case; use `$api` when guaranteed collision-free access is needed:
 
@@ -513,9 +513,11 @@ Calling reset on a nested form only resets that subtree. State belonging to sibl
 
 `form()` and `group()` accept named children after creation through `add(key, definition)` or an
 atomic `add(definitions)` call. A plain object definition is normalized to a `group()` exactly as
-it is during initial construction. The returned nodes retain their exact inferred types. Arbitrary
-direct child names are typed as `DynamicNode | undefined`; initially declared children keep their
-original precise and non-optional types. `DynamicNode` exposes the state and
+it is during initial construction. The returned nodes retain their exact inferred types. Dynamic
+children are not installed as direct properties: this makes an undeclared or misspelled property a
+TypeScript and Angular strict-template error. `get(key)` and `children[key]` return
+`DynamicNode | undefined`; initially declared children keep their original precise and non-optional
+direct-property types. `DynamicNode` exposes the state and
 operations common to every primitive directly, including `value`, `disabled`, validation, and
 interaction state, while hiding native function members and omitting primitive-specific methods.
 
@@ -532,15 +534,14 @@ standalone removed field reports `form() === null`; a removed aggregate becomes 
 
 The form's statically inferred value type remains based on its initial definition. Runtime values
 contain current dynamic properties, but callers should retain the typed result of `add()` or narrow
-a direct dynamic-property result when they need a dynamic value. Fixed-shape `set()`, `patch()`, `update()`, and
+the result of `get()` or `children[key]` when they need a dynamic value. Fixed-shape `set()`, `patch()`, `update()`, and
 `reset(value)` signatures remain unchanged. Runtime dynamic keys supplied through untyped data are
 updated; omitted dynamic keys retain their values. Reset operations still clear their interaction
 state.
 
 The overloads preserve input cardinality intentionally: `add(key, definition)` returns the exact
-attached node, while `add(definitions)` returns an exact keyed map of attached nodes. Dynamic
-properties are readonly lookup surfaces. Proxy assignment does not attach nodes because structural
-mutation, parentage, and aggregate-state changes remain explicit through `add()`.
+attached node, while `add(definitions)` returns an exact keyed map of attached nodes. Structural
+mutation, parentage, and aggregate-state changes remain explicit through `add()` and `remove()`.
 
 This intentionally differs from Angular Signal Forms `v22.1.5` at commit
 `468b65b74566537456c192ac4281795c5a1e1a5e`. Angular derives changing child structure from its

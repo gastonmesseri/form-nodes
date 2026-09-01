@@ -162,9 +162,42 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
     nodeType(): 'group';
     /** Stable readonly map of this group's immediate child nodes. */
     readonly children: GroupChildren<TNodes, TParent> & DynamicFormChildren;
-    /** Adds one child at runtime and returns the attached node with its exact inferred type. */
+    /**
+     * Adds one child at runtime and returns the attached node with its exact inferred type.
+     *
+     * @example Add one named child to a group.
+     * ```ts
+     * const filters = group({ query: field('') });
+     *
+     * const category = filters.add('category', field('all'));
+     * category(); // 'all'
+     * filters.get('category') === category; // true
+     * filters.children['category'] === category; // true
+     * ```
+     */
     add<TKey extends string, TDefinition extends NodeDefinitions | Node>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: TDefinition): AddedNode<TDefinition, Group<TNodes, TParent>>;
-    /** Adds several child definitions atomically and returns their attached live nodes. */
+    /**
+     * Adds several child definitions atomically and returns an exact keyed map of their attached
+     * live nodes.
+     *
+     * @example Add several children to a group in one structural update.
+     * ```ts
+     * const filters = group({ query: field('') });
+     *
+     * const added = filters.add({
+     *   sort: field('relevance'),
+     *   range: {
+     *     minimum: field(0),
+     *     maximum: field(100),
+     *   },
+     * });
+     *
+     * added.sort(); // 'relevance'
+     * added.range.maximum(); // 100
+     * filters.get('range') === added.range; // true
+     * filters.children['range'] === added.range; // true
+     * ```
+     */
     add<TDefinitions extends NodeDefinitions>(definitions: TDefinitions & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
       readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Group<TNodes, TParent>>;
     };
@@ -251,5 +284,4 @@ export type Group<TNodes extends Nodes, TParent extends Node = Node> =
   & GroupApiProperty<TNodes, TParent>
   & Omit<GroupChildren<TNodes, TParent>, 'api'>
   & Omit<GroupApi<TNodes, TParent>, keyof TNodes>
-  & DynamicFormChildren
   & HiddenFunctionMembers<keyof TNodes | keyof GroupApi<TNodes, TParent>>;

@@ -94,7 +94,7 @@ const myForm = form({
 | Create or configure an object branch | `group(...)`, `GroupOptions` | [Signatures](#signatures) and [options](#options) |
 | Decide between a group and submission boundary | `group()`, `form()` | [Group or form](#group-or-form) |
 | Read its value or navigate children | `myGroup()`, direct children, `children` | [Properties and methods](#properties-and-methods) |
-| Add or remove runtime children | `add()`, `remove()` | [Dynamic children](#dynamic-children-1) |
+| Add, find, or remove runtime children | `add()`, `get()`, `children[key]`, `remove()` | [Dynamic children](#dynamic-children-1) |
 | Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Method reference](#method-reference) |
 | Inspect or replace validation | `errors()`, `allErrors()`, `valid()`, `setValidators()` | [Validation properties](#validation-properties) |
 | Manage interaction or availability | State signals and marker methods | [Interaction](#interaction-properties) and [availability](#availability-properties) |
@@ -383,6 +383,7 @@ their value; `children` is a stable readonly map rather than a signal.
 | **Dynamic children** | |
 | [`add(key, definition)`](#add) | Attaches and returns one runtime child with its exact inferred node type. |
 | [`add(definitions)`](#add) | Atomically attaches and returns several runtime children. |
+| [`get(key)`](#get) | Returns a current child by runtime key, or `undefined`. |
 | [`remove(key)`](#remove) | Detaches and returns a dynamically added child, or `undefined`. |
 | **Value updates** | |
 | [`set(value)`](#set) | Assigns a complete object value without marking nodes dirty. |
@@ -486,13 +487,14 @@ complete object. The plain object itself has none of those node capabilities.
 
 ## Dynamic children
 
-Groups support the same `add()`, direct dynamic properties, and `remove()` operations as forms:
+Groups support the same explicit `add()`, `get()`, and `remove()` operations as forms:
 
 ```ts
 const filters = group({ query: field('') });
 const category = filters.add('category', field('all'));
 
 category(); // 'all'
+filters.get('category') === category; // true
 filters.remove('category');
 ```
 
@@ -559,7 +561,8 @@ const address = group({
 address.children.city(); // 'Zurich'
 ```
 
-Direct child access is preferred. If a child is named `children`, use `address.$api.children`.
+Direct access is preferred for initially declared children. Use `get(key)` or `children[key]` for
+runtime keys. If a child is named `children`, use `address.$api.children`.
 
 #### value()
 
@@ -1081,6 +1084,8 @@ const filters = group({
 
 const category = filters.add('category', field('all'));
 category(); // 'all'
+filters.get('category') === category; // true
+filters.children['category'] === category; // true
 
 const added = filters.add({
   sort: field('relevance'),
@@ -1092,10 +1097,37 @@ const added = filters.add({
 
 added.sort(); // 'relevance'
 added.range.maximum(); // 100
+filters.get('range') === added.range; // true
+filters.children['range'] === added.range; // true
 ```
 
 Keys must be new, definitions must be detached, and `$api` and `$field` are reserved. The object
-form validates every supplied definition before attaching any child.
+form validates every supplied definition before attaching any child. Keep the returned node for
+its exact type, or retrieve it later with `get()` or `children[key]`.
+
+#### get()
+
+**Signature:** `get(key: string): DynamicNode | undefined`
+
+Returns a current child by runtime key. Dynamically added children are not direct properties, so
+misspelled names fail TypeScript and Angular template checking.
+
+:::important
+
+Use `filters.query` only for a child included in the original `group()` declaration. After
+`filters.add('category', ...)`, use the returned node, `filters.get('category')`, or
+`filters.children['category']`. Neither `filters.category` nor `filters['category']` is supported.
+
+:::
+
+```ts
+const filters = group({ query: field('') });
+filters.add('category', field('all'));
+
+filters.get('category')?.value(); // 'all'
+filters.children['category']?.value(); // 'all'
+filters.get('missing'); // undefined
+```
 
 #### remove()
 

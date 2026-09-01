@@ -245,7 +245,7 @@ export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = {
 export type AddedNode<TDefinition extends NodeDefinition, TParent extends Node> =
   NodeWithParent<NormalizedNode<TDefinition>, TParent>;
 
-/** Dynamically addressable child properties. A key that has not been added returns `undefined`. */
+/** Readonly runtime-key map of dynamic and initially declared children. */
 export type DynamicFormChildren = {
   readonly [key: string]: DynamicNode | undefined;
 };
@@ -260,20 +260,62 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /** Stable readonly map of this form's immediate child nodes. */
   readonly children: FormChildren<TNodes, TParent> & DynamicFormChildren;
   /**
+   * Returns a child by runtime key, or `undefined` when no current child has that key.
+   *
+   * @example Look up children attached through either `add()` signature.
+   * ```ts
+   * const profile = form({ name: field('Ada') });
+   *
+   * profile.add('age', field(36));
+   * profile.get('age')?.value(); // 36
+   *
+   * profile.add({
+   *   nickname: field('countess'),
+   *   address: { city: field('London') },
+   * });
+   * profile.get('nickname')?.value(); // 'countess'
+   * profile.get('address')?.value(); // { city: 'London' }
+   * ```
+   */
+  get(key: string): DynamicNode | undefined;
+  /**
    * Adds one child node at runtime and returns that live node with its exact inferred type.
    *
    * The key must not already belong to this form. The supplied node must not currently have a
    * parent. Plain object definitions are normalized to `group()` nodes.
-   * When a runtime key collides with an operation or native callable member, use `children` to
-   * read the child.
+   * Dynamic children are not installed as direct properties. Read them through `get()`,
+   * `children[key]`, or the exact node returned by this method.
    *
+   * @example Add one named child and retain its exact node type.
    * ```ts
+   * const profile = form({ name: field('Ada') });
+   *
    * const age = profile.add('age', field(23));
    * age(); // 23
+   * profile.get('age') === age; // true
+   * profile.children['age'] === age; // true
    * ```
    */
   add<TKey extends string, TDefinition extends NodeDefinition>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: TDefinition): AddedNode<TDefinition, Form<TNodes, TParent>>;
-  /** Adds several child definitions atomically and returns their attached live nodes. */
+  /**
+   * Adds several child definitions atomically and returns an exact keyed map of their attached
+   * live nodes.
+   *
+   * @example Add several children in one structural update.
+   * ```ts
+   * const profile = form({ name: field('Ada') });
+   *
+   * const added = profile.add({
+   *   age: field(36),
+   *   address: { city: field('London') },
+   * });
+   *
+   * added.age(); // 36
+   * added.address.city(); // 'London'
+   * profile.get('address') === added.address; // true
+   * profile.children['address'] === added.address; // true
+   * ```
+   */
   add<TDefinitions extends NodeDefinitions>(definitions: TDefinitions & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
     readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Form<TNodes, TParent>>;
   };
@@ -591,5 +633,4 @@ export type Form<TNodes extends Nodes, TParent extends Node = Node> =
   & FormApiProperty<TNodes, TParent>
   & Omit<FormChildren<TNodes, TParent>, 'api'>
   & Omit<FormApi<TNodes, TParent>, keyof TNodes>
-  & DynamicFormChildren
   & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;

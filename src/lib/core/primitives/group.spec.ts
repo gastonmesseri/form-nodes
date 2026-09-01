@@ -112,12 +112,15 @@ describe('group', () => {
     const zip = address.add('zip', field('8001'));
 
     expect(address()).toEqual({ city: 'Zurich', zip: '8001' });
-    expect(address.zip).toBe(zip);
+    expect(address.get('zip')).toBe(zip);
+    expect(address.children['zip']).toBe(zip);
+    expect((address as unknown as Record<string, unknown>)['zip']).toBeUndefined();
     expect(zip.parent()).toBe(address);
     expect(zip.form()).toBe(address);
     expect(address).not.toHaveProperty('submit');
 
     expect(address.remove('zip')).toBe(zip);
+    expect(address.get('zip')).toBeUndefined();
     expect(address()).toEqual({ city: 'Zurich' });
     expect(zip.parent()).toBeNull();
   });

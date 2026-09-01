@@ -611,25 +611,27 @@ describe('types', () => {
 
     expectTypeOf(age()).toEqualTypeOf<number | null>();
     expectTypeOf(age.parent()).toEqualTypeOf<typeof profile | null>();
-    expectTypeOf(profile.age).toEqualTypeOf<DynamicNode | undefined>();
+    expectTypeOf(profile.get('age')).toEqualTypeOf<DynamicNode | undefined>();
     const dynamicKey: string = 'age';
-    expectTypeOf(profile[dynamicKey]).toEqualTypeOf<DynamicNode | undefined>();
+    expectTypeOf(profile.children[dynamicKey]).toEqualTypeOf<DynamicNode | undefined>();
     expectTypeOf(added.nickname()).toEqualTypeOf<string | null>();
     expectTypeOf(added.address.city()).toEqualTypeOf<string | null>();
     expectTypeOf(added.address.parent()).toEqualTypeOf<typeof profile | null>();
     expectTypeOf(profile.remove('age')).toEqualTypeOf<DynamicNode | undefined>();
 
-    expectTypeOf(profile.nonExistingPropertyOrDynamic?.value).toEqualTypeOf<Signal<any> | undefined>();
-    expectTypeOf(profile.nonExistingPropertyOrDynamic?.disabled).toEqualTypeOf<Signal<boolean> | undefined>();
-    expectTypeOf(profile.nonExistingPropertyOrDynamic?.$field).toEqualTypeOf<any>();
+    expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.value).toEqualTypeOf<Signal<any> | undefined>();
+    expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.disabled).toEqualTypeOf<Signal<boolean> | undefined>();
+    expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.$field).toEqualTypeOf<any>();
 
     if (false) {
       // @ts-expect-error native callable members remain hidden
-      profile.nonExistingPropertyOrDynamic?.apply;
+      profile.get('nonExistingPropertyOrDynamic')?.apply;
       // @ts-expect-error submit is specific to forms
-      profile.nonExistingPropertyOrDynamic?.submit;
+      profile.get('nonExistingPropertyOrDynamic')?.submit;
       // @ts-expect-error direct patch is not common to every node
-      profile.nonExistingPropertyOrDynamic?.patch;
+      profile.get('nonExistingPropertyOrDynamic')?.patch;
+      // @ts-expect-error dynamic children are not direct properties
+      profile.nonExistingPropertyOrDynamic;
     }
 
     if (false) {
@@ -644,7 +646,11 @@ describe('types', () => {
     const address = group({ city: field('Zurich') });
     const zip = address.add('zip', field('8001'));
     expectTypeOf(zip.parent()).toEqualTypeOf<typeof address | null>();
-    expectTypeOf(address.missing).toEqualTypeOf<DynamicNode | undefined>();
+    expectTypeOf(address.get('missing')).toEqualTypeOf<DynamicNode | undefined>();
+    if (false) {
+      // @ts-expect-error dynamic children are not direct properties
+      address.missing;
+    }
   });
 
   it('allows api as a child name and reserves $api', () => {

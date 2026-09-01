@@ -53,34 +53,77 @@ definition returns that exact attached node; adding an object returns an exact k
 all attached nodes. This keeps the common single-control call concise while retaining precise types
 for an atomic multi-control addition.
 
-Unlike keys in the initial `form()` definition, a dynamically added key does not replace an
-existing form or callable member. When such a name collides, read the child through `children`.
+Unlike keys in the initial `form()` definition, a dynamically added key is not installed as a
+direct property. This keeps misspelled properties detectable by TypeScript and Angular's strict
+template checker.
+
+:::important Static children and dynamic children use different access paths
+
+Children present in the original `form()` or `group()` declaration support direct property access.
+Children attached later with `add()` do not.
+
+| Child kind | Declaration | Supported access |
+| --- | --- | --- |
+| Initially declared | `form({ name: field('') })` | `profile.name` |
+| Added dynamically | `profile.add('age', field(23))` | returned node, `profile.get('age')`, or `profile.children['age']` |
+
+Neither `profile.age` nor `profile['age']` is supported for a dynamically added child. This is
+intentional: allowing arbitrary properties would also allow a typo such as
+`profile.mistypedName` to pass type checking.
+
+:::
 
 ## Look up a runtime key
 
-Access runtime keys directly with dot or bracket notation. Undeclared names have type
-`DynamicNode | undefined` and evaluate to
-`undefined` until added. `DynamicNode` exposes every state and operation shared by all node kinds,
-such as `value`, `disabled`, `errors`, `set()`, and `reset()`. Native function members such as
-`apply` and primitive-specific operations such as `submit()` remain hidden. Children declared in
-the original definition retain their exact types.
+Use `get(key)` or `children[key]` for a runtime key. Both return `DynamicNode | undefined`.
+`DynamicNode` exposes every state and operation shared by all node kinds, such as `value`,
+`disabled`, `errors`, `set()`, and `reset()`. Primitive-specific operations such as `submit()` are
+not available until the node is narrowed. Children declared in the original definition retain
+their exact direct-property types.
 
 ```ts
-profile.age; // DynamicNode | undefined
-profile.age?.value(); // 23
-profile.unknown; // DynamicNode | undefined
+profile.get('age')?.value(); // 23
+profile.children['age']?.value(); // 23
+profile.get('unknown'); // undefined
 profile.name(); // string | null
 
 const key: string = configuration.controlName;
-profile[key]; // DynamicNode | undefined
+profile.get(key); // DynamicNode | undefined
+profile.children[key]; // DynamicNode | undefined
 ```
 
-When a dynamic name collides with an API operation such as `set`, or a native callable member such
-as `name`, access that child through `children`; the existing member remains available normally.
+`profile.age` does not compile merely because `age` was added at runtime. Retain the exact node
+returned by `add()` when its type matters. Assignment such as `profile.age = field(23)` is not an
+alternative spelling of `add()`: structural mutation remains explicit.
 
-Dynamic properties are readonly lookups. Assignment such as `profile.age = field(23)` is not an
-alternative spelling of `add()`: attaching or detaching a node changes tree structure, parentage,
-validation, and aggregate state, so it remains an explicit operation.
+The same rule applies in Angular templates. Narrow the optional lookup before binding it:
+
+```html
+<!-- Correct: name was part of the original declaration. -->
+<input [formNode]="profile.name" />
+
+<!-- Correct: age was added at runtime. -->
+@if (profile.get('age'); as age) {
+  <input [formNode]="age" />
+}
+
+<!-- Does not compile: age is not a declared direct property. -->
+<input [formNode]="profile.age" />
+
+<!-- Does not compile, catching the typo. -->
+<input [formNode]="profile.mistypedName" />
+```
+
+If the code that adds the child also owns the template, retaining the result gives the clearest and
+most precise binding:
+
+```ts
+const age = profile.add('age', field(23));
+```
+
+```html
+<input [formNode]="age" />
+```
 
 ## Remove a dynamic child
 
@@ -89,7 +132,7 @@ validation, and aggregate state, so it remains an explicit operation.
 ```ts
 const removed = profile.remove('age'); // DynamicNode | undefined
 
-profile.age; // undefined
+profile.get('age'); // undefined
 removed?.parent(); // null
 ```
 
@@ -101,7 +144,7 @@ their presence is guaranteed by the form's static type.
 
 The original definition remains the form's statically known value shape. Runtime children appear
 in the JavaScript object returned by the form, but code that needs their values should retain the
-typed node returned by `add()` or narrow the direct dynamic-property result.
+typed node returned by `add()` or narrow the result of `get()` or `children[key]`.
 
 `set()`, `patch()`, `update()`, and `reset(value)` keep their original fixed-shape input types.
 They update matching dynamic keys when an untyped runtime object supplies them; omitted dynamic
