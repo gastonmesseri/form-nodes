@@ -2,6 +2,18 @@
 
 ## Up next
 
+- Website documentation roadmap (implement in this order)
+  - [x] Create an API overview page that maps common needs to the relevant public APIs.
+  - [ ] Add a Common mistakes page with incorrect and corrected examples.
+  - [ ] Add a Troubleshooting page organized around symptoms and concrete solutions.
+  - [ ] Add a configuration reference covering scopes, reactivity, precedence, inheritance, and providers.
+  - [ ] Add a consumer testing guide for nodes, validators, arrays, bindings, and submission.
+  - [ ] Improve navigation within long reference pages with summaries and on-page API maps.
+  - [ ] Add complete Angular Material and PrimeNG integration examples.
+  - [ ] Convert more behavior-defining documentation examples into executable, type-checked examples.
+  - [ ] Add a form-modeling patterns guide for common domain and UI design decisions.
+  - [ ] Add an interactive playground for values, state, validation, debounce, and arrays.
+  - [ ] Add versioning, Angular compatibility, changelog, and migration documentation.
 - Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
 - Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
 - Consider if nested form() should actually be a different type like group() by default and not another form() (the one inferred from the object)
