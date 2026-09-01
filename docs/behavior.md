@@ -868,7 +868,7 @@ const age = field<number>(null, {
 | `between(minimum, maximum)` | `number | null` | Passes for `null` and `NaN`; disabled if either bound is absent or `NaN` | `{ kind: 'between', min, max, actual, message }` |
 | `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
 | `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
-| `uniqueItems(selector?)` | A readonly array, `null`, or `undefined` | Absent, empty, and one-item arrays pass | `{ kind: 'uniqueItems', duplicateIndexes, message }` |
+| `uniqueItems(keySelector?)` | A readonly array, `null`, or `undefined` | Absent, empty, and one-item arrays pass | `{ kind: 'uniqueItems', duplicateIndexes, message }` |
 | `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, actual, message }` |
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
@@ -962,7 +962,7 @@ helper because cross-field confirmation is common and otherwise awkward to expre
 `uniqueItems` validates an array node and keeps its error on that array rather than mutating errors
 on its item nodes. `null` and `undefined` are treated as empty arrays so the validator remains safe
 when composed with nullable fields, even though `array()` itself normalizes those inputs to `[]`.
-Without a selector it compares items using SameValueZero equality, matching
+Without a key selector it compares items using SameValueZero equality, matching
 `Set`: `NaN` values match, `0` and `-0` match, and objects use reference identity. A property-name
 shorthand or function can select a comparable key:
 
@@ -1011,7 +1011,7 @@ fallback chain. This works inside and outside Angular dependency injection.
 an options factory; validators that require a constraint accept message configuration as their final
 argument. A static string is the concise message form. The inline object is retained for reactive
 message functions and date parsing options. `uniqueItems` cannot use a one-argument string message
-because strings select an object property; use `uniqueItems({ message: ... })` without a selector or
+because strings select an object property; use `uniqueItems({ message: ... })` without a key selector or
 `uniqueItems('property', 'message')` with one. Field contexts carry a non-enumerable internal symbol
 marker, allowing overloaded validators to recognize genuine contexts without relying on their
 structural shape or exposing the marker in the public `FieldContext` type.

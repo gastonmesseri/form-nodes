@@ -346,7 +346,7 @@ Unlike optional format validators, `null` and `undefined` are compared as real v
 
 ## `uniqueItems`
 
-Requires every array item—or a selected item key—to be unique. It supports direct use, an options factory, a property selector, and a selector function:
+Requires every array item—or a selected item key—to be unique. It supports direct use, an options factory, a property key selector, and a key-selector function:
 
 ```ts
 const myForm = form({
@@ -381,7 +381,7 @@ const myForm = form({
 });
 ```
 
-Calling `uniqueItems()` without arguments is equivalent to direct `[uniqueItems]`. Without a selector, comparison uses SameValueZero like `Set`: `NaN` matches `NaN`, `0` matches `-0`, and objects compare by reference. Property and function selectors compare their derived keys; selector functions may read signals reactively.
+Calling `uniqueItems()` without arguments is equivalent to direct `[uniqueItems]`. Without a key selector, comparison uses SameValueZero like `Set`: `NaN` matches `NaN`, `0` matches `-0`, and objects compare by reference. Property and function key selectors compare their derived keys; key-selector functions may read signals reactively.
 
 `null` and `undefined` pass as empty arrays. Empty and one-item arrays pass. A failure is `{ kind: 'uniqueItems', duplicateIndexes, message }`. It belongs to the array node and reports every participating index in ascending order while deliberately omitting duplicate values.
 

@@ -46,7 +46,7 @@ describe('uniqueItems', () => {
     expect(contacts.errors()).toEqual([]);
   });
 
-  it('tracks selector dependencies and custom messages reactively', () => {
+  it('tracks key-selector dependencies and custom messages reactively', () => {
     const caseSensitive = signal(false);
     const message = signal('Names must be unique');
     const names = array(field(''), ['Marco', 'marco'], [

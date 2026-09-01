@@ -27,6 +27,7 @@
   - update docs if required, check all docs
   - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
   - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
+
 - Think about how to better structure project folders given current knowledge and existing files
 - [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - Validator framework roadmap (implement in this order)
@@ -291,7 +292,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 - [x] Allow built-in validators to accept a static message string directly when the signature is unambiguous.
   - Preserve the options object for reactive messages and date parsing configuration.
-  - Preserve `uniqueItems('property')` as the property-selector shorthand; use an options object for a no-selector message or pass the message after a selector.
+  - Preserve `uniqueItems('property')` as the property key-selector shorthand; use an options object for a no-key-selector message or pass the message after a key selector.
 
 - [x] Add `mapObjectValues(object, mapper)` for value transformations that preserve an object's keys.
   - Use it for object-node normalization and recursive node-definition cloning.
@@ -414,7 +415,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     - [x] Add `url()` for absolute WHATWG URLs, keeping HTTP-only validation as a possible separate validator.
     - [x] Add `integer()` using JavaScript's safe-integer range.
     - [x] Add reactive `equalTo()` for confirmation and cross-field equality without exposing compared values in errors.
-    - [x] Add `uniqueItems()` for arrays with identity, property-name, and reactive function selectors.
+    - [x] Add `uniqueItems()` for arrays with identity, property-name, and reactive function key selectors.
     - [x] Add inclusive `between()` with reactive numeric bounds and native constraint metadata.
     - [x] Add inclusive `dateBetween()` with parsed reactive date bounds and native constraint metadata.
   - [x] Consider changing 'kind' to 'type' in validators

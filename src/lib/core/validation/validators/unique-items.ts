@@ -8,17 +8,17 @@ type UniqueItemsOptions = {
   message?: string | (() => string | undefined);
 };
 
-type UniqueItemsSelector<TItem> = keyof TItem | ((item: TItem, index: number) => unknown);
+type UniqueItemsKeySelector<TItem> = keyof TItem | ((item: TItem, index: number) => unknown);
 
-const resolveKey = (item: unknown, index: number, selector?: PropertyKey | ((item: any, index: number) => unknown)): unknown => {
-  if (selector === undefined) return item;
-  if (typeof selector === 'function') return selector(item, index);
-  return (item as Record<PropertyKey, unknown>)[selector];
+const resolveKey = (item: unknown, index: number, keySelector?: PropertyKey | ((item: any, index: number) => unknown)): unknown => {
+  if (keySelector === undefined) return item;
+  if (typeof keySelector === 'function') return keySelector(item, index);
+  return (item as Record<PropertyKey, unknown>)[keySelector];
 };
 
 const validateUniqueItems = <TItem>(
   context: FieldContext<readonly TItem[] | null | undefined>,
-  selector?: UniqueItemsSelector<TItem>,
+  keySelector?: UniqueItemsKeySelector<TItem>,
   message?: string | (() => string | undefined),
 ): BuiltInValidationErrorMap['uniqueItems'] | null => {
   const firstIndexByKey = new Map<unknown, number>();
@@ -26,7 +26,7 @@ const validateUniqueItems = <TItem>(
   const items = context.value() ?? [];
 
   items.forEach((item, index) => {
-    const key = resolveKey(item, index, selector);
+    const key = resolveKey(item, index, keySelector);
     const firstIndex = firstIndexByKey.get(key);
     if (firstIndex === undefined) {
       firstIndexByKey.set(key, index);
@@ -48,7 +48,7 @@ const validateUniqueItems = <TItem>(
 /**
  * Requires every array item to be unique using SameValueZero equality.
  *
- * Without a selector, values are compared like `Set`, so `NaN` equals `NaN`, `0` equals `-0`, and
+ * Without a key selector, values are compared like `Set`, so `NaN` equals `NaN`, `0` equals `-0`, and
  * objects use reference identity. The error belongs to the array and exposes only the indexes of
  * every item participating in a duplicate group; duplicated values are intentionally omitted. A
  * failure produces `{ kind: 'uniqueItems', duplicateIndexes, message }`. `null` and `undefined`
@@ -69,7 +69,7 @@ export function uniqueItems(options?: {
  * Validates array item identity when passed directly in a validators array.
  *
  * This is equivalent to `uniqueItems()` and uses the default message. Use the factory form when a
- * selector or custom message is required.
+ * key selector or custom message is required.
  *
  * @example
  * ```ts
@@ -82,11 +82,11 @@ export function uniqueItems(context: FieldContext<readonly unknown[] | null | un
 /**
  * Requires values selected from array items to be unique using SameValueZero equality.
  *
- * A property name is a concise selector for object values. A selector function can compute any
+ * A property name is a concise key selector for object values. A key-selector function can compute any
  * comparable key and is evaluated reactively for every item. The error remains on the array and
  * reports all participating indexes in ascending order.
  *
- * @reactive Tracks signals read by a selector function and the custom message while they are active.
+ * @reactive Tracks signals read by a key-selector function and the custom message while they are active.
  *
  * @example
  * ```ts
@@ -101,26 +101,26 @@ export function uniqueItems(context: FieldContext<readonly unknown[] | null | un
  * ]);
  * ```
  *
- * @param selector Property name or function selecting the comparable key for each item.
+ * @param keySelector Property name or function selecting the comparable key for each item.
  * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export function uniqueItems<TItem>(
-  selector: keyof TItem | ((item: TItem, index: number) => unknown),
+  keySelector: keyof TItem | ((item: TItem, index: number) => unknown),
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
   },
 ): Validator<readonly TItem[] | null | undefined>;
 export function uniqueItems<TItem>(
-  contextOrSelectorOrOptions?: FieldContext<readonly TItem[] | null | undefined> | UniqueItemsSelector<TItem> | UniqueItemsOptions,
+  contextOrKeySelectorOrOptions?: FieldContext<readonly TItem[] | null | undefined> | UniqueItemsKeySelector<TItem> | UniqueItemsOptions,
   selectedOptions?: string | UniqueItemsOptions,
 ): Validator<readonly TItem[] | null | undefined> | ValidationResult {
-  if (isFieldContext(contextOrSelectorOrOptions)) return validateUniqueItems(contextOrSelectorOrOptions);
-  const hasSelector = typeof contextOrSelectorOrOptions === 'function'
-    || typeof contextOrSelectorOrOptions === 'string'
-    || typeof contextOrSelectorOrOptions === 'number'
-    || typeof contextOrSelectorOrOptions === 'symbol';
-  const selector = hasSelector ? contextOrSelectorOrOptions as UniqueItemsSelector<TItem> : undefined;
-  const options = hasSelector ? selectedOptions : contextOrSelectorOrOptions as UniqueItemsOptions | undefined;
-  return context => validateUniqueItems(context, selector, resolveValidatorMessageOption(options));
+  if (isFieldContext(contextOrKeySelectorOrOptions)) return validateUniqueItems(contextOrKeySelectorOrOptions);
+  const hasKeySelector = typeof contextOrKeySelectorOrOptions === 'function'
+    || typeof contextOrKeySelectorOrOptions === 'string'
+    || typeof contextOrKeySelectorOrOptions === 'number'
+    || typeof contextOrKeySelectorOrOptions === 'symbol';
+  const keySelector = hasKeySelector ? contextOrKeySelectorOrOptions as UniqueItemsKeySelector<TItem> : undefined;
+  const options = hasKeySelector ? selectedOptions : contextOrKeySelectorOrOptions as UniqueItemsOptions | undefined;
+  return context => validateUniqueItems(context, keySelector, resolveValidatorMessageOption(options));
 }
