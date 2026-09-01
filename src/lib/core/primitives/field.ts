@@ -26,6 +26,20 @@ export type { Field, FieldApi, FieldOptions } from './field.type';
 
 type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { readonly nullable?: true };
 type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { readonly nullable: false };
+/**
+ * Creates a nullable field whose future value type is not yet known.
+ *
+ * Use an explicit generic such as `field<string>(null)` when the eventual value type is known.
+ */
+export function field(
+  value: null,
+  options?: NullableFieldOptions<unknown>,
+): Field<unknown>;
+export function field(
+  value: null,
+  validators: ValidatorSource<unknown>,
+  options?: NullableFieldOptions<unknown>,
+): Field<unknown>;
 export function field<TValue extends {}>(
   value: TValue,
   options: NonNullableFieldOptions<NoInfer<TValue>>,

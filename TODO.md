@@ -2,17 +2,13 @@
 
 ## Up next
 
+- website docs
+  - add some sort of modifiable example (maybe open external web or something) to allow user
+    to interact with the example
 - Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
 - Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
 - Consider if nested form() should sactually be a different type like group() by default and not another form() (the one inferred from the object)
   - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
-- Consider doing the following:
-  maybeName: field(null),
-  if field es initialized with null, then the inferred type of the field() value shouldn't
-  be 'null', but 'any'
-  - probably only in the case that it is { nullable: true }
-
-
 - Consider including dynamic controls in form() (like in reactive forms)
   - update docs if required, check all docs
   - myForm.add('age', field<number>(2));
@@ -244,6 +240,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- [x] Infer `field(null)` as `Field<unknown>` instead of `Field<null>`, while preserving explicit generic inference such as `field<string>(null)` as `Field<string | null>`.
 - [x] Complete the consumer website documentation roadmap.
   - [x] Create an API overview page that maps common needs to the relevant public APIs.
   - [x] Add a Common mistakes page with incorrect and corrected examples.
