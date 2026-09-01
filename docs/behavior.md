@@ -1389,7 +1389,7 @@ class ProfileEditor {
 The directive currently provides these behaviors:
 
 - Two-way synchronization with native `input`, `textarea`, and `select` elements, including number, range, checkbox, radio, date-like, and multiple-select values.
-- Native input updates use `setControlValue()`. They therefore mark the field dirty and honor the field's own or inherited control debounce; programmatic `set()` updates remain immediate and pristine.
+- Native input updates use `setControlValue()`. They therefore mark the field dirty and honor the field's own or inherited control debounce; programmatic `set()` updates remain immediate and pristine. A dynamically bound native input `type` remains live: changing between compatible textual types such as `password` and `text` preserves model-to-view and view-to-model synchronization.
 - Resetting a field or an ancestor form cancels its pending native-control debounce, restores the rendered committed value immediately, and prevents the cancelled value from reappearing when its timer would have completed.
 - A blur event marks the field touched. IME composition is buffered until `compositionend`.
 - `disabled`, `readonly`, `required`, `aria-invalid`, `min`, `max`, `minLength`, `maxLength`, and `pattern` are synchronized from field state to applicable DOM properties. Applicability observes an input type bound during Angular initialization. Date limits are formatted for native `date` and `month` inputs. When several pattern validators are active, the generated native pattern requires all of them; the node validators remain the authoritative validation behavior.

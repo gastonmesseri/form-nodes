@@ -162,6 +162,43 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('continues synchronizing when a native input changes between password and text', () => {
+    @Component({
+      standalone: true,
+      imports: [FormNode],
+      template: `<input [type]="passwordVisible() ? 'text' : 'password'" [formNode]="password">`,
+    })
+    class Host {
+      readonly password = field('', { nullable: false });
+      readonly passwordVisible = signal(false);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.type).toBe('password');
+    fixture.componentInstance.password.set('secret');
+    fixture.detectChanges();
+    expect(input.value).toBe('secret');
+
+    input.value = 'updated while hidden';
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.password()).toBe('updated while hidden');
+
+    fixture.componentInstance.passwordVisible.set(true);
+    fixture.detectChanges();
+    expect(input.type).toBe('text');
+
+    fixture.componentInstance.password.set('visible');
+    fixture.detectChanges();
+    expect(input.value).toBe('visible');
+
+    input.value = 'updated while visible';
+    dispatch(input, 'input');
+    expect(fixture.componentInstance.password()).toBe('updated while visible');
+  });
+
   it('reflects validation, readonly, and disabled state onto a native control', () => {
     @Component({
       standalone: true,
