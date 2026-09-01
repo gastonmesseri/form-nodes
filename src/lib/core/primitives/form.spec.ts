@@ -571,6 +571,22 @@ describe('form', () => {
     expect(profile.debouncing()).toBe(false);
   });
 
+  it('inherits an asynchronous control debouncer into descendant fields', async () => {
+    let resolve!: () => void;
+    const profile = form({ name: field('initial') }, {
+      debounce: () => new Promise<void>((done) => { resolve = done; }),
+    });
+
+    profile.name.setControlValue('pending');
+    expect(profile()).toEqual({ name: 'initial' });
+    expect(profile.debouncing()).toBe(true);
+
+    resolve();
+    await Promise.resolve();
+    expect(profile()).toEqual({ name: 'pending' });
+    expect(profile.debouncing()).toBe(false);
+  });
+
   it('includes the value of nested forms', () => {
     const formGroup = form({
       age: field(23),

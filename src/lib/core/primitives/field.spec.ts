@@ -141,6 +141,66 @@ describe('field', () => {
     expect(fieldNode.debouncing()).toBe(false);
   });
 
+  it('runs cancelable asynchronous control debouncers and ignores stale settlements', async () => {
+    const runs: Array<{
+      readonly signal: AbortSignal;
+      resolve(): void;
+      reject(): void;
+    }> = [];
+    const fieldNode = field('initial', {
+      debounce: (abortSignal) => new Promise<void>((resolve, reject) => {
+        runs.push({ signal: abortSignal, resolve, reject });
+      }),
+    });
+
+    fieldNode.setControlValue('first');
+    fieldNode.setControlValue('second');
+    expect(runs[0]!.signal.aborted).toBe(true);
+    expect(runs[1]!.signal.aborted).toBe(false);
+    expect(fieldNode()).toBe('initial');
+
+    runs[0]!.resolve();
+    await Promise.resolve();
+    expect(fieldNode()).toBe('initial');
+
+    runs[1]!.resolve();
+    await Promise.resolve();
+    expect(fieldNode()).toBe('second');
+    expect(fieldNode.debouncing()).toBe(false);
+
+    fieldNode.setControlValue('rejected');
+    runs[2]!.reject();
+    await Promise.resolve();
+    expect(fieldNode()).toBe('second');
+    expect(fieldNode.controlValue()).toBe('rejected');
+    expect(fieldNode.debouncing()).toBe(false);
+
+    fieldNode.setControlValue('reset pending');
+    fieldNode.reset();
+    expect(runs[3]!.signal.aborted).toBe(true);
+    expect(fieldNode()).toBe('second');
+    expect(fieldNode.controlValue()).toBe('second');
+
+    fieldNode.setControlValue('flushed');
+    fieldNode.flush();
+    expect(runs[4]!.signal.aborted).toBe(true);
+    expect(fieldNode()).toBe('flushed');
+  });
+
+  it('handles synchronous custom control debouncers', () => {
+    const immediate = field('initial', { debounce: () => {} });
+    immediate.setControlValue('updated');
+    expect(immediate()).toBe('updated');
+    expect(immediate.debouncing()).toBe(false);
+
+    const failure = new Error('Debouncer failed');
+    const throwing = field('initial', { debounce: () => { throw failure; } });
+    expect(() => throwing.setControlValue('pending')).toThrow(failure);
+    expect(throwing()).toBe('initial');
+    expect(throwing.controlValue()).toBe('pending');
+    expect(throwing.debouncing()).toBe(false);
+  });
+
   it('does not restart asynchronous validation until a control value is committed', async () => {
     vi.useFakeTimers();
     try {

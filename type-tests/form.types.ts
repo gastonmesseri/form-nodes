@@ -1,6 +1,7 @@
 import { field, form } from '../src/public-api';
 
 form({ name: field('') }, { debounce: 'blur' });
+form({ name: field('') }, { debounce: abortSignal => Promise.resolve(void abortSignal.aborted) });
 
 import type { Equal, Expect } from './assert.types';
 

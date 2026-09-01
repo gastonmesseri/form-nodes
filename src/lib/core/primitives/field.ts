@@ -147,16 +147,25 @@ export function field<TValue>(
   };
   const controlDebounce = {
     timer: null as ReturnType<typeof setTimeout> | null,
+    controller: null as AbortController | null,
     strategy: undefined as ControlDebounce | undefined,
     cancel: () => {
       if (controlDebounce.timer !== null) clearTimeout(controlDebounce.timer);
+      controlDebounce.controller?.abort();
       controlDebounce.timer = null;
+      controlDebounce.controller = null;
       controlDebounce.strategy = undefined;
       fieldDebouncing.set(false);
     },
     commit: () => {
       controlDebounce.cancel();
       fieldValue.set(fieldControlValue());
+    },
+    resolve: (controller: AbortController) => {
+      if (controlDebounce.controller === controller && !controller.signal.aborted) controlDebounce.commit();
+    },
+    reject: (controller: AbortController) => {
+      if (controlDebounce.controller === controller) controlDebounce.cancel();
     },
   };
   const controlDebounceRef = new WeakRef(controlDebounce);
@@ -171,13 +180,33 @@ export function field<TValue>(
     fieldControlValue.set(next);
     fieldDirty.set(true);
     const debounce = fieldControlDebounce() ?? 0;
-    if (Object.is(next, fieldValue()) || (debounce !== 'blur' && (!Number.isFinite(debounce) || debounce <= 0))) {
+    if (Object.is(next, fieldValue()) || (typeof debounce === 'number' && (!Number.isFinite(debounce) || debounce <= 0))) {
       fieldValue.set(next);
       return;
     }
     fieldDebouncing.set(true);
     controlDebounce.strategy = debounce;
     if (debounce === 'blur') return;
+    if (typeof debounce === 'function') {
+      const controller = new AbortController();
+      controlDebounce.controller = controller;
+      let completion: void | PromiseLike<void>;
+      try {
+        completion = debounce(controller.signal);
+      } catch (error) {
+        controlDebounce.cancel();
+        throw error;
+      }
+      if (completion === undefined) {
+        controlDebounce.commit();
+        return;
+      }
+      Promise.resolve(completion).then(
+        () => controlDebounceRef.deref()?.resolve(controller),
+        () => controlDebounceRef.deref()?.reject(controller),
+      );
+      return;
+    }
     controlDebounce.timer = setTimeout(() => controlDebounceRef.deref()?.commit(), debounce);
   };
   const reset = (...args: [] | [value: TValue]) => {
