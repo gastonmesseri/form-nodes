@@ -695,6 +695,18 @@ describe('array', () => {
     expect(names.debouncing()).toBe(false);
   });
 
+  it('flushes a direct control buffer when marked as touched', () => {
+    const names = array(field(''), ['Marco'], { debounce: 'blur' });
+
+    (names as unknown as InternalNode).$api._setControlValue(['Mark']);
+    names.markAsTouched({ skipDescendants: true });
+
+    expect(names()).toEqual(['Mark']);
+    expect(names.touched()).toBe(true);
+    expect(names.at(0)!.touched()).toBe(false);
+    expect(names.debouncing()).toBe(false);
+  });
+
   it('inherits a form control debounce through an array into future items', async () => {
     vi.useFakeTimers();
     try {

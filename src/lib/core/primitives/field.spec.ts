@@ -289,6 +289,17 @@ describe('field', () => {
     }
   });
 
+  it('flushes a pending control value when marked as touched', () => {
+    const fieldNode = field('initial', { debounce: 'blur' });
+
+    fieldNode.setControlValue('touched');
+    fieldNode.markAsTouched();
+
+    expect(fieldNode()).toBe('touched');
+    expect(fieldNode.touched()).toBe(true);
+    expect(fieldNode.debouncing()).toBe(false);
+  });
+
   it('is valid with an empty error array when it has no validators', () => {
     const fieldNode = field('David');
     expect(fieldNode.errors()).toEqual([]);

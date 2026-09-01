@@ -577,6 +577,30 @@ describe('form', () => {
     }
   });
 
+  it('flushes its own and selected descendant buffers when marked as touched', () => {
+    const profile = form({ name: field('Marco') }, { debounce: 'blur' });
+    profile.name.setControlValue('child');
+
+    profile.markAsTouched({ skipDescendants: true });
+
+    expect(profile()).toEqual({ name: 'Marco' });
+    expect(profile.name.controlValue()).toBe('child');
+    expect(profile.name.touched()).toBe(false);
+    expect(profile.debouncing()).toBe(true);
+
+    profile.markAsTouched();
+
+    expect(profile()).toEqual({ name: 'child' });
+    expect(profile.name.touched()).toBe(true);
+    expect(profile.debouncing()).toBe(false);
+
+    (profile as unknown as InternalNode).$api._setControlValue({ name: 'aggregate' });
+    profile.markAsTouched({ skipDescendants: true });
+
+    expect(profile()).toEqual({ name: 'aggregate' });
+    expect(profile.debouncing()).toBe(false);
+  });
+
   it('uses the nearest configured ancestor control debounce', async () => {
     vi.useFakeTimers();
     try {
