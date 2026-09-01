@@ -234,6 +234,7 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- Implement the `oneOf()` validator with static or reactive allowed values.
 - Add centralized default messages and common custom-message options to the built-in validators.
 - <!> important. Consider including hidden access to .api that is not .api, (maybe $api, or _api) because user defined properties could collide with it
   and then the form() framework will not work because it uses it on the internal system

@@ -5,6 +5,9 @@ export const defaultValidatorMessages = {
   email(): string {
     return 'Please enter a valid email address.';
   },
+  oneOf(): string {
+    return 'Please enter one of the allowed values.';
+  },
   min(minimum: number): string {
     return `Please enter a value greater than or equal to ${minimum}.`;
   },
