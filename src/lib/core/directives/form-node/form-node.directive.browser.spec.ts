@@ -636,6 +636,23 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('lets an AOT wrapper accept and delegate formNode without creating an outer binding', async () => {
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../../integration-tests/form-node-signal-control.fixture');
+    const fixture = TestBed.createComponent(module.AotPassThroughHost);
+    fixture.detectChanges();
+    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(inputElement.value).toBe('AOT wrapper initial');
+
+    inputElement.value = 'updated';
+    dispatch(inputElement, 'input');
+    expect(fixture.componentInstance.name()).toBe('updated');
+
+    fixture.componentInstance.name.focus();
+    expect(document.activeElement).toBe(inputElement);
+    fixture.destroy();
+  });
+
   it('ignores a reentrant onChange callback during a CVA model-to-view write', () => {
     @Component({
       standalone: true,

@@ -1,7 +1,7 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output } from '@angular/core';
 
-import { field, FormNode, required } from '../src/public-api';
+import { field, FormNode, required, type Field } from '../src/public-api';
 
 @Component({
   standalone: true,
@@ -28,6 +28,26 @@ export class AotSignalValueControl implements FormValueControl<string> {
 })
 export class AotSignalCheckboxControl implements FormCheckboxControl {
   checked = model(false);
+}
+
+@Component({
+  standalone: true,
+  selector: 'aot-delegating-control',
+  imports: [FormNode],
+  template: `<input [formNode]="formNode()">`,
+})
+export class AotDelegatingControl {
+  readonly formNode = input.required<Field<string>>();
+}
+
+@Component({
+  standalone: true,
+  selector: 'aot-pass-through-host',
+  imports: [AotDelegatingControl, FormNode],
+  template: `<aot-delegating-control [formNode]="name" />`,
+})
+export class AotPassThroughHost {
+  readonly name = field('AOT wrapper initial', { nullable: false });
 }
 
 @Component({

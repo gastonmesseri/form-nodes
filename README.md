@@ -50,6 +50,25 @@ export class ProfileEditor {
 
 `FormNode` is both the directive value used in `imports` and the clean public type used by `viewChild()`. The template reference must export `formNode`, while the string passed to `viewChild.required()` must match the local reference name (`nameBinding` in this example). Call `nameBinding()` to obtain the binding and `nameBinding().node()` to obtain its current form node.
 
+A wrapper component can accept the same `formNode` input and delegate it to an inner control. Angular recognizes the outer directive as pass-through, so only the inner control binds to the field:
+
+```ts
+import { Component, input } from '@angular/core';
+
+import { FormNode, type Field } from '@gem/ng-forms';
+
+@Component({
+  selector: 'app-text-field',
+  imports: [FormNode],
+  template: `<input [formNode]="formNode()">`,
+})
+export class TextField {
+  readonly formNode = input.required<Field<string>>();
+}
+```
+
+Use it as `<app-text-field [formNode]="name" />`. The input must be exposed under the exact template name `formNode`; no provider or registration helper is required.
+
 Consumers should import from the package entry point. Internal code is organized by role:
 
 ```text

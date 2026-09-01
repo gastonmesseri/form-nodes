@@ -4,6 +4,12 @@ import type { FormNodeControl } from '../form-node-control';
 
 type ComponentCandidate = Record<PropertyKey, unknown> & { constructor: Type<unknown> };
 
+const getComponentCandidate = (element: HTMLElement): ComponentCandidate | null => {
+  const debugNode = getDebugNode(element);
+  const candidate = debugNode?.componentInstance as ComponentCandidate | null;
+  return candidate && debugNode?.providerTokens.includes(candidate.constructor) ? candidate : null;
+};
+
 const hasModel = (candidate: ComponentCandidate, name: 'value' | 'checked'): boolean => {
   const mirror = reflectComponentType(candidate.constructor);
   if (!mirror) return false;
@@ -18,9 +24,14 @@ const hasModel = (candidate: ComponentCandidate, name: 'value' | 'checked'): boo
 
 /** Discovers an Angular Signal Forms compatible component hosted on an element. */
 export const discoverSignalControl = (element: HTMLElement): FormNodeControl | null => {
-  const debugNode = getDebugNode(element);
-  const candidate = debugNode?.componentInstance as ComponentCandidate | null;
-  if (!candidate || !debugNode?.providerTokens.includes(candidate.constructor)) return null;
+  const candidate = getComponentCandidate(element);
+  if (!candidate) return null;
   if (hasModel(candidate, 'value') || hasModel(candidate, 'checked')) return candidate as unknown as FormNodeControl;
   return null;
+};
+
+/** Detects a wrapper component that consumes the public `formNode` input itself. */
+export const componentAcceptsFormNode = (element: HTMLElement): boolean => {
+  const candidate = getComponentCandidate(element);
+  return !!candidate && !!reflectComponentType(candidate.constructor)?.inputs.some(({ templateName }) => templateName === 'formNode');
 };

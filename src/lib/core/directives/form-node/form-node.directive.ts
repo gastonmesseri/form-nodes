@@ -1,5 +1,5 @@
+import { NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Validators, type ControlValueAccessor, type Validator, type ValidatorFn } from '@angular/forms';
 import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
-import { CheckboxControlValueAccessor, DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, Validators, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
 import type { Field } from '../../primitives/field';
 import { FORM_NODE_CONFIG } from './form-node-config';
@@ -7,73 +7,20 @@ import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
 import { shallowEqual } from '../../utils/shallow-equal';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { discoverSignalControl } from './utils/discover-signal-control';
+import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import type { ValidationError } from '../../validation/validation.type';
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
 import type { InternalNode, Node, NodeValue } from '../../types/node.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import { FORM_NODE_CONTROL, type FormNodeControl } from './form-node-control';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
+import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
+import { formatNativeLimit, formatNativePattern, isValidatorObject, selectValueAccessor, toControlErrors } from './form-node.utils';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
 
 /** Public injection token for the nearest `[formNode]` binding. */
 export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
-
-const builtInAccessors = [
-  CheckboxControlValueAccessor,
-  DefaultValueAccessor,
-  NumberValueAccessor,
-  RadioControlValueAccessor,
-  RangeValueAccessor,
-  SelectControlValueAccessor,
-  SelectMultipleControlValueAccessor,
-];
-
-const isBuiltInAccessor = (accessor: ControlValueAccessor): boolean =>
-  builtInAccessors.some((accessorType) => accessor instanceof accessorType);
-
-const selectValueAccessor = (accessors: readonly ControlValueAccessor[] | null): ControlValueAccessor | null => {
-  if (!accessors || accessors.length === 0) return null;
-  let defaultAccessor: ControlValueAccessor | undefined;
-  let builtInAccessor: ControlValueAccessor | undefined;
-  let customAccessor: ControlValueAccessor | undefined;
-
-  accessors.forEach((accessor) => {
-    if (accessor instanceof DefaultValueAccessor) {
-      if (defaultAccessor) throw new Error('formNode: more than one default ControlValueAccessor matches the host');
-      defaultAccessor = accessor;
-    } else if (isBuiltInAccessor(accessor)) {
-      if (builtInAccessor) throw new Error('formNode: more than one built-in ControlValueAccessor matches the host');
-      builtInAccessor = accessor;
-    } else {
-      if (customAccessor) throw new Error('formNode: more than one custom ControlValueAccessor matches the host');
-      customAccessor = accessor;
-    }
-  });
-
-  return customAccessor ?? builtInAccessor ?? defaultAccessor!;
-};
-
-const isValidatorObject = (validator: ValidatorFn | Validator): validator is Validator =>
-  typeof validator === 'object' && validator !== null;
-
-const toControlErrors = (errors: ValidationErrors | null): readonly ValidationError.WithoutTargetNode[] =>
-  errors ? Object.entries(errors).map(([kind, context]) => ({ kind, context })) : [];
-
-const formatNativeLimit = (value: unknown, type: string): unknown => {
-  if (!(value instanceof Date) || (type !== 'date' && type !== 'month')) return value;
-  const year = value.getUTCFullYear();
-  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
-  if (type === 'month') return `${year}-${month}`;
-  const day = String(value.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const formatNativePattern = (patterns: readonly RegExp[]): string => {
-  if (patterns.length <= 1) return patterns[0]?.source ?? '';
-  return `${patterns.map((pattern) => `(?=(?:${pattern.source})$)`).join('')}.*`;
-};
 
 @Directive({
   selector: ':not(form)[formNode]',
@@ -88,9 +35,9 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   /** @internal */
   readonly _formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
-  private renderer = inject(Renderer2);
-
   readonly injector = inject(Injector);
+
+  private renderer = inject(Renderer2);
 
   private destroyRef = inject(DestroyRef);
 
@@ -118,6 +65,8 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private signalControl = inject(FORM_NODE_CONTROL, { optional: true, self: true });
 
+  private explicitPassThrough = inject(FORM_NODE_PASS_THROUGH, { optional: true, self: true }) ?? false;
+
   private config = inject(FORM_NODE_CONFIG, { optional: true });
 
   private focuser = (options?: FocusOptions) => this.element.focus(options);
@@ -136,6 +85,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   }
 
   ngOnInit() {
+    if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) return;
     const accessor = selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
     const signalControl = this.signalControl ?? discoverSignalControl(this.element);
     if (accessor) this.connectAccessor(accessor);
@@ -345,6 +295,14 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     }, { injector: this.injector });
   }
 
+  private getNativeField(): Field<NodeValue<TNode>> {
+    const node = this._field as unknown as Partial<Field<NodeValue<TNode>>>;
+    if (typeof node.controlValue !== 'function') {
+      throw new Error('formNode: native controls require a field node');
+    }
+    return node as Field<NodeValue<TNode>>;
+  }
+
   focus(options?: FocusOptions) {
     this.focuser(options);
   }
@@ -355,14 +313,6 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   reset() {
     this._field.$api.reset();
-  }
-
-  private getNativeField(): Field<NodeValue<TNode>> {
-    const node = this._field as unknown as Partial<Field<NodeValue<TNode>>>;
-    if (typeof node.controlValue !== 'function') {
-      throw new Error('formNode: native controls require a field node');
-    }
-    return node as Field<NodeValue<TNode>>;
   }
 }
 
