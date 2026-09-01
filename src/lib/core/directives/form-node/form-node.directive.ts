@@ -1,5 +1,5 @@
 import { NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Validators, type ControlValueAccessor, type Validator, type ValidatorFn } from '@angular/forms';
-import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
+import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterEveryRender, afterRenderEffect, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
 
 import type { Field } from '../../primitives/field';
 import { FORM_NODE_CONFIG } from './form-node-config';
@@ -242,6 +242,9 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
         writeNativeControlValue(control, value);
       });
     }, { injector: this.injector });
+    if (isNativeInput(control) && control.type === 'radio') {
+      afterEveryRender(() => writeNativeControlValue(control, this.getNativeField().controlValue()), { injector: this.injector });
+    }
     if (isNativeInput(control) && nativeInputRequiresValidityTracking(control)) {
       const stopWatchingValidity = watchNativeInputValidity(control, commit, this.cspNonce ?? undefined);
       this.destroyRef.onDestroy(stopWatchingValidity);
