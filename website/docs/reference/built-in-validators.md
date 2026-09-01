@@ -80,8 +80,8 @@ minDate(moment().toDate());
 ## Cross-value and collection constraints
 
 ```ts
-const password = field('', { nullable: false });
-const confirmation = field('', [equalTo(() => password())], { nullable: false });
+const password = field('');
+const confirmation = field('', [equalTo(() => password())]);
 
 const products = field<Product[]>([], [
   uniqueItems<Product>(product => product.id),
@@ -91,3 +91,24 @@ const products = field<Product[]>([], [
 `uniqueItems` accepts nullish values safely and reports duplicate indexes. It can compare item identity directly or derive a comparison key.
 
 Only imported validators are included in a consumer's final bundle when the application bundler performs tree shaking.
+
+## Important comparison behavior
+
+- `between`, `min`, `max`, and date boundaries are inclusive.
+- `equalTo` uses `Object.is()` and compares nullish values as real values. Its error omits both compared values to avoid exposing secrets such as passwords.
+- `oneOf` uses `Array.prototype.includes`; objects compare by reference and `NaN` matches `NaN`.
+- `uniqueItems` uses SameValueZero comparison. It reports duplicate indexes but omits duplicated values.
+- `integer` uses `Number.isSafeInteger()`, rejecting unsafe integers as well as decimals and infinities.
+- `url` uses the WHATWG `URL` constructor without a base, so absolute non-HTTP schemes are valid while relative URLs are not.
+- Word validators count Unicode letter-or-number sequences; internal apostrophes and hyphens remain part of one word.
+
+## Reactive constraints
+
+Numeric, length, date, pattern, choice, equality, and word-count constraints can read signals through source functions. Returning `undefined` temporarily disables constraints that support optional sources:
+
+```ts
+const minimumAge = signal(18);
+const age = field<number>(null, [min(() => minimumAge())]);
+```
+
+Constraint metadata exists even while the current value is valid. Multiple minimums expose the strictest, largest minimum; multiple maximums expose the strictest, smallest maximum; `pattern()` exposes every active expression. Conditionally composed validators contribute metadata only while active.

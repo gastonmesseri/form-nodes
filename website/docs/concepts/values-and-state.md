@@ -64,7 +64,7 @@ from a bound UI control, while the node call and `value()` read the committed mo
 validators and ancestors:
 
 ```ts
-const search = field('', { debounce: 300, nullable: false });
+const search = field('', { debounce: 300 });
 
 search.setControlValue('angular');
 search.controlValue(); // 'angular'
@@ -82,6 +82,8 @@ descendant value commits.
 Use `debounce: 'blur'` to commit on focus loss, or provide a function that receives an `AbortSignal` and optionally returns a promise. A new control value cancels the previous debounce. `flush()` commits immediately.
 
 Forms and arrays can define an inherited debounce for descendant fields and expose aggregate `debouncing()` and `flush()` operations. Programmatic `set()`, `update()`, `patch()`, and `reset(value)` are never debounced.
+
+See [Value flow and debounce](../guides/value-flow-and-debounce.md) for the complete transition table, custom debounce cancellation, aggregate buffers, and reset interaction.
 
 ## Interaction state
 
@@ -122,6 +124,8 @@ profile.api.disable('Account is locked');
 profile.api.disabledReasons();
 ```
 
+See [Interaction and availability](../guides/interaction-and-availability.md) for exact propagation, stored state, and non-interactive validation behavior.
+
 ## Tree navigation
 
 Every node exposes reactive `parent()`, `form()`, `path()`, and `keyInParent()` signals:
@@ -133,3 +137,5 @@ profile.address.city.form(); // profile
 ```
 
 Forms expose a stable readonly `children` map. Arrays expose an `items()` signal and index access.
+
+See [Tree navigation and API access](./tree-and-api.md) for paths, parents, child maps, and API-name collisions.

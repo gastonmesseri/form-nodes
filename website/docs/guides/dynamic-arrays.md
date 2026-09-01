@@ -9,13 +9,43 @@ An `array()` owns an ordered collection of cloned node templates:
 ```ts
 const people = array(
   {
-    id: field('', { nullable: false }),
-    name: field('', { nullable: false }),
+    id: field(''),
+    name: field(''),
   },
   [{ id: '1', name: 'Ada' }],
   { trackBy: 'id' },
 );
 ```
+
+The recommended signature places initial data immediately after the template. A non-negative number creates that many items from template defaults:
+
+```ts
+array(personTemplate);
+array(personTemplate, initialPeople);
+array(personTemplate, 3);
+array(personTemplate, initialPeople, validators, options);
+```
+
+`initialValue` may alternatively live in the options object. TypeScript prevents specifying both positional and option-based initial values.
+
+## Templates and factories
+
+A template may be a field, form, nested array, shorthand object, or explicit factory:
+
+```ts
+const tags = array(field(''), ['angular', 'signals']);
+
+const people = array(() => ({
+  name: field(''),
+  age: field(0),
+}));
+```
+
+Declarative templates are compiled into a clone recipe. Every item receives fresh signals, descendants, validators, state, debounce ownership, and async watchers. Runtime values, touched/dirty flags, errors, pending work, parents, and paths are never shared.
+
+The template node itself is not inserted. If application code retains it, it remains an independent live node. Use a factory when template construction itself must not start independent asynchronous work.
+
+A factory must return a fresh tree. Returning the same live node more than once throws rather than allowing items to share state.
 
 ## Reading items
 
@@ -33,6 +63,16 @@ for (const person of people) {
 }
 ```
 
+Angular templates can iterate the node directly. Track the node instance to retain rendered controls across moves:
+
+```html
+@for (person of people; track person) {
+  <input [formNode]="person.name" />
+}
+```
+
+Array traversal helpers snapshot `items()` when the operation begins. Structural changes made inside a callback do not alter that active traversal.
+
 `items()` is a signal whose array reference changes when structure changes. Its nodes are live and readonly as a collection.
 
 ## Add and remove items
@@ -46,6 +86,8 @@ people.clear();
 
 Omit the value from `push()` or `insert()` to use the template defaults.
 
+New items start pristine and untouched. Structural mutations are programmatic and preserve the array's current dirty state. Removed nodes detach from parent state and validation; a retained reference remains usable as a standalone tree.
+
 ## Reorder items
 
 Structural operations preserve node identity, interaction state, validation state, and pending work:
@@ -58,6 +100,8 @@ people.swap(0, 2);
 ```
 
 Paths and indexes update after each operation.
+
+Boundary moves and same-index operations are no-ops. An index that does not identify an existing item throws `RangeError` for movement and swap operations.
 
 ## Complete reconciliation
 

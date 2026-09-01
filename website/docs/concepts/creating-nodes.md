@@ -41,7 +41,7 @@ Use `form()` to combine named nodes into an object:
 import { field, form } from '@gem/ng-forms';
 
 const profile = form({
-  name: field('', { nullable: false }),
+  name: field(''),
   age: field<number>(),
 });
 
@@ -84,7 +84,7 @@ Use `array()` for a dynamic collection. Its first argument is a node template cl
 ```ts
 import { array, field } from '@gem/ng-forms';
 
-const tags = array(field('', { nullable: false }), ['angular', 'signals']);
+const tags = array(field(''), ['angular', 'signals']);
 
 tags(); // ['angular', 'signals']
 tags[0]?.set('typescript');
@@ -95,8 +95,8 @@ The template may also be a form definition:
 ```ts
 const people = array(
   {
-    id: field('', { nullable: false }),
-    name: field('', { nullable: false }),
+    id: field(''),
+    name: field(''),
   },
   [{ id: '1', name: 'Ada' }],
   { trackBy: 'id' },
@@ -112,7 +112,7 @@ Fields, forms, and arrays accept options for validators, debounce, and initial o
 ```ts
 const account = form(
   {
-    email: field('', { nullable: false }),
+    email: field(''),
   },
   {
     disabled: () => !permissions().canEdit,
@@ -130,10 +130,14 @@ The closest configured node provides inherited `disabled`, `readonly`, `hidden`,
 Node creation, synchronous validation, state transitions, and explicitly triggered asynchronous validation work without dependency injection:
 
 ```ts
-const counter = field(0, { nullable: false });
+const counter = field(0);
 
-counter.update(value => value + 1);
+counter.update(value => (value ?? 0) + 1);
 console.log(counter()); // 1
 ```
 
 Provide an Angular `Injector` only when you want its `DestroyRef` to own asynchronous validation cleanup deterministically.
+
+## Current structural boundaries
+
+The named children of a `form()` are fixed by its definition. Use `array()` when items must be added or removed at runtime. The library does not currently generate form trees from JSON schema definitions.

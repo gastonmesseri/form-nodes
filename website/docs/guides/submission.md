@@ -9,8 +9,8 @@ Configure submission on the root `form()`:
 ```ts
 const registration = form(
   {
-    name: field('', [required], { nullable: false }),
-    email: field('', [required, email], { nullable: false }),
+    name: field('', [required]),
+    email: field('', [required, email]),
   },
   {
     submission: {

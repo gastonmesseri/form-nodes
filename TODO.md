@@ -81,6 +81,7 @@
   - maybe other ones that are not required, min(), max(), etc
 - Add precise instructions on how to use the library (e.g. angular imports, etc)
 - Expose restoreDefaultValidatorMessages() function in the public api
+- Add playground to the website, with simple example or something like that
 - Consider @gemgular/forms name for library
 - Add good docs about implementing a custom control (support for focus, etc, angular CVA, form value accessor, etc)
 - Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling

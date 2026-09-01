@@ -11,6 +11,12 @@ read. Direct `value()` and `api.value()` access are equivalent alternatives. Use
 only when the immediate, potentially debounced value owned by a bound control is specifically
 needed.
 
+For actions and state, prefer direct members on fields and arrays (`name.set()`, `items.push()`) but
+use `.api` for form-level members (`profile.api.patch()`, `profile.api.valid()`) because a named form
+child may take precedence over a direct API member. `.api` remains available on every node for
+generic code. Use `$api` only when a form has a child named `api` or infrastructure needs a
+guaranteed collision-safe path. See [Tree navigation and API access](../concepts/tree-and-api.md).
+
 ## Shared value and tree API
 
 | Member | Description |
