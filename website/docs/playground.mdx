@@ -1,0 +1,40 @@
+---
+title: Playground
+description: Experiment interactively with Gem Forms values, state, validation, debounce, and dynamic arrays.
+---
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import FormsPlayground from '../src/components/FormsPlayground';
+
+# Playground
+
+This playground runs the real `form()`, `field()`, `array()`, and built-in validator implementations
+in your browser. The declaration, editable controls, value pipeline, public signals, errors, and
+resulting JSON are shown together so you can connect the API with its observable behavior.
+
+<BrowserOnly fallback={<div className="forms-playground__loading">Loading interactive playground…</div>}>
+  {() => <FormsPlayground />}
+</BrowserOnly>
+
+## What to try
+
+1. Type a two-character display name and compare the immediate control value with the committed
+   form value during the 300 ms debounce.
+2. Press **Flush name** before the delay ends.
+3. Enter an invalid email, then blur or press **Mark all touched**.
+4. Disable the name and inspect its disabled reason and the form's validation state.
+5. Add, reorder, and remove contacts while watching their paths and the aggregate value.
+6. Reset the playground to restore the initial value and clear interaction state.
+
+## What the panels represent
+
+- **Model declaration:** the exact `form()` tree instantiated by the playground.
+- **Editor:** control-originated changes, equivalent to changes received through `[formNode]`.
+- **Signal inspector:** live reads from the node's public API.
+- **Committed value:** the result of calling `playgroundForm()`.
+- **Immediate control value:** the pending display-name value before its debounce commits.
+- **Simplified errors:** the useful `kind`, `message`, and target path from `allErrors()`.
+
+Continue with [Values and state](./concepts/values-and-state.md),
+[Value flow and debounce](./guides/value-flow-and-debounce.md),
+[Validation](./guides/validation.md), and [Dynamic arrays](./guides/dynamic-arrays.md).

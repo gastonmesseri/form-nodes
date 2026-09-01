@@ -2,21 +2,9 @@
 
 ## Up next
 
-- Website documentation roadmap (implement in this order)
-  - [x] Create an API overview page that maps common needs to the relevant public APIs.
-  - [x] Add a Common mistakes page with incorrect and corrected examples.
-  - [x] Add a Troubleshooting page organized around symptoms and concrete solutions.
-  - [x] Add a configuration reference covering scopes, reactivity, precedence, inheritance, and providers.
-  - [x] Add a consumer testing guide for nodes, validators, arrays, bindings, and submission.
-  - [x] Improve navigation within long reference pages with summaries and on-page API maps.
-  - [x] Add complete Angular Material and PrimeNG integration examples.
-  - [x] Convert more behavior-defining documentation examples into executable, type-checked examples.
-  - [x] Add a form-modeling patterns guide for common domain and UI design decisions.
-  - [ ] Add an interactive playground for values, state, validation, debounce, and arrays.
-  - [ ] Add versioning, Angular compatibility, changelog, and migration documentation.
 - Check if accessing angular signal node (e.g. mySignal[ɵSIGNAL]) is safe and public (it is exported in angular/core)
 - Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
-- Consider if nested form() should actually be a different type like group() by default and not another form() (the one inferred from the object)
+- Consider if nested form() should sactually be a different type like group() by default and not another form() (the one inferred from the object)
   - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
 - Consider doing the following:
   maybeName: field(null),
@@ -256,6 +244,18 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 
 ## Completed
 
+- [x] Complete the consumer website documentation roadmap.
+  - [x] Create an API overview page that maps common needs to the relevant public APIs.
+  - [x] Add a Common mistakes page with incorrect and corrected examples.
+  - [x] Add a Troubleshooting page organized around symptoms and concrete solutions.
+  - [x] Add a configuration reference covering scopes, reactivity, precedence, inheritance, and providers.
+  - [x] Add a consumer testing guide for nodes, validators, arrays, bindings, and submission.
+  - [x] Improve navigation within long reference pages with summaries and on-page API maps.
+  - [x] Add complete Angular Material and PrimeNG integration examples.
+  - [x] Convert more behavior-defining documentation examples into executable, type-checked examples.
+  - [x] Add a form-modeling patterns guide for common domain and UI design decisions.
+  - [x] Add an interactive playground for values, state, validation, debounce, and arrays.
+  - [x] Add versioning, Angular compatibility, changelog, and migration documentation.
 - [x] Verify consumer tree shaking removes validators and default messages that are not imported.
 - Implement ESLint
 - Document every built-in validator and structured built-in error for IntelliSense.

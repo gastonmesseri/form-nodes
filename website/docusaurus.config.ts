@@ -64,6 +64,7 @@ const config: Config = {
         { type: 'docSidebar', sidebarId: 'consumerDocs', position: 'left', label: 'Docs' },
         { to: '/guides/validation', position: 'left', label: 'Guides' },
         { to: '/reference/node-api', position: 'left', label: 'API' },
+        { to: '/playground', position: 'left', label: 'Playground' },
         { href: 'https://github.com/gastonmesseri/ng-forms', position: 'right', label: 'GitHub' },
       ],
     },
@@ -77,6 +78,7 @@ const config: Config = {
             { label: 'Core concepts', to: '/concepts/form-nodes' },
             { label: 'Guides', to: '/guides/validation' },
             { label: 'API reference', to: '/reference/node-api' },
+            { label: 'Compatibility', to: '/project/compatibility' },
           ],
         },
         {
@@ -84,6 +86,7 @@ const config: Config = {
           items: [
             { label: 'GitHub', href: 'https://github.com/gastonmesseri/ng-forms' },
             { label: 'npm', href: 'https://www.npmjs.com/package/@gem/ng-forms' },
+            { label: 'Changelog', to: '/project/changelog' },
           ],
         },
       ],
