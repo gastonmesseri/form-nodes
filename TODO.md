@@ -3,22 +3,7 @@
 ## Up next
 
 - Validator framework roadmap (implement in this order)
-  - [x] Add strongly typed built-in validation errors so `getError(kind)` exposes each error's structured properties in IntelliSense, while retaining an extensible fallback for custom error kinds.
-  - [x] Improve every built-in validator's JSDoc with examples, empty-value behavior, reactive constraint semantics, custom-message options, and exact error shapes.
-  - [x] Add a `validator()` authoring helper so reusable custom validators infer their context and validate their result without manually annotating the callback signature; only the value model generic is required for a standalone declaration.
-  - [x] Support reactive custom validator messages, comparable to Angular 22 Signal Forms, while preserving static strings as the simplest option.
-  - [x] Allow applications to customize or internationalize the centralized default validator messages reactively, both inside and outside Angular dependency injection.
-    - [x] Record a consumer-oriented internationalization guide covering global, provider, form/array, and validator-local configuration for reuse by the future documentation website.
-  - [x] Keep using the general `minLength()` and `maxLength()` validators for arrays instead of adding redundant `arrayMinLength()` and `arrayMaxLength()` variants.
-  - [x] Do not add `arrayMinMaxLength()` for now; composing `minLength()` and `maxLength()` preserves individual error details and avoids another error shape.
-  - [x] Keep individual validator exports instead of adding a `vtValidators` namespace object, preserving straightforward imports and tree shaking.
-  - Consider what other common use validators could be useful by checking other libraries (any framekwork)
-    - [x] Add `url()` for absolute WHATWG URLs, keeping HTTP-only validation as a possible separate validator.
-    - [x] Add `integer()` using JavaScript's safe-integer range.
-    - [x] Add reactive `equalTo()` for confirmation and cross-field equality without exposing compared values in errors.
-    - [x] Add `uniqueItems()` for arrays with identity, property-name, and reactive function selectors.
-    - [x] Add inclusive `between()` with reactive numeric bounds and native constraint metadata.
-    - [x] Add inclusive `dateBetween()` with parsed reactive date bounds and native constraint metadata.
+  - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
   - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
@@ -322,3 +307,20 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
 - Remove unnecessary explicit `void` return annotations and discarded-Promise `void` expressions.
 - quitar unnecessary readonly de members
 - Add keyInParent property to nodes
+- Validator framework roadmap
+  - [x] Add strongly typed built-in validation errors so `getError(kind)` exposes each error's structured properties in IntelliSense, while retaining an extensible fallback for custom error kinds.
+  - [x] Improve every built-in validator's JSDoc with examples, empty-value behavior, reactive constraint semantics, custom-message options, and exact error shapes.
+  - [x] Add a `validator()` authoring helper so reusable custom validators infer their context and validate their result without manually annotating the callback signature; only the value model generic is required for a standalone declaration.
+  - [x] Support reactive custom validator messages, comparable to Angular 22 Signal Forms, while preserving static strings as the simplest option.
+  - [x] Allow applications to customize or internationalize the centralized default validator messages reactively, both inside and outside Angular dependency injection.
+    - [x] Record a consumer-oriented internationalization guide covering global, provider, form/array, and validator-local configuration for reuse by the future documentation website.
+  - [x] Keep using the general `minLength()` and `maxLength()` validators for arrays instead of adding redundant `arrayMinLength()` and `arrayMaxLength()` variants.
+  - [x] Do not add `arrayMinMaxLength()` for now; composing `minLength()` and `maxLength()` preserves individual error details and avoids another error shape.
+  - [x] Keep individual validator exports instead of adding a `vtValidators` namespace object, preserving straightforward imports and tree shaking.
+  - [x] Consider what other common use validators could be useful by checking other libraries (any framekwork)
+    - [x] Add `url()` for absolute WHATWG URLs, keeping HTTP-only validation as a possible separate validator.
+    - [x] Add `integer()` using JavaScript's safe-integer range.
+    - [x] Add reactive `equalTo()` for confirmation and cross-field equality without exposing compared values in errors.
+    - [x] Add `uniqueItems()` for arrays with identity, property-name, and reactive function selectors.
+    - [x] Add inclusive `between()` with reactive numeric bounds and native constraint metadata.
+    - [x] Add inclusive `dateBetween()` with parsed reactive date bounds and native constraint metadata.
