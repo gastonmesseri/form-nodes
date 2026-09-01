@@ -42,6 +42,9 @@ try {
   if (packageManifest.sideEffects !== false) {
     throw new Error('The published package must declare sideEffects: false for consumer tree shaking.');
   }
+  if (packageManifest.workspaces !== undefined) {
+    throw new Error('The published package unexpectedly contains repository workspace configuration.');
+  }
 
   const angularDirectory = join(temporaryDirectory, 'node_modules', '@angular');
   mkdirSync(angularDirectory, { recursive: true });

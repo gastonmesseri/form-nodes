@@ -3,5 +3,7 @@ dist/
 out-tsc/
 coverage/
 .angular/
+website/.docusaurus/
+website/build/
 .DS_Store
 *.log

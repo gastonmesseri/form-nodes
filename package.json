@@ -4,8 +4,14 @@
   "description": "Small, typed, signal-based form primitives for Angular.",
   "license": "MIT",
   "type": "module",
+  "workspaces": [
+    "website"
+  ],
   "scripts": {
     "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json",
+    "docs:build": "npm --workspace website run build",
+    "docs:start": "npm --workspace website run start",
+    "docs:typecheck": "npm --workspace website run typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",

@@ -56,6 +56,7 @@
 - Before handing off completed code changes, run `npm run typecheck`, `npm run build`, and `npm run test:coverage` unless the change is strictly non-code documentation with no effect on examples, configuration, or generated output.
 - Run `npm run test:types` whenever public types, overloads, inference, exports, or IntelliSense-facing declarations change. This is also included by `npm run typecheck` and must remain enabled there.
 - Run `npm run test:package` whenever package metadata, build configuration, public exports, peer dependencies, or published artifact structure changes.
+- Run `npm run docs:typecheck` and `npm run docs:build` whenever the consumer documentation website, its configuration, or its dependencies change.
 - Run `npm run test:browser` whenever `[formNode]`, native-control behavior, DOM events, accessibility attributes, `ControlValueAccessor` interoperability, or browser-specific behavior changes. Install the Playwright Chromium binary first when needed with `npx playwright install chromium`; `PLAYWRIGHT_USE_SYSTEM_CHROME=true npm run test:browser` may be used to verify against an installed Chrome browser.
 - Treat a command that exits successfully without discovering the expected test files as a failed verification. Confirm that focused and browser runs report the intended files and a nonzero test count.
 - If an environmental limitation prevents a required command from running, report the exact command, failure, and unverified scope explicitly instead of claiming the change is fully verified.

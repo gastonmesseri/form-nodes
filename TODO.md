@@ -6,6 +6,11 @@
 - Move interation-tests/type-tests/testing folders into a single folder (maybe called testing or tests)
 - Consider if nested form() should actually be a different type like group() by default and not another form() (the one inferred from the object)
   - Create group() aside of form() (similar but without submit, maybe something else that i am missing to have into account)
+- Consider doing the following:
+  maybeName: field(null),
+  if field es initialized with null, then the inferred type of the field() value shouldn't
+  be 'null', but 'any'
+  - probably only in the case that it is { nullable: true }
 
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
@@ -114,7 +119,6 @@
 - Try to simplify the "markers" concept, probably not needed that overengineering
 - Consider allowing optionally a schemaFunction (like in angular 22 signal forms)
   - maybe better a init: () => void, in the form() options
-- [x] Add reactive internationalization support for built-in validator messages. See `docs/validator-messages.md`.
 - Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
 - Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
 - Add isNil utility, and check all cases where it is applicable, (checking for x === null || x ===undefined)
@@ -123,6 +127,7 @@
 - Allow defining global options
   - example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
 - Add support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
+  - this would break treeshaking
   - If possible, typed strings
 - Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project
 - Exponer un helper para obtener el valor del form(), e.g. (type MyFormValue = FormValue<typeof myFormInstance>) (or FormNodeValue<typeof myFormInstance>)
@@ -156,11 +161,7 @@
 - Check angular docs to check metadata implementation etc, and more stuff:
   - https://angular.dev/guide/forms/signals/form-logic?utm_source=chatgpt.com
 - Check what is the minimum Typescript version needed for the package (it uses NoInfer for example), and therefore check what minimum angular version is supported
-- Check OTHER LIBRARIES, to see how can i improve the api, adding more features, etc
-- Consider doing the following:
-  maybeName: field(null),
-  if field es initialized with null, then the inferred type of the field() value shouldn't 
-  be 'null', but 'any'
+- Check OTHER LIBRARIES, to see how can i improve the api, adding more useful features, etc
 - To make it safe to use (similar to what we did with self-referencing root in validators), ensure
   that disabled, readonly, etc, also allow referencing safely something that hasn't been created yet
   (e.g. referencing a signal that is at the bottom of the file [through a function]).
@@ -331,3 +332,4 @@ Angular crea y elimina nodos automáticamente según el array almacenado en el s
   - [x] required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
 - directive
   - [x] Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
+- [x] Add reactive internationalization support for built-in validator messages. See `docs/validator-messages.md`.
