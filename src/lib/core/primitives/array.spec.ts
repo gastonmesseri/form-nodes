@@ -667,10 +667,12 @@ describe('array', () => {
     first.setControlValue('pending');
     expect(first.controlValue()).toBe('pending');
     expect(first()).toBe('initial');
+    expect(names.controlValue()).toEqual(['initial']);
     expect(names.debouncing()).toBe(true);
 
     names.flush();
     expect(first()).toBe('pending');
+    expect(names.controlValue()).toEqual(['pending']);
     expect(names.debouncing()).toBe(false);
   });
 

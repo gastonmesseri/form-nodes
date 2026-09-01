@@ -69,6 +69,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
   value: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
+  /** Complete value represented by a control bound directly to this form. Pending descendant control values are not aggregated. */
+  controlValue: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
   set(value: FormSet<TNodes>): void;
   /** Computes and sets the complete form value from its current value without marking nodes dirty. */
   update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;

@@ -333,7 +333,7 @@ Every new control update restarts the complete delay. `debounce: 'blur'` instead
 
 Programmatic operations are never debounced. `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `controlValue()` and `value()` immediately. `reset()` without a value cancels the pending update, discards the buffered control value, and restores `controlValue()` from the currently committed value. This prevents a stale timer from overwriting a newer programmatic value. A control update marks the field dirty immediately; reset clears dirty and touched state as usual.
 
-Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. A field's `controlValue()` represents only the control bound directly to that field and is not aggregated from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
+Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. Every node exposes `controlValue()`, but it represents only the control bound directly to that node and does not aggregate pending control values from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
 
 This follows the control buffer semantics inspected in Angular Signal Forms 22.1.4 at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.
 
@@ -362,10 +362,12 @@ negative value also overrides an inherited delay and commits control updates imm
 array items resolve the effective debounce after they are attached, so both current and future
 items inherit from their array and ancestors.
 
-Aggregate nodes do not expose an aggregated `controlValue()`. Pending descendant control values
-remain local to their fields, and a form or array `value()` continues to contain only committed
-descendant values. This follows Angular Signal Forms, whose node-level `controlValue()` explicitly
-does not incorporate child control values.
+Aggregate nodes expose a readonly `controlValue()`, but it intentionally does not compose pending
+control values from descendants. Until those descendants commit, both the aggregate `value()` and
+`controlValue()` contain their last committed values. This avoids exposing a partially buffered
+object or array and follows Angular Signal Forms, whose node-level `controlValue()` explicitly does
+not incorporate child control values. Unlike Angular's writable signal, this library keeps the
+signal readonly and distinguishes control-originated writes through its binding API.
 
 `form.debouncing()` and `array.debouncing()` are true while any current descendant field has a
 pending control-value debounce. They aggregate only control debounce state and remain independent
