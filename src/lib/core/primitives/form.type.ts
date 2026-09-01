@@ -3,7 +3,7 @@ import type { Injector, Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { DisabledReason, MarkAsTouchedOptions, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any, TForm extends Form<any> = Form<any>> = {
@@ -97,7 +97,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & { readonly kind: TKind }) | undefined;
+  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
+  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
   required: Signal<boolean>;
   pending: Signal<boolean>;
   /** Whether this form or an ancestor form is currently running its submission action. */

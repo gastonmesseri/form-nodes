@@ -1,7 +1,7 @@
 import type { Injector, Signal } from '@angular/core';
 
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { ValidationError, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { DisabledReason, MarkAsTouchedOptions, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 
 export type FieldOptions<TValue = any> = {
@@ -82,7 +82,8 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & { readonly kind: TKind }) | undefined;
+  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & ValidationErrorMap[TKind]) | undefined;
+  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & CustomValidationError<TKind>) | undefined;
   /** Strictest minimum value contributed by active numeric or date validators, or `null` when absent. */
   min: Signal<NonNullable<TValue> | null>;
   /** Strictest maximum value contributed by active numeric or date validators, or `null` when absent. */
