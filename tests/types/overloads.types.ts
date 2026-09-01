@@ -1,4 +1,4 @@
-import { array, field, form, required, type ArrayOptions, type FieldOptions, type FormOptions, type FormSubmissionOptions, type GroupOptions, type MarkAsTouchedOptions } from '../../src/public-api';
+import { array, field, form, required, type ArrayOptions, type FieldOptions, type FormOptions, type FormSubmissionOptions, type FormValueContract, type GroupOptions, type MarkAsTouchedOptions } from '../../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 
@@ -18,6 +18,21 @@ type ExpectedFormValue = { name: string | null };
 type _ShorthandForm = Expect<Equal<ReturnType<typeof formWithShorthand>, ExpectedFormValue>>;
 type _OptionsForm = Expect<Equal<ReturnType<typeof formWithOptions>, ExpectedFormValue>>;
 type _SeparateOptionsForm = Expect<Equal<ReturnType<typeof formWithSeparateOptions>, ExpectedFormValue>>;
+
+type ContractFormValue = {
+  username: string | null;
+  items: (string | null)[];
+};
+const contractForm = form({
+  username: field(''),
+  items: array(field('')),
+}) satisfies FormValueContract<ContractFormValue>;
+type _ContractFormValue = Expect<Equal<ReturnType<typeof contractForm>, ContractFormValue>>;
+type _ContractFormArrayNode = Expect<Equal<ReturnType<typeof contractForm.items.nodeType>, 'array'>>;
+contractForm.items.push('Angular');
+
+// @ts-expect-error the inferred username value is incompatible with the contract
+form({ username: field(0), items: array(field('')) }) satisfies FormValueContract<ContractFormValue>;
 
 const arrayWithDefaultValue = array(field(''));
 const arrayWithValidatorShorthand = array(field(''), [required, null]);

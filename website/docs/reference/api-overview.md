@@ -18,6 +18,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Model one logical value | `field()` | [`field()` reference](./field.md) |
 | Organize unrelated standalone nodes without aggregate behavior | Plain JavaScript object | [Creating nodes](../concepts/creating-nodes.md#a-container-is-optional) |
 | Define a submission workflow boundary | `form()` | [`form()` reference](./form.md) |
+| Check an inferred aggregate against a named value model | `FormValueContract<TValue>` | [`FormValueContract` reference](./form-value-contract.md) |
 | Model a dynamic ordered collection of independent nodes | `array()` | [`array()` reference](./array.md) |
 | Give an object branch its own options without creating a submission workflow | Explicit `group()` | [`group()` reference](./group.md) |
 | Choose between a structured field, form, or array | — | [Choosing a primitive](../guides/choosing-a-primitive.md) |
@@ -67,8 +68,8 @@ and `roles: ['admin']` are concise field definitions. Object literals remain gro
 An array value always becomes a field; only an explicit `array(...)` creates a dynamic collection
 of item nodes. Ordinary functions and non-plain object instances become concise fields too.
 
-Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, `FormPatch`, and
-`FormSubmissionOptions`.
+Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormValueContract`, `FormSet`,
+`FormPatch`, and `FormSubmissionOptions`.
 
 ### array()
 

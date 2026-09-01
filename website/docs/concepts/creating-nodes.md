@@ -7,6 +7,9 @@ title: Creating nodes
 Gem Forms models a workflow as a tree of `field()`, `form()`, `array()`, and `group()` nodes.
 TypeScript infers the complete value shape from that tree.
 
+When a named domain model should check that inferred value without replacing concrete child types,
+use [`satisfies FormValueContract<Model>`](../reference/form-value-contract.md).
+
 ## Fields
 
 Use `field()` for a leaf value. Fields normally appear inside a form definition:

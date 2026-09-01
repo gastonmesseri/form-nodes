@@ -130,7 +130,8 @@ errors: Signal<readonly ValidationError[]>;
 The package exports:
 
 - `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
-- `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
+- `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormValueContract`, `FormSet`, and
+  `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
 - Built-in `required`, `requiredIf`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, `maxDate`, and `dateBetween` validators.
@@ -255,6 +256,13 @@ profile.api.value(); // { city: 'Moscow', billingCity: 'Zurich' }
 ```
 
 The callable and `value()` expose the fully materialized object shape in TypeScript tooling instead of an internal `FormValue<...>` alias. Nested forms and arrays are expanded recursively in IntelliSense.
+
+`FormValueContract<TValue>` is a structural compile-time contract for `satisfies`. It checks that a
+form or group is callable as `TValue` and exposes `value: Signal<TValue>` without replacing the
+definition-inferred type. Consequently an `array()` definition remains an `ArrayNode` with its
+structural methods after the aggregate value is checked against a named model. The contract follows
+TypeScript assignability; it does not change runtime behavior or require the model to determine
+which primitive represents each property.
 
 Each child is exposed under its definition key. Application code should normally access form-level state and actions through `form.api`. The same API is always available under `form.$api` when a collision-safe access path is required.
 

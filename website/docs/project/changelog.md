@@ -12,6 +12,8 @@ canonical release record.
 
 ### Added
 
+- `FormValueContract<TValue>` checks an inferred form or group against a named aggregate value with
+  `satisfies` while preserving concrete child-node types such as `ArrayNode`.
 - A complete consumer documentation website with tutorials, API reference, recipes, integration
   guides, executable examples, and an interactive playground.
 - Typed `field()`, `form()`, `array()`, and `group()` signal-based primitives.

@@ -4,6 +4,7 @@ title: form()
 
 import CodeBlock from '@theme/CodeBlock';
 import formFocusSource from '!!raw-loader!../../examples/form-focus.typecheck.ts';
+import formValueContractSource from '!!raw-loader!../../examples/form-value-contract.typecheck.ts';
 import formFieldShorthandSource from '!!raw-loader!../../examples/form-field-shorthand.typecheck.ts';
 import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-shorthand-form-node.typecheck.ts';
 
@@ -59,6 +60,22 @@ const myForm = form({
 form(definitions, options?);
 form(definitions, validators, options?);
 ```
+
+### Check a named value model
+
+Use `satisfies FormValueContract<Model>` when the complete value must conform to a named domain
+model. `satisfies` checks the callable form value and its `value` signal without replacing the type
+inferred from `definitions`:
+
+<CodeBlock language="ts">{formValueContractSource}</CodeBlock>
+
+Here `profile()` and `profile.value()` conform to `Profile`, while `profile.items` remains the
+concrete `ArrayNode` selected by `array()` and continues to expose `push()`, `at()`, and its other
+structural operations. An incompatible child value produces a TypeScript error at the `satisfies`
+expression. The same contract can check a `group()` because both primitives expose a callable
+aggregate value and a `value` signal. See the dedicated
+[`FormValueContract` reference](./form-value-contract.md) for nullability, incompatible-model,
+annotation, and structural-compatibility details.
 
 Nested object definitions are normalized to groups. Use an explicit `group()` when that level needs
 validators, structural options, or validator messages. Use an explicit nested `form()` only when

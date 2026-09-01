@@ -70,6 +70,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Other',
           items: [
+            'reference/form-value-contract',
             'reference/provide-form-node-config',
             'reference/provide-form-node-pass-through',
             'reference/provide-validator-messages',
