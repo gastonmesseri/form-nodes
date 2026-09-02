@@ -6,6 +6,7 @@ import type { FormNodeBinding } from '../../types/form-node-binding.type';
 
 export type { FormNodeBinding } from '../../types/form-node-binding.type';
 
+/** Configuration inherited by `[formNode]` and interoperable Angular `[formField]` bindings. */
 export type FormNodeConfig = {
   /**
    * CSS class names and their reactive activation predicates.
@@ -42,6 +43,7 @@ export const ANGULAR_FORMS_STATUS_CLASSES: NonNullable<FormNodeConfig['classes']
   },
 };
 
+/** Angular injection token containing the nearest `FormNodeConfig`. */
 export const FORM_NODE_CONFIG = new InjectionToken<FormNodeConfig>('FORM_NODE_CONFIG');
 
 /**

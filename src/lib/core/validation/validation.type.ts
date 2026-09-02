@@ -192,104 +192,175 @@ export type ValidationResult =
 
 /** Reactive context available to validation functions for the current field. */
 export type FieldContext<TValue> = {
-  /** Signal containing the current field value. */
+  /** Current value of the node being validated. Reading it creates a reactive dependency. */
   readonly value: Signal<TValue>;
 };
 
 /** Non-validation state exposed to validator callbacks. */
 export type AsyncValidatorState = {
+  /** Whether this node or an ancestor form is currently running its submission action. */
   readonly submitting: Signal<boolean>;
+  /** Whether this node has been marked as interacted with. */
   readonly touched: Signal<boolean>;
+  /** Logical inverse of `touched()`; true until this node is marked as touched. */
   readonly untouched: Signal<boolean>;
+  /** Whether user interaction or `markAsDirty()` has recorded this node as modified. */
   readonly dirty: Signal<boolean>;
+  /** Logical inverse of `dirty()`; true while the node does not report user modification. */
   readonly pristine: Signal<boolean>;
+  /** Whether this node is excluded from validation and aggregate values. */
   readonly disabled: Signal<boolean>;
+  /** Active reasons that currently make this node disabled. */
   readonly disabledReasons: Signal<readonly DisabledReason[]>;
+  /** Logical inverse of `disabled()`; true while the node participates normally. */
   readonly enabled: Signal<boolean>;
+  /** Whether consumers should prevent the user from editing this node. */
   readonly readonly: Signal<boolean>;
+  /** Logical inverse of `readonly()`; true while the node may be edited. */
   readonly writable: Signal<boolean>;
+  /** Whether consumers should omit this node from the visible UI. */
   readonly hidden: Signal<boolean>;
+  /** Logical inverse of `hidden()`; true while the node should be displayed. */
   readonly visible: Signal<boolean>;
+  /** Whether the current validation rules require this node to contain a value. */
   readonly required: Signal<boolean>;
 };
 
 /** Common node API exposed to validators when no exact owner API is specified. */
 export type ValidatorApi<TValue> = AsyncValidatorState & {
+  /** Root form containing the validated node, or `null` for a standalone node. */
   readonly form: Signal<PublicNode<Node> | null>;
+  /** Immediate parent node, or `null` when the validated node is a root. */
   readonly parent: Signal<PublicNode<Node> | null>;
+  /** Property names and array indexes locating the node from its root. */
   readonly path: Signal<readonly string[]>;
+  /** Current committed value of the node being validated. */
   readonly value: Signal<TValue>;
+  /** Validation errors owned directly by this node. */
   readonly errors: Signal<readonly ValidationError[]>;
+  /** Errors owned by this node and every descendant. */
   readonly allErrors: Signal<readonly ValidationError[]>;
+  /** Whether this node and its descendants have no active errors or unresolved validation. */
   readonly valid: Signal<boolean>;
+  /** Whether this node or a descendant currently contributes an error. False while unknown. */
   readonly invalid: Signal<boolean>;
+  /** Whether asynchronous validation is running on this node or a descendant. */
   readonly pending: Signal<boolean>;
+  /** Whether asynchronous validation is waiting for its debounce delay. */
   readonly debouncing: Signal<boolean>;
+  /** Current aggregate result: valid, invalid, or unknown while validation is unresolved. */
   readonly validationStatus: Signal<ValidationStatus>;
+  /**
+   * Returns this node's first direct error with `kind`, or `undefined` when none exists.
+   *
+   * @reactive Reads the current direct-error collection on every call.
+   */
   getError<TKind extends string>(kind: TKind): ValidationError.ForKind<TKind> | undefined;
+  /** Replaces the node's committed value and triggers the corresponding state and validation updates. */
   set(value: TValue): void;
+  /** Replaces the value with the result of applying `updater` to its current committed value. */
   update(updater: (value: TValue) => TValue): void;
+  /** Commits any buffered control value immediately and runs validation that was waiting for it. */
   flush(): void;
+  /** Clears interaction state; preserves the current value unless a replacement is provided. */
   reset(...args: [] | [value: TValue]): void;
+  /** Marks this node as touched and, unless skipped, propagates the operation to descendants. */
   markAsTouched(options?: {
     /** When true, marks only the validated node and leaves its descendants untouched. */
     skipDescendants?: boolean;
   }): void;
+  /** Marks this node as untouched without changing its value. */
   markAsUntouched(): void;
+  /** Marks this node as dirty without changing its value. */
   markAsDirty(): void;
+  /** Clears stored dirty state without changing the current value. */
   markAsPristine(): void;
+  /** Adds an imperative disabled reason, excluding this node from validation and aggregate values. */
   disable(message?: string): void;
+  /** Removes disabled reasons previously added through `disable()`. */
   enable(): void;
+  /** Adds the imperative readonly state, making `readonly()` true. */
   markAsReadonly(): void;
+  /** Removes the readonly state previously added through `markAsReadonly()`. */
   markAsWritable(): void;
+  /** Adds the imperative hidden state, making `visible()` false. */
   hide(): void;
+  /** Removes the hidden state previously added through `hide()`, making `visible()` true. */
   show(): void;
 };
 
+/** Mutable node API exposed to asynchronous validators by default. */
 export type AsyncValidatorApi<TValue> = ValidatorApi<TValue>;
 
+/** Readonly reactive node state shared by all validator context specializations. */
 export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & AsyncValidatorState & {
+  /** Root form inferred by a specialized validator API. */
   readonly form: Signal<any>;
+  /** Immediate parent inferred by a specialized validator API. */
   readonly parent: Signal<any>;
+  /** Property names and array indexes locating the validated node from its root. */
   readonly path: Signal<readonly string[]>;
 };
 
 /** Reactive context provided to synchronous validators. */
 export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = Node> = Pick<TApi, keyof ValidatorReadonlyApi<TValue>> & {
+  /** Full API of the node being validated, including state signals and node operations. */
   readonly api: TApi;
+  /** Callable public node being validated. Prefer `value()` when only its value is needed. */
   readonly field: TField;
 };
 
 /** Reactive context shared by asynchronous validator conditions, params, and handlers. */
 export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = ValidatorContext<TValue, TApi, TField>;
 
+/**
+ * Aggregate validation result.
+ *
+ * `unknown` means that the final result is not available yet because asynchronous validation is
+ * pending or debouncing. It does not mean that the node has an unknown value type.
+ */
 export type ValidationStatus = 'valid' | 'invalid' | 'unknown';
 
+/** Reactive node context and cancellation signal provided to an asynchronous validator run. */
 export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = AsyncValidatorBaseContext<TValue, TApi, TField> & {
+  /**
+   * Cancellation signal for this execution.
+   *
+   * It aborts when a newer execution supersedes this one or the validator is deactivated. Pass it
+   * to APIs such as `fetch()` so obsolete work stops promptly; stale results are ignored anyway.
+   */
   readonly abortSignal: AbortSignal;
 };
 
+/** Asynchronous validator context extended with the current reactive parameter snapshot. */
 export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = AsyncValidatorContext<TValue, TApi, TField> & {
   /** Snapshot returned by the validator's reactive `params` function. */
   readonly params: TParams;
 };
 
+/** Promise-like or observable-like result accepted from an asynchronous validator. */
 export type AsyncValidationResult = PromiseLike<ValidationResult> | ObservableLike<ValidationResult>;
 
+/** Synchronous validator receiving the current value as a reactive signal. */
 export type Validator<TValue> = (context: FieldContext<TValue>) => ValidationResult;
 
+/** Validator marked by `asyncValidator()` for asynchronous scheduling and cancellation. */
 export type AsyncValidator<TValue> = Validator<TValue>;
 
+/** Validator that may return errors directly or compose one or more validators dynamically. */
 export type ComposableValidator<TValue> = (context: ValidatorContext<TValue>) => ComposableValidationResult<TValue>;
 
+/** Result accepted from a composable validator, including nested validators and successful entries. */
 export type ComposableValidationResult<TValue> =
   | ValidationResult
   | Validator<TValue>
   | ComposableValidator<TValue>
   | readonly (ComposableValidator<TValue> | ValidationSuccess)[];
 
+/** Readonly normalized collection of composable validators for a node value. */
 export type Validators<TValue> = readonly ComposableValidator<TValue>[];
 
+/** One validator or a readonly list in which `null` and `undefined` represent no validator. */
 export type ValidatorSource<TValue> =
   | ComposableValidator<TValue>
   | readonly (ComposableValidator<TValue> | ValidationSuccess)[];

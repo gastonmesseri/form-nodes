@@ -3,12 +3,18 @@ import { InjectionToken, assertInInjectionContext, inject, makeEnvironmentProvid
 import type { Node } from '../types/node.type';
 import type { BuiltInValidationErrorMap, ValidationError } from './validation.type';
 
+/** Structured built-in error data available to a configured message function. */
 export type ValidatorMessageParameters<TKind extends keyof BuiltInValidationErrorMap> = Omit<
   BuiltInValidationErrorMap[TKind],
   keyof ValidationError | 'targetNode' | 'formNode'
 >;
 
-/** Partial catalog used to replace built-in validator messages. */
+/**
+ * Partial catalog used to replace built-in validator messages by error kind.
+ *
+ * A string is reused verbatim. A function receives that validator's typed constraint and actual
+ * values, and may return `undefined` to continue searching parent, DI, and global catalogs.
+ */
 export type ValidatorMessages = {
   -readonly [TKind in keyof BuiltInValidationErrorMap]?: string | ((parameters: ValidatorMessageParameters<TKind>) => string | undefined);
 };

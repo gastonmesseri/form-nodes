@@ -1,5 +1,6 @@
 import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorReadonlyApi } from '../validation/validation.type';
 
+/** Scheduling, activation, and failure-handling options for `asyncValidator()`. */
 export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>> = {
   /**
    * Delay in milliseconds before each execution. A newer trigger cancels the pending delay.
@@ -46,6 +47,7 @@ export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TVal
   onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi>) => ValidationResult;
 };
 
+/** Options for an async validator whose tracked dependencies are exposed as a typed snapshot. */
 export type ParameterizedAsyncValidatorOptions<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>> = AsyncValidatorOptions<TValue, TApi> & {
   /**
    * Reactively derives the explicit dependency snapshot passed to the validator. Signals read by

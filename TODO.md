@@ -110,10 +110,6 @@
 - Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
   both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
   access the errors() or something like that
-- Add very descriptive IntelliSense for every member in the public API.
-  - [x] Audit public options and source parameters.
-  - [x] Document primitive instance properties and their state semantics.
-  - [x] Audit remaining action methods and callable signatures.
 - Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
   - Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
 - Think about what is a good name to use in the examples for the form instance
@@ -308,6 +304,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [ ]
 
 ## Discarded
+
 - discarded - implement debounce for synchronous validators
 - [x] Do not add `'blur'` to `asyncValidator()` debounce.
   - Angular 22.1.x accepts milliseconds or a custom asynchronous timer for async-operation
@@ -318,6 +315,13 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Add very descriptive IntelliSense for every member in the public API.
+  - [x] Audit public options and source parameters.
+  - [x] Document primitive instance properties and their state semantics.
+  - [x] Audit remaining action methods and callable signatures.
+  - [x] Document validator APIs, contexts, statuses, and asynchronous contracts.
+  - [x] Document custom-control integration and binding configuration.
+  - [x] Document structural value, set, and patch utility types.
 - [x] Add complete IntelliSense JSDoc for primitive instance properties, including properties that
   were still missing descriptions after `keyInParent` and `disabledReasons` were introduced.
   - [x] Document common structure, value, validation, interaction, availability, and lifecycle

@@ -195,14 +195,17 @@ export type FormSubmissionOptions<TValue, TForm extends Node = Form<any>> = {
   ignoreValidators?: 'pending' | 'none' | 'all';
 };
 
+/** Object value produced by a form, with each child node mapped to its readable value. */
 export type FormValue<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeValue<TNodes[K]>;
 };
 
+/** Complete object accepted by a form's `set()`, recursively using each child's set type. */
 export type FormSet<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeSet<TNodes[K]>;
 };
 
+/** Partial object accepted by a form's `patch()`; omitted child properties remain unchanged. */
 export type FormPatch<TNodes extends Nodes> = {
   [K in keyof TNodes]?: NodePatch<TNodes[K]>;
 };
