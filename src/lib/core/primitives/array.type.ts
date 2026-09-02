@@ -195,6 +195,7 @@ export type ArrayItems<TItem extends Node, TParent extends Node> =
   readonly ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>[];
 
 export type ArrayIndexes<TItem extends Node, TParent extends Node> = {
+  /** Live item at this index, or `undefined` when the index is outside the current structure. */
   readonly [index: number]: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
 };
 
@@ -206,38 +207,93 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * Use spread syntax or Array.from() when a mutable copy of the node list is needed.
    */
   items: Signal<ArrayItems<TItem, TParent>>;
+  /** Current number of live item nodes. Equivalent to `items().length`. */
   length: Signal<number>;
+  /** Complete root node containing this array, or this array itself when it is the root node. */
   form: Signal<ArrayRoot<TItem, TParent>>;
+  /** Immediate structural parent of this array, or `null` when it is a root or has been detached. */
   parent: Signal<TParent | null>;
+  /**
+   * Property and array-index segments from the complete root to this array. Root arrays use `[]`.
+   *
+   * @example
+   * ```ts
+   * myForm.contacts.path();
+   * // ['contacts']
+   * ```
+   */
   path: Signal<readonly string[]>;
   /**
    * Property or array index under which this array is stored, or `null` when it is a root array.
    *
    * @example
-   * `myForm.items.keyInParent()` returns `'items'`.
+   * ```ts
+   * myForm.items.keyInParent(); // 'items'
+   * ```
    *
    * @example
-   * `myForm.items[0]?.keyInParent()` returns `0` for the first item.
+   * ```ts
+   * myForm.items[0]?.keyInParent(); // 0
+   * ```
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
+  /**
+   * Aggregated committed values of the current items.
+   *
+   * Prefer calling the array directly instead of using `names.value()` for ordinary value reads:
+   *
+   * @example
+   * ```ts
+   * const names = array(field(''), {
+   *   initialValue: ['Marco', 'Lia'],
+   * });
+   *
+   * names(); // ['Marco', 'Lia']
+   * ```
+   */
   value: Signal<ArrayValue<TItem>>;
   /** Complete value represented by a control bound directly to this array. Pending descendant control values are not aggregated. */
   controlValue: Signal<ArrayValue<TItem>>;
+  /** Returns the live item node at `index`, or `undefined` when no item exists there. */
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
+  /** Invokes `callback` once for each current item node, in index order. */
   forEach(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => void): void;
+  /** Transforms each current item node and returns the collected results without changing the array. */
   map<TResult>(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => TResult): TResult[];
+  /** Returns the current item nodes accepted by a type-guard predicate. */
   filter<TFiltered extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFiltered): TFiltered[];
+  /** Returns the current item nodes for which `predicate` produces a truthy result. */
   filter(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>[];
+  /** Returns the first current item node accepted by a type-guard predicate, or `undefined`. */
   find<TFound extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFound): TFound | undefined;
+  /** Returns the first current item node for which `predicate` is truthy, or `undefined`. */
   find(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
+  /** Returns the index of the first item node matching `predicate`, or `-1` when none matches. */
   findIndex(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): number;
+  /** Whether at least one current item node matches `predicate`. */
   some(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): boolean;
+  /** Whether every current item node matches `predicate`. Returns `true` for an empty array. */
   every(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): boolean;
+  /** Whether the exact item-node instance occurs at or after `fromIndex`. */
   includes(item: Node, fromIndex?: number): boolean;
+  /** Returns the index of the exact item-node instance, or `-1` when it is absent. */
   indexOf(item: Node, fromIndex?: number): number;
+  /** Iterates over a stable snapshot of the current item nodes in index order. */
   [Symbol.iterator](): IterableIterator<ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>;
+  /**
+   * Creates and appends an item node, optionally initializing it with `value`, and returns the new
+   * live node. The new item starts pristine and untouched.
+   */
   push(...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
+  /**
+   * Creates an item node at `index`, optionally initializes it with `value`, shifts later items,
+   * and returns the new live node. Throws `RangeError` when `index` is outside `0..length`.
+   */
   insert(index: number, ...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
+  /**
+   * Removes, detaches, and returns the item at `index`, or returns `undefined` for an invalid index.
+   * A retained removed node remains independently usable.
+   */
   removeAt(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
   /** Moves the item one position toward the start. The first item remains in place. */
   moveUp(index: number): void;
@@ -264,18 +320,29 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * `items.swap(0, 2)` exchanges the first and third items.
    */
   swap(firstIndex: number, secondIndex: number): void;
+  /** Removes and detaches every current item node without marking the array dirty. */
   clear(): void;
   /**
    * Reconciles the complete array value while preserving matching item nodes.
    *
    * ℹ️ Passing `null` or `undefined` clears the array.
+   *
+   * @example
+   * ```ts
+   * names.set(['Marco', 'Lia']);
+   * ```
    */
   set(value: ArraySet<TItem> | null | undefined): void;
   /**
    * Computes the complete array value using the configured index or `trackBy` reconciliation.
    *
    * ℹ️ Returning `null` or `undefined` clears the array.
-  */
+   *
+   * @example
+   * ```ts
+   * names.update(value => [...value, 'Lia']);
+   * ```
+   */
   update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
   /**
    * Partially updates existing item nodes by array index without changing the array structure.
@@ -314,21 +381,37 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * ℹ️ Passing `null` or `undefined` clears the array before resetting its state.
    */
   reset(...args: [] | [value: ArraySet<TItem> | null | undefined]): void;
+  /** Current normalized validators assigned directly to this array, in declaration order. */
   validators: Signal<Validators<ArrayValue<TItem>>>;
+  /** Replaces validators owned by this array and immediately validates its current aggregate value. */
   setValidators(validators: ValidatorSource<ArrayValue<TItem>>): void;
   /**
-   * A signal containing the validation errors of **this array node itself, excluding its descendants**.
+  * A signal containing the validation errors of **this array node itself, excluding its descendants**.
+  *
+  * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
    *
-   * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
-   */
+   * @example
+   * ```ts
+   * names.errors();
+   * // [{ kind: 'uniqueItems', duplicateIndexes: [0, 2], targetNode: names }]
+   * ```
+  */
   errors: Signal<readonly ValidationError.WithTargetNode<ArrayNode<TItem, TParent>>[]>;
   /**
-   * A signal containing the validation errors of **this array node and its descendants**.
+  * A signal containing the validation errors of **this array node and its descendants**.
+  *
+  * ℹ️ To read only errors belonging directly to this array node, use `errors()` instead.
    *
-   * ℹ️ To read only errors belonging directly to this array node, use `errors()` instead.
-   */
+   * @example
+   * ```ts
+   * names.allErrors();
+   * // [{ kind: 'required', message: 'Name is required.', targetNode: names[0] }]
+   * ```
+  */
   allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
+  /** Whether this array and every current item subtree have completed validation without errors. */
   valid: Signal<boolean>;
+  /** Whether this array or any current item subtree contributes a validation error. */
   invalid: Signal<boolean>;
   /**
    * Returns the first validation error belonging directly to this array and matching `kind`.
@@ -336,48 +419,155 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & ValidationErrorMap[TKind]) | undefined;
+  /**
+   * Returns the first custom error belonging directly to this array and matching `kind`.
+   *
+   * @reactive Maintains an independent reactive computation for each `kind`.
+   */
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
+  /** Whether active validation metadata marks this array itself as required. */
   required: Signal<boolean>;
+  /** Whether asynchronous validation is active on this array or any current item subtree. */
   pending: Signal<boolean>;
-  /** Whether this array or an ancestor form is currently running its submission action. */
+  /** Whether an ancestor form is currently running its submission action. Arrays cannot initiate submission. */
   submitting: Signal<boolean>;
-  /** Whether any current item descendant has a pending control-value debounce. */
+  /** Whether this array or any current item subtree has a control-originated value awaiting commit. */
   debouncing: Signal<boolean>;
   /** Immediately commits every pending control value in this array's current item subtrees. */
   flush(): void;
   /** Focuses the first bound UI control in this array's current item subtrees, in DOM order. */
   focus(options?: FocusOptions): void;
+  /**
+   * Aggregated validation phase for this array and its item subtrees: `'valid'`, `'invalid'`, or
+   * `'unknown'`.
+   *
+   * `'unknown'` means asynchronous validation is pending on this array or an item and no error is
+   * currently available anywhere in the subtree. While unknown, `pending()` is true and both
+   * `valid()` and `invalid()` are false. Any available error makes the status `'invalid'`, even if
+   * other validation remains pending.
+   */
   validationStatus: Signal<ValidationStatus>;
+  /**
+   * Whether this array or any current item subtree has been marked touched.
+   *
+   * ℹ️ Disabled, readonly, or hidden nodes report `false` and do not contribute touched state to ancestors.
+   */
   touched: Signal<boolean>;
+  /**
+   * Logical inverse of `touched()`.
+   *
+   * Whether neither this array nor any contributing item subtree currently reports touched state.
+   */
   untouched: Signal<boolean>;
+  /**
+   * Marks this array and, by default, every item subtree as touched, making their effective
+   * `touched()` true and `untouched()` false while they are interactive.
+   */
   markAsTouched(options?: {
     /** When true, marks only this array and leaves every current item subtree untouched. */
     skipDescendants?: boolean;
   }): void;
+  /** Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. */
   markAsUntouched(): void;
+  /**
+   * Whether this array currently reports user-modified state.
+   *
+   * This becomes `true` when the array's own state is marked dirty or an interactive item subtree
+   * is dirty. Programmatic value and structural operations do not mark nodes dirty.
+   * `markAsPristine()` clears only this array's own state, so a dirty item can keep the result true.
+   */
   dirty: Signal<boolean>;
+  /**
+   * Logical inverse of `dirty()`.
+   *
+   * Whether neither this array nor any contributing item subtree currently reports user-modified state.
+   */
   pristine: Signal<boolean>;
+  /** Marks this array's own state dirty, making `dirty()` true and `pristine()` false while it is interactive. */
   markAsDirty(): void;
+  /**
+   * Clears this array's own dirty state. `pristine()` becomes true and `dirty()` false only when no
+   * contributing item remains dirty.
+   */
   markAsPristine(): void;
+  /** Whether this array is effectively disabled by its own state or an ancestor reason. */
   disabled: Signal<boolean>;
-  /** Active inherited and local causes of this array's disabled state. */
+  /**
+   * Active inherited and local causes of this array's disabled state.
+   *
+   * @example
+   * ```ts
+   * names.disabledReasons();
+   * // [
+   * //   {
+   * //     sourceNode: profile,
+   * //     message: 'Profile is locked',
+   * //   },
+   * // ]
+   * ```
+   */
   disabledReasons: Signal<readonly DisabledReason[]>;
+  /**
+   * Logical inverse of `disabled()`.
+   *
+   * Whether this array has no active local or inherited disabled reason and can participate normally.
+   */
   enabled: Signal<boolean>;
-  /** Disables this array subtree, optionally recording a user-facing reason. */
+  /**
+   * Disables this array subtree, optionally recording a user-facing reason.
+   * Sets `disabled()` to true and `enabled()` to false on this array and its item subtrees.
+   *
+   * @example Disable without a reason
+   * ```ts
+   * names.disable();
+   * ```
+   *
+   * @example Disable with a reason
+   * ```ts
+   * names.disable('Locked');
+   * ```
+   */
   disable(message?: string): void;
+  /**
+   * Clears the imperative disabled state created by `disable()`. `enabled()` becomes true only on
+   * nodes without another configured or inherited disabled reason.
+   */
   enable(): void;
+  /** Whether this array is effectively readonly through its own state or an ancestor. */
   readonly: Signal<boolean>;
+  /**
+   * Logical inverse of `readonly()`.
+   *
+   * Whether this array accepts value changes from a control bound directly to it.
+   */
   writable: Signal<boolean>;
+  /** Marks this array subtree readonly, making `readonly()` true and `writable()` false throughout it. */
   markAsReadonly(): void;
+  /**
+   * Clears this array's imperative readonly state. `writable()` becomes true only on nodes without
+   * another configured or inherited readonly state.
+   */
   markAsWritable(): void;
+  /** Whether this array is effectively hidden through its own state or an ancestor. */
   hidden: Signal<boolean>;
+  /**
+   * Logical inverse of `hidden()`.
+   *
+   * Whether this array is currently intended to be shown to the user.
+   */
   visible: Signal<boolean>;
+  /** Hides this array subtree, making `hidden()` true and `visible()` false throughout it. */
   hide(): void;
+  /**
+   * Clears this array's imperative hidden state. `visible()` becomes true only on nodes without
+   * another configured or inherited hidden state.
+   */
   show(): void;
 };
 
 export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
   & {
+    /** Returns the array's current aggregate committed value and participates in signal dependency tracking. */
     (): ArrayValue<TItem>;
     /**
      * Complete array API and the recommended access path for application code.

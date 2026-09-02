@@ -36,10 +36,25 @@ type FormDefinitions<TDefinitions extends NodeDefinitions> = {
     : TDefinitions[TKey] extends NodeDefinitions ? FormDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
 };
 
+/**
+ * Creates a root form from a fixed object of node definitions and optional configuration.
+ * Plain nested objects are normalized to structural groups.
+ *
+ * @example
+ * ```ts
+ * const profile = form({
+ *   name: field(''),
+ *   address: { city: field('') },
+ * }, {
+ *   submission: { action: (_form, value) => saveProfile(value) },
+ * });
+ * ```
+ */
 export function form<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
+/** Creates a root form with positional validators and optional configuration. */
 export function form<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,

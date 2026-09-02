@@ -14,7 +14,6 @@
     e.g. myField = field(); myField() to read the value; myField.set() to set the value, like a signal
 - provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
-- Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
 
 - Consider including dynamic controls in form() (like in reactive forms)
@@ -34,6 +33,10 @@
     inheritance, documentation, and migration impact before changing the current behavior.
 - Think about how to better structure project folders given current knowledge and existing files
 - [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
+- Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
+  e.g. validator functions, disabled, readonly, etc...
+  - because if there is a form self-reference then it could fail if called when form hasn't been yet initialized.
+  - be careful that the tracking in those computed/reactive functions is not destroyed by the function failure/error
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api
@@ -107,10 +110,12 @@
 - Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
   both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
   access the errors() or something like that
-- Add very descriptive intellisense for every property in public api, (options, calls, etc, properties)
+- Add very descriptive IntelliSense for every member in the public API.
+  - [x] Audit public options and source parameters.
+  - [x] Document primitive instance properties and their state semantics.
+  - [x] Audit remaining action methods and callable signatures.
 - Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
   - Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
-- also add other missing properties besides of keyInParent (disabledReasons, etc)
 - Think about what is a good name to use in the examples for the form instance
   - e.g.
   form = form({ 
@@ -304,8 +309,24 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Discarded
 - discarded - implement debounce for synchronous validators
+- [x] Do not add `'blur'` to `asyncValidator()` debounce.
+  - Angular 22.1.x accepts milliseconds or a custom asynchronous timer for async-operation
+    debounce; `'blur'` belongs to control-value debounce instead.
+  - Consumers can combine `field(..., { debounce: 'blur' })` with an async validator so validation
+    begins after the control value commits on blur, then optionally apply a numeric async-validator
+    debounce.
 
 ## Completed
+
+- [x] Add complete IntelliSense JSDoc for primitive instance properties, including properties that
+  were still missing descriptions after `keyInParent` and `disabledReasons` were introduced.
+  - [x] Document common structure, value, validation, interaction, availability, and lifecycle
+    signals on generic nodes and on `field()`, `form()`, `group()`, and `array()` instances.
+  - [x] Explain leaf-versus-aggregate behavior for `errors`, `allErrors`, `pending`, `touched`,
+    `dirty`, and `debouncing`.
+  - [x] Verify that the descriptions survive declaration generation for consumer IntelliSense.
+  - [x] Document primitive action methods, array navigation and structural operations, callable
+    node signatures, and every published `field()`, `form()`, `group()`, and `array()` overload.
 
 - [x] Infer `field(undefined)` as `Field<unknown>`, matching `field(null)`.
   - [x] Preserve explicit generic inference such as `field<string>(undefined)` as
@@ -592,3 +613,4 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] directive
   - [x] Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
 - [x] Add reactive internationalization support for built-in validator messages. See `docs/validator-messages.md`.
+- [x] Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown

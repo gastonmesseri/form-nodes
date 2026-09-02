@@ -4,7 +4,7 @@ import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent } from './form.type';
-import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidatorSource } from '../validation/validation.type';
+import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
 export type GroupOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
@@ -157,14 +157,53 @@ export type GroupChildren<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
-  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'getError' | 'submit' | 'submitting'>
+  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'getError' | 'submit' | 'submitting' | 'validationStatus'>
   & {
+    /** Stable readonly map of this group's immediate child nodes. */
     readonly children: GroupChildren<TNodes, TParent>;
+    /** Complete root node containing this group. A root group returns itself. */
     form: Signal<GroupRoot<TNodes, TParent>>;
+    /**
+     * Validation errors belonging directly to this group, excluding descendant-owned errors.
+     *
+     * @example
+     * ```ts
+     * address.errors();
+     * // [{ kind: 'unsupportedCountry', message: 'Country is unavailable.', targetNode: address }]
+     * ```
+     */
     errors: Signal<readonly ValidationError.WithTargetNode<Group<TNodes, TParent>>[]>;
+    /**
+     * Validation errors from this group and its complete subtree in structural order.
+     *
+     * @example
+     * ```ts
+     * address.allErrors();
+     * // [{ kind: 'required', message: 'City is required.', targetNode: address.city }]
+     * ```
+     */
     allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
+    /**
+     * Returns the first validation error belonging directly to this group and matching `kind`.
+     *
+     * @reactive Maintains an independent reactive computation for each `kind`.
+     */
     getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<Group<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
+    /**
+     * Returns the first custom error belonging directly to this group and matching `kind`.
+     *
+     * @reactive Maintains an independent reactive computation for each `kind`.
+     */
     getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Group<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+    /**
+     * Aggregated validation phase for this group subtree: `'valid'`, `'invalid'`, or `'unknown'`.
+     *
+     * `'unknown'` means asynchronous validation is pending on this group or a descendant and no
+     * error is currently available in the subtree. While unknown, `pending()` is true and both
+     * `valid()` and `invalid()` are false. Any available error makes the status `'invalid'`, even
+     * if other validation remains pending.
+     */
+    validationStatus: Signal<ValidationStatus>;
     /** Whether an ancestor form is currently running its submission action. Groups cannot initiate submission. */
     submitting: Signal<boolean>;
   };
@@ -196,7 +235,10 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
 
 /** A fixed, object-shaped structural node without its own submission workflow. */
 export type Group<TNodes extends Nodes, TParent extends Node = Node> =
-  & { (): GroupValue<TNodes> }
+  & {
+    /** Returns the group's current aggregate committed value and participates in signal dependency tracking. */
+    (): GroupValue<TNodes>;
+  }
   & GroupApiProperty<TNodes, TParent>
   & Omit<GroupChildren<TNodes, TParent>, 'api'>
   & Omit<GroupApi<TNodes, TParent>, keyof TNodes>
