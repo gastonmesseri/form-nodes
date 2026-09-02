@@ -1,5 +1,6 @@
 import type { Signal } from '@angular/core';
 
+import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { Node, NodeDefinitions, Nodes, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent } from './form.type';
@@ -190,7 +191,7 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
    * ```
    *
    */
-  readonly $field: never;
+  readonly $field: OpaqueAngularField;
 };
 
 /** A fixed, object-shaped structural node without its own submission workflow. */

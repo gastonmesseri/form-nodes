@@ -15,7 +15,7 @@
     directive or its host `DebugNode`, then make that injector available to the node tree and the
     `$field` adapter. Determine how to avoid circular initialization because `[formField]` needs
     `$field` before its own binding exists, and do not rely on private Angular APIs.
-  - [ ] Verify cleanup for the concrete supported lifecycle: a bound node is removed from its tree,
+  - [x] Verify cleanup for the concrete supported lifecycle: a bound node is removed from its tree,
     its Angular view is destroyed, or the owning injector is destroyed. Do not add machinery for
     speculative cross-root or cross-injector reparenting unless a supported public workflow needs it.
 - website docs
@@ -329,6 +329,18 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Make `$field` compatible with Angular AOT strict-template checking without publishing a typed
+  Angular field API.
+  - [x] Type-erase the terminal adapter to `any`; Angular's template checker must call the field and
+    inspect its writable `value`, which makes `never`, `Field<never>`, and `() => never` invalid.
+  - [x] Compile native, custom field, form, group, and array `[formField]` bindings with `ngc` and
+    `strictTemplates: true`.
+  - [x] Keep Gem nodes as the documented and supported surface for every programmatic operation.
+- [x] Verify `$field` adapter cleanup across its supported lifecycle.
+  - [x] Disconnect removed array items and unregister their destroyed `[formField]` bindings.
+  - [x] Remove focus and parsing-error registrations when a bound Angular view is destroyed.
+  - [x] Stop value and interaction synchronization and clean up control registrations when the
+    adapter's owning injector is destroyed.
 - [x] Verify injector ownership for nodes created later by `array()`.
   - [x] Resolve `$field` through the complete root's captured or explicit injector, including for
     lazily created nested descendants whose item factory runs outside an injection context.

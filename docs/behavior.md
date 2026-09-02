@@ -1835,11 +1835,11 @@ operations happened first. When no bound-control edit occurred, the node remains
 This explicit user-input priority prevents a queued control edit from being overwritten merely by
 effect scheduling; synchronization converges in one control-channel write without feedback loops.
 `$field` is reserved as collision-safe interop syntax and remains a supported, stable adapter. Its
-public type is deliberately `never`. This makes the expression assignable to
-Angular's `FormField` input during strict template checking while preventing application
-TypeScript from calling it or accessing any runtime `FieldTree` property, including children and
-function-object members. Consumers select the Gem Forms node first and use `$field` only as the
-terminal template-binding adapter.
+public type is deliberately erased to `any`. Angular's AOT strict-template checker calls the bound
+field and inspects its writable `value`, so narrower opaque types reject valid `[formField]`
+templates. The erased type avoids publishing a typed Angular `Field` or `FieldTree` contract and
+therefore provides no discoverable adapter API in IntelliSense. Consumers select the Gem Forms node
+first and use `$field` only as the terminal template-binding adapter.
 
 At leaf bindings, control interaction flows back into Gem Forms: input-driven dirty state and
 blur-driven touched state update the library node, while node calls can independently set or clear
@@ -1909,6 +1909,13 @@ the affected subtree. It also retains Gem Forms semantics for explicit values, e
 interaction state, and pending debounce. The adapter does not treat Angular's internal field-state
 `reset()` as a second entry point: `$field` is opaque application infrastructure, and consumers
 reset through the Gem node API instead.
+
+The public `$field` type is deliberately erased to `any`. Angular's AOT strict-template checker
+calls the bound field and inspects its `value` state for native and custom-control compatibility,
+so `never`, `Field<never>`, or a callable returning `never` rejects otherwise valid `[formField]`
+templates. The erased type avoids presenting Angular's field-state API as a supported application
+surface. This is an intentional terminal-adapter boundary rather than a type-safe bridge: consumers
+must select a Gem node before `$field` and perform every programmatic operation through that node.
 
 Angular 22.1.4 `FormRoot` handles submission but does not listen for the native `reset` event. A
 native `<form>` containing `$field`-backed controls should use `[formNode]` on the form root when it

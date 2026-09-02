@@ -723,6 +723,81 @@ describe('Angular Signal Forms field adapter', () => {
     expect(document.activeElement).toBe(second);
   });
 
+  it('disconnects a removed array item when Angular destroys its bound view', () => {
+    @Component({
+      template: `
+        @for (person of people; track person) {
+          <input [formField]="person.name.$field">
+        }
+      `,
+      imports: [FormField],
+    })
+    class Host {
+      people = array({ name: field('') }, {
+        initialValue: [{ name: 'David' }],
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    const people = fixture.componentInstance.people;
+    const removedPerson = people[0]!;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.focus();
+    expect(document.activeElement).toBe(input);
+
+    people.removeAt(0);
+    TestBed.flushEffects();
+    input.blur();
+    removedPerson.name.focus();
+
+    expect(input.isConnected).toBe(false);
+    expect(document.activeElement).not.toBe(input);
+  });
+
+  it('destroys adapter synchronization and binding registrations with its owning injector', () => {
+    const owner = Injector.create({ providers: [], parent: TestBed.inject(Injector) });
+
+    @Component({
+      selector: 'owned-control',
+      template: '',
+    })
+    class OwnedControl {
+      value = input<string | null>('');
+      valueChange = output<string | null>();
+      focus = vi.fn<() => void>();
+    }
+    registerSignalModelForJit(OwnedControl, 'value');
+
+    @Component({
+      template: `<owned-control [formField]="name.$field" />`,
+      imports: [OwnedControl, FormField],
+    })
+    class Host {
+      name = field('David', { injector: owner });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    const name = fixture.componentInstance.name;
+    const angularName = getAngularField<string | null>(name);
+    const control = fixture.debugElement.children[0]!.componentInstance as OwnedControl;
+
+    name.focus();
+    expect(control.focus).toHaveBeenCalledOnce();
+
+    owner.destroy();
+    name.set('After destroy');
+    TestBed.flushEffects();
+    name.focus();
+
+    expect(angularName().value()).toBe('David');
+    expect(control.focus).toHaveBeenCalledOnce();
+  });
+
   it('moves focus registration when a formField binding is rebound to another node', () => {
     @Component({
       template: `<input [formField]="selected().$field">`,

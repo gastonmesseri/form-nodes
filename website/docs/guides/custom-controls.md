@@ -61,10 +61,12 @@ directly or import a shared module that exports it.
 `$field` is a supported, stable adapter and is not deprecated. Use it specifically in templates
 that bind Angular's `[formField]`.
 
-The adapter is intentionally opaque in TypeScript: it cannot be called, inspected, or navigated.
-Its public `never` type exists only so strict template checking accepts it for Angular's
-`FormField` input. Select the intended Gem Forms node before `$field`, as in
-`profileForm.displayName.$field`; do not use `$field` as an application-code API.
+The adapter is intentionally type-erased to `any`. Angular's AOT strict-template checker calls and
+inspects the bound field state, so narrower opaque types such as `never` reject valid templates.
+The erased type deliberately avoids advertising Angular's field-state members in IntelliSense; it
+is not an application-code API or a type-safe bridge. Select the intended Gem Forms node before
+`$field`, as in `profileForm.displayName.$field`, and perform programmatic operations through that
+Gem node.
 
 Most bindings target a `field()`. An aggregate `form()`, `group()`, or `array()` can also expose
 `$field` for an uncommon custom control whose single value is the corresponding object or array;

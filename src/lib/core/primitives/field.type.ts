@@ -1,5 +1,6 @@
 import type { Injector, Signal } from '@angular/core';
 
+import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -260,7 +261,7 @@ export type Field<TValue, TParent extends Node = Node> =
      * ```
      *
      */
-    readonly $field: never;
+    readonly $field: OpaqueAngularField;
   }
   & Omit<FieldApi<TValue, TParent>, 'patch'>
   & HiddenFunctionMembers;
