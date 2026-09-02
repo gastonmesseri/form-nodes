@@ -1,8 +1,8 @@
 import { APP_ID, effect, reflectComponentType, untracked, type Injector, type Type } from '@angular/core';
 
+import type { Node } from '../../types/node.type';
 import { getFormNodeName } from './form-node-name';
-import type { Field } from '../../../primitives/field';
-import type { Node } from '../../../types/node.type';
+import type { Field } from '../../primitives/field';
 import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
 
 export type SignalControlInputConnection = {

@@ -6,10 +6,10 @@ import { Component, forwardRef, input, model, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 
-import { field } from '../../primitives/field';
+import { field } from '../primitives/field';
 import { FormNode } from './form-node.directive';
-import { required } from '../../validation/validators/required';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { required } from '../validation/validators/required';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 

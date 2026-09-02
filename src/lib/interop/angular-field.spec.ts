@@ -20,8 +20,8 @@ import { minDate } from '../validation/validators/min-date';
 import { required } from '../validation/validators/required';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
+import { provideFormNodeConfig } from '../form-node/form-node-config';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));

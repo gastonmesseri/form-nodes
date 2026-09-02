@@ -6,19 +6,19 @@ import { FormField, type FormCheckboxControl, type FormValueControl } from '@ang
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, forwardRef, input, model, output, signal, type OnDestroy } from '@angular/core';
 
-import { form } from '../../primitives/form';
-import { array } from '../../primitives/array';
-import { field } from '../../primitives/field';
-import { group } from '../../primitives/group';
+import { form } from '../primitives/form';
+import { array } from '../primitives/array';
+import { field } from '../primitives/field';
+import { group } from '../primitives/group';
 import { FormNode } from './form-node.directive';
-import { max } from '../../validation/validators/max';
-import { min } from '../../validation/validators/min';
+import { max } from '../validation/validators/max';
+import { min } from '../validation/validators/min';
 import { provideFormNodeConfig } from './form-node-config';
-import { required } from '../../validation/validators/required';
-import { asyncValidator } from '../../validation/async-validator';
-import { maxLength } from '../../validation/validators/max-length';
-import { minLength } from '../../validation/validators/min-length';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { required } from '../validation/validators/required';
+import { asyncValidator } from '../validation/async-validator';
+import { maxLength } from '../validation/validators/max-length';
+import { minLength } from '../validation/validators/min-length';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
@@ -1845,7 +1845,7 @@ describe('FormNode in Chromium', () => {
   });
 
   it('automatically integrates with production-style AOT signal controls', async () => {
-    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../tests/integration/form-node-signal-control.fixture');
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
     const fixture = TestBed.createComponent(module.AotSignalControlHost);
     fixture.detectChanges();
     const valueControl = fixture.debugElement.children[0]!.componentInstance as InstanceType<typeof module.AotSignalValueControl>;
@@ -1886,7 +1886,7 @@ describe('FormNode in Chromium', () => {
   });
 
   it('binds a typed shorthand group to a production-style AOT company selector', async () => {
-    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../tests/integration/form-node-signal-control.fixture');
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
     const fixture = TestBed.createComponent(module.AotCompanySelectorHost);
     fixture.detectChanges();
     const control = fixture.debugElement.children[0]!.componentInstance as InstanceType<typeof module.AotCompanySelector>;
@@ -1913,7 +1913,7 @@ describe('FormNode in Chromium', () => {
   });
 
   it('lets an AOT wrapper accept and delegate formNode without creating an outer binding', async () => {
-    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../tests/integration/form-node-signal-control.fixture');
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
     const fixture = TestBed.createComponent(module.AotPassThroughHost);
     fixture.detectChanges();
     const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;

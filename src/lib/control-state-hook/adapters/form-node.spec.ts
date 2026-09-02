@@ -10,12 +10,12 @@ import { field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { pattern } from '../../validation/validators/pattern';
+import { FormNode } from '../../form-node/form-node.directive';
 import { required } from '../../validation/validators/required';
 import { injectFormNodeControlStateAdapter } from './form-node';
 import { asyncValidator } from '../../validation/async-validator';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
-import { FormNode } from '../../directives/form-node/form-node.directive';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({ selector: 'form-node-adapter-control', template: '', standalone: true })

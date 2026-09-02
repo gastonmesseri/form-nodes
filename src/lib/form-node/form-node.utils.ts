@@ -1,6 +1,6 @@
 import { CheckboxControlValueAccessor, DefaultValueAccessor, NumberValueAccessor, RadioControlValueAccessor, RangeValueAccessor, SelectControlValueAccessor, SelectMultipleControlValueAccessor, type ControlValueAccessor, type ValidationErrors, type Validator, type ValidatorFn } from '@angular/forms';
 
-import type { ValidationError } from '../../validation/validation.type';
+import type { ValidationError } from '../validation/validation.type';
 
 const builtInAccessors = [
   CheckboxControlValueAccessor,

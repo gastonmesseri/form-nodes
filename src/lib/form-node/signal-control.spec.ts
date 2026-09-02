@@ -7,9 +7,9 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { Component, EventEmitter, Injector, Input, Output, input, model, output, runInInjectionContext, signal } from '@angular/core';
 
 import { connectSignalControl } from './signal-control';
-import { field, type Field } from '../../primitives/field';
-import { required } from '../../validation/validators/required';
-import { registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { field, type Field } from '../primitives/field';
+import { required } from '../validation/validators/required';
+import { registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());

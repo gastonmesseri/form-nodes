@@ -7,16 +7,16 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { Component, Injector, Input, booleanAttribute, input, model, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 
-import { form } from '../../../primitives/form';
-import { field } from '../../../primitives/field';
-import { max } from '../../../validation/validators/max';
-import { min } from '../../../validation/validators/min';
-import { pattern } from '../../../validation/validators/pattern';
-import { required } from '../../../validation/validators/required';
+import { form } from '../../primitives/form';
+import { field } from '../../primitives/field';
+import { max } from '../../validation/validators/max';
+import { min } from '../../validation/validators/min';
+import { pattern } from '../../validation/validators/pattern';
+import { required } from '../../validation/validators/required';
+import { maxLength } from '../../validation/validators/max-length';
+import { minLength } from '../../validation/validators/min-length';
 import { connectSignalControlInputs } from './signal-control-inputs';
-import { maxLength } from '../../../validation/validators/max-length';
-import { minLength } from '../../../validation/validators/min-length';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
