@@ -1,28 +1,28 @@
 import { signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { field } from '../../primitives/field';
+import { url } from '../validators/url';
+import { min } from '../validators/min';
+import { max } from '../validators/max';
+import { email } from '../validators/email';
 import { form } from '../../primitives/form';
-import { url } from './url';
-import { min } from './min';
-import { max } from './max';
-import { email } from './email';
-import { oneOf } from './one-of';
-import { pattern } from './pattern';
-import { between } from './between';
-import { integer } from './integer';
-import { maxDate } from './max-date';
-import { minDate } from './min-date';
-import { required } from './required';
-import { equalTo } from './equal-to';
-import { maxWords } from './max-words';
-import { minWords } from './min-words';
-import { maxLength } from './max-length';
-import { minLength } from './min-length';
-import { requiredIf } from './required-if';
-import { dateBetween } from './date-between';
-import { uniqueItems } from './unique-items';
-import { applyValidatorWhen } from './validator-options';
+import { oneOf } from '../validators/one-of';
+import { field } from '../../primitives/field';
+import { pattern } from '../validators/pattern';
+import { between } from '../validators/between';
+import { integer } from '../validators/integer';
+import { maxDate } from '../validators/max-date';
+import { minDate } from '../validators/min-date';
+import { equalTo } from '../validators/equal-to';
+import { required } from '../validators/required';
+import { maxWords } from '../validators/max-words';
+import { minWords } from '../validators/min-words';
+import { maxLength } from '../validators/max-length';
+import { minLength } from '../validators/min-length';
+import { requiredIf } from '../validators/required-if';
+import { dateBetween } from '../validators/date-between';
+import { uniqueItems } from '../validators/unique-items';
+import { applyValidatorWhen } from '../utils/validator-options';
 
 describe('built-in validator error option', () => {
   it('replaces every built-in validation error', () => {

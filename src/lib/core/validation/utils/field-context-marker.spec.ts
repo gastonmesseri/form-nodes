@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
-import type { FieldContext } from '../validation/validation.type';
+import type { FieldContext } from '../validation.type';
 import { isFieldContext, markAsFieldContext } from './field-context-marker';
 
 describe('field context marker', () => {

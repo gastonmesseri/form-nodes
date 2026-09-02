@@ -1,10 +1,10 @@
 import { isEmpty } from '../../utils/is-empty';
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { PATTERN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
-import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultPatternMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { defaultPatternMessage } from '../utils/default-validator-messages';
+import { resolveValidatorMessage } from '../utils/resolve-validator-message';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 
 /**
  * Requires a non-empty string to match a regular expression.

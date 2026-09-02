@@ -1,5 +1,5 @@
 import type { Node } from '../types/node.type';
-import { markAsAsyncValidator, type AsyncValidatorOptions, type ParameterizedAsyncValidatorOptions } from '../utils/async-validator-marker';
+import { markAsAsyncValidator, type AsyncValidatorOptions, type ParameterizedAsyncValidatorOptions } from './utils/async-validator-marker';
 import type { AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, AsyncValidatorContext, ParameterizedAsyncValidatorContext, ValidationResult, ValidatorOwner, ValidatorReadonlyApi } from './validation.type';
 
 export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi, ValidatorOwner<TField>> & {
@@ -231,4 +231,4 @@ export function asyncValidator<TValue, TParams>(
   return markAsAsyncValidator(validatorOrConfig.validate as unknown as AsyncValidator<TValue>, validatorOrConfig);
 }
 
-export type { AsyncValidatorOptions, ParameterizedAsyncValidatorOptions } from '../utils/async-validator-marker';
+export type { AsyncValidatorOptions, ParameterizedAsyncValidatorOptions } from './utils/async-validator-marker';

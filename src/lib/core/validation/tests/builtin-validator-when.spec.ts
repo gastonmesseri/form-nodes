@@ -1,25 +1,25 @@
 import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
-import { max } from './max';
-import { min } from './min';
-import { url } from './url';
+import { max } from '../validators/max';
+import { min } from '../validators/min';
+import { url } from '../validators/url';
+import { email } from '../validators/email';
+import { oneOf } from '../validators/one-of';
 import { field } from '../../primitives/field';
-import { email } from './email';
-import { oneOf } from './one-of';
-import { integer } from './integer';
-import { between } from './between';
-import { pattern } from './pattern';
-import { equalTo } from './equal-to';
-import { maxDate } from './max-date';
-import { minDate } from './min-date';
-import { required } from './required';
-import { maxWords } from './max-words';
-import { minWords } from './min-words';
-import { maxLength } from './max-length';
-import { minLength } from './min-length';
-import { dateBetween } from './date-between';
-import { uniqueItems } from './unique-items';
+import { integer } from '../validators/integer';
+import { between } from '../validators/between';
+import { pattern } from '../validators/pattern';
+import { equalTo } from '../validators/equal-to';
+import { maxDate } from '../validators/max-date';
+import { minDate } from '../validators/min-date';
+import { required } from '../validators/required';
+import { maxWords } from '../validators/max-words';
+import { minWords } from '../validators/min-words';
+import { maxLength } from '../validators/max-length';
+import { minLength } from '../validators/min-length';
+import { dateBetween } from '../validators/date-between';
+import { uniqueItems } from '../validators/unique-items';
 
 describe('built-in validator when option', () => {
   it('reactively enables every built-in validator', () => {

@@ -1,7 +1,7 @@
-import { isFieldContext } from '../../utils/field-context-marker';
-import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultIntegerMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { isFieldContext } from '../utils/field-context-marker';
+import { defaultIntegerMessage } from '../utils/default-validator-messages';
+import { resolveValidatorMessage } from '../utils/resolve-validator-message';
+import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 const validateInteger = (

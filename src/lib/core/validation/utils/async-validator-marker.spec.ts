@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { AsyncValidator } from '../validation/validation.type';
+import type { AsyncValidator } from '../validation.type';
 import { getAsyncValidatorOptions, isAsyncValidator, markAsAsyncValidator } from './async-validator-marker';
 
 describe('async validator marker', () => {

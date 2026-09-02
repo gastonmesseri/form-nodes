@@ -6,10 +6,10 @@ import type { Node } from '../types/node.type';
 import type { FieldOptions } from './field.type';
 import { isPlainObject } from '../utils/is-plain-object';
 import type { ObjectNodeDefinitions } from './form.type';
-import type { FormPrimitives, FormPrimitivesOptions } from './create-form-primitives.type';
-import { isValidatorSource } from '../validation/validator-source';
 import type { ValidatorSource } from '../validation/validation.type';
+import { isValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeDefaultValidatorMessages } from '../validation/validator-messages';
+import type { FormPrimitives, FormPrimitivesOptions } from './create-form-primitives.type';
 
 export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimitivesOptions, GroupFactory, NonNullableFieldFactory } from './create-form-primitives.type';
 

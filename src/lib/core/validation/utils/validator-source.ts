@@ -1,5 +1,5 @@
-import type { Node } from '../types/node.type';
-import type { ComposableValidator, ValidatorNode, ValidatorSource, Validators } from './validation.type';
+import type { Node } from '../../types/node.type';
+import type { ComposableValidator, ValidatorNode, ValidatorSource, Validators } from '../validation.type';
 
 export const isValidatorSource = <TValue, TField extends Node = ValidatorNode>(value: unknown): value is ValidatorSource<TValue, TField> => {
   return typeof value === 'function' || Array.isArray(value);

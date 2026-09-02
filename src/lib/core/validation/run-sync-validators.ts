@@ -2,10 +2,10 @@ import { isNotNil } from '../utils/is-nil';
 import type { Node } from '../types/node.type';
 import type { MetadataKey } from '../metadata/metadata';
 import { runWithValidatorMessages } from './validator-messages';
-import { isAsyncValidator } from '../utils/async-validator-marker';
-import { createValidatorContext } from './create-validator-context';
-import { addDefaultTargetNode } from '../utils/add-default-target-node';
-import { normalizeValidationResult } from '../utils/normalize-validation-result';
+import { isAsyncValidator } from './utils/async-validator-marker';
+import { addDefaultTargetNode } from './utils/add-default-target-node';
+import { createValidatorContext } from './utils/create-validator-context';
+import { normalizeValidationResult } from './utils/normalize-validation-result';
 import { collectValidatorMetadata, type ValidatorMetadata } from './validator-metadata';
 import type { AsyncValidatorState, ComposableValidationResult, ComposableValidator, FieldContext, ValidationError, ValidationResult, ValidatorContext, Validators } from './validation.type';
 

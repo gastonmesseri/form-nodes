@@ -1,5 +1,5 @@
-import type { Node } from '../types/node.type';
-import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorNode, ValidatorReadonlyApi } from '../validation/validation.type';
+import type { Node } from '../../types/node.type';
+import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorNode, ValidatorReadonlyApi } from '../validation.type';
 
 /** Scheduling, activation, and failure-handling options for `asyncValidator()`. */
 export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = {

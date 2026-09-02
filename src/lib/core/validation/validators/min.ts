@@ -1,9 +1,9 @@
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
-import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultMinMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { defaultMinMessage } from '../utils/default-validator-messages';
+import { resolveValidatorMessage } from '../utils/resolve-validator-message';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 
 /**
  * Requires a non-empty number to be greater than or equal to a minimum.

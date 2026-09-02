@@ -1,5 +1,5 @@
-import type { ValidationError, ValidationResult } from '../validation/validation.type';
-import { isNil } from './is-nil';
+import { isNil } from '../../utils/is-nil';
+import type { ValidationError, ValidationResult } from '../validation.type';
 
 /** Normalizes a validator result to the readonly error array exposed by nodes. */
 export const normalizeValidationResult = (result: ValidationResult): readonly ValidationError[] => {
