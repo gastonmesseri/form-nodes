@@ -1,8 +1,10 @@
 import { signal } from '@angular/core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { field } from '../../primitives/field';
 import { dateBetween } from './date-between';
+
+afterEach(() => vi.useRealTimers());
 
 describe('dateBetween', () => {
   it('accepts inclusive boundaries and reports dates outside the range', () => {
@@ -49,5 +51,21 @@ describe('dateBetween', () => {
 
     expect(value.min()).toEqual(new Date(2026, 0, 1));
     expect(value.max()).toEqual(new Date(2026, 11, 31));
+  });
+
+  it('supports static and reactive today range boundaries', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-24T15:00:00.000Z'));
+    const maximum = signal<Date | string>(new Date('2026-08-25T00:00:00.000Z'));
+    const value = field<Date>(new Date('2026-08-26T00:00:00.000Z'), [
+      dateBetween('today', () => maximum()),
+    ]);
+
+    expect(value.getError('dateBetween')).toMatchObject({
+      minDate: new Date('2026-08-24T00:00:00.000Z'),
+      maxDate: new Date('2026-08-25T00:00:00.000Z'),
+    });
+    value.set(new Date('2026-08-24T00:00:00.000Z'));
+    expect(value.errors()).toEqual([]);
   });
 });

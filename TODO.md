@@ -12,10 +12,6 @@
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
   - explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
     e.g. myField = field(); myField() para tomar valor; myField.set() para definir valor, como una signal
-- Consider including dynamic controls in form() (like in reactive forms)
-  - update docs if required, check all docs
-  - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
-  - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
 - provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
 - The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
   user doesn't provide an injector
@@ -25,10 +21,13 @@
     eventos y estado de mi libreria al field de angular, y viceversa.
 - The injector (for async validators), could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode)
   and use it inside the form() field(), etc. as a fallback in case the user doesn't provide an injector.
-- en maxDate, minDate, dateBetween, add shortcuts como 'today' en string
 - Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
  
+- Consider including dynamic controls in form() (like in reactive forms)
+  - update docs if required, check all docs
+  - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
+  - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
 - Decide the exact semantics and naming of object-node ancestry lookups.
   - Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
     an explicit nested form the workflow owner observed by all of its descendants.
@@ -298,6 +297,11 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
+  - Original task: add string shortcuts such as `'today'` to these date validators.
+  - Support `'today'` as a static or reactive boundary.
+  - Resolve shortcuts lazily at UTC midnight by default or local midnight with `parseAs: 'local'`.
+  - Keep the behavior explicit: no hidden timer revalidates a form exactly at midnight.
 - [x] Create the internal `isNil(value)` type guard.
   - Original follow-up: check all applicable cases that used `x === null || x === undefined`.
   - Use it in validator normalization and composition, nullish validator values, array validator-source detection, empty-value detection, and native-control writes.
