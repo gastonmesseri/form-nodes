@@ -1,6 +1,6 @@
 import { computed, signal, type Signal } from '@angular/core';
 
-import type { ControlDebounce } from '../types/node.type';
+import type { ControlDebounce } from '../../types/node.type';
 
 export type ControlValueBuffer<TValue, TControlValue = TValue> = {
   readonly controlValue: Signal<TValue>;
