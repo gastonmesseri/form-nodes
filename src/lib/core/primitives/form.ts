@@ -37,24 +37,45 @@ type FormDefinitions<TDefinitions extends NodeDefinitions> = {
 };
 
 /**
- * Creates a root form from a fixed object of node definitions and optional configuration.
- * Plain nested objects are normalized to structural groups.
- *
- * @example
  * ```ts
  * const profile = form({
  *   name: field(''),
- *   address: { city: field('') },
- * }, {
- *   submission: { action: (_form, value) => saveProfile(value) },
+ *   age: field(null),
+ *   address: {
+ *     city: field(''),
+ *   },
+ *   contacts: array({
+ *     type: field(''),
+ *     value: field(''),
+ *   }),
  * });
  * ```
+ *
+ * Creates a root form from a fixed object of node definitions and optional configuration.
+ *
+ * Plain nested objects are normalized to structural groups. Use the options object for form-level
+ * validators, submission, state, debounce, and validator messages.
+ *
+ * @param definitions Fixed child-node definitions.
+ * @param options Form configuration.
  */
 export function form<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
-/** Creates a root form with positional validators and optional configuration. */
+/**
+ * Creates a root form with positional validators and optional configuration.
+ *
+ * ```ts
+ * const profile = form({
+ *   name: field('')
+ * }, [profileValidator]);
+ * ```
+ *
+ * @param definitions Fixed child-node definitions.
+ * @param validators Validators for the complete form value.
+ * @param options Form configuration.
+ */
 export function form<TDefinitions extends NodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,

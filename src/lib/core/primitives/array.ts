@@ -48,55 +48,35 @@ const looksLikeValidatorSource = (value: unknown): boolean => {
 };
 
 /**
- * Creates an array node from a declarative node template.
+ * Creates a dynamic array by cloning a declarative node template for every item.
+ * 
+ * ```ts
+ * const people = array({
+ *   name: field(''),
+ * }, 1);
  *
- * **Template with initial value**
+ * people(); // [{ name: '' }]
  * 
- * ```ts
+ * 
  * const people = array({
- *   name: field(''), 
- *   age: field(0) 
- * }, [
- *   { name: 'Marco', age: 30 },
- *   { name: 'Tom', age: 22 }
- * ]);
- * ```
- * 
- * **Template with initial amount of values**
- * ```ts
- * const people = array({
- *   name: field(''), 
- *   age: field(0) 
- * }, 2);
- * ```
- * 
- * **Primitive field template**
- * ```ts
- * const tags = array(field(''), ['angular', 'signals']);
- * ```
- * 
- * **Template with options**
- * ```ts
- * const people = array({
- *   name: field(''), 
- *   age: field(0) 
+ *   name: field(''),
  * }, {
- *   initialValue: [{ name: 'Marco', age: 30 }],
- *   validators: [minLength(1)],
- *   trackBy: item => item.name,
+ *   initialValue: [{ name: 'Marco' }],
  * });
- * ```
+ *
+ * people(); // [{ name: 'Marco' }]
  * 
- * **Factory with options**
- * ```ts
- * const people = array(() => ({
- *   name: field(''), 
- *   age: field(0) 
- * }), {
- *   validators: [minLength(1)],
- * });
- * ```
  * 
+ * const people = array({
+ *   name: field(''),
+ * }, [{ name: 'Marco' }]);
+ *
+ * people(); // [{ name: 'Marco' }]
+ * ```
+ *
+ * The template itself remains independent; each item is a fresh clone. Use a factory overload
+ * when item construction must be deferred or customized.
+ *
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
  * `array()`, or shorthand object. The supplied definition remains an independent node and is not
  * inserted directly into this array.
@@ -108,6 +88,10 @@ export function array<TDefinition extends NodeDefinition>(
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a declarative node template and positional initial contents.
+ *
+ * ```ts
+ * const names = array(field(''), ['Marco', 'Lia']);
+ * ```
  *
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
  * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
@@ -121,6 +105,10 @@ export function array<TDefinition extends NodeDefinition>(
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a template, positional initial contents, and validators.
+ *
+ * ```ts
+ * const names = array(field(''), ['Marco'], [minLength(1)]);
+ * ```
  *
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
  * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
@@ -137,6 +125,10 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a template and validators.
  *
+ * ```ts
+ * const names = array(field(''), [minLength(1)]);
+ * ```
+ *
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
  * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
  * @param validators Reactive validator source for the complete array value.
@@ -150,12 +142,12 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a node-definition factory.
  *
- * @example Factory returning a fresh shorthand form definition for every item.
  * ```ts
- * const people = array(
- *   () => ({ name: field(''), age: field(0) }),
- *   2,
- * );
+ * const people = array(() => ({
+ *   name: field(''),
+ * }), {
+ *   initialValue: 2,
+ * });
  * ```
  *
  * @param factory Creates the declarative shape for each item. Use a factory when construction
@@ -170,6 +162,10 @@ export function array<TDefinition extends NodeDefinition>(
 /**
  * Creates an array node from a factory and positional initial contents.
  *
+ * ```ts
+ * const names = array(() => field(''), 2);
+ * ```
+ *
  * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
  * Returning the same definition from multiple calls throws.
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
@@ -182,6 +178,10 @@ export function array<TDefinition extends NodeDefinition>(
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a factory, positional initial contents, and validators.
+ *
+ * ```ts
+ * const names = array(() => field(''), 2, [minLength(1)]);
+ * ```
  *
  * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
  * Returning the same definition from multiple calls throws.
@@ -197,6 +197,10 @@ export function array<TDefinition extends NodeDefinition>(
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a factory and validators.
+ *
+ * ```ts
+ * const names = array(() => field(''), [minLength(1)]);
+ * ```
  *
  * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
  * Returning the same definition from multiple calls throws.
