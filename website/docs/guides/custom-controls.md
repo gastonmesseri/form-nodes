@@ -58,17 +58,21 @@ Every NgModule that declares a component using `[formField]` must import either 
 or a module that re-exports it. Likewise, every standalone component must import `FormField`
 directly or import a shared module that exports it.
 
-`$field` is intentionally marked with TypeScript's `@deprecated` tag so this specialized adapter
-does not compete with the everyday node API in autocomplete. It remains fully supported and is not
-scheduled for removal; use it specifically in templates that bind Angular's `[formField]`. Its type
-remains assignable to Angular's `FieldTree`, but inherited function-object members such as
-`toString`, `apply`, and `bind` are hidden because they are not part of the adapter's consumer API.
-Real `FieldTree` children remain typed for structural compatibility.
+`$field` is a supported, stable adapter and is not deprecated. Use it specifically in templates
+that bind Angular's `[formField]`.
+
+The adapter is intentionally opaque in TypeScript: it cannot be called, inspected, or navigated.
+Its public `never` type exists only so strict template checking accepts it for Angular's
+`FormField` input. Select the intended Gem Forms node before `$field`, as in
+`profileForm.displayName.$field`; do not use `$field` as an application-code API.
+
+Most bindings target a `field()`. An aggregate `form()`, `group()`, or `array()` can also expose
+`$field` for an uncommon custom control whose single value is the corresponding object or array;
+native inputs normally bind to leaf fields.
 
 No conversion function is required. Values synchronize in both directions, and the adapter mirrors
 disabled, readonly, hidden, required, validation, touched, and dirty state. Every descendant uses
-the same adapted tree, so `profileForm.displayName.$field` is the same field as
-`profileForm.$field.displayName`.
+the same adapted Angular tree internally.
 
 For a bound leaf field, control interaction flows back naturally: input marks the Gem Forms field
 dirty, blur marks it touched, and an Angular field reset clears both interaction flags. Calls such

@@ -14,8 +14,11 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
 
 const name = field('David', [required, nameValidator]);
 const angularNameField: FieldTree<string | null> = name.$field;
-// @ts-expect-error Function-object internals are intentionally hidden from the public adapter.
+type _OpaqueAngularNameField = Expect<Equal<typeof name.$field, never>>;
+// @ts-expect-error The adapter is opaque in TypeScript and cannot expose properties.
 name.$field.toString();
+// @ts-expect-error The adapter is opaque in TypeScript and cannot be called.
+name.$field();
 void angularNameField;
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
@@ -46,12 +49,12 @@ field<Date>(null, [dateBetween('today', () => '2026-12-31')]);
 const angularProfile = form({ name: field('David'), age: field(30) });
 const angularProfileField: FieldTree<{ name: string | null; age: number | null }> = angularProfile.$field;
 const angularProfileNameField: FieldTree<string | null> = angularProfile.name.$field;
-const angularProfileChildField: FieldTree<string | null> = angularProfile.$field.name;
-// @ts-expect-error Function-object internals are intentionally hidden from the public adapter.
+// @ts-expect-error The adapter is opaque; navigate through the Gem Forms node instead.
+angularProfile.$field.name;
+// @ts-expect-error The adapter is opaque in TypeScript and cannot expose properties.
 angularProfile.$field.bind(undefined);
 void angularProfileField;
 void angularProfileNameField;
-void angularProfileChildField;
 
 const adult = validator<number | null>(({ value, api, field: targetField }) => {
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;

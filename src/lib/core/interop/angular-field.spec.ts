@@ -13,6 +13,7 @@ import { array } from '../primitives/array';
 import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { required } from '../validation/validators/required';
+import { getAngularField } from './angular-field';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -27,8 +28,8 @@ describe('Angular Signal Forms field adapter', () => {
       age: field(30),
     }));
 
-    expect(profile.$field.name).toBe(profile.name.$field);
-    expect(profile.$field.name().value()).toBe('David');
+    expect(getAngularField<{ name: string | null; age: number | null }>(profile).name).toBe(getAngularField(profile.name));
+    expect(getAngularField<{ name: string | null; age: number | null }>(profile).name().value()).toBe('David');
     expect(profile.name.$field).toBe(profile.name.$field);
   });
 
@@ -38,9 +39,9 @@ describe('Angular Signal Forms field adapter', () => {
 
     profile.name.set('Ana');
     TestBed.flushEffects();
-    expect(profile.name.$field().value()).toBe('Ana');
+    expect(getAngularField<string | null>(profile.name)().value()).toBe('Ana');
 
-    profile.name.$field().value.set('Mark');
+    getAngularField<string | null>(profile.name)().value.set('Mark');
     TestBed.flushEffects();
     expect(profile.name()).toBe('Mark');
   });
@@ -48,7 +49,7 @@ describe('Angular Signal Forms field adapter', () => {
   it('mirrors availability, required, validation, and interaction state', () => {
     const injector = TestBed.inject(Injector);
     const name = runInInjectionContext(injector, () => field('', [required]));
-    const angularState = name.$field();
+    const angularState = getAngularField<string | null>(name)();
 
     expect(angularState.required()).toBe(true);
     expect(angularState.invalid()).toBe(true);
@@ -78,7 +79,7 @@ describe('Angular Signal Forms field adapter', () => {
   it('synchronizes touched and dirty independently in both directions', () => {
     const injector = TestBed.inject(Injector);
     const name = runInInjectionContext(injector, () => field('David'));
-    const angularState = name.$field();
+    const angularState = getAngularField<string | null>(name)();
 
     angularState.markAsTouched();
     TestBed.flushEffects();
@@ -116,7 +117,7 @@ describe('Angular Signal Forms field adapter', () => {
   it('keeps availability derived from the library node', () => {
     const injector = TestBed.inject(Injector);
     const name = runInInjectionContext(injector, () => field('David'));
-    const angularState = name.$field();
+    const angularState = getAngularField<string | null>(name)();
 
     name.disable('Unavailable');
     expect(angularState.disabled()).toBe(true);
@@ -140,8 +141,8 @@ describe('Angular Signal Forms field adapter', () => {
       initialValue: ['angular'],
     }));
 
-    expect(tags[0]!.$field).toBe(tags.$field[0]);
-    expect(tags.$field[0]!().value()).toBe('angular');
+    expect(getAngularField(tags[0]!)).toBe(getAngularField<(string | null)[]>(tags)[0]);
+    expect(getAngularField<(string | null)[]>(tags)[0]!().value()).toBe('angular');
   });
 
   it('remains lazy and reports how to opt in outside Angular injection', () => {

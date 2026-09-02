@@ -85,6 +85,7 @@
   and use it inside the form() field(), etc. as a fallback in case the user doesn't provide an injector.
 - Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
+- Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown
  
 - Consider including dynamic controls in form() (like in reactive forms)
   - update docs if required, check all docs
@@ -140,6 +141,7 @@
       partner: null as string | null,
       friend: field<string>(),
     })
+    // <!!!!> Maybe it even works with an object like value even if it creates a group() // just a hunch (because of the form({ valueObj: { name: '' } })) // myForm.valueObj() still returns the object
 - directive
   - allow alternative predefined names for directive
   - allow dynamic name for directive (in case is possible for example creating a form)

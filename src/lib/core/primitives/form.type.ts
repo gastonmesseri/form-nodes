@@ -1,5 +1,4 @@
 import type { Injector, Signal } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
 
 import type { Field } from './field.type';
 import type { ArrayNode } from './array.type';
@@ -320,26 +319,22 @@ type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
    * Prefer `api` for normal application code. Use `$api` when this form declares a child named
    * `api`; the child takes precedence at `form.api`, while `form.$api` always remains the API.
    *
-   * This property is not obsolete and is not planned for removal. It is marked as deprecated
-   * only to reduce its prominence in autocomplete and keep the usual `api` access easier to find.
-   *
-   * @deprecated Not actually deprecated. Prefer `api` unless collision-safe access is required.
+   * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
   $api: FormApi<TNodes, TParent>;
   /**
-   * Angular Signal Forms view of this node for binding with `[formField]`.
+   * Opaque Angular Signal Forms adapter for binding with `[formField]`.
    *
-   * This property is supported and is not planned for removal. It is marked as deprecated only
-   * to keep this template-specific adapter out of the way in ordinary node autocomplete.
+   * This property is supported and is not planned for removal. Use it only as the terminal value
+   * passed to Angular's `[formField]` binding.
    *
    * @example
    * ```html
-   * <my-component [formField]="myForm.$field" />
+   * <input [formField]="form.user.$field" />
    * ```
    *
-   * @deprecated Not actually deprecated. Use only when binding through Angular's `[formField]`.
    */
-  readonly $field: FieldTree<FormValue<TNodes>> & HiddenFunctionMembers<keyof FieldTree<FormValue<TNodes>>>;
+  readonly $field: never;
 };
 
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =
