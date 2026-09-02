@@ -1809,6 +1809,44 @@ submission-owning form.
 
 ## Control binding with `[formNode]`
 
+### Angular Signal Forms `FieldTree` adapter
+
+Every node exposes a lazy `$field` property containing the corresponding official Angular Signal
+Forms `FieldTree`. A single Angular tree is created for the complete root and descendant `$field`
+properties navigate that same tree, preserving identity:
+
+```ts
+myForm.name.$field === myForm.$field.name;
+```
+
+This enables Angular's own directive without replacing the library model:
+
+```html
+<input [formField]="myForm.name.$field">
+```
+
+Committed values synchronize bidirectionally. Disabled, readonly, hidden, required, validation,
+touched, and dirty state are mirrored so Angular controls observe the library node as their source
+of form state, while control-originated value and interaction changes update the library node.
+`$field` is reserved as collision-safe interop syntax and is intentionally less prominent than
+the normal callable node API. Its public JSDoc uses TypeScript's `@deprecated` editor marker solely
+to demote it in autocomplete: the adapter remains supported, is not obsolete, and is not planned
+for removal. The public type remains structurally assignable to Angular's `FieldTree`, while
+irrelevant inherited function-object members such as `toString`, `apply`, and `bind` are hidden.
+Actual `FieldTree` children remain navigable and typed.
+
+Adapter creation is lazy. Declaring and using nodes outside Angular dependency injection remains
+safe as long as `$field` is not requested. In normal component field initializers, the current
+injector is captured automatically. Code creating nodes outside an injection context must pass an
+explicit `injector` option before using `$field`; otherwise access throws a descriptive error.
+
+The implementation was derived from Angular Signal Forms 22.1.4 at commit
+`898380974d49cf7976e9d89cc74a0801a26ce7b1`, specifically
+`packages/forms/signals/src/api/structure.ts`, `api/types.ts`,
+`directive/form_field.ts`, and the field and web binding tests. A real Angular `FieldTree` is
+required because `[formField]` resolves Angular's private `FieldNode`; a structurally compatible
+object is insufficient.
+
 `FormNode` binds a field node to a native form control, and binds field, group, form, or array nodes
 to an explicitly provided signal custom control or a component that implements Angular's
 `ControlValueAccessor` contract:

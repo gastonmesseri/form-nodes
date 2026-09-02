@@ -607,7 +607,7 @@ describe('types', () => {
   });
 
   it('accepts initial disabled options', () => {
-    expectTypeOf(field).toBeCallableWith('David', undefined, { disabled: true });
+    field('David', undefined, { disabled: true });
     form(
       { name: field('David') },
       undefined,
@@ -616,7 +616,7 @@ describe('types', () => {
   });
 
   it('accepts initial readonly options', () => {
-    expectTypeOf(field).toBeCallableWith('David', undefined, { readonly: true });
+    field('David', undefined, { readonly: true });
     form(
       { name: field('David') },
       undefined,
@@ -625,7 +625,7 @@ describe('types', () => {
   });
 
   it('accepts initial hidden options', () => {
-    expectTypeOf(field).toBeCallableWith('David', undefined, { hidden: true });
+    field('David', undefined, { hidden: true });
     form(
       { name: field('David') },
       undefined,
@@ -635,7 +635,7 @@ describe('types', () => {
 
   it('accepts signals and functions as state sources', () => {
     const state = signal(false);
-    expectTypeOf(field).toBeCallableWith('David', undefined, {
+    field('David', undefined, {
       disabled: state,
       readonly: () => state(),
       hidden: () => false,

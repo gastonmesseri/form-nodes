@@ -2,6 +2,75 @@
 
 ## Up next
 
+- Harden the `$field` adapter for complete Angular `[formField]` interoperability. The current
+  baseline was audited against Angular `v22.1.4` at commit
+  `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
+  - [ ] Route control-originated Angular model changes through the corresponding node's
+    `setControlValue()` channel instead of `root.set()` so `controlValue()`, numeric and blur
+    debounce, `flush()`, cancellation, and programmatic-versus-control write semantics remain
+    correct without replacing the complete root value unnecessarily.
+  - [ ] Define and test deterministic conflict resolution when Angular and the library node both
+    change in the same reactive turn; avoid dropping the latest control edit or creating feedback
+    loops, and assert exact write counts.
+  - [ ] Synchronize `touched` and `dirty` independently in both directions. Do not use Angular
+    `FieldState.reset()` to clear only one flag because it can also clear the other; cover leaf,
+    aggregate, ancestor, descendant, disabled, readonly, and hidden transitions.
+  - [ ] Register every Angular `FormField` binding with the original library node so node-level
+    `focus()` works, multiple bindings use DOM order, destroyed and rebound controls unregister,
+    and custom focus implementations are preserved.
+  - [ ] Bridge reset behavior in both directions, including library `reset()` and native form reset,
+    Angular parsing-state cleanup, custom-control reset hooks, CVA state, pending debounced values,
+    and reset with an explicit value.
+  - [ ] Propagate Angular native and custom-control parse errors back into library validation so
+    `valid()`, `allErrors()`, and `submit()` cannot disagree with the rendered control; remove the
+    errors when parsing recovers or the binding is destroyed.
+  - [ ] Support dynamic arrays after adapter creation: push, insert, remove, clear, set, reset,
+    move, swap, and `trackBy` reconciliation. Preserve item identity and interaction state when
+    appropriate, update item `$field` paths after reordering, create synchronization for new items,
+    and dispose synchronization for removed items.
+  - [ ] Mirror native constraint metadata required by Angular `FormField`, including `min`, `max`,
+    `minLength`, `maxLength`, and `pattern`, for native and custom controls. Cover reactive
+    constraints, activation and removal, SSR, and browser validity.
+  - [ ] Preserve complete validation-error information instead of reducing every error to
+    `{ kind }`, including messages, custom properties, expected and actual values, and other
+    validator metadata consumed through the Angular field state.
+  - [ ] Preserve `targetNode` semantics for form/group and cross-field validators by attaching each
+    adapted error to the corresponding Angular field path rather than always to the validator's
+    source node.
+  - [ ] Prevent duplicate errors when Angular metadata rules such as `required`, `min`, `max`,
+    `minLength`, `maxLength`, and `pattern` both validate and receive an equivalent error from the
+    library. Decide which side owns constraint validation and which side only communicates binding
+    metadata.
+  - [ ] Mirror asynchronous validation lifecycle, especially `pending`, cancellation, stale-result
+    handling, and pending aggregation, without executing validators twice.
+  - [ ] Mirror form submission lifecycle where Angular controls can observe it, including
+    `submitting`, descendant propagation, invalid submission, concurrent submission, and completion.
+  - [ ] Integrate `provideFormNodeConfig({ classes })` with `$field` bindings or provide an explicit
+    bridge to Angular's `provideSignalFormsConfig({ classes })`. Define safe provider composition
+    because Angular's configuration token is not multi, and never silently replace consumer-defined
+    Angular Signal Forms configuration.
+  - [ ] Define the recommended form-root integration when controls use `[formField]`, covering Gem
+    Forms submit behavior, native submit and reset events, parse errors, `novalidate`, focus of the
+    first invalid control, and whether Angular's form-root directive should ever be combined with
+    the library root binding.
+  - [ ] Harden adapter ownership and lifecycle for access before attachment, detached nodes,
+    reparenting between roots, moves between injectors, destroyed injectors, repeated `$field`
+    access after destruction, and prevention of two live adapters synchronizing the same node.
+  - [ ] Verify injector resolution for a root-created tree, explicitly configured child injectors,
+    detached array items, and nodes created outside an injection context before being attached to a
+    root with an injector.
+  - [ ] Confirm that availability state remains intentionally node-to-Angular where Angular exposes
+    derived readonly state (`disabled`, `readonly`, `hidden`, and `required`), and document rather
+    than emulate unsupported reverse setters.
+  - [ ] Build a complete adapter test matrix across focused integration, public type tests, Angular
+    template type checking, real-browser behavior, SSR/hydration, package/AOT consumption, and
+    lifecycle cleanup. Cover text, number, date, checkbox, radio, select, multi-select, textarea,
+    signal-model custom controls, input/output controls, CVAs, Angular Material, PrimeNG, multiple
+    bindings, dynamic rebinding, parsing failures, constraints, debounce, focus, reset, arrays,
+    submission, and configuration classes.
+  - [ ] Update `docs/behavior.md` and the consumer website as each adapter capability or intentional
+    limitation is implemented; keep the Angular tag, commit, source paths, and relevant test paths
+    recorded.
 - website docs
   - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -16,9 +85,6 @@
 - The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
   user doesn't provide an injector
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
-- Create adapter to be able to use angular [formField] with the library: myForm.name.$field, <my-control [formField]="myForm.name.$field">
-  - maybe $field should be an instance of form() (Angular form function) or maybe form().field (Angular form). I think it is a field tree or something similar that can interact with formField and pass
-    events and state from this library to the Angular field, and vice versa.
 - The injector (for async validators), could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode)
   and use it inside the form() field(), etc. as a fallback in case the user doesn't provide an injector.
 - Check if debounce in asyncValidators also should include the 'blur' value
@@ -297,6 +363,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Create an Angular Signal Forms adapter exposed as `myForm.name.$field` for direct use with `<my-control [formField]="myForm.name.$field">`.
+  - [x] Back `$field` with a real, stable Angular `FieldTree` created once per root rather than a structural imitation or an independent Angular form per child.
+  - [x] Synchronize values bidirectionally and mirror disabled, readonly, hidden, required, validation, touched, and dirty state.
+  - [x] Keep adapter creation lazy so nodes remain usable outside Angular dependency injection until `$field` is requested.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

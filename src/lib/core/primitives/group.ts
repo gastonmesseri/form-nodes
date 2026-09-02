@@ -1,13 +1,13 @@
 import type { ValidatorSource } from '../validation/validation.type';
 import type { NodeDefinitions } from '../types/node.type';
 import { _createObjectNode } from './form';
-import type { FormOptions } from './form.type';
+import type { Form, FormOptions } from './form.type';
 import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
 
 export type { Group, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
 
 type GroupDefinitions<TDefinitions extends NodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends '$api'
+  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field'
     ? never
     : TDefinitions[TKey] extends NodeDefinitions ? GroupDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
 };
@@ -47,8 +47,8 @@ export function group<TDefinitions extends NodeDefinitions>(
   type TValue = GroupValue<TNodes>;
   return _createObjectNode<TDefinitions>(
     definitions,
-    validatorsOrOptions as ValidatorSource<TValue> | FormOptions<TValue> | undefined,
-    separateOptions as FormOptions<TValue> | undefined,
+    validatorsOrOptions as ValidatorSource<TValue> | FormOptions<TValue, Form<TNodes>> | undefined,
+    separateOptions as FormOptions<TValue, Form<TNodes>> | undefined,
     'group',
   ) as Group<TNodes>;
 }

@@ -1,5 +1,6 @@
-import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
+import type { FieldTree } from '@angular/forms/signals';
 
+import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 import type { Equal, Expect, HasKey } from './assert.types';
 
 type _NoExampleCustomError = Expect<Equal<HasKey<ValidationErrorMap, 'unavailableUsername'>, false>>;
@@ -12,6 +13,10 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
 };
 
 const name = field('David', [required, nameValidator]);
+const angularNameField: FieldTree<string | null> = name.$field;
+// @ts-expect-error Function-object internals are intentionally hidden from the public adapter.
+name.$field.toString();
+void angularNameField;
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
@@ -37,6 +42,16 @@ field<Date>(null, [dateBetween('2026-01-01', () => '2026-12-31', { parseAs: 'loc
 field<Date>(null, [dateBetween('2026-01-01', '2026-12-31', 'Outside range')]);
 field<Date>(null, [minDate('today'), maxDate(() => 'today')]);
 field<Date>(null, [dateBetween('today', () => '2026-12-31')]);
+
+const angularProfile = form({ name: field('David'), age: field(30) });
+const angularProfileField: FieldTree<{ name: string | null; age: number | null }> = angularProfile.$field;
+const angularProfileNameField: FieldTree<string | null> = angularProfile.name.$field;
+const angularProfileChildField: FieldTree<string | null> = angularProfile.$field.name;
+// @ts-expect-error Function-object internals are intentionally hidden from the public adapter.
+angularProfile.$field.bind(undefined);
+void angularProfileField;
+void angularProfileNameField;
+void angularProfileChildField;
 
 const adult = validator<number | null>(({ value, api, field: targetField }) => {
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;
