@@ -10,7 +10,7 @@ export type ValidatorMessageParameters<TKind extends keyof BuiltInValidationErro
 
 /** Partial catalog used to replace built-in validator messages. */
 export type ValidatorMessages = {
-  readonly [TKind in keyof BuiltInValidationErrorMap]?: string | ((parameters: ValidatorMessageParameters<TKind>) => string | undefined);
+  -readonly [TKind in keyof BuiltInValidationErrorMap]?: string | ((parameters: ValidatorMessageParameters<TKind>) => string | undefined);
 };
 
 type ValidatorMessagesSource = ValidatorMessages | (() => ValidatorMessages | undefined);

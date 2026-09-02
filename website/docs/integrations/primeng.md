@@ -55,14 +55,14 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 
-import { FORM_NODE_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodeConfig, required } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodeConfig, required } from '@gem/ng-forms';
 
 @Component({
   selector: 'app-primeng-profile-editor',
   imports: [FormNode, ButtonModule, SelectModule, CheckboxModule, DatePickerModule, InputTextModule],
   providers: [
     provideFormNodeConfig({
-      classes: FORM_NODE_STATUS_CLASSES,
+      classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
   template: `
@@ -151,13 +151,36 @@ PrimeNG's official guides document Angular Forms support for
 ## Validation styling
 
 PrimeNG uses Angular-style status classes such as `ng-invalid` and `ng-dirty` for invalid-state
-styling. Opt into those classes once for the relevant injector scope:
+styling. For an application that uses PrimeNG broadly, register the preset once in the standalone
+application configuration, alongside the normal PrimeNG providers:
 
 ```ts
-provideFormNodeConfig({
-  classes: FORM_NODE_STATUS_CLASSES,
-});
+import Aura from '@primeuix/themes/aura';
+import { providePrimeNG } from 'primeng/config';
+import type { ApplicationConfig } from '@angular/core';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: Aura,
+      },
+    }),
+    provideFormNodeConfig({
+      classes: ANGULAR_FORMS_STATUS_CLASSES,
+    }),
+  ],
+};
 ```
+
+This makes the classes available to every `[formNode]` binding created below the application
+injector. If only one feature uses PrimeNG styling, put the same `provideFormNodeConfig(...)` call
+in that route's or component's `providers` array instead. The complete component example above
+demonstrates that narrower component scope.
 
 The preset adds `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and
 `ng-untouched`/`ng-touched` reactively. It is optional: node validity and message rendering work

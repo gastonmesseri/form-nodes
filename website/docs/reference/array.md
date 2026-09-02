@@ -284,6 +284,22 @@ detach nodes, and duplicate keys throw before mutation.
 An array's validators receive its complete plain value. Validation and pending state aggregate the
 array's own state with that of its current descendants.
 
+Start with one collection validator and add an array only when multiple rules are needed:
+
+```ts
+const myForm = form({
+  tags: array(field(''), {
+    validators: minLength(1),
+  }),
+  roles: array(field(''), {
+    validators: [minLength(1), uniqueItems],
+  }),
+});
+```
+
+These rules validate each complete array. Put validators on `field('')` instead when the rule must
+run independently for every item.
+
 | Member | Description |
 | --- | --- |
 | `validators()` | Current normalized validator collection. |

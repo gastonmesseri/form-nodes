@@ -2,7 +2,7 @@ import type { Signal } from '@angular/core';
 
 import type { ObservableLike } from '../types/observable-like.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import type { DisabledReason, MarkAsTouchedOptions, Node, PublicNode } from '../types/node.type';
+import type { DisabledReason, Node, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -219,7 +219,10 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   update(updater: (value: TValue) => TValue): void;
   flush(): void;
   reset(...args: [] | [value: TValue]): void;
-  markAsTouched(options?: MarkAsTouchedOptions): void;
+  markAsTouched(options?: {
+    /** When true, marks only the validated node and leaves its descendants untouched. */
+    skipDescendants?: boolean;
+  }): void;
   markAsUntouched(): void;
   markAsDirty(): void;
   markAsPristine(): void;

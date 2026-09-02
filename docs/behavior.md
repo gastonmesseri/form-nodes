@@ -108,6 +108,13 @@ API member on its own.
 - Do not rely on colors, HTML styling, or editor-specific rendering. JSDoc Markdown, bold text,
   inline code, and the Unicode information symbol must remain understandable as plain text.
 
+Consumer-created options and configuration objects are mutable in the public type system. A
+`readonly` modifier there would add editor noise without protecting library-owned state. Small
+accepted unions and one-property call-site objects are exposed inline so completion shows the
+choices immediately; named types remain for concepts that applications reasonably construct,
+share, or annotate separately. Library-owned state, signals, error results, and snapshots remain
+readonly where mutation would violate their contract.
+
 For example:
 
 ```ts
@@ -612,6 +619,11 @@ const username = field('', [
 ```
 
 `AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context extends the same flat readonly facade with an `abortSignal` belonging only to that execution. Parameterized validators additionally receive their `params` snapshot. Neither execution-specific property is added to or mutated on `field`. Validators can pass the signal to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
+
+The `asyncValidator()` overloads inline these accepted option shapes so editor completion exposes
+`debounce`, `when`, `onError`, `params`, and `validate` without navigating through a type alias.
+The named option and configuration types remain exported for separately constructed reusable
+configuration objects.
 
 Asynchronous callbacks also receive the complete runtime node `api`. By default it is typed as `AsyncValidatorApi<TValue>`, so value access, validation and interaction state, and common node operations preserve the validated value type. Automatic validators react to API signals they read. Parameterized validators may read API signals explicitly inside `params`; their `validate` callback remains untracked. The exact owner type can be supplied explicitly as the second generic argument for a callback validator, for example `asyncValidator<string | null, FieldApi<string | null>>(...)`. Parameterized validators use the third generic argument: `asyncValidator<TValue, TParams, TApi>({...})`. A future owner-contextual validator declaration signature may infer the exact `FieldApi` or `FormApi` automatically.
 
@@ -1816,7 +1828,7 @@ The directive currently provides these behaviors:
 - Native controls receive a stable generated `name` in the form `${APP_ID}.formN.path.to.field`. Bindings for the same field share the same name, which preserves radio grouping, while fields in different root trees receive different names. Because the path is reactive, names follow array items when their indexes change. An explicitly authored native `name` is replaced by the generated field name, matching Angular Signal Forms.
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - A reused radio input re-evaluates its authored `value` after every Angular render, so changing the option represented by an existing DOM node immediately recalculates its checked state without requiring a model change.
-- `provideFormNodeConfig({ classes })` installs reactive classes on every concrete binding. Predicates receive the public `FormNodeBinding`, including its host `element`, and track only the signals they read. `FORM_NODE_STATUS_CLASSES` is an optional preset providing `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng-untouched`/`ng-touched`; these classes are not installed unless the preset is configured.
+- `provideFormNodeConfig({ classes })` installs reactive classes on every concrete binding. Predicates receive the public `FormNodeBinding`, including its host `element`, and track only the signals they read. `ANGULAR_FORMS_STATUS_CLASSES` is an optional Angular Forms compatibility preset providing `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng-untouched`/`ng-touched`; these classes are not installed unless the preset is configured.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - A wrapper component may consume an input whose template name is exactly `formNode` and delegate that node to an inner `[formNode]` control. The outer directive becomes pass-through: it performs no synchronization, validation, CSS-class work, hidden-field warning, or focus registration. Only the delegated inner control is a binding. This is automatic and requires no provider. An aliased property is valid as long as its public template input name is `formNode`.
 - Component wrappers are detected automatically from Angular's public component metadata. A directive that consumes or re-exports `formNode`, including a host directive, must add `providers: [provideFormNodePassThrough()]` because Angular exposes no equivalent public runtime reflection API for directive inputs. The provider affects only the injector on that host element.

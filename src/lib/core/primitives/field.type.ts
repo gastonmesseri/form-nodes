@@ -1,24 +1,113 @@
 import type { Injector, Signal } from '@angular/core';
 
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+import type { DisabledReason, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { DisabledReason, MarkAsTouchedOptions, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 
 export type FieldOptions<TValue = any> = {
-  /** Synchronous and explicitly marked asynchronous validators applied to the field value. */
-  readonly validators?: ValidatorSource<TValue>;
+  /**
+   * One validator or an array of validators for this field's value.
+   *
+   * @example Start with one built-in validator.
+   * ```ts
+   * field('', { validators: required });
+   * ```
+   *
+   * @example Combine built-in validators in an array.
+   * ```ts
+   * field('', { validators: [required, minLength(3)] });
+   * ```
+   *
+   * @example Configure a validator or declare a small custom rule inline.
+   * ```ts
+   * field('', {
+   *   validators: [
+   *     required('Enter a username.'),
+   *     ({ value }) => value()?.includes(' ')
+   *       ? { kind: 'spaces', message: 'Spaces are not allowed.' }
+   *       : null,
+   *   ],
+   * });
+   * ```
+   *
+   * @example Configure a validator or declare a small custom rule inline.
+   * ```ts
+   * field('', {
+   *   validators: ({ value }) => {
+   *     return someReactiveCondition() ? [required] : null;
+   *   },
+   * });
+   * ```
+   *
+   * @example Add one asynchronous validator.
+   * ```ts
+   * field('', {
+   *   validators: asyncValidator(async ({ value }) => {
+   *     const available = await isUsernameAvailable(value());
+   *     return available ? null : { kind: 'usernameTaken' };
+   *   }),
+   * });
+   * ```
+   *
+   * Arrays may also contain validators created with `asyncValidator()` and ignored `null` or
+   * `undefined` entries.
+   */
+  validators?: ValidatorSource<TValue>;
   /** Whether the field value includes null. Defaults to true and affects the public value type. */
-  readonly nullable?: boolean;
+  nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
-  readonly injector?: Injector;
+  injector?: Injector;
   /** Delay strategy for control updates. A number waits in milliseconds, `'blur'` waits for focus loss, and a function commits when its returned promise resolves. Overrides an inherited debounce. */
-  readonly debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
-  /** Initial hidden state or a Signal, computed Signal, or function evaluated reactively. */
-  readonly hidden?: boolean | (() => boolean);
-  /** Initial or reactive disabled state. A string disables the field and describes the reason. */
-  readonly disabled?: boolean | string | (() => boolean | string);
-  /** Initial readonly state or a Signal, computed Signal, or function evaluated reactively. */
-  readonly readonly?: boolean | (() => boolean);
+  debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
+  /**
+   * Initial or reactive visibility of this field.
+   *
+   * @example Start with the field hidden.
+   * ```ts
+   * field('', { hidden: true });
+   * ```
+   *
+   * @example Hide a company field unless the user selects a business account.
+   * ```ts
+   * field('', {
+   *   hidden: () => accountType() !== 'business',
+   * });
+   * ```
+   */
+  hidden?: boolean | (() => boolean);
+  /**
+   * Initial or reactive disabled state. Return a string to disable the field and expose the reason
+   * through `disabledReasons()`.
+   *
+   * @example Start with the field disabled and record why.
+   * ```ts
+   * field('', { disabled: 'Only administrators can edit this field.' });
+   * ```
+   *
+   * @example Prevent editing while a record is being saved.
+   * ```ts
+   * field('', {
+   *   disabled: () => isSaving() ? 'The profile is being saved.' : false,
+   * });
+   * ```
+   */
+  disabled?: boolean | string | (() => boolean | string);
+  /**
+   * Initial or reactive readonly state.
+   *
+   * @example Start with a field in readonly mode.
+   * ```ts
+   * field('INV-2026-001', { readonly: true });
+   * ```
+   *
+   * @example Keep an identifier visible but immutable after creation.
+   * ```ts
+   * field('', {
+   *   readonly: () => recordAlreadyExists(),
+   * });
+   * ```
+   */
+  readonly?: boolean | (() => boolean);
 };
 
 export type FieldApi<TValue, TParent extends Node = Node> = {
@@ -101,7 +190,10 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   validationStatus: Signal<ValidationStatus>;
   touched: Signal<boolean>;
   untouched: Signal<boolean>;
-  markAsTouched(options?: MarkAsTouchedOptions): void;
+  markAsTouched(options?: {
+    /** When true, marks only this field. Fields have no descendants, so this is accepted for API consistency. */
+    skipDescendants?: boolean;
+  }): void;
   markAsUntouched(): void;
   dirty: Signal<boolean>;
   pristine: Signal<boolean>;

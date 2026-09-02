@@ -1,4 +1,4 @@
-import { array, field, form, required } from '../../src/public-api';
+import { array, field, form, required, type ArrayOptions, type FieldOptions, type FormOptions, type FormSubmissionOptions, type GroupOptions, type MarkAsTouchedOptions } from '../../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 
@@ -32,6 +32,32 @@ type _InitialArray = Expect<Equal<ReturnType<typeof arrayWithInitialValue>, (str
 type _OptionsArray = Expect<Equal<ReturnType<typeof arrayWithOptions>, (string | null)[]>>;
 type _ValidatorsAndOptionsArray = Expect<Equal<ReturnType<typeof arrayWithValidatorsAndOptions>, (string | null)[]>>;
 type _FactoryArray = Expect<Equal<ReturnType<typeof arrayWithFactory>, { name: string | null }[]>>;
+
+const fieldOptions: FieldOptions<string | null> = {};
+fieldOptions.disabled = () => 'Temporarily unavailable';
+fieldOptions.validators = [required];
+
+const formOptions: FormOptions<{ name: string | null }> = {};
+formOptions.debounce = 'blur';
+formOptions.hidden = () => false;
+
+const groupOptions: GroupOptions<{ name: string | null }> = {};
+groupOptions.readonly = true;
+
+const arrayOptions: ArrayOptions<readonly { id: number }[]> = {};
+arrayOptions.initialValue = [{ id: 1 }];
+arrayOptions.trackBy = 'id';
+
+const submissionOptions: FormSubmissionOptions<{ name: string | null }> = {
+  action: () => undefined,
+};
+submissionOptions.ignoreValidators = 'pending';
+
+const touchedOptions: MarkAsTouchedOptions = {};
+touchedOptions.skipDescendants = true;
+formWithOptions.markAsTouched({ skipDescendants: true });
+
+void [fieldOptions, formOptions, groupOptions, arrayOptions, submissionOptions, touchedOptions];
 
 // @ts-expect-error field options cannot be passed as a fourth argument
 field('David', [required], { readonly: true }, { hidden: true });

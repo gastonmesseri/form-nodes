@@ -17,7 +17,7 @@ fallback validator-message catalog.
 | Scope | API | Affects | Reactive |
 | --- | --- | --- | --- |
 | Validator call | `{ message }` | That validator instance | Message functions are reactive |
-| Node or subtree | `field()`, `group()`, `form()`, and `array()` options | The declared node; selected options inherit | Function sources are reactive |
+| Node or subtree | `field()`, `form()`, `array()`, and `group()` options | The declared node; selected options inherit | Function sources are reactive |
 | Angular injector | `provideValidatorMessages()` | Nodes created in that injector scope | Selected message functions are reactive |
 | Angular injector | `provideFormNodeConfig()` | Descendant `[formNode]` bindings | Class predicates are reactive |
 | JavaScript process | `configureGlobalValidatorMessages()` | Fallback for every node | Catalog sources and selected messages are reactive |
@@ -41,9 +41,19 @@ ancestor.
 
 ## Node options
 
+The call-site types are designed for discovery in IntelliSense. Small accepted unions—such as
+`number | 'blur'` for debounce or `boolean | string | (() => boolean | string)` for disabled
+state—are shown directly instead of being hidden behind another type name. Reactive callbacks are
+identified in their property documentation and describe what changes retrigger them.
+
+Named types such as `FieldOptions`, `FormOptions`, `ArrayOptions`, and `GroupOptions` remain
+available when an application wants to construct or reuse configuration separately. These are
+consumer-owned mutable objects, so their properties are not marked `readonly`; the library reads
+the selected values when the node is created.
+
 ### Options shared by nodes
 
-| Option | `field()` | `group()` | `form()` | `array()` | Inheritance |
+| Option | `field()` | `form()` | `array()` | `group()` | Inheritance |
 | --- | --- | --- | --- | --- | --- |
 | `validators` | Yes | Yes | Yes | Yes | No; validates that exact node |
 | `injector` | Yes | Yes | Yes | Yes | No; owns that node's async watcher and captures provider messages |
@@ -52,7 +62,7 @@ ancestor.
 | `disabled` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
 | `readonly` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
 
-`group()`, `form()`, and `array()` additionally accept `validatorMessages`. Only a form accepts `submission`.
+`form()`, `array()`, and `group()` additionally accept `validatorMessages`. Only a form accepts `submission`.
 An array additionally accepts `initialValue` and `trackBy`. Only `field()` accepts `nullable`.
 
 ### Static and reactive state
@@ -106,16 +116,57 @@ See [Value flow and debounce](../guides/value-flow-and-debounce.md).
 
 ### Validators
 
-Validators belong to the exact node where they are declared; they do not inherit. A form or array
-validator receives the complete aggregate value, while descendant validators continue to own
-their own errors:
+Validators belong to the exact node where they are declared; they do not inherit. The
+`FormOptions.validators` option accepts one validator directly or an array. Start with a named
+validator when a rule is reused:
 
 ```ts
 const profileForm = form({
-  displayName: field('', [required]),
+  displayName: field(''),
+  marketingConsent: field(false),
 }, {
   validators: [profilePolicy],
 });
+```
+
+For a small rule belonging only to one form, declare it inline. The callback receives the complete
+form value through the callable `value` signal:
+
+```ts
+const checkoutForm = form({
+  acceptTerms: field(false),
+}, {
+  validators: ({ value }) => {
+    return value().acceptTerms
+      ? null
+      : { kind: 'termsRequired', message: 'Accept the terms to continue.' };
+  },
+});
+```
+
+Form-level validators are especially useful when a rule compares multiple children:
+
+```ts
+const passwordForm = form({
+  password: field(''),
+  confirmation: field(''),
+}, {
+  validators: [({ value }) => {
+    return value().password === value().confirmation
+      ? null
+      : { kind: 'passwordMismatch', message: 'Passwords must match.' };
+  }],
+});
+```
+
+The form owns errors returned by these validators; descendant validators continue to own their own
+errors. Arrays may combine synchronous validators, validators created with `asyncValidator()`, and
+`null` or `undefined` entries, which are ignored. A single validator does not need an array:
+
+```ts
+const profileForm = form({
+  displayName: field(''),
+}, { validators: profilePolicy });
 ```
 
 `setValidators()` replaces the validators of that node at runtime. Async validators must be
@@ -270,12 +321,27 @@ provideFormNodeConfig({
 });
 ```
 
-Use `FORM_NODE_STATUS_CLASSES` to opt into the familiar `ng-valid`, `ng-invalid`, `ng-pending`,
+Use `ANGULAR_FORMS_STATUS_CLASSES` to opt into the familiar `ng-valid`, `ng-invalid`, `ng-pending`,
 `ng-touched`, `ng-untouched`, `ng-dirty`, and `ng-pristine` classes:
 
 ```ts
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+
 provideFormNodeConfig({
-  classes: FORM_NODE_STATUS_CLASSES,
+  classes: ANGULAR_FORMS_STATUS_CLASSES,
+});
+```
+
+The preset is useful when migrating Angular Forms styles or integrating UI libraries that inspect
+those class names. It is not required for `[formNode]` binding itself. Spread the preset into a new
+object to add custom classes:
+
+```ts
+provideFormNodeConfig({
+  classes: {
+    ...ANGULAR_FORMS_STATUS_CLASSES,
+    'is-readonly': binding => binding.node().readonly(),
+  },
 });
 ```
 

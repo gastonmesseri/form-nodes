@@ -1,5 +1,5 @@
 import type { FormCheckboxControl, FormUiControl, FormValueControl } from '@angular/forms/signals';
-import { InjectionToken, forwardRef, type ExistingProvider, type ForwardRefFn, type WritableSignal } from '@angular/core';
+import { InjectionToken, forwardRef, type ExistingProvider, type Type, type WritableSignal } from '@angular/core';
 
 import type { Field } from '../../primitives/field';
 import type { Node } from '../../types/node.type';
@@ -37,10 +37,39 @@ export const FORM_NODE_CONTROL = new InjectionToken<FormNodeControl>('FORM_NODE_
  * when the component needs direct access to the exact bound field and wants to derive its own UI
  * state from that field.
  *
- * @example
- * `providers: [provideFormNodeControl(() => DatePicker)]`
+ * @example Explicitly register a signal-based custom control.
+ * ```ts
+ * import { Component, input, model, output } from '@angular/core';
+ *
+ * import { provideFormNodeControl, type FormNodeValueControl } from '@gem/ng-forms';
+ *
+ * @Component({
+ *   selector: 'app-date-picker',
+ *   providers: [provideFormNodeControl(() => DatePicker)],
+ *   template: `
+ *     <input
+ *       type="date"
+ *       [value]="value() ?? ''"
+ *       [disabled]="disabled()"
+ *       (input)="select($any($event.target).value)"
+ *       (blur)="touch.emit()"
+ *     >
+ *   `,
+ * })
+ * export class DatePicker implements FormNodeValueControl<string | null> {
+ *   value = model<string | null>(null);
+ *   disabled = input(false);
+ *   touch = output<void>();
+ *
+ *   select(value: string) {
+ *     this.value.set(value || null);
+ *   }
+ * }
+ * ```
+ *
+ * @param control Deferred custom-control component type. The function avoids referencing the component before its declaration is initialized.
  */
-export const provideFormNodeControl = (control: ForwardRefFn): ExistingProvider => ({
+export const provideFormNodeControl = (control: () => Type<unknown>): ExistingProvider => ({
   provide: FORM_NODE_CONTROL,
   useExisting: forwardRef(control),
 });

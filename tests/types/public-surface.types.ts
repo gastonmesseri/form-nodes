@@ -34,4 +34,12 @@ provideFormNodeConfig({
   },
 });
 
+const classConfig = {
+  classes: {
+    touched: (binding: FormNodeBinding) => binding.node().$api.touched(),
+  },
+};
+classConfig.classes.touched = () => true;
+provideFormNodeConfig(classConfig);
+
 void [FormRoot, FormRootDirective, markAsAsyncValidator, createReactiveWatch, createNodeDefinitionFactory, appendMetadataContributions];

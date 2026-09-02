@@ -119,6 +119,18 @@ const myForm = form({
 | `readonly` | boolean or reactive function | Makes the field readonly |
 | `hidden` | boolean or reactive function | Hides the field |
 
+Start with a single built-in validator, then use an array when the field needs several rules:
+
+```ts
+const myForm = form({
+  displayName: field('', [required]),
+  username: field('', [required, minLength(3)]),
+});
+```
+
+The same array can contain configured built-ins, custom callbacks, and `asyncValidator()` results.
+See [Validation](../guides/validation.md) for the progressively more advanced forms.
+
 State and debounce options inherit from ancestors. A local option can add a state cause or override
 the inherited debounce.
 

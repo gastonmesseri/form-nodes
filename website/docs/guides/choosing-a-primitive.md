@@ -2,14 +2,14 @@
 title: Choosing a primitive
 ---
 
-# Choosing between `field()`, `group()`, `form()`, and `array()`
+# Choosing between `field()`, `form()`, `array()`, and `group()`
 
 Choose a primitive from the shape and lifecycle of the value you need to model:
 
 - Use `field()` for one replaceable value.
-- Use `group()` or nested shorthand for a fixed set of named child nodes.
 - Use `form()` for the fixed object tree that owns a submission workflow.
 - Use `array()` for a dynamic ordered collection of repeated nodes.
+- Use explicit `group()` only when a fixed object boundary needs its own configuration without submission; ordinary nested objects use shorthand.
 
 Most application forms combine several primitives rather than choosing only one.
 
@@ -38,13 +38,13 @@ const myForm = form({
 
 ## At a glance
 
-| Question | `field()` | `group()` | `form()` | `array()` |
+| Question | `field()` | `form()` | `array()` | `group()` |
 | --- | --- | --- | --- | --- |
-| Value shape | Any single value | Non-null object | Non-null object | Non-null array |
-| Structure | Leaf | Fixed named children | Fixed workflow tree | Dynamic repeated items |
-| Submission | No | Inherited state only | Own `submit()` action | Inherited state only |
+| Value shape | Any single value | Non-null object | Non-null array | Non-null object |
+| Structure | Leaf | Fixed workflow tree | Dynamic repeated items | Fixed named children |
+| Submission | No | Own `submit()` action | Inherited state only | Inherited state only |
 | Nullable by default | Yes | No | No | No |
-| Typical use | Name, selection, optional object | Address, settings branch | Registration, checkout, subflow | Contacts, line items |
+| Typical use | Name, selection, optional object | Registration, checkout, subflow | Contacts, line items | Exceptional configured object boundary |
 
 ## Plain object, root group, or form?
 
@@ -108,40 +108,6 @@ Use a field for an object when:
 - replacing the whole object is the natural update;
 - the object itself must be nullable; or
 - individual properties do not need their own errors, touched state, or bindings.
-
-## Use `group()` for named children
-
-A group gives each property its own node while aggregating them into a typed object value.
-
-```ts
-const myForm = form({
-  location: {
-    latitude: field<number>(),
-    longitude: field<number>(),
-  },
-});
-
-myForm.location.latitude.set(47.3769);
-myForm.location.set({ latitude: 47.3769, longitude: 8.5417 });
-```
-
-Choose this representation when properties need independent controls, validation, state, or
-reactive access. The set of named children is fixed by the definition; `patch()` changes their
-values, not the structure.
-
-A plain object in a form definition is shorthand for a `group()`:
-
-```ts
-const myForm = form({
-  address: {
-    city: field(''),
-    country: field(''),
-  },
-});
-```
-
-Use explicit `group({...}, options)` when the nested object itself needs validators, state options,
-or validator messages. Use an explicit nested `form()` only for an independent submission workflow.
 
 ## Use `array()` for repeated dynamic nodes
 
@@ -224,6 +190,41 @@ domain genuinely treat the object atomically.
 only when that branch is independently submittable; ordinary nested structure should remain a
 group or shorthand object. Binding a group to a native `<form [formNode]>` is tolerated and retains
 touch, flush, and reset behavior, but only a form can configure and run a submission action.
+
+## Use explicit `group()` for an exceptional object boundary
+
+Ordinary fixed child structures should use the object shorthand. It already creates a group node,
+gives every property independent controls and state, and aggregates them into a typed object:
+
+```ts
+const myForm = form({
+  address: {
+    city: field(''),
+    country: field(''),
+  },
+});
+```
+
+Use explicit `group({...}, options)` only when that object boundary itself needs validators, state
+options, or validator messages without owning an independent submission workflow:
+
+```ts
+const filters = group({
+  query: field(''),
+  category: field(''),
+}, {
+  disabled: () => !canEditFilters(),
+  validators: [({ value }) => {
+    return value().query || value().category
+      ? null
+      : { kind: 'emptyFilters', message: 'Enter a query or choose a category.' };
+  }],
+});
+```
+
+Here the explicit boundary owns both its reactive disabled state and a validator that considers the
+complete `{ query, category }` value. The object shorthand remains preferable when the boundary
+does not need configuration of its own.
 
 ## Array field or `array()`?
 

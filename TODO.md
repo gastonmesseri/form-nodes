@@ -27,14 +27,21 @@
   - update docs if required, check all docs
   - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
   - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
-
+- provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
+- Create adapter to be able to use angular [formField] with the library: myForm.name.$field, <my-control [formField]="myForm.name.$field">
+- Create isNil helper
+- The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
+  user doesn't provide an injector
+- Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
+- en maxDate, minDate, dateBetween, add shortcuts como 'today' en string
+- Check if debounce in asyncValidators also should include the 'blur' value
+ 
 - Think about how to better structure project folders given current knowledge and existing files
 - [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - Validator framework roadmap (implement in this order)
   - Check TODO_VALIDATORS.md file to include more builtin validators
 - Public api
   - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
-  - Audit existing public configuration types and inline small consumer-relevant unions so IntelliSense shows the accepted values directly. Review validator options and other aliases that may currently hide useful choices, while retaining named types when they are independently valuable to consumers.
 - Validators
   - Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
     - Also handle cases like in lab, like addErrors, and those
@@ -87,12 +94,10 @@
     - (from angular docs) The [formField] directive also syncs field state for attributes like required, disabled, and readonly when appropriate.
     - Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
     - It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
-- Ensure that the library performs tree-shaking (e.g. not used validators )
+- Ensure that the library performs tree-shaking (e.g. not used validators ) [I THINK I ALREADY HANDLED THIS IN SOME COMMIT]
 - Investigate how other angular libraries perform versioning,
   - e.g. do they use the version name as the same as angular current version?
   - do they support previous versions?
-- Audit `readonly` across all consumer-supplied option objects. Prefer mutable properties when `readonly` only adds IntelliSense clutter and does not protect library-owned state.
-- Audit every public options and source parameter from the consumer's IntelliSense perspective. Inline small accepted shapes and unions, clarify reactive source signatures, and retain named types only when they improve reuse or understanding.
 - Ensure that disabledReasons also doesn't fail when it references self form root, when it is declared with a reactive function
 - Consider nesting disabledReasons in myForm.myField.disabled.reasons();
 - Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
@@ -290,6 +295,14 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Audit every public options and source parameter from the consumer's IntelliSense perspective.
+  - Inline small call-site shapes such as `markAsTouched()` and both `asyncValidator()` overloads.
+  - Keep named types for reusable concepts such as node options, validator sources, message catalogs, and async configurations.
+  - Expose small accepted unions directly in node and built-in-validator options and clarify which callback sources are reactive.
+  - Remove the redundant `RequiredOptions` alias while retaining reusable `ValidatorOptions`.
+- [x] Audit `readonly` across consumer-supplied option and configuration objects.
+  - Keep options, submission configuration, validator-message catalogs, async configuration, and binding-class configuration mutable in the public type system.
+  - Retain readonly state and result objects owned by the library.
 - [x] Allow built-in validators to accept a static message string directly when the signature is unambiguous.
   - Preserve the options object for reactive messages and date parsing configuration.
   - Preserve `uniqueItems('property')` as the property key-selector shorthand; use an options object for a no-key-selector message or pass the message after a key selector.

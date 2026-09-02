@@ -39,6 +39,23 @@ group(definitions, validators, options?);
 `GroupOptions` accepts `validators`, `injector`, `validatorMessages`, `debounce`, `disabled`,
 `readonly`, and `hidden`. It does not accept `submission`.
 
+Start with a named validator for a reusable object rule. Use an inline callback for a small rule
+specific to one group:
+
+```ts
+const filters = group({
+  query: field(''),
+  category: field(''),
+}, {
+  validators: ({ value }) => value().query || value().category
+    ? null
+    : { kind: 'emptyFilters', message: 'Enter a query or choose a category.' },
+});
+```
+
+Group validators receive the complete object. Put a validator on a child field when the rule only
+concerns that child's value.
+
 ## Value and children
 
 The group is callable, and direct child access is preferred:
