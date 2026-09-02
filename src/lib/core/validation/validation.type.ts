@@ -228,8 +228,10 @@ export type AsyncValidatorState = {
 
 /** Common node API exposed to validators when no exact owner API is specified. */
 export type ValidatorApi<TValue> = AsyncValidatorState & {
-  /** Root form containing the validated node, or `null` for a standalone node. */
+  /** Nearest explicit form workflow containing the validated node, or `null` when none owns it. */
   readonly form: Signal<PublicNode<Node> | null>;
+  /** Complete root node containing the validated node. */
+  readonly root: Signal<PublicNode<Node>>;
   /** Immediate parent node, or `null` when the validated node is a root. */
   readonly parent: Signal<PublicNode<Node> | null>;
   /** Property names and array indexes locating the node from its root. */
@@ -294,8 +296,10 @@ export type AsyncValidatorApi<TValue> = ValidatorApi<TValue>;
 
 /** Readonly reactive node state shared by all validator context specializations. */
 export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & AsyncValidatorState & {
-  /** Root form inferred by a specialized validator API. */
+  /** Nearest explicit form workflow inferred by a specialized validator API. */
   readonly form: Signal<any>;
+  /** Complete structural root inferred by a specialized validator API. */
+  readonly root: Signal<any>;
   /** Immediate parent inferred by a specialized validator API. */
   readonly parent: Signal<any>;
   /** Property names and array indexes locating the validated node from its root. */

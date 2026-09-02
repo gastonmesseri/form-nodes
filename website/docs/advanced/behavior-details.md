@@ -106,7 +106,8 @@ const removed = myForm.people.removeAt(0);
 
 removed?.parent(); // null
 removed?.path();   // []
-removed?.form();   // the removed aggregate itself, or null for a removed field
+removed?.form();   // itself for an explicit form item, otherwise null
+removed?.root();   // removed
 ```
 
 The former array immediately stops aggregating the removed node's value, errors, pending work,

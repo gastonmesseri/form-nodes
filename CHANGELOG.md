@@ -11,6 +11,8 @@ consumer migration guide.
 
 ### Added
 
+- A reactive `root()` signal on every node and validator context returns the complete structural
+  root, including standalone fields, groups, forms, and arrays.
 - An `error` option on every built-in validator for replacing a failed rule's standard error with
   one or more static or reactively produced custom errors.
 - `field.strict()` and `field.nullable()` shortcuts for forcing one field's nullability regardless
@@ -28,6 +30,9 @@ consumer migration guide.
 
 ### Changed
 
+- `form()` now returns the nearest explicit form workflow instead of the complete structural root.
+  Nested forms own their descendants, while standalone fields, groups, and arrays return `null`;
+  use `root()` when the outermost node is required.
 - `field(undefined)` now preserves `undefined` as its initial value, while an omitted initial value
   continues to start at `null`. Explicitly typed calls include `undefined` in the field value type.
 - Field-level `nullable` options have been removed. Use `field.strict()` or `field.nullable()` for

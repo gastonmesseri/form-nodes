@@ -219,14 +219,18 @@ describe('types', () => {
     field.strict('David', {
       validators: [({ api }) => {
         const parent = api.parent();
-        const rootForm = api.form();
-        if (parent && rootForm) {
+        const owningForm = api.form();
+        const root = api.root();
+        if (parent && owningForm) {
           expectTypeOf(parent).toBeCallableWith();
-          expectTypeOf(rootForm).toBeCallableWith();
+          expectTypeOf(owningForm).toBeCallableWith();
+          expectTypeOf(root).toBeCallableWith();
           // @ts-expect-error native function members are intentionally hidden
           parent.apply(null);
           // @ts-expect-error native function members are intentionally hidden
-          rootForm.bind(null);
+          owningForm.bind(null);
+          // @ts-expect-error native function members are intentionally hidden
+          root.call(null);
         }
         return null;
       }],
@@ -297,19 +301,29 @@ describe('types', () => {
     }
   });
 
-  it('types the root form from every node in its tree', () => {
+  it('types the nearest form and structural root from every node in its tree', () => {
     const profile = form({
       name: field('David'),
       address: { city: field('Zurich') },
     });
 
     expectTypeOf(profile.api.form()).toEqualTypeOf<typeof profile>();
+    expectTypeOf(profile.api.root()).toEqualTypeOf<typeof profile>();
     expectTypeOf(profile.name.api.form()).toEqualTypeOf<typeof profile | null>();
-    expectTypeOf(profile.address.api.form()).toEqualTypeOf<typeof profile>();
+    expectTypeOf(profile.name.api.root()).toEqualTypeOf<typeof profile>();
+    expectTypeOf(profile.address.api.form()).toEqualTypeOf<typeof profile | null>();
+    expectTypeOf(profile.address.api.root()).toEqualTypeOf<typeof profile>();
     expectTypeOf(profile.address.city.api.form()).toEqualTypeOf<typeof profile | null>();
+    expectTypeOf(profile.address.city.api.root()).toEqualTypeOf<typeof profile>();
+
+    const nested = form({ outer: form({ value: field('nested') }) });
+    expectTypeOf(nested.outer.form()).toEqualTypeOf<typeof nested.outer>();
+    expectTypeOf(nested.outer.value.form()).toEqualTypeOf<typeof nested.outer | null>();
+    expectTypeOf(nested.outer.root()).toEqualTypeOf<typeof nested>();
+    expectTypeOf(nested.outer.value.root()).toEqualTypeOf<typeof nested>();
   });
 
-  it('retains the exact root form type through ten parent levels', () => {
+  it('retains exact form and root types through ten parent levels', () => {
     const root = form({
       level1: {
         level2: {
@@ -334,14 +348,17 @@ describe('types', () => {
 
     expectTypeOf(root.level1.level2.level3.level4.level5.level6.level7.level8.level9.value.api.form())
       .toEqualTypeOf<typeof root | null>();
+    expectTypeOf(root.level1.level2.level3.level4.level5.level6.level7.level8.level9.value.api.root())
+      .toEqualTypeOf<typeof root>();
   });
 
-  it('types the root form in an async validator given the refined field API', () => {
+  it('types form and root in an async validator given the refined field API', () => {
     const profile = form({ name: field('David'), age: field(23) });
 
     profile.age.setValidators([
       asyncValidator<number | null, typeof profile.age.api>(async ({ api }) => {
         expectTypeOf(api.form()).toEqualTypeOf<typeof profile | null>();
+        expectTypeOf(api.root()).toEqualTypeOf<typeof profile>();
         return null;
       }),
     ]);

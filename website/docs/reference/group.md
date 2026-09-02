@@ -391,7 +391,8 @@ their value; `children` is a stable readonly map rather than a signal.
 | [`value()`](#value) | Current committed aggregate value. Equivalent to calling the group directly. |
 | [`controlValue()`](#controlvalue) | Complete value from a control bound directly to the group. |
 | [`nodeType()`](#nodetype) | Returns the literal `'group'`. |
-| [`form()`](#form) | Complete root node; a root group returns itself. |
+| [`form()`](#form) | Nearest explicit form workflow, or `null` when none owns the group. |
+| [`root()`](#root) | Complete structural root; a root group returns itself. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
@@ -632,16 +633,32 @@ address.nodeType(); // 'group'
 
 #### form()
 
-**Signature:** `form: Signal<RootNode>`
+**Signature:** `form: Signal<Form | null>`
 
-Returns the complete root node containing the group. A root group returns itself.
+Returns the nearest explicit `form()` containing the group. A standalone or detached group returns
+`null` because it provides structure without owning a form workflow.
 
 ```ts
 const address = group({
   city: field('Zurich'),
 });
 
-address.form() === address; // true
+address.form(); // null
+```
+
+#### root()
+
+**Signature:** `root: Signal<RootNode>`
+
+Returns the complete structural root containing the group. A standalone or detached group returns
+itself.
+
+```ts
+const address = group({
+  city: field('Zurich'),
+});
+
+address.root() === address; // true
 ```
 
 #### parent()

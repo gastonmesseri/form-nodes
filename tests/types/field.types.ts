@@ -1,4 +1,4 @@
-import { field, type DisabledReason, type FieldApi } from '../../src/public-api';
+import { field, type DisabledReason, type FieldApi, type Node } from '../../src/public-api';
 
 field('', { debounce: 'blur' });
 field('', { debounce: async abortSignal => { void abortSignal.aborted; } });
@@ -43,6 +43,7 @@ type _MinimumLength = Expect<Equal<ReturnType<typeof nullable.minLength>, number
 type _MaximumLength = Expect<Equal<ReturnType<typeof nullable.maxLength>, number | null>>;
 type _Patterns = Expect<Equal<ReturnType<typeof nullable.pattern>, readonly RegExp[]>>;
 type _RootKeyInParent = Expect<Equal<ReturnType<typeof nullable.keyInParent>, string | number | null>>;
+type _StandaloneRoot = Expect<Equal<ReturnType<typeof nullable.root>, Node>>;
 type _DisabledReasons = Expect<Equal<ReturnType<typeof nullable.disabledReasons>, readonly DisabledReason[]>>;
 type _NoInternalParentSetter = Expect<Equal<HasKey<typeof nullable, '_setParent'>, false>>;
 type _NoInternalClone = Expect<Equal<HasKey<FieldApi<string | null>, '_clone'>, false>>;

@@ -34,8 +34,10 @@ export type NodeControlBinding = {
 export type NodeApi = {
   /** Returns the concrete primitive represented by this node. */
   nodeType(): NodeType;
-  /** Complete root node containing this node, or `null` when detached generic infrastructure cannot resolve one. */
+  /** Nearest explicit `form()` containing this node, or `null` when no form workflow owns it. */
   form: Signal<Node | null>;
+  /** Complete root node containing this node. A root node returns itself. */
+  root: Signal<Node>;
   /** Immediate structural parent of this node, or `null` when it is a root or has been detached. */
   parent: Signal<Node | null>;
   /**
@@ -306,6 +308,10 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
         : TNode
       : TNode
     : Node;
+export type NearestForm<TNode extends Node> = Node extends TNode ? Node
+  : TNode extends { $api: { form: Signal<infer TForm> } }
+    ? Exclude<TForm, null> extends Node ? Exclude<TForm, null> : never
+    : never;
 export type NodeType = 'field' | 'group' | 'form' | 'array';
 export type InternalNodeApi = NodeApi & {
   /** Runtime discriminant for internal node capability and implementation selection. */

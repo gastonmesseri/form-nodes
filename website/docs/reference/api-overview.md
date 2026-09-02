@@ -288,7 +288,7 @@ Every field, form, and array exposes common reactive state:
 | Validation | `errors()`, `allErrors()`, `getError()`, `valid()`, `invalid()`, `pending()` |
 | Interaction | `touched()`, `dirty()`, their complements, and marking methods |
 | Availability | `disabled()`, `readonly()`, `hidden()`, their complements, reasons, and actions |
-| Tree | `form()`, `parent()`, `path()`, `keyInParent()`, and object-node `add()`, `get()`, `children[key]`, `remove()` |
+| Tree | `form()`, `root()`, `parent()`, `path()`, `keyInParent()`, and object-node `add()`, `get()`, `children[key]`, `remove()` |
 | Controls | `debouncing()`, `flush()`, `focus()` |
 
 Call the node itself for its committed value and use direct members for normal application code.

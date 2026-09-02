@@ -1,7 +1,7 @@
 import type { Signal } from '@angular/core';
 
 import type { OpaqueAngularField } from '../interop/angular-field.type';
-import type { DynamicNode, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DynamicNode, NearestForm, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
@@ -156,7 +156,7 @@ export type GroupChildren<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
-  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
+  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
   & {
     /** Returns the concrete primitive represented by this node. */
     nodeType(): 'group';
@@ -203,8 +203,16 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
     };
     /** Detaches a dynamically added child. Initially declared children cannot be removed. */
     remove(key: string): DynamicNode | undefined;
-    /** Complete root node containing this group. A root group returns itself. */
-    form: Signal<GroupRoot<TNodes, TParent>>;
+    /**
+     * Nearest explicit `form()` containing this group, or `null` when no form workflow owns it.
+     * A nested explicit form is the workflow owner instead of the complete structural root.
+     */
+    form: Signal<NearestForm<TParent> | null>;
+    /**
+     * Complete structural root containing this group. A root or detached group returns itself.
+     * Use this signal when traversal must cross nested form workflow boundaries.
+     */
+    root: Signal<GroupRoot<TNodes, TParent>>;
     /**
      * Validation errors belonging directly to this group, excluding descendant-owned errors.
      *

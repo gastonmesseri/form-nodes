@@ -2,6 +2,10 @@
 title: Tree navigation and API access
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+
+import ancestryLookupsSource from '!!raw-loader!../../examples/ancestry-lookups.example.ts';
+
 # Tree navigation and API access
 
 A form is both a callable value signal and a typed tree of child nodes. Gem Forms keeps those two views connected without requiring string paths.
@@ -132,16 +136,28 @@ Every node exposes reactive tree-location signals:
 profile.address.city.keyInParent(); // 'city'
 profile.address.city.parent(); // profile.address
 profile.address.city.form(); // profile
+profile.address.city.root(); // profile
 profile.address.city.path(); // ['address', 'city']
 ```
 
 - A root node has `parent() === null` and path `[]`.
-- A standalone field has `form() === null`.
+- `form()` returns the nearest explicit `form()` workflow. A nested form returns itself, and every
+  descendant resolves that nested form until another explicit form begins.
+- A standalone field, group, or array has `form() === null`.
+- `root()` returns the complete structural root and therefore never returns `null`. A standalone
+  node returns itself, including a standalone field, group, form, or array.
 - Array item paths use decimal string segments such as `['people', '0', 'name']`.
 - Moving an array item updates its path without recreating the node.
-- Detaching an array item clears its parent and path; a retained reference remains independently usable.
+- Detaching an array item clears its parent and path; a retained reference becomes its own root and
+  remains independently usable. Attaching or reparenting it updates both lookups immediately.
 
-The signals are stable and reactive, so validators and effects can observe a node being attached, detached, or moved.
+An explicit nested form separates workflow ownership from structural ownership. This complete
+example also covers standalone fields, groups, and arrays:
+
+<CodeBlock language="ts" title="ancestry-lookups.example.ts">{ancestryLookupsSource}</CodeBlock>
+
+Both signals are stable and reactive, so validators and effects can observe a node being attached,
+detached, or moved. Validator callbacks receive the same `form()` and `root()` signals.
 
 ## Function property names
 

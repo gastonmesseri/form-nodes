@@ -353,7 +353,8 @@ export function array<TDefinition extends ArrayTemplate>(
   const arrayContext = markAsFieldContext({ value: arrayValue });
   const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource(validatorSource));
   const emptySyncMetadata = new Map();
-  const rootForm = computed(() => arrayParent()?.$api.form() ?? arrayNode) as Signal<ArrayNode<TItem>>;
+  const owningForm = computed(() => arrayParent()?.$api.form() ?? null);
+  const rootNode = computed(() => arrayParent()?.$api.root() ?? arrayNode) as Signal<ArrayNode<TItem>>;
   const arraySyncValidation = computed(() => arrayNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(arrayContext, arrayValidators(), arrayNode));
@@ -560,7 +561,8 @@ export function array<TDefinition extends ArrayTemplate>(
     nodeType: () => 'array',
     items: arrayItems.asReadonly() as Signal<ArrayItems<TItem, Node>>,
     length: computed(() => arrayItems().length),
-    form: rootForm,
+    form: owningForm,
+    root: rootNode,
     parent: arrayParent.asReadonly(),
     path: arrayPath,
     keyInParent: arrayKeyInParent.asReadonly(),

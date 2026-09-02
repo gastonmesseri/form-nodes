@@ -39,7 +39,8 @@ guide documents `.api` only for name collisions and generic infrastructure.
 | `set(value)` | Assigns a complete value |
 | `update(updater)` | Computes and assigns a complete value |
 | `reset()` / `reset(value)` | Clears interaction state, optionally replacing the value |
-| `form()` | Root form or null for a standalone field |
+| `form()` | Nearest explicit form workflow, or null when none owns the node |
+| `root()` | Complete structural root; every standalone root returns itself |
 | `parent()` | Direct parent or null at the root |
 | `path()` | Reactive string path from the root |
 | `keyInParent()` | Property name, array index, or null |

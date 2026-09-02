@@ -44,7 +44,7 @@ The directive synchronizes value, disabled, readonly, required, name, and applic
 
 Native support includes text and numeric inputs, range, checkbox, radio, date-like inputs, single and multiple selects, and textareas. IME composition is buffered until `compositionend`. Dynamically changing between compatible textual input types preserves synchronization.
 
-Bindings receive a stable generated `name` based on the application, root form, and reactive path. Controls bound to the same field share a name, preserving radio groups; moving an array item updates that path-derived name. An explicitly authored native name is replaced.
+Bindings receive a stable generated `name` based on the application, structural root, and reactive path. Controls bound to the same field share a name, preserving radio groups; moving an array item updates that path-derived name. An explicitly authored native name is replaced.
 
 Select values are reapplied when options change, including asynchronously rendered options. Radio bindings reevaluate their authored option value after Angular renders.
 

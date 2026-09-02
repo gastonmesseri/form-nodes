@@ -44,6 +44,27 @@ Every breaking migration will identify:
 from. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
 
+### Form and root ancestry lookups
+
+`form()` now identifies workflow ownership by returning the nearest explicit `form()`. Code that
+used it to reach the outermost structural node must call `root()` instead:
+
+```ts
+const checkout = form({
+  payment: form({
+    card: field(''),
+  }),
+});
+
+checkout.payment.card.form(); // checkout.payment
+checkout.payment.card.root(); // checkout
+```
+
+A standalone `group()` or `array()` previously returned itself from `form()` and now returns
+`null`; its new `root()` signal returns itself. Standalone fields continue to return `null` from
+`form()`, but now also expose themselves through `root()`. Update validator dependencies in the
+same way: use `context.form()` for the owning workflow and `context.root()` for the complete tree.
+
 ### Field nullability options
 
 Per-field `nullable` options were removed before the initial release. Replace

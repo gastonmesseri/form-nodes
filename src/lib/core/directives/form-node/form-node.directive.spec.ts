@@ -883,7 +883,8 @@ describe('FormNode', () => {
     expect(input.name).toMatch(/\.form\d+\.address\.city$/);
     expect(profile.address.city.path()).toEqual(['address', 'city']);
     expect(profile.address.city.parent()).toBe(profile.address);
-    expect(profile.address.city.form()).toBe(profile);
+    expect(profile.address.city.form()).toBe(profile.address);
+    expect(profile.address.city.root()).toBe(profile);
 
     input.value = 'Bern';
     dispatch(input, 'input');

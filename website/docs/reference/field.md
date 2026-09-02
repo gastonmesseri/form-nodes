@@ -312,7 +312,8 @@ state API. Signal properties must be called to read their current value.
 | [`value()`](#value) | Current committed value. Equivalent to calling the field directly. |
 | [`controlValue()`](#controlvalue) | Immediate value received from a bound control; it can differ during debounce. |
 | [`nodeType()`](#nodetype) | Returns the literal `'field'`. |
-| [`form()`](#form) | Root node that owns the field, or `null` for a standalone field. |
+| [`form()`](#form) | Nearest explicit form workflow, or `null` when none owns the field. |
+| [`root()`](#root) | Complete structural root; a standalone field returns itself. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
@@ -441,9 +442,11 @@ username.nodeType(); // 'field'
 
 #### form()
 
-**Signature:** `form: Signal<RootNode | null>`
+**Signature:** `form: Signal<Form | null>`
 
-Returns the complete root node containing the field, or `null` when the field is standalone.
+Returns the nearest explicit `form()` containing the field, or `null` when the field belongs only
+to a standalone `group()` or `array()`, or is itself standalone. A nested explicit form owns its
+descendant fields.
 
 ```ts
 const profile = form({
@@ -451,6 +454,19 @@ const profile = form({
 });
 
 profile.username.form() === profile; // true
+```
+
+#### root()
+
+**Signature:** `root: Signal<RootNode>`
+
+Returns the complete structural root containing the field. A standalone or detached field returns
+itself, and this lookup crosses nested form workflow boundaries.
+
+```ts
+const username = field('ada');
+
+username.root() === username; // true
 ```
 
 #### parent()

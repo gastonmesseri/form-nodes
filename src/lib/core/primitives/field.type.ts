@@ -2,7 +2,7 @@ import type { Injector, Signal } from '@angular/core';
 
 import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, Node, NodeKeyInParent, RootNode } from '../types/node.type';
+import type { DisabledReason, NearestForm, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
 export type FieldOptions<TValue = any> = {
@@ -138,8 +138,16 @@ export type FieldOptions<TValue = any> = {
 export type FieldApi<TValue, TParent extends Node = Node> = {
   /** Returns the concrete primitive represented by this node. */
   nodeType(): 'field';
-  /** Complete root node containing this field, or `null` while the field is a detached root. */
-  form: Signal<RootNode<TParent> | null>;
+  /**
+   * Nearest explicit `form()` containing this field, or `null` when no form workflow owns it.
+   * A nested explicit form is the workflow owner instead of the complete structural root.
+   */
+  form: Signal<NearestForm<TParent> | null>;
+  /**
+   * Complete structural root containing this field. A standalone or detached field returns itself.
+   * Use this signal when traversal must cross nested form workflow boundaries.
+   */
+  root: Signal<Node extends TParent ? Node : RootNode<TParent>>;
   /** Immediate structural parent of this field, or `null` when it is a root or has been detached. */
   parent: Signal<TParent | null>;
   /**
