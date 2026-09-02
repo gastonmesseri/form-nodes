@@ -336,6 +336,12 @@ myForm.people.getError('uniqueItems');
 Programmatic value and structural operations do not mark nodes dirty. `reset()` recursively clears
 interaction state after restoring or replacing the value.
 
+When item controls use Angular `[formField]` through `$field`, these operations also reconcile the
+Angular field paths that have actually been requested through `$field`. Retained connected items
+keep their touched and dirty state across `move()`, `swap()`, and `trackBy` reconciliation; newly
+rendered items connect when Angular evaluates their `$field`, and removed items detach cleanly. See
+[Control binding](../guides/control-binding.md#dynamic-arrays-with-formfield).
+
 ## Availability properties and methods
 
 | Member | Description |

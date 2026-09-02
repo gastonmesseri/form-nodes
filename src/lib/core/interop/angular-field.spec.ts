@@ -186,6 +186,9 @@ describe('Angular Signal Forms field adapter', () => {
       name: string | null;
       address: { city: string | null };
     }>(profile);
+    getAngularField(profile.name);
+    getAngularField(profile.address);
+    getAngularField(profile.address.city);
 
     angularProfile.address.city().markAsTouched();
     angularProfile.address.city().markAsDirty();
@@ -247,6 +250,7 @@ describe('Angular Signal Forms field adapter', () => {
       initialValue: ['angular', 'signals'],
     }));
     const angularTags = getAngularField<(string | null)[]>(tags);
+    getAngularField(tags[1]!);
 
     angularTags[1]!().markAsTouched();
     angularTags[1]!().markAsDirty();
@@ -285,6 +289,66 @@ describe('Angular Signal Forms field adapter', () => {
     expect(tags.dirty()).toBe(false);
     expect(tags[1]!.touched()).toBe(false);
     expect(tags[1]!.dirty()).toBe(false);
+  });
+
+  it('applies item schema and synchronization when an adapted array starts empty', () => {
+    const factory = vi.fn(() => field('', [minLength(3)]));
+    const injector = TestBed.inject(Injector);
+    const tags = runInInjectionContext(injector, () => array(factory));
+    const angularTags = getAngularField<(string | null)[]>(tags);
+
+    expect(factory).toHaveBeenCalledTimes(1);
+    const tag = tags.push('ng');
+    TestBed.flushEffects();
+
+    expect(factory).toHaveBeenCalledTimes(1);
+    expect(getAngularField(tag)).toBe(angularTags[0]);
+    expect(angularTags[0]!().minLength!()).toBe(3);
+    expect(angularTags[0]!().errors().map(error => error.kind)).toEqual(['minLength']);
+
+    tag.disable('Unavailable');
+    TestBed.flushEffects();
+    expect(angularTags[0]!().disabled()).toBe(true);
+
+    tag.enable();
+    angularTags[0]!().markAsTouched();
+    angularTags[0]!().markAsDirty();
+    TestBed.flushEffects();
+    expect(tag.touched()).toBe(true);
+    expect(tag.dirty()).toBe(true);
+
+    tags.removeAt(0);
+    TestBed.flushEffects();
+    expect(angularTags().value()).toEqual([]);
+  });
+
+  it('remaps primitive array interaction state by Gem item identity', () => {
+    const injector = TestBed.inject(Injector);
+    const tags = runInInjectionContext(injector, () => array(field(''), ['first', 'second']));
+    const angularTags = getAngularField<(string | null)[]>(tags);
+    const second = tags[1]!;
+    getAngularField(tags[0]!);
+    getAngularField(second);
+
+    second.markAsTouched();
+    second.markAsDirty();
+    TestBed.flushEffects();
+    tags.moveUp(1);
+    TestBed.flushEffects();
+
+    expect(tags[0]).toBe(second);
+    expect(getAngularField(second)).toBe(angularTags[0]);
+    expect(angularTags[0]!().touched()).toBe(true);
+    expect(angularTags[0]!().dirty()).toBe(true);
+    expect(angularTags[1]!().touched()).toBe(false);
+    expect(angularTags[1]!().dirty()).toBe(false);
+
+    tags.moveDown(0);
+    TestBed.flushEffects();
+    expect(tags[1]).toBe(second);
+    expect(getAngularField(second)).toBe(angularTags[1]);
+    expect(angularTags[1]!().touched()).toBe(true);
+    expect(angularTags[1]!().dirty()).toBe(true);
   });
 
   it('keeps availability derived from the library node', () => {

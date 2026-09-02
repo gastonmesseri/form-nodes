@@ -7,12 +7,6 @@
   The current
   baseline was audited against Angular `v22.1.4` at commit
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
-  - [ ] Extend independent `touched` and `dirty` synchronization to array items created, removed,
-    moved, or reconciled after adapter creation as part of dynamic-array support.
-  - [ ] Support dynamic arrays after adapter creation: push, insert, remove, clear, set, reset,
-    move, swap, and `trackBy` reconciliation. Preserve item identity and interaction state when
-    appropriate, update item `$field` paths after reordering, create synchronization for new items,
-    and dispose synchronization for removed items.
   - [ ] Define the recommended form-root integration when controls use `[formField]`, covering Gem
     Forms submit behavior, native submit and reset events, parse errors, `novalidate`, focus of the
     first invalid control, and whether Angular's form-root directive should ever be combined with
@@ -388,6 +382,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Preserve explicit `targetNode` semantics for aggregate and cross-field validators by
     attaching each adapted error to the corresponding Angular field path. Permit validator results
     to target a Gem node while reserving `formNode` for concrete rendered bindings.
+  - [x] Resolve dynamic array item `$field` bindings lazily instead of eagerly mirroring every
+    descendant. Remap only requested nodes after moves or `trackBy` reconciliation, preserve their
+    interaction state, and clean up removed connections before Angular observes an orphan field.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.
