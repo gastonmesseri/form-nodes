@@ -60,6 +60,11 @@ Select values are reapplied when options change, including asynchronously render
 
 Invalid native numeric or date input produces a `parse` error while retaining the last valid model value and the user's raw text. A later valid input, programmatic update, reset, rebind, or binding destruction clears the binding-owned parse error.
 
+Gem validation is also visible through Angular's field state. The adapter preserves the complete
+error payload—including `message`, constraint data, and custom properties—and maps an explicit Gem
+`targetNode` to the corresponding Angular field path. Angular-originated parse errors are not fed
+back into that same Angular state a second time.
+
 Date-like controls can change native validity without emitting an input event. Browser bindings monitor those transitions; the mechanism is CSP nonce-aware and is not installed during server rendering.
 
 ## Querying the binding

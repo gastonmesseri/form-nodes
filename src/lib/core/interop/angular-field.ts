@@ -36,6 +36,7 @@ const nodeInjectors = new WeakMap<Node, Injector>();
 const rootAdapters = new WeakMap<Node, AngularFieldAdapter>();
 const angularFieldNodes = new WeakMap<FieldTree<any>, Node>();
 const angularFormNodeBindings = new WeakMap<FormFieldBinding, FormNodeBinding>();
+const adaptedAngularFormNodeBindings = new WeakSet<FormNodeBinding>();
 
 const getCurrentInjector = (): Injector | undefined => {
   try {
@@ -94,14 +95,24 @@ const configureConstraints = (path: SchemaPath<any>, resolveNode: () => Node) =>
   }
 };
 
+const toAngularValidationError = (error: ValidationError.WithTargetNode<Node>): ValidationError => {
+  const angularError = { ...error } as Record<string, unknown>;
+  Reflect.deleteProperty(angularError, 'targetNode');
+  Reflect.deleteProperty(angularError, 'formNode');
+  return angularError as unknown as ValidationError;
+};
+
 const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: Node) => {
   disabled(path, { when: () => resolveNode()!.$api.disabled() });
   configureReadonly(path, { when: () => resolveNode()!.$api.readonly() });
   hidden(path, { when: () => resolveNode()!.$api.hidden() });
   required(path, { when: () => resolveNode()!.$api.required() });
-  validate(path, () => resolveNode()!.$api.errors().map(error => ({
-    kind: error.kind,
-  })));
+  validate(path, () => {
+    const targetNode = resolveNode();
+    return (getRootNode(targetNode).$api.allErrors() as readonly ValidationError.WithTargetNode<Node>[])
+      .filter(error => error.targetNode === targetNode && (!error.formNode || !adaptedAngularFormNodeBindings.has(error.formNode)))
+      .map(error => toAngularValidationError(error));
+  });
 
   const internalSample = sample as InternalNode;
   if (internalSample.$api._nodeType === 'field') configureConstraints(path, resolveNode);
@@ -229,6 +240,7 @@ export const getFormNodeBindingForAngularField = (binding: FormFieldBinding): Fo
     reset: () => node().$api.reset(),
   };
   angularFormNodeBindings.set(binding, adaptedBinding);
+  adaptedAngularFormNodeBindings.add(adaptedBinding);
   return adaptedBinding;
 };
 

@@ -78,6 +78,17 @@ const completeProfile = validator<{ name: string | null; age: number | null }>((
 });
 form({ name: field('David'), age: field(42) }, [completeProfile]);
 
+const confirmation = field('different');
+form({ password: field('secret'), confirmation }, {
+  validators: ({ value }) => value().password === value().confirmation
+    ? null
+    : { kind: 'passwordMismatch', targetNode: confirmation },
+});
+// @ts-expect-error A validator target must be a Gem Forms node.
+field('', [() => ({ kind: 'invalidTarget', targetNode: 'name' })]);
+// @ts-expect-error formNode is reserved for errors produced by concrete control bindings.
+field('', [() => ({ kind: 'invalidBindingOwner', formNode: {} })]);
+
 const atLeastOneItem = validator<readonly (string | null)[]>(({ value }) => {
   return value().length > 0 ? null : { kind: 'emptyArray' };
 });

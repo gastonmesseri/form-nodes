@@ -13,12 +13,6 @@
     move, swap, and `trackBy` reconciliation. Preserve item identity and interaction state when
     appropriate, update item `$field` paths after reordering, create synchronization for new items,
     and dispose synchronization for removed items.
-  - [ ] Preserve complete validation-error information instead of reducing every error to
-    `{ kind }`, including messages, custom properties, expected and actual values, and other
-    validator metadata consumed through the Angular field state.
-  - [ ] Preserve `targetNode` semantics for form/group and cross-field validators by attaching each
-    adapted error to the corresponding Angular field path rather than always to the validator's
-    source node.
   - [ ] Define the recommended form-root integration when controls use `[formField]`, covering Gem
     Forms submit behavior, native submit and reset events, parse errors, `novalidate`, focus of the
     first invalid control, and whether Angular's form-root directive should ever be combined with
@@ -388,6 +382,12 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     field metadata for native and custom `[formField]` controls. Keep the sources reactive, support
     number and date limits, use metadata-only rules so Gem remains the sole validator owner, and
     avoid duplicate validation errors.
+  - [x] Preserve complete Gem validation-error payloads in Angular field state, including messages,
+    constraint data, and custom properties, while preventing Angular-originated parse errors from
+    being fed back into Angular a second time.
+  - [x] Preserve explicit `targetNode` semantics for aggregate and cross-field validators by
+    attaching each adapted error to the corresponding Angular field path. Permit validator results
+    to target a Gem node while reserving `formNode` for concrete rendered bindings.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

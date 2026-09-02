@@ -487,9 +487,9 @@ The same context shape is used for field-level and form-level validators. In a f
 
 Additional Angular Signal Forms context members such as `state`, `fieldTree`, `valueOf`, `stateOf`, `fieldTreeOf`, and `pathKeys` are not implemented yet. They will be designed separately instead of being included with provisional semantics.
 
-Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a single `ValidationError.WithoutTargetNode`, or a readonly array of such errors.
+Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a single `ValidationError.ValidatorResult`, or a readonly array of such errors.
 
-Validators do not assign their own target. When their results are exposed through `errors()`, the validator runner associates every error with the node being validated through `targetNode`:
+Validators normally omit their own target. When their results are exposed through `errors()`, the validator runner associates every untargeted error with the node being validated through `targetNode`:
 
 ```ts
 const name = field('', [required]);
@@ -505,9 +505,10 @@ The public error variants are:
 ValidationError.WithTargetNode<TNode>
 ValidationError.WithOptionalTargetNode<TNode>
 ValidationError.WithoutTargetNode
+ValidationError.ValidatorResult<TNode>
 ```
 
-Field errors use their `Field<TValue>` as the target type. Form errors use their complete `Form<TNodes>` as the target type. The internal defaulting operation preserves a target that is already present, preparing the error model for future tree validators that can direct an error to a different node.
+Field errors use their `Field<TValue>` as the target type. Form errors use their complete `Form<TNodes>` as the target type. A form, group, or other aggregate validator may explicitly return a descendant in `targetNode` for a cross-field rule. The internal defaulting operation preserves that target; otherwise it assigns the validated node. `formNode` remains reserved for errors produced by concrete rendered bindings.
 
 This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but is named `targetNode` to match this library's field-and-form node model. An error produced by a concrete control binding may additionally expose `formNode: FormNodeBinding`. Node validators leave this property absent because their errors belong to the node rather than to one rendered control.
 

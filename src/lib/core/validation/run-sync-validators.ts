@@ -41,7 +41,7 @@ const resolveComposableResult = <TValue>(
   if (Array.isArray(result)) {
     const items = result.filter(isNotNil);
     const validators = items.filter(item => typeof item === 'function');
-    if (validators.length === 0) return items as readonly ValidationError.WithoutTargetNode[];
+    if (validators.length === 0) return items as readonly ValidationError.ValidatorResult[];
     if (validators.length !== items.length) {
       throw new Error('Synchronous validator composition cannot mix validators and validation errors in the same array.');
     }
