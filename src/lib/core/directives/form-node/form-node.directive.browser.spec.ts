@@ -1,6 +1,6 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { FormField, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
@@ -306,6 +306,46 @@ describe('FormNode in Chromium', () => {
     expect(profile.name.touched()).toBe(false);
     expect(profile.name.dirty()).toBe(false);
     expect(input.value).toBe('Pending');
+  });
+
+  it('uses the Gem form root for invalid submission and focus with formField controls', () => {
+    const action = vi.fn();
+
+    @Component({
+      template: `
+        <form [formNode]="profile">
+          <input [formField]="profile.displayName.$field">
+          <button type="submit">Save</button>
+        </form>
+      `,
+      imports: [FormNode, FormField],
+    })
+    class Host {
+      profile = form({
+        displayName: field('', [required]),
+      }, {
+        submission: {
+          action,
+          onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus(),
+        },
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const profile = fixture.componentInstance.profile;
+    const formElement = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+
+    formElement.dispatchEvent(submitEvent);
+    TestBed.flushEffects();
+
+    expect(formElement.noValidate).toBe(true);
+    expect(submitEvent.defaultPrevented).toBe(true);
+    expect(action).not.toHaveBeenCalled();
+    expect(profile.displayName.touched()).toBe(true);
+    expect(document.activeElement).toBe(input);
   });
 
   it('applies form-node classes through the Angular formField adapter', () => {

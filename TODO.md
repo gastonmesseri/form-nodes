@@ -4,33 +4,20 @@
 
 - Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Gem Forms remains
   the sole authority for form state and operations. Do not expose or reproduce Angular's form API.
-  The current
-  baseline was audited against Angular `v22.1.4` at commit
+  Only support behavior required by controls that actually bind a node's terminal `$field`; do not
+  eagerly mirror unused nodes or reproduce Angular's form engine. The current baseline was audited
+  against Angular `v22.1.4` at commit
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
-  - [ ] Define the recommended form-root integration when controls use `[formField]`, covering Gem
-    Forms submit behavior, native submit and reset events, parse errors, `novalidate`, focus of the
-    first invalid control, and whether Angular's form-root directive should ever be combined with
-    the library root binding.
-  - [ ] Harden adapter ownership and lifecycle for access before attachment, detached nodes,
-    reparenting between roots, moves between injectors, destroyed injectors, repeated `$field`
-    access after destruction, and prevention of two live adapters synchronizing the same node.
-  - [ ] Verify injector resolution for a root-created tree, explicitly configured child injectors,
-    detached array items, and nodes created outside an injection context before being attached to a
-    root with an injector.
-  - [ ] Confirm that availability state remains intentionally node-to-Angular where Angular exposes
-    derived readonly state (`disabled`, `readonly`, `hidden`, and `required`), and document rather
-    than emulate unsupported reverse setters.
-  - [ ] Build a complete adapter test matrix across focused integration, public type tests, Angular
-    template type checking, real-browser behavior, SSR/hydration, package/AOT consumption, and
-    lifecycle cleanup. Cover text, number, date, checkbox, radio, select, multi-select, textarea,
-    signal-model custom controls, input/output controls, CVAs, Angular Material, PrimeNG, multiple
-    bindings, dynamic rebinding, parsing failures, constraints, debounce, focus, reset, arrays,
-    submission, and configuration classes.
-  - [ ] Update `docs/behavior.md` and the consumer website as each adapter capability or intentional
-    limitation is implemented; keep the Angular tag, commit, source paths, and relevant test paths
-    recorded.
-  - [ ] The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
-    user doesn't provide an injector. I think this is important for the angular $field adapter, as we normally don't pass an injector to the field() or form()
+  - [ ] Verify that lazily connected descendants, including array items added later, resolve the
+    root adapter's injector. Nodes whose complete root was created outside injection must continue
+    to require an explicit `injector` option and throw the documented error otherwise.
+  - [ ] Investigate whether a node without an injector can adopt one from a concrete `[formNode]`
+    directive or its host `DebugNode`, then make that injector available to the node tree and the
+    `$field` adapter. Determine how to avoid circular initialization because `[formField]` needs
+    `$field` before its own binding exists, and do not rely on private Angular APIs.
+  - [ ] Verify cleanup for the concrete supported lifecycle: a bound node is removed from its tree,
+    its Angular view is destroyed, or the owning injector is destroyed. Do not add machinery for
+    speculative cross-root or cross-injector reparenting unless a supported public workflow needs it.
 - The new nodes in array() do they have an injector? where is it taken from? (should it pick it from the parent array?)
 - website docs
   - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
@@ -385,6 +372,19 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Resolve dynamic array item `$field` bindings lazily instead of eagerly mirroring every
     descendant. Remap only requested nodes after moves or `trackBy` reconciliation, preserve their
     interaction state, and clean up removed connections before Angular observes an orphan field.
+  - [x] Keep availability intentionally directional: Gem owns `disabled`, `readonly`, `hidden`, and
+    `required`; Angular derives them for `[formField]`. Do not emulate reverse setters that Angular
+    does not expose.
+  - [x] Reject an exhaustive adapter matrix as a standing implementation goal. Add focused unit,
+    template, browser, SSR, hydration, or package tests only when a supported binding capability
+    requires them; do not reproduce Angular's own cross-library test suite.
+  - [x] Keep adapter documentation updates as a standing project rule in `AGENTS.md`, not a
+    perpetual unfinished `$field` task. Record the inspected Angular version and governing source
+    paths whenever adapter behavior changes.
+  - [x] Document and verify the recommended native `<form>` composition: use Gem's `[formNode]` as
+    the sole root for submit, reset, and `novalidate`, while individual controls may use
+    `[formField]="node.$field"`. Invalid adapted controls block submission and can be focused from
+    `onInvalid`; do not combine competing form-root directives.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

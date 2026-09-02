@@ -1915,6 +1915,15 @@ native `<form>` containing `$field`-backed controls should use `[formNode]` on t
 needs Gem Forms reset behavior; the root directive resets the library tree, and the adapter then
 resets all Angular `FormField` controls.
 
+This is the recommended composition even when every rendered control uses `[formField]`:
+`<form [formNode]="myForm">` remains the sole form root, and descendants bind terminal adapters as
+`[formField]="myForm.name.$field"`. The two engines must not install competing root directives on
+the same native form. `[formNode]` applies `novalidate`, prevents native navigation, delegates
+submit and reset to the Gem tree, and therefore includes adapted parse errors in submission
+validity. Invalid-submit UI remains application policy; for example,
+`onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus()` focuses the first
+reported bound error target and safely does nothing when that target has no rendered binding.
+
 Independent interaction clearing uses the runtime `FieldNode.markAsUntouched()` and
 `FieldNode.markAsPristine()` methods present in Angular 22.1.4. Angular omits those methods from its
 public `FieldState` type even though its implementation exposes them, so this access remains

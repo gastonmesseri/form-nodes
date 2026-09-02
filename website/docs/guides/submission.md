@@ -58,6 +58,42 @@ runs the configured action. Binding a `group()` is intentionally tolerated: subm
 flushes the tree but runs no action. This makes an accidental group/form choice non-destructive
 while keeping submission configuration exclusive to `form()`.
 
+Controls may instead use Angular Signal Forms' `FormField`. Keep `[formNode]` on the native form so
+Gem remains the only form root:
+
+```ts
+import { Component } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
+
+import { FormNode, field, form, required } from '@gem/ng-forms';
+
+@Component({
+  imports: [FormNode, FormField],
+  template: `
+    <form [formNode]="myForm">
+      <input [formField]="myForm.email.$field" />
+      <button type="submit">Save</button>
+      <button type="reset">Reset</button>
+    </form>
+  `,
+})
+export class EmailEditor {
+  myForm = form({
+    email: field('', [required]),
+  }, {
+    submission: {
+      action: (_form, value) => save(value),
+      onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus(),
+    },
+  });
+}
+```
+
+The adapted control contributes its value, interaction state, and parse errors to the Gem tree, so
+the normal invalid-submission path still applies. Do not place Angular's separate form-root
+directive on the same `<form>`. See [Control binding](./control-binding.md#native-form-root-with-formfield-controls)
+for the complete composition rule and reset semantics.
+
 ## Submission state
 
 `submitting()` is true while an asynchronous action is running and is inherited by descendants. Repeated submissions do not start overlapping actions.

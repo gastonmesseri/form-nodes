@@ -95,6 +95,50 @@ myForm.people.move(0, 1);
 Gem remains the source of collection identity and operations. Use `array()` methods rather than
 trying to mutate the opaque Angular `$field`.
 
+## Native form root with `formField` controls
+
+Use Gem's `[formNode]` binding on the native `<form>`, even when individual controls use Angular's
+`[formField]`. This keeps submission and reset owned by the same Gem form tree:
+
+```ts
+import { Component } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
+
+import { FormNode, field, form, required } from '@gem/ng-forms';
+
+@Component({
+  imports: [FormNode, FormField],
+  template: `
+    <form [formNode]="myForm">
+      <input [formField]="myForm.displayName.$field" />
+      <button type="submit">Save</button>
+      <button type="reset">Reset</button>
+    </form>
+  `,
+})
+export class ProfileEditor {
+  myForm = form({
+    displayName: field('', [required]),
+  }, {
+    submission: {
+      action: (_form, value) => saveProfile(value),
+      onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus(),
+    },
+  });
+}
+```
+
+`[formNode]` applies `novalidate`, prevents native navigation, delegates submit to
+`myForm.submit()`, and delegates native reset to `myForm.reset()`. Errors produced through an
+adapted `[formField]` control participate in the same validity and submission checks. The optional
+`onInvalid` callback above focuses the first reported error target; `$api` is appropriate here
+because generic error targets do not expose a statically known concrete node type. `focus()` is a
+no-op when that node has no rendered binding.
+
+Do not add Angular's separate form-root directive to the same `<form>`. The Angular `FormField`
+import is required for the controls only; Gem's `FormNode` remains the single root binding. Controls
+inside that form may mix `[formNode]` and `[formField]` when an integration needs both styles.
+
 Date-like controls can change native validity without emitting an input event. Browser bindings monitor those transitions; the mechanism is CSP nonce-aware and is not installed during server rendering.
 
 ## Querying the binding

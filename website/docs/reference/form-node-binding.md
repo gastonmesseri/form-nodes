@@ -231,15 +231,22 @@ export class FormNodeWrapperDirective {}
 
 ## Native form submission
 
-The same `FormNode` import binds controls and a root node to a native form:
+Use `FormNode` as the single root binding. Its controls may use either `[formNode]` or Angular's
+`[formField]` adapter:
 
 ```ts
+import { Component } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
+
+import { FormNode, field, form } from '@gem/ng-forms';
+
 @Component({
-  imports: [FormNode],
+  imports: [FormNode, FormField],
   template: `
     <form [formNode]="myForm">
-      <input [formNode]="myForm.email" />
+      <input [formField]="myForm.email.$field" />
       <button type="submit">Save</button>
+      <button type="reset">Reset</button>
     </form>
   `,
 })
@@ -258,6 +265,7 @@ On a native `<form>`, the directive prevents native navigation and applies `nova
 `form()` delegates submit to `form.submit()`. A bound `group()` is also accepted: submit marks and
 flushes its tree without running an action. Native reset delegates to either node's `reset()`.
 Fields and arrays remain invalid native-form roots.
+Do not combine `[formNode]` with Angular's separate form-root directive on the same element.
 
 See [Control binding](../guides/control-binding.md), [Custom controls](../guides/custom-controls.md),
 and [Form submission](../guides/submission.md).
