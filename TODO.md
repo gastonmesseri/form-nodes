@@ -8,7 +8,7 @@
   eagerly mirror unused nodes or reproduce Angular's form engine. The current baseline was audited
   against Angular `v22.1.4` at commit
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
-  - [ ] Verify that lazily connected descendants, including array items added later, resolve the
+  - [x] Verify that lazily connected descendants, including array items added later, resolve the
     root adapter's injector. Nodes whose complete root was created outside injection must continue
     to require an explicit `injector` option and throw the documented error otherwise.
   - [ ] Investigate whether a node without an injector can adopt one from a concrete `[formNode]`
@@ -18,7 +18,6 @@
   - [ ] Verify cleanup for the concrete supported lifecycle: a bound node is removed from its tree,
     its Angular view is destroyed, or the owning injector is destroyed. Do not add machinery for
     speculative cross-root or cross-injector reparenting unless a supported public workflow needs it.
-- The new nodes in array() do they have an injector? where is it taken from? (should it pick it from the parent array?)
 - website docs
   - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -36,6 +35,9 @@
 - Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
 - Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown
+
+- The new nodes in array() do they have an injector? where is it taken from? (should it pick it from the parent array?)
+  - i am worried because they can be created dynamically
  
 - Consider including dynamic controls in form() (like in reactive forms)
   - update docs if required, check all docs
@@ -327,6 +329,13 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Verify injector ownership for nodes created later by `array()`.
+  - [x] Resolve `$field` through the complete root's captured or explicit injector, including for
+    lazily created nested descendants whose item factory runs outside an injection context.
+  - [x] Keep injector ownership at the adapter root instead of copying it into every generated item.
+  - [x] Preserve the documented error when the complete root was created outside dependency
+    injection without an explicit `injector`; entering an ambient injection context later does not
+    make that root adopt it implicitly.
 - [x] Create an Angular Signal Forms adapter exposed as `myForm.name.$field` for direct use with `<my-control [formField]="myForm.name.$field">`.
   - [x] Back `$field` with a real, stable Angular `FieldTree` created once per root rather than a structural imitation or an independent Angular form per child.
   - [x] Synchronize values bidirectionally and mirror disabled, readonly, hidden, required, validation, touched, and dirty state.
