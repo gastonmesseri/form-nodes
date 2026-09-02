@@ -131,3 +131,32 @@ form({ email: field('') }, { validators: (ctx) => {
   type _FormKind = Expect<Equal<ReturnType<ReturnType<typeof ctx.node>['nodeType']>, 'form'>>;
   return null;
 } });
+
+// Display improvements must preserve nominal values, unions, tuples, and generic validators.
+class PrivateValue {
+  private readonly identity = 1;
+  getIdentity() {
+    return this.identity;
+  }
+}
+field.strict(new PrivateValue(), [(ctx) => {
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, PrivateValue>>;
+  return null;
+}]);
+field(new Date(), [asyncValidator(async (ctx) => {
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, Date | null>>;
+  return null;
+})]);
+field.strict<readonly [string, number]>(['entry', 1], [(ctx) => {
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, readonly [string, number]>>;
+  return null;
+}]);
+field.strict<{ kind: 'text'; text: string } | { kind: 'count'; count: number }>({ kind: 'text', text: '' }, [(ctx) => {
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, { kind: 'text'; text: string } | { kind: 'count'; count: number }>>;
+  return null;
+}]);
+const genericValue = <TValue>(ctx: ValidatorContext<TValue>) => {
+  type _Value = Expect<Equal<ReturnType<typeof ctx.value>, TValue>>;
+  return null;
+};
+field('', [genericValue]);

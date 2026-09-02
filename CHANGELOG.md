@@ -32,7 +32,8 @@ consumer migration guide.
 
 - Inline validators now infer their owning `Field`, `Form`, `Group`, or `ArrayNode`, including
   aggregate children and array items. This also works through inline `validator()` and
-  `asyncValidator()` helpers, with configured primitives and nullability overrides.
+  `asyncValidator()` helpers, with configured primitives and nullability overrides. IntelliSense
+  shows the expanded model for inline `context.value()` reads, matching the node value signal.
 - Validator contexts expose the validated node through the same readonly signal under `node` and
   `field`. Use `context.node()` (or `context.field()`) for the node and `context.value()` for its
   value. Flat `context.form()` and `context.root()` have been removed; use `context.node().form()`
