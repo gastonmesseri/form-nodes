@@ -119,6 +119,53 @@ describe('FormNode in Chromium', () => {
     expect(input.disabled).toBe(false);
   });
 
+  it('bridges a native form reset through formNode into formField controls', () => {
+    @Component({
+      template: `
+        <form [formNode]="profile">
+          <input [formField]="profile.name.$field">
+        </form>
+      `,
+      imports: [FormNode, FormField],
+    })
+    class Host {
+      profile = form({
+        name: field('David', { debounce: 'blur' }),
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const profile = fixture.componentInstance.profile;
+    const formElement = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.value = 'Pending';
+    dispatch(input, 'input');
+    dispatch(input, 'blur');
+    TestBed.flushEffects();
+    expect(profile.name()).toBe('Pending');
+    expect(profile.name.touched()).toBe(true);
+    expect(profile.name.dirty()).toBe(true);
+
+    input.value = 'Another pending value';
+    dispatch(input, 'input');
+    TestBed.flushEffects();
+    expect(profile.name()).toBe('Pending');
+    expect(profile.name.debouncing()).toBe(true);
+
+    formElement.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(profile.name()).toBe('Pending');
+    expect(profile.name.controlValue()).toBe('Pending');
+    expect(profile.name.debouncing()).toBe(false);
+    expect(profile.name.touched()).toBe(false);
+    expect(profile.name.dirty()).toBe(false);
+    expect(input.value).toBe('Pending');
+  });
+
   it('applies form-node classes through the Angular formField adapter', () => {
     @Component({
       template: `<input [formField]="name.$field">`,

@@ -115,6 +115,9 @@ const synchronizeTreeState = (node: Node, fieldTree: FieldTree<any>, injector: I
       (node as InternalNode).$api._registerControlBinding({
         element: binding.element,
         focus: options => binding.focus(options),
+        reset: () => {
+          if (fieldTree().formFieldBindings()[0] === binding) fieldTree().reset(node());
+        },
       }),
     );
     onCleanup(() => unregister.forEach(cleanup => cleanup()));

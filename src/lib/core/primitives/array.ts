@@ -466,6 +466,7 @@ export function array<TDefinition extends NodeDefinition>(
     arraySelfTouched.set(false);
     arraySelfDirty.set(false);
     notifyExternalValidationReset(arrayNode);
+    arrayControlBindings.forEach(binding => binding.reset?.());
   };
   const getControlBindingForFocus = () => {
     const own = findFirstControlBindingInDom(arrayControlBindings);

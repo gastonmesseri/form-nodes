@@ -24,6 +24,7 @@ export type DisabledReason<TNode extends Node = Node> = {
 export type NodeControlBinding = {
   readonly element: Element;
   focus(options?: FocusOptions): void;
+  reset?(): void;
 };
 
 export type NodeApi = {

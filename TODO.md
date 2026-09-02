@@ -2,14 +2,13 @@
 
 ## Up next
 
-- Harden the `$field` adapter for complete Angular `[formField]` interoperability. The current
+- Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Gem Forms remains
+  the sole authority for form state and operations. Do not expose or reproduce Angular's form API.
+  The current
   baseline was audited against Angular `v22.1.4` at commit
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
   - [ ] Extend independent `touched` and `dirty` synchronization to array items created, removed,
     moved, or reconciled after adapter creation as part of dynamic-array support.
-  - [ ] Bridge reset behavior in both directions, including library `reset()` and native form reset,
-    Angular parsing-state cleanup, custom-control reset hooks, CVA state, pending debounced values,
-    and reset with an explicit value.
   - [ ] Propagate Angular native and custom-control parse errors back into library validation so
     `valid()`, `allErrors()`, and `submit()` cannot disagree with the rendered control; remove the
     errors when parsing recovers or the binding is destroyed.
@@ -30,10 +29,6 @@
     `minLength`, `maxLength`, and `pattern` both validate and receive an equivalent error from the
     library. Decide which side owns constraint validation and which side only communicates binding
     metadata.
-  - [ ] Mirror asynchronous validation lifecycle, especially `pending`, cancellation, stale-result
-    handling, and pending aggregation, without executing validators twice.
-  - [ ] Mirror form submission lifecycle where Angular controls can observe it, including
-    `submitting`, descendant propagation, invalid submission, concurrent submission, and completion.
   - [ ] Define the recommended form-root integration when controls use `[formField]`, covering Gem
     Forms submit behavior, native submit and reset events, parse errors, `novalidate`, focus of the
     first invalid control, and whether Angular's form-root directive should ever be combined with
@@ -336,6 +331,12 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 ## Later
 
 - Reconsider whether `array()` should expose `patch()`; its positional semantics may be confusing and the same updates can be expressed explicitly through item nodes or other array operations.
+- Reconsider mirroring Gem asynchronous-validation `pending` into Angular field state only if
+  Angular provides a supported external-state mechanism. Gem must remain the validator owner and
+  validators must never execute twice merely to reproduce Angular's lifecycle.
+- Reconsider exposing Gem submission state to Angular controls only if a concrete control use case
+  appears. Submission remains owned by `[formNode]`; the `$field` adapter must not reproduce or
+  combine with Angular `FormRoot` by default.
 
 ## Ideas
 
@@ -364,7 +365,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Verify and document that an existing `provideSignalFormsConfig({ classes })` applies
     directly to `$field`-backed controls through Angular's native `FormFieldBinding` contract.
   - [x] Synchronize leaf-node `touched` and `dirty` independently in both directions, including
-    control-originated input and blur, Angular reset, node-originated clearing, and node-owned
+    control-originated input and blur, node-originated reset and clearing, and node-owned
     disabled, readonly, and hidden state flowing to Angular.
   - [x] Route control-originated Angular model changes through the bound node's control-value
     channel instead of `root.set()`, preserving `controlValue()`, numeric and blur debounce,
@@ -378,6 +379,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Register every Angular `FormFieldBinding` with its original library node so node-level and
     aggregate `focus()` work, multiple bindings use DOM order, destroyed and rebound controls
     unregister, and Angular custom-control focus implementations are preserved.
+  - [x] Propagate Gem subtree and explicit-value resets into Angular parsing/control-value cleanup
+    and native, custom-control, or CVA reset hooks; cancel pending Gem debounce and handle native
+    form reset through `[formNode]`. Angular's internal field reset is deliberately not a public
+    operation because `$field` is opaque and Gem Forms is the sole state authority.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

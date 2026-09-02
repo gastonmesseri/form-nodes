@@ -205,10 +205,12 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     notifyExternalValidationReset(formNode);
     if (args.length === 0) {
       controlKeys().forEach(key => controls[key]!.$api.reset());
+      formControlBindings.forEach(binding => binding.reset?.());
       return;
     }
     const value = args[0];
     controlKeys().forEach(key => controls[key]!.$api.reset(value[key]));
+    formControlBindings.forEach(binding => binding.reset?.());
   };
   const getControlBindingForFocus = () => {
     const own = findFirstControlBindingInDom(formControlBindings);
