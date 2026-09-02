@@ -166,6 +166,119 @@ describe('Angular Signal Forms field adapter', () => {
     expect(angularState.dirty()).toBe(false);
   });
 
+  it('synchronizes aggregate interaction state across ancestors and descendants', () => {
+    const injector = TestBed.inject(Injector);
+    const profile = runInInjectionContext(injector, () => form({
+      name: field('David'),
+      address: {
+        city: field('Zurich'),
+      },
+    }));
+    const angularProfile = getAngularField<{
+      name: string | null;
+      address: { city: string | null };
+    }>(profile);
+
+    angularProfile.address.city().markAsTouched();
+    angularProfile.address.city().markAsDirty();
+    TestBed.flushEffects();
+
+    expect(profile.address.city.touched()).toBe(true);
+    expect(profile.address.touched()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    expect(profile.address.city.dirty()).toBe(true);
+    expect(profile.address.dirty()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+
+    profile.reset();
+    TestBed.flushEffects();
+
+    expect(angularProfile().touched()).toBe(false);
+    expect(angularProfile.address().touched()).toBe(false);
+    expect(angularProfile.address.city().touched()).toBe(false);
+    expect(angularProfile().dirty()).toBe(false);
+    expect(angularProfile.address().dirty()).toBe(false);
+    expect(angularProfile.address.city().dirty()).toBe(false);
+
+    profile.markAsTouched();
+    TestBed.flushEffects();
+
+    expect(angularProfile().touched()).toBe(true);
+    expect(angularProfile.name().touched()).toBe(true);
+    expect(angularProfile.address().touched()).toBe(true);
+    expect(angularProfile.address.city().touched()).toBe(true);
+
+    profile.reset();
+    profile.markAsTouched({ skipDescendants: true });
+    profile.markAsDirty();
+    TestBed.flushEffects();
+
+    expect(angularProfile().touched()).toBe(true);
+    expect(angularProfile.name().touched()).toBe(false);
+    expect(angularProfile.address().touched()).toBe(false);
+    expect(angularProfile().dirty()).toBe(true);
+    expect(angularProfile.name().dirty()).toBe(false);
+
+    profile.reset();
+    TestBed.flushEffects();
+    angularProfile().markAsTouched();
+    angularProfile().markAsDirty();
+    TestBed.flushEffects();
+
+    expect(profile.touched()).toBe(true);
+    expect(profile.name.touched()).toBe(true);
+    expect(profile.address.touched()).toBe(true);
+    expect(profile.address.city.touched()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.name.dirty()).toBe(false);
+  });
+
+  it('preserves interaction state across non-interactive transitions and existing array items', () => {
+    const injector = TestBed.inject(Injector);
+    const tags = runInInjectionContext(injector, () => array(field(''), {
+      initialValue: ['angular', 'signals'],
+    }));
+    const angularTags = getAngularField<(string | null)[]>(tags);
+
+    angularTags[1]!().markAsTouched();
+    angularTags[1]!().markAsDirty();
+    TestBed.flushEffects();
+
+    expect(tags[1]!.touched()).toBe(true);
+    expect(tags[1]!.dirty()).toBe(true);
+    expect(tags.touched()).toBe(true);
+    expect(tags.dirty()).toBe(true);
+
+    tags[1]!.disable('Unavailable');
+    TestBed.flushEffects();
+    expect(angularTags[1]!().touched()).toBe(false);
+    expect(angularTags[1]!().dirty()).toBe(false);
+
+    tags[1]!.enable();
+    tags[1]!.markAsReadonly();
+    TestBed.flushEffects();
+    expect(angularTags[1]!().touched()).toBe(false);
+    expect(angularTags[1]!().dirty()).toBe(false);
+
+    tags[1]!.markAsWritable();
+    tags[1]!.hide();
+    TestBed.flushEffects();
+    expect(angularTags[1]!().touched()).toBe(false);
+    expect(angularTags[1]!().dirty()).toBe(false);
+
+    tags[1]!.show();
+    TestBed.flushEffects();
+    expect(angularTags[1]!().touched()).toBe(true);
+    expect(angularTags[1]!().dirty()).toBe(true);
+
+    angularTags().reset();
+    TestBed.flushEffects();
+    expect(tags.touched()).toBe(false);
+    expect(tags.dirty()).toBe(false);
+    expect(tags[1]!.touched()).toBe(false);
+    expect(tags[1]!.dirty()).toBe(false);
+  });
+
   it('keeps availability derived from the library node', () => {
     const injector = TestBed.inject(Injector);
     const name = runInInjectionContext(injector, () => field('David'));

@@ -5,9 +5,8 @@
 - Harden the `$field` adapter for complete Angular `[formField]` interoperability. The current
   baseline was audited against Angular `v22.1.4` at commit
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
-  - [ ] Extend independent `touched` and `dirty` adapter coverage beyond leaf nodes to aggregates,
-    ancestors, descendants, disabled, readonly, hidden, reset propagation, and dynamically changing
-    array items.
+  - [ ] Extend independent `touched` and `dirty` synchronization to array items created, removed,
+    moved, or reconciled after adapter creation as part of dynamic-array support.
   - [ ] Register every Angular `FormField` binding with the original library node so node-level
     `focus()` works, multiple bindings use DOM order, destroyed and rebound controls unregister,
     and custom focus implementations are preserved.
@@ -375,6 +374,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Resolve same-turn Angular and node value conflicts deterministically: a real bound-control
     edit takes precedence, while the node wins when no control edit occurred. Verify both operation
     orders, exact control-channel write counts, stable convergence, and absence of feedback loops.
+  - [x] Extend independent `touched` and `dirty` adapter coverage beyond leaf nodes to forms,
+    groups, arrays, ancestors, descendants, `skipDescendants`, disabled, readonly, hidden, reset
+    propagation, and array items already materialized when the adapter is created.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

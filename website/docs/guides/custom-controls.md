@@ -88,6 +88,12 @@ dirty, blur marks it touched, and an Angular field reset clears both interaction
 as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so
 clearing one does not clear the other.
 
+The same state remains consistent through materialized forms, groups, arrays, and their ancestors.
+Aggregate `markAsTouched()` reaches descendants unless `skipDescendants` is used, while
+`markAsDirty()` marks only the aggregate itself. Reset clears the complete subtree. A disabled,
+readonly, or hidden node temporarily appears untouched and pristine on both sides and restores its
+previous interaction state when it becomes interactive again.
+
 Availability is intentionally node-owned. Calling `disable()`, `markAsReadonly()`, or `hide()` on
 the Gem Forms node updates Angular's field state and the bound control. Angular models disabled,
 readonly, hidden, and required as derived schema state and does not expose reverse setters, so a
