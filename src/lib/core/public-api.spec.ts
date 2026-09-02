@@ -1,11 +1,11 @@
-import { signal } from '@angular/core';
+import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
 import { form } from './primitives/form';
 import { field } from './primitives/field';
 import { group } from './primitives/group';
 import { array } from './primitives/array';
-import type { Node } from './types/node.type';
+import type { DynamicNode, Node } from './types/node.type';
 import { required } from './validation/validators/required';
 import { asyncValidator } from './validation/async-validator';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
@@ -547,6 +547,52 @@ describe('types', () => {
     expectTypeOf(formGroup.api.set).toBeCallableWith({ age: '30' });
     // @ts-expect-error 'nope' does not exist
     expectTypeOf(formGroup.api.patch).toBeCallableWith({ nope: 1 });
+  });
+
+  it('types dynamic object-node children safely', () => {
+    const profile = form({ name: field('David') });
+    const age = profile.add('age', field(23));
+    const added = profile.add({
+      nickname: field('Dave'),
+      address: { city: field('Zurich') },
+    });
+
+    expectTypeOf(age()).toEqualTypeOf<number | null>();
+    expectTypeOf(age.parent()).toEqualTypeOf<typeof profile | null>();
+    expectTypeOf(profile.age).toEqualTypeOf<DynamicNode | undefined>();
+    const dynamicKey: string = 'age';
+    expectTypeOf(profile[dynamicKey]).toEqualTypeOf<DynamicNode | undefined>();
+    expectTypeOf(added.nickname()).toEqualTypeOf<string | null>();
+    expectTypeOf(added.address.city()).toEqualTypeOf<string | null>();
+    expectTypeOf(added.address.parent()).toEqualTypeOf<typeof profile | null>();
+    expectTypeOf(profile.remove('age')).toEqualTypeOf<DynamicNode | undefined>();
+
+    expectTypeOf(profile.nonExistingPropertyOrDynamic?.value).toEqualTypeOf<Signal<any> | undefined>();
+    expectTypeOf(profile.nonExistingPropertyOrDynamic?.disabled).toEqualTypeOf<Signal<boolean> | undefined>();
+    expectTypeOf(profile.nonExistingPropertyOrDynamic?.$field).toEqualTypeOf<any>();
+
+    if (false) {
+      // @ts-expect-error native callable members remain hidden
+      profile.nonExistingPropertyOrDynamic?.apply;
+      // @ts-expect-error submit is specific to forms
+      profile.nonExistingPropertyOrDynamic?.submit;
+      // @ts-expect-error direct patch is not common to every node
+      profile.nonExistingPropertyOrDynamic?.patch;
+    }
+
+    if (false) {
+      // @ts-expect-error initially declared children cannot be added again
+      profile.add('name', field('Mark'));
+      // @ts-expect-error '$api' is reserved
+      profile.add('$api', field(1));
+      // @ts-expect-error batches cannot replace initially declared children
+      profile.add({ name: field('Mark') });
+    }
+
+    const address = group({ city: field('Zurich') });
+    const zip = address.add('zip', field('8001'));
+    expectTypeOf(zip.parent()).toEqualTypeOf<typeof address | null>();
+    expectTypeOf(address.missing).toEqualTypeOf<DynamicNode | undefined>();
   });
 
   it('allows api as a child name and reserves $api', () => {

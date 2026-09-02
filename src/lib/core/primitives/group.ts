@@ -13,7 +13,7 @@ type GroupDefinitions<TDefinitions extends NodeDefinitions> = {
 };
 
 /**
- * Creates a fixed object-shaped structural node without an independent submission workflow.
+ * Creates an object-shaped structural node without an independent submission workflow.
  *
  * ```ts
  * const address = group({
@@ -29,7 +29,7 @@ type GroupDefinitions<TDefinitions extends NodeDefinitions> = {
  * object aggregate needs validators, state configuration, debounce, or validator messages. Use
  * `form()` instead when this exact node must own `submission` and `submit()`.
  *
- * @param definitions Fixed child-node definitions.
+ * @param definitions Initially declared child-node definitions.
  * @param options Group configuration.
  */
 export function group<TDefinitions extends NodeDefinitions>(
@@ -37,7 +37,7 @@ export function group<TDefinitions extends NodeDefinitions>(
   options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
 ): Group<NormalizedNodes<TDefinitions>>;
 /**
- * Creates a fixed object-shaped structural node with positional validators and optional configuration.
+ * Creates an object-shaped structural node with positional validators and optional configuration.
  *
  * ```ts
  * const address = group(
@@ -46,7 +46,7 @@ export function group<TDefinitions extends NodeDefinitions>(
  * );
  * ```
  *
- * @param definitions Fixed child-node definitions.
+ * @param definitions Initially declared child-node definitions.
  * @param validators Validators for the complete group value.
  * @param options Group configuration.
  */

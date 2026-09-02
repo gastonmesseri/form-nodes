@@ -7,7 +7,7 @@ import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { DisabledReason, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, DynamicNode, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
   /**
@@ -218,13 +218,45 @@ export type NormalizedNodes<TNodes extends NodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
 };
 
+/** Result of attaching a node definition dynamically to an object node. */
+export type AddedNode<TDefinition extends NodeDefinition, TParent extends Node> =
+  NodeWithParent<NormalizedNode<TDefinition>, TParent>;
+
+/** Dynamically addressable child properties. A key that has not been added returns `undefined`. */
+export type DynamicFormChildren = {
+  readonly [key: string]: DynamicNode | undefined;
+};
+
 export type FormRoot<TNodes extends Nodes, TParent extends Node> = Node extends TParent
   ? Form<TNodes, TParent>
   : RootNode<TParent>;
 
 export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /** Stable readonly map of this form's immediate child nodes. */
-  readonly children: FormChildren<TNodes, TParent>;
+  readonly children: FormChildren<TNodes, TParent> & DynamicFormChildren;
+  /**
+   * Adds one child node at runtime and returns that live node with its exact inferred type.
+   *
+   * The key must not already belong to this form. The supplied node must not currently have a
+   * parent. Plain object definitions are normalized to `group()` nodes.
+   * When a runtime key collides with an operation or native callable member, use `children` to
+   * read the child.
+   *
+   * ```ts
+   * const age = profile.add('age', field(23));
+   * age(); // 23
+   * ```
+   */
+  add<TKey extends string, TDefinition extends NodeDefinition>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: TDefinition): AddedNode<TDefinition, Form<TNodes, TParent>>;
+  /** Adds several child definitions atomically and returns their attached live nodes. */
+  add<TDefinitions extends NodeDefinitions>(definitions: TDefinitions & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
+    readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Form<TNodes, TParent>>;
+  };
+  /**
+   * Detaches and returns a dynamically added child, or `undefined` when the key is absent.
+   * Initially declared children are fixed and cannot be removed.
+   */
+  remove(key: string): DynamicNode | undefined;
   /** Complete root node containing this form. A root form returns itself. */
   form: Signal<FormRoot<TNodes, TParent>>;
   /** Immediate structural parent of this form, or `null` when it is a root or has been detached. */
@@ -534,4 +566,5 @@ export type Form<TNodes extends Nodes, TParent extends Node = Node> =
   & FormApiProperty<TNodes, TParent>
   & Omit<FormChildren<TNodes, TParent>, 'api'>
   & Omit<FormApi<TNodes, TParent>, keyof TNodes>
+  & DynamicFormChildren
   & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;

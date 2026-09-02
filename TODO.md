@@ -15,11 +15,9 @@
 - [ ] provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
 - [ ] Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - [ ] Consider changing the @example to something different, like a heading with asterisks **Like this**
+- [ ] In the .add function of group() form() decide what api to use add('key', field('')) or add({ key: field('') })
+  I think the second one is better, and it allows setting several at once
 
-- [ ] Consider including dynamic controls in form() (like in reactive forms)
-  - [ ] update docs if required, check all docs
-  - [ ] myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
-  - [ ] handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
 - [ ] Decide the exact semantics and naming of object-node ancestry lookups.
   - [ ] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
     an explicit nested form the workflow owner observed by all of its descendants.
@@ -213,7 +211,6 @@
   });
 
   const submitted = await profile.submit();
-- [ ] Add ESLINt with vt rules
 
 More general debounce
 We support milliseconds in `field()`. Angular supports cancellable asynchronous debouncers, inheritance from ancestors, and strategies such as blur. Our implementation already cancels timers correctly, but it is less expressive.
@@ -315,6 +312,12 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Add dynamic named children to `form()` and `group()`.
+  - [x] Support `add(name, definition)` and atomic `add({ ... })` calls.
+  - [x] Expose safe `DynamicNode | undefined` direct dynamic properties.
+  - [x] Allow `remove(name)` for dynamically added children while preserving fixed-child types.
+  - [x] Update behavior and consumer documentation with the complete dynamic-child contract.
+- [x] Add ESLINt with vt rules
 - [x] Add very descriptive IntelliSense for every member in the public API.
   - [x] Audit public options and source parameters.
   - [x] Document primitive instance properties and their state semantics.

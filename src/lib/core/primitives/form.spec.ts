@@ -2242,6 +2242,145 @@ describe('form', () => {
     warning.mockRestore();
   });
 
+  it('adds, reads, and removes dynamic children while updating aggregate state', () => {
+    const profile = form({ name: field('David') });
+    const age = profile.add('age', field(23));
+
+    expect(age()).toBe(23);
+    expect(profile.age).toBe(age);
+    expect(profile.children.age).toBe(age);
+    expect(profile()).toEqual({ name: 'David', age: 23 });
+    expect(age.parent()).toBe(profile);
+    expect(age.form()).toBe(profile);
+    expect(age.path()).toEqual(['age']);
+
+    age.set(24);
+    expect(profile()).toEqual({ name: 'David', age: 24 });
+
+    expect(profile.remove('missing')).toBeUndefined();
+    expect(profile.remove('age')).toBe(age);
+    expect(profile.age).toBeUndefined();
+    expect(profile()).toEqual({ name: 'David' });
+    expect(age.parent()).toBeNull();
+    expect(age.form()).toBeNull();
+    expect(age.path()).toEqual([]);
+  });
+
+  it('adds several dynamic children atomically and normalizes shorthand groups', () => {
+    const profile = form({ name: field('David') });
+
+    const added = profile.add({
+      age: field(23),
+      address: { city: field('Zurich') },
+    });
+
+    expect(added.age).toBe(profile.age);
+    expect(added.address).toBe(profile.address);
+    expect(added.address.city.parent()).toBe(added.address);
+    expect(added.address.city.form()).toBe(profile);
+    expect(profile()).toEqual({
+      name: 'David',
+      age: 23,
+      address: { city: 'Zurich' },
+    });
+  });
+
+  it('includes dynamic children in validation and interaction aggregation', () => {
+    const profile = form({ name: field('David') });
+    const email = profile.add('email', field('', [required]));
+
+    expect(profile.invalid()).toBe(true);
+    expect(profile.allErrors()).toContainEqual(expect.objectContaining({ targetNode: email }));
+
+    email.markAsTouched();
+    email.markAsDirty();
+    expect(profile.touched()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+
+    profile.remove('email');
+    expect(profile.valid()).toBe(true);
+    expect(profile.allErrors()).toEqual([]);
+    expect(profile.touched()).toBe(false);
+    expect(profile.dirty()).toBe(false);
+  });
+
+  it('protects fixed keys and rejects attached or duplicate dynamic children', () => {
+    const profile = form({ name: field('David') });
+    const other = form({ age: field(23) });
+
+    expect(() => profile.remove('name')).toThrowError('form: initially declared child "name" cannot be removed');
+    expect(() => (profile.add as any)('name', field('Mark'))).toThrowError('form: child "name" already exists');
+    expect(() => (profile.add as any)('$api', field(1))).toThrowError('form: "$api" is reserved and cannot be added as a dynamic child');
+    expect(() => profile.add('age', other.age)).toThrowError('form: a dynamic child must not already have a parent');
+    expect(() => (profile.add as any)('invalid')).toThrowError('form: a dynamic child must be a node or object definition');
+
+    profile.add('age', field(23));
+    expect(() => profile.add({ city: field('Zurich'), age: field(24) })).toThrowError('form: child "age" already exists');
+    expect(profile.city).toBeUndefined();
+  });
+
+  it('keeps dynamic child values when reset receives only the fixed shape', () => {
+    const profile = form({ name: field('David') });
+    const age = profile.add('age', field(23));
+    age.markAsDirty();
+
+    profile.reset({ name: 'Mark' });
+
+    expect(profile()).toEqual({ name: 'Mark', age: 23 });
+    expect(age.pristine()).toBe(true);
+  });
+
+  it('keeps API operations reachable when a dynamic child uses a colliding name', () => {
+    const profile = form({ name: field('David') });
+    const setChild = profile.add('set', field('dynamic'));
+
+    expect(profile.children.set).toBe(setChild);
+    expect(typeof profile.set).toBe('function');
+
+    profile.set({ name: 'Mark' });
+    expect(profile()).toEqual({ name: 'Mark', set: 'dynamic' });
+    expect(profile.remove('set')).toBe(setChild);
+    expect(typeof profile.set).toBe('function');
+  });
+
+  it('applies inherited availability state to children added later', () => {
+    const profile = form({ name: field('David') }, {
+      disabled: 'Locked',
+      readonly: true,
+      hidden: true,
+    });
+    const age = profile.add('age', field(23));
+
+    expect(age.disabled()).toBe(true);
+    expect(age.disabledReasons()).toContainEqual({ sourceNode: profile, message: 'Locked' });
+    expect(age.readonly()).toBe(true);
+    expect(age.hidden()).toBe(true);
+  });
+
+  it('gives a dynamic child the parent injector as its async-validation owner', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const city = field('Zurich', [asyncValidator(validate)]);
+    const injector = Injector.create({ providers: [] });
+    const profile = form({ name: field('David') }, { injector });
+
+    profile.add('city', city);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(city.pending()).toBe(false);
+  });
+
   it('ignores markAsTouched while the form is non-interactive', () => {
     const profile = form({ name: field('David') }, { disabled: true });
 

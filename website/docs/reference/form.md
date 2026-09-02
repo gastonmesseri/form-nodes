@@ -4,9 +4,9 @@ title: form()
 
 # `form()`
 
-`form()` creates a fixed, typed object tree that owns a submission workflow. It is the usual root
-primitive for an application form. Use groups or nested object shorthand for ordinary structural
-branches.
+`form()` creates a typed object tree that owns a submission workflow. Its initial children are
+fixed and precisely inferred; named children can also be attached and detached explicitly at
+runtime. Use groups or nested object shorthand for ordinary structural branches.
 
 Not sure which node shape fits a value? See [Choosing a primitive](../guides/choosing-a-primitive.md).
 
@@ -30,6 +30,7 @@ const myForm = form({
 | Create or configure a form | `form(...)`, `FormOptions` | [Signatures](#signatures) and [options](#options) |
 | Read its value or navigate children | `myForm()`, direct children, `children` | [Instance shape](#instance-shape) and [value and tree properties](#value-and-tree-properties) |
 | Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Value update methods](#value-update-methods) |
+| Add, find, or remove runtime children | `add()`, direct properties, `remove()` | [Dynamic children](#dynamic-children) |
 | Inspect or replace validation | `errors()`, `allErrors()`, `valid()`, `setValidators()` | [Validation](#validation-properties-and-methods) |
 | Manage touched and dirty state | `markAsTouched()`, `markAsDirty()`, `reset()` | [Interaction](#interaction-properties-and-methods) |
 | Manage disabled, readonly, or hidden state | `disable()`, `markAsReadonly()`, `hide()` | [Availability](#availability-properties-and-methods) |
@@ -80,16 +81,23 @@ object-valued `field()` instead.
 
 ## Instance shape
 
-A form node is both a callable value reader and an object whose named children take precedence over
-API members:
+A form node is both a callable value reader and an object. Every child name declared by the user in
+the initial `form()` definition takes precedence in the public type over ordinary form API members
+and native callable members. This includes names such as `value`, `reset`, `children`, `api`,
+`name`, and `apply`.
+
+The exceptions are `$api` and `$field`: both names are reserved and cannot be used as child keys.
+`$api` therefore remains the guaranteed collision-safe form API, while `$field` remains the opaque
+Angular `[formField]` adapter.
 
 | Member | Description |
 | --- | --- |
 | `myForm()` | Returns the current committed object value. This is the preferred complete-value read. |
 | `myForm.child` | Direct access to a named child node with its precise inferred type. This is the preferred child access. |
-| `children` | Stable readonly map containing every named child. Useful when code needs to be explicit or iterate generically. |
+| `children` | Stable readonly map containing every named child, unless a declared child named `children` takes precedence. Use `$api.children` in that case. |
 | `api` | Complete form API unless the form declares a child named `api`; that child takes precedence. |
 | `$api` | Always exposes the complete form API, even when child names collide. Prefer direct members or `api` normally. |
+| `$field` | Always exposes the opaque adapter used by Angular's `[formField]` directive. |
 
 When a child has the same name as an API member, the child remains available directly and the
 operation remains available through `$api`:
@@ -105,6 +113,24 @@ myForm.$api.reset(); // resets the form
 
 See [Tree navigation and API access](../concepts/tree-and-api.md) for collision and generic-code
 patterns.
+
+## Dynamic children
+
+Use `add()` when a named control is not known until runtime:
+
+```ts
+const age = myForm.add('age', field(23));
+
+age(); // 23
+myForm.age; // DynamicNode | undefined
+```
+
+An object adds several definitions atomically, including shorthand groups. `remove()` only accepts
+children previously introduced through `add()`; initial children remain fixed because their types
+guarantee their presence. Removed nodes stay usable but no longer contribute to this form.
+
+See [Dynamic object children](../guides/dynamic-object-children.md) for collisions, value typing,
+detachment, and the difference from dynamic arrays.
 
 ## Value and tree properties
 

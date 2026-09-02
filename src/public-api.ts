@@ -29,7 +29,7 @@ export { provideFormNodePassThrough } from './lib/core/directives/form-node/form
 export { FORM_NODE, FormNode, _FormNode } from './lib/core/directives/form-node/form-node.directive';
 export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/core/types/observable-like.type';
 export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/core/primitives/group';
-export type { DisabledReason, DisabledStateSource, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
+export type { DisabledReason, DisabledStateSource, DynamicNode, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/core/validation/async-validator';
 export {
@@ -58,6 +58,8 @@ export type {
   ArrayItemWithParent,
 } from './lib/core/primitives/array';
 export type {
+  AddedNode,
+  DynamicFormChildren,
   Form,
   FormApi,
   FormSet,

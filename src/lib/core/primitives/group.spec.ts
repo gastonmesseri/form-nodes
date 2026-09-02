@@ -94,4 +94,19 @@ describe('group', () => {
     await submission;
     expect(profile.address.submitting()).toBe(false);
   });
+
+  it('supports dynamic children without turning a group into a submission boundary', () => {
+    const address = group({ city: field('Zurich') });
+    const zip = address.add('zip', field('8001'));
+
+    expect(address()).toEqual({ city: 'Zurich', zip: '8001' });
+    expect(address.zip).toBe(zip);
+    expect(zip.parent()).toBe(address);
+    expect(zip.form()).toBe(address);
+    expect(address).not.toHaveProperty('submit');
+
+    expect(address.remove('zip')).toBe(zip);
+    expect(address()).toEqual({ city: 'Zurich' });
+    expect(zip.parent()).toBeNull();
+  });
 });

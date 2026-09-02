@@ -44,6 +44,7 @@ const sidebars: SidebarsConfig = {
         'guides/async-validation',
         'guides/value-flow-and-debounce',
         'guides/interaction-and-availability',
+        'guides/dynamic-object-children',
         'guides/dynamic-arrays',
         'guides/control-binding',
         'guides/custom-controls',
