@@ -103,6 +103,24 @@ and restores the control to the committed value. With multiple controls bound to
 control owns its parsing error independently; destroying or rebinding a control removes only its
 contribution. Gem validator errors remain present alongside binding parsing errors.
 
+Validator constraints flow in the other direction. Gem validators remain responsible for
+validation, while `[formField]` receives their active metadata for rendering and custom-control
+inputs:
+
+```ts
+profileForm = form({
+  age: field(18, [min(16), max(120)]),
+  userName: field('', [minLength(3), maxLength(24), pattern(/^[a-z]+$/i)]),
+});
+```
+
+A custom Angular control that declares `min`, `max`, `minLength`, `maxLength`, or `pattern` inputs
+receives the corresponding reactive values naturally. Native controls receive the properties that
+Angular supports for their element and input type. Angular 22 currently exposes patterns to custom
+controls but does not write them to a native input's `pattern` property. Gem still validates every
+configured pattern, and metadata propagation does not run a second Angular validator or duplicate
+errors.
+
 The same state remains consistent through materialized forms, groups, arrays, and their ancestors.
 Aggregate `markAsTouched()` reaches descendants unless `skipDescendants` is used, while
 `markAsDirty()` marks only the aggregate itself. Reset clears the complete subtree. A disabled,

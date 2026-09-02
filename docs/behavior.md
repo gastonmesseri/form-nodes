@@ -1857,6 +1857,22 @@ recovers, the node resets, or the binding is destroyed or rebound. The exposed G
 Angular's error data except its internal `fieldTree` and `formField` references, and identifies the
 originating control through `formNode`.
 
+Gem validator constraints are also published into the Angular field metadata consumed by
+`[formField]`: numeric and date `min`/`max`, `minLength`, `maxLength`, and active patterns. These
+sources remain reactive, including activation and removal. The adapter contributes metadata only;
+it does not install Angular validators, so Gem remains the validator owner and each failed
+constraint produces one error rather than a duplicate from each engine.
+
+Angular then applies the metadata according to its normal control contract. Custom controls with
+matching inputs receive the values directly. Native controls receive `min`, `max`, `minLength`, and
+`maxLength` only where Angular 22.1.4 considers those properties applicable, including its date
+serialization. Angular 22.1.4 exposes pattern metadata to custom controls but does not write it to
+the native `pattern` property; the adapter deliberately retains that Angular behavior. Every
+pattern materialized when the adapter is created receives its own Angular metadata contribution,
+and one slot is reserved when the initial list is empty so a normal reactive pattern can activate
+later. Activating more simultaneous patterns than the initial slot count is recorded as a later
+compatibility enhancement because Angular schemas have a fixed rule structure after creation.
+
 Interaction synchronization applies to the complete materialized tree, not only bound leaves. A
 touched or dirty descendant makes its Angular and library ancestors touched or dirty through their
 normal aggregation rules. Marking an aggregate as touched propagates to descendants unless
@@ -1912,6 +1928,11 @@ upgrade checklist. The governing Angular 22.1.4 sources are
 `packages/forms/signals/src/directive/form_field.ts`,
 `packages/forms/signals/src/field/validation.ts`, and
 `packages/forms/signals/test/node/parse_errors.spec.ts`.
+
+Constraint interoperability was derived from Angular 22.1.4
+`packages/forms/signals/src/api/rules/metadata.ts`, the numeric, date, length, and pattern rules in
+`packages/forms/signals/src/api/rules/validation/`, and the native/custom binding implementations
+under `packages/forms/signals/src/directive/`.
 
 `FormNode` binds a field node to a native form control, and binds field, group, form, or array nodes
 to an explicitly provided signal custom control or a component that implements Angular's

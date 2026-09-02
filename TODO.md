@@ -13,19 +13,12 @@
     move, swap, and `trackBy` reconciliation. Preserve item identity and interaction state when
     appropriate, update item `$field` paths after reordering, create synchronization for new items,
     and dispose synchronization for removed items.
-  - [ ] Mirror native constraint metadata required by Angular `FormField`, including `min`, `max`,
-    `minLength`, `maxLength`, and `pattern`, for native and custom controls. Cover reactive
-    constraints, activation and removal, SSR, and browser validity.
   - [ ] Preserve complete validation-error information instead of reducing every error to
     `{ kind }`, including messages, custom properties, expected and actual values, and other
     validator metadata consumed through the Angular field state.
   - [ ] Preserve `targetNode` semantics for form/group and cross-field validators by attaching each
     adapted error to the corresponding Angular field path rather than always to the validator's
     source node.
-  - [ ] Prevent duplicate errors when Angular metadata rules such as `required`, `min`, `max`,
-    `minLength`, `maxLength`, and `pattern` both validate and receive an equivalent error from the
-    library. Decide which side owns constraint validation and which side only communicates binding
-    metadata.
   - [ ] Define the recommended form-root integration when controls use `[formField]`, covering Gem
     Forms submit behavior, native submit and reset events, parse errors, `novalidate`, focus of the
     first invalid control, and whether Angular's form-root directive should ever be combined with
@@ -50,7 +43,7 @@
     recorded.
   - [ ] The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
     user doesn't provide an injector. I think this is important for the angular $field adapter, as we normally don't pass an injector to the field() or form()
-- The new nodes in array() do they have an injector? where is it taken from?
+- The new nodes in array() do they have an injector? where is it taken from? (should it pick it from the parent array?)
 - website docs
   - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -337,6 +330,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - Reconsider exposing Gem submission state to Angular controls only if a concrete control use case
   appears. Submission remains owned by `[formNode]`; the `$field` adapter must not reproduce or
   combine with Angular `FormRoot` by default.
+- Revisit `$field` pattern-slot growth if a field can activate more simultaneous pattern
+  contributions after adapter creation than were materialized initially. Angular schemas register
+  a fixed number of metadata rules; the adapter currently mirrors every initially materialized
+  pattern and reserves one slot for the common initially inactive reactive-pattern case.
 
 ## Ideas
 
@@ -387,6 +384,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     into Gem validation. Preserve binding ownership, merge them with Gem validator errors, remove
     them on recovery, reset, destruction, or rebinding, and expose them through `errors()`,
     `allErrors()`, ancestor validity, and submission checks.
+  - [x] Mirror Gem `min`, `max`, `minLength`, `maxLength`, and pattern constraints into Angular
+    field metadata for native and custom `[formField]` controls. Keep the sources reactive, support
+    number and date limits, use metadata-only rules so Gem remains the sole validator owner, and
+    avoid duplicate validation errors.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

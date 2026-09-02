@@ -10,12 +10,19 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { form } from '../primitives/form';
 import { array } from '../primitives/array';
 import { field } from '../primitives/field';
+import { max } from '../validation/validators/max';
+import { min } from '../validation/validators/min';
 import { getAngularField } from './angular-field';
 import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
+import { maxDate } from '../validation/validators/max-date';
+import { minDate } from '../validation/validators/min-date';
+import { pattern } from '../validation/validators/pattern';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
+import { maxLength } from '../validation/validators/max-length';
+import { minLength } from '../validation/validators/min-length';
 import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
-import { registerSignalModelForJit, registerSignalOutputForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -299,6 +306,90 @@ describe('Angular Signal Forms field adapter', () => {
     expect(angularState.hidden()).toBe(true);
     name.show();
     expect(angularState.hidden()).toBe(false);
+  });
+
+  it('mirrors reactive numeric, date, length, and pattern constraints without duplicating errors', () => {
+    const minimum = signal(2);
+    const maximum = signal(10);
+    const minimumLength = signal(2);
+    const activePattern = signal<RegExp | undefined>(/^[a-z]+$/);
+    const firstDate = new Date('2026-01-01T00:00:00.000Z');
+    const lastDate = new Date('2026-12-31T00:00:00.000Z');
+    const injector = TestBed.inject(Injector);
+    const profile = runInInjectionContext(injector, () => form({
+      amount: field(5, [min(() => minimum()), max(() => maximum())]),
+      code: field('abc', [minLength(() => minimumLength()), maxLength(8), pattern(() => activePattern()), pattern(/^.{3}$/)]),
+      departure: field<Date>(null, [minDate(firstDate), maxDate(lastDate)]),
+    }));
+    const angularProfile = getAngularField<{
+      amount: number | null;
+      code: string | null;
+      departure: Date | null;
+    }>(profile);
+
+    expect(angularProfile.amount().min!()).toBe(2);
+    expect(angularProfile.amount().max!()).toBe(10);
+    expect(angularProfile.code().minLength!()).toBe(2);
+    expect(angularProfile.code().maxLength!()).toBe(8);
+    expect(angularProfile.code().pattern()).toEqual([/^[a-z]+$/, /^.{3}$/]);
+    expect(angularProfile.departure().min!()).toEqual(firstDate);
+    expect(angularProfile.departure().max!()).toEqual(lastDate);
+    expect(angularProfile.amount().errors()).toEqual([]);
+
+    minimum.set(6);
+    maximum.set(9);
+    minimumLength.set(4);
+    activePattern.set(undefined);
+
+    expect(angularProfile.amount().min!()).toBe(6);
+    expect(angularProfile.amount().max!()).toBe(9);
+    expect(angularProfile.code().minLength!()).toBe(4);
+    expect(angularProfile.code().pattern()).toEqual([/^.{3}$/]);
+    expect(angularProfile.amount().errors().map(error => error.kind)).toEqual(['min']);
+  });
+
+  it('provides Gem constraints to formField custom-control inputs', () => {
+    @Component({
+      selector: 'constraint-control',
+      template: '',
+    })
+    class ConstraintControl {
+      value = input<string | null>('');
+      valueChange = output<string | null>();
+      minLength = input<number | undefined>();
+      maxLength = input<number | undefined>();
+      pattern = input<readonly RegExp[]>([]);
+    }
+    registerSignalModelForJit(ConstraintControl, 'value');
+    registerSignalInputForJit(ConstraintControl, 'minLength', 'minLength');
+    registerSignalInputForJit(ConstraintControl, 'maxLength', 'maxLength');
+    registerSignalInputForJit(ConstraintControl, 'pattern', 'pattern');
+
+    const minimumLength = signal(2);
+    const expression = signal<RegExp | undefined>(/^[a-z]+$/);
+    @Component({
+      template: `<constraint-control [formField]="code.$field" />`,
+      imports: [ConstraintControl, FormField],
+    })
+    class Host {
+      code = field('abc', [minLength(() => minimumLength()), maxLength(8), pattern(() => expression())]);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as ConstraintControl;
+
+    expect(control.minLength()).toBe(2);
+    expect(control.maxLength()).toBe(8);
+    expect(control.pattern()).toEqual([/^[a-z]+$/]);
+
+    minimumLength.set(3);
+    expression.set(undefined);
+    fixture.detectChanges();
+
+    expect(control.minLength()).toBe(3);
+    expect(control.maxLength()).toBe(8);
+    expect(control.pattern()).toEqual([]);
   });
 
   it('maps existing array item nodes into the shared Angular tree', () => {
