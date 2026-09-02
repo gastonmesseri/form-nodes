@@ -409,7 +409,6 @@ export class FieldState<TValue> {
 
     const internalApi = {
       ...publicApi,
-      _nodeType: 'field' as const,
       _controlDebounce: this.controlDebounce,
       _controlValue: this.controlValue.asReadonly(),
       _setControlValue: publicApi.setControlValue,

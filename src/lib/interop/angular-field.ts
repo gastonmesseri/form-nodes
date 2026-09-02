@@ -54,10 +54,10 @@ const getRootNode = (node: Node): Node => {
 };
 
 const getChildren = (node: InternalNode): readonly Node[] => {
-  if (node.$api._nodeType === 'array') {
+  if (node.$api.nodeType() === 'array') {
     return Array.from(node as unknown as Iterable<Node>);
   }
-  if (node.$api._nodeType === 'form' || node.$api._nodeType === 'group') {
+  if (node.$api.nodeType() === 'form' || node.$api.nodeType() === 'group') {
     return Object.values((node.$api as typeof node.$api & { children: Record<string, Node> }).children);
   }
   return [];
@@ -115,14 +115,14 @@ const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: N
   });
 
   const internalSample = sample as InternalNode;
-  if (internalSample.$api._nodeType === 'field') configureConstraints(path, resolveNode);
-  if (internalSample.$api._nodeType === 'array') {
+  if (internalSample.$api.nodeType() === 'field') configureConstraints(path, resolveNode);
+  if (internalSample.$api.nodeType() === 'array') {
     const sampleItem = getChildren(internalSample)[0]
       ?? (internalSample as ArrayNodeWithSchemaSample).$api._getSchemaSample();
     applyEach(path, itemPath => configureNode(itemPath as unknown as SchemaPath<any>, () => sampleItem, sampleItem));
     return;
   }
-  if (internalSample.$api._nodeType !== 'form' && internalSample.$api._nodeType !== 'group') return;
+  if (internalSample.$api.nodeType() !== 'form' && internalSample.$api.nodeType() !== 'group') return;
   const children = (internalSample.$api as typeof internalSample.$api & { children: Record<string, Node> }).children;
   Object.entries(children).forEach(([key, child]) => {
     configureNode(

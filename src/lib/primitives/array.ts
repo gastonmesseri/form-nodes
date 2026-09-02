@@ -681,7 +681,6 @@ export function array<TDefinition extends ArrayTemplate>(
   };
   const internalApi = {
     ...api,
-    _nodeType: 'array' as const,
     _controlDebounce: arrayControlDebounce,
     _controlValue: api.controlValue,
     _setControlValue: (value: TInput) => arrayControlValueBuffer.set(normalizeArrayValue(value)),

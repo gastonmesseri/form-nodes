@@ -324,8 +324,6 @@ export type NearestForm<TNode extends Node> = Node extends TNode ? NavigationFor
     : never;
 export type NodeType = 'field' | 'group' | 'form' | 'array';
 export type InternalNodeApi = NodeApi & {
-  /** Runtime discriminant for internal node capability and implementation selection. */
-  readonly _nodeType: NodeType;
   _controlDebounce: Signal<ControlDebounce | undefined>;
   _controlValue: Signal<any>;
   _setControlValue(value: any): void;
