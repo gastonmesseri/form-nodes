@@ -1828,6 +1828,11 @@ than assigned to the complete root. Consequently `controlValue()` reflects the i
 value, numeric and blur debounce delay only the committed node value, `flush()` commits pending
 input, and a programmatic `set()` cancels pending control input without being treated as a dirty
 control edit.
+If a bound Angular control and the library node both change before adapter synchronization runs, a
+real control edit takes deterministic precedence, regardless of which of the two synchronous
+operations happened first. When no bound-control edit occurred, the node remains authoritative.
+This explicit user-input priority prevents a queued control edit from being overwritten merely by
+effect scheduling; synchronization converges in one control-channel write without feedback loops.
 `$field` is reserved as collision-safe interop syntax and remains a supported, stable adapter. Its
 public type is deliberately `never`. This makes the expression assignable to
 Angular's `FormField` input during strict template checking while preventing application

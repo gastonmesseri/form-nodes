@@ -54,6 +54,30 @@ describe('FormNode in Chromium', () => {
     expect(input.value).toBe('Mark');
   });
 
+  it('preserves a formField control edit during a simultaneous node write', () => {
+    @Component({
+      template: `<input [formField]="name.$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      name = field('David');
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const name = fixture.componentInstance.name;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.value = 'Control edit';
+    dispatch(input, 'input');
+    name.set('Programmatic write');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(name()).toBe('Control edit');
+    expect(input.value).toBe('Control edit');
+  });
+
   it('synchronizes formField interaction events and node-owned availability', () => {
     @Component({
       template: `<input [formField]="name.$field">`,
