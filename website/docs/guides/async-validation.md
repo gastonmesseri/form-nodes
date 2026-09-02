@@ -109,7 +109,12 @@ error makes the node invalid.
 
 ## Lifecycle
 
-Async validation works inside and outside Angular injection contexts. When a node is created with an explicit or current injector, that injector's `DestroyRef` owns its watcher. Outside dependency injection, the library uses weak ownership so unreachable form trees can be garbage-collected.
+Async validation works inside and outside Angular injection contexts. A node's explicit or currently
+captured injector owns its watcher. Without one, the node uses the nearest ancestor injector by
+default, including items created later by an array template or factory. Set `inheritInjector: false`
+on a node to prevent it and its otherwise injector-less descendants from adopting an ancestor
+injector. Detaching a node releases inherited ownership. Outside dependency injection, the library
+uses weak ownership so unreachable form trees can be garbage-collected.
 
 Disabling, hiding, or marking a node readonly cancels its active async work. Returning it to an
 interactive state starts validation again against the current committed value.

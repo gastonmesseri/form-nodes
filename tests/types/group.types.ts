@@ -8,6 +8,7 @@ const address = group({
     latitude: field(47.37),
   },
 });
+group({ city: field('') }, { inheritInjector: false });
 
 type AddressValue = {
   city: string | null;

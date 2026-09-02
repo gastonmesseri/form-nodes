@@ -320,6 +320,18 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Make injector lookup inherit through the node tree by default.
+  - [x] Prefer each node's explicit or currently captured injector, then use the nearest ancestor
+    injector when the node has none of its own.
+  - [x] Apply inherited ownership to existing descendants and to nodes created later by both array
+    templates and factories.
+  - [x] Add `inheritInjector: false` as a subtree boundary while preserving injectors owned by the
+    boundary node or a descendant.
+  - [x] Transfer lifecycle ownership when nodes are adopted and release it when they are detached.
+  - [x] Keep injector-free nodes safe through weak watcher ownership.
+  - [x] Derive the root-resolution baseline from Angular `v22.1.4` at commit
+    `898380974d49cf7976e9d89cc74a0801a26ce7b1`, while documenting Gem Forms' dynamic-node extension.
+
 - [x] Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Gem Forms
   remains the sole authority for form state and operations.
   - [x] Support only behavior required by controls that bind a node's terminal `$field`; do not

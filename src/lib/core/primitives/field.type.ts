@@ -59,6 +59,12 @@ export type FieldOptions<TValue = any> = {
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   injector?: Injector;
   /**
+   * Whether this node may use the injector of its parent or another ancestor when it has no
+   * injector of its own. Defaults to `true`. Set to `false` to create an injector-inheritance
+   * boundary while preserving an explicit or currently captured injector on this node.
+   */
+  inheritInjector?: boolean;
+  /**
    * Delay strategy for control updates. A number waits in milliseconds, `'blur'` waits for focus
    * loss, and a function commits when its returned promise resolves. Overrides an inherited
    * debounce.

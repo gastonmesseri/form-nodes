@@ -89,7 +89,10 @@ pending, but errors remain ordered by validator declaration rather than network 
 
 ## Ownership and lifetime
 
-When an injector is available, its `DestroyRef` deterministically owns async validation watchers.
+An explicit or currently captured injector takes precedence. Otherwise, the nearest ancestor
+injector owns async validation watchers by default. `inheritInjector: false` creates a subtree
+boundary, and detaching a node releases inherited ownership. The effective injector's `DestroyRef`
+provides deterministic cleanup.
 Nodes also work outside dependency injection; weak ownership allows an unreachable standalone tree
 and its watchers to be garbage-collected. Garbage-collection cleanup is nondeterministic, so pass an
 injector when deterministic teardown matters.

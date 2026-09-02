@@ -80,6 +80,12 @@ export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   injector?: Injector;
   /**
+   * Whether this node may use the injector of its parent or another ancestor when it has no
+   * injector of its own. Defaults to `true`. Set to `false` to create an injector-inheritance
+   * boundary while preserving an explicit or currently captured injector on this node.
+   */
+  inheritInjector?: boolean;
+  /**
    * Partial validator message catalog inherited by this form or array and its descendants.
    *
    * ℹ️ This scope overrides provider and global catalogs. A validator's own `message` option has

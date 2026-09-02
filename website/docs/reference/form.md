@@ -65,7 +65,8 @@ const myForm = form({
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | `validators` | validator, validator array, or reactive source | Validates the complete object value |
-| `injector` | Angular `Injector` | Owns asynchronous validation cleanup |
+| `injector` | Angular `Injector` | Provides this node's preferred lifecycle owner |
+| `inheritInjector` | `boolean` | Uses the nearest ancestor injector when no own injector exists; defaults to `true` |
 | `validatorMessages` | catalog or reactive catalog source | Overrides messages for this subtree |
 | `debounce` | number, `'blur'`, or asynchronous function | Default control debounce inherited by descendants |
 | `disabled` | boolean, string, or reactive function | Disables this form subtree |

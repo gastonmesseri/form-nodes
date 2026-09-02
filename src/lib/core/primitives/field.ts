@@ -4,6 +4,7 @@ import { isNotNil } from '../utils/is-nil';
 import { markAsNode } from '../utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
+import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { registerAngularField } from '../interop/angular-field';
 import { computedFunction } from '../utils/computed-function';
 import type { Field, FieldApi, FieldOptions } from './field.type';
@@ -17,7 +18,7 @@ import { createAsyncValidation } from '../validation/create-async-validation';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
-import { createReactiveWatch, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
+import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
@@ -159,10 +160,12 @@ export function field<TValue>(
     return 'valid';
   });
   let asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
+  let asyncValidationWatchRef: ReactiveWatchRef | null = null;
   const ensureAsyncValidationWatch = () => {
     if (asyncValidationWatchTarget || !fieldValidators().some(isAsyncValidator)) return;
     asyncValidationWatchTarget = { run: asyncValidation.validate, cleanup: asyncValidation.cancel, destroy: asyncValidation.destroy };
-    createReactiveWatch(asyncValidationWatchTarget, resolvedOptions?.injector);
+    asyncValidationWatchRef = createReactiveWatch(asyncValidationWatchTarget, null);
+    watchNodeInjector(fieldNode, injector => asyncValidationWatchRef?.setInjector(injector));
   };
   const controlDebounce = {
     timer: null as ReturnType<typeof setTimeout> | null,
@@ -313,7 +316,9 @@ export function field<TValue>(
     _setParent: (parent: Node | null, key?: string) => {
       fieldParent.set(parent);
       fieldKeyInParent.set(parent ? key ?? null : null);
+      refreshNodeInjector(fieldNode);
     },
+    _refreshInjector: () => refreshNodeInjector(fieldNode),
     _registerControlBinding: (binding: NodeControlBinding) => {
       fieldControlBindings.add(binding);
       return () => { fieldControlBindings.delete(binding); };
@@ -326,7 +331,8 @@ export function field<TValue>(
     { api: internalApi, $api: internalApi },
   ) as unknown as Field<TValue>;
   markAsNode(fieldNode);
-  registerAngularField(fieldNode, resolvedOptions?.injector);
+  registerNodeInjector(fieldNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false);
+  registerAngularField(fieldNode);
   registerNodeValidatorMessages(fieldNode, undefined, resolvedOptions?.injector);
   ensureAsyncValidationWatch();
   return fieldNode;

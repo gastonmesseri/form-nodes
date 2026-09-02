@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { computed, signal, type Signal } from '@angular/core';
+import { computed, Injector, signal, type Signal } from '@angular/core';
 
+import { form } from './form';
 import { field } from './field';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
@@ -23,6 +24,93 @@ import { minLength } from '../validation/validators/min-length';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('inherits async-validation ownership from its parent injector by default', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const name = field('David', [asyncValidator(validate)]);
+    const injector = Injector.create({ providers: [] });
+    form({ name }, { injector });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledOnce();
+    expect(name.pending()).toBe(false);
+  });
+
+  it('aborts inherited pending validation when the ancestor injector is destroyed', async () => {
+    let abortSignal: AbortSignal | undefined;
+    const name = field('David', [asyncValidator(({ abortSignal: currentSignal }) => {
+      abortSignal = currentSignal;
+      return new Promise<null>(() => {});
+    })]);
+    const injector = Injector.create({ providers: [] });
+    form({ name }, { injector });
+
+    await Promise.resolve();
+    expect(name.pending()).toBe(true);
+
+    injector.destroy();
+
+    expect(abortSignal?.aborted).toBe(true);
+    expect(name.pending()).toBe(false);
+  });
+
+  it('can opt out of inheriting async-validation ownership from ancestors', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const name = field('David', [asyncValidator(validate)], { inheritInjector: false });
+    const injector = Injector.create({ providers: [] });
+    form({ name }, { injector });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('prefers its own injector over an ancestor injector', async () => {
+    const dependency = signal('initial');
+    const validate = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const childInjector = Injector.create({ providers: [] });
+    const parentInjector = Injector.create({ providers: [] });
+    const name = field('David', [asyncValidator(validate)], { injector: childInjector });
+    form({ name }, { injector: parentInjector });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    parentInjector.destroy();
+    dependency.set('after parent destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(2);
+
+    childInjector.destroy();
+    dependency.set('after child destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
   it('exposes inclusive between validation and both constraint metadata values', () => {
     const percentage = field(101, [between(0, 100)]);
 

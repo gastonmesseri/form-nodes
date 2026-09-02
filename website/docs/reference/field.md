@@ -113,7 +113,8 @@ const myForm = form({
 | --- | --- | --- |
 | `validators` | validator, validator array, or reactive source | Validates the field value |
 | `nullable` | boolean | Includes or excludes `null` from the public value type |
-| `injector` | Angular `Injector` | Owns asynchronous validation cleanup |
+| `injector` | Angular `Injector` | Provides this node's preferred lifecycle owner |
+| `inheritInjector` | `boolean` | Uses the nearest ancestor injector when no own injector exists; defaults to `true` |
 | `debounce` | number, `'blur'`, or asynchronous function | Delays control-originated commits |
 | `disabled` | boolean, string, or reactive function | Disables the field |
 | `readonly` | boolean or reactive function | Makes the field readonly |

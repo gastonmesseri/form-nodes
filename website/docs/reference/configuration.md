@@ -56,7 +56,8 @@ the selected values when the node is created.
 | Option | `field()` | `form()` | `array()` | `group()` | Inheritance |
 | --- | --- | --- | --- | --- | --- |
 | `validators` | Yes | Yes | Yes | Yes | No; validates that exact node |
-| `injector` | Yes | Yes | Yes | Yes | No; owns that node's async watcher and captures provider messages |
+| `injector` | Yes | Yes | Yes | Yes | Own injector; takes precedence over tree inheritance |
+| `inheritInjector` | Yes | Yes | Yes | Yes | Yes by default; `false` creates a subtree boundary |
 | `debounce` | Yes | Yes | Yes | Yes | Yes; nearest configured node wins for descendants |
 | `hidden` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
 | `disabled` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
@@ -364,11 +365,19 @@ also covers native Angular Signal Forms trees. See
 
 ## Injector ownership
 
-`form()`, `field()`, and `array()` remain safe outside Angular dependency injection. When a node is
-created in an injection context, or receives an explicit `injector`, that injector supplies scoped
-validator messages and its `DestroyRef` owns asynchronous-validation watchers. Outside dependency
-injection, synchronous behavior and explicitly triggered async validation still work, and watcher
-ownership remains weak so an unreachable node can be garbage-collected.
+`form()`, `field()`, `array()`, and `group()` remain safe outside Angular dependency injection. A
+node first uses an explicit `injector` or the injector captured when it was created. Otherwise it
+uses the nearest injector on its parent chain by default. This means nodes produced later by array
+templates and factories automatically belong to the array's Angular lifecycle. The effective
+injector supplies scoped validator messages and its `DestroyRef` owns asynchronous-validation
+watchers.
+
+Set `inheritInjector: false` on any node to stop ancestor lookup there. The boundary also protects
+otherwise injector-less descendants, while a descendant's own injector still takes precedence.
+Moving a node transfers inherited ownership to its new tree; detaching it releases inherited
+ownership. With no effective injector, synchronous behavior and explicitly triggered async
+validation still work, and watcher ownership remains weak so an unreachable node can be
+garbage-collected.
 
 Pass an explicit injector when node creation happens later or outside the constructor but should
 still belong to a known Angular lifecycle:
