@@ -11,6 +11,23 @@ fallback.
 For all node and binding options—not only messages—see the
 [Configuration reference](../reference/configuration.md).
 
+## Where to configure messages
+
+| Intended scope | API and recommended location |
+| --- | --- |
+| Standalone Angular application | `provideValidatorMessages()` in `app.config.ts`, passed to `bootstrapApplication` |
+| NgModule application | `provideValidatorMessages()` in `AppModule.providers` |
+| Shared process-wide fallback, including nodes outside DI | `configureGlobalValidatorMessages()` in `main.ts`, before bootstrapping |
+| Larger message catalog | Export the data from a separate file and import it at the chosen configuration point |
+
+Prefer the Angular provider for application configuration, particularly when messages depend on
+injected translations or an SSR request. Use the global setter when a shared fallback is intended.
+Do not repeat global setup in component constructors or lifecycle hooks. A static catalog needs no
+application initializer or side-effect-only import.
+
+See the complete [global startup example](../reference/configure-global-validator-messages.md#where-to-call-it)
+and [application provider example](../reference/provide-validator-messages.md#example).
+
 ## Precedence
 
 The closest definition wins:
@@ -69,7 +86,10 @@ the global and built-in fallbacks.
 
 ## Global configuration
 
-Use process-wide configuration outside Angular or for one immutable application default:
+Use process-wide configuration outside Angular or for one shared application default. In an Angular
+browser entry point, call it in `main.ts` before bootstrapping. The
+[startup example](../reference/configure-global-validator-messages.md#where-to-call-it) keeps the
+catalog active; the following fragment instead shows a temporary override:
 
 ```ts
 const restore = configureGlobalValidatorMessages({

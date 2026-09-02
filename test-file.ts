@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 
 import { FormNode } from './dist/types/gem-ng-forms';
-import { array, asyncValidator, createFormPrimitives, field, form, FormValueContract, group, minLength, oneOf, required, validator } from './src/public-api';
+import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, group, min, minLength, oneOf, required, validator } from './src/public-api';
 
 type Company = { companyId: number; companyName: string }
 const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
@@ -113,7 +113,7 @@ const shorthandForm = form({
 });
 
 const username = shorthandForm.username() // ''
-const email = shorthandForm.email() // ''
+const emailValue = shorthandForm.email() // ''
 const password = shorthandForm.password() // ''
 const confirmPassword = shorthandForm.confirmPassword() // ''
 shorthandForm.username.nodeType() === 'field' // true
@@ -257,7 +257,7 @@ export const { form: xForm, group: xGroup, field: xField, array: xArray } = crea
 export const { form: aForm, group: aGroup, field: aField, array: aArray } = createFormPrimitives({ nullable: false });
 
 
-const myValidatorCustom1 = validator<string | null>((ctx) => {
+const myValidatorCustom1 = validator<any>((ctx) => {
   // ctx.field().
   if (ctx.value()) return { kind: 'somo', message: '' }
 });
@@ -265,12 +265,18 @@ const myValidatorCustom1 = validator<string | null>((ctx) => {
 
 // const field = {} as any;
 
-// const myFormNon = form({
-//   username: field(''),
-//   email: field.nonNullable(''),
-//   company: field.strict(''),
-//   url: field('', { nullable: false }),
-// });
+const myFormNon = form({
+  username: field(''),
+  email: field.strict(''),
+  company: field(2, [min(1)]),
+  url: field.strict(''),
+  subarray: array({
+    username: field(''),
+    email: field('', [email]),
+  }, {
+    validators: [minLength(2)],
+  })
+});
 
 // const fForm = form;
 // const fField = field;
