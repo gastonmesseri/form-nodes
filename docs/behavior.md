@@ -1823,6 +1823,11 @@ This enables Angular's own directive without replacing the library model:
 Committed values synchronize bidirectionally. Disabled, readonly, hidden, required, validation,
 touched, and dirty state are mirrored so Angular controls observe the library node as their source
 of form state, while control-originated value and interaction changes update the library node.
+Control-originated values are routed through the bound node's internal control-value channel rather
+than assigned to the complete root. Consequently `controlValue()` reflects the immediate rendered
+value, numeric and blur debounce delay only the committed node value, `flush()` commits pending
+input, and a programmatic `set()` cancels pending control input without being treated as a dirty
+control edit.
 `$field` is reserved as collision-safe interop syntax and remains a supported, stable adapter. Its
 public type is deliberately `never`. This makes the expression assignable to
 Angular's `FormField` input during strict template checking while preventing application

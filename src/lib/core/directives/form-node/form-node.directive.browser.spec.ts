@@ -60,7 +60,7 @@ describe('FormNode in Chromium', () => {
       imports: [FormField],
     })
     class Host {
-      name = field('David');
+      name = field('David', { debounce: 'blur' });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -69,9 +69,17 @@ describe('FormNode in Chromium', () => {
 
     input.value = 'Ana';
     dispatch(input, 'input');
+    TestBed.flushEffects();
+
+    expect(fixture.componentInstance.name()).toBe('David');
+    expect(fixture.componentInstance.name.controlValue()).toBe('Ana');
+    expect(fixture.componentInstance.name.debouncing()).toBe(true);
+
     dispatch(input, 'blur');
     TestBed.flushEffects();
 
+    expect(fixture.componentInstance.name()).toBe('Ana');
+    expect(fixture.componentInstance.name.debouncing()).toBe(false);
     expect(fixture.componentInstance.name.dirty()).toBe(true);
     expect(fixture.componentInstance.name.touched()).toBe(true);
 

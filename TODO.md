@@ -5,10 +5,6 @@
 - Harden the `$field` adapter for complete Angular `[formField]` interoperability. The current
   baseline was audited against Angular `v22.1.4` at commit
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
-  - [ ] Route control-originated Angular model changes through the corresponding node's
-    `setControlValue()` channel instead of `root.set()` so `controlValue()`, numeric and blur
-    debounce, `flush()`, cancellation, and programmatic-versus-control write semantics remain
-    correct without replacing the complete root value unnecessarily.
   - [ ] Define and test deterministic conflict resolution when Angular and the library node both
     change in the same reactive turn; avoid dropping the latest control edit or creating feedback
     loops, and assert exact write counts.
@@ -376,6 +372,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Synchronize leaf-node `touched` and `dirty` independently in both directions, including
     control-originated input and blur, Angular reset, node-originated clearing, and node-owned
     disabled, readonly, and hidden state flowing to Angular.
+  - [x] Route control-originated Angular model changes through the bound node's control-value
+    channel instead of `root.set()`, preserving `controlValue()`, numeric and blur debounce,
+    `flush()`, cancellation, dirty state, and programmatic-versus-control write semantics.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

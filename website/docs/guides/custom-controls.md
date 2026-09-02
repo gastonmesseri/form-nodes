@@ -74,6 +74,11 @@ No conversion function is required. Values synchronize in both directions, and t
 disabled, readonly, hidden, required, validation, touched, and dirty state. Every descendant uses
 the same adapted Angular tree internally.
 
+Control edits use the same value channel as `[formNode]`. With `debounce: 300` or
+`debounce: 'blur'`, the node call keeps returning the last committed value while `controlValue()`
+contains the text currently rendered by the control. Calling `flush()` commits it immediately;
+calling `set()` programmatically replaces it and cancels the pending edit.
+
 For a bound leaf field, control interaction flows back naturally: input marks the Gem Forms field
 dirty, blur marks it touched, and an Angular field reset clears both interaction flags. Calls such
 as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so
