@@ -174,11 +174,16 @@ return `null`. Prefer `ctx.node()` when writing validation that can apply to dif
 | `ctx.node().root()` | Complete structural root; never `null` |
 | `ctx.parent()` | Direct parent, or `null` |
 | `ctx.value()` | Committed value with its inferred type |
+| `ctx.node().touched()` / `ctx.node().dirty()` | Interaction state of the validated node |
 
 There are no flat `ctx.form()` or `ctx.root()` properties. Read a value with `ctx.value()`, or use
 `ctx.node().value()` / `ctx.field().value()` when accessing it through the node. The node signal
 and its result stay stable across value changes and tree moves. Reading only `ctx.node()` does
 not subscribe to the value; read the returned node's value, state, or ancestry to track it.
+
+Interaction, availability, required, and submission signals live on the node. Use
+`ctx.node().touched()`, `ctx.node().disabled()`, or `ctx.node().submitting()` instead of flat context
+properties. This applies to synchronous validators and every `asyncValidator()` callback.
 
 ### Inline node inference
 
@@ -199,8 +204,8 @@ available on the union; operations unique to a primitive require narrowing.
 
 Knowing the validated node does not infer the enclosing form's parents or sibling keys. Access
 through the declared tree or an explicitly specialized context retains those exact relationships.
-The context's `api` continues to expose the common API unless explicitly specialized. Validators
-should normally read state and return errors rather than submit or mutate their node.
+Access an API alias through `ctx.node().api` or `ctx.field().api`; its type follows the node.
+Validators should normally read state and return errors rather than submit or mutate their node.
 
 <CodeBlock language="ts" title="validator-ancestry.typecheck.ts">{validatorAncestrySource}</CodeBlock>
 

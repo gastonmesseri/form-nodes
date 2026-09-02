@@ -44,6 +44,17 @@ Every breaking migration will identify:
 from. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
 
+### Validator state access
+
+State signals are no longer direct validator-context properties. Read `dirty`, `disabled`,
+`disabledReasons`, `enabled`, `hidden`, `pristine`, `readonly`, `required`, `submitting`, `touched`,
+`untouched`, `visible`, and `writable` through `context.node()` or `context.field()` instead.
+
+For example, replace `({ touched }) => touched()` with `({ node }) => node().touched()`.
+The same migration applies to inline validators, `validator()`, built-in validator `when` options,
+and all `asyncValidator()` callbacks. State reads retain their existing reactive tracking rules.
+`value`, `node`, `field`, `parent`, and `path` remain on the shared context.
+
 ### Validator node signals and navigation
 
 `context.node` and `context.field` are now the same readonly signal returning the validated node.
@@ -61,7 +72,10 @@ or items. Omit helper generics to allow inference from the enclosing primitive.
 Flat `form` and `root` context properties are removed. The node signals never return `null` and
 keep their identity across value changes or tree moves. Explicit `TField` context types appear
 as `Signal<TField>` on both aliases. Reading only `context.node()` tracks identity, not value.
-`context.parent()` remains available. The full `context.api` still exposes the node API.
+`context.parent()` remains available. Replace `context.api` with `context.node().api` or
+`context.field().api`. Inline validators infer the concrete node API. For separately declared
+helpers, provide `TField` when an exact node type is needed; `TApi` now only specializes the
+remaining context navigation. Read the typed value with `context.value()`.
 
 ### Form and root ancestry lookups
 

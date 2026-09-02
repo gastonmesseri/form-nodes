@@ -26,6 +26,76 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('tracks interaction state read through validator node aliases', () => {
+    const validate = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      return ctx.node().touched() && ctx.field().dirty() ? { kind: 'edited' } : null;
+    });
+    const model = field('initial', { validators: validate });
+
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(1);
+    model.markAsTouched();
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(2);
+    model.markAsDirty();
+    expect(model.errors()).toMatchObject([{ kind: 'edited' }]);
+    expect(validate).toHaveBeenCalledTimes(3);
+    model.markAsPristine();
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(4);
+  });
+
+  it('tracks node state in async conditions and params and exposes it to error handlers', async () => {
+    const params = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      return ctx.node().dirty();
+    });
+    const states: boolean[] = [];
+    const onError = vi.fn((_error: unknown, ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      return ctx.node().dirty() ? { kind: 'edited' } : null;
+    });
+    const validate = vi.fn(async (ctx: { params: boolean; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      states.push(ctx.field().dirty());
+      throw new Error('Unavailable');
+    });
+    const validators = asyncValidator({
+      when: ctx => ctx.node().touched(),
+      params,
+      validate,
+      onError,
+    });
+    const model = field('initial', { validators });
+
+    expect(model.valid()).toBe(true);
+    expect(params).not.toHaveBeenCalled();
+    expect(validate).not.toHaveBeenCalled();
+    model.markAsTouched();
+    await Promise.resolve();
+    expect(model.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(model.valid()).toBe(true);
+    expect(params).toHaveBeenCalledTimes(1);
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+
+    model.markAsDirty();
+    await Promise.resolve();
+    expect(model.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(model.errors()).toMatchObject([{ kind: 'edited' }]);
+    expect(params).toHaveBeenCalledTimes(2);
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(onError).toHaveBeenCalledTimes(2);
+    expect(states).toEqual([false, true]);
+
+    model.markAsUntouched();
+    await Promise.resolve();
+    expect(model.pending()).toBe(false);
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
   it('exposes a stable readonly validator field signal independently of the node value', () => {
     const references: Signal<Node>[] = [];
     const validators = (context: { field: Signal<Node>; node: Signal<Node> }) => {
@@ -692,10 +762,10 @@ describe('field', () => {
     let disabled: unknown;
     let disabledReasons: unknown;
     const fieldNode = field('David', [(context) => {
-      validatorApi = context.api;
+      validatorApi = context.node().api;
       validatorField = context.field();
-      disabled = context.disabled;
-      disabledReasons = context.disabledReasons;
+      disabled = context.node().disabled;
+      disabledReasons = context.node().disabledReasons;
       return null;
     }]);
 
@@ -895,7 +965,8 @@ describe('field', () => {
 
   it('exposes its interaction and availability state to an asynchronous validator', async () => {
     const states: Array<{ dirty: boolean; disabled: boolean; hidden: boolean; readonly: boolean; touched: boolean }> = [];
-    const fieldNode = field('David', [asyncValidator(async ({ api }) => {
+    const fieldNode = field('David', [asyncValidator(async ({ node }) => {
+      const api = node().api;
       states.push({
         dirty: api.dirty(),
         disabled: api.disabled(),
@@ -1148,7 +1219,7 @@ describe('field', () => {
   it('provides the complete reactive validator context to a built-in when option', () => {
     const enabled = signal(false);
     const fieldNode = field('', [required({
-      when: ({ value, touched }) => enabled() && value() === '' && touched(),
+      when: ({ value, node }) => enabled() && value() === '' && node().touched(),
     })]);
 
     expect(fieldNode.valid()).toBe(true);

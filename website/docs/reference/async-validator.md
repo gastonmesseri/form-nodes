@@ -78,13 +78,17 @@ const usernameAvailable = asyncValidator<string | null>(({ value }) => {
 The same rule applies to the parameterized signature: its first generic is the validated value,
 and `params` provides inference for `TParams` from the snapshot it returns.
 
+The optional `TApi` generic specializes the remaining `parent` and `path` properties. It does not
+add an `api` member to the context. `TField` specializes the node and its API; omit helper generics
+for inline inference. Without an exact node type, use `ctx.value()` for the typed value.
+
 ### Callback signature
 
 ```ts
-asyncValidator<TValue, TApi = AsyncValidatorApi<TValue>>(
-  validate: (context: AsyncValidatorContext<TValue, TApi>) => AsyncValidationResult,
-  options?: AsyncValidatorOptions<TValue, TApi>,
-): AsyncValidator<TValue>;
+asyncValidator<TValue, TApi = AsyncValidatorApi<TValue>, TField extends Node = Node>(
+  validate: (context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult,
+  options?: AsyncValidatorOptions<TValue, TApi, ValidatorOwner<TField>>,
+): AsyncValidator<TValue, TField>;
 ```
 
 Signals read while `validate` runs become dependencies. A later change cancels the previous
@@ -106,13 +110,13 @@ const usernameAvailable = asyncValidator(({ value, abortSignal }) => {
 ### Parameterized signature
 
 ```ts
-asyncValidator<TValue, TParams, TApi = AsyncValidatorApi<TValue>>({
+asyncValidator<TValue, TParams, TApi = AsyncValidatorApi<TValue>, TField extends Node = Node>({
   params,
   validate,
   debounce?,
   when?,
   onError?,
-}): AsyncValidator<TValue>;
+}): AsyncValidator<TValue, TField>;
 ```
 
 `params` selects tracked inputs and `validate` receives the stable result. Signals read only
@@ -283,17 +287,8 @@ executions, and `params` only to parameterized `validate`.
 | [`value`](#async-validator-context-value) | `Signal<TValue>` | All callbacks |
 | [`node`](#async-validator-context-node) | `Signal<TField>` | All callbacks |
 | [`field`](#async-validator-context-field) | `Signal<TField>` | All callbacks |
-| [`api`](#async-validator-context-api) | `TApi` | All callbacks |
 | [`parent`](#async-validator-context-parent) | parent-node signal | All callbacks |
 | [`path`](#async-validator-context-path) | path signal | All callbacks |
-| [`submitting`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
-| [`touched` / `untouched`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
-| [`dirty` / `pristine`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
-| [`disabled` / `enabled`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
-| [`disabledReasons`](#async-validator-context-state) | `Signal<readonly DisabledReason[]>` | All callbacks |
-| [`readonly` / `writable`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
-| [`hidden` / `visible`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
-| [`required`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
 | [`abortSignal`](#async-validator-context-abortsignal) | `AbortSignal` | `validate` |
 | [`params`](#async-validator-context-params) | `TParams` | Parameterized `validate` |
 
@@ -340,17 +335,12 @@ See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside
 asyncValidator(({ field }) => auditNode(field()));
 ```
 
-#### api {#async-validator-context-api}
+#### node().api {#async-validator-context-api}
 
-**Signature:** `api: TApi`
-
-The typed common node API, including value, validation, navigation, state, and operations. Its
-default is `AsyncValidatorApi<TValue>`; generics can provide a more exact API type. See
-[Node API](./node-api.md).
-
-```ts
-asyncValidator(({ api }) => api.dirty() ? checkValue(api.value()) : Promise.resolve(null));
-```
+Access the node API through `ctx.node().api` or `ctx.field().api`. Its type follows the validated
+node, so inline validators retain the concrete primitive API. There is no direct `ctx.api` property.
+For ordinary state reads, use the node directly, such as `ctx.node().dirty()`.
+See [API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code) for aliases and child-name collisions.
 
 #### node().form() {#async-validator-context-form}
 
@@ -387,23 +377,27 @@ asyncValidator(({ path }) => auditPath(path()));
 
 #### state signals {#async-validator-context-state}
 
+Read state through `ctx.node()` or its alias `ctx.field()`. These signals are not direct context
+properties. The same access works in inline validators and reusable helpers.
+
 | Signal | Meaning | Example read |
 | --- | --- | --- |
-| `submitting()` | The node or root form is submitting | `const isSubmitting = submitting();` |
-| `touched()` | Interaction marked the node touched | `const wasTouched = touched();` |
-| `untouched()` | The node remains untouched | `const isUntouched = untouched();` |
-| `dirty()` | Modification was recorded | `const wasModified = dirty();` |
-| `pristine()` | No modification was recorded | `const isPristine = pristine();` |
-| `disabled()` | The node is excluded | `const isDisabled = disabled();` |
-| `enabled()` | The node participates normally | `const isEnabled = enabled();` |
-| `disabledReasons()` | Active disabling causes | `const reasons = disabledReasons();` |
-| `readonly()` | Consumers should prevent editing | `const isReadonly = readonly();` |
-| `writable()` | Consumers may permit editing | `const canEdit = writable();` |
-| `hidden()` | Consumers should omit the node | `const isHidden = hidden();` |
-| `visible()` | Consumers should display the node | `const isVisible = visible();` |
-| `required()` | Current rules require a value | `const isRequired = required();` |
+| `ctx.node().submitting()` | The node or an ancestor form is submitting | `ctx.node().submitting()` |
+| `ctx.node().touched()` | Interaction marked the node touched | `ctx.node().touched()` |
+| `ctx.node().untouched()` | The node remains untouched | `ctx.node().untouched()` |
+| `ctx.node().dirty()` | Modification was recorded | `ctx.node().dirty()` |
+| `ctx.node().pristine()` | No modification was recorded | `ctx.node().pristine()` |
+| `ctx.node().disabled()` | The node is excluded | `ctx.node().disabled()` |
+| `ctx.node().enabled()` | The node participates normally | `ctx.node().enabled()` |
+| `ctx.node().disabledReasons()` | Active disabling causes | `ctx.node().disabledReasons()` |
+| `ctx.node().readonly()` | Consumers should prevent editing | `ctx.node().readonly()` |
+| `ctx.node().writable()` | Consumers may permit editing | `ctx.node().writable()` |
+| `ctx.node().hidden()` | Consumers should omit the node | `ctx.node().hidden()` |
+| `ctx.node().visible()` | Consumers should display the node | `ctx.node().visible()` |
+| `ctx.node().required()` | Current rules require a value | `ctx.node().required()` |
 
-Reading one in the callback form or in `params` makes it a dependency.
+Reading state in `when`, the callback form, or `params` makes it a dependency.
+Parameterized `validate` and `onError` can read the same state without tracking new dependencies.
 
 ### Execution-only members
 

@@ -117,10 +117,9 @@ See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 | [`value()`](#custom-validator-context-value) | Current committed node value with its inferred type. |
 | [`node`](#custom-validator-context-node) | Readonly signal of the inferred validated node; identical to `field`. |
 | [`field`](#custom-validator-context-field) | Readonly signal returning the validated field, form, group, or array. |
-| [`api`](#custom-validator-context-api) | Typed common API for validation, state, navigation, and node operations. |
 | [`parent()`](#custom-validator-context-parent) | Direct parent node, or `null` at the root. |
 | [`path()`](#custom-validator-context-path) | Reactive path from the root. |
-| [State signals](#custom-validator-context-state) | `touched`, `dirty`, `disabled`, `readonly`, `hidden`, `required`, `submitting`, and their complements. |
+| [Node state](#custom-validator-context-state) | Read interaction and availability signals through `ctx.node()` or `ctx.field()`. |
 
 The context and its signals are stable. Any signal read while the validator executes becomes a
 reactive dependency.
@@ -132,17 +131,8 @@ reactive dependency.
 | [`value`](#custom-validator-context-value) | `Signal<TValue>` | Current committed value |
 | [`node`](#custom-validator-context-node) | `Signal<TField>` | Real node being validated |
 | [`field`](#custom-validator-context-field) | `Signal<TField>` | Real node being validated |
-| [`api`](#custom-validator-context-api) | `ValidatorApi<TValue>` | Common node state and operations |
 | [`parent`](#custom-validator-context-parent) | parent-node signal | Direct parent or `null` |
 | [`path`](#custom-validator-context-path) | path signal | Location from the root |
-| [`submitting`](#custom-validator-context-state) | `Signal<boolean>` | Submission state |
-| [`touched` / `untouched`](#custom-validator-context-state) | `Signal<boolean>` | Touched state and its complement |
-| [`dirty` / `pristine`](#custom-validator-context-state) | `Signal<boolean>` | Modification state and its complement |
-| [`disabled` / `enabled`](#custom-validator-context-state) | `Signal<boolean>` | Participation state and its complement |
-| [`disabledReasons`](#custom-validator-context-state) | `Signal<readonly DisabledReason[]>` | Active disabling causes |
-| [`readonly` / `writable`](#custom-validator-context-state) | `Signal<boolean>` | Editing state and its complement |
-| [`hidden` / `visible`](#custom-validator-context-state) | `Signal<boolean>` | Visibility state and its complement |
-| [`required`](#custom-validator-context-state) | `Signal<boolean>` | Whether current rules require a value |
 
 <div className="api-member-reference">
 
@@ -187,17 +177,12 @@ See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside
 validator<string>(({ field }) => field().value() ? null : { kind: 'blank' });
 ```
 
-#### api {#custom-validator-context-api}
+#### node().api {#custom-validator-context-api}
 
-**Signature:** `api: TApi`
-
-The common value, validation, navigation, state, and operations API. Reading one of its signals is
-reactively tracked. Validators should normally remain pure rather than mutate through this API.
-See [Node API](./node-api.md).
-
-```ts
-validator<string>(({ api }) => api.dirty() && !api.value() ? { kind: 'blank' } : null);
-```
+Access the node API through `ctx.node().api` or `ctx.field().api`. Its type follows the validated
+node, so inline validators retain the concrete primitive API. There is no direct `ctx.api` property.
+For ordinary state reads, use the node directly, such as `ctx.node().dirty()`.
+See [API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code) for aliases and child-name collisions.
 
 ### Tree navigation
 
@@ -237,21 +222,24 @@ validator<string>(({ path }) => path().length > 3 ? { kind: 'tooDeep' } : null);
 
 #### state signals {#custom-validator-context-state}
 
+Read state through `ctx.node()` or its alias `ctx.field()`. These signals are not direct context
+properties. The same access works in inline validators and reusable helpers.
+
 | Signal | Meaning | Example read |
 | --- | --- | --- |
-| `submitting()` | The node or root form is submitting | `validator<unknown>(({ submitting }) => { submitting(); return null; })` |
-| `touched()` | Interaction marked the node touched | `validator<unknown>(({ touched }) => { touched(); return null; })` |
-| `untouched()` | The node remains untouched | `validator<unknown>(({ untouched }) => { untouched(); return null; })` |
-| `dirty()` | Modification was recorded | `validator<unknown>(({ dirty }) => { dirty(); return null; })` |
-| `pristine()` | No modification was recorded | `validator<unknown>(({ pristine }) => { pristine(); return null; })` |
-| `disabled()` | The node is excluded | `validator<unknown>(({ disabled }) => { disabled(); return null; })` |
-| `enabled()` | The node participates normally | `validator<unknown>(({ enabled }) => { enabled(); return null; })` |
-| `disabledReasons()` | Active disabling causes | `validator<unknown>(({ disabledReasons }) => { disabledReasons(); return null; })` |
-| `readonly()` | Consumers should prevent editing | `validator<unknown>(({ readonly }) => { readonly(); return null; })` |
-| `writable()` | Consumers may permit editing | `validator<unknown>(({ writable }) => { writable(); return null; })` |
-| `hidden()` | Consumers should omit the node | `validator<unknown>(({ hidden }) => { hidden(); return null; })` |
-| `visible()` | Consumers should display the node | `validator<unknown>(({ visible }) => { visible(); return null; })` |
-| `required()` | Current rules require a value | `validator<unknown>(({ required }) => { required(); return null; })` |
+| `ctx.node().submitting()` | The node or an ancestor form is submitting | `ctx.node().submitting()` |
+| `ctx.node().touched()` | Interaction marked the node touched | `ctx.node().touched()` |
+| `ctx.node().untouched()` | The node remains untouched | `ctx.node().untouched()` |
+| `ctx.node().dirty()` | Modification was recorded | `ctx.node().dirty()` |
+| `ctx.node().pristine()` | No modification was recorded | `ctx.node().pristine()` |
+| `ctx.node().disabled()` | The node is excluded | `ctx.node().disabled()` |
+| `ctx.node().enabled()` | The node participates normally | `ctx.node().enabled()` |
+| `ctx.node().disabledReasons()` | Active disabling causes | `ctx.node().disabledReasons()` |
+| `ctx.node().readonly()` | Consumers should prevent editing | `ctx.node().readonly()` |
+| `ctx.node().writable()` | Consumers may permit editing | `ctx.node().writable()` |
+| `ctx.node().hidden()` | Consumers should omit the node | `ctx.node().hidden()` |
+| `ctx.node().visible()` | Consumers should display the node | `ctx.node().visible()` |
+| `ctx.node().required()` | Current rules require a value | `ctx.node().required()` |
 
 Any state signal read by the validator becomes a dependency.
 

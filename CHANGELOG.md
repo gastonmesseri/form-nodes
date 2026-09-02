@@ -36,7 +36,12 @@ consumer migration guide.
 - Validator contexts expose the validated node through the same readonly signal under `node` and
   `field`. Use `context.node()` (or `context.field()`) for the node and `context.value()` for its
   value. Flat `context.form()` and `context.root()` have been removed; use `context.node().form()`
-  and `context.node().root()` instead. `parent()` remains available on the context.
+  and `context.node().root()` instead. Interaction, availability, required, and submission state
+  signals also move from the flat context to the node, such as `context.node().touched()` and
+  `context.node().disabled()`. This applies to synchronous validators and every asynchronous
+  callback. Access the API through `context.node().api` or `context.field().api` instead of
+  `context.api`; inline validators retain the concrete node API. `parent()` remains available on
+  the context.
 
 - `form()` now returns the nearest explicit form workflow instead of the complete structural root.
   Nested forms own their descendants, while standalone fields, groups, and arrays return `null`;

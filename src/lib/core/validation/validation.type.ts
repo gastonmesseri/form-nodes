@@ -200,7 +200,7 @@ export type FieldContext<TValue> = {
   readonly value: Signal<TValue>;
 };
 
-/** Non-validation state exposed to validator callbacks. */
+/** Non-validation state available through the validated node API. */
 export type AsyncValidatorState = {
   /** Whether this node or an ancestor form is currently running its submission action. */
   readonly submitting: Signal<boolean>;
@@ -316,8 +316,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
 /** Mutable node API exposed to asynchronous validators by default. */
 export type AsyncValidatorApi<TValue> = ValidatorApi<TValue>;
 
-/** Readonly reactive node state shared by all validator context specializations. */
-export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & AsyncValidatorState & {
+/** Reactive value and navigation shared by all validator context specializations. */
+export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
   /** Immediate parent inferred by a specialized validator API. */
   readonly parent: Signal<any>;
   /** Property names and array indexes locating the validated node from its root. */
@@ -326,8 +326,6 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & AsyncValidator
 
 /** Reactive context provided to synchronous validators. */
 export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = ValidatorNode> = Pick<TApi, keyof ValidatorReadonlyApi<TValue>> & {
-  /** Full API of the node being validated, including state signals and node operations. */
-  readonly api: TApi;
   /**
    * Readonly signal of the node being validated.
    * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.

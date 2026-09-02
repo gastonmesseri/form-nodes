@@ -3,10 +3,10 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
-import { form, type FormApi } from '../primitives/form';
-import { field, type FieldApi } from '../primitives/field';
+import { form, type Form, type FormApi } from '../primitives/form';
+import { field, type Field, type FieldApi } from '../primitives/field';
+import type { AsyncValidatorContext, FieldContext } from './validation.type';
 import type { ObservableLike, ObserverLike } from '../types/observable-like.type';
-import type { AsyncValidatorApi, AsyncValidatorContext, FieldContext } from './validation.type';
 
 const settle = async () => {
   await Promise.resolve();
@@ -319,19 +319,19 @@ describe('asyncValidator', () => {
     expect(profile.api.valid()).toBe(true);
   });
 
-  it('provides flat readonly state, the field, its API, and an abort signal by default', () => {
-    asyncValidator<number | null>(async ({ api, field: fieldNode, value, path, disabled, readonly, touched, abortSignal }) => {
-      expectTypeOf(api).toEqualTypeOf<AsyncValidatorApi<number | null>>();
+  it('provides node state through the field alongside its API and an abort signal', () => {
+    asyncValidator<number | null>(async ({ field: fieldNode, value, path, abortSignal }) => {
+      const api = fieldNode().api;
       expectTypeOf(fieldNode).toEqualTypeOf<AsyncValidatorContext<number | null>['field']>();
-      expectTypeOf(api.value()).toEqualTypeOf<number | null>();
+      expectTypeOf(api.value()).toBeAny();
       expectTypeOf(api.path()).toEqualTypeOf<readonly string[]>();
       expectTypeOf(api.set).toBeCallableWith(42);
       expectTypeOf(api.set).toBeCallableWith(null);
       expectTypeOf(value()).toEqualTypeOf<number | null>();
       expectTypeOf(path()).toEqualTypeOf<readonly string[]>();
-      expectTypeOf(disabled()).toEqualTypeOf<boolean>();
-      expectTypeOf(readonly()).toEqualTypeOf<boolean>();
-      expectTypeOf(touched()).toEqualTypeOf<boolean>();
+      expectTypeOf(fieldNode().disabled()).toEqualTypeOf<boolean>();
+      expectTypeOf(fieldNode().readonly()).toEqualTypeOf<boolean>();
+      expectTypeOf(fieldNode().touched()).toEqualTypeOf<boolean>();
       expectTypeOf(abortSignal).toEqualTypeOf<AbortSignal>();
       return null;
     });
@@ -358,9 +358,10 @@ describe('asyncValidator', () => {
     expect(receivedField).toBe(rootForm.profile.age);
   });
 
-  it('accepts an explicit exact field API type', async () => {
+  it('preserves the API of an explicitly typed field node', async () => {
     let receivedApi: FieldApi<string | null> | undefined;
-    const name = field('David', [asyncValidator<string | null, FieldApi<string | null>>(async ({ api }) => {
+    const name = field('David', [asyncValidator<string | null, FieldApi<string | null>, Field<string | null>>(async ({ node }) => {
+      const api = node().api;
       expectTypeOf(api).toEqualTypeOf<FieldApi<string | null>>();
       receivedApi = api;
       return null;
@@ -371,11 +372,12 @@ describe('asyncValidator', () => {
     expect(receivedApi).toBe(name.api);
   });
 
-  it('accepts an explicit exact form API type', async () => {
+  it('preserves the API of an explicitly typed form node', async () => {
     const country = field('CH');
     type CountryFormApi = FormApi<{ country: typeof country }>;
     let receivedApi: CountryFormApi | undefined;
-    const profile = form({ country }, [asyncValidator<{ country: string | null }, CountryFormApi>(async ({ api }) => {
+    const profile = form({ country }, [asyncValidator<{ country: string | null }, CountryFormApi, Form<{ country: typeof country }>>(async ({ node }) => {
+      const api = node().api;
       expectTypeOf(api).toEqualTypeOf<CountryFormApi>();
       receivedApi = api;
       return null;
@@ -389,7 +391,8 @@ describe('asyncValidator', () => {
   it('provides typed explicit params to a parameterized validator', () => {
     asyncValidator({
       params: ({ value }: FieldContext<string>) => ({ country: 'CH', username: value() }),
-      validate: async ({ abortSignal, params, api, value }) => {
+      validate: async ({ abortSignal, params, node, value }) => {
+        const api = node().api;
         expectTypeOf(value()).toEqualTypeOf<string>();
         expectTypeOf(params).toEqualTypeOf<{ country: string; username: string }>();
         expectTypeOf(api.dirty()).toEqualTypeOf<boolean>();
@@ -400,7 +403,7 @@ describe('asyncValidator', () => {
   });
 
   it('reacts to interaction state read by an automatic validator', async () => {
-    const validate = vi.fn(async ({ api }) => api.touched() ? { kind: 'alreadyTouched' } : null);
+    const validate = vi.fn(async ({ node }) => node().api.touched() ? { kind: 'alreadyTouched' } : null);
     const name = field('David', [asyncValidator(validate)]);
 
     await settle();
@@ -417,7 +420,7 @@ describe('asyncValidator', () => {
   it('allows explicit params to derive from asynchronous validator state', async () => {
     const validate = vi.fn(async ({ params }) => params.dirty ? { kind: 'changed' } : null);
     const name = field('David', [asyncValidator({
-      params: ({ api }) => ({ dirty: api.dirty() }),
+      params: ({ node }) => ({ dirty: node().api.dirty() }),
       validate,
     })]);
 

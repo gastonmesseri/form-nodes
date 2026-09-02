@@ -88,9 +88,9 @@ uses its condition argument for the same purpose:
 
 ```ts
 const myForm = form({
-  newsletterEmail: field('', [email({
-    when: ({ value }) => value() !== '',
-  })]),
+  newsletterEmail: field('', [
+    email({ when: ({ value }) => value() !== '' })
+  ]),
 });
 ```
 
