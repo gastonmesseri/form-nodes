@@ -2,50 +2,50 @@
 
 ## Up next
 
-- website docs
-  - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
+- [ ] website docs
+  - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
-  - add playground to play with states, and etc, and with the code
-  - check what font-size would be ideal for the code examples
-  - check what colors for documentation are the most recognize as good by people
+  - [ ] add playground to play with states, and etc, and with the code
+  - [ ] check what font-size would be ideal for the code examples
+  - [ ] check what colors for documentation are the most recognize as good by people
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
-  - explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
+  - [ ] explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
     e.g. myField = field(); myField() to read the value; myField.set() to set the value, like a signal
-- provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
-- Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
-- Consider changing the @example to something different, like a heading with asterisks **Like this**
+- [ ] provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
+- [ ] Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
+- [ ] Consider changing the @example to something different, like a heading with asterisks **Like this**
 
-- Consider including dynamic controls in form() (like in reactive forms)
-  - update docs if required, check all docs
-  - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
-  - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
-- Decide the exact semantics and naming of object-node ancestry lookups.
-  - Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
+- [ ] Consider including dynamic controls in form() (like in reactive forms)
+  - [ ] update docs if required, check all docs
+  - [ ] myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
+  - [ ] handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
+- [ ] Decide the exact semantics and naming of object-node ancestry lookups.
+  - [ ] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
     an explicit nested form the workflow owner observed by all of its descendants.
-  - Consider adding a separate `root()` or `rootForm()` signal for retrieving the actual root of the
+  - [ ] Consider adding a separate `root()` or `rootForm()` signal for retrieving the actual root of the
     complete node tree instead of overloading `form()` with both workflow ownership and root lookup.
-  - Define whether `root()` returns any root node (`Field`, `Group`, `Form`, or `ArrayNode`) while
+  - [ ] Define whether `root()` returns any root node (`Field`, `Group`, `Form`, or `ArrayNode`) while
     `rootForm()` returns only a `Form | null`, and choose names that remain clear in IntelliSense.
-  - Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
+  - [ ] Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
     groups inside arrays, detached array items, and nodes that are reparented at runtime.
-  - Review validator contexts, public root-type inference, async dependency tracking, submission
+  - [ ] Review validator contexts, public root-type inference, async dependency tracking, submission
     inheritance, documentation, and migration impact before changing the current behavior.
-- Think about how to better structure project folders given current knowledge and existing files
-- [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
-- Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
+- [ ] Think about how to better structure project folders given current knowledge and existing files
+- [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
+- [ ] Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
   e.g. validator functions, disabled, readonly, etc...
-  - because if there is a form self-reference then it could fail if called when form hasn't been yet initialized.
-  - be careful that the tracking in those computed/reactive functions is not destroyed by the function failure/error
-- Validator framework roadmap (implement in this order)
-  - Check TODO_VALIDATORS.md file to include more builtin validators
-- Public api
-  - Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
-- Validators
-  - Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
-    - Also handle cases like in lab, like addErrors, and those
-  - Check what model of errors() other libraries return, and decide for the best system
-  - Consider allowing defining a asyncValidator without asyncValidator function:
+  - [ ] because if there is a form self-reference then it could fail if called when form hasn't been yet initialized.
+  - [ ] be careful that the tracking in those computed/reactive functions is not destroyed by the function failure/error
+- [ ] Validator framework roadmap (implement in this order)
+  - [ ] Check TODO_VALIDATORS.md file to include more builtin validators
+- [ ] Public api
+  - [ ] Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
+- [ ] Validators
+  - [ ] Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
+    - [ ] Also handle cases like in lab, like addErrors, and those
+  - [ ] Check what model of errors() other libraries return, and decide for the best system
+  - [ ] Consider allowing defining a asyncValidator without asyncValidator function:
     e.g.
     field('Marco', {
       validators: [
@@ -58,8 +58,8 @@
         }
       ],
     })
-- Shortcuts for signature
-  - Consider shortcut for simple array template (just an array with 1 object [forced through type] (maybe 2 objects?)) [detectable through Array.isArray()]
+- [ ] Shortcuts for signature
+  - [ ] Consider shortcut for simple array template (just an array with 1 object [forced through type] (maybe 2 objects?)) [detectable through Array.isArray()]
     // maybe not a good idea because it is ambiguous whether it should start with 1 item (the one in the template) or 0 items (probably not)
     form({
       houses: [{
@@ -67,7 +67,7 @@
         country: field(''),
       }],
     })
-  - Consider shortcut for simple primitives [detectable through typeof === number/string/boolean/null/undefined]
+  - [ ] Consider shortcut for simple primitives [detectable through typeof === number/string/boolean/null/undefined]
     form({
       age: 23, // same as "age: field<number>(23)"
       name: 'Marco',
@@ -75,45 +75,45 @@
       friend: field<string>(),
     })
     // <!!!!> Maybe it even works with an object like value even if it creates a group() // just a hunch (because of the form({ valueObj: { name: '' } })) // myForm.valueObj() still returns the object
-- directive
-  - allow alternative predefined names for directive
-  - allow dynamic name for directive (in case is possible for example creating a form)
+- [ ] directive
+  - [ ] allow alternative predefined names for directive
+  - [ ] allow dynamic name for directive (in case is possible for example creating a form)
     . e.g. providers: [FormNode.withName('myCustomDirectiveName')]
-  - Consider deliberately extending native `min`/`max` propagation beyond Angular 22 Signal Forms to `input[type=time]`, `input[type=week]`, and `input[type=datetime-local]`, which support those constraints in the HTML standard.
-    - Design the native serialization for `Date`, number, and string constraints before implementing it (`HH:mm[:ss]`, `YYYY-Www`, and local date-time strings without a time-zone offset).
-    - Define the time-zone semantics for `datetime-local` and avoid implicit `Date.toString()` conversion.
-    - Ensure the constraint representation agrees with the value representation supported by each native control.
-    - Cover browser validity, SSR, hydration, reset, rebinding, and clearing inactive constraints.
-    - Document this as a deliberate improvement over Angular 22.1.4, whose native propagation currently covers only `number`, `range`, `date`, and `month`.
-  - Allow hooking to existing angular apis
-    - Add other Angular interoperability mechanisms if they become relevant
-  - Decide whether host attributes or inputs such as `[disabled]` should also update the node; node-to-control state synchronization is already implemented.
-  - Ensure whether we need to have angular forms as package dependency, or we can create an abstraction like we did with isObservableLike....
-  - Make the directive sync disabled/readonly/required attributes like in angular signal forms 22.
-    - maybe there are more attributes synced, check in angular implementation
-    - (from angular docs) The [formField] directive also syncs field state for attributes like required, disabled, and readonly when appropriate.
-    - Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
-    - It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
-- Ensure that the library performs tree-shaking (e.g. not used validators ) [I THINK I ALREADY HANDLED THIS IN SOME COMMIT]
-- Investigate how other angular libraries perform versioning,
-  - e.g. do they use the version name as the same as angular current version?
-  - do they support previous versions?
-- Ensure that disabledReasons also doesn't fail when it references self form root, when it is declared with a reactive function
-- Consider nesting disabledReasons in myForm.myField.disabled.reasons();
-- Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
-  - maybe other ones that are not required, min(), max(), etc
-- Add precise instructions on how to use the library (e.g. angular imports, etc)
-- Expose restoreDefaultValidatorMessages() function in the public api
-- Add playground to the website, with simple example or something like that
-- Consider @gemgular/forms name for library
-- Add good docs about implementing a custom control (support for focus, etc, angular CVA, form value accessor, etc)
-- Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
+  - [ ] Consider deliberately extending native `min`/`max` propagation beyond Angular 22 Signal Forms to `input[type=time]`, `input[type=week]`, and `input[type=datetime-local]`, which support those constraints in the HTML standard.
+    - [ ] Design the native serialization for `Date`, number, and string constraints before implementing it (`HH:mm[:ss]`, `YYYY-Www`, and local date-time strings without a time-zone offset).
+    - [ ] Define the time-zone semantics for `datetime-local` and avoid implicit `Date.toString()` conversion.
+    - [ ] Ensure the constraint representation agrees with the value representation supported by each native control.
+    - [ ] Cover browser validity, SSR, hydration, reset, rebinding, and clearing inactive constraints.
+    - [ ] Document this as a deliberate improvement over Angular 22.1.4, whose native propagation currently covers only `number`, `range`, `date`, and `month`.
+  - [ ] Allow hooking to existing angular apis
+    - [ ] Add other Angular interoperability mechanisms if they become relevant
+  - [ ] Decide whether host attributes or inputs such as `[disabled]` should also update the node; node-to-control state synchronization is already implemented.
+  - [ ] Ensure whether we need to have angular forms as package dependency, or we can create an abstraction like we did with isObservableLike....
+  - [ ] Make the directive sync disabled/readonly/required attributes like in angular signal forms 22.
+    - [ ] maybe there are more attributes synced, check in angular implementation
+    - [ ] (from angular docs) The [formField] directive also syncs field state for attributes like required, disabled, and readonly when appropriate.
+    - [ ] Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
+    - [ ] It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
+- [ ] Ensure that the library performs tree-shaking (e.g. not used validators ) [I THINK I ALREADY HANDLED THIS IN SOME COMMIT]
+- [ ] Investigate how other angular libraries perform versioning,
+  - [ ] e.g. do they use the version name as the same as angular current version?
+  - [ ] do they support previous versions?
+- [ ] Ensure that disabledReasons also doesn't fail when it references self form root, when it is declared with a reactive function
+- [ ] Consider nesting disabledReasons in myForm.myField.disabled.reasons();
+- [ ] Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
+  - [ ] maybe other ones that are not required, min(), max(), etc
+- [ ] Add precise instructions on how to use the library (e.g. angular imports, etc)
+- [ ] Expose restoreDefaultValidatorMessages() function in the public api
+- [ ] Add playground to the website, with simple example or something like that
+- [ ] Consider @gemgular/forms name for library
+- [ ] Add good docs about implementing a custom control (support for focus, etc, angular CVA, form value accessor, etc)
+- [ ] Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
   both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
   access the errors() or something like that
-- Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
-  - Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
-- Think about what is a good name to use in the examples for the form instance
-  - e.g.
+- [ ] Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
+  - [ ] Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
+- [ ] Think about what is a good name to use in the examples for the form instance
+  - [ ] e.g.
   form = form({ 
     name: field(''),
     age: field(23),
@@ -121,40 +121,40 @@
   // later in the template <input type="text" [formNode]="form.name">
   // 'form' is good for the instance? maybe formModel, maybe myForm? maybe personForm?
 
-- Check if the submission state, has to be explicitly coming from <form [formNode]="myForm">
+- [ ] Check if the submission state, has to be explicitly coming from <form [formNode]="myForm">
   Maybe just binding a nested field with [formNode] could automatically detect the parent form (maybe not)
-- Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
-  - controlValue and setControlValue feel more like an internal thing
-  - also maybe hide disabledReasons
-- maybe add "novalidate" html property by default to the parent form of the fields? (maybe not)
-- Allow creating a framework with predefined options (e.g. by default form() array() or field() has { nullable: true })
-- code style: functions declared with `export const` or `const` that return an expression directly should use braces
-- Implement shorthand for required in the field options similar to disbled
-- initial value should be null or undefined? (for field())
-  - and for array?
-- Rename to something generic like @ng-tools/forms (maybe)
-- In the future allow something like dynamic forms from a JSON or object definition
-  - Schema-driven form generation from JSON definitions.
-- Always expose `myForm.$api` in `form()` and `group()` in case the user wants to declare an `api` property (user-defined properties always take priority)
-- Runtime addition or removal of form nodes.
-- Consider allowing validator function returning false/true (for shorthands)
-- Try to simplify the "markers" concept, probably not needed that overengineering
-- Consider allowing optionally a schemaFunction (like in angular 22 signal forms)
-  - maybe better a init: () => void, in the form() options
-- Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
-- Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
-- Restructure project folder structure, once project is solid and stable. think how to organize folders
-- Create repo to pass custom lintern rules in dlab
-- Allow defining global options
-  - example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
-- Add support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
-  - this would break treeshaking
-  - If possible, typed strings
-- Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project
-- Expose a helper to obtain the value type of `form()`, e.g. `type MyFormValue = FormValue<typeof myFormInstance>` (or `FormNodeValue<typeof myFormInstance>`)
-- Due to typescript limitations, try providing something similar to signal forms schemaPath api,
+- [ ] Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
+  - [ ] controlValue and setControlValue feel more like an internal thing
+  - [ ] also maybe hide disabledReasons
+- [ ] maybe add "novalidate" html property by default to the parent form of the fields? (maybe not)
+- [ ] Allow creating a framework with predefined options (e.g. by default form() array() or field() has { nullable: true })
+- [ ] code style: functions declared with `export const` or `const` that return an expression directly should use braces
+- [ ] Implement shorthand for required in the field options similar to disbled
+- [ ] initial value should be null or undefined? (for field())
+  - [ ] and for array?
+- [ ] Rename to something generic like @ng-tools/forms (maybe)
+- [ ] In the future allow something like dynamic forms from a JSON or object definition
+  - [ ] Schema-driven form generation from JSON definitions.
+- [ ] Always expose `myForm.$api` in `form()` and `group()` in case the user wants to declare an `api` property (user-defined properties always take priority)
+- [ ] Runtime addition or removal of form nodes.
+- [ ] Consider allowing validator function returning false/true (for shorthands)
+- [ ] Try to simplify the "markers" concept, probably not needed that overengineering
+- [ ] Consider allowing optionally a schemaFunction (like in angular 22 signal forms)
+  - [ ] maybe better a init: () => void, in the form() options
+- [ ] Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
+- [ ] Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
+- [ ] Restructure project folder structure, once project is solid and stable. think how to organize folders
+- [ ] Create repo to pass custom lintern rules in dlab
+- [ ] Allow defining global options
+  - [ ] example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
+- [ ] Add support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
+  - [ ] this would break treeshaking
+  - [ ] If possible, typed strings
+- [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project
+- [ ] Expose a helper to obtain the value type of `form()`, e.g. `type MyFormValue = FormValue<typeof myFormInstance>` (or `FormNodeValue<typeof myFormInstance>`)
+- [ ] Due to typescript limitations, try providing something similar to signal forms schemaPath api,
   so that in another callback, we can set validators properly typed or something like that.
-  - e.g.
+  - [ ] e.g.
   profile.address.city.setValidators([
     asyncValidator<
       string | null,
@@ -166,27 +166,27 @@
       return null;
     }),
   ]);
-- Consider an alternative name for ".api"
-- Pick ideas from other form libraries (e.g. veevalidate, or other react, angular libraries)
-- Add debounce to synchronous validators, probably also with a factory function validator(() => ...)
-- TRY TO MAKE ASYNC VALIDATORS ALSO BEING THE RESULT OF A COMPOSABLE VALIDATION FUNCTION.
-  - at the moment this is not possible.
-- Consider cleaning the form() array() field() files, (maybe a class?)
-- Also consider exporting the main functions with the following names: ngForm, ngField, ngArray
-- In the framework, provide also a component (create and export an angular component) to display the validation errors
-  - max validation errors
-  - color, color by type
-  - maybe consider also simply component to put below the html field, and then display things like warnings, errors, or disableReasons
-- In the same sense that required() was implmeented to potentially notify custom components that the required validator has been configured, also do 
+- [ ] Consider an alternative name for ".api"
+- [ ] Pick ideas from other form libraries (e.g. veevalidate, or other react, angular libraries)
+- [ ] Add debounce to synchronous validators, probably also with a factory function validator(() => ...)
+- [ ] TRY TO MAKE ASYNC VALIDATORS ALSO BEING THE RESULT OF A COMPOSABLE VALIDATION FUNCTION.
+  - [ ] at the moment this is not possible.
+- [ ] Consider cleaning the form() array() field() files, (maybe a class?)
+- [ ] Also consider exporting the main functions with the following names: ngForm, ngField, ngArray
+- [ ] In the framework, provide also a component (create and export an angular component) to display the validation errors
+  - [ ] max validation errors
+  - [ ] color, color by type
+  - [ ] maybe consider also simply component to put below the html field, and then display things like warnings, errors, or disableReasons
+- [ ] In the same sense that required() was implmeented to potentially notify custom components that the required validator has been configured, also do
   with min() max() to notify custom components that there is a min/max validator defined (e.g. maybe a number input would allow writing or clicking arrows for more than max, or something like that)
-- Check angular docs to check metadata implementation etc, and more stuff:
-  - https://angular.dev/guide/forms/signals/form-logic?utm_source=chatgpt.com
-- Check what is the minimum Typescript version needed for the package (it uses NoInfer for example), and therefore check what minimum angular version is supported
-- Check OTHER LIBRARIES, to see how can i improve the api, adding more useful features, etc
-- To make it safe to use (similar to what we did with self-referencing root in validators), ensure
+- [ ] Check angular docs to check metadata implementation etc, and more stuff:
+  - [ ] https://angular.dev/guide/forms/signals/form-logic?utm_source=chatgpt.com
+- [ ] Check what is the minimum Typescript version needed for the package (it uses NoInfer for example), and therefore check what minimum angular version is supported
+- [ ] Check OTHER LIBRARIES, to see how can i improve the api, adding more useful features, etc
+- [ ] To make it safe to use (similar to what we did with self-referencing root in validators), ensure
   that disabled, readonly, etc, also allow referencing safely something that hasn't been created yet
   (e.g. referencing a signal that is at the bottom of the file [through a function]).
-- Consider imports interface like the following:
+- [ ] Consider imports interface like the following:
   import { form } from 'wherever';
 
   const myForm = form({
@@ -197,10 +197,10 @@
       country: form.field('Spain'),
     }),
   });
-- Consider nullable api like this:
+- [ ] Consider nullable api like this:
   const name = field.nullable('Mark');
   const age = field.nullable(23),
-- Consider the following (changing submission api):
+- [ ] Consider the following (changing submission api):
   // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmit, and onInvalidSubmit to allow easier api
   // Same in case it has more options inside submission
   const profile = form({
@@ -213,7 +213,7 @@
   });
 
   const submitted = await profile.submit();
-- Add ESLINt with vt rules
+- [ ] Add ESLINt with vt rules
 
 More general debounce
 We support milliseconds in `field()`. Angular supports cancellable asynchronous debouncers, inheritance from ancestors, and strategies such as blur. Our implementation already cancels timers correctly, but it is less expressive.
