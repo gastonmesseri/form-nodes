@@ -3,6 +3,7 @@ import { field, type DisabledReason, type FieldApi } from '../../src/public-api'
 field('', { debounce: 'blur' });
 field('', { debounce: async abortSignal => { void abortSignal.aborted; } });
 field('', { inheritInjector: false });
+field('', { adoptBindingInjector: false });
 // @ts-expect-error Unsupported debounce strategy.
 field('', { debounce: 'change' });
 

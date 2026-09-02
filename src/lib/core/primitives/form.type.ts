@@ -86,6 +86,12 @@ export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
    */
   inheritInjector?: boolean;
   /**
+   * Whether this node may temporarily adopt the injector of a directly bound `[formNode]` host
+   * when it has no injector of its own. Defaults to `true`. The binding injector takes precedence
+   * over an inherited ancestor injector and is released when the binding is destroyed or rebound.
+   */
+  adoptBindingInjector?: boolean;
+  /**
    * Partial validator message catalog inherited by this form or array and its descendants.
    *
    * ℹ️ This scope overrides provider and global catalogs. A validator's own `message` option has

@@ -340,7 +340,7 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
   ) as Form<TNodes>;
   controlKeys().forEach(key => (controls[key] as InternalNode).$api._setParent(formNode, String(key)));
   markAsNode(formNode);
-  registerNodeInjector(formNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false);
+  registerNodeInjector(formNode, resolvedOptions?.injector, resolvedOptions?.inheritInjector !== false, resolvedOptions?.adoptBindingInjector !== false);
   registerAngularField(formNode);
   registerNodeValidatorMessages(formNode, resolvedOptions?.validatorMessages, resolvedOptions?.injector);
   refreshInjector();

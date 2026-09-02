@@ -9,6 +9,7 @@ const address = group({
   },
 });
 group({ city: field('') }, { inheritInjector: false });
+group({ city: field('') }, { adoptBindingInjector: false });
 
 type AddressValue = {
   city: string | null;

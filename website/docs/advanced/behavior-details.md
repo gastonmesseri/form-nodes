@@ -89,10 +89,11 @@ pending, but errors remain ordered by validator declaration rather than network 
 
 ## Ownership and lifetime
 
-An explicit or currently captured injector takes precedence. Otherwise, the nearest ancestor
-injector owns async validation watchers by default. `inheritInjector: false` creates a subtree
-boundary, and detaching a node releases inherited ownership. The effective injector's `DestroyRef`
-provides deterministic cleanup.
+An explicit or currently captured injector takes precedence. Otherwise, a directly bound
+`[formNode]` injector and then the nearest ancestor injector own async validation watchers by
+default. `adoptBindingInjector: false` and `inheritInjector: false` control those stages
+independently. Rebinding and detaching release transient ownership. The effective injector's
+`DestroyRef` provides deterministic cleanup.
 Nodes also work outside dependency injection; weak ownership allows an unreachable standalone tree
 and its watchers to be garbage-collected. Garbage-collection cleanup is nondeterministic, so pass an
 injector when deterministic teardown matters.

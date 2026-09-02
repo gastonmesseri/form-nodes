@@ -6,6 +6,7 @@ import { FORM_NODE_CONFIG } from './form-node-config';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
 import { shallowEqual } from '../../utils/shallow-equal';
+import { registerNodeBindingInjector } from '../../utils/node-injector';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import type { ValidationError } from '../../validation/validation.type';
@@ -63,6 +64,8 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private destroyed = false;
 
+  private bindingInjectorCleanups = new Set<() => void>();
+
   private composing = false;
 
   private writingAccessorValue = false;
@@ -89,7 +92,19 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   }, { equal: shallowEqual });
 
   constructor() {
-    this.destroyRef.onDestroy(() => { this.destroyed = true; });
+    this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
+      this.bindingInjectorCleanups.forEach(cleanup => cleanup());
+      this.bindingInjectorCleanups.clear();
+    });
+    effect((onCleanup) => {
+      const cleanup = registerNodeBindingInjector(this.node(), this.injector);
+      this.bindingInjectorCleanups.add(cleanup);
+      onCleanup(() => {
+        this.bindingInjectorCleanups.delete(cleanup);
+        cleanup();
+      });
+    }, { injector: this.injector });
   }
 
   ngOnInit() {

@@ -94,6 +94,9 @@ Items created later from either a template or factory inherit the array's neares
 default. Set `inheritInjector: false` on an item template or factory result to create a lifecycle
 boundary for that item subtree.
 
+Like every node, an array also adopts a directly bound `[formNode]` host injector by default. Use
+`adoptBindingInjector: false` when rendering the array must not change its lifecycle owner.
+
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | `initialValue` | item-value array, non-negative count, or `null` | Creates the initial items |

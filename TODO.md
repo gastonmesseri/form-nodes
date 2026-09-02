@@ -13,18 +13,6 @@
   - explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
     e.g. myField = field(); myField() to read the value; myField.set() to set the value, like a signal
 - provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
-- Investigate whether `[formNode]` can make its host injector available to the bound node tree.
-  - Evaluate retrieving the concrete directive or host injector through Angular's public
-    `getDebugNode()` API and passing it to the node after binding.
-  - Determine which injector-dependent features should be allowed to adopt it, including explicitly
-    triggered asynchronous validation and a later `$field` adapter request.
-  - Define ownership and cleanup through the injector's `DestroyRef`, rebinding behavior, and what
-    happens when a node already has an explicit or previously captured injector.
-  - Do not make this investigation part of the completed `$field` adapter scope, do not rely on
-    private Angular APIs, and do not introduce circular initialization between `[formNode]` and
-    `[formField]`.
-  - Original idea: use the `[formNode]` directive or `getDebugNode()` as a fallback injector for
-    asynchronous validators when `form()`, `field()`, or another primitive received no injector.
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
@@ -319,6 +307,23 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - discarded - implement debounce for synchronous validators
 
 ## Completed
+
+- [x] Let `[formNode]` temporarily provide its host injector to a directly bound node.
+  - [x] Investigation found that the directive already obtains the concrete host injector through
+    public `inject(Injector)`; `getDebugNode()` is unnecessary for the directive itself.
+  - [x] Use the binding injector for explicitly triggered asynchronous validation and a later
+    `$field` adapter request, without changing creation-time provider message catalogs.
+  - [x] Model binding ownership as a revocable lease: preserve the first active binding, select the
+    next active binding on release, and fall back to ancestor or weak ownership on rebinding or
+    destruction.
+  - [x] Keep an explicit or currently captured injector first in precedence, put a direct binding
+    injector second, and put the nearest ancestor injector third.
+  - [x] Add `adoptBindingInjector` independently from `inheritInjector`, with both enabled by
+    default and neither affecting an injector owned directly by the node.
+  - [x] Avoid private Angular APIs and circular initialization between `[formNode]` and
+    `[formField]`.
+  - [x] Original idea: use the `[formNode]` directive or `getDebugNode()` as a fallback injector for
+    asynchronous validators when `form()`, `field()`, or another primitive received no injector.
 
 - [x] Make injector lookup inherit through the node tree by default.
   - [x] Prefer each node's explicit or currently captured injector, then use the nearest ancestor

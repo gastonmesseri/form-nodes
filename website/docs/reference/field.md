@@ -114,6 +114,7 @@ const myForm = form({
 | `validators` | validator, validator array, or reactive source | Validates the field value |
 | `nullable` | boolean | Includes or excludes `null` from the public value type |
 | `injector` | Angular `Injector` | Provides this node's preferred lifecycle owner |
+| `adoptBindingInjector` | `boolean` | Temporarily adopts a direct `[formNode]` host injector; defaults to `true` |
 | `inheritInjector` | `boolean` | Uses the nearest ancestor injector when no own injector exists; defaults to `true` |
 | `debounce` | number, `'blur'`, or asynchronous function | Delays control-originated commits |
 | `disabled` | boolean, string, or reactive function | Disables the field |

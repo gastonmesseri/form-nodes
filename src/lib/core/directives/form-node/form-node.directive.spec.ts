@@ -4,11 +4,13 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { Component, Directive, ViewContainerRef, booleanAttribute, forwardRef, inject, input, model, output, signal } from '@angular/core';
+import { Component, Directive, Injector, ViewContainerRef, booleanAttribute, forwardRef, inject, input, model, output, signal } from '@angular/core';
 import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, NumberValueAccessor, Validators, type AbstractControl, type ControlValueAccessor, type ValidationErrors, type Validator } from '@angular/forms';
 
 import { form } from '../../primitives/form';
 import { array } from '../../primitives/array';
+import { asyncValidator } from '../../validation/async-validator';
+import { resolveNodeInjector } from '../../utils/node-injector';
 import { FormNode } from './form-node.directive';
 import type { Node } from '../../types/node.type';
 import { max } from '../../validation/validators/max';
@@ -48,6 +50,87 @@ const accessorWithPrototype = (prototype: object): ControlValueAccessor & { writ
 };
 
 describe('FormNode', () => {
+  it('temporarily adopts the host injector for async validation', async () => {
+    const dependency = signal(0);
+    let abortSignal: AbortSignal | undefined;
+    const validate = vi.fn(async ({ abortSignal: currentAbortSignal }) => {
+      dependency();
+      abortSignal = currentAbortSignal;
+      return new Promise<null>(() => {});
+    });
+    const boundName = field('', [asyncValidator(validate)]);
+
+    @Component({
+      template: `<input [formNode]="name">`,
+      imports: [FormNode],
+    })
+    class Host {
+      name = boundName;
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    dependency.update(value => value + 1);
+    await Promise.resolve();
+    await Promise.resolve();
+    const boundAbortSignal = abortSignal;
+    const callsBeforeDestroy = validate.mock.calls.length;
+
+    fixture.destroy();
+    expect(boundAbortSignal?.aborted).toBe(true);
+
+    dependency.update(value => value + 1);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(callsBeforeDestroy + 1);
+  });
+
+  it('can decline the injector of a directly bound host', async () => {
+    let abortSignal: AbortSignal | undefined;
+    const validate = vi.fn(async ({ abortSignal: currentAbortSignal }) => {
+      abortSignal = currentAbortSignal;
+      return new Promise<null>(() => {});
+    });
+    const boundName = field('', [asyncValidator(validate)], { adoptBindingInjector: false });
+
+    @Component({
+      template: `<input [formNode]="name">`,
+      imports: [FormNode],
+    })
+    class Host {
+      name = boundName;
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.destroy();
+
+    expect(abortSignal?.aborted).toBe(false);
+  });
+
+  it('falls back to an ancestor injector after its binding lease is released', () => {
+    const ancestorInjector = Injector.create({ providers: [] });
+    const boundName = field('');
+    form({ name: boundName }, { injector: ancestorInjector });
+
+    @Component({
+      template: `<input [formNode]="name">`,
+      imports: [FormNode],
+    })
+    class Host {
+      name = boundName;
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    expect(resolveNodeInjector(boundName)).not.toBe(ancestorInjector);
+
+    fixture.destroy();
+    expect(resolveNodeInjector(boundName)).toBe(ancestorInjector);
+  });
+
   it('lets a wrapper component accept and delegate the formNode input', () => {
     @Component({
       selector: 'delegating-control',
