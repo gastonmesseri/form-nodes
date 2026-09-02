@@ -11,14 +11,14 @@
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
   - explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
-    e.g. myField = field(); myField() para tomar valor; myField.set() para definir valor, como una signal
+    e.g. myField = field(); myField() to read the value; myField.set() to set the value, like a signal
 - provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
 - The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
   user doesn't provide an injector
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - Create adapter to be able to use angular [formField] with the library: myForm.name.$field, <my-control [formField]="myForm.name.$field">
-  - maybe $field should be an instance of form() (angular form function) or maybe form().field (angular form). un field-tree creo, o algo asi. que sirva para interactuar con formField, y pasar
-    eventos y estado de mi libreria al field de angular, y viceversa.
+  - maybe $field should be an instance of form() (Angular form function) or maybe form().field (Angular form). I think it is a field tree or something similar that can interact with formField and pass
+    events and state from this library to the Angular field, and vice versa.
 - The injector (for async validators), could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode)
   and use it inside the form() field(), etc. as a fallback in case the user doesn't provide an injector.
 - Check if debounce in asyncValidators also should include the 'blur' value
@@ -133,14 +133,14 @@
   - also maybe hide disabledReasons
 - maybe add "novalidate" html property by default to the parent form of the fields? (maybe not)
 - Allow creating a framework with predefined options (e.g. by default form() array() or field() has { nullable: true })
-- code style: funciones "export const" "const" que devuelven algo directamente, hacer que abran brackets
+- code style: functions declared with `export const` or `const` that return an expression directly should use braces
 - Implement shorthand for required in the field options similar to disbled
 - initial value should be null or undefined? (for field())
   - and for array?
 - Rename to something generic like @ng-tools/forms (maybe)
 - In the future allow something like dynamic forms from a JSON or object definition
   - Schema-driven form generation from JSON definitions.
-- Allow always myForm.$api in form()/group() in case the user wants to declare de property api (always user priority)
+- Always expose `myForm.$api` in `form()` and `group()` in case the user wants to declare an `api` property (user-defined properties always take priority)
 - Runtime addition or removal of form nodes.
 - Consider allowing validator function returning false/true (for shorthands)
 - Try to simplify the "markers" concept, probably not needed that overengineering
@@ -156,7 +156,7 @@
   - this would break treeshaking
   - If possible, typed strings
 - Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project
-- Exponer un helper para obtener el valor del form(), e.g. (type MyFormValue = FormValue<typeof myFormInstance>) (or FormNodeValue<typeof myFormInstance>)
+- Expose a helper to obtain the value type of `form()`, e.g. `type MyFormValue = FormValue<typeof myFormInstance>` (or `FormNodeValue<typeof myFormInstance>`)
 - Due to typescript limitations, try providing something similar to signal forms schemaPath api,
   so that in another callback, we can set validators properly typed or something like that.
   - e.g.
@@ -220,19 +220,19 @@
   const submitted = await profile.submit();
 - Add ESLINt with vt rules
 
-Debounce más general
-Nosotros admitimos milisegundos en field(). Angular permite debouncers asíncronos cancelables, herencia desde ancestros y estrategias como blur. Nuestra implementación ya cancela timers correctamente, pero es menos expresiva.
+More general debounce
+We support milliseconds in `field()`. Angular supports cancellable asynchronous debouncers, inheritance from ancestors, and strategies such as blur. Our implementation already cancels timers correctly, but it is less expressive.
 
-Forma pública de controlValue
-Angular expone un WritableSignal; nosotros un Signal readonly más setControlValue(). Es una diferencia deliberada de API y prefiero nuestra versión porque distingue claramente el origen del cambio:
-field.set(value);             // aplicación
+Public shape of controlValue
+Angular exposes a `WritableSignal`; we expose a readonly `Signal` plus `setControlValue()`. This is a deliberate API difference, and our version is preferred because it clearly distinguishes the origin of the change:
+field.set(value);             // application
 field.setControlValue(value); // control
 
-Nodos eliminados
-Nosotros convertimos un nodo eliminado en un nodo raíz independiente y utilizable. Angular lo considera orphan. Hay que decidir qué comportamiento resulta más útil.
+Removed nodes
+We turn a removed node into an independent, usable root node. Angular considers it an orphan. Decide which behavior is more useful.
 
-Tracking estructural desde el modelo
-Angular crea y elimina nodos automáticamente según el array almacenado en el signal. Nosotros usamos template/factory y métodos estructurales. Es una diferencia arquitectónica deliberada que no intentaría eliminar.
+Structural tracking from the model
+Angular automatically creates and removes nodes based on the array stored in the signal. We use a template/factory and structural methods. This is a deliberate architectural difference that should not be removed.
 
 ## Angular upgrade checklist
 
@@ -298,46 +298,46 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 ## Completed
 
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
-  - Original task: add string shortcuts such as `'today'` to these date validators.
-  - Support `'today'` as a static or reactive boundary.
-  - Resolve shortcuts lazily at UTC midnight by default or local midnight with `parseAs: 'local'`.
-  - Keep the behavior explicit: no hidden timer revalidates a form exactly at midnight.
+  - [x] Original task: add string shortcuts such as `'today'` to these date validators.
+  - [x] Support `'today'` as a static or reactive boundary.
+  - [x] Resolve shortcuts lazily at UTC midnight by default or local midnight with `parseAs: 'local'`.
+  - [x] Keep the behavior explicit: no hidden timer revalidates a form exactly at midnight.
 - [x] Create the internal `isNil(value)` type guard.
-  - Original follow-up: check all applicable cases that used `x === null || x === undefined`.
-  - Use it in validator normalization and composition, nullish validator values, array validator-source detection, empty-value detection, and native-control writes.
+  - [x] Original follow-up: check all applicable cases that used `x === null || x === undefined`.
+  - [x] Use it in validator normalization and composition, nullish validator values, array validator-source detection, empty-value detection, and native-control writes.
 - [x] Audit every public options and source parameter from the consumer's IntelliSense perspective.
-  - Inline small call-site shapes such as `markAsTouched()` and both `asyncValidator()` overloads.
-  - Keep named types for reusable concepts such as node options, validator sources, message catalogs, and async configurations.
-  - Expose small accepted unions directly in node and built-in-validator options and clarify which callback sources are reactive.
-  - Remove the redundant `RequiredOptions` alias while retaining reusable `ValidatorOptions`.
+  - [x] Inline small call-site shapes such as `markAsTouched()` and both `asyncValidator()` overloads.
+  - [x] Keep named types for reusable concepts such as node options, validator sources, message catalogs, and async configurations.
+  - [x] Expose small accepted unions directly in node and built-in-validator options and clarify which callback sources are reactive.
+  - [x] Remove the redundant `RequiredOptions` alias while retaining reusable `ValidatorOptions`.
 - [x] Audit `readonly` across consumer-supplied option and configuration objects.
-  - Keep options, submission configuration, validator-message catalogs, async configuration, and binding-class configuration mutable in the public type system.
-  - Retain readonly state and result objects owned by the library.
+  - [x] Keep options, submission configuration, validator-message catalogs, async configuration, and binding-class configuration mutable in the public type system.
+  - [x] Retain readonly state and result objects owned by the library.
 - [x] Allow built-in validators to accept a static message string directly when the signature is unambiguous.
-  - Preserve the options object for reactive messages and date parsing configuration.
-  - Preserve `uniqueItems('property')` as the property key-selector shorthand; use an options object for a no-key-selector message or pass the message after a key selector.
+  - [x] Preserve the options object for reactive messages and date parsing configuration.
+  - [x] Preserve `uniqueItems('property')` as the property key-selector shorthand; use an options object for a no-key-selector message or pass the message after a key selector.
 
 - [x] Add `mapObjectValues(object, mapper)` for value transformations that preserve an object's keys.
-  - Use it for object-node normalization and recursive node-definition cloning.
-  - Keep `arrayToObject()` for transformations whose source is genuinely an array and whose mapper
+  - [x] Use it for object-node normalization and recursive node-definition cloning.
+  - [x] Keep `arrayToObject()` for transformations whose source is genuinely an array and whose mapper
     derives each output key.
 - [x] Add a general `arrayToObject(items, mapper)` utility and replace the existing
   `Object.fromEntries(array.map(...))` patterns.
-  - The mapper receives the item, index, and readonly source array and returns a key/value tuple.
-  - Property keys preserve their inferred string, number, or symbol union.
-  - Duplicate keys deliberately follow `Object.fromEntries()` semantics: the last value wins.
+  - [x] The mapper receives the item, index, and readonly source array and returns a key/value tuple.
+  - [x] Property keys preserve their inferred string, number, or symbol union.
+  - [x] Duplicate keys deliberately follow `Object.fromEntries()` semantics: the last value wins.
 - [x] Introduce `group()` as the default fixed-object aggregate while reserving `form()` for a submission/workflow boundary.
-  - Research found Angular Reactive Forms reuses `FormGroup`, Angular 22 Signal Forms separates its uniform `FieldTree` from `FormRoot`, path-based libraries avoid nested form instances, and TanStack uses groups beneath a submission-owning form.
-  - `group()` is a fixed, non-null object node with children, aggregate value/state, validators, inherited configuration, updates, reset, and common node operations.
-  - `group()` omits `submission` and `submit()` while inheriting `submitting()` from an ancestor workflow.
-  - `form()` remains the explicit workflow boundary and the only node accepted by native `<form [formNode]>`.
-  - Plain nested objects and object templates inside `array()` normalize to `group()`; explicit nested `form()` remains available for independent subflows.
-  - Both primitives share the same internal object-node engine, with capability-specific public types and runtime surfaces.
-  - The inference decision is recorded in behavior docs, website reference, the development changelog, and type tests. No consumer migration entry is needed before the first publication.
+  - [x] Research found Angular Reactive Forms reuses `FormGroup`, Angular 22 Signal Forms separates its uniform `FieldTree` from `FormRoot`, path-based libraries avoid nested form instances, and TanStack uses groups beneath a submission-owning form.
+  - [x] `group()` is a fixed, non-null object node with children, aggregate value/state, validators, inherited configuration, updates, reset, and common node operations.
+  - [x] `group()` omits `submission` and `submit()` while inheriting `submitting()` from an ancestor workflow.
+  - [x] `form()` remains the explicit workflow boundary and the only node accepted by native `<form [formNode]>`.
+  - [x] Plain nested objects and object templates inside `array()` normalize to `group()`; explicit nested `form()` remains available for independent subflows.
+  - [x] Both primitives share the same internal object-node engine, with capability-specific public types and runtime surfaces.
+  - [x] The inference decision is recorded in behavior docs, website reference, the development changelog, and type tests. No consumer migration entry is needed before the first publication.
 - [x] Consolidate root-level `integration-tests`, `type-tests`, and `testing` infrastructure under `tests/integration`, `tests/types`, and `tests/helpers`.
 - [x] Determine whether accessing `mySignal[ɵSIGNAL]` is a supported Angular API.
-  - It is exported from `@angular/core`, but Angular explicitly excludes every `ɵ`-prefixed symbol from its supported public API and compatibility guarantees.
-  - Keep the current `ɵSIGNAL`/`ɵInputSignalNode` adapter isolated and covered by AOT, SSR, hydration, OnPush, and browser tests until Angular provides a public host-component input-writing mechanism.
+  - [x] It is exported from `@angular/core`, but Angular explicitly excludes every `ɵ`-prefixed symbol from its supported public API and compatibility guarantees.
+  - [x] Keep the current `ɵSIGNAL`/`ɵInputSignalNode` adapter isolated and covered by AOT, SSR, hydration, OnPush, and browser tests until Angular provides a public host-component input-writing mechanism.
 - [x] Infer `field(null)` as `Field<unknown>` instead of `Field<null>`, while preserving explicit generic inference such as `field<string>(null)` as `Field<string | null>`.
 - [x] Complete the consumer website documentation roadmap.
   - [x] Create an API overview page that maps common needs to the relevant public APIs.
@@ -352,79 +352,79 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Add an interactive playground for values, state, validation, debounce, and arrays.
   - [x] Add versioning, Angular compatibility, changelog, and migration documentation.
 - [x] Verify consumer tree shaking removes validators and default messages that are not imported.
-- Implement ESLint
-- Document every built-in validator and structured built-in error for IntelliSense.
-- Add an extensible validation error registry and strongly typed `getError(kind)` overloads.
-- Include the rejected `actual` measurement or value in applicable built-in validation errors.
-- Implement `minWords()` and `maxWords()` with deterministic Unicode word counting.
-- Implement the `oneOf()` validator with static or reactive allowed values.
-- Add centralized default messages and common custom-message options to the built-in validators.
-- <!> important. Consider including hidden access to .api that is not .api, (maybe $api, or _api) because user defined properties could collide with it
+- [x] Implement ESLint
+- [x] Document every built-in validator and structured built-in error for IntelliSense.
+- [x] Add an extensible validation error registry and strongly typed `getError(kind)` overloads.
+- [x] Include the rejected `actual` measurement or value in applicable built-in validation errors.
+- [x] Implement `minWords()` and `maxWords()` with deterministic Unicode word counting.
+- [x] Implement the `oneOf()` validator with static or reactive allowed values.
+- [x] Add centralized default messages and common custom-message options to the built-in validators.
+- [x] <!> important. Consider including hidden access to .api that is not .api, (maybe $api, or _api) because user defined properties could collide with it
   and then the form() framework will not work because it uses it on the internal system
-- Allow `array()` `trackBy` to accept a typed string property name in addition to a callback.
-- Document the `array()` template and factory first parameter in IntelliSense, including cloning semantics, fresh-definition requirements, and examples.
-- Decide and document nullable `array()` input behavior: normalize `null` and `undefined` container values to an empty array while keeping the observable value structurally non-null.
-- Add `swap()` to `array()` and document the structural reordering operations for IntelliSense.
-- Add `moveUp()` and `moveDown()` convenience operations to `array()` while preserving node identity and state.
-- Complete the observable `[formNode]` comparison against Angular Signal Forms 22.1.4, including native controls, custom controls, pass-through wrappers, binding state, control debounce, SSR, hydration, AOT, and real-browser behavior; retain documented differences where Angular relies on private or binding-name-specific compiler support.
-- Expose readonly `controlValue()` on forms and arrays without aggregating pending descendant buffers, including independent debounce for controls bound directly to aggregate nodes.
-- Implement `getError()` on every node.
-- Pass value, node API, path, parent, and root form context to validators.
-- Allow validator functions to return an error object or `undefined`.
-- Make `array()` nodes iterable so Angular `@for` can iterate their child nodes directly.
-- Choose `[formNode]` as the node-binding directive name.
-- Bind aggregate forms to native `<form [formNode]="form">` elements.
-- Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
-- Automatically support Angular `FormValueControl` and `FormCheckboxControl`, retaining `provideFormNodeControl()` as the explicit fallback.
-- Synchronize applicable native and signal-control state such as disabled, readonly, required, invalid, touched, and dirty.
-- Document the supported custom-control integration paths.
-- Reach and enforce high test coverage, including dedicated type, template, package-consumer, browser, SSR, AOT, and hydration tests.
-- Investigate and implement the distinction between `value()` and `controlValue()` for control-originated debounce.
-- Implement form submission state and native form submission integration.
-- Implement `update()` for field, form, and array nodes.
-- Implement `allErrors()` for own and descendant error aggregation while keeping `errors()` scoped to the current node.
-- Add Promise-based asynchronous validators with cancellation, debounce, pending state, and parent propagation.
-- Allow shorthand objects instead of explicit nested `form()` calls.
-- Store a parent node reference instead of manually propagating disabled and readonly state.
-- Distinguish signal properties from action methods in IntelliSense declarations.
-- Allow booleans, signals, and reactive functions for disabled, readonly, and hidden state.
-- Consider by default should be FieldType | null?
-  - Should allow field<string>(null) ?
-- Consider making the validators array second parameter optional, and allow optionally an overload to directly set the options.
-- Consider allowing in form()/group() that the api is also exposed in the root (not only in api property)
+- [x] Allow `array()` `trackBy` to accept a typed string property name in addition to a callback.
+- [x] Document the `array()` template and factory first parameter in IntelliSense, including cloning semantics, fresh-definition requirements, and examples.
+- [x] Decide and document nullable `array()` input behavior: normalize `null` and `undefined` container values to an empty array while keeping the observable value structurally non-null.
+- [x] Add `swap()` to `array()` and document the structural reordering operations for IntelliSense.
+- [x] Add `moveUp()` and `moveDown()` convenience operations to `array()` while preserving node identity and state.
+- [x] Complete the observable `[formNode]` comparison against Angular Signal Forms 22.1.4, including native controls, custom controls, pass-through wrappers, binding state, control debounce, SSR, hydration, AOT, and real-browser behavior; retain documented differences where Angular relies on private or binding-name-specific compiler support.
+- [x] Expose readonly `controlValue()` on forms and arrays without aggregating pending descendant buffers, including independent debounce for controls bound directly to aggregate nodes.
+- [x] Implement `getError()` on every node.
+- [x] Pass value, node API, path, parent, and root form context to validators.
+- [x] Allow validator functions to return an error object or `undefined`.
+- [x] Make `array()` nodes iterable so Angular `@for` can iterate their child nodes directly.
+- [x] Choose `[formNode]` as the node-binding directive name.
+- [x] Bind aggregate forms to native `<form [formNode]="form">` elements.
+- [x] Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
+- [x] Automatically support Angular `FormValueControl` and `FormCheckboxControl`, retaining `provideFormNodeControl()` as the explicit fallback.
+- [x] Synchronize applicable native and signal-control state such as disabled, readonly, required, invalid, touched, and dirty.
+- [x] Document the supported custom-control integration paths.
+- [x] Reach and enforce high test coverage, including dedicated type, template, package-consumer, browser, SSR, AOT, and hydration tests.
+- [x] Investigate and implement the distinction between `value()` and `controlValue()` for control-originated debounce.
+- [x] Implement form submission state and native form submission integration.
+- [x] Implement `update()` for field, form, and array nodes.
+- [x] Implement `allErrors()` for own and descendant error aggregation while keeping `errors()` scoped to the current node.
+- [x] Add Promise-based asynchronous validators with cancellation, debounce, pending state, and parent propagation.
+- [x] Allow shorthand objects instead of explicit nested `form()` calls.
+- [x] Store a parent node reference instead of manually propagating disabled and readonly state.
+- [x] Distinguish signal properties from action methods in IntelliSense declarations.
+- [x] Allow booleans, signals, and reactive functions for disabled, readonly, and hidden state.
+- [x] Consider by default should be FieldType | null?
+  - [x] Should allow field<string>(null) ?
+- [x] Consider making the validators array second parameter optional, and allow optionally an overload to directly set the options.
+- [x] Consider allowing in form()/group() that the api is also exposed in the root (not only in api property)
   but giving priority in types and also in runtime to the user defined properties during the form({}) call.
-  - also considering exposing as prefixed with $disabled() $markAsTouched (with dolar prefix)
-- Implement shortcut for required in field() form() para saber si es required o no, tomando en cuenta el validador por defecto con ese kind
-- Make Nodes have some property to recognize if it is a root of the tree
-- Implement debounce for the field value.
-- rename variable name internalApi (i think it is not internal, but actually external exposed)
-- Separate types in validation.type, (e.g. observableLike should probably has its own file)
+  - [x] also considering exposing as prefixed with $disabled() $markAsTouched (with dolar prefix)
+- [x] Implement a shortcut on `field()` and `form()` that reports whether the node is required, taking the built-in validator with that kind into account
+- [x] Make Nodes have some property to recognize if it is a root of the tree
+- [x] Implement debounce for the field value.
+- [x] rename variable name internalApi (i think it is not internal, but actually external exposed)
+- [x] Separate types in validation.type, (e.g. observableLike should probably has its own file)
 - [x] Make validators reactive by default through automatic signal dependency tracking.
   - [x] Revalidate built-in validators when the validated node value changes.
   - [x] Treat plain value snapshots as intentionally static; use a signal-reading function for reactive constraints.
   - [x] Do not add `reactive: false`; validators only track signals they actually read, while parameterized asynchronous validators provide explicit dependency control.
-- Allow `validators` to be a reactive function that returns validators conditionally.
-- In form() (or group()), allow also exposing all the .api properties, but giving priority to userDefined fields. 
-  - Also provide a property called "controls" (or "fields") that contains only the sub-fields
-- Array
-  - Dynamic array primitives.
-  - in documentation (and in tests) ensure that passing a field directly is documented ( e.g. array([], field('Marco')) )
-  - Ensure signature allow [template/factory, initialValue, validators, options] and [template/factory, initialValue, options]
-  - Ensure that setting form.set({ myArray: [{ name: 'son1', age: 11 }, { name: 'son2', age: 15 }] }) works properly and not weird behavior
-    - It should propagate the value properly
-    - It should create new nodes if needed
-    - It should delete nodes if needed
+- [x] Allow `validators` to be a reactive function that returns validators conditionally.
+- [x] In form() (or group()), allow also exposing all the .api properties, but giving priority to userDefined fields.
+  - [x] Also provide a property called "controls" (or "fields") that contains only the sub-fields
+- [x] Array
+  - [x] Dynamic array primitives.
+  - [x] in documentation (and in tests) ensure that passing a field directly is documented ( e.g. array([], field('Marco')) )
+  - [x] Ensure signature allow [template/factory, initialValue, validators, options] and [template/factory, initialValue, options]
+  - [x] Ensure that setting form.set({ myArray: [{ name: 'son1', age: 11 }, { name: 'son2', age: 15 }] }) works properly and not weird behavior
+    - [x] It should propagate the value properly
+    - [x] It should create new nodes if needed
+    - [x] It should delete nodes if needed
     -<i> This is not possible in FormArray of reactive forms
-  - Considerar si es mejor pasar el valor inicial (o numero) en el primer parametro de array() o en el segundo.
-    - maybe better in the second, so that it is optional, and initial value is empty array []
-  - Being accesible by myFormArray[0] // index
-  - implement map/filter etc methods, possibly implementing being an array by itself, all methods (without collision) [MAYBE NOT NEEDED, that is on the value, MAYBE YES NEEDED TO ITERATE THE FIELDS AND NOT THE VALUES]
-- migrar @input a input()
-- migrar @hostlistener a host: { ... }
-- Remove unnecessary explicit `void` return annotations and discarded-Promise `void` expressions.
-- quitar unnecessary readonly de members
-- Add keyInParent property to nodes
-- Validator framework roadmap
+  - [x] Consider whether the initial value (or item count) should be passed as the first or second parameter of `array()`.
+    - [x] maybe better in the second, so that it is optional, and initial value is empty array []
+  - [x] Being accesible by myFormArray[0] // index
+  - [x] implement map/filter etc methods, possibly implementing being an array by itself, all methods (without collision) [MAYBE NOT NEEDED, that is on the value, MAYBE YES NEEDED TO ITERATE THE FIELDS AND NOT THE VALUES]
+- [x] Migrate `@Input` to `input()`
+- [x] Migrate `@HostListener` to `host: { ... }`
+- [x] Remove unnecessary explicit `void` return annotations and discarded-Promise `void` expressions.
+- [x] Remove unnecessary `readonly` modifiers from members
+- [x] Add keyInParent property to nodes
+- [x] Validator framework roadmap
   - [x] Add strongly typed built-in validation errors so `getError(kind)` exposes each error's structured properties in IntelliSense, while retaining an extensible fallback for custom error kinds.
   - [x] Improve every built-in validator's JSDoc with examples, empty-value behavior, reactive constraint semantics, custom-message options, and exact error shapes.
   - [x] Add a `validator()` authoring helper so reusable custom validators infer their context and validate their result without manually annotating the callback signature; only the value model generic is required for a standalone declaration.
@@ -446,12 +446,12 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     - [x] Review required overload and make it work like in lab
   - [x] discarded - value probably is simpler to make it directly the value, and not a signal() wrapping the value
   - [x] Each validator should have a very descriptive behavior in is JSDoc
-  - Improve validators model, similar to Angular 22 signal forms, but also allow referencing other fields, and also de form tree (as arguments)
+  - [x] Improve the validator model similarly to Angular 22 Signal Forms, while also allowing references to other fields and the form tree through arguments
   - [x] Export `validator()` for users to define validator functions without manually specifying the callback signature.
     - [x] Make this the recommended way to create a custom validator in a separate file where node-level contextual inference is unavailable.
       - [x] Accept the value model as a generic for `field()`, `array()`, or `form()` validators.
   - [x] Inline built-in validator option objects so `message` and date `parseAs` choices are visible directly at each call site.
   - [x] required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
-- directive
+- [x] directive
   - [x] Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
 - [x] Add reactive internationalization support for built-in validator messages. See `docs/validator-messages.md`.
