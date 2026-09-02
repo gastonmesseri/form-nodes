@@ -119,11 +119,29 @@ field('', [(ctx) => {
 
 const reusable = validator<string | null>((ctx) => {
   type _GenericNode = Expect<Equal<typeof ctx.field, ValidatorContext<string | null>['field']>>;
+  const node = ctx.field();
+  type _NodeValue = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
+  type _CallableValue = Expect<Equal<ReturnType<typeof node>, string | null>>;
+  type _ApiValue = Expect<Equal<ReturnType<typeof node.api.value>, string | null>>;
+  type _SafeApiValue = Expect<Equal<ReturnType<typeof node.$api.value>, string | null>>;
+  type _NodeAlias = Expect<Equal<typeof ctx.node, typeof ctx.field>>;
+  // @ts-expect-error The reusable validator's node value is not numeric.
+  const numericValue: number = node.value();
+  void numericValue;
   return ctx.value() ? null : { kind: 'required' };
 });
 field('', [required, reusable]);
 const reusableAsync = asyncValidator<string | null>(async (ctx) => {
   type _GenericNode = Expect<Equal<typeof ctx.field, ValidatorContext<string | null>['field']>>;
+  const node = ctx.field();
+  type _NodeValue = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
+  type _CallableValue = Expect<Equal<ReturnType<typeof node>, string | null>>;
+  type _ApiValue = Expect<Equal<ReturnType<typeof node.api.value>, string | null>>;
+  type _SafeApiValue = Expect<Equal<ReturnType<typeof node.$api.value>, string | null>>;
+  type _NodeAlias = Expect<Equal<typeof ctx.node, typeof ctx.field>>;
+  // @ts-expect-error The reusable validator's node value is not numeric.
+  const numericValue: number = node.value();
+  void numericValue;
   return null;
 });
 field('', [reusableAsync]);
@@ -160,3 +178,42 @@ const genericValue = <TValue>(ctx: ValidatorContext<TValue>) => {
   return null;
 };
 field('', [genericValue]);
+
+validator((ctx) => {
+  const node = ctx.node();
+  type _UnknownValue = Expect<Equal<ReturnType<typeof node.value>, unknown>>;
+  return null;
+});
+validator<{ name: string | null }>((ctx) => {
+  const node = ctx.node();
+  type _ObjectValue = Expect<Equal<ReturnType<typeof node.value>, { name: string | null }>>;
+  return null;
+});
+validator<readonly [string, number]>((ctx) => {
+  const node = ctx.node();
+  type _TupleValue = Expect<Equal<ReturnType<typeof node.value>, readonly [string, number]>>;
+  return null;
+});
+
+asyncValidator<string | null, { text: string | null }>({
+  when: (ctx) => {
+    const node = ctx.field();
+    type _Value = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
+    return true;
+  },
+  params: (ctx) => {
+    const node = ctx.node();
+    type _Value = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
+    return { text: node() };
+  },
+  validate: async (ctx) => {
+    const node = ctx.field();
+    type _Value = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
+    return null;
+  },
+  onError: (_error, ctx) => {
+    const node = ctx.node();
+    type _Value = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
+    return null;
+  },
+});

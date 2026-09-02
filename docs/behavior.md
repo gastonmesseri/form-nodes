@@ -830,7 +830,10 @@ helper calls in validator arrays receive the validator's contextual type. Runtim
 interpretation is unchanged.
 
 Separately declared helpers retain a generic authoring context and remain reusable. Supplying only
-a helper's value generic uses its default owner; omit helper generics for inline inference or
+a helper's value generic preserves that type on the generic owner's callable value and its
+`value`, `api.value`, and `$api.value` signals, including async callback contexts. The primitive
+kind and child keys remain unspecified. Without a value generic or a consuming node, these reads
+remain `unknown`. Omit helper generics for inline inference or
 supply the owner generic explicitly. `context.node().api` follows the inferred or explicitly supplied node type.
 Knowing the local node does not infer ancestors or siblings from an enclosing declaration.
 Inline validator contexts reuse the concrete node API value signal type for `value`, so IntelliSense
