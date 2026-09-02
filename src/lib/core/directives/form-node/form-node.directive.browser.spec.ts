@@ -52,6 +52,9 @@ describe('FormNode in Chromium', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
     expect(input.value).toBe('Mark');
+
+    fixture.componentInstance.profile.name.focus({ preventScroll: true });
+    expect(document.activeElement).toBe(input);
   });
 
   it('preserves a formField control edit during a simultaneous node write', () => {

@@ -7,9 +7,6 @@
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
   - [ ] Extend independent `touched` and `dirty` synchronization to array items created, removed,
     moved, or reconciled after adapter creation as part of dynamic-array support.
-  - [ ] Register every Angular `FormField` binding with the original library node so node-level
-    `focus()` works, multiple bindings use DOM order, destroyed and rebound controls unregister,
-    and custom focus implementations are preserved.
   - [ ] Bridge reset behavior in both directions, including library `reset()` and native form reset,
     Angular parsing-state cleanup, custom-control reset hooks, CVA state, pending debounced values,
     and reset with an explicit value.
@@ -59,6 +56,9 @@
   - [ ] Update `docs/behavior.md` and the consumer website as each adapter capability or intentional
     limitation is implemented; keep the Angular tag, commit, source paths, and relevant test paths
     recorded.
+  - [ ] The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
+    user doesn't provide an injector. I think this is important for the angular $field adapter, as we normally don't pass an injector to the field() or form()
+- The new nodes in array() do they have an injector? where is it taken from?
 - website docs
   - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -70,8 +70,6 @@
   - explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
     e.g. myField = field(); myField() to read the value; myField.set() to set the value, like a signal
 - provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
-- The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
-  user doesn't provide an injector
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - The injector (for async validators), could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode)
   and use it inside the form() field(), etc. as a fallback in case the user doesn't provide an injector.
@@ -377,6 +375,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Extend independent `touched` and `dirty` adapter coverage beyond leaf nodes to forms,
     groups, arrays, ancestors, descendants, `skipDescendants`, disabled, readonly, hidden, reset
     propagation, and array items already materialized when the adapter is created.
+  - [x] Register every Angular `FormFieldBinding` with its original library node so node-level and
+    aggregate `focus()` work, multiple bindings use DOM order, destroyed and rebound controls
+    unregister, and Angular custom-control focus implementations are preserved.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

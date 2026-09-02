@@ -110,6 +110,15 @@ const synchronizeInteractionState = (node: Node, fieldTree: FieldTree<any>, inje
 const synchronizeTreeState = (node: Node, fieldTree: FieldTree<any>, injector: Injector) => {
   angularFieldNodes.set(fieldTree, node);
   synchronizeInteractionState(node, fieldTree, injector);
+  effect((onCleanup) => {
+    const unregister = fieldTree().formFieldBindings().map(binding =>
+      (node as InternalNode).$api._registerControlBinding({
+        element: binding.element,
+        focus: options => binding.focus(options),
+      }),
+    );
+    onCleanup(() => unregister.forEach(cleanup => cleanup()));
+  }, { injector });
   const children = getChildren(node as InternalNode);
   children.forEach((child) => {
     const key = child.$api.keyInParent()!;
