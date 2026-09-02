@@ -28,4 +28,5 @@ Organize implementation code by responsibility directly under `src/lib/`:
 - Put tests spanning several implementations in the feature's `tests/` directory, such as `validation/tests/reactive-validator-messages.spec.ts`.
 - Keep public primitive behavior covered in `field.spec.ts` and `form.spec.ts`, even when helpers have focused tests.
 - Use the root `tests/` directory for shared test helpers, public type contracts, integration fixtures, and performance checks.
+- Keep command-line automation in the root `scripts/` directory, invoked through `package.json`. These scripts prepare or run checks, including Angular fixture compilation, template type checking, type-performance measurement, and package-consumer verification. Keep the test cases, fixtures, and imported test helpers in `tests/`.
 - Keep contributor references in `docs/`, consumer documentation in `website/docs/`, and executable or typechecked documentation examples in `website/examples/`.
