@@ -11,6 +11,11 @@ type AngularFieldAdapter = {
   readonly model: WritableSignal<any>;
 };
 
+type AngularInteractionState = ReturnType<FieldTree<any>> & {
+  markAsPristine(): void;
+  markAsUntouched(): void;
+};
+
 const nodeInjectors = new WeakMap<Node, Injector>();
 const rootAdapters = new WeakMap<Node, AngularFieldAdapter>();
 const angularFieldNodes = new WeakMap<FieldTree<any>, Node>();
@@ -70,7 +75,7 @@ const configureNode = (path: SchemaPath<any>, resolveNode: () => Node, sample: N
 };
 
 const synchronizeInteractionState = (node: Node, fieldTree: FieldTree<any>, injector: Injector) => {
-  const state = fieldTree();
+  const state = fieldTree() as AngularInteractionState;
   let previousNodeTouched = node.$api.touched();
   let previousFieldTouched = state.touched();
   let previousNodeDirty = node.$api.dirty();
@@ -85,12 +90,12 @@ const synchronizeInteractionState = (node: Node, fieldTree: FieldTree<any>, inje
     if (fieldTouched !== previousFieldTouched && nodeTouched === previousNodeTouched) {
       fieldTouched ? node.$api.markAsTouched({ skipDescendants: true }) : node.$api.markAsUntouched();
     } else if (nodeTouched !== fieldTouched) {
-      nodeTouched ? state.markAsTouched({ skipDescendants: true }) : state.reset();
+      nodeTouched ? state.markAsTouched({ skipDescendants: true }) : state.markAsUntouched();
     }
     if (fieldDirty !== previousFieldDirty && nodeDirty === previousNodeDirty) {
       fieldDirty ? node.$api.markAsDirty() : node.$api.markAsPristine();
     } else if (nodeDirty !== fieldDirty) {
-      nodeDirty ? state.markAsDirty() : state.reset();
+      nodeDirty ? state.markAsDirty() : state.markAsPristine();
     }
 
     previousNodeTouched = node.$api.touched();

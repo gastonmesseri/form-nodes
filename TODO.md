@@ -12,9 +12,9 @@
   - [ ] Define and test deterministic conflict resolution when Angular and the library node both
     change in the same reactive turn; avoid dropping the latest control edit or creating feedback
     loops, and assert exact write counts.
-  - [ ] Synchronize `touched` and `dirty` independently in both directions. Do not use Angular
-    `FieldState.reset()` to clear only one flag because it can also clear the other; cover leaf,
-    aggregate, ancestor, descendant, disabled, readonly, and hidden transitions.
+  - [ ] Extend independent `touched` and `dirty` adapter coverage beyond leaf nodes to aggregates,
+    ancestors, descendants, disabled, readonly, hidden, reset propagation, and dynamically changing
+    array items.
   - [ ] Register every Angular `FormField` binding with the original library node so node-level
     `focus()` works, multiple bindings use DOM order, destroyed and rebound controls unregister,
     and custom focus implementations are preserved.
@@ -312,6 +312,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [ ] Compare node creation, parent/root ownership, paths and keys, removed/orphan nodes, array identity and reconciliation, and structural model changes.
   - [ ] Compare committed value and control-value flow, programmatic versus control-originated writes, equality rules, reset semantics, and debounce inheritance, blur behavior, cancellation, and flushing.
   - [ ] Compare touched, dirty, hidden, readonly, disabled reasons, required state, interaction propagation, and which ancestors or descendants each operation affects.
+  - [ ] Re-check that Angular's runtime `FieldNode` still implements `markAsUntouched()` and
+    `markAsPristine()`. Angular 22.1.4 omits them from the public `FieldState` interface even though
+    the adapter needs their independent behavior to avoid using the broader `reset()` operation.
   - [ ] Compare synchronous and asynchronous validation, laziness and reactive dependencies, pending propagation, cancellation and stale results, error ownership and aggregation, validator metadata, and native constraint metadata.
   - [ ] Compare submission, invalid submission, concurrent submission, submitted/submitting state, native submit/reset events, focus behavior, and disabled or hidden descendants.
   - [ ] Re-audit every intentional difference recorded in `docs/behavior.md`; update, remove, or add differences and regression tests as Angular changes.
@@ -368,6 +371,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     Signal Forms config requires consumers to choose one class-config provider per injector scope.
   - [x] Verify and document that an existing `provideSignalFormsConfig({ classes })` applies
     directly to `$field`-backed controls through Angular's native `FormFieldBinding` contract.
+  - [x] Synchronize leaf-node `touched` and `dirty` independently in both directions, including
+    control-originated input and blur, Angular reset, node-originated clearing, and node-owned
+    disabled, readonly, and hidden state flowing to Angular.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

@@ -70,6 +70,16 @@ disabled, readonly, hidden, required, validation, touched, and dirty state. Ever
 the same adapted tree, so `profileForm.displayName.$field` is the same field as
 `profileForm.$field.displayName`.
 
+For a bound leaf field, control interaction flows back naturally: input marks the Gem Forms field
+dirty, blur marks it touched, and an Angular field reset clears both interaction flags. Calls such
+as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so
+clearing one does not clear the other.
+
+Availability is intentionally node-owned. Calling `disable()`, `markAsReadonly()`, or `hide()` on
+the Gem Forms node updates Angular's field state and the bound control. Angular models disabled,
+readonly, hidden, and required as derived schema state and does not expose reverse setters, so a
+control does not mutate those states back into the Gem Forms node.
+
 Classes configured through `provideFormNodeConfig({ classes })` also apply to controls using this
 `$field` binding. The predicate receives the same `FormNodeBinding` shape as it does for
 `[formNode]`, so existing class maps and `ANGULAR_FORMS_STATUS_CLASSES` can be reused unchanged.

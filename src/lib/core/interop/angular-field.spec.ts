@@ -75,6 +75,65 @@ describe('Angular Signal Forms field adapter', () => {
     expect(angularState.dirty()).toBe(true);
   });
 
+  it('synchronizes touched and dirty independently in both directions', () => {
+    const injector = TestBed.inject(Injector);
+    const name = runInInjectionContext(injector, () => field('David'));
+    const angularState = name.$field();
+
+    angularState.markAsTouched();
+    TestBed.flushEffects();
+    expect(name.touched()).toBe(true);
+    expect(name.dirty()).toBe(false);
+
+    angularState.markAsDirty();
+    TestBed.flushEffects();
+    expect(name.touched()).toBe(true);
+    expect(name.dirty()).toBe(true);
+
+    angularState.reset();
+    TestBed.flushEffects();
+    expect(name.touched()).toBe(false);
+    expect(name.dirty()).toBe(false);
+
+    name.markAsTouched();
+    name.markAsDirty();
+    TestBed.flushEffects();
+    expect(angularState.touched()).toBe(true);
+    expect(angularState.dirty()).toBe(true);
+
+    name.markAsUntouched();
+    TestBed.flushEffects();
+    expect(angularState.touched()).toBe(false);
+    expect(angularState.dirty()).toBe(true);
+
+    name.markAsTouched();
+    name.markAsPristine();
+    TestBed.flushEffects();
+    expect(angularState.touched()).toBe(true);
+    expect(angularState.dirty()).toBe(false);
+  });
+
+  it('keeps availability derived from the library node', () => {
+    const injector = TestBed.inject(Injector);
+    const name = runInInjectionContext(injector, () => field('David'));
+    const angularState = name.$field();
+
+    name.disable('Unavailable');
+    expect(angularState.disabled()).toBe(true);
+    name.enable();
+    expect(angularState.disabled()).toBe(false);
+
+    name.markAsReadonly();
+    expect(angularState.readonly()).toBe(true);
+    name.markAsWritable();
+    expect(angularState.readonly()).toBe(false);
+
+    name.hide();
+    expect(angularState.hidden()).toBe(true);
+    name.show();
+    expect(angularState.hidden()).toBe(false);
+  });
+
   it('maps existing array item nodes into the shared Angular tree', () => {
     const injector = TestBed.inject(Injector);
     const tags = runInInjectionContext(injector, () => array(field(''), {

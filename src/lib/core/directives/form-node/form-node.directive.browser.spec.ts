@@ -54,6 +54,36 @@ describe('FormNode in Chromium', () => {
     expect(input.value).toBe('Mark');
   });
 
+  it('synchronizes formField interaction events and node-owned availability', () => {
+    @Component({
+      template: `<input [formField]="name.$field">`,
+      imports: [FormField],
+    })
+    class Host {
+      name = field('David');
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    input.value = 'Ana';
+    dispatch(input, 'input');
+    dispatch(input, 'blur');
+    TestBed.flushEffects();
+
+    expect(fixture.componentInstance.name.dirty()).toBe(true);
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+
+    fixture.componentInstance.name.disable('Unavailable');
+    fixture.detectChanges();
+    expect(input.disabled).toBe(true);
+
+    fixture.componentInstance.name.enable();
+    fixture.detectChanges();
+    expect(input.disabled).toBe(false);
+  });
+
   it('applies form-node classes through the Angular formField adapter', () => {
     @Component({
       template: `<input [formField]="name.$field">`,
