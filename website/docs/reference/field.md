@@ -80,12 +80,14 @@ const myForm = form({
 myForm.name.set(null);
 ```
 
-When the literal initial value is `null`, there is no non-null value from which TypeScript can infer
-a future type. Gem Forms uses `unknown`, rather than the unsafe `any`:
+When the literal initial value is `null` or `undefined`, there is no concrete value from which
+TypeScript can infer a future type. Gem Forms uses `unknown`, rather than the unsafe `any`. An
+explicit `undefined` initial value is normalized to `null`, like an omitted initial value:
 
 ```ts
 const myForm = form({
   unspecified: field(null),         // Field<unknown>
+  deferred: field(undefined),       // Field<unknown>; starts at null
   nickname: field<string>(null),    // Field<string | null>
 });
 

@@ -16,7 +16,6 @@
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
-- Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown
 
 - Consider including dynamic controls in form() (like in reactive forms)
   - update docs if required, check all docs
@@ -307,6 +306,12 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - discarded - implement debounce for synchronous validators
 
 ## Completed
+
+- [x] Infer `field(undefined)` as `Field<unknown>`, matching `field(null)`.
+  - [x] Preserve explicit generic inference such as `field<string>(undefined)` as
+    `Field<string | null>`.
+  - [x] Keep the existing runtime normalization from an explicit `undefined` initial value to
+    `null`, matching `field()` without an argument.
 
 - [x] Let `[formNode]` temporarily provide its host injector to a directly bound node.
   - [x] Investigation found that the directive already obtains the concrete host injector through

@@ -42,6 +42,7 @@ inferred as `Field<unknown>`:
 ```ts
 const myForm = form({
   unspecifiedValue: field(null),      // Field<unknown>
+  deferredValue: field(undefined),    // Field<unknown>, initial value is null
   nickname: field<string>(null),      // Field<string | null>
 });
 ```

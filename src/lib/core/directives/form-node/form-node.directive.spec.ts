@@ -1890,8 +1890,10 @@ describe('FormNode', () => {
       name = null as unknown as Node;
     }
 
-    expect(() => TestBed.createComponent(Host).detectChanges())
+    const fixture = TestBed.createComponent(Host);
+    expect(() => fixture.detectChanges())
       .toThrowError('formNode: a field, form, or array node is required');
+    fixture.destroy();
   });
 
   it('supports a minimal CVA without disabled handling or legacy validators and ignores callbacks after destroy', () => {

@@ -24,6 +24,13 @@ import { minLength } from '../validation/validators/min-length';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('normalizes an explicit undefined initial value to null', () => {
+    const fieldNode = field(undefined);
+
+    expect(fieldNode()).toBeNull();
+    expect(fieldNode.controlValue()).toBeNull();
+  });
+
   it('inherits async-validation ownership from its parent injector by default', async () => {
     const dependency = signal('initial');
     const validate = vi.fn(async () => {
