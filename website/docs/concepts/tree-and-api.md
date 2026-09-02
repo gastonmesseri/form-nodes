@@ -114,7 +114,7 @@ const isNodeValid = (node: Node): boolean => {
 };
 ```
 
-A field's rarely needed leaf `patch()` is also available only through this uniform API and behaves
+A field's rarely needed leaf `patch()` is exposed in the public types only through this uniform API and behaves
 like `set()`; application code should normally call `field.set(value)`.
 
 The name `api` is also a valid child name. `$api` is the reserved, collision-safe escape hatch:

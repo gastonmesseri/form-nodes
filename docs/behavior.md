@@ -237,7 +237,7 @@ name.value(); // ''
 name.api.value(); // ''
 ```
 
-These reads refer to the same value. Most field state and actions are exposed both on the callable field and under `field.api`. `patch()` is intentionally available only under `field.api`; for a leaf field it behaves exactly like `set()`.
+These reads refer to the same value. Most field state and actions are exposed both on the callable field and under `field.api`. `patch()` is exposed in the public types through `field.api` and `field.$api`; for a leaf field it behaves exactly like `set()`. The callable field also carries the runtime method, but intentionally omits it from its public type.
 
 ## Creating forms
 
@@ -1822,6 +1822,8 @@ Each clone receives fresh signals and fresh descendant nodes. Cloning never copi
 - Debounce timers, abort controllers, subscriptions, or reactive watchers.
 
 The compiled factory retains clone closures and property keys rather than the original template tree. Consequently an inline template can be garbage-collected after `array()` compiles it. If application code keeps a reference to the original template, that template remains an independent live node and later changes to it do not affect current or future array items.
+
+Field, form/group, array, and shorthand-object recipes capture declarative inputs in isolated callback scopes, so the recipe itself does not retain the source node or its parent tree. Application-owned values, validator callbacks, state sources, and explicit injectors retain their existing identity and ownership; references held by that application configuration are not removed by compiling a template.
 
 The template is already a live node before `array()` receives it. Compiling it neither mutates nor destroys it, so a separately retained template keeps its own reactive lifecycle. For templates whose construction itself must not start independent asynchronous work, use the explicit factory form.
 

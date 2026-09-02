@@ -441,8 +441,8 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     _controlValue: api.controlValue,
     _setControlValue: formControlValueBuffer.set,
     _flushControlValueOnBlur: api.flush,
-    _clone: () => createObjectNode<ObjectNodeDefinitions>(
-      createDefinitions() as ObjectNodeDefinitions,
+    _clone: createObjectClone(
+      createDefinitions,
       validatorSource as ValidatorSource<any>,
       cloneOptions as FormOptions<any> | undefined,
       nodeType,
@@ -472,4 +472,21 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   refreshInjector();
   ensureAsyncValidationWatch();
   return formNode;
+}
+
+// Capture declarative inputs without sharing the live object's closure environment.
+function createObjectClone(
+  createDefinitions: ReturnType<typeof createNodeDefinitionFactory>,
+  initialValidatorSource: ValidatorSource<any>,
+  options: FormOptions<any> | undefined,
+  nodeType: 'form' | 'group',
+  normalizeDefinition: (definition: unknown) => Node,
+) {
+  return () => createObjectNode<ObjectNodeDefinitions>(
+    createDefinitions() as ObjectNodeDefinitions,
+    initialValidatorSource,
+    options,
+    nodeType,
+    normalizeDefinition,
+  );
 }

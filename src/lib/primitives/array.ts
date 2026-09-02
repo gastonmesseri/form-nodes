@@ -687,7 +687,7 @@ export function array<TDefinition extends ArrayTemplate>(
     _setControlValue: (value: TInput) => arrayControlValueBuffer.set(normalizeArrayValue(value)),
     _flushControlValueOnBlur: api.flush,
     _getSchemaSample: getSchemaSample,
-    _clone: () => recreateArray(factory as ArrayFactory<TDefinition>, cloneInitial, validatorSource, cloneOptions),
+    _clone: createArrayClone(recreateArray, factory as ArrayFactory<TDefinition>, cloneInitial, validatorSource, cloneOptions),
     _setParent: (parent: Node | null, key?: string) => {
       arrayParent.set(parent);
       arrayKeyInParent.set(parent ? key ?? null : null);
@@ -731,4 +731,9 @@ export function array<TDefinition extends ArrayTemplate>(
   refreshInjector();
   ensureAsyncValidationWatch();
   return arrayNode;
+}
+
+// Capture only the constructor and declarative arguments, outside the live array's scope.
+function createArrayClone<TArgs extends unknown[], TResult>(create: (...args: TArgs) => TResult, ...args: TArgs) {
+  return () => create(...args);
 }

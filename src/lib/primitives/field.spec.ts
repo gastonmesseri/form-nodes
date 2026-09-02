@@ -505,6 +505,38 @@ describe('field', () => {
     expect(fieldNode.value()).toBe(30);
   });
 
+  it('keeps extracted actions callable without a receiver', () => {
+    const name = field('initial', { debounce: 'blur' });
+    const { set, update, setControlValue, flush, reset, setValidators, markAsTouched } = name;
+    const { patch } = name.api;
+
+    set('first');
+    update(value => `${value}!`);
+    expect(name()).toBe('first!');
+    expect(name.pristine()).toBe(true);
+
+    setControlValue('pending');
+    expect(name()).toBe('first!');
+    expect(name.controlValue()).toBe('pending');
+    expect(name.debouncing()).toBe(true);
+    flush();
+    expect(name()).toBe('pending');
+    expect(name.debouncing()).toBe(false);
+
+    setValidators([required]);
+    patch('');
+    expect(name.errors()).toMatchObject([{ kind: 'required' }]);
+    markAsTouched();
+    expect(name.touched()).toBe(true);
+
+    reset('ready');
+    expect(name()).toBe('ready');
+    expect(name.controlValue()).toBe('ready');
+    expect(name.errors()).toEqual([]);
+    expect(name.touched()).toBe(false);
+    expect(name.dirty()).toBe(false);
+  });
+
   it('updates programmatically from the committed value without marking dirty', () => {
     const updater = vi.fn((value: number | null) => (value ?? 0) + 1);
     const fieldNode = field(23);
@@ -1386,10 +1418,16 @@ describe('field', () => {
     expect(fieldNode.dirty()).toBe(false);
   });
 
-  it('patches like it sets, through api', () => {
+  it('patches like it sets through the API and the runtime field member', () => {
     const fieldNode = field('David');
     fieldNode.api.patch('Ana');
     expect(fieldNode()).toBe('Ana');
+    expect(fieldNode.dirty()).toBe(false);
+
+    const { patch } = fieldNode as typeof fieldNode & Pick<typeof fieldNode.api, 'patch'>;
+    patch('Bea');
+    expect(fieldNode()).toBe('Bea');
+    expect(fieldNode.controlValue()).toBe('Bea');
     expect(fieldNode.dirty()).toBe(false);
   });
 

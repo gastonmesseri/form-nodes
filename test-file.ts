@@ -249,6 +249,8 @@ const myForm2 = form({
   }, 1),
 });
 
+// myForm2.address.root().address
+
 const _myForm2Value = myForm2();
 myForm2.nested.subForm.subGroup.username.root().address()
 

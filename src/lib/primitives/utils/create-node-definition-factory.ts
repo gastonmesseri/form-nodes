@@ -34,8 +34,13 @@ export const createNodeDefinitionFactory = (definition: unknown): (() => NodeDef
 
   if (definition !== null && typeof definition === 'object' && isPlainObject(definition)) {
     const childFactories = mapObjectValues(definition, child => createNodeDefinitionFactory(child));
-    return (() => mapObjectValues(childFactories, createChild => createChild()) as NodeDefinitions);
+    return createObjectDefinitionFactory(childFactories);
   }
 
   return (() => field(definition));
 };
+
+// Keep the source definition out of the returned recipe's closure environment.
+function createObjectDefinitionFactory(childFactories: Record<string, () => NodeDefinition>) {
+  return () => mapObjectValues(childFactories, createChild => createChild()) as NodeDefinitions;
+}
