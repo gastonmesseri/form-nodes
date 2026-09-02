@@ -2,17 +2,6 @@
 
 ## Up next
 
-- Decide the exact semantics and naming of object-node ancestry lookups.
-  - Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
-    an explicit nested form the workflow owner observed by all of its descendants.
-  - Consider adding a separate `root()` or `rootForm()` signal for retrieving the actual root of the
-    complete node tree instead of overloading `form()` with both workflow ownership and root lookup.
-  - Define whether `root()` returns any root node (`Field`, `Group`, `Form`, or `ArrayNode`) while
-    `rootForm()` returns only a `Form | null`, and choose names that remain clear in IntelliSense.
-  - Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
-    groups inside arrays, detached array items, and nodes that are reparented at runtime.
-  - Review validator contexts, public root-type inference, async dependency tracking, submission
-    inheritance, documentation, and migration impact before changing the current behavior.
 - website docs
   - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -28,15 +17,29 @@
   - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
   - handle typing properly for this // probably form() and group() should allow dynamic string keys (and make it safe through proxy?, or maybe just ensure that if any non known key is accessed, then only return it as undefined, similar to array() with an index)
 - provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
-- Create adapter to be able to use angular [formField] with the library: myForm.name.$field, <my-control [formField]="myForm.name.$field">
-- Create isNil helper
 - The injector, could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode) and use it inside the form() field(), etc. as a fallback in case the
   user doesn't provide an injector
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
+- Create adapter to be able to use angular [formField] with the library: myForm.name.$field, <my-control [formField]="myForm.name.$field">
+  - maybe $field should be an instance of form() (angular form function) or maybe form().field (angular form). un field-tree creo, o algo asi. que sirva para interactuar con formField, y pasar
+    eventos y estado de mi libreria al field de angular, y viceversa.
+- The injector (for async validators), could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode)
+  and use it inside the form() field(), etc. as a fallback in case the user doesn't provide an injector.
 - en maxDate, minDate, dateBetween, add shortcuts como 'today' en string
 - Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
  
+- Decide the exact semantics and naming of object-node ancestry lookups.
+  - Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
+    an explicit nested form the workflow owner observed by all of its descendants.
+  - Consider adding a separate `root()` or `rootForm()` signal for retrieving the actual root of the
+    complete node tree instead of overloading `form()` with both workflow ownership and root lookup.
+  - Define whether `root()` returns any root node (`Field`, `Group`, `Form`, or `ArrayNode`) while
+    `rootForm()` returns only a `Form | null`, and choose names that remain clear in IntelliSense.
+  - Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
+    groups inside arrays, detached array items, and nodes that are reparented at runtime.
+  - Review validator contexts, public root-type inference, async dependency tracking, submission
+    inheritance, documentation, and migration impact before changing the current behavior.
 - Think about how to better structure project folders given current knowledge and existing files
 - [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 - Validator framework roadmap (implement in this order)
@@ -146,7 +149,6 @@
   - maybe better a init: () => void, in the form() options
 - Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
 - Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
-- Add isNil utility, and check all cases where it is applicable, (checking for x === null || x ===undefined)
 - Restructure project folder structure, once project is solid and stable. think how to organize folders
 - Create repo to pass custom lintern rules in dlab
 - Allow defining global options
@@ -296,6 +298,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Create the internal `isNil(value)` type guard.
+  - Original follow-up: check all applicable cases that used `x === null || x === undefined`.
+  - Use it in validator normalization and composition, nullish validator values, array validator-source detection, empty-value detection, and native-control writes.
 - [x] Audit every public options and source parameter from the consumer's IntelliSense perspective.
   - Inline small call-site shapes such as `markAsTouched()` and both `asyncValidator()` overloads.
   - Keep named types for reusable concepts such as node options, validator sources, message catalogs, and async configurations.

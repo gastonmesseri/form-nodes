@@ -1,5 +1,6 @@
 import { computed, signal, untracked } from '@angular/core';
 
+import { isNotNil } from '../utils/is-nil';
 import { markAsNode } from '../utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
@@ -106,7 +107,7 @@ export function field<TValue>(
   );
   const fieldDisabledReasons = computed(() => [
     ...(fieldParent()?.$api.disabledReasons() ?? []),
-    ...[fieldOwnDisabledReason(), fieldConfiguredDisabledReason()].filter(reason => reason !== undefined),
+    ...[fieldOwnDisabledReason(), fieldConfiguredDisabledReason()].filter(isNotNil),
   ], { equal: shallowEqual });
   const fieldDisabled = computed(() => fieldDisabledReasons().length > 0);
   const fieldSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
