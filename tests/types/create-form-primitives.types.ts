@@ -14,6 +14,10 @@ const modelNullableName = nonNullableForms.field<string | null>(null);
 const validatedName = nonNullableForms.field('', ({ value }) => value().length > 0 ? null : { kind: 'required' });
 const forcedNullableName = nonNullableForms.field.nullable('Marco');
 const forcedNonNullableName = nullableForms.field.strict('Marco');
+const omittedValue = nonNullableForms.field();
+const undefinedValue = nonNullableForms.field(undefined);
+const nullValue = nonNullableForms.field(null);
+const omittedNullableName = nonNullableForms.field.nullable<string>();
 
 type _Name = Expect<Equal<typeof name, Field<string>>>;
 type _NullableName = Expect<Equal<typeof nullableName, Field<string | null>>>;
@@ -23,6 +27,10 @@ type _ModelNullableName = Expect<Equal<typeof modelNullableName, Field<string | 
 type _ValidatedName = Expect<Equal<typeof validatedName, Field<string>>>;
 type _ForcedNullableName = Expect<Equal<typeof forcedNullableName, Field<string | null>>>;
 type _ForcedNonNullableName = Expect<Equal<typeof forcedNonNullableName, Field<string>>>;
+type _OmittedValue = Expect<Equal<typeof omittedValue, Field<unknown>>>;
+type _UndefinedValue = Expect<Equal<typeof undefinedValue, Field<unknown>>>;
+type _NullValue = Expect<Equal<typeof nullValue, Field<unknown>>>;
+type _OmittedNullableName = Expect<Equal<typeof omittedNullableName, Field<string | null>>>;
 
 const profile = nonNullableForms.form({
   name: '',

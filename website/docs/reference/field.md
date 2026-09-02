@@ -148,6 +148,10 @@ myForm.unspecified.set(42);
 With an explicit generic, `field<T>(undefined)` includes both the default nullable value and the
 explicit initial value, producing `Field<T | null | undefined>`.
 
+The same distinction applies to an untyped `field()` from
+`createFormPrimitives({ nullable: false })`: it returns `Field<unknown>` initialized to `null`.
+For a known future type without an initial value, use that factory's `field.nullable<T>()`.
+
 <CodeBlock language="ts" title="undefined-field.example.ts">{undefinedFieldSource}</CodeBlock>
 
 Use an explicit generic when the domain type is known. Although `Field<unknown>` accepts `null`,

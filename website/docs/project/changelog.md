@@ -52,6 +52,8 @@ canonical release record.
   use `root()` when the outermost node is required.
 - `field(undefined)` preserves `undefined` as its initial value, while an omitted initial value
   continues to start at `null`. Explicitly typed calls include `undefined` in the field value type.
+  A no-argument `field()` from `createFormPrimitives({ nullable: false })` now also typechecks as
+  `Field<unknown>`, matching its existing `null` initial value.
 - Field-level `nullable` options have been removed. Use `field.strict()` or `field.nullable()` for
   local nullability choices; `createFormPrimitives({ nullable })` remains the factory-wide default.
 - Form and group callable values display their complete nested object shape in IntelliSense rather
