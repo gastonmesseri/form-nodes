@@ -57,7 +57,21 @@ export type FieldOptions<TValue = any> = {
   nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   injector?: Injector;
-  /** Delay strategy for control updates. A number waits in milliseconds, `'blur'` waits for focus loss, and a function commits when its returned promise resolves. Overrides an inherited debounce. */
+  /**
+   * Delay strategy for control updates. A number waits in milliseconds, `'blur'` waits for focus
+   * loss, and a function commits when its returned promise resolves. Overrides an inherited
+   * debounce.
+   *
+   * @example Wait 300 milliseconds after the latest control change.
+   * ```ts
+   * field('', { debounce: 300 });
+   * ```
+   *
+   * @example Commit the control value when the control loses focus.
+   * ```ts
+   * field('', { debounce: 'blur' });
+   * ```
+   */
   debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /**
    * Initial or reactive visibility of this field.

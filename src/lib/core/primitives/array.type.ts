@@ -7,7 +7,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { DisabledReason, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
-export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'hidden' | 'disabled' | 'readonly'> & {
+export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * One validator or an array of validators for the complete array value, not each item.
    *
@@ -49,6 +49,20 @@ export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' 
    * Put validators in the item template when every item should be validated independently.
    */
   validators?: ValidatorSource<TValue>;
+  /**
+   * Default control-value debounce inherited by every current and future item.
+   *
+   * @example Give item controls a 300-millisecond debounce by default.
+   * ```ts
+   * array(field(''), { debounce: 300 });
+   * ```
+   *
+   * @example Commit item control values when their controls lose focus.
+   * ```ts
+   * array(field(''), { debounce: 'blur' });
+   * ```
+   */
+  debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /**
    * Initial or reactive visibility of the complete collection.
    *

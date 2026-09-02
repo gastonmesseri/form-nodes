@@ -35,6 +35,7 @@
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - en maxDate, minDate, dateBetween, add shortcuts como 'today' en string
 - Check if debounce in asyncValidators also should include the 'blur' value
+- Consider changing the @example to something different, like a heading with asterisks **Like this**
  
 - Think about how to better structure project folders given current knowledge and existing files
 - [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
