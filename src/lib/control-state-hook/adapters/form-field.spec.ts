@@ -3,19 +3,19 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { Component, input, output, resource, signal, type Type } from '@angular/core';
-import { FormField, disabled, form as createAngularForm, validateAsync } from '@angular/forms/signals';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { FormField, disabled, form as createAngularForm, validateAsync } from '@angular/forms/signals';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
-import { required } from '../../validation/validators/required';
 import { pattern } from '../../validation/validators/pattern';
+import { required } from '../../validation/validators/required';
+import { injectFormFieldControlStateAdapter } from './form-field';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
-import { injectFormFieldControlStateAdapter } from './form-field';
-import { registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({ selector: 'form-field-adapter-control', template: '', standalone: true })
 class FormFieldAdapterControl {

@@ -1,38 +1,38 @@
-export { form } from './lib/core/primitives/form';
-export { group } from './lib/core/primitives/group';
-export { field } from './lib/core/primitives/field';
-export { array } from './lib/core/primitives/array';
-export { max } from './lib/core/validation/validators/max';
-export { min } from './lib/core/validation/validators/min';
-export { url } from './lib/core/validation/validators/url';
-export { validator } from './lib/core/validation/validator';
-export { email } from './lib/core/validation/validators/email';
-export { oneOf } from './lib/core/validation/validators/one-of';
-export { integer } from './lib/core/validation/validators/integer';
-export { between } from './lib/core/validation/validators/between';
-export { pattern } from './lib/core/validation/validators/pattern';
-export { equalTo } from './lib/core/validation/validators/equal-to';
-export { maxDate } from './lib/core/validation/validators/max-date';
-export { minDate } from './lib/core/validation/validators/min-date';
-export { required } from './lib/core/validation/validators/required';
-export { requiredIf } from './lib/core/validation/validators/required-if';
-export { maxWords } from './lib/core/validation/validators/max-words';
-export { minWords } from './lib/core/validation/validators/min-words';
-export { asyncValidator } from './lib/core/validation/async-validator';
-export { maxLength } from './lib/core/validation/validators/max-length';
-export { minLength } from './lib/core/validation/validators/min-length';
-export { dateBetween } from './lib/core/validation/validators/date-between';
-export { uniqueItems } from './lib/core/validation/validators/unique-items';
-export type { FormNodeBinding } from './lib/core/types/form-node-binding.type';
-export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
-export type { ValidatorOptions } from './lib/core/validation/utils/validator-options';
-export { provideFormNodePassThrough } from './lib/core/directives/form-node/form-node-pass-through';
-export { FORM_NODE, FormNode, _FormNode } from './lib/core/directives/form-node/form-node.directive';
-export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/core/types/observable-like.type';
-export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/core/primitives/group';
-export type { DisabledReason, DisabledStateSource, DynamicNode, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
-export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
-export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/core/validation/async-validator';
+export { form } from './lib/primitives/form';
+export { group } from './lib/primitives/group';
+export { field } from './lib/primitives/field';
+export { array } from './lib/primitives/array';
+export { max } from './lib/validation/validators/max';
+export { min } from './lib/validation/validators/min';
+export { url } from './lib/validation/validators/url';
+export { validator } from './lib/validation/validator';
+export { email } from './lib/validation/validators/email';
+export { oneOf } from './lib/validation/validators/one-of';
+export { integer } from './lib/validation/validators/integer';
+export { between } from './lib/validation/validators/between';
+export { pattern } from './lib/validation/validators/pattern';
+export { equalTo } from './lib/validation/validators/equal-to';
+export { maxDate } from './lib/validation/validators/max-date';
+export { minDate } from './lib/validation/validators/min-date';
+export { required } from './lib/validation/validators/required';
+export { requiredIf } from './lib/validation/validators/required-if';
+export { maxWords } from './lib/validation/validators/max-words';
+export { minWords } from './lib/validation/validators/min-words';
+export { asyncValidator } from './lib/validation/async-validator';
+export { maxLength } from './lib/validation/validators/max-length';
+export { minLength } from './lib/validation/validators/min-length';
+export { dateBetween } from './lib/validation/validators/date-between';
+export { uniqueItems } from './lib/validation/validators/unique-items';
+export type { FormNodeBinding } from './lib/types/form-node-binding.type';
+export type { Field, FieldApi, FieldOptions } from './lib/primitives/field';
+export type { ValidatorOptions } from './lib/validation/utils/validator-options';
+export { provideFormNodePassThrough } from './lib/directives/form-node/form-node-pass-through';
+export { FORM_NODE, FormNode, _FormNode } from './lib/directives/form-node/form-node.directive';
+export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/types/observable-like.type';
+export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/primitives/group';
+export type { DisabledReason, DisabledStateSource, DynamicNode, MarkAsTouchedOptions, Node, NodeApi } from './lib/types/node.type';
+export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/directives/form-node/form-node-config';
+export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/validation/async-validator';
 export {
   type FormFactory,
   type GroupFactory,
@@ -42,26 +42,26 @@ export {
   createFormPrimitives,
   type FormPrimitivesOptions,
   type NonNullableFieldFactory,
-} from './lib/core/primitives/create-form-primitives';
+} from './lib/primitives/create-form-primitives';
 export {
   useControlState,
   type ControlState,
   type ControlStateError,
   type ControlStateSource,
   type ControlStateDisabledReason,
-} from './lib/core/control-state-hook/control-state';
+} from './lib/control-state-hook/control-state';
 export {
   type ValidatorMessages,
   provideValidatorMessages,
   type ValidatorMessageParameters,
   configureGlobalValidatorMessages,
-} from './lib/core/validation/validator-messages';
+} from './lib/validation/validator-messages';
 export {
   type FormNodeControl,
   type FormNodeUiControl,
   type FormNodeValueControl,
   type FormNodeCheckboxControl,
-} from './lib/core/directives/form-node/form-node-control';
+} from './lib/directives/form-node/form-node-control';
 export type {
   ArrayApi,
   ArraySet,
@@ -72,7 +72,7 @@ export type {
   ArrayIndexes,
   ArrayOptions,
   ArrayItemWithParent,
-} from './lib/core/primitives/array';
+} from './lib/primitives/array';
 export type {
   Form,
   FormApi,
@@ -84,7 +84,7 @@ export type {
   FormValueContract,
   DynamicFormChildren,
   FormSubmissionOptions,
-} from './lib/core/primitives/form';
+} from './lib/primitives/form';
 export type {
   Validator,
   Validators,
@@ -109,4 +109,4 @@ export type {
   AsyncValidatorBaseContext,
   ComposableValidationResult,
   ParameterizedAsyncValidatorContext,
-} from './lib/core/validation/validation.type';
+} from './lib/validation/validation.type';

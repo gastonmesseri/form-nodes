@@ -1,11 +1,11 @@
+import { expect, it } from 'vitest';
 import { effect } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { expect, it } from 'vitest';
-import type { ComponentFixture } from '@angular/core/testing';
 import type { AbstractControl } from '@angular/forms';
+import type { ComponentFixture } from '@angular/core/testing';
 
-import type { ControlStateSource } from '../../src/lib/core/control-state-hook/control-state';
-import type { ControlStateAdapter } from '../../src/lib/core/control-state-hook/control-state-adapter';
+import type { ControlStateSource } from '../../src/lib/control-state-hook/control-state';
+import type { ControlStateAdapter } from '../../src/lib/control-state-hook/control-state-adapter';
 
 export type AbstractControlContractFixture = {
   control: AbstractControl<string>;

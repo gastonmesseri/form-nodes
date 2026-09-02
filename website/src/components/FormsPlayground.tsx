@@ -1,12 +1,12 @@
 import CodeBlock from '@theme/CodeBlock';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 
-import { form } from '../../../src/lib/core/primitives/form';
-import { field } from '../../../src/lib/core/primitives/field';
-import { array } from '../../../src/lib/core/primitives/array';
-import { email } from '../../../src/lib/core/validation/validators/email';
-import { required } from '../../../src/lib/core/validation/validators/required';
-import { minLength } from '../../../src/lib/core/validation/validators/min-length';
+import { form } from '../../../src/lib/primitives/form';
+import { field } from '../../../src/lib/primitives/field';
+import { array } from '../../../src/lib/primitives/array';
+import { email } from '../../../src/lib/validation/validators/email';
+import { required } from '../../../src/lib/validation/validators/required';
+import { minLength } from '../../../src/lib/validation/validators/min-length';
 
 const playgroundDeclaration = `const playgroundForm = form({
   displayName: field('', [required, minLength(3)], {

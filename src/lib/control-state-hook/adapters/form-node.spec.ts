@@ -7,16 +7,16 @@ import { APP_ID, Component, DestroyRef, ElementRef, inject, model, signal, type 
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { field } from '../../primitives/field';
-import { asyncValidator } from '../../validation/async-validator';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
-import { required } from '../../validation/validators/required';
 import { pattern } from '../../validation/validators/pattern';
-import { FormNode } from '../../directives/form-node/form-node.directive';
+import { required } from '../../validation/validators/required';
+import { injectFormNodeControlStateAdapter } from './form-node';
+import { asyncValidator } from '../../validation/async-validator';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
-import { injectFormNodeControlStateAdapter } from './form-node';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
+import { FormNode } from '../../directives/form-node/form-node.directive';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({ selector: 'form-node-adapter-control', template: '', standalone: true })
 class FormNodeAdapterControl {

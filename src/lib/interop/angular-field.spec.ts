@@ -1,28 +1,28 @@
 // @vitest-environment jsdom
 
 import '@angular/compiler';
-import { Component, Injector, input, model, output, runInInjectionContext, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { FormField, form as createAngularForm, provideSignalFormsConfig, transformedValue, type FormValueControl } from '@angular/forms/signals';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Component, Injector, input, model, output, runInInjectionContext, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { FormField, form as createAngularForm, provideSignalFormsConfig, transformedValue, type FormValueControl } from '@angular/forms/signals';
 
 import { form } from '../primitives/form';
 import { array } from '../primitives/array';
 import { field } from '../primitives/field';
+import { getAngularField } from './angular-field';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
-import { getAngularField } from './angular-field';
 import type { InternalNode } from '../types/node.type';
-import { required } from '../validation/validators/required';
+import { pattern } from '../validation/validators/pattern';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
-import { pattern } from '../validation/validators/pattern';
-import type { FormNodeBinding } from '../types/form-node-binding.type';
+import { required } from '../validation/validators/required';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
+import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { provideFormNodeConfig } from '../directives/form-node/form-node-config';
-import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
