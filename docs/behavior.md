@@ -1847,6 +1847,16 @@ intentionally directional: disabled, readonly, hidden, and required are derived 
 Angular, so the library node is their source and `[formField]` reflects them into Angular and the
 control. Angular does not expose reverse setters for those states.
 
+Parsing failures produced by Angular native controls, `transformedValue()` custom controls, and
+CVA validation are registered as binding-owned external errors on the corresponding Gem node. A
+failed parse leaves the last committed Gem value unchanged but makes the node and its ancestors
+invalid; the error appears in `errors()`, `allErrors()`, `getError()`, and submission validation.
+Each binding owns its errors independently, so multiple controls can contribute separate parse
+errors without replacing Gem validator errors. A binding contribution is removed when parsing
+recovers, the node resets, or the binding is destroyed or rebound. The exposed Gem error retains
+Angular's error data except its internal `fieldTree` and `formField` references, and identifies the
+originating control through `formNode`.
+
 Interaction synchronization applies to the complete materialized tree, not only bound leaves. A
 touched or dirty descendant makes its Angular and library ancestors touched or dirty through their
 normal aggregation rules. Marking an aggregate as touched propagates to descendants unless
@@ -1893,6 +1903,15 @@ The implementation was derived from Angular Signal Forms 22.1.4 at commit
 `directive/form_field.ts`, and the field and web binding tests. A real Angular `FieldTree` is
 required because `[formField]` resolves Angular's private `FieldNode`; a structurally compatible
 object is insufficient.
+
+Angular's public `FormFieldBinding` does not expose binding-specific parsing errors. The adapter
+therefore reads the runtime `FormField.parseErrors` signal, which Angular marks internal, rather
+than reading the complete field error state and creating a reactive cycle with Gem validators. This
+isolated dependency is covered by native and custom-control tests and recorded in the Angular
+upgrade checklist. The governing Angular 22.1.4 sources are
+`packages/forms/signals/src/directive/form_field.ts`,
+`packages/forms/signals/src/field/validation.ts`, and
+`packages/forms/signals/test/node/parse_errors.spec.ts`.
 
 `FormNode` binds a field node to a native form control, and binds field, group, form, or array nodes
 to an explicitly provided signal custom control or a component that implements Angular's

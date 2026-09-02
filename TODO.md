@@ -9,9 +9,6 @@
   `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
   - [ ] Extend independent `touched` and `dirty` synchronization to array items created, removed,
     moved, or reconciled after adapter creation as part of dynamic-array support.
-  - [ ] Propagate Angular native and custom-control parse errors back into library validation so
-    `valid()`, `allErrors()`, and `submit()` cannot disagree with the rendered control; remove the
-    errors when parsing recovers or the binding is destroyed.
   - [ ] Support dynamic arrays after adapter creation: push, insert, remove, clear, set, reset,
     move, swap, and `trackBy` reconciliation. Preserve item identity and interaction state when
     appropriate, update item `$field` paths after reordering, create synchronization for new items,
@@ -307,6 +304,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [ ] Re-audit every intentional difference recorded in `docs/behavior.md`; update, remove, or add differences and regression tests as Angular changes.
 - `[formNode]` and control interoperability
   - [ ] Compare Angular `FormField`, form-root binding, binding selection, pass-through wrappers, the control-creation hook, directive exports, and supported host elements.
+  - [ ] Re-check the runtime `FormField.parseErrors` signal used by the opaque `$field` adapter.
+    Angular 22.1.4 marks it internal and omits it from `FormFieldBinding`, while no public binding API
+    exposes parsing errors without also reading the complete validation state.
   - [ ] Verify native `input`, `select`, `textarea`, checkbox, radio, multi-select, number, range, date, month, time, week, and datetime-local value parsing and serialization.
   - [ ] Verify native `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, disabled, readonly, name, accessibility, validity, parse-error, focus, and event synchronization.
   - [ ] Verify signal controls using `model()` or input/output pairs, `value` versus `checked`, input aliases and transforms, optional state inputs, reset and touch hooks, explicit `provideFormNodeControl()`, and node pass-through.
@@ -383,6 +383,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     and native, custom-control, or CVA reset hooks; cancel pending Gem debounce and handle native
     form reset through `[formNode]`. Angular's internal field reset is deliberately not a public
     operation because `$field` is opaque and Gem Forms is the sole state authority.
+  - [x] Propagate native and custom-control parsing errors from each Angular `FormField` binding
+    into Gem validation. Preserve binding ownership, merge them with Gem validator errors, remove
+    them on recovery, reset, destruction, or rebinding, and expose them through `errors()`,
+    `allErrors()`, ancestor validity, and submission checks.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.
