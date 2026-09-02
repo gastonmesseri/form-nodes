@@ -2,6 +2,7 @@ import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
 import type { NormalizedNode } from './form';
+import { isNil } from '../utils/is-nil';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isNode, markAsNode } from '../utils/node-marker';
@@ -41,7 +42,7 @@ const looksLikeValidatorSource = (value: unknown): boolean => {
   return typeof value === 'function'
     || (Array.isArray(value)
     && value.some(entry => typeof entry === 'function')
-    && value.every(entry => entry === null || entry === undefined || typeof entry === 'function'));
+    && value.every(entry => isNil(entry) || typeof entry === 'function'));
 };
 
 /**

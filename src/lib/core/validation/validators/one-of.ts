@@ -1,4 +1,5 @@
 import type { Validator } from '../validation.type';
+import { isNil } from '../../utils/is-nil';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultOneOfMessage } from './default-validator-messages';
 import { resolveValidatorMessageOption } from './validator-options';
@@ -42,7 +43,7 @@ export const oneOf = <TValue>(
   const message = resolveValidatorMessageOption(options);
   return ({ value }) => {
     const currentValue = value();
-    if (currentValue === null || currentValue === undefined || currentValue === '') return null;
+    if (isNil(currentValue) || currentValue === '') return null;
     const resolvedAllowedValues = typeof allowedValues === 'function' ? allowedValues() : allowedValues;
     if (resolvedAllowedValues === undefined || resolvedAllowedValues.includes(currentValue)) return null;
     return {

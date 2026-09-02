@@ -1,5 +1,6 @@
 import { untracked } from '@angular/core';
 
+import { isNil } from '../../../utils/is-nil';
 import type { ValidationError } from '../../../validation/validation.type';
 
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -94,7 +95,7 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
     return;
   }
   if (!isNativeInput(element)) {
-    element.value = value === null || value === undefined ? '' : String(value);
+    element.value = isNil(value) ? '' : String(value);
     return;
   }
 
@@ -109,7 +110,7 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
     case 'range':
     case 'datetime-local':
       if (typeof value === 'number') writeNumber(element, value);
-      else element.value = value === null || value === undefined ? '' : String(value);
+      else element.value = isNil(value) ? '' : String(value);
       return;
     case 'date':
     case 'month':
@@ -117,9 +118,9 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
     case 'week':
       if (value === null || value instanceof Date) element.valueAsDate = value;
       else if (typeof value === 'number') writeNumber(element, value);
-      else element.value = value === null || value === undefined ? '' : String(value);
+      else element.value = isNil(value) ? '' : String(value);
       return;
     default:
-      element.value = value === null || value === undefined ? '' : String(value);
+      element.value = isNil(value) ? '' : String(value);
   }
 };
