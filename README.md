@@ -71,7 +71,7 @@ Use it as `<app-text-field [formNode]="name" />`. The input must be exposed unde
 
 ## Documentation
 
-- [Validator messages and internationalization](docs/validator-messages.md) explains global,
+- [Validator messages and internationalization](website/docs/guides/validator-messages.md) explains global,
   Angular provider, form/array, and validator-local configuration, including reactive locale
   changes and SSR guidance.
 - [Behavior reference](docs/behavior.md) records the complete implemented semantics and deliberate
