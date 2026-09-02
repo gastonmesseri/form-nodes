@@ -2,22 +2,6 @@
 
 ## Up next
 
-- Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Gem Forms remains
-  the sole authority for form state and operations. Do not expose or reproduce Angular's form API.
-  Only support behavior required by controls that actually bind a node's terminal `$field`; do not
-  eagerly mirror unused nodes or reproduce Angular's form engine. The current baseline was audited
-  against Angular `v22.1.4` at commit
-  `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
-  - [x] Verify that lazily connected descendants, including array items added later, resolve the
-    root adapter's injector. Nodes whose complete root was created outside injection must continue
-    to require an explicit `injector` option and throw the documented error otherwise.
-  - [ ] Investigate whether a node without an injector can adopt one from a concrete `[formNode]`
-    directive or its host `DebugNode`, then make that injector available to the node tree and the
-    `$field` adapter. Determine how to avoid circular initialization because `[formField]` needs
-    `$field` before its own binding exists, and do not rely on private Angular APIs.
-  - [x] Verify cleanup for the concrete supported lifecycle: a bound node is removed from its tree,
-    its Angular view is destroyed, or the owning injector is destroyed. Do not add machinery for
-    speculative cross-root or cross-injector reparenting unless a supported public workflow needs it.
 - website docs
   - add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -29,16 +13,23 @@
   - explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
     e.g. myField = field(); myField() to read the value; myField.set() to set the value, like a signal
 - provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
+- Investigate whether `[formNode]` can make its host injector available to the bound node tree.
+  - Evaluate retrieving the concrete directive or host injector through Angular's public
+    `getDebugNode()` API and passing it to the node after binding.
+  - Determine which injector-dependent features should be allowed to adopt it, including explicitly
+    triggered asynchronous validation and a later `$field` adapter request.
+  - Define ownership and cleanup through the injector's `DestroyRef`, rebinding behavior, and what
+    happens when a node already has an explicit or previously captured injector.
+  - Do not make this investigation part of the completed `$field` adapter scope, do not rely on
+    private Angular APIs, and do not introduce circular initialization between `[formNode]` and
+    `[formField]`.
+  - Original idea: use the `[formNode]` directive or `getDebugNode()` as a fallback injector for
+    asynchronous validators when `form()`, `field()`, or another primitive received no injector.
 - Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
-- The injector (for async validators), could also be taken from the formNode directive (maybe directly from the directive, or from getDebugNode)
-  and use it inside the form() field(), etc. as a fallback in case the user doesn't provide an injector.
 - Check if debounce in asyncValidators also should include the 'blur' value
 - Consider changing the @example to something different, like a heading with asterisks **Like this**
 - Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown
 
-- The new nodes in array() do they have an injector? where is it taken from? (should it pick it from the parent array?)
-  - i am worried because they can be created dynamically
- 
 - Consider including dynamic controls in form() (like in reactive forms)
   - update docs if required, check all docs
   - myForm.add('age', field(2)); // or myForm.add({ age: field(2) })
@@ -329,6 +320,19 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Gem Forms
+  remains the sole authority for form state and operations.
+  - [x] Support only behavior required by controls that bind a node's terminal `$field`; do not
+    eagerly mirror unused nodes or reproduce Angular's form engine.
+  - [x] Verify that lazily connected descendants, including array items added later, resolve the
+    root adapter's injector. A complete root created outside injection continues to require an
+    explicit `injector` option and throws the documented error otherwise.
+  - [x] Verify cleanup when a bound node is removed, its Angular view is destroyed, or the owning
+    injector is destroyed.
+  - [x] Keep automatic injector adoption from `[formNode]` outside this adapter milestone and track
+    it as an independent investigation.
+  - [x] Audit the completed baseline against Angular `v22.1.4` at commit
+    `898380974d49cf7976e9d89cc74a0801a26ce7b1`.
 - [x] Make `$field` compatible with Angular AOT strict-template checking without publishing a typed
   Angular field API.
   - [x] Type-erase the terminal adapter to `any`; Angular's template checker must call the field and
@@ -342,6 +346,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Stop value and interaction synchronization and clean up control registrations when the
     adapter's owning injector is destroyed.
 - [x] Verify injector ownership for nodes created later by `array()`.
+  - [x] Original concern: determine whether dynamically created array nodes have an injector and
+    whether it should come from the parent array.
   - [x] Resolve `$field` through the complete root's captured or explicit injector, including for
     lazily created nested descendants whose item factory runs outside an injection context.
   - [x] Keep injector ownership at the adapter root instead of copying it into every generated item.
