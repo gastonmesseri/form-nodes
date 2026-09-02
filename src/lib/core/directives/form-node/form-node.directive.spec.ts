@@ -1767,31 +1767,26 @@ describe('FormNode', () => {
     expect(custom.writes).toEqual(['David']);
   });
 
-  it.each([
-    ['default', DefaultValueAccessor.prototype],
-    ['built-in', NumberValueAccessor.prototype],
-  ])('uses a single %s accessor when no higher-priority accessor exists', (_kind, prototype) => {
+  it('uses a single default accessor when no higher-priority accessor exists', () => {
     let accessor!: ReturnType<typeof accessorWithPrototype>;
 
     @Component({
-      selector: 'single-angular-accessor',
+      selector: 'single-default-accessor',
       template: '',
       standalone: true,
       providers: [{
         provide: NG_VALUE_ACCESSOR,
-        useFactory: () => (accessor = accessorWithPrototype(prototype)),
+        useFactory: () => (accessor = accessorWithPrototype(DefaultValueAccessor.prototype)),
         multi: true,
       }],
-      host: { 'data-accessor-kind': _kind },
     })
     class SingleAccessorControl {}
 
     @Component({
-      selector: 'single-angular-accessor-host',
-      template: `<single-angular-accessor [formNode]="name" />`,
+      selector: 'single-default-accessor-host',
+      template: `<single-default-accessor [formNode]="name" />`,
       standalone: true,
       imports: [FormNode, SingleAccessorControl],
-      host: { 'data-accessor-kind': _kind },
     })
     class Host {
       readonly name = field('David', { nullable: false });
@@ -1802,49 +1797,101 @@ describe('FormNode', () => {
     expect(accessor.writes).toEqual(['David']);
   });
 
-  it.each([
-    ['default', DefaultValueAccessor.prototype, 'formNode: more than one default ControlValueAccessor matches the host'],
-    ['built-in', NumberValueAccessor.prototype, 'formNode: more than one built-in ControlValueAccessor matches the host'],
-  ])('rejects multiple %s accessors', (_kind, prototype, message) => {
-    @Component({
-      selector: 'duplicate-angular-accessor',
-      template: '',
-      standalone: true,
-      providers: [
-        { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(prototype), multi: true },
-        { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(prototype), multi: true },
-      ],
-      host: { 'data-accessor-kind': _kind },
-    })
-    class DuplicateAccessorControl {}
+  it('uses a single built-in accessor when no higher-priority accessor exists', () => {
+    let accessor!: ReturnType<typeof accessorWithPrototype>;
 
     @Component({
-      selector: 'duplicate-angular-accessor-host',
-      template: `<duplicate-angular-accessor [formNode]="name" />`,
+      selector: 'single-built-in-accessor',
+      template: '',
       standalone: true,
-      imports: [DuplicateAccessorControl, FormNode],
-      host: { 'data-accessor-kind': _kind },
+      providers: [{
+        provide: NG_VALUE_ACCESSOR,
+        useFactory: () => (accessor = accessorWithPrototype(NumberValueAccessor.prototype)),
+        multi: true,
+      }],
+    })
+    class SingleAccessorControl {}
+
+    @Component({
+      selector: 'single-built-in-accessor-host',
+      template: `<single-built-in-accessor [formNode]="name" />`,
+      standalone: true,
+      imports: [FormNode, SingleAccessorControl],
     })
     class Host {
       readonly name = field('David', { nullable: false });
     }
 
-    expect(() => TestBed.createComponent(Host).detectChanges()).toThrowError(message);
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    expect(accessor.writes).toEqual(['David']);
   });
 
-  it('reports access before its required field input is initialized', () => {
+  it('rejects multiple default accessors', () => {
     @Component({
-      selector: 'missing-field-host',
-      template: `<input formNode>`,
+      selector: 'duplicate-default-accessor',
+      template: '',
+      standalone: true,
+      providers: [
+        { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(DefaultValueAccessor.prototype), multi: true },
+        { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(DefaultValueAccessor.prototype), multi: true },
+      ],
+    })
+    class DuplicateAccessorControl {}
+
+    @Component({
+      selector: 'duplicate-default-accessor-host',
+      template: `<duplicate-default-accessor [formNode]="name" />`,
+      standalone: true,
+      imports: [DuplicateAccessorControl, FormNode],
+    })
+    class Host {
+      readonly name = field('David', { nullable: false });
+    }
+
+    expect(() => TestBed.createComponent(Host).detectChanges())
+      .toThrowError('formNode: more than one default ControlValueAccessor matches the host');
+  });
+
+  it('rejects multiple built-in accessors', () => {
+    @Component({
+      selector: 'duplicate-built-in-accessor',
+      template: '',
+      standalone: true,
+      providers: [
+        { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(NumberValueAccessor.prototype), multi: true },
+        { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(NumberValueAccessor.prototype), multi: true },
+      ],
+    })
+    class DuplicateAccessorControl {}
+
+    @Component({
+      selector: 'duplicate-built-in-accessor-host',
+      template: `<duplicate-built-in-accessor [formNode]="name" />`,
+      standalone: true,
+      imports: [DuplicateAccessorControl, FormNode],
+    })
+    class Host {
+      readonly name = field('David', { nullable: false });
+    }
+
+    expect(() => TestBed.createComponent(Host).detectChanges())
+      .toThrowError('formNode: more than one built-in ControlValueAccessor matches the host');
+  });
+
+  it('rejects a formNode input that is not a node at runtime', () => {
+    @Component({
+      selector: 'invalid-field-host',
+      template: `<input [formNode]="name">`,
       standalone: true,
       imports: [FormNode],
     })
-    class Host {}
+    class Host {
+      name = null as unknown as Node;
+    }
 
-    const fixture = TestBed.createComponent(Host);
-    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
-    expect(() => binding.node()).toThrowError('formNode: a field, form, or array node is required');
-    fixture.destroy();
+    expect(() => TestBed.createComponent(Host).detectChanges())
+      .toThrowError('formNode: a field, form, or array node is required');
   });
 
   it('supports a minimal CVA without disabled handling or legacy validators and ignores callbacks after destroy', () => {
