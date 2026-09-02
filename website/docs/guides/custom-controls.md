@@ -70,6 +70,19 @@ disabled, readonly, hidden, required, validation, touched, and dirty state. Ever
 the same adapted tree, so `profileForm.displayName.$field` is the same field as
 `profileForm.$field.displayName`.
 
+Classes configured through `provideFormNodeConfig({ classes })` also apply to controls using this
+`$field` binding. The predicate receives the same `FormNodeBinding` shape as it does for
+`[formNode]`, so existing class maps and `ANGULAR_FORMS_STATUS_CLASSES` can be reused unchanged.
+
+If an application already uses Angular's `provideSignalFormsConfig({ classes })`, those classes also
+apply automatically: `$field` is a real Angular `FieldTree`, so its `[formField]` binding consumes
+the normal Angular configuration. Those predicates receive Angular's `FormFieldBinding`, not Gem
+Forms' `FormNodeBinding`.
+
+Choose one provider in each injector scope. Do not add both class-config providers in the same
+injector because Angular exposes a single, non-multi Signal Forms config and the last provider would
+replace the other.
+
 The adapter is created only when `$field` is read. Component field initializers automatically
 capture their Angular injector. If a form is created outside an Angular injection context, pass an
 explicit `injector` option before using `$field`:

@@ -1,8 +1,10 @@
-import { assertInInjectionContext, effect, inject, Injector, signal, untracked, type WritableSignal } from '@angular/core';
-import { disabled, form as createAngularForm, hidden, readonly as configureReadonly, required, validate, type FieldTree, type SchemaPath } from '@angular/forms/signals';
+import { assertInInjectionContext, computed, effect, inject, Injector, signal, untracked, type WritableSignal } from '@angular/core';
+import { disabled, form as createAngularForm, hidden, readonly as configureReadonly, required, validate, type FieldTree, type FormFieldBinding, type SchemaPath } from '@angular/forms/signals';
 
 import { shallowEqual } from '../utils/shallow-equal';
 import type { InternalNode, Node } from '../types/node.type';
+import type { FormNodeBinding } from '../types/form-node-binding.type';
+import type { ValidationError } from '../validation/validation.type';
 
 type AngularFieldAdapter = {
   readonly fieldTree: FieldTree<any>;
@@ -11,6 +13,8 @@ type AngularFieldAdapter = {
 
 const nodeInjectors = new WeakMap<Node, Injector>();
 const rootAdapters = new WeakMap<Node, AngularFieldAdapter>();
+const angularFieldNodes = new WeakMap<FieldTree<any>, Node>();
+const angularFormNodeBindings = new WeakMap<FormFieldBinding, FormNodeBinding>();
 
 const getCurrentInjector = (): Injector | undefined => {
   try {
@@ -97,12 +101,35 @@ const synchronizeInteractionState = (node: Node, fieldTree: FieldTree<any>, inje
 };
 
 const synchronizeTreeState = (node: Node, fieldTree: FieldTree<any>, injector: Injector) => {
+  angularFieldNodes.set(fieldTree, node);
   synchronizeInteractionState(node, fieldTree, injector);
   const children = getChildren(node as InternalNode);
   children.forEach((child) => {
     const key = child.$api.keyInParent()!;
     synchronizeTreeState(child, (fieldTree as unknown as Record<PropertyKey, FieldTree<any>>)[key]!, injector);
   });
+};
+
+export const getFormNodeBindingForAngularField = (binding: FormFieldBinding): FormNodeBinding | undefined => {
+  const resolveNode = () => {
+    return angularFieldNodes.get(binding.state().fieldTree as FieldTree<any>);
+  };
+  if (!resolveNode()) return undefined;
+  let adaptedBinding = angularFormNodeBindings.get(binding);
+  if (adaptedBinding) return adaptedBinding;
+
+  const node = computed(() => resolveNode()!);
+  adaptedBinding = {
+    element: binding.element,
+    injector: binding.injector,
+    node,
+    errors: computed(() => node().$api.errors() as readonly ValidationError.WithTargetNode<Node>[], { equal: shallowEqual }),
+    focus: (options?: FocusOptions) => binding.focus(options),
+    flush: () => node().$api.flush(),
+    reset: () => node().$api.reset(),
+  };
+  angularFormNodeBindings.set(binding, adaptedBinding);
+  return adaptedBinding;
 };
 
 const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {

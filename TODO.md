@@ -45,10 +45,6 @@
     handling, and pending aggregation, without executing validators twice.
   - [ ] Mirror form submission lifecycle where Angular controls can observe it, including
     `submitting`, descendant propagation, invalid submission, concurrent submission, and completion.
-  - [ ] Integrate `provideFormNodeConfig({ classes })` with `$field` bindings or provide an explicit
-    bridge to Angular's `provideSignalFormsConfig({ classes })`. Define safe provider composition
-    because Angular's configuration token is not multi, and never silently replace consumer-defined
-    Angular Signal Forms configuration.
   - [ ] Define the recommended form-root integration when controls use `[formField]`, covering Gem
     Forms submit behavior, native submit and reset events, parse errors, `novalidate`, focus of the
     first invalid control, and whether Angular's form-root directive should ever be combined with
@@ -367,6 +363,11 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Back `$field` with a real, stable Angular `FieldTree` created once per root rather than a structural imitation or an independent Angular form per child.
   - [x] Synchronize values bidirectionally and mirror disabled, readonly, hidden, required, validation, touched, and dirty state.
   - [x] Keep adapter creation lazy so nodes remain usable outside Angular dependency injection until `$field` is requested.
+  - [x] Apply `provideFormNodeConfig({ classes })` predicates to `$field`-backed `[formField]`
+    controls while ignoring unrelated Angular field trees, and document that Angular's non-multi
+    Signal Forms config requires consumers to choose one class-config provider per injector scope.
+  - [x] Verify and document that an existing `provideSignalFormsConfig({ classes })` applies
+    directly to `$field`-backed controls through Angular's native `FormFieldBinding` contract.
 - [x] Add relative-day shortcuts to `minDate()`, `maxDate()`, and `dateBetween()`.
   - [x] Original task: add string shortcuts such as `'today'` to these date validators.
   - [x] Support `'today'` as a static or reactive boundary.

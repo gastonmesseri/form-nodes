@@ -13,6 +13,7 @@ import { group } from '../../primitives/group';
 import { FormNode } from './form-node.directive';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
+import { provideFormNodeConfig } from './form-node-config';
 import { required } from '../../validation/validators/required';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
@@ -51,6 +52,34 @@ describe('FormNode in Chromium', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
     expect(input.value).toBe('Mark');
+  });
+
+  it('applies form-node classes through the Angular formField adapter', () => {
+    @Component({
+      template: `<input [formField]="name.$field">`,
+      imports: [FormField],
+      providers: [provideFormNodeConfig({
+        classes: {
+          'is-invalid': binding => binding.node().$api.invalid(),
+          'is-touched': binding => binding.node().$api.touched(),
+        },
+      })],
+    })
+    class Host {
+      name = field('', [required]);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    expect(input.classList.contains('is-invalid')).toBe(true);
+    expect(input.classList.contains('is-touched')).toBe(false);
+
+    dispatch(input, 'blur');
+    fixture.detectChanges();
+
+    expect(input.classList.contains('is-touched')).toBe(true);
   });
 
   it('tolerates a group as a native form root and preserves submit and reset state behavior', () => {
