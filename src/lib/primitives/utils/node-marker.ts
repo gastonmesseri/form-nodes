@@ -1,4 +1,4 @@
-import type { Node } from '../types/node.type';
+import type { Node } from '../../types/node.type';
 
 const nodeMarker = Symbol('form-node');
 
