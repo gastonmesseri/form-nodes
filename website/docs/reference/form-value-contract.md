@@ -33,12 +33,13 @@ import { type FormValueContract } from '@gem/ng-forms';
 The contract verifies both ordinary value-reading surfaces:
 
 ```ts
-profile();       // { username: '', age: 0 }
-profile.value(); // { username: '', age: 0 }
+profile();       // { username: '', age: 0, country: 'Switzerland' }
+profile.value(); // { username: '', age: 0, country: 'Switzerland' }
 ```
 
 The expression retains the type inferred by `form()`. `username` and `age` remain their concrete
-`Field` nodes, while the `Profile` model verifies their aggregate value.
+`Field` nodes, and `country` remains a `Field<string>` declared with `field.strict<string>()`.
+The `Profile` model verifies their aggregate value.
 
 ## Incompatible values
 

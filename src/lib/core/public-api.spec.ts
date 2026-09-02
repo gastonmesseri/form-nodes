@@ -1,16 +1,16 @@
 import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { field } from './primitives/field';
-import { createFormPrimitives } from './primitives/create-form-primitives';
 import { group } from './primitives/group';
 import { array } from './primitives/array';
-import { form, type FormValueContract } from './primitives/form';
 import { min } from './validation/validators/min';
+import { field, type Field } from './primitives/field';
 import type { DynamicNode, Node } from './types/node.type';
 import { required } from './validation/validators/required';
 import { asyncValidator } from './validation/async-validator';
+import { form, type FormValueContract } from './primitives/form';
 import { requiredIf } from './validation/validators/required-if';
+import { createFormPrimitives } from './primitives/create-form-primitives';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
@@ -534,13 +534,13 @@ describe('types', () => {
   it('types validators inside field options', () => {
     field.strict('David', {
       validators: [(context) => {
-        expectTypeOf(context).toEqualTypeOf<ValidatorContext<string>>();
+        expectTypeOf(context).toEqualTypeOf<ValidatorContext<string, ValidatorApi<string>, Field<string>>>();
         expectTypeOf(context.value()).toEqualTypeOf<string>();
         expectTypeOf(context.api).toEqualTypeOf<ValidatorApi<string>>();
         expectTypeOf(context.api.value()).toEqualTypeOf<string>();
         expectTypeOf(context.api.path()).toEqualTypeOf<readonly string[]>();
-        expectTypeOf(context.field).toEqualTypeOf<Node>();
-        expectTypeOf(context.form()).toEqualTypeOf<ReturnType<ValidatorApi<string>['form']>>();
+        expectTypeOf(context.field).toEqualTypeOf<Signal<Field<string>>>();
+        expectTypeOf(context.node()).toEqualTypeOf<Field<string>>();
         expectTypeOf(context.path()).toEqualTypeOf<readonly string[]>();
         expectTypeOf(context.disabled()).toEqualTypeOf<boolean>();
         return null;

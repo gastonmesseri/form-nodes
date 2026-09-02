@@ -5,6 +5,9 @@ title: Tree navigation and API access
 import CodeBlock from '@theme/CodeBlock';
 
 import ancestryLookupsSource from '!!raw-loader!../../examples/ancestry-lookups.example.ts';
+import validatorAncestrySource from '!!raw-loader!../../examples/validator-ancestry.typecheck.ts';
+import validatorFieldSignalSource from '!!raw-loader!../../examples/validator-field-signal.example.ts';
+import inlineValidatorNodesSource from '!!raw-loader!../../examples/inline-validator-nodes.typecheck.ts';
 
 # Tree navigation and API access
 
@@ -157,7 +160,57 @@ example also covers standalone fields, groups, and arrays:
 <CodeBlock language="ts" title="ancestry-lookups.example.ts">{ancestryLookupsSource}</CodeBlock>
 
 Both signals are stable and reactive, so validators and effects can observe a node being attached,
-detached, or moved. Validator callbacks receive the same `form()` and `root()` signals.
+detached, or moved. Validators access those signals through `ctx.node().form()` and `ctx.node().root()`.
+
+### Navigation inside validators
+
+`ctx.node` and `ctx.field` are the same readonly signal. Both return the validated node and never
+return `null`. Prefer `ctx.node()` when writing validation that can apply to different primitives.
+
+| Access | Result |
+| --- | --- |
+| `ctx.node()` or `ctx.field()` | The validated node |
+| `ctx.node().form()` | Nearest explicit form workflow, or `null` |
+| `ctx.node().root()` | Complete structural root; never `null` |
+| `ctx.parent()` | Direct parent, or `null` |
+| `ctx.value()` | Committed value with its inferred type |
+
+There are no flat `ctx.form()` or `ctx.root()` properties. Read a value with `ctx.value()`, or use
+`ctx.node().value()` / `ctx.field().value()` when accessing it through the node. The node signal
+and its result stay stable across value changes and tree moves. Reading only `ctx.node()` does
+not subscribe to the value; read the returned node's value, state, or ancestry to track it.
+
+### Inline node inference
+
+An inline validator knows the primitive being created. A field validator receives `Field<TValue>`;
+a form or group validator retains its declared children; an array validator retains its item type.
+This works for positional validators, `options.validators`, configured primitives, and inline
+`validator()` / `asyncValidator()` helpers. Omit helper type arguments to let the enclosing
+primitive infer both the value and the node. Explicit generics on the primitive, such as
+`field.strict<string>('')`, still preserve this inference.
+
+<CodeBlock language="ts" title="inline-validator-nodes.typecheck.ts">{inlineValidatorNodesSource}</CodeBlock>
+
+A validator declared separately cannot acquire its future owner's type retroactively. Its node
+uses the common field/form/group/array API union unless an exact node type is supplied explicitly.
+Likewise, specifying only a helper's value generic uses its default owner type; omit the helper's
+generics for inline inference, or supply its owner generic explicitly. Common members are
+available on the union; operations unique to a primitive require narrowing.
+
+Knowing the validated node does not infer the enclosing form's parents or sibling keys. Access
+through the declared tree or an explicitly specialized context retains those exact relationships.
+The context's `api` continues to expose the common API unless explicitly specialized. Validators
+should normally read state and return errors rather than submit or mutate their node.
+
+<CodeBlock language="ts" title="validator-ancestry.typecheck.ts">{validatorAncestrySource}</CodeBlock>
+
+This executable example verifies both aliases, stable signal identity, and separate value tracking:
+
+<CodeBlock language="ts" title="validator-field-signal.example.ts">{validatorFieldSignalSource}</CodeBlock>
+
+The same context is available to synchronous and asynchronous validators, including `when`,
+`params`, `validate`, and `onError`. Async execution adds `abortSignal`; parameterized execution
+also adds `params`.
 
 ## Function property names
 

@@ -1,11 +1,9 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { isNotNil } from '../utils/is-nil';
-import { isPlainObject } from '../utils/is-plain-object';
-import { assertValidObjectDefinition, normalizeObjectDefinition } from './form.utils';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
-import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
+import { isPlainObject } from '../utils/is-plain-object';
 import { isNode, markAsNode } from '../utils/node-marker';
 import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
@@ -13,22 +11,24 @@ import { registerAngularField } from '../interop/angular-field';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { createValidatorContext } from '../validation/create-validator-context';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { createValidatorContext } from '../validation/create-validator-context';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import { assertValidObjectDefinition, normalizeObjectDefinition } from './form.utils';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
-import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { DynamicNode, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
-import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
+import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
+import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
+import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { DynamicNode, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
+import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, FormValueContract, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
@@ -80,12 +80,12 @@ export function form<TDefinitions extends ObjectNodeDefinitions>(
  */
 export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
-  validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>>,
+  validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
   options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
-  validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
   separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>> {
   return createObjectNode<TDefinitions>(
@@ -98,8 +98,8 @@ export function form<TDefinitions extends ObjectNodeDefinitions>(
 
 export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions,
-  validatorsOrOptions: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
-  separateOptions: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
+  validatorsOrOptions: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, any> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, any> | undefined,
+  separateOptions: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, any> | undefined,
   nodeType: 'form' | 'group',
   normalizeDefinition: (definition: unknown) => Node = normalizeObjectDefinition,
 ): Node {

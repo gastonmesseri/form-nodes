@@ -1,31 +1,115 @@
 import { describe, expect, it, vi } from 'vitest';
-import { computed, Injector, signal, type Signal } from '@angular/core';
+import { computed, Injector, isSignal, signal, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
-import { createFormPrimitives } from './create-form-primitives';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
 import { url } from '../validation/validators/url';
 import { validator } from '../validation/validator';
 import { email } from '../validation/validators/email';
-import type { InternalNode } from '../types/node.type';
 import { pattern } from '../validation/validators/pattern';
 import { integer } from '../validation/validators/integer';
 import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
-import { dateBetween } from '../validation/validators/date-between';
+import type { InternalNode, Node } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
-import { requiredIf } from '../validation/validators/required-if';
+import { createFormPrimitives } from './create-form-primitives';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
+import { requiredIf } from '../validation/validators/required-if';
+import { dateBetween } from '../validation/validators/date-between';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('exposes a stable readonly validator field signal independently of the node value', () => {
+    const references: Signal<Node>[] = [];
+    const validators = (context: { field: Signal<Node>; node: Signal<Node> }) => {
+      references.push(context.field);
+      expect(context.node).toBe(context.field);
+      expect(isSignal(context.field)).toBe(true);
+      expect(Object.hasOwn(context.field, 'set')).toBe(false);
+      return null;
+    };
+    const node = field('initial', { validators });
+    expect(node.errors()).toEqual([]);
+    const readIdentity = vi.fn(() => references[0]!());
+    const identity = computed(readIdentity);
+    const readValue = vi.fn(() => references[0]!()());
+    const value = computed(readValue);
+    expect(identity()).toBe(node);
+    expect(value()).toEqual(node());
+
+    node.set('updated');
+    expect(node.errors()).toEqual([]);
+    expect(references.at(-1)).toBe(references[0]);
+    expect(identity()).toBe(node);
+    expect(value()).toEqual('updated');
+    expect(readIdentity).toHaveBeenCalledTimes(1);
+    expect(readValue).toHaveBeenCalledTimes(2);
+
+    const owner = form({ fixed: field(true) });
+    owner.add('node', node);
+    expect(identity()).toBe(node);
+    owner.remove('node');
+    expect(identity()).toBe(node);
+    expect(readIdentity).toHaveBeenCalledTimes(1);
+  });
+
+  it('tracks async validator field identity separately from reading its node value', async () => {
+    const readValue = signal(false);
+    const references: Signal<Node>[] = [];
+    const params = vi.fn((context: { field: Signal<Node>; node: Signal<Node> }) => {
+      references.push(context.field);
+      expect(context.node).toBe(context.field);
+      return readValue() ? context.field()() : context.field();
+    });
+    const validate = vi.fn(async () => null);
+    const validators = asyncValidator({ params, validate });
+    const node = field('initial', { validators });
+    expect(node.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(params).toHaveBeenCalledTimes(1);
+    expect(node.pending()).toBe(false);
+    expect(references[0]!()).toBe(node);
+
+    node.set('updated');
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(params).toHaveBeenCalledTimes(1);
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(node.valid()).toBe(true);
+
+    readValue.set(true);
+    await Promise.resolve();
+    expect(node.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(params).toHaveBeenCalledTimes(2);
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(node.pending()).toBe(false);
+
+    node.set('final');
+    await Promise.resolve();
+    expect(node.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(params).toHaveBeenCalledTimes(3);
+    expect(validate).toHaveBeenCalledTimes(3);
+    expect(references.every(reference => Object.is(reference, references[0]))).toBe(true);
+    expect(node.valid()).toBe(true);
+  });
+
   it('creates explicit nullable and non-nullable fields through short factory methods', () => {
     const nonNullableName = field.strict('Marco');
     const hiddenNonNullableName = field.strict('Lia', { hidden: true });
@@ -289,8 +373,8 @@ describe('field', () => {
 
   it('reactively updates validator ancestry when a field is attached and detached', async () => {
     const ancestry: [unknown, unknown][] = [];
-    const name = field('David', [asyncValidator(async ({ form: owningForm, root }) => {
-      ancestry.push([owningForm(), root()]);
+    const name = field('David', [asyncValidator(async ({ node }) => {
+      ancestry.push([node().form(), node().root()]);
       return null;
     })]);
     const profile = form({ fixed: field(true) });
@@ -609,7 +693,7 @@ describe('field', () => {
     let disabledReasons: unknown;
     const fieldNode = field('David', [(context) => {
       validatorApi = context.api;
-      validatorField = context.field;
+      validatorField = context.field();
       disabled = context.disabled;
       disabledReasons = context.disabledReasons;
       return null;

@@ -1,13 +1,13 @@
 import type { Injector, Signal } from '@angular/core';
 
 import type { Field } from './field.type';
-import type { ArrayNode } from './array.type';
 import type { Group } from './group.type';
+import type { ArrayNode } from './array.type';
 import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 import type { DisabledReason, DynamicNode, Node, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
 /** Values inferred as concise `field()` definitions inside an object node. */
 export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | readonly unknown[] | ((...args: any[]) => any);
@@ -112,7 +112,7 @@ export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
    * validators, validators created with `asyncValidator()`, and ignored `null` or `undefined`
    * entries.
    */
-  validators?: ValidatorSource<TValue>;
+  validators?: ValidatorSource<TValue, TForm>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   injector?: Injector;
   /**
@@ -450,7 +450,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /** Current normalized validators assigned directly to this form, in declaration order. */
   validators: Signal<Validators<FormValue<TNodes>>>;
   /** Replaces validators owned by this form and immediately validates its current aggregate value. */
-  setValidators(validators: ValidatorSource<FormValue<TNodes>>): void;
+  setValidators(validators: ValidatorSource<FormValue<TNodes>, Form<TNodes, TParent>>): void;
   /**
   * A signal containing the validation errors of **this form node itself, excluding its descendants**.
   *

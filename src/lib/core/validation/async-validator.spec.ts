@@ -1,13 +1,12 @@
 import { Injector, signal } from '@angular/core';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import type { Node } from '../types/node.type';
 import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
 import { form, type FormApi } from '../primitives/form';
 import { field, type FieldApi } from '../primitives/field';
 import type { ObservableLike, ObserverLike } from '../types/observable-like.type';
-import type { AsyncValidatorApi, FieldContext } from './validation.type';
+import type { AsyncValidatorApi, AsyncValidatorContext, FieldContext } from './validation.type';
 
 const settle = async () => {
   await Promise.resolve();
@@ -323,7 +322,7 @@ describe('asyncValidator', () => {
   it('provides flat readonly state, the field, its API, and an abort signal by default', () => {
     asyncValidator<number | null>(async ({ api, field: fieldNode, value, path, disabled, readonly, touched, abortSignal }) => {
       expectTypeOf(api).toEqualTypeOf<AsyncValidatorApi<number | null>>();
-      expectTypeOf(fieldNode).toEqualTypeOf<Node>();
+      expectTypeOf(fieldNode).toEqualTypeOf<AsyncValidatorContext<number | null>['field']>();
       expectTypeOf(api.value()).toEqualTypeOf<number | null>();
       expectTypeOf(api.path()).toEqualTypeOf<readonly string[]>();
       expectTypeOf(api.set).toBeCallableWith(42);
@@ -343,11 +342,11 @@ describe('asyncValidator', () => {
     let receivedForm: unknown;
     let receivedRoot: unknown;
     let receivedField: unknown;
-    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ field: fieldNode, form, root, path: fieldPath }) => {
+    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ field: fieldNode, path: fieldPath }) => {
       path = fieldPath();
-      receivedForm = form();
-      receivedRoot = root();
-      receivedField = fieldNode;
+      receivedForm = fieldNode().form();
+      receivedRoot = fieldNode().root();
+      receivedField = fieldNode();
       return null;
     })]) } });
 

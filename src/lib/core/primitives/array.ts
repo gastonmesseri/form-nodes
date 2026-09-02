@@ -2,34 +2,34 @@ import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
 import type { NormalizedNode } from './form';
-import { assertValidObjectDefinition } from './form.utils';
 import { isNil, isNotNil } from '../utils/is-nil';
-import { isPlainObject } from '../utils/is-plain-object';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
-import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
+import { isPlainObject } from '../utils/is-plain-object';
 import { isNode, markAsNode } from '../utils/node-marker';
+import { assertValidObjectDefinition } from './form.utils';
 import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { createValidatorContext } from '../validation/create-validator-context';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { createValidatorContext } from '../validation/create-validator-context';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
-import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
+import type { InternalNode, Node, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
+import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
-import type { InternalNode, Node, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
+import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
+import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
-import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
@@ -40,9 +40,9 @@ type ArrayTemplateInput<TDefinition extends ArrayTemplate> =
 type ArrayFactory<TDefinition extends ArrayTemplate> = () => TDefinition & ArrayTemplateInput<TDefinition>;
 type ArraySource<TDefinition extends ArrayTemplate> = (TDefinition & ArrayTemplateInput<TDefinition>) | ArrayFactory<TDefinition>;
 type ArrayInitial<TDefinition extends ArrayTemplate> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
-type PositionalArrayOptions<TValue> = Omit<ArrayOptions<TValue>, 'initialValue'>;
+type PositionalArrayOptions<TValue, TArray extends Node = ArrayNode<Node>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
 
-const omitInitialValue = <TValue>(options: ArrayOptions<TValue>): PositionalArrayOptions<TValue> => {
+const omitInitialValue = <TValue, TArray extends Node>(options: ArrayOptions<TValue, TArray>): PositionalArrayOptions<TValue, TArray> => {
   const { initialValue: _initialValue, ...remainingOptions } = options;
   return remainingOptions;
 };
@@ -100,7 +100,24 @@ const assertArrayObjectTemplate = (definition: unknown, source: 'factory' | 'tem
  */
 export function array<TDefinition extends ArrayTemplate>(
   template: TDefinition & ArrayTemplateInput<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a template and validators.
+ *
+ * ```ts
+ * const names = array(field(''), [minLength(1)]);
+ * ```
+ *
+ * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
+ * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
+ * @param validators Reactive validator source for the complete array value.
+ * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
+ */
+export function array<TDefinition extends ArrayTemplate>(
+  template: TDefinition & ArrayTemplateInput<TDefinition>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNode<NormalizedNode<TDefinition>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a declarative node template and positional initial contents.
@@ -117,7 +134,7 @@ export function array<TDefinition extends ArrayTemplate>(
 export function array<TDefinition extends ArrayTemplate>(
   template: TDefinition & ArrayTemplateInput<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a template, positional initial contents, and validators.
@@ -135,25 +152,8 @@ export function array<TDefinition extends ArrayTemplate>(
 export function array<TDefinition extends ArrayTemplate>(
   template: TDefinition & ArrayTemplateInput<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-/**
- * Creates an array node from a template and validators.
- *
- * ```ts
- * const names = array(field(''), [minLength(1)]);
- * ```
- *
- * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
- * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
- * @param validators Reactive validator source for the complete array value.
- * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
- */
-export function array<TDefinition extends ArrayTemplate>(
-  template: TDefinition & ArrayTemplateInput<TDefinition>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNode<NormalizedNode<TDefinition>>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a node-definition factory.
@@ -173,7 +173,24 @@ export function array<TDefinition extends ArrayTemplate>(
  */
 export function array<TDefinition extends ArrayTemplate>(
   factory: ArrayFactory<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
+): ArrayNode<NormalizedNode<TDefinition>>;
+/**
+ * Creates an array node from a factory and validators.
+ *
+ * ```ts
+ * const names = array(() => field(''), [minLength(1)]);
+ * ```
+ *
+ * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
+ * Returning the same definition from multiple calls throws.
+ * @param validators Reactive validator source for the complete array value.
+ * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
+ */
+export function array<TDefinition extends ArrayTemplate>(
+  factory: ArrayFactory<TDefinition>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNode<NormalizedNode<TDefinition>>>,
+  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a factory and positional initial contents.
@@ -190,7 +207,7 @@ export function array<TDefinition extends ArrayTemplate>(
 export function array<TDefinition extends ArrayTemplate>(
   factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a factory, positional initial contents, and validators.
@@ -208,31 +225,14 @@ export function array<TDefinition extends ArrayTemplate>(
 export function array<TDefinition extends ArrayTemplate>(
   factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-): ArrayNode<NormalizedNode<TDefinition>>;
-/**
- * Creates an array node from a factory and validators.
- *
- * ```ts
- * const names = array(() => field(''), [minLength(1)]);
- * ```
- *
- * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
- * Returning the same definition from multiple calls throws.
- * @param validators Reactive validator source for the complete array value.
- * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
- */
-export function array<TDefinition extends ArrayTemplate>(
-  factory: ArrayFactory<TDefinition>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNode<NormalizedNode<TDefinition>>>,
+  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends ArrayTemplate>(
   source: ArraySource<TDefinition>,
-  initialOrValidatorsOrOptions?: ArrayInitial<TDefinition> | ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-  validatorsOrOptions?: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
-  separateOptions?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>>,
+  initialOrValidatorsOrOptions?: ArrayInitial<TDefinition> | ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNode<NormalizedNode<TDefinition>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNode<NormalizedNode<TDefinition>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
+  separateOptions?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNode<NormalizedNode<TDefinition>>>,
 ): ArrayNode<NormalizedNode<TDefinition>> {
   type TItem = NormalizedNode<TDefinition>;
   type TValue = ArrayValue<TItem>;
@@ -246,8 +246,8 @@ export function array<TDefinition extends ArrayTemplate>(
       !secondIsValidators || thirdIsValidators || separateOptions !== undefined
     ));
   const resolvedOptions = hasInitial
-    ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue> | undefined
-    : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue> | undefined;
+    ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue, any> | undefined
+    : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue, any> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue, any> | undefined;
   const configuredInitial = resolvedOptions?.initialValue;
   const initial = hasInitial
     ? initialOrValidatorsOrOptions as number | TSet | null
@@ -272,8 +272,8 @@ export function array<TDefinition extends ArrayTemplate>(
   const recreateArray = array as unknown as (
     initialSource: ArrayFactory<TDefinition>,
     initialValue: number | TSet,
-    initialValidators: ValidatorSource<TValue>,
-    initialOptions?: ArrayOptions<TValue>,
+    initialValidators: ValidatorSource<TValue, any>,
+    initialOptions?: ArrayOptions<TValue, any>,
   ) => ArrayNode<TItem>;
   const createdDefinitions = new WeakSet<object>();
   const trackDefinition = (definition: unknown, root = false) => {
@@ -351,9 +351,9 @@ export function array<TDefinition extends ArrayTemplate>(
   const arrayNonInteractive = computed(() => arrayHidden() || arrayDisabled() || arrayReadonly());
   const arrayValue = computed<TValue>(() => arrayItems().map(item => item()) as TValue);
   const arrayContext = markAsFieldContext({ value: arrayValue });
-  const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource(validatorSource));
+  const arrayValidators = signal<Validators<TValue>>(normalizeValidatorSource<TValue, any>(validatorSource));
   const emptySyncMetadata = new Map();
-  const owningForm = computed(() => arrayParent()?.$api.form() ?? null);
+  const owningForm = computed(() => arrayParent()?.$api.form() ?? null) as ArrayApi<TItem>['form'];
   const rootNode = computed(() => arrayParent()?.$api.root() ?? arrayNode) as Signal<ArrayNode<TItem>>;
   const arraySyncValidation = computed(() => arrayNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }

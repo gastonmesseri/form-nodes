@@ -1,7 +1,7 @@
-import type { ValidatorSource } from '../validation/validation.type';
 import { createObjectNode } from './form';
-import type { Form, FormOptions, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { ValidatorSource } from '../validation/validation.type';
 import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
+import type { Form, FormOptions, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 export type { Group, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
 
@@ -33,7 +33,7 @@ type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDe
  */
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
-  options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
+  options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
 ): Group<NormalizedNodes<TDefinitions>>;
 /**
  * Creates an object-shaped structural node with positional validators and optional configuration.
@@ -51,20 +51,20 @@ export function group<TDefinitions extends ObjectNodeDefinitions>(
  */
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
-  validators?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
-  options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
+  validators?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
+  options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
 ): Group<NormalizedNodes<TDefinitions>>;
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
-  validatorsOrOptions?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>> | GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
-  separateOptions?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>> | GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
+  separateOptions?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
 ): Group<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = GroupValue<TNodes>;
   return createObjectNode<TDefinitions>(
     definitions,
-    validatorsOrOptions as ValidatorSource<TValue> | FormOptions<TValue, Form<TNodes>> | undefined,
-    separateOptions as FormOptions<TValue, Form<TNodes>> | undefined,
+    validatorsOrOptions as unknown as ValidatorSource<TValue> | FormOptions<TValue, Form<TNodes>> | undefined,
+    separateOptions as unknown as FormOptions<TValue, Form<TNodes>> | undefined,
     'group',
   ) as Group<TNodes>;
 }

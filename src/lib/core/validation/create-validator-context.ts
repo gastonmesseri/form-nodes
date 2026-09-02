@@ -1,9 +1,9 @@
+import { signal } from '@angular/core';
+
 import type { Node } from '../types/node.type';
 import type { AsyncValidatorState, FieldContext, ValidatorApi, ValidatorContext } from './validation.type';
 
 const readonlyApiKeys = [
-  'form',
-  'root',
   'parent',
   'path',
   'value',
@@ -22,20 +22,22 @@ const readonlyApiKeys = [
 ] as const;
 
 /** Adds the stable readonly node facade used by validator callbacks. */
-export const createValidatorContext = <TValue, TField extends Node>(
+export const createValidatorContext = <TValue>(
   context: FieldContext<TValue>,
-  field: TField & { $api: AsyncValidatorState },
-): ValidatorContext<TValue, ValidatorApi<TValue>, TField> => {
-  const validatorContext = context as ValidatorContext<TValue, ValidatorApi<TValue>, TField>;
+  field: Node & { $api: AsyncValidatorState },
+): ValidatorContext<TValue> => {
+  const validatorContext = context as ValidatorContext<TValue>;
   if (Object.hasOwn(validatorContext, 'api')) return validatorContext;
   const api = field.$api as unknown as ValidatorApi<TValue>;
   readonlyApiKeys.forEach((key) => {
     if (key === 'value') return;
     Object.defineProperty(validatorContext, key, { enumerable: true, value: api[key] });
   });
+  const node = signal(field).asReadonly();
   Object.defineProperties(validatorContext, {
     api: { enumerable: true, value: api },
-    field: { enumerable: true, value: field },
+    field: { enumerable: true, value: node },
+    node: { enumerable: true, value: node },
   });
   return validatorContext;
 };

@@ -8,7 +8,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { DisabledReason, NearestForm, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
-export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type ArrayOptions<TValue = any, TArray extends Node = ArrayNode<Node>> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * One validator or an array of validators for the complete array value, not each item.
    *
@@ -49,7 +49,7 @@ export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' 
    *
    * Put validators in the item template when every item should be validated independently.
    */
-  validators?: ValidatorSource<TValue>;
+  validators?: ValidatorSource<TValue, TArray>;
   /**
    * Default control-value debounce inherited by every current and future item.
    *
@@ -425,7 +425,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   /** Current normalized validators assigned directly to this array, in declaration order. */
   validators: Signal<Validators<ArrayValue<TItem>>>;
   /** Replaces validators owned by this array and immediately validates its current aggregate value. */
-  setValidators(validators: ValidatorSource<ArrayValue<TItem>>): void;
+  setValidators(validators: ValidatorSource<ArrayValue<TItem>, ArrayNode<TItem, TParent>>): void;
   /**
   * A signal containing the validation errors of **this array node itself, excluding its descendants**.
   *

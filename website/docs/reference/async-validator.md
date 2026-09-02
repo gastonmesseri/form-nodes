@@ -281,10 +281,9 @@ executions, and `params` only to parameterized `validate`.
 | Member | Type | Available in |
 | --- | --- | --- |
 | [`value`](#async-validator-context-value) | `Signal<TValue>` | All callbacks |
-| [`field`](#async-validator-context-field) | callable node | All callbacks |
+| [`node`](#async-validator-context-node) | `Signal<TField>` | All callbacks |
+| [`field`](#async-validator-context-field) | `Signal<TField>` | All callbacks |
 | [`api`](#async-validator-context-api) | `TApi` | All callbacks |
-| [`form`](#async-validator-context-form) | nearest-form signal | All callbacks |
-| [`root`](#async-validator-context-root) | structural-root signal | All callbacks |
 | [`parent`](#async-validator-context-parent) | parent-node signal | All callbacks |
 | [`path`](#async-validator-context-path) | path signal | All callbacks |
 | [`submitting`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
@@ -313,15 +312,32 @@ dependency; reading it in `params` contributes to the derived snapshot.
 asyncValidator(({ value }) => checkUsername(value()));
 ```
 
+#### node {#async-validator-context-node}
+
+**Signature:** `node: Signal<TField>`
+
+The readonly signal of the validated node, identical to `field`. Prefer this name when the owner
+can be a form, group, or array. Both aliases retain the same inferred node type.
+See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
+
 #### field {#async-validator-context-field}
 
-**Signature:** `field: TField`
+**Signature:** `field: Signal<TField>`
 
-The real callable node. The name remains `field` even when the owner is a form, group, or array.
-Use it when node identity or a node-specific member is required.
+A stable readonly signal returning the validated node; never `null`. This is the exact same signal
+as `node`. Inline primitive validators infer the concrete field, form, group, or array, including
+aggregate children and array items. A separately declared validator defaults to the common node
+API union; primitive-specific operations then require narrowing. Explicit `TField` context types
+are preserved as `Signal<TField>`.
+
+`context.field()` returns the node. Read its committed value with `context.value()`, which
+preserves the inferred value type. Use `context.field().value()` when accessing it through the node. Reading only `field()` tracks node identity, which
+stays stable across value changes and attachment or detachment. Read a returned node's value or
+state signal when validation should depend on that state.
+See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside-validators).
 
 ```ts
-asyncValidator(({ field }) => auditNode(field));
+asyncValidator(({ field }) => auditNode(field()));
 ```
 
 #### api {#async-validator-context-api}
@@ -336,31 +352,22 @@ default is `AsyncValidatorApi<TValue>`; generics can provide a more exact API ty
 asyncValidator(({ api }) => api.dirty() ? checkValue(api.value()) : Promise.resolve(null));
 ```
 
-#### form {#async-validator-context-form}
+#### node().form() {#async-validator-context-form}
 
-**Signature:** `form: Signal<PublicNode<Node> | null>`
+Use `context.node().form()` (or `context.field().form()`) for the nearest explicit form workflow.
+It returns `null` when no form owns the node. There is no flat `context.form` property.
 
-The nearest explicit form workflow owning this node, or `null` when none exists.
+#### node().root() {#async-validator-context-root}
 
-```ts
-asyncValidator(({ form }) => form() ? validateInForm(form()!) : Promise.resolve(null));
-```
-
-#### root {#async-validator-context-root}
-
-**Signature:** `root: Signal<PublicNode<Node>>`
-
-The complete structural root containing the validated node. A standalone node returns itself.
-
-```ts
-asyncValidator(({ root }) => validateInTree(root()));
-```
+Use `context.node().root()` (or `context.field().root()`) for the complete structural root.
+It never returns `null`. There is no flat `context.root` property.
 
 #### parent {#async-validator-context-parent}
 
-**Signature:** `parent: Signal<PublicNode<Node> | null>`
+**Default type:** Signal of a form, group, or array API, or `null`.
 
-The direct parent, or `null` when the validated node is a root.
+The direct parent, or `null` when the validated node is a root. A parent is always a form, group,
+or array. Common node members are available directly; primitive-specific operations need narrowing.
 
 ```ts
 asyncValidator(({ parent }) => parent() ? validateWithParent(parent()!) : Promise.resolve(null));

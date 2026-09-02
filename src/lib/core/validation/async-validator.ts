@@ -1,7 +1,8 @@
+import type { Node } from '../types/node.type';
 import { markAsAsyncValidator, type AsyncValidatorOptions, type ParameterizedAsyncValidatorOptions } from '../utils/async-validator-marker';
-import type { AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, AsyncValidatorContext, ParameterizedAsyncValidatorContext, ValidationResult, ValidatorReadonlyApi } from './validation.type';
+import type { AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, AsyncValidatorContext, ParameterizedAsyncValidatorContext, ValidationResult, ValidatorOwner, ValidatorReadonlyApi } from './validation.type';
 
-export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi> & {
+export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi, ValidatorOwner<TField>> & {
   /**
    * Validates one stable params snapshot. Signals read here are not tracked automatically.
    *
@@ -17,7 +18,7 @@ export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends Vali
    * });
    * ```
    */
-  validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams, TApi>) => AsyncValidationResult;
+  validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams, TApi, ValidatorOwner<TField>>) => AsyncValidationResult;
 };
 
 /**
@@ -48,7 +49,7 @@ export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends Vali
  *
  * @reactive Tracks signals read by `params` and `when`. Only shallow params changes trigger a new execution.
  */
-export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>>(config: {
+export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node>(config: {
   /**
    * Reactively derives the explicit dependency snapshot passed to `validate`. Signals read here
    * are tracked. Object and array results are compared shallowly, so validation reruns only when a
@@ -73,7 +74,7 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    *
    * @reactive Tracks signals read by this function and compares the returned snapshot shallowly.
    */
-  params: (context: AsyncValidatorBaseContext<TValue, TApi>) => TParams;
+  params: (context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => TParams;
   /**
    * Validates one stable params snapshot. Signals read here are not tracked automatically.
    *
@@ -89,7 +90,7 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    * });
    * ```
    */
-  validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams, TApi>) => AsyncValidationResult;
+  validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams, TApi, ValidatorOwner<TField>>) => AsyncValidationResult;
   /**
    * Delay in milliseconds before each execution. A newer params snapshot cancels the pending delay.
    *
@@ -117,7 +118,7 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    *
    * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
    */
-  when?: (context: AsyncValidatorBaseContext<TValue, TApi>) => boolean;
+  when?: (context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean;
   /**
    * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
    *
@@ -133,8 +134,8 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    * });
    * ```
    */
-  onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi>) => ValidationResult;
-}): AsyncValidator<TValue>;
+  onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => ValidationResult;
+}): AsyncValidator<TValue, TField>;
 /**
  * Creates a Promise- or Observable-based validator whose callback dependencies are tracked automatically.
  *
@@ -170,8 +171,8 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
  *
  * @reactive Tracks signals read by the validator and `when`; changes cancel stale work and trigger a new execution.
  */
-export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>>(
-  validator: (context: AsyncValidatorContext<TValue, TApi>) => AsyncValidationResult,
+export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node>(
+  validator: (context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult,
   options?: {
     /**
      * Delay in milliseconds before each execution. A newer trigger cancels the pending delay.
@@ -198,7 +199,7 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
      *
      * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
      */
-    when?: (context: AsyncValidatorBaseContext<TValue, TApi>) => boolean;
+    when?: (context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean;
     /**
      * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
      *
@@ -215,9 +216,9 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
      * );
      * ```
      */
-    onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi>) => ValidationResult;
+    onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => ValidationResult;
   },
-): AsyncValidator<TValue>;
+): AsyncValidator<TValue, TField>;
 export function asyncValidator<TValue, TParams>(
   validatorOrConfig:
     | ((context: AsyncValidatorContext<TValue>) => AsyncValidationResult)

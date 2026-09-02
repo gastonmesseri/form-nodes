@@ -72,13 +72,15 @@ field created with `field.strict()`.
 ### Signature
 
 ```ts
-validator<TValue>(
-  validate: ComposableValidator<TValue>,
-): ComposableValidator<TValue>;
+validator<TValue, TField extends Node = Node>(
+  validate: ComposableValidator<TValue, ValidatorOwner<TField>>,
+): ComposableValidator<TValue, TField>;
 ```
 
 `TValue` is the exact committed value type of the field, form, group, or array. The return value is
-the original `validate` function by identity.
+the original `validate` function by identity. `TField` is inferred from the consuming primitive
+when the helper is inline. `ValidatorOwner` gives a standalone helper the common node union
+when no concrete owner is supplied. Omit helper type arguments to infer both types inline.
 
 ### Value type and inference
 
@@ -105,18 +107,17 @@ const adult = validator<number | null>(({ value }) => {
 });
 ```
 
-The type must include `null` for nullable fields. Contextual inference remains available when a
-callback is written directly inside a node's `validators` source.
+The type must include `null` for nullable fields. Inline callbacks and inline helpers infer the validated node as well as its value.
+See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
 ## Validator context
 
 | Member | Description |
 | --- | --- |
 | [`value()`](#custom-validator-context-value) | Current committed node value with its inferred type. |
-| [`field`](#custom-validator-context-field) | Real callable node being validated, including when it is a form or array. |
+| [`node`](#custom-validator-context-node) | Readonly signal of the inferred validated node; identical to `field`. |
+| [`field`](#custom-validator-context-field) | Readonly signal returning the validated field, form, group, or array. |
 | [`api`](#custom-validator-context-api) | Typed common API for validation, state, navigation, and node operations. |
-| [`form()`](#custom-validator-context-form) | Nearest explicit form workflow, or `null` when none owns the node. |
-| [`root()`](#custom-validator-context-root) | Complete structural root containing the node. |
 | [`parent()`](#custom-validator-context-parent) | Direct parent node, or `null` at the root. |
 | [`path()`](#custom-validator-context-path) | Reactive path from the root. |
 | [State signals](#custom-validator-context-state) | `touched`, `dirty`, `disabled`, `readonly`, `hidden`, `required`, `submitting`, and their complements. |
@@ -129,10 +130,9 @@ reactive dependency.
 | Member | Type | Purpose |
 | --- | --- | --- |
 | [`value`](#custom-validator-context-value) | `Signal<TValue>` | Current committed value |
-| [`field`](#custom-validator-context-field) | callable node | Real node being validated |
+| [`node`](#custom-validator-context-node) | `Signal<TField>` | Real node being validated |
+| [`field`](#custom-validator-context-field) | `Signal<TField>` | Real node being validated |
 | [`api`](#custom-validator-context-api) | `ValidatorApi<TValue>` | Common node state and operations |
-| [`form`](#custom-validator-context-form) | nearest-form signal | Owning workflow or `null` |
-| [`root`](#custom-validator-context-root) | structural-root signal | Complete tree root |
 | [`parent`](#custom-validator-context-parent) | parent-node signal | Direct parent or `null` |
 | [`path`](#custom-validator-context-path) | path signal | Location from the root |
 | [`submitting`](#custom-validator-context-state) | `Signal<boolean>` | Submission state |
@@ -159,15 +159,32 @@ again when the value changes.
 validator<string>(({ value }) => value().trim() ? null : { kind: 'blank' });
 ```
 
+#### node {#custom-validator-context-node}
+
+**Signature:** `node: Signal<TField>`
+
+The readonly signal of the validated node, identical to `field`. Prefer this name when the owner
+can be a form, group, or array. Both aliases retain the same inferred node type.
+See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
+
 #### field {#custom-validator-context-field}
 
-**Signature:** `field: TField`
+**Signature:** `field: Signal<TField>`
 
-The real callable node. The property retains the name `field` when the owner is a form, group, or
-array. Prefer `value()` unless node identity or a concrete node member is required.
+A stable readonly signal returning the validated node; never `null`. This is the exact same signal
+as `node`. Inline primitive validators infer the concrete field, form, group, or array, including
+aggregate children and array items. A separately declared validator defaults to the common node
+API union; primitive-specific operations then require narrowing. Explicit `TField` context types
+are preserved as `Signal<TField>`.
+
+`context.field()` returns the node. Read its committed value with `context.value()`, which
+preserves the inferred value type. Use `context.field().value()` when accessing it through the node. Reading only `field()` tracks node identity, which
+stays stable across value changes and attachment or detachment. Read a returned node's value or
+state signal when validation should depend on that state.
+See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside-validators).
 
 ```ts
-validator<string>(({ field }) => field() ? null : { kind: 'blank' });
+validator<string>(({ field }) => field().value() ? null : { kind: 'blank' });
 ```
 
 #### api {#custom-validator-context-api}
@@ -184,31 +201,22 @@ validator<string>(({ api }) => api.dirty() && !api.value() ? { kind: 'blank' } :
 
 ### Tree navigation
 
-#### form {#custom-validator-context-form}
+#### node().form() {#custom-validator-context-form}
 
-**Signature:** `form: Signal<PublicNode<Node> | null>`
+Use `context.node().form()` (or `context.field().form()`) for the nearest explicit form workflow.
+It returns `null` when no form owns the node. There is no flat `context.form` property.
 
-The nearest explicit form workflow owning this node, or `null` when none exists.
+#### node().root() {#custom-validator-context-root}
 
-```ts
-validator<string>(({ form }) => form() === null ? { kind: 'mustBelongToForm' } : null);
-```
-
-#### root {#custom-validator-context-root}
-
-**Signature:** `root: Signal<PublicNode<Node>>`
-
-The complete structural root containing the validated node. A standalone node returns itself.
-
-```ts
-validator<string>(({ field: node, root }) => root() === node ? null : { kind: 'mustBeRoot' });
-```
+Use `context.node().root()` (or `context.field().root()`) for the complete structural root.
+It never returns `null`. There is no flat `context.root` property.
 
 #### parent {#custom-validator-context-parent}
 
-**Signature:** `parent: Signal<PublicNode<Node> | null>`
+**Default type:** Signal of a form, group, or array API, or `null`.
 
-The direct parent, or `null` when the validated node is a root.
+The direct parent, or `null` when the validated node is a root. A parent is always a form, group,
+or array. Common node members are available directly; primitive-specific operations need narrowing.
 
 ```ts
 validator<string>(({ parent }) => parent() ? null : { kind: 'mustHaveParent' });
@@ -404,7 +412,7 @@ error?.minimumAge; // number | undefined
 | `ValidatorContext<TValue>` | Complete synchronous callback context. |
 | `Validator<TValue>` | Basic synchronous validation function. |
 | `ComposableValidator<TValue>` | Validator that can return other validators conditionally. |
-| `ValidatorSource<TValue>` | One validator or a readonly validator array with nullish entries. |
+| `ValidatorSource<TValue, TField>` | One validator or a readonly validator array with nullish entries. |
 | `ValidationErrorMap` | Extensible registry used by typed `getError()`. |
 
 See [Validation](../guides/validation.md), [Built-in validators](./built-in-validators.md), and

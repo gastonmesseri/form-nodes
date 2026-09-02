@@ -1,18 +1,30 @@
-import { Injector, computed, signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
+import { Injector, computed, signal } from '@angular/core';
 
 import { form } from './form';
 import { array } from './array';
 import { field } from './field';
-import { createFormPrimitives } from './create-form-primitives';
 import { validator } from '../validation/validator';
 import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { createFormPrimitives } from './create-form-primitives';
 import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('exposes one node signal under both validator aliases', () => {
+    let receivedNode: unknown;
+    const validate = (context: { node: () => unknown; field: () => unknown }) => {
+      expect(context.node).toBe(context.field);
+      receivedNode = context.node();
+      return null;
+    };
+    const target = array({ email: field('') }, { initialValue: 1, validators: validate });
+    expect(target.errors()).toEqual([]);
+    expect(receivedNode).toBe(target);
+  });
+
   it('keeps configured defaults in shorthand templates and factories', () => {
     const { array: configuredArray } = createFormPrimitives({ nullable: false });
     const templates = configuredArray({ name: '' }, 1);

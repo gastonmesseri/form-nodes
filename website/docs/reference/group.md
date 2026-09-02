@@ -101,6 +101,11 @@ const myForm = form({
 | Commit or focus bound controls | `flush()`, `focus()` | [Control methods](#control-methods) |
 | Observe an ancestor submission | `submitting()` | [Control and workflow properties](#control-and-workflow-properties) |
 
+Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
+value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+helpers retain that inference when their generics are omitted. See
+[Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
+
 ## Signatures
 
 ```ts
@@ -217,7 +222,7 @@ Each option includes its signature, default behavior, scope, and a complete exam
 
 #### validators {#group-validators-option}
 
-**Signature:** `validators?: ValidatorSource<GroupValue>`
+**Signature:** `validators?: ValidatorSource<GroupValue, Group<TNodes>>`
 
 Assigns one validator, several validators, or a reactive validator source to the complete group
 value. Validators declared by descendants continue to run independently.
@@ -1284,7 +1289,7 @@ address.pristine(); // true
 
 #### setValidators()
 
-**Signature:** `setValidators(validators: ValidatorSource<GroupValue>): void`
+**Signature:** `setValidators(validators: ValidatorSource<GroupValue, Group<TNodes>>): void`
 
 Replaces validators owned by the group and immediately evaluates its current aggregate value.
 Child validators are unchanged.

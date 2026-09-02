@@ -1,8 +1,12 @@
 import type { Signal } from '@angular/core';
 
+import type { Field } from '../primitives/field.type';
+import type { FormApi } from '../primitives/form.type';
+import type { GroupApi } from '../primitives/group.type';
+import type { ArrayNode } from '../primitives/array.type';
 import type { ObservableLike } from '../types/observable-like.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import type { DisabledReason, Node, PublicNode } from '../types/node.type';
+import type { DisabledReason, DynamicNode, Node, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -226,14 +230,32 @@ export type AsyncValidatorState = {
   readonly required: Signal<boolean>;
 };
 
+/** Callable form API when the declaration's child keys are not known. */
+type ValidatorForm = PublicNode<Node> & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
+
+/** Callable group API when the declaration's child keys are not known. */
+type ValidatorGroup = PublicNode<Node> & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> };
+
+/** Callable node API when the validated primitive is not known statically. */
+export type ValidatorNode = Field<any> | ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode>;
+
 /** Common node API exposed to validators when no exact owner API is specified. */
 export type ValidatorApi<TValue> = AsyncValidatorState & {
-  /** Nearest explicit form workflow containing the validated node, or `null` when none owns it. */
-  readonly form: Signal<PublicNode<Node> | null>;
-  /** Complete root node containing the validated node. */
-  readonly root: Signal<PublicNode<Node>>;
-  /** Immediate parent node, or `null` when the validated node is a root. */
-  readonly parent: Signal<PublicNode<Node> | null>;
+  /**
+   * Nearest explicit form workflow, or `null` when none owns the validated node.
+   * Exposes the complete form API directly; unknown child keys are available through `get()`.
+   */
+  readonly form: Signal<ValidatorForm | null>;
+  /**
+   * Complete structural root, including a standalone field. Common node members are available
+   * directly; narrow the node kind before using primitive-specific operations.
+   */
+  readonly root: Signal<ValidatorNode>;
+  /**
+   * Immediate form, group, or array parent, or `null` for a standalone node.
+   * Common node members are available directly. A field can never be a parent.
+   */
+  readonly parent: Signal<ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode> | null>;
   /** Property names and array indexes locating the node from its root. */
   readonly path: Signal<readonly string[]>;
   /** Current committed value of the node being validated. */
@@ -296,10 +318,6 @@ export type AsyncValidatorApi<TValue> = ValidatorApi<TValue>;
 
 /** Readonly reactive node state shared by all validator context specializations. */
 export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & AsyncValidatorState & {
-  /** Nearest explicit form workflow inferred by a specialized validator API. */
-  readonly form: Signal<any>;
-  /** Complete structural root inferred by a specialized validator API. */
-  readonly root: Signal<any>;
   /** Immediate parent inferred by a specialized validator API. */
   readonly parent: Signal<any>;
   /** Property names and array indexes locating the validated node from its root. */
@@ -307,15 +325,23 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & AsyncValidator
 };
 
 /** Reactive context provided to synchronous validators. */
-export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = Node> = Pick<TApi, keyof ValidatorReadonlyApi<TValue>> & {
+export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = ValidatorNode> = Pick<TApi, keyof ValidatorReadonlyApi<TValue>> & {
   /** Full API of the node being validated, including state signals and node operations. */
   readonly api: TApi;
-  /** Callable public node being validated. Prefer `value()` when only its value is needed. */
-  readonly field: TField;
+  /**
+   * Readonly signal of the node being validated.
+   * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.
+   */
+  readonly field: Signal<TField>;
+  /**
+   * Readonly signal of the node being validated.
+   * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.
+   */
+  readonly node: Signal<TField>;
 };
 
 /** Reactive context shared by asynchronous validator conditions, params, and handlers. */
-export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = ValidatorContext<TValue, TApi, TField>;
+export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = ValidatorContext<TValue, TApi, TField>;
 
 /**
  * Aggregate validation result.
@@ -326,7 +352,7 @@ export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<
 export type ValidationStatus = 'valid' | 'invalid' | 'unknown';
 
 /** Reactive node context and cancellation signal provided to an asynchronous validator run. */
-export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = AsyncValidatorBaseContext<TValue, TApi, TField> & {
+export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = AsyncValidatorBaseContext<TValue, TApi, TField> & {
   /**
    * Cancellation signal for this execution.
    *
@@ -337,7 +363,7 @@ export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TVal
 };
 
 /** Asynchronous validator context extended with the current reactive parameter snapshot. */
-export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = AsyncValidatorContext<TValue, TApi, TField> & {
+export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = AsyncValidatorContext<TValue, TApi, TField> & {
   /** Snapshot returned by the validator's reactive `params` function. */
   readonly params: TParams;
 };
@@ -348,23 +374,26 @@ export type AsyncValidationResult = PromiseLike<ValidationResult> | ObservableLi
 /** Synchronous validator receiving the current value as a reactive signal. */
 export type Validator<TValue> = (context: FieldContext<TValue>) => ValidationResult;
 
+/** Resolves an unspecified helper owner to the common public node API while preserving reuse. */
+export type ValidatorOwner<TNode extends Node> = Node extends TNode ? ValidatorNode : TNode;
+
 /** Validator marked by `asyncValidator()` for asynchronous scheduling and cancellation. */
-export type AsyncValidator<TValue> = Validator<TValue>;
+export type AsyncValidator<TValue, TField extends Node = Node> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => ValidationResult;
 
 /** Validator that may return errors directly or compose one or more validators dynamically. */
-export type ComposableValidator<TValue> = (context: ValidatorContext<TValue>) => ComposableValidationResult<TValue>;
+export type ComposableValidator<TValue, TField extends Node = ValidatorNode> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => ComposableValidationResult<TValue, TField>;
 
 /** Result accepted from a composable validator, including nested validators and successful entries. */
-export type ComposableValidationResult<TValue> =
+export type ComposableValidationResult<TValue, TField extends Node = ValidatorNode> =
   | ValidationResult
   | Validator<TValue>
-  | ComposableValidator<TValue>
-  | readonly (ComposableValidator<TValue> | ValidationSuccess)[];
+  | ComposableValidator<TValue, TField>
+  | readonly (ComposableValidator<TValue, TField> | ValidationSuccess)[];
 
 /** Readonly normalized collection of composable validators for a node value. */
-export type Validators<TValue> = readonly ComposableValidator<TValue>[];
+export type Validators<TValue, TField extends Node = ValidatorNode> = readonly ComposableValidator<TValue, TField>[];
 
 /** One validator or a readonly list in which `null` and `undefined` represent no validator. */
-export type ValidatorSource<TValue> =
-  | ComposableValidator<TValue>
-  | readonly (ComposableValidator<TValue> | ValidationSuccess)[];
+export type ValidatorSource<TValue, TField extends Node = ValidatorNode> =
+  | ComposableValidator<TValue, TField>
+  | readonly (ComposableValidator<TValue, TField> | ValidationSuccess)[];

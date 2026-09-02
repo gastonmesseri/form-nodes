@@ -12,7 +12,7 @@ canonical release record.
 
 ### Added
 
-- A reactive `root()` signal on every node and validator context returns the complete structural
+- A reactive `root()` signal on every node returns the complete structural
   root, including standalone fields, groups, forms, and arrays.
 - An `error` option on every built-in validator for replacing a failed rule's standard error with
   one or more static or reactively produced custom errors.
@@ -29,6 +29,14 @@ canonical release record.
 - Angular `[formNode]` binding for native, signal-based, and `ControlValueAccessor` controls.
 
 ### Changed
+
+- Inline validators now infer their owning `Field`, `Form`, `Group`, or `ArrayNode`, including
+  aggregate children and array items. This also works through inline `validator()` and
+  `asyncValidator()` helpers, with configured primitives and nullability overrides.
+- Validator contexts expose the validated node through the same readonly signal under `node` and
+  `field`. Use `context.node()` (or `context.field()`) for the node and `context.value()` for its
+  value. Flat `context.form()` and `context.root()` have been removed; use `context.node().form()`
+  and `context.node().root()` instead. `parent()` remains available on the context.
 
 - `form()` returns the nearest explicit form workflow instead of the complete structural root.
   Nested forms own their descendants, while standalone fields, groups, and arrays return `null`;

@@ -1,13 +1,13 @@
 import type { Signal } from '@angular/core';
 
 import type { OpaqueAngularField } from '../interop/angular-field.type';
-import type { DynamicNode, NearestForm, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { DynamicNode, NearestForm, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
+import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
-export type GroupOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type GroupOptions<TValue = any, TGroup extends Node = Group<any>> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * One validator or an array of validators for the complete group value.
    *
@@ -49,7 +49,7 @@ export type GroupOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' 
    * Use child validators for rules that belong to one field; use group validators for rules that
    * consider the object boundary as a whole.
    */
-  validators?: ValidatorSource<TValue>;
+  validators?: ValidatorSource<TValue, TGroup>;
   /**
    * Default control-value debounce inherited by descendants of this object branch.
    *
@@ -156,10 +156,12 @@ export type GroupChildren<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
-  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
+  & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
   & {
     /** Returns the concrete primitive represented by this node. */
     nodeType(): 'group';
+    /** Replaces this group's validators while preserving its node type in inline callbacks. */
+    setValidators(validators: ValidatorSource<GroupValue<TNodes>, Group<TNodes, TParent>>): void;
     /** Stable readonly map of this group's immediate child nodes. */
     readonly children: GroupChildren<TNodes, TParent> & DynamicFormChildren;
     /**

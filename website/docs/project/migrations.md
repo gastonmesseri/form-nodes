@@ -44,6 +44,25 @@ Every breaking migration will identify:
 from. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
 
+### Validator node signals and navigation
+
+`context.node` and `context.field` are now the same readonly signal returning the validated node.
+Inline callbacks and inline helpers infer the concrete primitive, its value type, and its children
+or items. Omit helper generics to allow inference from the enclosing primitive.
+
+| Previous access | New access |
+| --- | --- |
+| `context.field` as a node | `context.node()` or `context.field()` |
+| `context.field.dirty()` | `context.node().dirty()` or `context.field().dirty()` |
+| `context.field()` to read a value | `context.value()` (preferred) or `context.field().value()` |
+| `context.form()` | `context.node().form()` or `context.field().form()` |
+| `context.root()` | `context.node().root()` or `context.field().root()` |
+
+Flat `form` and `root` context properties are removed. The node signals never return `null` and
+keep their identity across value changes or tree moves. Explicit `TField` context types appear
+as `Signal<TField>` on both aliases. Reading only `context.node()` tracks identity, not value.
+`context.parent()` remains available. The full `context.api` still exposes the node API.
+
 ### Form and root ancestry lookups
 
 `form()` now identifies workflow ownership by returning the nearest explicit `form()`. Code that
@@ -63,7 +82,7 @@ checkout.payment.card.root(); // checkout
 A standalone `group()` or `array()` previously returned itself from `form()` and now returns
 `null`; its new `root()` signal returns itself. Standalone fields continue to return `null` from
 `form()`, but now also expose themselves through `root()`. Update validator dependencies in the
-same way: use `context.form()` for the owning workflow and `context.root()` for the complete tree.
+same way: use `context.node().form()` for the owning workflow and `context.node().root()` for the complete tree.
 
 ### Field nullability options
 
