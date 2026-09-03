@@ -1,12 +1,12 @@
 ---
 title: Angular Material
-description: Bind Gem Forms directly to Angular Material inputs, selects, checkboxes, datepickers, errors, and native forms.
+description: Bind Form Nodes directly to Angular Material inputs, selects, checkboxes, datepickers, errors, and native forms.
 ---
 
 # Angular Material
 
 Angular Material controls work with `[formNode]` through their normal Angular Forms contracts. No
-Gem Forms adapter, wrapper, `FormControl`, `FormsModule`, or `ReactiveFormsModule` is required.
+Form Nodes adapter, wrapper, `FormControl`, `FormsModule`, or `ReactiveFormsModule` is required.
 
 ## Install Material
 
@@ -17,7 +17,7 @@ ng add @angular/material
 ```
 
 Follow the official [Angular Material installation guide](https://material.angular.dev/guide/getting-started)
-for theme and application setup. Gem Forms adds no Material-specific provider.
+for theme and application setup. Form Nodes adds no Material-specific provider.
 
 ## Complete example
 
@@ -34,7 +34,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 
-import { FormNode, email, field, form, maxDate, required } from '@gem/ng-forms';
+import { FormNode, email, field, form, maxDate, required } from 'form-nodes';
 
 @Component({
   selector: 'app-material-profile-editor',
@@ -130,7 +130,7 @@ See the official [input API](https://material.angular.dev/components/input/api),
 
 ## Error messages
 
-Gem Forms errors already contain their resolved message and target node. Render the relevant error
+Form Nodes errors already contain their resolved message and target node. Render the relevant error
 inside `mat-error`:
 
 ```html

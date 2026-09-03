@@ -1,4 +1,4 @@
-import { form } from '@gem/ng-forms';
+import { form } from 'form-nodes';
 
 type Company = {
   companyId: number;

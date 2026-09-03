@@ -342,7 +342,7 @@ describe('FormNode in Chromium', () => {
     expect(input.disabled).toBe(false);
   });
 
-  it('propagates formField native parsing errors into Gem validation', () => {
+  it('propagates formField native parsing errors into Form Nodes validation', () => {
     @Component({
       template: `<input [formField]="profile.age.$field">`,
       imports: [FormField],
@@ -387,7 +387,7 @@ describe('FormNode in Chromium', () => {
     expect(input.value).toBe('12');
   });
 
-  it('reflects reactive Gem constraints through formField native properties', () => {
+  it('reflects reactive Form Nodes constraints through formField native properties', () => {
     @Component({
       template: `
         <input id="amount" type="number" [formField]="profile.amount.$field">
@@ -529,7 +529,7 @@ describe('FormNode in Chromium', () => {
     expect(input.value).toBe('Pending');
   });
 
-  it('uses the Gem form root for invalid submission and focus with formField controls', () => {
+  it('uses the Form Nodes form root for invalid submission and focus with formField controls', () => {
     const action = vi.fn();
 
     @Component({
@@ -1736,9 +1736,9 @@ describe('FormNode in Chromium', () => {
     expect(company.companyId).toBe(companyIdNode);
     expect(company.companyName).toBe(companyNameNode);
 
-    company.companyName.set('Gem');
+    company.companyName.set('Form Nodes');
     fixture.detectChanges();
-    expect(control.value()).toEqual({ companyId: 7, companyName: 'Gem' });
+    expect(control.value()).toEqual({ companyId: 7, companyName: 'Form Nodes' });
 
     button.click();
     fixture.detectChanges();

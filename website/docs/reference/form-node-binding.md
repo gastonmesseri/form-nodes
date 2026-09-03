@@ -10,7 +10,7 @@ available. The same symbol is also the public generic type returned by binding q
 ```ts
 import { Component, viewChild } from '@angular/core';
 
-import { field, form, FormNode } from '@gem/ng-forms';
+import { field, form, FormNode } from 'form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -42,7 +42,7 @@ and linker infrastructure.
 
 ## Directive input
 
-Import `FormNode` in the component and bind a Gem node to the required `formNode` input:
+Import `FormNode` in the component and bind a Form Nodes node to the required `formNode` input:
 
 ```ts
 @Component({
@@ -234,12 +234,12 @@ injector ownership. A node can then remain in use or bind somewhere else.
 
 For the common application-wide setup, register `provideFormNodeConfig()` in the standalone
 application configuration. The same predicates apply to `[formNode]` and to `[formField]` controls
-whose field comes from a Gem Forms node's `$field`:
+whose field comes from a Form Nodes node's `$field`:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { provideFormNodeConfig } from '@gem/ng-forms';
+import { provideFormNodeConfig } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -278,7 +278,7 @@ default, so applications that do not need Angular-compatible CSS incur no class-
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -307,11 +307,11 @@ state, or submission behavior.
 `provideFormNodeConfig()` uses Angular's Signal Forms configuration internally for adapted
 `[formField]` controls. Do not combine it with `provideSignalFormsConfig({ classes })` in the same
 injector because Angular's config token is not multi and the last provider would replace the first.
-Angular `[formField]` controls backed by ordinary Angular field trees do not receive Gem Forms class
+Angular `[formField]` controls backed by ordinary Angular field trees do not receive Form Nodes class
 predicates.
 
 Conversely, an existing `provideSignalFormsConfig({ classes })` works normally with
-`[formField]="node.$field"` without any Gem Forms configuration. Its callbacks receive Angular's
+`[formField]="node.$field"` without any Form Nodes configuration. Its callbacks receive Angular's
 `FormFieldBinding` and can read `binding.state()`. Choose this when the application wants one Angular
 class map for both adapted and native Angular field trees; choose `provideFormNodeConfig()` when the
 same `FormNodeBinding` callbacks should work with both `[formNode]` and adapted `[formField]`.
@@ -329,7 +329,7 @@ does not expose arbitrary directive or host-directive instances. Use a component
 ```ts
 import { Component, input, model, output } from '@angular/core';
 
-import { FormNode, field, form, type FormNodeValueControl } from '@gem/ng-forms';
+import { FormNode, field, form, type FormNodeValueControl } from 'form-nodes';
 
 @Component({
   selector: 'app-date-picker',
@@ -401,7 +401,7 @@ Use `FormNode` as the single root binding. Its controls may use either `[formNod
 ```ts
 import { Component } from '@angular/core';
 
-import { FormNode, field, form } from '@gem/ng-forms';
+import { FormNode, field, form } from 'form-nodes';
 
 @Component({
   imports: [FormNode],

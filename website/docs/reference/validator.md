@@ -11,7 +11,7 @@ Attach a synchronous validator directly to a field, form, or array. The consumin
 infers its value type:
 
 ```ts
-import { field, form, required, validator } from '@gem/ng-forms';
+import { field, form, required, validator } from 'form-nodes';
 
 const adult = validator<number | null>(({ value }) => {
   const age = value();
@@ -50,7 +50,7 @@ from which TypeScript can infer its value.
 Use `validator<TValue>()` when declaring a reusable validator separately from its consuming node:
 
 ```ts
-import { field, form, required, validator } from '@gem/ng-forms';
+import { field, form, required, validator } from 'form-nodes';
 
 export const adult = validator<number | null>(({ value }) => {
   const age = value();
@@ -292,7 +292,7 @@ const myForm = form({
 });
 ```
 
-The outer callback tracks `requireAdult()`. When it changes, Gem Forms resolves the selected rule
+The outer callback tracks `requireAdult()`. When it changes, Form Nodes resolves the selected rule
 against the same context.
 
 :::warning Keep returned arrays homogeneous
@@ -380,7 +380,7 @@ augment `ValidationErrorMap` so custom kinds expose strongly typed data. See
 Custom properties are `unknown` by default. Applications and packages can augment the registry:
 
 ```ts
-declare module '@gem/ng-forms' {
+declare module 'form-nodes' {
   interface ValidationErrorMap {
     minimumAge: ValidationError & {
       readonly kind: 'minimumAge';

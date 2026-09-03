@@ -8,7 +8,7 @@ The complete [debounce example](../examples/executable-examples.mdx#control-valu
 compiled and executed with assertions for control value, committed value, dirty, touched, and
 debouncing state.
 
-Gem Forms distinguishes programmatic model updates from values originating in a bound UI control. That distinction determines debounce and dirty behavior.
+Form Nodes distinguishes programmatic model updates from values originating in a bound UI control. That distinction determines debounce and dirty behavior.
 
 ## Committed values
 

@@ -1,4 +1,4 @@
-import { asyncValidator, field, form } from '@gem/ng-forms';
+import { asyncValidator, field, form } from 'form-nodes';
 
 const accountForm = form({
   username: field('ada', [

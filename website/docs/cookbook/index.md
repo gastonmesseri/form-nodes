@@ -1,7 +1,7 @@
 ---
 title: Cookbook
 slug: /cookbook
-description: Focused Gem Forms recipes for common Angular form workflows.
+description: Focused Form Nodes recipes for common Angular form workflows.
 ---
 
 # Cookbook

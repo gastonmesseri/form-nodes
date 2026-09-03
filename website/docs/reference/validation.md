@@ -4,14 +4,14 @@ title: Validation
 
 # Validation reference
 
-Every Gem Forms node can own validation rules. Fields validate one leaf value; forms, groups, and
+Every Form Nodes node can own validation rules. Fields validate one leaf value; forms, groups, and
 arrays can validate their aggregate value while also collecting validation state from descendants.
 
 Use [`validator()`](./validator.md) to type a reusable synchronous rule and
 [`asyncValidator()`](./async-validator.md) for Promise- or Observable-based work.
 
 ```ts
-import { asyncValidator, field, form, minLength, required, validator } from '@gem/ng-forms';
+import { asyncValidator, field, form, minLength, required, validator } from 'form-nodes';
 
 const usernameAllowed = validator(({ value }) => {
   return value() === 'admin'
@@ -211,7 +211,7 @@ See [`validator()`](./validator.md) for the complete callback context and compos
 ## Asynchronous validators
 
 `asyncValidator()` marks a validator for managed scheduling. It can return a Promise-like or
-Observable-like operation. Gem Forms owns pending state, debounce, cancellation, dependency
+Observable-like operation. Form Nodes owns pending state, debounce, cancellation, dependency
 tracking, error mapping, and stale-result suppression.
 
 ```ts

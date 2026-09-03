@@ -11,7 +11,7 @@ import consumerValueEqualitySource from '!!raw-loader!../../examples/consumer-va
 Nodes are callable signals. **Prefer calling the node itself to read its committed value:**
 
 ```ts
-import { field, form } from '@gem/ng-forms';
+import { field, form } from 'form-nodes';
 
 const profileForm = form({
   name: field('Marco'),

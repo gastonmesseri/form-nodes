@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Gem Forms are documented in this file.
+All notable changes to Form Nodes are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the package is below 1.0,
@@ -49,6 +49,9 @@ consumer migration guide.
 - Angular `[formNode]` binding for native, signal-based, and `ControlValueAccessor` controls.
 
 ### Changed
+
+- **Breaking:** The package is now named `form-nodes`. Update dependencies, imports, and module
+  augmentations to use `form-nodes`; exported APIs and runtime behavior are unchanged by the rename.
 
 - Callable field objects now include a runtime `patch()` method equivalent to `set()`. The public
   types continue to expose field patching only through `api` and `$api`.

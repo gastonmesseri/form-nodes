@@ -165,8 +165,7 @@ state, and stale-result handling remain owned by the node.
 
 ### Read-only signal-input compatibility
 
-Angular does not expose a public setter for an `input()` signal on an existing host component. Gem
-Forms resolves aliases, property names, signal flags, and transforms through public
+Angular does not expose a public setter for an `input()` signal on an existing host component. Form Nodes resolves aliases, property names, signal flags, and transforms through public
 `reflectComponentType()` metadata. A narrowly isolated compatibility adapter then discovers the
 private input-signal node through the signal's own symbols, without importing Angular's private
 `ɵSIGNAL` or `ɵInputSignalNode` exports. It uses Angular's component-definition input writer when
@@ -177,12 +176,12 @@ Angular implementation details. They are isolated under `form-node/angular-inter
 every supported Angular upgrade rather than treated as version-stable.
 
 These private operations fail safely. If a future Angular release changes the component-definition
-writer, Gem Forms falls back to the smaller signal writer. If that signal mechanism also becomes
+writer, Form Nodes falls back to the smaller signal writer. If that signal mechanism also becomes
 incompatible, only synchronization of the affected optional state inputs—such as `disabled`,
 `readonly`, or `required`—is skipped. Value and event binding and the form node itself continue to
 work. Errors thrown by an application-defined input transform are still reported normally.
 
-Gem Forms emits one warning per affected control instance and input name when such a write is
+Form Nodes emits one warning per affected control instance and input name when such a write is
 skipped. When the component does not already use it, the warning recommends
 `useControlState()` as the source-neutral state facade. A component already consuming that
 facade does not receive the redundant recommendation. A `ControlValueAccessor` is another option when only

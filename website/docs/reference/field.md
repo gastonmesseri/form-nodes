@@ -21,13 +21,13 @@ Not sure whether a structured value should be a field or child nodes? See
 
 `field()` can be safely created and used outside an Angular injection context. Value operations,
 state, synchronous validation, and asynchronous validation all continue to work. When an injector
-is available, its `DestroyRef` provides deterministic cleanup; without one, Gem Forms uses weak
+is available, its `DestroyRef` provides deterministic cleanup; without one, Form Nodes uses weak
 ownership so an unreachable field and its validation watcher can be garbage-collected.
 
 :::
 
 ```ts
-import { field, form, required } from '@gem/ng-forms';
+import { field, form, required } from 'form-nodes';
 
 const myForm = form({
   name: field('', [required]),
@@ -134,7 +134,7 @@ describe the resulting field type: `strict()` always excludes `null`, while `nul
 includes it.
 
 When the literal initial value is `null` or `undefined`, there is no concrete value from which
-TypeScript can infer a future type. Gem Forms uses `unknown`, rather than the unsafe `any`.
+TypeScript can infer a future type. Form Nodes uses `unknown`, rather than the unsafe `any`.
 Omitting the initial value starts at `null`, while an explicit `undefined` is preserved:
 
 ```ts
@@ -624,8 +624,8 @@ Returns the opaque terminal adapter used by Angular's `[formField]` directive.
 <input [formField]="profile.username.$field" />
 ```
 
-Select the Gem field first and use `$field` only in the template binding. Its public type is
-intentionally erased; programmatic operations belong to the Gem node API.
+Select the Form Nodes field first and use `$field` only in the template binding. Its public type is
+intentionally erased; programmatic operations belong to the Form Nodes node API.
 
 ### Validation properties
 
@@ -1264,7 +1264,7 @@ username.visible(); // true
 ```ts
 import { Component } from '@angular/core';
 
-import { field, form, FormNode } from '@gem/ng-forms';
+import { field, form, FormNode } from 'form-nodes';
 
 @Component({
   selector: 'app-profile-editor',

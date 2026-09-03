@@ -1,12 +1,12 @@
 ---
 title: PrimeNG
-description: Bind Gem Forms directly to PrimeNG inputs, selects, checkboxes, datepickers, validation styles, and native forms.
+description: Bind Form Nodes directly to PrimeNG inputs, selects, checkboxes, datepickers, validation styles, and native forms.
 ---
 
 # PrimeNG
 
 PrimeNG form controls work with `[formNode]` through native elements and Angular's
-`ControlValueAccessor` contract. No Gem Forms adapter, wrapper, `FormControl`, `FormsModule`, or
+`ControlValueAccessor` contract. No Form Nodes adapter, wrapper, `FormControl`, `FormsModule`, or
 `ReactiveFormsModule` is required.
 
 PrimeNG aligns its major releases with Angular. For Angular 22, use a compatible PrimeNG 22 release;
@@ -39,7 +39,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-See the official [PrimeNG installation guide](https://primeng.org/installation). Gem Forms requires
+See the official [PrimeNG installation guide](https://primeng.org/installation). Form Nodes requires
 no additional PrimeNG provider.
 
 ## Complete example
@@ -55,7 +55,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodeConfig, required } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodeConfig, required } from 'form-nodes';
 
 @Component({
   selector: 'app-primeng-profile-editor',
@@ -160,7 +160,7 @@ import { providePrimeNG } from 'primeng/config';
 import type { ApplicationConfig } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -184,13 +184,13 @@ demonstrates that narrower component scope.
 
 The preset adds `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and
 `ng-untouched`/`ng-touched` reactively. It is optional: node validity and message rendering work
-without it. Gem Forms adds no status classes by default.
+without it. Form Nodes adds no status classes by default.
 
 ## Binary and collection checkboxes
 
 Use `[binary]="true"` with a boolean field. For a checkbox group that owns one complete collection
 value, use an array-valued `field()` rather than `array()`. Use `array()` only when each item needs
-an independent Gem Forms node. See
+an independent Form Nodes node. See
 [Choosing a primitive](../guides/choosing-a-primitive.md#array-field-or-array).
 
 ## Disabled, focus, and reset

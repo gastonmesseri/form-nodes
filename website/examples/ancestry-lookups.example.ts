@@ -1,4 +1,4 @@
-import { array, field, form, group } from '@gem/ng-forms';
+import { array, field, form, group } from 'form-nodes';
 
 const checkout = form({
   payment: form({

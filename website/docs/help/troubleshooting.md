@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Diagnose common Gem Forms symptoms and apply concrete fixes.
+description: Diagnose common Form Nodes symptoms and apply concrete fixes.
 ---
 
 # Troubleshooting
@@ -112,7 +112,7 @@ asyncValidator(checkAvailability, {
 });
 ```
 
-Gem Forms cancels stale work when dependencies or values change. See
+Form Nodes cancels stale work when dependencies or values change. See
 [`asyncValidator()` parameters](../reference/async-validator.md#explicit-parameters).
 
 ## Array rows keep the wrong touched or pending state

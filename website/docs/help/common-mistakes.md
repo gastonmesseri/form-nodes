@@ -1,13 +1,13 @@
 ---
 title: Common mistakes
-description: Frequent Gem Forms modeling and state mistakes, with corrected examples and explanations.
+description: Frequent Form Nodes modeling and state mistakes, with corrected examples and explanations.
 ---
 
 # Common mistakes
 
 Most surprises come from choosing the wrong node boundary or treating programmatic model updates as
 if they were user interaction. This page collects the mistakes that are easiest to make when first
-using Gem Forms. If something already fails or produces an unexpected result, start with
+using Form Nodes. If something already fails or produces an unexpected result, start with
 [Troubleshooting](./troubleshooting.md).
 
 ## Using array() for every array value

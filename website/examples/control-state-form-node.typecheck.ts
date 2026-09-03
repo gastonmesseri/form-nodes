@@ -1,6 +1,6 @@
 import { Component, input, model } from '@angular/core';
 
-import { FormNode, field, form, useControlState, required } from '@gem/ng-forms';
+import { FormNode, field, form, useControlState, required } from 'form-nodes';
 
 // Custom control component
 

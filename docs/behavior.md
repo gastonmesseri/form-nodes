@@ -2,6 +2,9 @@
 
 This document records the behavior currently implemented by the library. It is an evolving specification and the source material for future user-facing documentation.
 
+The package name and public import path are `form-nodes`. The package rename does not change
+exported symbols, node behavior, or Angular integration contracts.
+
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.5` at commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
 Every `field()`, `group()`, `form()`, and `array()` exposes its complete API through `.api`, which
@@ -101,7 +104,7 @@ The reference inspected for this correction was Angular `v22.1.5`, commit
 `packages/forms/signals/src/field/structure.ts` materializes children inside `untracked()`, and
 `packages/forms/signals/test/node/field_node.spec.ts` covers child access inside a computed.
 Angular's root factory also installs a management effect through `src/field/manager.ts`, which is
-not a model for root creation inside a computed. Gem deliberately supports constructing fresh
+not a model for root creation inside a computed. Form Nodes deliberately supports constructing fresh
 trees in computed declarations and outside injection contexts, preserving dependencies of its
 declaration factories; Angular's schema/model API is not the public contract.
 
@@ -121,7 +124,7 @@ starts at `null`; an explicit `undefined` is preserved. A typed `field<T>()` sti
 initial value. Consumers can instead declare `field.nullable<T>()` to start at `null` with type
 `Field<T | null>`.
 
-This initialization convenience belongs to Gem's API. Angular v22.1.5 requires an existing model
+This initialization convenience belongs to Form Nodes' API. Angular v22.1.5 requires an existing model
 signal in `packages/forms/signals/src/api/structure.ts`, passed through by
 `src/util/normalize_form_args.ts`; its `test/node/form.spec.ts` and `test/node/field_node.spec.ts`
 cover model-backed creation and values. Angular has no corresponding no-argument field factory.
@@ -304,7 +307,7 @@ The Angular reference is `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`):
 `packages/core/primitives/signals/src/signal.ts`, `computed.ts`, and their corresponding
 `packages/core/test/signals/` tests govern storage and exposed comparison. Signal Forms projects
 children from a shared model through `packages/forms/signals/src/util/deep_signal.ts`, covered by
-`packages/forms/signals/test/node/deep_signal.spec.ts`. Gem deliberately adds public equality over
+`packages/forms/signals/test/node/deep_signal.spec.ts`. Form Nodes deliberately adds public equality over
 independently owned values; control interaction and committed storage remain separate.
 
 Consumers that need their own comparison of a form, group, array, or field value should derive a
@@ -373,12 +376,12 @@ control buffers use committed values so retained snapshots cannot revert control
 Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`:
 `packages/core/primitives/signals/src/computed.ts`, `watch.ts`, and the matching computed tests
 govern retained values and dependency polling. Signal Forms `util/deep_signal.ts` and
-`test/node/deep_signal.spec.ts` project child values from a shared model. Gem's two aggregate value
+`test/node/deep_signal.spec.ts` project child values from a shared model. Form Nodes' two aggregate value
 paths are an intentional extension for independently owned child nodes.
 
 For array identity and moves, also inspected Angular `packages/forms/signals/src/field/structure.ts`
 and `packages/forms/signals/test/node/dynamic.spec.ts` on the same release: object array children
-preserve their node identity across moves and subsequent writes target the new key. Gem retains its
+preserve their node identity across moves and subsequent writes target the new key. Form Nodes retains its
 explicit `trackBy`/index reconciliation API and adds independent public equality without changing
 structural ownership.
 
@@ -528,8 +531,8 @@ ownership. Direct object literals, object `type` aliases containing plain values
 types, Moment-like values, and concrete class types retain matching inference and runtime behavior.
 
 Angular 22.1.x Signal Forms derives its tree from an existing model signal and enumerates object
-keys in `packages/forms/signals/src/field/structure.ts`; it does not expose Gem's declaration
-shorthand boundary. Gem therefore intentionally uses the stricter rule above for its definition
+keys in `packages/forms/signals/src/field/structure.ts`; it does not expose Form Nodes' declaration
+shorthand boundary. Form Nodes therefore intentionally uses the stricter rule above for its definition
 API while retaining comparable node-state behavior after the definition has been normalized.
 
 Groups and forms provide the same child access and value shape:
@@ -668,7 +671,7 @@ cancelled promises, and live completion in both class-field emit modes.
 This ownership correction was checked against Angular Signal Forms `v22.1.5` at commit
 `468b65b74566537456c192ac4281795c5a1e1a5e`, specifically `packages/forms/signals/src/field/node.ts`
 and `packages/forms/signals/test/node/api/debounce.spec.ts` for completion, replacement, and touch
-semantics. Weak lifetime for standalone Gem nodes is an additional library contract, rather than a
+semantics. Weak lifetime for standalone Form Nodes nodes is an additional library contract, rather than a
 requirement inferred from Angular's injector-owned field lifecycle.
 
 Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. Every node exposes `controlValue()`, but it represents only the control bound directly to that node and does not aggregate pending control values from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
@@ -1034,7 +1037,7 @@ This API shape intentionally differs from Angular 22.1.5, verified against the l
 Angular 22 tag `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`). Angular's
 `packages/forms/signals/src/field/context.ts` exposes `fieldTree` as a getter returning the node's
 proxy, separately from its value signal; `packages/forms/signals/test/node/field_context.spec.ts`
-tests those distinct `fieldTree`, `state`, and `value` accesses. Gem preserves that distinction
+tests those distinct `fieldTree`, `state`, and `value` accesses. Form Nodes preserves that distinction
 between node identity and reactive node state while adding an explicit readonly signal wrapper.
 State reads through the node keep their existing dependency tracking and state propagation; removing
 flat context state and API properties changes only the public access path. The context constructor
@@ -1049,8 +1052,8 @@ This ownership split is library-specific. Angular 22.1.5 Signal Forms, inspected
 (`468b65b74566537456c192ac4281795c5a1e1a5e`) in
 `packages/forms/signals/src/api/structure.ts`, `packages/forms/signals/src/field/structure.ts`, and
 `packages/forms/signals/test/node/form.spec.ts`, creates one `FieldTree` root from a model signal and
-does not expose Gem's explicit nested-form workflow primitive or separate `form()` and `root()`
-lookups. Gem retains comparable reactive parent/path behavior while defining these ownership
+does not expose Form Nodes' explicit nested-form workflow primitive or separate `form()` and `root()`
+lookups. Form Nodes retains comparable reactive parent/path behavior while defining these ownership
 semantics for its explicit node architecture.
 
 `when(context)` is reactive. While it returns `false`, the validator does not evaluate explicit params, invoke the service, expose pending state, or contribute errors. A transition to `true` starts normal validation. A transition to `false` cancels any debounce timer or in-flight Promise or Observable, clears that asynchronous validation state, and makes stale results unobservable.
@@ -1105,7 +1108,7 @@ With no effective injector, the watcher weakly references its node-owned target,
 `FinalizationRegistry` disconnects it if that target becomes unreachable. Garbage-collection
 cleanup is necessarily nondeterministic, while injector cleanup is immediate. Angular 22.1.4's
 `packages/forms/signals/src/field/util.ts` similarly resolves the root field structure's injector
-for descendant field trees. Gem Forms deliberately generalizes that lifecycle behavior to every
+for descendant field trees. Form Nodes deliberately generalizes that lifecycle behavior to every
 node and exposes the opt-out boundary because its independently constructed nodes can be detached
 or inserted dynamically.
 
@@ -1575,7 +1578,7 @@ error?.targetNode; // typeof age | undefined
 Unknown kinds retain the generic `{ kind, message?, targetNode }` contract and allow additional properties as `unknown`. Application code can therefore read arbitrary custom payload properties and narrow them locally without registering the error first. Reusable custom validation packages can add equally precise kinds by augmenting `ValidationErrorMap`:
 
 ```ts
-declare module '@gem/ng-forms' {
+declare module 'form-nodes' {
   interface ValidationErrorMap {
     readonly unavailableUsername: ValidationError & {
       readonly kind: 'unavailableUsername';
@@ -2284,10 +2287,10 @@ effect scheduling; synchronization converges in one control-channel write withou
 public type is deliberately erased to `any`. Angular's AOT strict-template checker calls the bound
 field and inspects its writable `value`, so narrower opaque types reject valid `[formField]`
 templates. The erased type avoids publishing a typed Angular `Field` or `FieldTree` contract and
-therefore provides no discoverable adapter API in IntelliSense. Consumers select the Gem Forms node
+therefore provides no discoverable adapter API in IntelliSense. Consumers select the Form Nodes node
 first and use `$field` only as the terminal template-binding adapter.
 
-At leaf bindings, control interaction flows back into Gem Forms: input-driven dirty state and
+At leaf bindings, control interaction flows back into Form Nodes: input-driven dirty state and
 blur-driven touched state update the library node, while node calls can independently set or clear
 either flag without resetting the other. Availability is
 intentionally directional: disabled, readonly, hidden, and required are derived schema state in
@@ -2295,19 +2298,19 @@ Angular, so the library node is their source and `[formField]` reflects them int
 control. Angular does not expose reverse setters for those states.
 
 Parsing failures produced by Angular native controls, `transformedValue()` custom controls, and
-CVA validation are registered as binding-owned external errors on the corresponding Gem node. A
-failed parse leaves the last committed Gem value unchanged but makes the node and its ancestors
+CVA validation are registered as binding-owned external errors on the corresponding Form Nodes node. A
+failed parse leaves the last committed Form Nodes value unchanged but makes the node and its ancestors
 invalid; the error appears in `errors()`, `allErrors()`, `getError()`, and submission validation.
 Each binding owns its errors independently, so multiple controls can contribute separate parse
-errors without replacing Gem validator errors. A binding contribution is removed when parsing
-recovers, the node resets, or the binding is destroyed or rebound. The exposed Gem error retains
+errors without replacing Form Nodes validator errors. A binding contribution is removed when parsing
+recovers, the node resets, or the binding is destroyed or rebound. The exposed Form Nodes error retains
 Angular's error data except its internal `fieldTree` and `formField` references, and identifies the
 originating control through `formNode`.
 
-Gem validator constraints are also published into the Angular field metadata consumed by
+Form Nodes validator constraints are also published into the Angular field metadata consumed by
 `[formField]`: numeric and date `min`/`max`, `minLength`, `maxLength`, and active patterns. These
 sources remain reactive, including activation and removal. The adapter contributes metadata only;
-it does not install Angular validators, so Gem remains the validator owner and each failed
+it does not install Angular validators, so Form Nodes remains the validator owner and each failed
 constraint produces one error rather than a duplicate from each engine.
 
 Angular then applies the metadata according to its normal control contract. Custom controls with
@@ -2332,13 +2335,13 @@ Dynamic array changes reconcile the adapter after creation. `push()`, `insert()`
 `clear()`, `set()`, `reset()`, `move()`, `moveUp()`, `moveDown()`, `swap()`, and `trackBy`
 reconciliation add, remove, or remap requested Angular paths without replacing the root `$field`.
 The adapter does not eagerly mirror every array descendant: a node is connected when application
-code or a template reads its `$field`. Retained connected Gem items preserve their identity and
+code or a template reads its `$field`. Retained connected Form Nodes items preserve their identity and
 interaction state while their `$field` path follows the new index. Synchronization for a removed
 connected node is destroyed before Angular removes the corresponding field, avoiding reads from an
 Angular orphan field. A newly rendered descendant receives value, interaction, availability,
 validation, constraint, binding, and parse-error synchronization when its `$field` is evaluated.
 Angular tracks object array entries by identity and primitive or nested-array entries by index, as
-in Angular 22.1.4. The adapter still remaps each current Angular path to the authoritative Gem item
+in Angular 22.1.4. The adapter still remaps each current Angular path to the authoritative Form Nodes item
 connected node after either kind of update.
 
 Every live Angular `FormFieldBinding` is also registered as a control binding on its original
@@ -2351,28 +2354,28 @@ own focus implementation and `FocusOptions`. Destroyed bindings unregister autom
 
 Reset is intentionally node-owned. A library `reset()` updates Angular's value and raw control
 value, clears Angular parsing state, and invokes every native, custom-control, or CVA reset hook in
-the affected subtree. It also retains Gem Forms semantics for explicit values, external errors,
+the affected subtree. It also retains Form Nodes semantics for explicit values, external errors,
 interaction state, and pending debounce. The adapter does not treat Angular's internal field-state
 `reset()` as a second entry point: `$field` is opaque application infrastructure, and consumers
-reset through the Gem node API instead.
+reset through the Form Nodes node API instead.
 
 The public `$field` type is deliberately erased to `any`. Angular's AOT strict-template checker
 calls the bound field and inspects its `value` state for native and custom-control compatibility,
 so `never`, `Field<never>`, or a callable returning `never` rejects otherwise valid `[formField]`
 templates. The erased type avoids presenting Angular's field-state API as a supported application
 surface. This is an intentional terminal-adapter boundary rather than a type-safe bridge: consumers
-must select a Gem node before `$field` and perform every programmatic operation through that node.
+must select a Form Nodes node before `$field` and perform every programmatic operation through that node.
 
 Angular 22.1.4 `FormRoot` handles submission but does not listen for the native `reset` event. A
 native `<form>` containing `$field`-backed controls should use `[formNode]` on the form root when it
-needs Gem Forms reset behavior; the root directive resets the library tree, and the adapter then
+needs Form Nodes reset behavior; the root directive resets the library tree, and the adapter then
 resets all Angular `FormField` controls.
 
 This is the recommended composition even when every rendered control uses `[formField]`:
 `<form [formNode]="myForm">` remains the sole form root, and descendants bind terminal adapters as
 `[formField]="myForm.name.$field"`. The two engines must not install competing root directives on
 the same native form. `[formNode]` applies `novalidate`, prevents native navigation, delegates
-submit and reset to the Gem tree, and therefore includes adapted parse errors in submission
+submit and reset to the Form Nodes tree, and therefore includes adapted parse errors in submission
 validity. Invalid-submit UI remains application policy; for example,
 `onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus()` focuses the first
 reported bound error target and safely does nothing when that target has no rendered binding.
@@ -2400,7 +2403,7 @@ object is insufficient.
 
 Angular's public `FormFieldBinding` does not expose binding-specific parsing errors. The adapter
 therefore reads the runtime `FormField.parseErrors` signal, which Angular marks internal, rather
-than reading the complete field error state and creating a reactive cycle with Gem validators. This
+than reading the complete field error state and creating a reactive cycle with Form Nodes validators. This
 isolated dependency is covered by native and custom-control tests and recorded in the Angular
 upgrade checklist. The governing Angular 22.1.4 sources are
 `packages/forms/signals/src/directive/form_field.ts`,
@@ -2443,8 +2446,8 @@ The directive currently provides these behaviors:
 - Native controls receive a stable generated `name` in the form `${APP_ID}.formN.path.to.field`. Bindings for the same field share the same name, which preserves radio grouping, while fields in different root trees receive different names. Because the path is reactive, names follow array items when their indexes change. An explicitly authored native `name` is replaced by the generated field name, matching Angular Signal Forms.
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - A reused radio input re-evaluates its authored `value` after every Angular render, so changing the option represented by an existing DOM node immediately recalculates its checked state without requiring a model change.
-- `provideFormNodeConfig({ classes })` installs reactive classes on every concrete `[formNode]` binding and every Angular `[formField]` binding backed by a Gem Forms node's `$field`. Predicates receive the public `FormNodeBinding`, including its host `element`, and track only the signals they read. Unrelated Angular `FieldTree` bindings are ignored. The provider installs Angular's Signal Forms class configuration internally; because Angular's configuration token is not multi, it must not be combined with `provideSignalFormsConfig({ classes })` in the same injector. `ANGULAR_FORMS_STATUS_CLASSES` is an optional Angular Forms compatibility preset providing `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng-untouched`/`ng-touched`; these classes are not installed unless the preset is configured.
-- An application that uses Angular's `provideSignalFormsConfig({ classes })` instead receives the normal Angular behavior for `$field`-backed controls without an additional bridge: `$field` is a real `FieldTree`, so Angular invokes those predicates with its `FormFieldBinding`. This Angular provider can cover both adapted and native Angular field trees, while `provideFormNodeConfig()` shares Gem Forms `FormNodeBinding` predicates across `[formNode]` and adapted `[formField]`. Only one may configure classes in a given injector because both ultimately provide Angular's same non-multi configuration token.
+- `provideFormNodeConfig({ classes })` installs reactive classes on every concrete `[formNode]` binding and every Angular `[formField]` binding backed by a Form Nodes node's `$field`. Predicates receive the public `FormNodeBinding`, including its host `element`, and track only the signals they read. Unrelated Angular `FieldTree` bindings are ignored. The provider installs Angular's Signal Forms class configuration internally; because Angular's configuration token is not multi, it must not be combined with `provideSignalFormsConfig({ classes })` in the same injector. `ANGULAR_FORMS_STATUS_CLASSES` is an optional Angular Forms compatibility preset providing `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng-untouched`/`ng-touched`; these classes are not installed unless the preset is configured.
+- An application that uses Angular's `provideSignalFormsConfig({ classes })` instead receives the normal Angular behavior for `$field`-backed controls without an additional bridge: `$field` is a real `FieldTree`, so Angular invokes those predicates with its `FormFieldBinding`. This Angular provider can cover both adapted and native Angular field trees, while `provideFormNodeConfig()` shares Form Nodes `FormNodeBinding` predicates across `[formNode]` and adapted `[formField]`. Only one may configure classes in a given injector because both ultimately provide Angular's same non-multi configuration token.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - A wrapper component may consume an input whose template name is exactly `formNode` and delegate that node to an inner `[formNode]` control. The outer directive becomes pass-through: it performs no synchronization, validation, CSS-class work, hidden-field warning, or focus registration. Only the delegated inner control is a binding. This is automatic and requires no provider. An aliased property is valid as long as its public template input name is `formNode`.
 - Component wrappers are detected automatically from Angular's public component metadata. A directive that consumes or re-exports `formNode`, including a host directive, must add `providers: [provideFormNodePassThrough()]` because Angular exposes no equivalent public runtime reflection API for directive inputs. The provider affects only the injector on that host element.
@@ -2475,7 +2478,7 @@ Import the capitalized `FormNode` symbol from the package entry point and add it
 ```ts
 import { Component } from '@angular/core';
 
-import { field, FormNode } from '@gem/ng-forms';
+import { field, FormNode } from 'form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -2495,7 +2498,7 @@ Assign the directive's `formNode` export to a template reference, then query tha
 ```ts
 import { Component, viewChild } from '@angular/core';
 
-import { field, FormNode } from '@gem/ng-forms';
+import { field, FormNode } from 'form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -2580,7 +2583,7 @@ The architecture follows Angular 22 Signal Forms `FormField`, `FormValueControl`
 
 Updating component inputs first resolves aliases, property names, signal-input flags, and decorator transforms through public `reflectComponentType()` metadata. The isolated adapter then finds an input signal's node structurally through its own symbols, without importing Angular's private `ɵSIGNAL` or `ɵInputSignalNode` exports. When the component definition supplies `ɵcmp.setInput`, the adapter delegates to it so Angular's `ngOnChanges` bookkeeping is preserved; otherwise it applies the signal write or decorator-input assignment directly. Every successful write calls public `ChangeDetectorRef.markForCheck()`. The private input-node and component-definition access lives only under `form-node/angular-internals` and remains covered by JIT, full-AOT, server-rendering, hydration, OnPush, and real-Chromium tests.
 
-Every private lookup and write is guarded independently. If Angular changes `ɵcmp.setInput`, Gem
+Every private lookup and write is guarded independently. If Angular changes `ɵcmp.setInput`, Form Nodes
 falls back to the smaller input-signal writer. If signal-node discovery or
 `applyValueToInputSignal()` is no longer compatible, that optional state-input write is skipped
 without breaking value synchronization, control events, or the bound form node. Consumer-authored
@@ -2605,16 +2608,16 @@ node's internal `_value`, so public equality cannot hide committed changes from 
 It does not report pending debounce input; that remains in the control's `model()` and the node's
 `controlValue()`. Error/validation signals still follow the node's exposed-value validation rules.
 The `[formField]` adapter reads Angular's own committed `FieldState.value`, and AbstractControl
-adapters read their source control values. Those are external forms APIs, not Gem public reads
+adapters read their source control values. Those are external forms APIs, not Form Nodes public reads
 that should be rewritten to `_value`.
 
 `useControlState<TValue>()` returns a read-only `ControlState<TValue>` facade from a custom-control component's injection context. Each source adapter lives in its own file and owns the complete translation from its source into the common signal model, including source-specific defaults and normalization. The main facade only selects the first connected adapter and forwards its signals; it contains no source-specific state mapping. Its explicit precedence is `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, then `ngModel`. The `[formNode]` adapter rendezvous through the shared host element without injecting `_FormNode` during component construction. The `[formField]` adapter resolves Angular's public same-host `FORM_FIELD` token after rendering and forwards its `FieldState` signals. The `[formControl]`, `formControlName`, and `ngModel` adapters resolve their concrete same-host `NgControl` after rendering, avoiding CVA construction cycles, observe the public `AbstractControl.events` stream, and reconcile directive/control identity and silent state changes after each browser render. Replacing a bound `FormControl` unsubscribes the previous control. Silent `{ emitEvent: false }` mutations become visible on the next render rather than synchronously. Every adapter cleans up through `DestroyRef`.
 
-The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'`. Every state member is a signal. Angular Signal Forms supplies the complete state surface, while `AbstractControl` sources supply value, disabled, dirty, touched, invalid, pending, normalized errors, and directive names where applicable. State unavailable from `AbstractControl`—such as readonly, hidden, disabled reasons, and constraint metadata—keeps the same neutral defaults used while disconnected. Reactive Forms `ValidationErrors` record entries become individual `{ kind, ...details }` objects; `true` becomes `{ kind }`, while primitive payloads use `{ kind, value }`. Errors never expose Angular's `fieldTree` or `formField` references. Disabled reasons are normalized to source-neutral `{ message? }` objects instead of exposing Gem `sourceNode` or Angular `fieldTree` references. Unnamed active reasons are preserved as `{}`; only `[]` means that no reason is known.
+The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'`. Every state member is a signal. Angular Signal Forms supplies the complete state surface, while `AbstractControl` sources supply value, disabled, dirty, touched, invalid, pending, normalized errors, and directive names where applicable. State unavailable from `AbstractControl`—such as readonly, hidden, disabled reasons, and constraint metadata—keeps the same neutral defaults used while disconnected. Reactive Forms `ValidationErrors` record entries become individual `{ kind, ...details }` objects; `true` becomes `{ kind }`, while primitive payloads use `{ kind, value }`. Errors never expose Angular's `fieldTree` or `formField` references. Disabled reasons are normalized to source-neutral `{ message? }` objects instead of exposing Form Nodes `sourceNode` or Angular `fieldTree` references. Unnamed active reasons are preserved as `{}`; only `[]` means that no reason is known.
 
 Render-discovered adapters remain safely disconnected during server rendering and connect during the first browser render, including hydration. Their neutral signals make this transition safe. `[formNode]` uses its synchronous host registry and can already be connected during server rendering.
 
-`markAsTouched()` delegates to the active source's native operation. It marks the Gem or Angular Signal Forms field using that engine's normal descendant propagation, and marks the active `AbstractControl` for Reactive Forms or `ngModel`. Calling it while disconnected is a no-op.
+`markAsTouched()` delegates to the active source's native operation. It marks the Form Nodes or Angular Signal Forms field using that engine's normal descendant propagation, and marks the active `AbstractControl` for Reactive Forms or `ngModel`. Calling it while disconnected is a no-op.
 
 The facade otherwise remains read-only. User value changes travel through the custom control's
 `model()`, `FormValueControl`, or `ControlValueAccessor` integration, while programmatic mutations
@@ -2628,14 +2631,14 @@ reset, availability, or validation operations.
 Audited all runtime folders under `src/lib`, using both a text search for value references and
 TypeScript type inspection of callable node reads. Value identifiers in primitive arguments,
 plain-data utilities, descriptors, metadata, DOM controls, and third-party control APIs are not
-Gem node-value reads. The relevant routing is:
+Form Nodes node-value reads. The relevant routing is:
 
 | Consumer | Intended value source |
 | --- | --- |
 | Internal aggregate computations and array `trackBy` matching | Child `$api._value()`. |
 | Control-buffer baseline/invalidation and field commits/reset | Internal class `value`, exposed across nodes as `$api._value`. |
 | Angular adapter model initialization, synchronization, and bound-control reset | `$api._value()`. |
-| `useControlState()` for a Gem `[formNode]` binding | `$api._value()`, independently of exposed equality. |
+| `useControlState()` for a Form Nodes `[formNode]` binding | `$api._value()`, independently of exposed equality. |
 | Native controls, signal control models, and CVA rendering/validation | `_controlValue()` (or equivalent field `controlValue()`), including pending input. |
 | Public aggregate construction, built-in/custom validators, metadata contexts, submit, and update callbacks | Exposed values, intentionally respecting public equality. |
 | Array-template/definition cloning | Captured initial values and definition recipes; no current node-value read. |
@@ -2645,7 +2648,7 @@ Remaining direct callable reads in runtime infrastructure construct the public f
 array aggregates. Angular reference: `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`),
 `packages/forms/signals/src/field/node.ts`, `util/deep_signal.ts`, and the deep-signal and debounce
 node tests. These establish the distinction between current committed values and pending control
-input; Gem additionally supports an independent equality-filtered public representation.
+input; Form Nodes additionally supports an independent equality-filtered public representation.
 
 ### Node structure
 

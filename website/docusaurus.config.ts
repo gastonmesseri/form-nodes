@@ -4,9 +4,9 @@ import { themes as prismThemes } from 'prism-react-renderer';
 import type { Options, ThemeConfig } from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Gem Forms',
+  title: 'Form Nodes',
   tagline: 'Typed, signal-based forms for Angular',
-  favicon: 'img/favicon.svg',
+  favicon: 'img/form-nodes-favicon.png',
   url: process.env.DOCS_URL ?? 'https://gastonmesseri.github.io',
   baseUrl: process.env.DOCS_BASE_URL ?? '/ng-forms/',
   organizationName: 'gastonmesseri',
@@ -58,7 +58,7 @@ const config: Config = {
     navbar: {
       hideOnScroll: true,
       logo: {
-        alt: 'Form Nodes — Gem Forms documentation',
+        alt: 'Form Nodes documentation',
         src: 'img/form-nodes-logo-header.png',
         width: 170,
         height: 40,
@@ -90,12 +90,12 @@ const config: Config = {
           title: 'Project',
           items: [
             { label: 'GitHub', href: 'https://github.com/gastonmesseri/ng-forms' },
-            { label: 'npm', href: 'https://www.npmjs.com/package/@gem/ng-forms' },
+            { label: 'npm', href: 'https://www.npmjs.com/package/form-nodes' },
             { label: 'Changelog', to: '/project/changelog' },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Gem Forms contributors.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Form Nodes contributors.`,
     },
     prism: {
       additionalLanguages: ['bash'],

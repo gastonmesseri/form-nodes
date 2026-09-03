@@ -10,7 +10,7 @@ stale-result protection. The component keeps the pending and error UI next to th
 ```ts
 import { Component } from '@angular/core';
 
-import { asyncValidator, field, form, FormNode, minLength, required } from '@gem/ng-forms';
+import { asyncValidator, field, form, FormNode, minLength, required } from 'form-nodes';
 
 @Component({
   selector: 'app-username-editor',

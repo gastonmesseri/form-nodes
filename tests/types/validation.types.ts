@@ -72,7 +72,7 @@ form({ password: field('secret'), confirmation }, {
     ? null
     : { kind: 'passwordMismatch', targetNode: confirmation },
 });
-// @ts-expect-error A validator target must be a Gem Forms node.
+// @ts-expect-error A validator target must be a Form Nodes node.
 field('', [() => ({ kind: 'invalidTarget', targetNode: 'name' })]);
 // @ts-expect-error formNode is reserved for errors produced by concrete control bindings.
 field('', [() => ({ kind: 'invalidBindingOwner', formNode: {} })]);

@@ -1,6 +1,6 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, createFormPrimitives, field, form, group, required, type FormNodeValue } from '@gem/ng-forms';
+import { FormNode, array, createFormPrimitives, field, form, group, required, type FormNodeValue } from 'form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -35,7 +35,7 @@ export class PackageConsumer {
     shorthandAddresses: array({ city: '', postcode: 0 }, [{ city: 'Bern', postcode: 3000 }]),
     roles: ['admin'],
     birthday: new Date('1990-06-15T00:00:00.000Z'),
-    company: new Company('Gem'),
+    company: new Company('Form Nodes'),
     atomicAddress: field({ city: 'Bern' }),
   });
 

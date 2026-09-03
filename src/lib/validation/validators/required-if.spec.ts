@@ -18,7 +18,7 @@ describe('requiredIf', () => {
     expect(name.errors()).toMatchObject([{ kind: 'required' }]);
     expect(name.required()).toBe(true);
 
-    name.set('Gem');
+    name.set('Form Nodes');
 
     expect(name.errors()).toEqual([]);
     expect(name.required()).toBe(true);

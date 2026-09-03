@@ -5,7 +5,7 @@ title: 2. Bind controls
 # 2. Bind controls
 
 `[formNode]` binds naturally to native elements, signal custom controls, Angular Material, PrimeNG,
-and other controls built on Angular's standard forms contracts. There are no Gem Forms adapters to
+and other controls built on Angular's standard forms contracts. There are no Form Nodes adapters to
 install, wrappers to write, or per-library providers to configure. Import the control as its own
 documentation requires, then bind your node with the same `[formNode]` syntax.
 
@@ -16,7 +16,7 @@ Expand the initial name binding to every field with `[formNode]`.
 ```ts
 import { Component } from '@angular/core';
 
-import { FormNode, field, form } from '@gem/ng-forms';
+import { FormNode, field, form } from 'form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
@@ -97,12 +97,12 @@ export class ReviewEditor {
 }
 ```
 
-No Gem Forms-specific interface or provider is required for the conventional `value = model()`
+No Form Nodes-specific interface or provider is required for the conventional `value = model()`
 shape.
 
 ## Bind Angular Material controls naturally
 
-No Angular Material-specific Gem Forms integration is required. After installing Material, import
+No Angular Material-specific Form Nodes integration is required. After installing Material, import
 its component modules normally and place `[formNode]` directly on controls that implement Angular
 Forms APIs. For example, `mat-select` can replace a native country select without changing the
 node or introducing a `FormControl`:
@@ -112,7 +112,7 @@ import { Component } from '@angular/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
-import { field, FormNode, form } from '@gem/ng-forms';
+import { field, FormNode, form } from 'form-nodes';
 
 @Component({
   imports: [FormNode, MatFormFieldModule, MatSelectModule],
@@ -134,13 +134,13 @@ export class CountryEditor {
 ```
 
 See the official [Angular Material select documentation](https://material.angular.dev/components/select/overview)
-for its ordinary installation and theming requirements. Gem Forms requires no additional Material
+for its ordinary installation and theming requirements. Form Nodes requires no additional Material
 setup. Continue with the complete [Angular Material integration](../integrations/angular-material.md)
 for inputs, selects, checkboxes, datepickers, errors, submission, and testing.
 
 ## Bind PrimeNG controls naturally
 
-PrimeNG also needs no Gem Forms adapter or wrapper. Import its module normally and bind
+PrimeNG also needs no Form Nodes adapter or wrapper. Import its module normally and bind
 `p-select` directly; its Angular Forms compatibility supplies the `ControlValueAccessor` contract
 that `[formNode]` recognizes:
 
@@ -148,7 +148,7 @@ that `[formNode]` recognizes:
 import { Component } from '@angular/core';
 import { SelectModule } from 'primeng/select';
 
-import { field, FormNode, form } from '@gem/ng-forms';
+import { field, FormNode, form } from 'form-nodes';
 
 @Component({
   imports: [FormNode, SelectModule],
@@ -170,7 +170,7 @@ export class CityEditor {
 ```
 
 See the official [PrimeNG Select documentation](https://primeng.org/select) for package setup and
-available options. Once PrimeNG itself is configured, there is no extra Gem Forms configuration.
+available options. Once PrimeNG itself is configured, there is no extra Form Nodes configuration.
 Continue with the complete [PrimeNG integration](../integrations/primeng.md) for installation,
 inputs, selects, checkboxes, datepickers, validation styling, submission, and testing.
 
@@ -178,8 +178,8 @@ inputs, selects, checkboxes, datepickers, validation styling, submission, and te
 
 In general, use `[formNode]` with native elements, `value = model()` or `checked = model()` custom
 controls, and components implementing `ControlValueAccessor`. This is why established Angular
-component libraries work without library-specific support in Gem Forms: the integration is based
-on Angular's contracts rather than component brand names. Gem Forms discovers the appropriate
+component libraries work without library-specific support in Form Nodes: the integration is based
+on Angular's contracts rather than component brand names. Form Nodes discovers the appropriate
 mechanism automatically.
 
 Based on their documented Angular Forms support, controls from these well-known libraries are also

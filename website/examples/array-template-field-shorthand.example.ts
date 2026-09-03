@@ -1,4 +1,4 @@
-import { array } from '@gem/ng-forms';
+import { array } from 'form-nodes';
 
 const people = array({
   name: '',

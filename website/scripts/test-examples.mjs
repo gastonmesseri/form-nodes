@@ -22,7 +22,7 @@ if (typecheck.status !== 0) {
 const executableExamples = readdirSync(examplesDirectory)
   .filter(file => file.endsWith('.example.ts'))
   .sort();
-const temporaryDirectory = mkdtempSync(join(tmpdir(), 'ng-forms-doc-examples-'));
+const temporaryDirectory = mkdtempSync(join(tmpdir(), 'form-nodes-doc-examples-'));
 
 try {
   for (const file of executableExamples) {
@@ -35,7 +35,7 @@ try {
       platform: 'node',
       target: 'node22',
       alias: {
-        '@gem/ng-forms': resolve(repositoryDirectory, 'src/public-api.ts'),
+        'form-nodes': resolve(repositoryDirectory, 'src/public-api.ts'),
       },
       inject: [resolve(import.meta.dirname, 'example-runtime-setup.ts')],
       logLevel: 'silent',

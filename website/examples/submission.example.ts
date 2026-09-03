@@ -1,4 +1,4 @@
-import { field, form, required } from '@gem/ng-forms';
+import { field, form, required } from 'form-nodes';
 
 const savedValues: unknown[] = [];
 let invalidAttempts = 0;

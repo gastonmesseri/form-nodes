@@ -11,7 +11,7 @@ Import `FormNode` and bind a node with `[formNode]`:
 
 ```ts
 import { Component } from '@angular/core';
-import { FormNode, field } from '@gem/ng-forms';
+import { FormNode, field } from 'form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -60,8 +60,8 @@ Select values are reapplied when options change, including asynchronously render
 
 Invalid native numeric or date input produces a `parse` error while retaining the last valid model value and the user's raw text. A later valid input, programmatic update, reset, rebind, or binding destruction clears the binding-owned parse error.
 
-Gem validation is also visible through Angular's field state. The adapter preserves the complete
-error payload—including `message`, constraint data, and custom properties—and maps an explicit Gem
+Form Nodes validation is also visible through Angular's field state. The adapter preserves the complete
+error payload—including `message`, constraint data, and custom properties—and maps an explicit Form Nodes
 `targetNode` to the corresponding Angular field path. Angular-originated parse errors are not fed
 back into that same Angular state a second time.
 
@@ -71,7 +71,7 @@ The same `$field` adapter follows dynamic `array()` operations without eagerly a
 collection. When Angular renders an item and evaluates its `$field`, that node receives its field
 path, validators, constraints, availability, touched and dirty synchronization, and control
 binding. Removing a connected item disposes its synchronization; moving, swapping, or reconciling
-a retained `trackBy` item keeps the Gem node and its state while updating its Angular path.
+a retained `trackBy` item keeps the Form Nodes node and its state while updating its Angular path.
 
 ```ts
 myForm = form({
@@ -92,19 +92,19 @@ myForm.people.move(0, 1);
 }
 ```
 
-Gem remains the source of collection identity and operations. Use `array()` methods rather than
+Form Nodes remains the source of collection identity and operations. Use `array()` methods rather than
 trying to mutate the opaque Angular `$field`.
 
 ## Native form root with formField controls
 
-Use Gem's `[formNode]` binding on the native `<form>`, even when individual controls use Angular's
-`[formField]`. This keeps submission and reset owned by the same Gem form tree:
+Use Form Nodes' `[formNode]` binding on the native `<form>`, even when individual controls use Angular's
+`[formField]`. This keeps submission and reset owned by the same Form Nodes form tree:
 
 ```ts
 import { Component } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
-import { FormNode, field, form, required } from '@gem/ng-forms';
+import { FormNode, field, form, required } from 'form-nodes';
 
 @Component({
   imports: [FormNode, FormField],
@@ -140,7 +140,7 @@ The Angular `FormField` import is required for the controls only. Controls insid
 
 :::warning Keep one form-root owner
 
-When Gem owns submission and reset, bind the native `<form>` with `[formNode]` only. Mixing two
+When Form Nodes owns submission and reset, bind the native `<form>` with `[formNode]` only. Mixing two
 root directives on the same element creates competing lifecycle and submission ownership.
 
 :::
@@ -153,7 +153,7 @@ Export the directive and query it with Angular's signal-based `viewChild()`:
 
 ```ts
 import { Component, viewChild } from '@angular/core';
-import { FormNode, field } from '@gem/ng-forms';
+import { FormNode, field } from 'form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -187,7 +187,7 @@ Configure reactive classes once in the standalone application providers:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { provideFormNodeConfig } from '@gem/ng-forms';
+import { provideFormNodeConfig } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -222,7 +222,7 @@ classes. `[formNode]` does not require the preset:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [

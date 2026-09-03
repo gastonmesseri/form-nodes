@@ -113,7 +113,7 @@ Clone-ownership evidence:
   options, plus independent asynchronous validation and explicit-injector cleanup for a deliberately
   retained source. Application-owned values and callbacks keep their existing identity.
 
-Angular `v22.1.5` source and node-identity tests were inspected as context. Gem's compiled-template
+Angular `v22.1.5` source and node-identity tests were inspected as context. Form Nodes' compiled-template
 ownership promise is specified by `create-node-definition-factory.ts` and `docs/behavior.md`;
 Angular node identity is not a substitute for that contract.
 
@@ -145,7 +145,7 @@ Angular `v22.1.5` (commit `468b65b74566537456c192ac4281795c5a1e1a5e`) was inspec
 - `packages/forms/signals/src/field/state.ts` defines effective availability, while
   `packages/forms/signals/test/node/api/readonly.spec.ts` and `hidden.spec.ts` cover initial states,
   reactive changes, inheritance, and validation suppression. The `disabled` cases in
-  `packages/forms/signals/test/node/field_node.spec.ts` cover reactive disablement and messages. Gem's imperative overrides and
+  `packages/forms/signals/test/node/field_node.spec.ts` cover reactive disablement and messages. Form Nodes' imperative overrides and
   constructor options remain its existing API; this refactor does not alter those semantics.
 
 The incremental experiment moved `selfDisabled` first: six public tests failed without `untracked()`
@@ -203,7 +203,7 @@ Angular `v22.1.5` remains the inspected reference. In addition to the signal sou
 `packages/forms/signals/src/field/validation.ts`,
 `packages/forms/signals/test/node/validation_status.spec.ts`, and
 `packages/forms/signals/test/node/api/validators/required.spec.ts` were inspected for initial
-validation and parent aggregation. Gem's existing first-invocation deferral and explicit watcher
+validation and parent aggregation. Form Nodes' existing first-invocation deferral and explicit watcher
 lifecycle are preserved by this refactor.
 
 ## Clone callback scope and placement
@@ -267,7 +267,7 @@ instantiations to 71,479 types / 786,139 instantiations without changing its bud
 Angular `v22.1.5` (commit `468b65b74566537456c192ac4281795c5a1e1a5e`) was the inspected reference:
 `packages/forms/signals/src/field/structure.ts`, `packages/forms/signals/src/util/array.ts`, and the
 array structure, tracking, and removal tests in `packages/forms/signals/test/node/field_node.spec.ts`.
-Gem's existing explicit `trackBy` and template-cloning contracts remain unchanged.
+Form Nodes' existing explicit `trackBy` and template-cloning contracts remain unchanged.
 
 An additional forced-GC audit found existing retention while numeric/custom debounce work is pending
 in the shared control-value buffer. The pre-migration array and the class behave identically in both
@@ -346,7 +346,7 @@ without changing its budgets.
 Angular `v22.1.5` (commit `468b65b74566537456c192ac4281795c5a1e1a5e`) was confirmed as the latest
 stable Angular 22 tag during this migration. The inspected reference paths were
 `packages/forms/signals/src/field/{state,structure,validation,submit}.ts` and
-`packages/forms/signals/test/node/{field_node,submit}.spec.ts`. Existing Gem submission, dynamic
+`packages/forms/signals/test/node/{field_node,submit}.spec.ts`. Existing Form Nodes submission, dynamic
 children, and group contracts remain unchanged; this migration does not redesign their behavior.
 
 A constructor audit also reproduced a pre-existing limitation in both implementations and both

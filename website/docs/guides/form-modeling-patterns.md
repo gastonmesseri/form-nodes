@@ -1,6 +1,6 @@
 ---
 title: Form modeling patterns
-description: Design Gem Forms trees around domain ownership, UI interaction, nullability, repeated data, validation, and server boundaries.
+description: Design Form Nodes trees around domain ownership, UI interaction, nullability, repeated data, validation, and server boundaries.
 ---
 
 # Form modeling patterns
@@ -240,7 +240,7 @@ causes, not as synchronization mechanisms for other application state.
 
 ## Separate presentation from participation
 
-Angular control flow decides what is rendered. Gem Forms `hidden` state decides whether a node
+Angular control flow decides what is rendered. Form Nodes `hidden` state decides whether a node
 participates in validation and aggregate interaction state.
 
 :::warning Hidden is form state, not DOM state

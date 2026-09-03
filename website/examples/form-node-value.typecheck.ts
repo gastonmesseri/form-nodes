@@ -1,4 +1,4 @@
-import { array, field, form, type FormNodeValue } from '@gem/ng-forms';
+import { array, field, form, type FormNodeValue } from 'form-nodes';
 
 const profile = form({
   name: field('Marco'),

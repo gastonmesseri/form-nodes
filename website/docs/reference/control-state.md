@@ -126,14 +126,14 @@ separate `required` input:
 
 <CodeBlock language="ts" metastring="{12,17-18,20,30}">{formNodeSource}</CodeBlock>
 
-The adapter supplies the complete Gem node state, including disabled reasons, visibility,
+The adapter supplies the complete Form Nodes node state, including disabled reasons, visibility,
 readonly state, constraints, and normalized errors.
 
 ## Bind with formField
 
 Angular's `formField` binding expects a Signal Forms-compatible control such as
 `FormValueControl`. This date control waits until it is touched, then reads `invalid()` and
-`errors()` to render its own accessible error list. A Gem node supplies its opaque `$field`
+`errors()` to render its own accessible error list. A Form Nodes node supplies its opaque `$field`
 adapter:
 
 <CodeBlock language="ts" metastring="{13,15,17,19,29}">{formFieldSource}</CodeBlock>
@@ -473,7 +473,7 @@ controlState.errors();
 
 Angular Reactive Forms object payloads are spread alongside their key. Boolean `true` becomes only
 `{ kind }`, while a primitive payload is available as `value`. Source-owned references such as a
-Gem node or Angular `FieldTree` are not exposed.
+Form Nodes node or Angular `FieldTree` are not exposed.
 
 Disabled reasons use `{ message?: string }`. An unnamed active reason is preserved as `{}` rather
 than filtered out, so only `[]` means that no reason is known. APIs based on `AbstractControl` do

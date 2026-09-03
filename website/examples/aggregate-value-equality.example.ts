@@ -1,4 +1,4 @@
-import { field, form, group, type FormNodeValue } from '@gem/ng-forms';
+import { field, form, group, type FormNodeValue } from 'form-nodes';
 
 let submitted: unknown;
 const profile = form({

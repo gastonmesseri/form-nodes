@@ -21,13 +21,13 @@ Not sure which node shape fits a value? See [Choosing a primitive](../guides/cho
 `form()` can be safely created and used outside an Angular injection context. Value and tree
 operations, state, submission invoked directly, synchronous validation, and asynchronous validation
 all continue to work. When an injector is available, its `DestroyRef` provides deterministic
-cleanup; without one, Gem Forms uses weak ownership so an unreachable form tree can be
+cleanup; without one, Form Nodes uses weak ownership so an unreachable form tree can be
 garbage-collected.
 
 :::
 
 ```ts
-import { array, field, form, group } from '@gem/ng-forms';
+import { array, field, form, group } from 'form-nodes';
 
 const myForm = form({
   name: field(''),
@@ -75,7 +75,7 @@ nested objects, arrays, and field nullability:
 type MyFormValue = FormNodeValue<typeof myForm>;
 ```
 
-Import the type from `@gem/ng-forms`. See the dedicated
+Import the type from `form-nodes`. See the dedicated
 [`FormNodeValue` reference](./form-node-value.md) for a complete example and the distinction from
 the child-map helper `FormValue<TNodes>`.
 
@@ -747,8 +747,8 @@ Returns the opaque terminal adapter used by Angular's `[formField]` directive.
 <input [formField]="profile.username.$field" />
 ```
 
-Select the intended Gem node first and use `$field` only as the binding value. Programmatic form
-operations belong to the Gem form API.
+Select the intended Form Nodes node first and use `$field` only as the binding value. Programmatic form
+operations belong to the Form Nodes form API.
 
 ### Validation properties
 

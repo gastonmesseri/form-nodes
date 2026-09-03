@@ -4,9 +4,9 @@ import { defineConfig } from 'vitest/config';
 import type {} from '@vitest/browser/providers/playwright';
 
 const useSystemChrome = process.env['PLAYWRIGHT_USE_SYSTEM_CHROME'] === 'true';
-const hydrationHtml = readFileSync(resolve('node_modules/.cache/ng-forms/form-node-hydration.html')).toString('base64');
-const signalControlHydrationHtml = readFileSync(resolve('node_modules/.cache/ng-forms/form-node-signal-control-hydration.html')).toString('base64');
-const signalControlFixture = `/@fs/${resolve('node_modules/.cache/ng-forms/aot-signal-control/form-node-signal-control.fixture.mjs')}`;
+const hydrationHtml = readFileSync(resolve('node_modules/.cache/form-nodes/form-node-hydration.html')).toString('base64');
+const signalControlHydrationHtml = readFileSync(resolve('node_modules/.cache/form-nodes/form-node-signal-control-hydration.html')).toString('base64');
+const signalControlFixture = `/@fs/${resolve('node_modules/.cache/form-nodes/aot-signal-control/form-node-signal-control.fixture.mjs')}`;
 
 export default defineConfig({
   define: {

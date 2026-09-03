@@ -1,4 +1,4 @@
-import { field, form, validator } from '@gem/ng-forms';
+import { field, form, validator } from 'form-nodes';
 
 const notBlank = validator<string | null>((ctx) => {
   const node = ctx.field();

@@ -1,4 +1,4 @@
-import { field, form, minLength, required, uniqueItems } from '@gem/ng-forms';
+import { field, form, minLength, required, uniqueItems } from 'form-nodes';
 
 const registration = form({
   username: field('', [required, minLength(3)]),

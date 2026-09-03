@@ -20,7 +20,7 @@ Use this process for every minor pre-1.0 release and every major stable release:
 6. Run tests that cover validation, submission, arrays, and `[formNode]` control bindings.
 
 ```bash
-npm install --save @gem/ng-forms@^0.1
+npm install --save form-nodes@^0.1
 npx tsc --noEmit
 ng build
 ng test
@@ -40,9 +40,26 @@ Every breaking migration will identify:
 
 ## Moving to 0.1.0
 
-`0.1.0` is the initial development version, so there is no earlier Gem Forms version to migrate
+`0.1.0` is the initial development version, so there is no earlier Form Nodes version to migrate
 from. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
+
+### Package name
+
+The library is now named `form-nodes`. Replace the previous package dependency with `form-nodes`
+and update imports, re-exports, module augmentations, and any TypeScript path mappings or bundler
+aliases that reference the previous name.
+
+```bash
+npm install --save form-nodes
+```
+
+```ts
+import { form, field, array } from 'form-nodes';
+```
+
+Exported symbols and form behavior are unchanged by the rename. Remove the previous dependency
+from `package.json` and regenerate your lockfile with your package manager.
 
 ### Validator state access
 

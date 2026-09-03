@@ -1,6 +1,6 @@
 import { computed, isSignal } from '@angular/core';
 
-import { field, form, type ValidatorContext } from '@gem/ng-forms';
+import { field, form, type ValidatorContext } from 'form-nodes';
 
 let nodeSignal: ValidatorContext<string | null>['field'] | undefined;
 const profile = form({

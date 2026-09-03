@@ -3828,7 +3828,7 @@ describe('form', () => {
 
   it('normalizes one dynamically added field shorthand', () => {
     class Account {
-      name = 'Gem';
+      name = 'Form Nodes';
     }
     const profile = form({ name: field('David') });
     const age = profile.add('age', 23);

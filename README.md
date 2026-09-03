@@ -2,20 +2,20 @@
   <img src="https://raw.githubusercontent.com/gastonmesseri/ng-forms/master/website/static/img/form-nodes-logo-big.png" alt="Form Nodes logo" width="280" height="280" />
 </p>
 
-# @gem/ng-forms
+# form-nodes
 
 A small, typed, signal-based forms library for Angular.
 
 ## Install
 
 ```sh
-npm install --save @gem/ng-forms
+npm install --save form-nodes
 ```
 
 ## Usage
 
 ```ts
-import { field, form } from '@gem/ng-forms';
+import { field, form } from 'form-nodes';
 
 const profile = form({
   name: field('', [({ value }) => value() ? null : { kind: 'required' }]),
@@ -34,7 +34,7 @@ Import `FormNode`, add it to the component's `imports`, and bind a node with `[f
 ```ts
 import { Component, viewChild } from '@angular/core';
 
-import { field, FormNode } from '@gem/ng-forms';
+import { field, FormNode } from 'form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -59,7 +59,7 @@ A wrapper component can accept the same `formNode` input and delegate it to an i
 ```ts
 import { Component, input } from '@angular/core';
 
-import { FormNode, type Field } from '@gem/ng-forms';
+import { FormNode, type Field } from 'form-nodes';
 
 @Component({
   selector: 'app-text-field',

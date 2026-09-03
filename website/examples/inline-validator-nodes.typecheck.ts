@@ -1,4 +1,4 @@
-import { array, asyncValidator, field, form, group, validator } from '@gem/ng-forms';
+import { array, asyncValidator, field, form, group, validator } from 'form-nodes';
 
 const profile = form({
   email: field('', {

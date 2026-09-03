@@ -23,7 +23,7 @@ type FormValueContract<TValue extends object> = {
 Import it from the package entry point:
 
 ```ts
-import { type FormValueContract } from '@gem/ng-forms';
+import { type FormValueContract } from 'form-nodes';
 ```
 
 ## Check a form value

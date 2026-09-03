@@ -1,5 +1,5 @@
 {
-  "name": "@gem/ng-forms",
+  "name": "form-nodes",
   "version": "0.1.0",
   "description": "Small, typed, signal-based form primitives for Angular.",
   "license": "MIT",

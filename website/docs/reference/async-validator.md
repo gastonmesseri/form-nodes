@@ -8,7 +8,7 @@ title: asyncValidator()
 reactive dependencies, debounce, cancellation, pending state, errors, and stale results.
 
 ```ts
-import { asyncValidator, field, form } from '@gem/ng-forms';
+import { asyncValidator, field, form } from 'form-nodes';
 
 const usernameAvailable = asyncValidator(({ value, abortSignal }) => {
   return checkUsername(value(), abortSignal).then(available =>
@@ -28,7 +28,7 @@ synchronous conditional validator.
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
-| Let Gem Forms discover dependencies | `asyncValidator(validate, options?)` | [Callback signature](#callback-signature) |
+| Let Form Nodes discover dependencies | `asyncValidator(validate, options?)` | [Callback signature](#callback-signature) |
 | Name dependencies explicitly | `asyncValidator({ params, validate, ... })` | [Parameterized signature](#parameterized-signature) |
 | Delay, condition, or recover validation | `debounce`, `when`, `onError` | [Option reference](#option-reference) |
 | Read value, tree, state, or cancellation | Callback context | [Context reference](#context-reference) |
@@ -231,7 +231,7 @@ Primitives use `Object.is()`. Objects and arrays are compared one level deep:
 
 Include only values that should restart the request.
 
-The signals read by `params` determine when Gem Forms reevaluates the snapshot. Angular signals
+The signals read by `params` determine when Form Nodes reevaluates the snapshot. Angular signals
 track the signal read, not an individual property of an object stored in that signal. The shallow
 comparison then determines whether validation actually restarts:
 
@@ -416,7 +416,7 @@ asyncValidator(({ value, abortSignal }) => {
 });
 ```
 
-Gem Forms discards stale results even when the underlying API ignores this signal.
+Form Nodes discards stale results even when the underlying API ignores this signal.
 
 #### params {#async-validator-context-params}
 
@@ -449,7 +449,7 @@ type AsyncValidationResult =
 | `readonly ValidationError[]` | Adds several errors in returned order |
 
 Observable-like values use their first emission and are then unsubscribed. RxJS Observables satisfy
-the structural contract, but Gem Forms does not require RxJS.
+the structural contract, but Form Nodes does not require RxJS.
 
 `asyncValidator()` returns the marked validator function—not a node or a separate instance with
 properties and methods. Add it directly to a `validators` source.
