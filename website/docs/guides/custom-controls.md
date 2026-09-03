@@ -310,18 +310,26 @@ The facade recognizes `[formNode]`, `[formField]`, `[formControl]`, `formControl
 `connected()` reports whether a supported binding is present, and `source()` identifies the active
 adapter without changing the component's API.
 
-The Reactive Forms and template-driven adapters observe the public `AbstractControl.events` stream.
-They provide value, disabled, dirty, touched, invalid, pending, and errors. Properties these APIs do
-not expose, including readonly, hidden, disabled reasons, and constraint metadata, retain their safe
-neutral defaults. `[formField]` instead exposes Angular Signal Forms state, including constraints,
-required, readonly, hidden, and disabled reasons.
+The Reactive Forms and template-driven adapters observe the public `AbstractControl.events` stream
+and reconcile the current directive control after rendering. They therefore follow a replaced
+`FormControl` and pick up `{ emitEvent: false }` mutations on the next render. They provide value,
+disabled, dirty, touched, invalid, pending, errors, and names declared by `formControlName` or
+`ngModel`. Properties these APIs do not expose, including readonly, hidden, disabled reasons, and
+constraint metadata, retain their safe neutral defaults. `[formField]` instead exposes Angular
+Signal Forms state, including constraints, required, readonly, hidden, and disabled reasons.
 
 All errors are exposed as `readonly { kind: string; ... }[]`, regardless of the source-specific
 error representation. The remaining signals include `value`, `disabled`, `disabledReasons`,
 `dirty`, `hidden`, `invalid`, constraints, `name`, `pattern`, `pending`, `readonly`, `required`, and
 `touched`. Disabled reasons are normalized to `{ message?: string }`, without exposing a Gem node or
-Angular field tree. An unbound component receives neutral values such as `false`, `[]`, `undefined`,
-and `null` rather than an injection error.
+Angular field tree. An unnamed active reason remains `{}` rather than being removed, so an empty
+array always means that no known reason is active. An unbound component receives neutral values
+such as `false`, `[]`, `undefined`, and `null` rather than an injection error.
+
+Server rendering safely starts render-discovered Angular adapters disconnected; they connect after
+the component is rendered in the browser. `[formNode]` can connect synchronously through its host
+registry. Code should always treat `connected()` as the authority and rely on the neutral defaults
+while no source is available.
 
 Call `markAsTouched()` from the custom control's blur interaction to notify whichever forms API is
 currently connected. The operation delegates to that API's native touched behavior and is a safe

@@ -2,11 +2,12 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, effect, forwardRef } from '@angular/core';
+import { Component, effect, forwardRef, signal } from '@angular/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
+import { normalizeAbstractControlName } from './abstract-control';
 import { injectFormControlBoundControl } from './form-control';
 
 @Component({
@@ -31,12 +32,14 @@ class ReactiveAdapterControl implements ControlValueAccessor {
 }
 
 @Component({
-  template: `<reactive-adapter-control [formControl]="name" />`,
+  template: `<reactive-adapter-control [formControl]="selected()" />`,
   standalone: true,
   imports: [ReactiveAdapterControl, ReactiveFormsModule],
 })
 class Host {
   name = new FormControl('', { nonNullable: true });
+  alternative = new FormControl('Alternative', { nonNullable: true });
+  selected = signal(this.name);
 }
 
 const createBoundControl = async () => {
@@ -54,6 +57,13 @@ afterAll(() => TestBed.resetTestEnvironment());
 describe('formControl bound-control adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
+
+  it('normalizes absent, string, and numeric directive names', () => {
+    expect(normalizeAbstractControlName(undefined)).toBeUndefined();
+    expect(normalizeAbstractControlName(null)).toBeUndefined();
+    expect(normalizeAbstractControlName('name')).toBe('name');
+    expect(normalizeAbstractControlName(2)).toBe('2');
+  });
 
   it('connects to a same-host FormControlDirective', async () => {
     const { state } = await createBoundControl();
@@ -75,6 +85,21 @@ describe('formControl bound-control adapter', () => {
     control.setValue('Marco');
     TestBed.flushEffects();
     expect(component.observedValues).toEqual(['', 'Marco']);
+  });
+
+  it('rebinds to a replacement FormControl and unsubscribes from the old control', async () => {
+    const { fixture, state } = await createBoundControl();
+    const previous = fixture.componentInstance.name;
+    const replacement = fixture.componentInstance.alternative;
+
+    fixture.componentInstance.selected.set(replacement);
+    fixture.detectChanges();
+    expect(state.value()).toBe('Alternative');
+
+    previous.setValue('Old');
+    expect(state.value()).toBe('Alternative');
+    replacement.setValue('Current');
+    expect(state.value()).toBe('Current');
   });
 
   it('tracks disabled changes', async () => {

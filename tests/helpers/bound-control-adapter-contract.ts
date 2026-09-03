@@ -1,3 +1,5 @@
+import { effect } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { expect, it } from 'vitest';
 import type { ComponentFixture } from '@angular/core/testing';
 import type { AbstractControl } from '@angular/forms';
@@ -11,7 +13,11 @@ export type AbstractControlContractFixture = {
   state: BoundControlAdapter<string>;
 };
 
-export const runAbstractControlAdapterContract = (source: BoundControlSource, create: () => Promise<AbstractControlContractFixture>) => {
+export const runAbstractControlAdapterContract = (
+  source: BoundControlSource,
+  create: () => Promise<AbstractControlContractFixture>,
+  expectedName?: string,
+) => {
   it(`connects to a same-host ${source} directive`, async () => {
     const { state } = await create();
     expect(state.source).toBe(source);
@@ -83,6 +89,46 @@ export const runAbstractControlAdapterContract = (source: BoundControlSource, cr
     expect(state.touched()).toBe(false);
   });
 
+  it('reconciles silent AbstractControl changes after rendering', async () => {
+    const { control, fixture, state } = await create();
+    control.setValue('Silent', { emitEvent: false });
+    control.markAsDirty({ emitEvent: false });
+    control.markAsTouched({ emitEvent: false });
+    control.setErrors({ silent: true }, { emitEvent: false });
+
+    fixture.detectChanges();
+
+    expect(state.value()).toBe('Silent');
+    expect(state.dirty()).toBe(true);
+    expect(state.touched()).toBe(true);
+    expect(state.invalid()).toBe(true);
+    expect(state.errors()).toEqual([{ kind: 'silent' }]);
+  });
+
+  it('notifies effects when tracked AbstractControl state changes', async () => {
+    const { control, state } = await create();
+    const observations: string[] = [];
+    const effectRef = TestBed.runInInjectionContext(() => effect(() => {
+      observations.push(`${state.value()}:${state.disabled()}:${state.dirty()}:${state.pending()}:${state.touched()}:${state.errors().length}`);
+    }));
+    TestBed.flushEffects();
+
+    control.setValue('Marco');
+    control.markAsDirty();
+    control.markAsPending();
+    control.markAsTouched();
+    control.setErrors({ custom: true });
+    TestBed.flushEffects();
+
+    expect(observations.at(-1)).toBe('Marco:false:true:false:true:1');
+
+    control.disable();
+    TestBed.flushEffects();
+
+    expect(observations.at(-1)).toBe('Marco:true:true:false:true:0');
+    effectRef.destroy();
+  });
+
   it('marks the control as touched', async () => {
     const { control, state } = await create();
     expect(control.touched).toBe(false);
@@ -99,7 +145,7 @@ export const runAbstractControlAdapterContract = (source: BoundControlSource, cr
     expect(state.maxLength()).toBeUndefined();
     expect(state.min()).toBeUndefined();
     expect(state.minLength()).toBeUndefined();
-    expect(state.name()).toBeUndefined();
+    expect(state.name()).toBe(expectedName);
     expect(state.pattern()).toEqual([]);
     expect(state.readonly()).toBe(false);
     expect(state.required()).toBe(false);

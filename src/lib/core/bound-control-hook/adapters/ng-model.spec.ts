@@ -24,7 +24,7 @@ class NgModelAdapterControl implements ControlValueAccessor {
 }
 
 @Component({
-  template: `<ng-model-adapter-control [(ngModel)]="name" [ngModelOptions]="{ standalone: true }" />`,
+  template: `<ng-model-adapter-control name="name" [(ngModel)]="name" [ngModelOptions]="{ standalone: true }" />`,
   standalone: true,
   imports: [FormsModule, NgModelAdapterControl],
 })
@@ -49,5 +49,5 @@ afterAll(() => TestBed.resetTestEnvironment());
 describe('ngModel bound-control adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
-  runAbstractControlAdapterContract('ngModel', createBoundControl);
+  runAbstractControlAdapterContract('ngModel', createBoundControl, 'name');
 });
