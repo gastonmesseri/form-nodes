@@ -1,4 +1,4 @@
-import { computed, signal, type Signal } from '@angular/core';
+import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import type { ControlDebounce } from '../../types/node.type';
 
@@ -35,9 +35,11 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
   commitValue: (value: TControlValue) => void,
   markDirty: () => void,
 ): ControlValueBuffer<TValue, TControlValue> => {
-  const pendingValue = signal(value() as unknown as TControlValue);
+  // Initialization takes a snapshot without subscribing the caller to later node edits.
+  const initialValue = untracked(value);
+  const pendingValue = signal(initialValue as unknown as TControlValue);
   const pending = signal(false);
-  let baseline = value();
+  let baseline = initialValue;
   const state = {
     timer: null as ReturnType<typeof setTimeout> | null,
     controller: null as AbortController | null,

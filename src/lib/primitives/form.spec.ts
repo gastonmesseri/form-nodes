@@ -25,6 +25,128 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it.each(['form', 'group'] as const)('constructs nested %s nodes in computed without tracking their mutable state', (kind) => {
+    const initialName = signal('Marco');
+    const locked = signal(false);
+    const create = vi.fn(() => {
+      const definitions = {
+        details: { name: field(initialName(), [required]) },
+        workflow: form({ city: field('Zurich') }),
+      };
+      const options = { get disabled() { return locked(); } };
+      return kind === 'form' ? form(definitions, options) : group(definitions, options);
+    });
+    const model = computed(create);
+    const first = model();
+    expect(first()).toEqual({ details: { name: 'Marco' }, workflow: { city: 'Zurich' } });
+    expect(first.details.parent()).toBe(first);
+    expect(first.details.name.path()).toEqual(['details', 'name']);
+    expect(first.details.name.root()).toBe(first);
+    expect(first.workflow.city.form()).toBe(first.workflow);
+    expect(first.valid()).toBe(true);
+
+    first.details.name.set('');
+    first.markAsTouched();
+    first.details.name.setValidators([required]);
+    first.setValidators([]);
+    expect(first.invalid()).toBe(true);
+    expect(first.details.name.touched()).toBe(true);
+    expect(model()).toBe(first);
+    expect(create).toHaveBeenCalledOnce();
+
+    locked.set(true);
+    const second = model();
+    expect(second).not.toBe(first);
+    expect(second.details.name.disabled()).toBe(true);
+    expect(second.valid()).toBe(true);
+    initialName.set('Noa');
+    const third = model();
+    expect(third.details.name()).toBe('Noa');
+    expect(third.details.name.parent()).toBe(third.details);
+    expect(create).toHaveBeenCalledTimes(3);
+    expect(first.details.name()).toBe('');
+  });
+
+  it('tracks configured shorthand normalization while constructing a computed form', () => {
+    const message = signal('First message');
+    const configured = createFormPrimitives({
+      get validatorMessages() { return { required: message() }; },
+    });
+    const model = computed(() => configured.form({ details: { name: '' } }));
+    const first = model();
+    first.details.name.setValidators([required]);
+    expect(first.details.name.getError('required')?.message).toBe('First message');
+    first.details.add('nickname', field('Lia'));
+    expect(model()).toBe(first);
+
+    message.set('Second message');
+    const second = model();
+    expect(second).not.toBe(first);
+    second.details.name.setValidators([required]);
+    expect(second.details.name.getError('required')?.message).toBe('Second message');
+  });
+
+  it.each(['field', 'form'] as const)('preserves reactive %s validation and injector ownership in computed forms', async (target) => {
+    const firstInjector = Injector.create({ providers: [] });
+    const secondInjector = Injector.create({ providers: [] });
+    const owner = signal(firstInjector);
+    const revision = signal(0);
+    const abortSignals: AbortSignal[] = [];
+    const validate = vi.fn((ctx: Context<unknown> & { abortSignal: AbortSignal }) => {
+      ctx.value();
+      revision();
+      abortSignals.push(ctx.abortSignal);
+      return new Promise<null>(() => {});
+    });
+    const create = vi.fn(() => {
+      return form({
+        details: { name: field('Marco', target === 'field' ? [asyncValidator(validate)] : []) },
+      }, {
+        validators: target === 'form' ? [asyncValidator(validate)] : [],
+        get injector() { return owner(); },
+      });
+    });
+    const model = computed(create);
+
+    let firstDestroyed = false;
+    try {
+      const first = model();
+      expect(first.pending()).toBe(true);
+      expect(validate).not.toHaveBeenCalled();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(validate).toHaveBeenCalledOnce();
+
+      revision.set(1);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(validate).toHaveBeenCalledTimes(2);
+      expect(abortSignals[0]!.aborted).toBe(true);
+      expect(model()).toBe(first);
+      expect(create).toHaveBeenCalledOnce();
+
+      owner.set(secondInjector);
+      const second = model();
+      expect(second).not.toBe(first);
+      expect(second.pending()).toBe(true);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(validate).toHaveBeenCalledTimes(3);
+      firstInjector.destroy();
+      firstDestroyed = true;
+      expect(abortSignals[1]!.aborted).toBe(true);
+      expect(abortSignals[2]!.aborted).toBe(false);
+      expect(first.pending()).toBe(false);
+      expect(second.pending()).toBe(true);
+      expect(model()).toBe(second);
+      expect(create).toHaveBeenCalledTimes(2);
+    } finally {
+      if (!firstDestroyed) firstInjector.destroy();
+      secondInjector.destroy();
+    }
+    expect(abortSignals.every(controller => controller.aborted)).toBe(true);
+  });
+
   it.each(['form', 'group'] as const)('initializes empty %s nodes inside computed declarations and tracks option getters', (kind) => {
     const locked = signal(false);
     const validate = vi.fn(() => ({ kind: 'required' }));
@@ -124,13 +246,16 @@ describe('form', () => {
     expect(profile.untouched()).toBe(true);
   });
 
-  it('aggregates the first async field validation after nested form construction', async () => {
+  it.each([false, true])('aggregates the first async field validation after nested form construction (computed: %s)', async (inComputed) => {
     const observed: Array<string | null> = [];
     const validate = vi.fn(async ({ value }: Context<string | null>) => {
       observed.push(value());
       return { kind: 'unavailable' };
     });
-    const profile = form({ details: form({ name: field('initial', asyncValidator(validate)) }) });
+    const create = () => {
+      return form({ details: form({ name: field('initial', asyncValidator(validate)) }) });
+    };
+    const profile = inComputed ? computed(create)() : create();
     expect(profile()).toEqual({ details: { name: 'initial' } });
     expect(profile.controlValue()).toEqual({ details: { name: 'initial' } });
     expect(profile.details.name.pending()).toBe(true);

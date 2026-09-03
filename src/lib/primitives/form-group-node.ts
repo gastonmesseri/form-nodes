@@ -263,13 +263,18 @@ export class FormGroupNode<TNodes extends Nodes> {
     );
 
     this.node = this.createNode();
-    this.getChildKeys().forEach(key => (this.children[key] as InternalNode).$api._setParent(this.node, String(key)));
+    // Parent links initialize the new tree; they are not dependencies of its declaration.
+    untracked(() => {
+      this.getChildKeys().forEach(key => (this.children[key] as unknown as InternalNode).$api._setParent(this.node, String(key)));
+    });
     markAsNode(this.node);
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerAngularField(this.node);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
-    this.refreshInjector();
-    this.ensureAsyncValidationWatch();
+    untracked(() => {
+      this.refreshInjector();
+      this.ensureAsyncValidationWatch();
+    });
   }
 
   getNode() {
@@ -441,7 +446,7 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   refreshInjector() {
     refreshNodeInjector(this.node);
-    this.getChildKeys().forEach(key => (this.children[key] as InternalNode).$api._refreshInjector());
+    this.getChildKeys().forEach(key => (this.children[key] as unknown as InternalNode).$api._refreshInjector());
   }
 
   registerControlBinding(binding: NodeControlBinding) {
@@ -453,7 +458,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     const own = findFirstControlBindingInDom(this.controlBindings);
     if (own) return own;
     return this.getChildKeys()
-      .map(key => (this.children[key] as InternalNode).$api._getControlBindingForFocus())
+      .map(key => (this.children[key] as unknown as InternalNode).$api._getControlBindingForFocus())
       .reduce(firstControlBindingInDom, undefined);
   }
 

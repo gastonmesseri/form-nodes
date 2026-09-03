@@ -82,6 +82,29 @@ example.apply(); // 'value'
 - Signals expose reactive state while actions are declared as methods in public types, allowing editors to distinguish state from behavior in IntelliSense.
 - Values remain programmatically readable and writable regardless of disabled, readonly, or hidden state.
 
+## Construction inside computed declarations
+
+`field()`, `form()`, `group()`, and populated `array()` declarations can run inside `computed()`.
+Child normalization, item factories, validator-source normalization, and configuration getters
+retain their signal dependencies. Initialization of parent links, array values, control buffers,
+and validator watchers does not subscribe the declaring computation to mutable node state.
+Editing values, validators, or descendants therefore does not by itself reconstruct the tree.
+
+A dependency explicitly read by the declaration still invalidates the computation. Re-evaluation
+creates a new tree when the declaration constructs fresh nodes; prior edits and interaction state
+are not transferred. Existing retained trees keep their own lifecycle and injector ownership.
+Reactive validators keep tracking their dependencies independently, including outside injection
+contexts. This support concerns construction; ordinary mutation operations remain side effects.
+
+The reference inspected for this correction was Angular `v22.1.5`, commit
+`468b65b74566537456c192ac4281795c5a1e1a5e`. Angular's
+`packages/forms/signals/src/field/structure.ts` materializes children inside `untracked()`, and
+`packages/forms/signals/test/node/field_node.spec.ts` covers child access inside a computed.
+Angular's root factory also installs a management effect through `src/field/manager.ts`, which is
+not a model for root creation inside a computed. Gem deliberately supports constructing fresh
+trees in computed declarations and outside injection contexts, preserving dependencies of its
+declaration factories; Angular's schema/model API is not the public contract.
+
 ## Configured primitive factories
 
 `createFormPrimitives()` returns an isolated `field`, `form`, `group`, and `array` factory set.

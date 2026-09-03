@@ -13,6 +13,28 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it.each([1, [{ name: 'Initial' }]])('constructs computed arrays with initial value %j and preserves factory dependencies', (initialValue) => {
+    const defaultName = signal('Marco');
+    const create = vi.fn(() => array(() => ({ name: field(defaultName(), [required]) }), { initialValue }));
+    const model = computed(create);
+    const first = model();
+    expect(first()).toEqual([{ name: typeof initialValue === 'number' ? 'Marco' : 'Initial' }]);
+    expect(first[0]!.name.path()).toEqual(['0', 'name']);
+    expect(first[0]!.name.root()).toBe(first);
+    first[0]!.name.set('');
+    first.push({ name: 'Lia' });
+    first.setValidators([]);
+    expect(first.invalid()).toBe(true);
+    expect(model()).toBe(first);
+    expect(create).toHaveBeenCalledOnce();
+
+    defaultName.set('Noa');
+    const second = model();
+    expect(second).not.toBe(first);
+    expect(second()).toEqual([{ name: typeof initialValue === 'number' ? 'Noa' : 'Initial' }]);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
   it('keeps extracted array operations bound to their node and updates the owning form', () => {
     const profile = form({ names: array(field(''), ['Marco']) });
     const { push, insert, move, swap, removeAt, set, update, patch, reset, clear, map, filter, find } = profile.names;
