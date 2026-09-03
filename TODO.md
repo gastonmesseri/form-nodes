@@ -10,13 +10,18 @@
   - [ ] check what colors for documentation are the most recognize as good by people
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
-  - [ ] explain that the primitives like field() are really like a normal signal() conceptually (like the ones you bind to ngModel), but in this case it has more features than a normal signal.
-    e.g. myField = field(); myField() to read the value; myField.set() to set the value, like a signal
+
 - [ ] provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
+  - try not using myInput[SIGNAL] and use Object.getOwnPropertySymbols (or something like that), and search for applyValueToInputSignal
+    or maybe just search for some way of setting the value in the signal (without applyValueToInputSignal) applying the transform mannually
+
+- [ ] In writeComponentInput, check if it is already taking into account that the input could have an alias @Input('myAlias') or input(undefined, { alias: 'myAlias' })
+
 - [ ] Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - [ ] Consider changing the @example to something different, like a heading with asterisks **Like this**
 - [ ] In the .add function of group() form() decide what api to use add('key', field('')) or add({ key: field('') })
-  I think the second one is better, and it allows setting several at once
+  I think the second one is better, and it allows setting several at once (maybe not, to make it consistent with .removew)
+  - [ ] rethink the return type of add (it does different depending on the signature)
 
 - [ ] Decide the exact semantics and naming of object-node ancestry lookups.
   - [ ] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
@@ -312,6 +317,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Explain that form primitives use the familiar Angular signal value pattern while adding form-specific features.
 - [x] Add dynamic named children to `form()` and `group()`.
   - [x] Support `add(name, definition)` and atomic `add({ ... })` calls.
   - [x] Expose safe `DynamicNode | undefined` direct dynamic properties.

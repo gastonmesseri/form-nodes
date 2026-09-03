@@ -58,6 +58,11 @@ myForm.allErrors();
 
 ## Reactive state signals
 
+If you already use Angular writable signals, a field follows the same basic value pattern:
+`myForm.fullName()` reads its value and `myForm.fullName.set(value)` changes it. Unlike a plain
+`signal()`, the field also owns form-specific state and behavior such as validation, touched,
+dirty, disabled, reset, debounce, and control binding.
+
 Fields, forms, and arrays expose their state as Angular signals, so templates and reactive code can
 read it directly without subscriptions:
 
