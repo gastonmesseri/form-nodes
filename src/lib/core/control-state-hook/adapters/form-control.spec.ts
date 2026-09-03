@@ -8,7 +8,7 @@ import { FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueA
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { normalizeAbstractControlName } from './abstract-control';
-import { injectFormControlBoundControl } from './form-control';
+import { injectFormControlStateAdapter } from './form-control';
 
 @Component({
   selector: 'reactive-adapter-control',
@@ -17,7 +17,7 @@ import { injectFormControlBoundControl } from './form-control';
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ReactiveAdapterControl), multi: true }],
 })
 class ReactiveAdapterControl implements ControlValueAccessor {
-  state = injectFormControlBoundControl<string>();
+  state = injectFormControlStateAdapter<string>();
   observedValues: string[] = [];
   constructor() {
     effect(() => {
@@ -42,7 +42,7 @@ class Host {
   selected = signal(this.name);
 }
 
-const createBoundControl = async () => {
+const createControlState = async () => {
   const fixture = TestBed.createComponent(Host);
   fixture.detectChanges();
   await fixture.whenStable();
@@ -54,7 +54,7 @@ const createBoundControl = async () => {
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('formControl bound-control adapter', () => {
+describe('formControl control-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
 
@@ -66,20 +66,20 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('connects to a same-host FormControlDirective', async () => {
-    const { state } = await createBoundControl();
+    const { state } = await createControlState();
     expect(state.source).toBe('formControl');
     expect(state.connected()).toBe(true);
   });
 
   it('tracks value changes', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(state.value()).toBe('');
     control.setValue('Marco');
     expect(state.value()).toBe('Marco');
   });
 
   it('notifies an asynchronous effect of value changes', async () => {
-    const { component, control } = await createBoundControl();
+    const { component, control } = await createControlState();
     expect(component.observedValues).toEqual(['']);
 
     control.setValue('Marco');
@@ -88,7 +88,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('rebinds to a replacement FormControl and unsubscribes from the old control', async () => {
-    const { fixture, state } = await createBoundControl();
+    const { fixture, state } = await createControlState();
     const previous = fixture.componentInstance.name;
     const replacement = fixture.componentInstance.alternative;
 
@@ -103,7 +103,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('tracks disabled changes', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(state.disabled()).toBe(false);
     control.disable();
     expect(state.disabled()).toBe(true);
@@ -112,7 +112,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('tracks dirty changes', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(state.dirty()).toBe(false);
     control.markAsDirty();
     expect(state.dirty()).toBe(true);
@@ -121,7 +121,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('tracks and normalizes error changes', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(state.errors()).toEqual([]);
     control.setErrors({ object: { reason: 'taken' }, flag: true, primitive: 'reason' });
     expect(state.errors()).toEqual([
@@ -134,7 +134,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('tracks invalid changes', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(state.invalid()).toBe(false);
     control.setErrors({ custom: true });
     expect(state.invalid()).toBe(true);
@@ -143,7 +143,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('tracks pending changes', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(state.pending()).toBe(false);
     control.markAsPending();
     expect(state.pending()).toBe(true);
@@ -152,7 +152,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('tracks touched changes', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(state.touched()).toBe(false);
     control.markAsTouched();
     expect(state.touched()).toBe(true);
@@ -161,7 +161,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('marks the control as touched', async () => {
-    const { control, state } = await createBoundControl();
+    const { control, state } = await createControlState();
     expect(control.touched).toBe(false);
     state.markAsTouched();
     expect(control.touched).toBe(true);
@@ -169,7 +169,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('provides neutral values for state unavailable from FormControl', async () => {
-    const { state } = await createBoundControl();
+    const { state } = await createControlState();
     expect(state.disabledReasons()).toEqual([]);
     expect(state.hidden()).toBe(false);
     expect(state.max()).toBeUndefined();
@@ -183,7 +183,7 @@ describe('formControl bound-control adapter', () => {
   });
 
   it('disconnects when its component is destroyed', async () => {
-    const { fixture, state } = await createBoundControl();
+    const { fixture, state } = await createControlState();
     expect(state.connected()).toBe(true);
     fixture.destroy();
     expect(state.connected()).toBe(false);

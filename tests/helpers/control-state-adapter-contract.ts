@@ -4,17 +4,17 @@ import { expect, it } from 'vitest';
 import type { ComponentFixture } from '@angular/core/testing';
 import type { AbstractControl } from '@angular/forms';
 
-import type { BoundControlSource } from '../../src/lib/core/bound-control-hook/bound-control';
-import type { BoundControlAdapter } from '../../src/lib/core/bound-control-hook/bound-control-adapter';
+import type { ControlStateSource } from '../../src/lib/core/control-state-hook/control-state';
+import type { ControlStateAdapter } from '../../src/lib/core/control-state-hook/control-state-adapter';
 
 export type AbstractControlContractFixture = {
   control: AbstractControl<string>;
   fixture: ComponentFixture<unknown>;
-  state: BoundControlAdapter<string>;
+  state: ControlStateAdapter<string>;
 };
 
 export const runAbstractControlAdapterContract = (
-  source: BoundControlSource,
+  source: ControlStateSource,
   create: () => Promise<AbstractControlContractFixture>,
   expectedName?: string,
 ) => {

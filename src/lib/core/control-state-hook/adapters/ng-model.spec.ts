@@ -7,8 +7,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe } from 'vitest';
 import { FormControl, FormsModule, NG_VALUE_ACCESSOR, NgControl, type ControlValueAccessor } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { injectNgModelBoundControl } from './ng-model';
-import { runAbstractControlAdapterContract } from '../../../../../tests/helpers/bound-control-adapter-contract';
+import { injectNgModelControlStateAdapter } from './ng-model';
+import { runAbstractControlAdapterContract } from '../../../../../tests/helpers/control-state-adapter-contract';
 
 @Component({
   selector: 'ng-model-adapter-control',
@@ -17,7 +17,7 @@ import { runAbstractControlAdapterContract } from '../../../../../tests/helpers/
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => NgModelAdapterControl), multi: true }],
 })
 class NgModelAdapterControl implements ControlValueAccessor {
-  state = injectNgModelBoundControl<string>();
+  state = injectNgModelControlStateAdapter<string>();
   writeValue() {}
   registerOnChange() {}
   registerOnTouched() {}
@@ -32,7 +32,7 @@ class Host {
   name = '';
 }
 
-const createBoundControl = async () => {
+const createControlState = async () => {
   const fixture = TestBed.createComponent(Host);
   fixture.detectChanges();
   await fixture.whenStable();
@@ -46,8 +46,8 @@ const createBoundControl = async () => {
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('ngModel bound-control adapter', () => {
+describe('ngModel control-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
-  runAbstractControlAdapterContract('ngModel', createBoundControl, 'name');
+  runAbstractControlAdapterContract('ngModel', createControlState, 'name');
 });

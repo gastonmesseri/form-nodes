@@ -1,7 +1,7 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, type OnChanges, type SimpleChanges } from '@angular/core';
 
-import { field, FormNode, injectBoundControl, required, type Field } from '../../src/public-api';
+import { field, FormNode, useControlState, required, type Field } from '../../src/public-api';
 
 @Component({
   standalone: true,
@@ -11,7 +11,7 @@ import { field, FormNode, injectBoundControl, required, type Field } from '../..
 })
 export class AotSignalValueControl implements FormValueControl<string>, OnChanges {
   value = model('');
-  boundControl = injectBoundControl<string>();
+  controlState = useControlState<string>();
   touch = output<void>();
   disabled = input(false, { transform: booleanAttribute });
   dirty = input(false);

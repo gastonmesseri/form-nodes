@@ -1,7 +1,7 @@
 import { Component, forwardRef } from '@angular/core';
 import { FormControl, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
 
-import { injectBoundControl } from '@gem/ng-forms';
+import { useControlState } from '@gem/ng-forms';
 
 // Custom control component
 
@@ -11,7 +11,7 @@ import { injectBoundControl } from '@gem/ng-forms';
   template: `
     <button
       type="button"
-      [disabled]="boundControl.disabled()"
+      [disabled]="controlState.disabled()"
       (click)="select('2026-09-03')"
       (blur)="markAsTouched()"
     >
@@ -20,7 +20,7 @@ import { injectBoundControl } from '@gem/ng-forms';
   `,
 })
 export class DatePicker implements ControlValueAccessor {
-  boundControl = injectBoundControl<string | null>();
+  controlState = useControlState<string | null>();
   value: string | null = null;
 
   select(value: string | null) {
@@ -29,7 +29,7 @@ export class DatePicker implements ControlValueAccessor {
   }
 
   markAsTouched() {
-    this.boundControl.markAsTouched();
+    this.controlState.markAsTouched();
     this.onTouched();
   }
 

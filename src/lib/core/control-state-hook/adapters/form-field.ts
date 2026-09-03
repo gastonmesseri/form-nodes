@@ -1,10 +1,10 @@
 import { FORM_FIELD, type FormField } from '@angular/forms/signals';
 import { DestroyRef, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 
-import type { BoundControlAdapter } from '../bound-control-adapter';
+import type { ControlStateAdapter } from '../control-state-adapter';
 
 /** Resolves and observes a same-host Angular Signal Forms `[formField]`. */
-export const injectFormFieldBoundControl = <TValue>(): BoundControlAdapter<TValue> => {
+export const injectFormFieldControlStateAdapter = <TValue>(): ControlStateAdapter<TValue> => {
   const injector = inject(Injector);
   const destroyRef = inject(DestroyRef);
   const formField = signal<FormField<unknown> | null>(null);

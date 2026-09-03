@@ -1,5 +1,5 @@
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNode, field, injectBoundControl, provideFormNodeConfig, type BoundControl, type BoundControlError, type FormNodeBinding } from '../../src/public-api';
+import { FormNode, field, useControlState, provideFormNodeConfig, type ControlState, type ControlStateError, type FormNodeBinding } from '../../src/public-api';
 
 const name = field('David', { nullable: false });
 declare const nameBinding: FormNodeBinding<typeof name>;
@@ -42,10 +42,10 @@ const classConfig = {
 classConfig.classes.touched = () => true;
 provideFormNodeConfig(classConfig);
 
-declare const boundControl: BoundControl<string | null>;
-const injectedBoundControl = injectBoundControl<string | null>();
-const boundValue: string | null | undefined = boundControl.value();
-const boundErrors: readonly BoundControlError[] = injectedBoundControl.errors();
+declare const controlState: ControlState<string | null>;
+const injectedControlState = useControlState<string | null>();
+const boundValue: string | null | undefined = controlState.value();
+const boundErrors: readonly ControlStateError[] = injectedControlState.errors();
 const boundErrorKind: string | undefined = boundErrors[0]?.kind;
 
 void [FormRoot, FormRootDirective, markAsAsyncValidator, createReactiveWatch, createNodeDefinitionFactory, appendMetadataContributions, boundValue, boundErrorKind];

@@ -1,22 +1,22 @@
 import { APP_ID, DestroyRef, ElementRef, computed, inject, type Signal } from '@angular/core';
 
-import { injectNgModelBoundControl } from './adapters/ng-model';
-import { injectFormNodeBoundControl } from './adapters/form-node';
-import { injectFormFieldBoundControl } from './adapters/form-field';
-import { injectFormControlBoundControl } from './adapters/form-control';
-import { injectFormControlNameBoundControl } from './adapters/form-control-name';
+import { injectNgModelControlStateAdapter } from './adapters/ng-model';
+import { injectFormNodeControlStateAdapter } from './adapters/form-node';
+import { injectFormFieldControlStateAdapter } from './adapters/form-field';
+import { injectFormControlStateAdapter } from './adapters/form-control';
+import { injectFormControlNameStateAdapter } from './adapters/form-control-name';
 
-/** Binding APIs that can supply a universal {@link BoundControl} state facade. */
-export type BoundControlSource = 'formNode' | 'formField' | 'formControl' | 'formControlName' | 'ngModel';
+/** Binding APIs that can supply a universal {@link ControlState} state facade. */
+export type ControlStateSource = 'formNode' | 'formField' | 'formControl' | 'formControlName' | 'ngModel';
 
 /** A validation error normalized across supported Angular form-binding APIs. */
-export type BoundControlError = {
+export type ControlStateError = {
   readonly kind: string;
   readonly [property: string]: unknown;
 };
 
 /** A source-neutral explanation for why the bound control is disabled. */
-export type BoundControlDisabledReason = {
+export type ControlStateDisabledReason = {
   readonly message?: string;
 };
 
@@ -27,21 +27,21 @@ export type BoundControlDisabledReason = {
  * implementation supplies state from every supported Angular forms binding through one stable
  * custom-control API.
  */
-export type BoundControl<TValue = unknown> = {
+export type ControlState<TValue = unknown> = {
   /** Whether a supported form binding is attached to the component host. */
   readonly connected: Signal<boolean>;
   /** API currently supplying the state, or `null` when the component is not bound. */
-  readonly source: Signal<BoundControlSource | null>;
+  readonly source: Signal<ControlStateSource | null>;
   /** Current committed bound value, or `undefined` when disconnected. */
   readonly value: Signal<TValue | undefined>;
   /** Whether the bound control is disabled. */
   readonly disabled: Signal<boolean>;
   /** Reasons currently disabling the bound control. */
-  readonly disabledReasons: Signal<readonly BoundControlDisabledReason[]>;
+  readonly disabledReasons: Signal<readonly ControlStateDisabledReason[]>;
   /** Whether the user has changed the bound control. */
   readonly dirty: Signal<boolean>;
   /** Validation errors normalized to objects containing a `kind`. */
-  readonly errors: Signal<readonly BoundControlError[]>;
+  readonly errors: Signal<readonly ControlStateError[]>;
   /** Whether the bound control is hidden by form state. */
   readonly hidden: Signal<boolean>;
   /** Whether the bound control is invalid. */
@@ -71,28 +71,36 @@ export type BoundControl<TValue = unknown> = {
 };
 
 /**
- * Injects a source-neutral, read-only view of the form state bound to a custom-control component.
+ * Returns a source-neutral, read-only view of the form state bound to a custom Angular component.
  *
- * Call this in a component injection context. When no supported binding exists on the host, the
- * returned signals expose neutral values.
+ * This hook must be called while constructing a custom Angular component and from an Angular
+ * injection context. It reads the forms binding attached to that component's host element. Do not
+ * call it from ordinary application functions, services, directives, or outside dependency
+ * injection. When no supported binding exists on the component host, the returned signals expose
+ * safe neutral values.
  *
  * ```ts
  * export class DatePicker {
  *   value = model<string | null>(null);
- *   boundControl = injectBoundControl<string | null>();
+ *
+ *   controlState = useControlState();
+ * 
+ *   shouldDisplayRequiredAsterisk = computed(() => controlState.required());
  * }
  * ```
+ *
+ * @throws When called outside an Angular injection context.
  */
-export const injectBoundControl = <TValue = unknown>(): BoundControl<TValue> => {
+export const useControlState = <TValue = unknown>(): ControlState<TValue> => {
   const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   const destroyRef = inject(DestroyRef);
   const appId = inject(APP_ID);
   const adapters = [
-    injectFormNodeBoundControl<TValue>(element, destroyRef, appId),
-    injectFormFieldBoundControl<TValue>(),
-    injectFormControlBoundControl<TValue>(),
-    injectFormControlNameBoundControl<TValue>(),
-    injectNgModelBoundControl<TValue>(),
+    injectFormNodeControlStateAdapter<TValue>(element, destroyRef, appId),
+    injectFormFieldControlStateAdapter<TValue>(),
+    injectFormControlStateAdapter<TValue>(),
+    injectFormControlNameStateAdapter<TValue>(),
+    injectNgModelControlStateAdapter<TValue>(),
   ];
   const active = computed(() => adapters.find(adapter => adapter.connected()) ?? null);
 

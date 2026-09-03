@@ -3,7 +3,7 @@ title: Custom controls
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import boundControlSource from '!!raw-loader!../../examples/bound-control-form-node.typecheck.ts';
+import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
 
 # Custom controls
 
@@ -84,7 +84,7 @@ Control edits use the same value channel as `[formNode]`. With `debounce: 300` o
 contains the text currently rendered by the control. Calling `flush()` commits it immediately;
 calling `set()` programmatically replaces it and cancels the pending edit.
 
-If application code writes the node in the same reactive turn as a real bound-control edit, the
+If application code writes the node in the same reactive turn as a real control-state edit, the
 control edit takes precedence. This deterministic rule protects user input from effect-ordering
 races; when no control edit occurred, the programmatic node value remains authoritative.
 
@@ -300,14 +300,14 @@ changes. The optional `touch` output marks the node touched; `focus(options?)` i
 
 ## Read bound state without state inputs
 
-The [`injectBoundControl()` reference](../reference/bound-control.md) lists the complete API,
+The [`useControlState()` reference](../reference/control-state.md) lists the complete API,
 defaults, source precedence, and lifecycle behavior.
 
-`injectBoundControl<T>()` is the stable alternative when a component does not want `[formNode]` to
+`useControlState<T>()` is the stable alternative when a component does not want `[formNode]` to
 write optional `disabled`, `readonly`, `required`, or error inputs through Angular internals. Call
 it in the component injection context and read its signals directly:
 
-<CodeBlock language="ts">{boundControlSource}</CodeBlock>
+<CodeBlock language="ts">{controlStateSource}</CodeBlock>
 
 The facade recognizes `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, and `ngModel`.
 `connected()` reports whether a supported binding is present, and `source()` identifies the active
@@ -338,7 +338,7 @@ Call `markAsTouched()` from the custom control's blur interaction to notify whic
 currently connected. The operation delegates to that API's native touched behavior and is a safe
 no-op while disconnected.
 
-`injectBoundControl()` is deliberately not a second form-control API. Read state from its signals
+`useControlState()` is deliberately not a second form-control API. Read state from its signals
 and use `markAsTouched()` to report the control's blur interaction. Send user-authored value changes
 through the component's `model()`, Angular `FormValueControl`, or `ControlValueAccessor` callbacks.
 Programmatic value writes, reset, disabled state, and other form operations remain owned by the API

@@ -1,10 +1,10 @@
 import { NgControl, type AbstractControl } from '@angular/forms';
 import { DestroyRef, Injector, afterEveryRender, computed, inject, signal } from '@angular/core';
 
-import type { BoundControlSource } from '../bound-control';
-import type { BoundControlAdapter } from '../bound-control-adapter';
+import type { ControlStateSource } from '../control-state';
+import type { ControlStateAdapter } from '../control-state-adapter';
 
-type AbstractControlSource = Extract<BoundControlSource, 'formControl' | 'formControlName' | 'ngModel'>;
+type AbstractControlSource = Extract<ControlStateSource, 'formControl' | 'formControlName' | 'ngModel'>;
 
 /** Normalizes directive names without leaking numeric FormArray keys into the common facade. */
 export const normalizeAbstractControlName = (name: string | number | null | undefined): string | undefined => {
@@ -12,11 +12,11 @@ export const normalizeAbstractControlName = (name: string | number | null | unde
 };
 
 /** Creates normalized bound state for an Angular directive backed by an AbstractControl. */
-export const injectAbstractControlBoundControl = <TValue>(
+export const injectAbstractControlStateAdapter = <TValue>(
   source: AbstractControlSource,
   accepts: (directive: NgControl) => boolean,
   resolveName: (directive: NgControl) => string | undefined = () => undefined,
-): BoundControlAdapter<TValue> => {
+): ControlStateAdapter<TValue> => {
   const injector = inject(Injector);
   const destroyRef = inject(DestroyRef);
   const control = signal<AbstractControl | null>(null);
