@@ -1,3 +1,5 @@
+// Route preloading evaluates Angular dependencies before the playground is rendered.
+import '@angular/compiler';
 import CodeBlock from '@theme/CodeBlock';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 

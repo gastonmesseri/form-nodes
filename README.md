@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/gastonmesseri/ng-forms/master/website/static/img/form-nodes-logo-big.png" alt="Form Nodes logo" width="280" height="280" />
+  <img src="./website/static/img/form-nodes-logo-big.png" alt="Form Nodes logo" width="280" height="280" />
 </p>
 
 # form-nodes
