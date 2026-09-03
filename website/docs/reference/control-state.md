@@ -43,6 +43,37 @@ state, accessibility attributes, and error list from whichever supported form AP
 
 No provider or adapter selection is required.
 
+## API map
+
+| I want to… | Start with | Details |
+| --- | --- | --- |
+| Create the state facade | `useControlState<TValue>()` | [Signature](#signature) |
+| Support a binding API | Host binding | [Component integration styles](#component-integration-styles) |
+| Identify the active binding | `connected()`, `source()` | [Connection properties](#connection-properties) |
+| Read value or validation | `value()`, `errors()`, `invalid()`, `pending()` | [Value and validation properties](#value-and-validation-properties) |
+| Mirror UI state | `disabled()`, `readonly()`, `hidden()`, `required()` | [Interaction and availability properties](#interaction-and-availability-properties) |
+| Apply native constraints | `min()`, `max()`, lengths, `pattern()` | [Constraint properties](#constraint-properties) |
+| Report blur interaction | `markAsTouched()` | [Method reference](#method-reference) |
+| Understand source selection | Adapter priority | [Selection and lifecycle](#selection-and-lifecycle) |
+
+## Signature
+
+```ts
+useControlState<TValue = unknown>(): ControlState<TValue>;
+```
+
+The hook has no arguments or configuration object. `TValue` affects only the type returned by
+`value()`; it does not select an adapter or change runtime behavior.
+
+```ts
+controlState = useControlState<string | null>();
+
+this.controlState.value(); // string | null | undefined
+```
+
+The additional `undefined` represents the disconnected state. Without a generic, `value()` is
+`unknown`, while every state and constraint signal remains fully typed.
+
 ## Component integration styles
 
 A signal custom control declares a `model()` and can optionally implement Angular's
@@ -158,27 +189,255 @@ Every state member is a signal and is safe to read while disconnected.
 
 | Signal | Disconnected default | Meaning |
 | --- | --- | --- |
-| `connected()` | `false` | Whether a supported binding is attached. |
-| `source()` | `null` | Active binding API. |
-| `value()` | `undefined` | Current committed bound value. |
-| `disabled()` | `false` | Whether interaction is disabled. |
-| `disabledReasons()` | `[]` | Source-neutral `{ message?: string }` reasons. |
-| `dirty()` | `false` | Whether the bound control has been changed by interaction. |
-| `errors()` | `[]` | Source-neutral `{ kind: string; ... }` errors. |
-| `hidden()` | `false` | Whether form state hides the control. |
-| `invalid()` | `false` | Whether validation currently fails. |
-| `pending()` | `false` | Whether asynchronous validation is pending. |
-| `touched()` | `false` | Whether the user has interacted with and left the control. |
-| `readonly()` | `false` | Whether editing is disallowed without disabling interaction. |
-| `required()` | `false` | Whether a non-empty value is required. |
-| `min()`, `max()` | `undefined` | Effective numeric or date limits. |
-| `minLength()`, `maxLength()` | `undefined` | Effective length limits. |
-| `pattern()` | `[]` | Effective regular-expression constraints. |
-| `name()` | `undefined` | Generated or declared control name when available. |
+| [`connected()`](#control-state-connected) | `false` | Whether a supported binding is attached. |
+| [`source()`](#control-state-source) | `null` | Active binding API. |
+| [`value()`](#control-state-value) | `undefined` | Current committed bound value. |
+| [`disabled()`](#control-state-disabled) | `false` | Whether interaction is disabled. |
+| [`disabledReasons()`](#control-state-disabledreasons) | `[]` | Source-neutral `{ message?: string }` reasons. |
+| [`dirty()`](#control-state-dirty) | `false` | Whether the bound control changed through interaction. |
+| [`errors()`](#control-state-errors) | `[]` | Source-neutral `{ kind: string; ... }` errors. |
+| [`hidden()`](#control-state-hidden) | `false` | Whether form state hides the control. |
+| [`invalid()`](#control-state-invalid) | `false` | Whether validation currently fails. |
+| [`pending()`](#control-state-pending) | `false` | Whether asynchronous validation is pending. |
+| [`touched()`](#control-state-touched) | `false` | Whether the user interacted with and left the control. |
+| [`readonly()`](#control-state-readonly) | `false` | Whether editing is disallowed without disabling interaction. |
+| [`required()`](#control-state-required) | `false` | Whether a non-empty value is required. |
+| [`min()`](#control-state-min), [`max()`](#control-state-max) | `undefined` | Effective numeric or date limits. |
+| [`minLength()`](#control-state-minlength), [`maxLength()`](#control-state-maxlength) | `undefined` | Effective length limits. |
+| [`pattern()`](#control-state-pattern) | `[]` | Effective regular-expression constraints. |
+| [`name()`](#control-state-name) | `undefined` | Generated or declared control name when available. |
 
 `formNode` and `formField` can supply their richer state models. `formControl`, `formControlName`,
 and `ngModel` supply the state available from `AbstractControl`; unsupported properties retain the
 defaults above. `formControlName` and named `ngModel` bindings expose their directive name.
+
+<div className="api-member-reference">
+
+## Property reference
+
+### Connection properties
+
+#### connected {#control-state-connected}
+
+**Signature:** `connected: Signal<boolean>`
+
+Reports whether a supported binding currently owns the component host.
+
+```ts
+if (this.controlState.connected()) setupFormOnlyBehavior();
+```
+
+#### source {#control-state-source}
+
+**Signature:** `source: Signal<ControlStateSource | null>`
+
+Identifies the selected adapter as `'formNode'`, `'formField'`, `'formControl'`,
+`'formControlName'`, or `'ngModel'`; returns `null` while disconnected.
+
+```ts
+this.controlState.source(); // 'formNode'
+```
+
+### Value and validation properties
+
+#### value {#control-state-value}
+
+**Signature:** `value: Signal<TValue | undefined>`
+
+Reads the committed bound value. User-authored changes still travel through `model()` or the CVA
+callbacks; this signal is readonly.
+
+```ts
+const preview = computed(() => this.controlState.value() ?? 'No value');
+```
+
+#### errors {#control-state-errors}
+
+**Signature:** `errors: Signal<readonly ControlStateError[]>`
+
+Returns source-neutral errors with a required `kind`.
+
+```ts
+const requiredError = computed(() =>
+  this.controlState.errors().find(error => error.kind === 'required'),
+);
+```
+
+#### invalid {#control-state-invalid}
+
+**Signature:** `invalid: Signal<boolean>`
+
+Reports whether validation currently fails.
+
+```ts
+showErrors = computed(() => this.controlState.touched() && this.controlState.invalid());
+```
+
+#### pending {#control-state-pending}
+
+**Signature:** `pending: Signal<boolean>`
+
+Reports unresolved asynchronous validation.
+
+```ts
+const statusText = computed(() => this.controlState.pending() ? 'Checking…' : 'Ready');
+```
+
+### Interaction and availability properties
+
+#### disabled {#control-state-disabled}
+
+**Signature:** `disabled: Signal<boolean>`
+
+Reports whether user interaction is disabled.
+
+```html
+<input [disabled]="controlState.disabled()" />
+```
+
+#### disabledReasons {#control-state-disabledreasons}
+
+**Signature:** `disabledReasons: Signal<readonly ControlStateDisabledReason[]>`
+
+Returns normalized reasons when the active API exposes them.
+
+```ts
+const disabledMessage = computed(() => this.controlState.disabledReasons()[0]?.message);
+```
+
+#### dirty {#control-state-dirty}
+
+**Signature:** `dirty: Signal<boolean>`
+
+Reports whether user interaction changed the bound control.
+
+```ts
+const hasUnsavedChange = computed(() => this.controlState.dirty());
+```
+
+#### hidden {#control-state-hidden}
+
+**Signature:** `hidden: Signal<boolean>`
+
+Reports form-owned visibility state. APIs without hidden state return `false`.
+
+```html
+@if (!controlState.hidden()) {
+  <input [value]="value()" />
+}
+```
+
+#### readonly {#control-state-readonly}
+
+**Signature:** `readonly: Signal<boolean>`
+
+Reports whether editing should be prevented without disabling interaction.
+
+```html
+<input [readonly]="controlState.readonly()" />
+```
+
+#### required {#control-state-required}
+
+**Signature:** `required: Signal<boolean>`
+
+Reports whether the effective validation rules require a non-empty value.
+
+```html
+@if (controlState.required()) {
+  <span aria-hidden="true">*</span>
+}
+```
+
+#### touched {#control-state-touched}
+
+**Signature:** `touched: Signal<boolean>`
+
+Reports whether the user interacted with and left the control.
+
+```html
+@if (controlState.touched() && controlState.invalid()) {
+  <p>Please correct this value.</p>
+}
+```
+
+### Constraint properties
+
+#### min {#control-state-min}
+
+**Signature:** `min: Signal<number | Date | undefined>`
+
+Returns the effective minimum numeric or date constraint.
+
+```ts
+const minimum = this.controlState.min();
+```
+
+#### max {#control-state-max}
+
+**Signature:** `max: Signal<number | Date | undefined>`
+
+Returns the effective maximum numeric or date constraint.
+
+```ts
+const maximum = this.controlState.max();
+```
+
+#### minLength {#control-state-minlength}
+
+**Signature:** `minLength: Signal<number | undefined>`
+
+Returns the effective minimum-length constraint.
+
+```html
+<input [attr.minlength]="controlState.minLength()" />
+```
+
+#### maxLength {#control-state-maxlength}
+
+**Signature:** `maxLength: Signal<number | undefined>`
+
+Returns the effective maximum-length constraint.
+
+```html
+<input [attr.maxlength]="controlState.maxLength()" />
+```
+
+#### pattern {#control-state-pattern}
+
+**Signature:** `pattern: Signal<readonly RegExp[]>`
+
+Returns every effective regular-expression constraint.
+
+```ts
+const accepts = computed(() =>
+  this.controlState.pattern().every(pattern => pattern.test(this.previewValue())),
+);
+```
+
+#### name {#control-state-name}
+
+**Signature:** `name: Signal<string | undefined>`
+
+Returns a generated or declared control name when the active binding exposes one.
+
+```html
+<input [attr.name]="controlState.name()" />
+```
+
+## Method reference
+
+### markAsTouched()
+
+**Signature:** `markAsTouched(): void`
+
+Reports a touched interaction to the active binding and safely does nothing while disconnected.
+
+```html
+<input (blur)="controlState.markAsTouched()" />
+```
+
+</div>
 
 ## Normalized errors and disabled reasons
 
