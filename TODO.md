@@ -20,6 +20,14 @@
 - Provide alternative for non-possible disabled = input() readonly = input(),
   strong alternative like useFieldState() hook, compatible with all angular ways of declaring a form state (ngModel, formControl, new way, formNode)
   this should also be notified in the component-input-writer console.warn
+  boundFieldState = useBoundFieldState<string | null>(); // Maybe infer type from value = model()
+  boundField = useBoundField(); // maybe better
+
+- Check what happens with the new angular FormValueControl (or whatever the name is) if:
+  - My custom control has value = model() and disabled = input();
+  - I instantiate my component like this: <my-component [formNode]="myNode" [disabled]="true" />
+  - i set myNode.enable()
+  - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
 
 - [ ] Decide the exact semantics and naming of object-node ancestry lookups.
   - [ ] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
@@ -259,7 +267,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     exposes parsing errors without also reading the complete validation state.
   - [ ] Verify native `input`, `select`, `textarea`, checkbox, radio, multi-select, number, range, date, month, time, week, and datetime-local value parsing and serialization.
   - [ ] Verify native `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, disabled, readonly, name, accessibility, validity, parse-error, focus, and event synchronization.
-  - [ ] Verify signal controls using `model()` or input/output pairs, `value` versus `checked`, input aliases and transforms, optional state inputs, reset and touch hooks, explicit `provideFormNodeControl()`, and node pass-through.
+  - [ ] Verify component signal controls using `model()` or input/output pairs, `value` versus `checked`, input aliases and transforms, optional state inputs, reset and touch hooks, and node pass-through.
   - [ ] Verify `ControlValueAccessor`, accessor precedence, `NgControl`, synchronous `NG_VALIDATORS`, disabled propagation, touch/change callbacks, and custom-control focus behavior.
   - [ ] Verify multiple bindings to one node, binding-owned errors, rebinding, destruction cleanup, DOM-order focus, and preservation of node-owned debounce work.
   - [ ] Re-check whether `getDebugNode()` and `reflectComponentType()` remain public, stable, sufficient for discovery, and unchanged in the information they expose.
@@ -323,7 +331,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Guard every private Angular lookup and write so incompatible internals only disable affected optional state-input synchronization.
   - [x] Warn once per control and input when compatibility fallback cannot synchronize an optional state input, with safe alternatives.
   - [x] Verify `getDebugNode()` component discovery in an isolated production-mode Chromium run with a full-AOT fixture.
-  - [x] Keep `provideFormNodeControl()` as the explicit fallback for directives and host directives, which `getDebugNode().componentInstance` cannot discover.
+  - [x] Initially keep `provideFormNodeControl()` as the explicit fallback for directives and host directives, which `getDebugNode().componentInstance` cannot discover.
+  - [x] Subsequently remove `provideFormNodeControl()` and intentionally limit automatic signal-control discovery to components; directive integrations can use a component wrapper or `ControlValueAccessor`.
 - [x] Explain that form primitives use the familiar Angular signal value pattern while adding form-specific features.
 - [x] Add dynamic named children to `form()` and `group()`.
   - [x] Support `add(name, definition)` and atomic `add({ ... })` calls.
@@ -554,6 +563,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Bind aggregate forms to native `<form [formNode]="form">` elements.
 - [x] Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
 - [x] Automatically support Angular `FormValueControl` and `FormCheckboxControl`, retaining `provideFormNodeControl()` as the explicit fallback.
+- [x] Remove the explicit signal-control provider after narrowing zero-configuration signal-control discovery to Angular components.
 - [x] Synchronize applicable native and signal-control state such as disabled, readonly, required, invalid, touched, and dirty.
 - [x] Document the supported custom-control integration paths.
 - [x] Reach and enforce high test coverage, including dedicated type, template, package-consumer, browser, SSR, AOT, and hydration tests.

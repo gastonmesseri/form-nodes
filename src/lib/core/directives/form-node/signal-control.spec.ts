@@ -114,7 +114,7 @@ describe('connectSignalControl', () => {
     expect(decoratorFixture.componentInstance.checked).toBe(false);
   });
 
-  it('rejects an invalid explicit signal-control provider', () => {
+  it('rejects an invalid signal-control shape', () => {
     const injector = TestBed.inject(Injector);
     const name = field('', { nullable: false });
     expect(() => connectSignalControl({ checked: undefined } as never, () => name, injector)).toThrowError(

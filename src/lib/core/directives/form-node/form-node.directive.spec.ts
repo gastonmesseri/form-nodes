@@ -17,7 +17,6 @@ import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { field, type Field } from '../../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { provideFormNodeControl } from './form-node-control';
 import { pattern } from '../../validation/validators/pattern';
 import { maxDate } from '../../validation/validators/max-date';
 import { minDate } from '../../validation/validators/min-date';
@@ -268,17 +267,17 @@ describe('FormNode', () => {
     expect(Array.from(inputElement.classList)).not.toEqual(expect.arrayContaining(['ng-invalid', 'ng-pristine', 'ng-untouched', 'ng-pending']));
   });
 
-  it('supports the explicit signal-control provider as a fallback', () => {
+  it('automatically discovers a signal-control component', () => {
     @Component({
       selector: 'explicit-signal-control',
       template: `<span>{{ value() }}</span>`,
       standalone: true,
-      providers: [provideFormNodeControl(() => ExplicitSignalControl)],
     })
     class ExplicitSignalControl {
       value = model('');
       focus = vi.fn();
     }
+    registerSignalModelForJit(ExplicitSignalControl, 'value');
 
     @Component({
       selector: 'explicit-signal-control-host',
@@ -343,13 +342,13 @@ describe('FormNode', () => {
       selector: 'rebound-signal-control',
       template: `<button type="button" (click)="value.set('updated')">{{ value() }}</button>`,
       standalone: true,
-      providers: [provideFormNodeControl(() => ReboundSignalControl)],
     })
     class ReboundSignalControl {
       value = model('');
       dirty = input(false);
       focus = vi.fn();
     }
+    registerSignalModelForJit(ReboundSignalControl, 'value');
     registerSignalInputForJit(ReboundSignalControl, 'dirty', 'dirty');
 
     @Component({
@@ -453,12 +452,12 @@ describe('FormNode', () => {
         selector: 'reset-debounce-signal-control',
         template: `{{ value() }}`,
         standalone: true,
-        providers: [provideFormNodeControl(() => ResetDebounceSignalControl)],
       })
       class ResetDebounceSignalControl {
         value = model('');
         reset = vi.fn();
       }
+      registerSignalModelForJit(ResetDebounceSignalControl, 'value');
 
       @Component({
         template: `<reset-debounce-signal-control [formNode]="name" />`,
@@ -498,12 +497,12 @@ describe('FormNode', () => {
       selector: 'blur-debounce-signal-control',
       template: '',
       standalone: true,
-      providers: [provideFormNodeControl(() => BlurDebounceSignalControl)],
     })
     class BlurDebounceSignalControl {
       value = model('');
       touch = output<void>();
     }
+    registerSignalModelForJit(BlurDebounceSignalControl, 'value');
 
     @Component({
       template: `<blur-debounce-signal-control [formNode]="name" />`,
@@ -1697,7 +1696,7 @@ describe('FormNode', () => {
     }
 
     expect(() => TestBed.createComponent(Host).detectChanges())
-      .toThrowError('formNode: the host must be a native form control, provide a signal custom control, or provide ControlValueAccessor');
+      .toThrowError('formNode: the host must be a native form control, a recognized signal custom-control component, or provide ControlValueAccessor');
   });
 
   it('rejects multiple custom ControlValueAccessors on the same host', () => {
@@ -1975,191 +1974,12 @@ describe('FormNode', () => {
     expect(fixture.componentInstance.name()).toBe('Mark');
   });
 
-  it('supports a signal custom control implemented as a directive', () => {
-    @Directive({
-      selector: 'input[providedSignalControl]',
-      standalone: true,
-      providers: [provideFormNodeControl(() => ProvidedSignalControl)],
-      host: {
-        '[value]': 'value()',
-        '(input)': 'onInput($event)',
-      },
-    })
-    class ProvidedSignalControl {
-      value = model('');
-      disabled = input(false);
-      required = input(false);
-      onInput(event: Event) { this.value.set((event.target as HTMLInputElement).value); }
-    }
-
-    @Component({
-      template: `<input providedSignalControl [formNode]="name">`,
-      standalone: true,
-      imports: [ProvidedSignalControl, FormNode],
-    })
-    class Host {
-      name = field('', [required], { nullable: false });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    const control = fixture.debugElement.children[0]!.injector.get(ProvidedSignalControl);
-    expect(control.required()).toBe(true);
-    expect(control.disabled()).toBe(false);
-    expect(inputElement.required).toBe(false);
-
-    inputElement.value = 'Mark';
-    inputElement.dispatchEvent(new Event('input'));
-    expect(fixture.componentInstance.name()).toBe('Mark');
-
-    fixture.componentInstance.name.disable();
-    fixture.detectChanges();
-    expect(control.disabled()).toBe(true);
-    expect(inputElement.disabled).toBe(false);
-  });
-
-  it('supports a signal checkbox control implemented as a directive', () => {
-    @Directive({
-      selector: 'input[providedSignalCheckbox]',
-      standalone: true,
-      providers: [provideFormNodeControl(() => ProvidedSignalCheckbox)],
-      host: {
-        '[checked]': 'checked()',
-        '(input)': 'onInput($event)',
-      },
-    })
-    class ProvidedSignalCheckbox {
-      checked = model(false);
-      required = input(false);
-      onInput(event: Event) { this.checked.set((event.target as HTMLInputElement).checked); }
-    }
-
-    @Component({
-      template: `<input type="checkbox" providedSignalCheckbox [formNode]="active">`,
-      standalone: true,
-      imports: [ProvidedSignalCheckbox, FormNode],
-    })
-    class Host {
-      active = field(true, [required], { nullable: false });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const inputElement = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    const control = fixture.debugElement.children[0]!.injector.get(ProvidedSignalCheckbox);
-    expect(inputElement.checked).toBe(true);
-    expect(control.required()).toBe(true);
-    expect(inputElement.required).toBe(false);
-
-    fixture.componentInstance.active.set(false);
-    fixture.detectChanges();
-    expect(inputElement.checked).toBe(false);
-
-    inputElement.checked = true;
-    inputElement.dispatchEvent(new Event('input'));
-    expect(fixture.componentInstance.active()).toBe(true);
-  });
-
-  it('supports an explicitly provided signal control composed as a host directive', () => {
-    @Directive({
-      standalone: true,
-      providers: [provideFormNodeControl(() => HostedSignalControl)],
-    })
-    class HostedSignalControl {
-      value = model('');
-      touched = input(false);
-    }
-
-    @Component({
-      selector: 'hosted-signal-control',
-      template: `<button type="button" (click)="control.value.set('Mark')">{{ control.value() }}</button>`,
-      standalone: true,
-      hostDirectives: [HostedSignalControl],
-    })
-    class HostedControlComponent {
-      readonly control = inject(HostedSignalControl);
-    }
-
-    @Component({
-      template: `<hosted-signal-control [formNode]="name" />`,
-      standalone: true,
-      imports: [HostedControlComponent, FormNode],
-    })
-    class Host {
-      name = field('David', { nullable: false });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const component = fixture.debugElement.children[0]!.componentInstance as HostedControlComponent;
-    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
-    expect(button.textContent).toContain('David');
-
-    button.click();
-    fixture.detectChanges();
-    expect(fixture.componentInstance.name()).toBe('Mark');
-    fixture.componentInstance.name.markAsTouched();
-    fixture.detectChanges();
-    expect(component.control.touched()).toBe(true);
-  });
-
-  it('supports an explicitly provided signal control through transitive host directives', () => {
-    @Directive({
-      standalone: true,
-      providers: [provideFormNodeControl(() => TransitiveSignalControl)],
-    })
-    class TransitiveSignalControl {
-      value = model('');
-      required = input(false);
-    }
-
-    @Directive({
-      standalone: true,
-      hostDirectives: [TransitiveSignalControl],
-    })
-    class SignalControlBridge {}
-
-    @Component({
-      selector: 'transitive-signal-control',
-      template: `<button type="button" (click)="control.value.set('Mark')">{{ control.value() }}</button>`,
-      standalone: true,
-      hostDirectives: [SignalControlBridge],
-    })
-    class TransitiveControlComponent {
-      readonly control = inject(TransitiveSignalControl);
-    }
-
-    @Component({
-      template: `<transitive-signal-control [formNode]="name" />`,
-      standalone: true,
-      imports: [TransitiveControlComponent, FormNode],
-    })
-    class Host {
-      name = field('David', [required], { nullable: false });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const component = fixture.debugElement.children[0]!.componentInstance as TransitiveControlComponent;
-    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
-    expect(button.textContent).toContain('David');
-    expect(component.control.required()).toBe(true);
-
-    button.click();
-    fixture.detectChanges();
-    expect(fixture.componentInstance.name()).toBe('Mark');
-  });
-
-  it('prefers a ControlValueAccessor over an explicit signal-control provider', () => {
+  it('prefers a ControlValueAccessor over an automatically discovered signal control', () => {
     @Component({
       selector: 'combined-control',
       template: '',
       standalone: true,
-      providers: [
-        provideFormNodeControl(() => CombinedControl),
-        { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CombinedControl), multi: true },
-      ],
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CombinedControl), multi: true }],
     })
     class CombinedControl implements ControlValueAccessor {
       value = model('signal initial');

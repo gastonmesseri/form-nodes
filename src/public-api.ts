@@ -39,8 +39,6 @@ export {
   type ValidatorMessageParameters,
 } from './lib/core/validation/validator-messages';
 export {
-  FORM_NODE_CONTROL,
-  provideFormNodeControl,
   type FormNodeControl,
   type FormNodeUiControl,
   type FormNodeValueControl,

@@ -37,7 +37,6 @@ and linker infrastructure.
 | Query or inspect one concrete binding | `FormNode<TNode>`, `FormNodeBinding<TNode>` | [Binding instance](#binding-instance) |
 | Inject the binding on its host | `FORM_NODE` | [`FORM_NODE`](#form_node) |
 | Apply reactive CSS classes | `provideFormNodeConfig()` | [Automatic CSS classes](#automatic-css-classes) |
-| Adapt an unusual signal component | `provideFormNodeControl()` | [Custom-control registration](#custom-control-registration) |
 | Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
 | Bind submit and reset on `<form>` | The same `FormNode` import | [Native form submission](#native-form-submission) |
 
@@ -148,24 +147,23 @@ Conversely, an existing `provideSignalFormsConfig({ classes })` works normally w
 class map for both adapted and native Angular field trees; choose `provideFormNodeConfig()` when the
 same `FormNodeBinding` callbacks should work with both `[formNode]` and adapted `[formField]`.
 
-## Custom-control registration
+## Custom-control components
 
 Components exposing `value = model<T>()`, `checked = model<boolean>()`, compatible input/output
 pairs, or a CVA are normally discovered automatically.
 
-Use `provideFormNodeControl()` when a custom control should register its signal contract explicitly
-instead of relying on compiled component-metadata discovery. This is also the supported discovery
-path for directive and host-directive controls, because `getDebugNode()` does not expose arbitrary
-directive instances. The provider belongs to the custom control itself:
+Signal custom controls are discovered from their compiled component metadata and require no
+library-specific provider. The integration intentionally applies to components: `getDebugNode()`
+does not expose arbitrary directive or host-directive instances. Use a component wrapper or
+`ControlValueAccessor` for those cases.
 
 ```ts
 import { Component, input, model, output } from '@angular/core';
 
-import { FormNode, field, form, provideFormNodeControl, type FormNodeValueControl } from '@gem/ng-forms';
+import { FormNode, field, form, type FormNodeValueControl } from '@gem/ng-forms';
 
 @Component({
   selector: 'app-date-picker',
-  providers: [provideFormNodeControl(() => DatePicker)],
   template: `
     <input
       type="date"
@@ -202,8 +200,7 @@ export class AppointmentEditor {
 ```
 
 `[formNode]` initializes `value`, receives subsequent `value` changes, supplies `disabled`, and
-marks the field touched when the component emits `touch`. Consumers use the component exactly like
-any automatically discovered custom control; they do not repeat the provider.
+marks the field touched when the component emits `touch`. No registration provider is required.
 
 The related public types are:
 
@@ -213,9 +210,6 @@ The related public types are:
 | `FormNodeCheckboxControl` | Boolean signal control whose primary model is `checked`. |
 | `FormNodeControl<T>` | Union of recognized value and checkbox control contracts. |
 | `FormNodeUiControl<T>` | Common optional UI state and node-integration surface. |
-
-`FORM_NODE_CONTROL` is the low-level injection token populated by the provider. Prefer the provider
-function over creating the token binding manually.
 
 ## Pass-through wrappers
 

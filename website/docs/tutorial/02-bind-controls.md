@@ -218,7 +218,7 @@ matrix, state inputs, hooks, precedence, and limitations.
 - [Control binding](../guides/control-binding.md) details native value conversion, constraints,
   focus, status classes, SSR, and hydration.
 - [Custom controls](../guides/custom-controls.md) covers `model()`, input/output pairs,
-  `ControlValueAccessor`, and explicit registration.
+  `ControlValueAccessor`, and component discovery.
 - [Node API](../reference/node-api.md#binding-api) lists the public API available from a
   `viewChild()` binding.
 - [Build a custom rating control](../cookbook/custom-rating-control.md) is a focused end-to-end

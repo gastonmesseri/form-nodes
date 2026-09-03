@@ -60,6 +60,6 @@ export class ReviewEditor {
 
 `[formNode]` discovers the `value` model automatically and synchronizes both directions. `touch` marks the field touched, while the optional `disabled` input receives node state. Controls may also expose standard inputs such as `errors`, `invalid`, `required`, `min`, `max`, and `touched`, plus optional `focus()` and `reset()` hooks.
 
-No library-specific provider is required for this conventional model shape. Use `provideFormNodeControl()` only when unusual metadata prevents automatic discovery.
+No library-specific provider is required for this conventional model shape. Signal-control discovery intentionally applies to components; use a component wrapper or `ControlValueAccessor` for directive-based controls.
 
 See [Custom controls](../guides/custom-controls.md).

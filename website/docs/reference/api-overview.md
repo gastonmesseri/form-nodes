@@ -30,7 +30,6 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Configure validator messages through Angular DI | `provideValidatorMessages()` | [Configuration](./configuration.md#angular-application-scope) |
 | Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Configuration](./configuration.md#process-wide-fallback) |
 | Add reactive status classes to every binding | `provideFormNodeConfig()` | [Binding configuration](./configuration.md#binding-configuration) |
-| Integrate an unusual signal control | `provideFormNodeControl()` | [Custom controls](../guides/custom-controls.md) |
 | Inspect the API shared by all nodes | `Node`, `DynamicNode`, and `NodeApi` | [Node API](./node-api.md) |
 | Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
 | Use Angular Material controls | `FormNode` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
@@ -233,7 +232,6 @@ Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` imp
 | --- | --- |
 | `provideFormNodeConfig()` | Configures reactive CSS classes for descendant `[formNode]` and `$field`-backed `[formField]` bindings. |
 | `ANGULAR_FORMS_STATUS_CLASSES` | Optional Angular Forms-compatible validity and interaction class preset. |
-| `provideFormNodeControl()` | Explicitly registers a signal-based custom control. |
 | `provideFormNodePassThrough()` | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |

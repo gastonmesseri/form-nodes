@@ -2074,8 +2074,8 @@ The directive currently provides these behaviors:
 - A state input declared by a component custom control takes precedence over a native DOM property with the same template name. Custom-element hosts never receive synthetic `disabled`, `required`, `readonly`, `name`, or constraint properties. When a component signal control or component CVA is hosted on a native form element, native fallback remains available only for properties the component does not declare. This matches Angular Signal Forms' `customControlHasInput()` precedence and prevents duplicate or accidental host writes. Unlike Angular's internal renderer, the public reflection API cannot enumerate inputs belonging to arbitrary directives on the same native host; directive-based controls therefore need to handle native-host collisions explicitly until Angular exposes an equivalent public facility.
 - The standard optional `touch` output marks the field touched; optional `focus()` and `reset()` hooks integrate with the directive and field reset lifecycle. Resetting during a pending control debounce restores the custom control model to the committed value, invokes its reset hook, and prevents the cancelled value from committing later. A library-specific `node` signal remains available through the optional `FormNodeValueControl` extension, but is not required for Angular-compatible controls.
 - When an existing signal custom control is rebound to another node, its value and state inputs switch to the new node, subsequent control events update only that node, and focus and reset registration are removed from the previous node. A debounce already started on the previous node is neither transferred nor cancelled by rebinding: control-value work belongs to node state and each node completes or cancels it independently.
-- `provideFormNodeControl()` remains an explicit fallback for unusual controls whose model is not exposed in Angular component metadata. Binding precedence is deliberate: a matching `ControlValueAccessor` wins first for compatibility with established Angular controls, then an explicit signal-control provider, then an automatically discovered Signal Forms control, then native-control handling.
-- A custom value or checkbox control implemented as a directive or host directive can register itself with `providers: [provideFormNodeControl(() => ControlDirective)]`. The provider remains discoverable through transitive `hostDirectives` composition. Because Angular exposes no public directive-reflection equivalent to `reflectComponentType()`, explicitly provided directives use canonical property names: `value` or `checked` for the model and any standard state input such as `disabled`, `required`, or `errors`. Signal inputs are synchronized with their transforms, and a declared state input takes precedence over a native host property with the same name. Unrelated directives on the same element are not discovered or updated automatically.
+- Binding precedence is deliberate: a matching `ControlValueAccessor` wins first for compatibility with established Angular controls, followed by an automatically discovered signal control and then native-control handling.
+- Automatic signal-control discovery is component-only. Angular's public `getDebugNode()` exposes the host component instance but not arbitrary directive or host-directive instances, so directive-based signal controls are not supported. A directive-based integration should use a component wrapper or `ControlValueAccessor` instead.
 - Model-to-view `writeValue()` calls are guarded against reentrant `onChange` callbacks. A legacy CVA that invokes its registered change callback from inside `writeValue()` therefore cannot mark the field dirty, write the value back, or create a feedback loop.
 - When several Angular accessors match, selection follows Angular's precedence: one custom accessor, then one specialized built-in accessor, then the default accessor. Multiple accessors within the selected category are rejected as ambiguous.
 - Synchronous validators provided by a CVA through `NG_VALIDATORS` participate in the field's real validation state. Their Angular validation key becomes `error.kind`, and `registerOnValidatorChange()` invalidates the reactive result. These binding-owned errors are suppressed with the field's other errors while it is disabled, readonly, or hidden and are removed when the binding is destroyed or changes field.
@@ -2170,28 +2170,6 @@ The predicate receives the same stable `FormNodeBinding` exposed by the template
 
 This behavior follows Angular Signal Forms as inspected in Angular `22.1.4`, commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, specifically `FormField.errors`, `FormField.focus()`, `FormField.reset()`, and `FormField.installClassBindingEffect()` in `packages/forms/signals/src/directive/form_field.ts`, the public `FormFieldBinding` in `packages/forms/signals/src/api/types.ts`, and the binding coverage in `packages/forms/signals/test/web/form_field.spec.ts`.
 
-### Explicit signal-control registration
-
-Automatic `FormValueControl` discovery is the zero-configuration path. A custom component may instead register itself explicitly with `provideFormNodeControl()`. This guarantees that `[formNode]` finds the intended control without relying on discovery from Angular's compiled input/output metadata and is the recommended fallback for controls with unusual model metadata. Components and host directives that intentionally consume the `formNode` input are pass-through wrappers instead and do not use this provider merely to delegate the node.
-
-```ts
-@Component({
-  selector: 'app-date-picker',
-  providers: [provideFormNodeControl(() => DatePicker)],
-  template: `...`,
-})
-export class DatePicker implements FormNodeValueControl<Date | null> {
-  value = model<Date | null>(null);
-  node = signal<Field<Date | null> | null>(null);
-}
-```
-
-```html
-<app-date-picker [formNode]="form.birthDate" />
-```
-
-The provider is optional and does not replace Angular's `FormValueControl` model contract: the component still exposes `value = model<T>()`, or `checked = model<boolean>()` for checkbox controls. The optional `node` signal receives the exact bound field, allowing the component to derive additional UI state directly. Supplying the provider avoids automatic control discovery; if the component also declares Angular read-only state inputs such as `disabled` or `errors`, synchronizing those inputs still uses the isolated Angular compatibility adapter described below. A component can avoid that state-input adapter by deriving such state from `node()` instead.
-
 ### Native parse errors
 
 Native controls parse their raw UI state before calling `setControlValue()`. If the browser reports
@@ -2238,7 +2216,7 @@ the rest of the optional state surface.
 
 This adapter is intentionally a temporary compatibility boundary. Angular's relevant implementation is `packages/core/src/render3/instructions/write_to_directive_input.ts`, `packages/core/src/render3/features/ng_onchanges_feature.ts`, `packages/core/src/render3/apply_value_input_field.ts`, and `packages/core/src/render3/component_ref.ts`. Neither the structurally discovered input node, its `applyValueToInputSignal()` method, nor `ɵcmp.setInput` is covered by Angular's public compatibility guarantees.
 
-Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an existing component host has no public API for obtaining that `ComponentRef`. Public `getDebugNode()` safely exposes the component instance, not arbitrary directive or host-directive instances and not a supported input writer. Its component discovery is covered separately in a production-mode Chromium process using a component compiled with full AOT, so the automatic path does not rely on development-mode debug metadata. Consequently, `provideFormNodeControl()` remains necessary as the explicit discovery fallback for directive-based controls; removing it would reduce supported interoperability. Every Angular upgrade must re-evaluate whether public APIs can replace both the input writer and explicit directive discovery. Consumers that want to avoid the input-writing compatibility boundary can expose a writable `model()` for the edited value and a writable `node` signal, then derive status directly from `node()`.
+Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an existing component host has no public API for obtaining that `ComponentRef`. Public `getDebugNode()` safely exposes the component instance, not arbitrary directive or host-directive instances and not a supported input writer. Its component discovery is covered separately in a production-mode Chromium process using a component compiled with full AOT, so the automatic path does not rely on development-mode debug metadata. Signal-control discovery is therefore intentionally limited to components. Every Angular upgrade must re-evaluate whether public APIs can replace the input writer. Consumers that want to avoid the input-writing compatibility boundary can expose a writable `model()` for the edited value and a writable `node` signal, then derive status directly from `node()`.
 
 ## Internal structural behavior
 
