@@ -231,6 +231,10 @@ export class FieldState<TValue> {
     this.ensureAsyncValidationWatch();
   }
 
+  getFieldNode() {
+    return this.node;
+  }
+
   set(next: TValue) {
     this.cancelControlDebounce();
     this.controlValue.set(next);
@@ -353,7 +357,7 @@ export class FieldState<TValue> {
   createClone() {
     // Capture configuration now so the retained callback does not reference this instance.
     const { initialValue, initialValidatorSource, cloneOptions } = this;
-    return () => new FieldState<TValue>(initialValue, initialValidatorSource, cloneOptions).node;
+    return () => new FieldState<TValue>(initialValue, initialValidatorSource, cloneOptions).getFieldNode();
   }
 
   createNode(): Field<TValue> {

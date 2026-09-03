@@ -134,7 +134,7 @@ export function field<TValue>(
   const validatorSource = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions)
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
-  return new FieldState<TValue>(initialValue, validatorSource, resolvedOptions).node;
+  return new FieldState<TValue>(initialValue, validatorSource, resolvedOptions).getFieldNode();
 }
 
 export namespace field {

@@ -19,7 +19,7 @@ Organize implementation code by responsibility directly under `src/lib/`:
 shortcuts. Its internal `FieldState` class in `field-state.ts` owns the signals and operations and
 assembles the callable node. The class is not exported from the package; node actions remain safe
 to pass as callbacks, and scheduled debounce work uses weak ownership.
-Callers use only `FieldState.node`. Its implementation members use plain names without `private`
+Callers use `FieldState.getFieldNode()` to retrieve the already assembled node. Its implementation members use plain names without `private`
 or `readonly` modifiers; `_` prefixes remain on the existing node API's internal hooks.
 Mutable local state uses names such as `selfTouched` and `selfDirty`; the corresponding computed
 properties use the node's public names, `touched` and `dirty`.
