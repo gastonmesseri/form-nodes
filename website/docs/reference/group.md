@@ -3,6 +3,8 @@ title: group()
 description: Reference for object groups without an independent submission workflow.
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import groupRootSource from '!!raw-loader!../../examples/group-root.typecheck.ts';
 import groupFocusSource from '!!raw-loader!../../examples/group-focus.typecheck.ts';
 
 # group()
@@ -46,6 +48,20 @@ declared as a standalone root.
 
 A group can also be the root of a node tree. `form()` is not required when the model needs aggregate
 structure and state but does not own a submission workflow.
+
+:::info A group can be the root model of a component
+
+Use `group()` as the root when a component needs a complete form tree but does not need Gem Forms'
+submission workflow. Values, validation, interaction state, availability, reset, and control
+binding work normally; the component can invoke its own action explicitly.
+
+<CodeBlock language="ts">{groupRootSource}</CodeBlock>
+
+The native reset delegates to `filters.reset()`. Because a group has no `submission` option or
+`submit()` method, use `form()` instead when the root should own an action, invalid-submission
+handling, concurrent-submission protection, or `submitting()` state of its own.
+
+:::
 
 :::info Safe outside Angular injection contexts
 
@@ -1362,9 +1378,7 @@ address.debouncing(); // false
 Focuses the first bound UI control in the group subtree in DOM order. A control bound directly to
 the group takes precedence over descendant bindings. Standard `FocusOptions` are forwarded.
 
-```ts {21}
-{groupFocusSource}
-```
+<CodeBlock language="ts">{groupFocusSource}</CodeBlock>
 
 </div>
 

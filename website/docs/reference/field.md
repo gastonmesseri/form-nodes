@@ -2,6 +2,7 @@
 title: field()
 ---
 
+import CodeBlock from '@theme/CodeBlock';
 import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.ts';
 
 # field()
@@ -963,9 +964,7 @@ username.debouncing(); // false
 Focuses the first `[formNode]` control bound to the field in DOM order. It forwards standard
 `FocusOptions` and does nothing when no control is bound.
 
-```ts {13}
-{fieldFocusSource}
-```
+<CodeBlock language="ts">{fieldFocusSource}</CodeBlock>
 
 ### Validation and interaction
 
