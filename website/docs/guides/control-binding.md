@@ -65,7 +65,7 @@ error payload—including `message`, constraint data, and custom properties—an
 `targetNode` to the corresponding Angular field path. Angular-originated parse errors are not fed
 back into that same Angular state a second time.
 
-## Dynamic arrays with `formField`
+## Dynamic arrays with formField
 
 The same `$field` adapter follows dynamic `array()` operations without eagerly adapting the complete
 collection. When Angular renders an item and evaluates its `$field`, that node receives its field
@@ -95,7 +95,7 @@ myForm.people.move(0, 1);
 Gem remains the source of collection identity and operations. Use `array()` methods rather than
 trying to mutate the opaque Angular `$field`.
 
-## Native form root with `formField` controls
+## Native form root with formField controls
 
 Use Gem's `[formNode]` binding on the native `<form>`, even when individual controls use Angular's
 `[formField]`. This keeps submission and reset owned by the same Gem form tree:

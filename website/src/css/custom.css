@@ -14,6 +14,7 @@
   --ifm-heading-font-weight: 680;
   --ifm-navbar-shadow: 0 1px 0 rgb(25 20 50 / 8%);
   --ifm-toc-border-color: rgb(39 31 79 / 10%);
+  --docusaurus-highlighted-code-line-bg: rgb(72 77 91 / 22%);
   --docs-accent: #158f82;
   --docs-ink: #1d1930;
   --docs-muted: #69647b;
@@ -33,6 +34,7 @@
   --ifm-background-color: #14121d;
   --ifm-background-surface-color: #1b1826;
   --ifm-navbar-background-color: rgb(20 18 29 / 88%);
+  --docusaurus-highlighted-code-line-bg: rgb(100 100 100 / 28%);
   --docs-accent: #5ed4c6;
   --docs-ink: #f7f5ff;
   --docs-muted: #aaa5bb;

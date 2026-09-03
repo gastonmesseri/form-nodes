@@ -2,7 +2,7 @@
 title: FormNode binding API
 ---
 
-# `FormNode` and control-binding APIs
+# FormNode and control-binding APIs
 
 `FormNode` is the standalone Angular directive imported by components to make `[formNode]`
 available. The same symbol is also the public generic type returned by binding queries.
@@ -55,7 +55,7 @@ and linker infrastructure.
 `FormNodeBinding<TNode>` is the structural version of this instance type for provider callbacks and
 generic configuration code.
 
-## `FORM_NODE`
+## FORM_NODE
 
 `FORM_NODE` is the injection token for the binding on the current host. Most application code uses
 a template reference and `viewChild()` instead. Inject the token only when a directive or service

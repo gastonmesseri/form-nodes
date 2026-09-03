@@ -2,7 +2,7 @@
 title: field()
 ---
 
-# `field()`
+# field()
 
 `field()` creates a leaf node for a scalar, object, date, or any other application value. Fields
 normally live inside a `form()` so their parent, path, validation, and state participate in a tree.

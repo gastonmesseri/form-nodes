@@ -8,7 +8,7 @@ description: Diagnose common Gem Forms symptoms and apply concrete fixes.
 Start with the symptom you can observe. Each solution links to the guide that explains the
 underlying behavior in more detail.
 
-## Angular does not recognize `[formNode]`
+## Angular does not recognize [formNode]
 
 **Symptom:** Angular reports that it cannot bind to `formNode`, or the directive does not run.
 
@@ -30,7 +30,7 @@ export class AccountEditor {}
 
 No separate root-form directive is required. See [Control binding](../guides/control-binding.md).
 
-## A `[formNode]` host is rejected
+## A [formNode] host is rejected
 
 **Symptom:** development fails with `formNode: the host must be a native form control, provide a
 signal custom control, or provide ControlValueAccessor`.
@@ -63,7 +63,7 @@ myForm.search.debouncing();   // true
 explicit action must commit immediately. Blur, touch, and form submission also commit pending
 control values. See [Value flow and debounce](../guides/value-flow-and-debounce.md).
 
-## A form is invalid but `errors()` is empty
+## A form is invalid but errors() is empty
 
 **Symptom:** `myForm.invalid()` is `true`, but `myForm.errors()` returns `[]`.
 
@@ -136,7 +136,7 @@ const people = array({
 In an Angular `@for`, track the node instance: `@for (person of people; track person)`. See
 [Complete reconciliation](../guides/dynamic-arrays.md#complete-reconciliation).
 
-## `set(null)` on an array does not leave a null value
+## set(null) on an array does not leave a null value
 
 **Symptom:** calling `myArray.set(null)` produces `[]`.
 
@@ -147,7 +147,7 @@ its items instead of making the node nullable.
 control. Use `array()` when each item needs its own node and state. See
 [Array field or `array()`](../guides/choosing-a-primitive.md#array-field-or-array).
 
-## Calling `reset()` did not restore the original value
+## Calling reset() did not restore the original value
 
 **Symptom:** interaction state clears, but the current value remains.
 
@@ -165,7 +165,7 @@ myForm.reset({
 
 See [Reset](../concepts/values-and-state.md#reset).
 
-## `enable()` does not make a node enabled
+## enable() does not make a node enabled
 
 **Symptom:** the node remains disabled after calling `enable()`.
 

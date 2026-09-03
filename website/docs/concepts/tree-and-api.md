@@ -77,7 +77,7 @@ profile.reset();
 profile.valid();
 ```
 
-## `.api` for collisions and generic code
+## .api for collisions and generic code
 
 Every node also exposes the same members through `.api`, but ordinary application examples should
 not use that longer path. It exists for two specific situations:
