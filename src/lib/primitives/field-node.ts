@@ -69,7 +69,7 @@ export class FieldNode<TValue> {
 
   keyInParent = signal<string | number | null>(null);
 
-  value = signal(undefined as TValue, { equal: (previous, next) => this.areValuesEqual(previous, next) });
+  value = signal(undefined as TValue);
 
   controlValue = signal(undefined as TValue);
 
@@ -100,6 +100,8 @@ export class FieldNode<TValue> {
   form = computed(() => this.parent()?.$api.form() ?? null) as FieldApi<TValue>['form'];
 
   root = computed(() => this.parent()?.$api.root() ?? this.node) as FieldApi<TValue>['root'];
+
+  exposedValue = computed(() => this.value(), { equal: (previous, next) => this.equal(previous, next) });
 
   controlDebounce = computed(() => {
     return this.options?.debounce
@@ -211,7 +213,7 @@ export class FieldNode<TValue> {
     this.cloneOptions = this.options === undefined ? undefined : { ...this.options };
     const { disabled, readonly, hidden } = this.options ?? {};
     const validators = normalizeValidatorSource(this.initialValidatorSource);
-    const equal = this.options?.equal;
+    this.equal = resolveValueEquality(this.options?.equal);
 
     // Seed all local state before creating the context, validation, or public node.
     untracked(() => {
@@ -223,10 +225,7 @@ export class FieldNode<TValue> {
       this.selfHidden.set(getInitialMutableState(hidden));
     });
 
-    // Install user equality only after seeding: temporary undefined is not a field value.
-    this.equal = resolveValueEquality(equal);
-
-    this.context = markAsFieldContext({ value: this.value.asReadonly() });
+    this.context = markAsFieldContext({ value: this.exposedValue });
 
     this.metadata = createNodeMetadata(
       this.validators,
@@ -261,10 +260,6 @@ export class FieldNode<TValue> {
     this.controlValue.set(next);
   }
 
-  areValuesEqual(previous: TValue, next: TValue): boolean {
-    return untracked(() => this.equal(previous, next));
-  }
-
   setControlValue(next: TValue) {
     this.cancelControlDebounce();
     this.controlValue.set(next);
@@ -275,7 +270,7 @@ export class FieldNode<TValue> {
       this.value.set(next);
       return;
     }
-    if (this.areValuesEqual(this.value(), next)) return;
+    if (Object.is(this.value(), next)) return;
     this.debouncing.set(true);
     this.debounceStrategy = debounce;
     if (debounce === 'blur') return;
@@ -397,11 +392,11 @@ export class FieldNode<TValue> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
-      value: this.value.asReadonly(),
+      value: this.exposedValue,
       controlValue: this.controlValue.asReadonly(),
       set: (next: TValue) => this.set(next),
       patch: (next: TValue) => this.set(next),
-      update: (updater: (value: TValue) => TValue) => untracked(() => this.set(updater(this.value()))),
+      update: (updater: (value: TValue) => TValue) => untracked(() => this.set(updater(this.exposedValue()))),
       setControlValue: (next: TValue) => this.setControlValue(next),
       debouncing: this.debouncing.asReadonly(),
       flush: () => this.commitControlValue(),
@@ -448,6 +443,7 @@ export class FieldNode<TValue> {
 
     const internalApi = {
       ...publicApi,
+      _value: this.value.asReadonly(),
       _controlDebounce: this.controlDebounce,
       _controlValue: this.controlValue.asReadonly(),
       _setControlValue: publicApi.setControlValue,
@@ -460,7 +456,7 @@ export class FieldNode<TValue> {
     };
 
     return Object.defineProperties(
-      () => this.value(),
+      () => this.exposedValue(),
       Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, $api: internalApi }),
     ) as Field<TValue>;
   }

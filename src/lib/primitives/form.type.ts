@@ -47,6 +47,34 @@ type WidenFieldShorthand<TValue> =
 
 export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
   /**
+   * Equality for the exposed aggregate value. Defaults to `Object.is`.
+   * Equal results retain the previous public value for callable/value reads, value-dependent
+   * validation, submission values, and update callbacks. Child writes and internal control
+   * synchronization still use the latest committed values. The comparator is captured at
+   * construction and runs untracked when the exposed computed value is evaluated.
+   *
+   * @example
+   * ```ts
+   * form({
+   *   name: field('Marco'),
+   *   age: field(18),
+   * }, { equal: 'deep' });
+   * 
+   * // or
+   * 
+   * form({
+   *   name: field('Marco')
+   * }, {
+   *   equal: (previous, next) => {
+   *     return previous.name.toLowerCase() === next.name.toLowerCase();
+   *   }
+   * });
+   * 
+   * ```
+   */
+  equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean);
+
+  /**
    * One validator or an array of validators that validate the complete form value.
    *
    * Start with a named validator when the rule is reused:
@@ -402,7 +430,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
   /**
-   * Aggregated committed value of every child.
+   * Exposed aggregate of public child values. The `equal` option may retain a previous snapshot.
    *
    * Prefer calling the form directly instead of using `profile.value()` for ordinary value reads:
    *
@@ -414,7 +442,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * ```
    */
   value: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
-  /** Complete value represented by a control bound directly to this form. Pending descendant control values are not aggregated. */
+  /** Current control-facing value, independent of exposed equality. Pending descendant control values are not aggregated. */
   controlValue: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
   /**
    * Assigns a complete form value immediately without marking the form or its descendants dirty.

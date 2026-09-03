@@ -176,7 +176,7 @@ const myForm = form({
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | [`validators`](#field-validators-option) | validator, validator array, or reactive source | Validates the field value |
-| [`equal`](#field-equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent committed values; defaults to `Object.is` |
+| [`equal`](#field-equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed values; defaults to `Object.is` |
 | [`injector`](#field-injector-option) | Angular `Injector` | Provides this node's preferred lifecycle owner |
 | [`adoptBindingInjector`](#field-adoptbindinginjector-option) | `boolean` | Temporarily adopts a direct `[formNode]` host injector; defaults to `true` |
 | [`inheritInjector`](#field-inheritinjector-option) | `boolean` | Uses the nearest ancestor injector when no own injector exists; defaults to `true` |
@@ -210,10 +210,18 @@ the inherited debounce.
 
 **Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
 
-Controls equality of the committed value returned by the field and its `value()` signal. When the
+Controls equality of the exposed value returned by the field and its `value()` signal. When the
 comparison returns `true`, the previous value and reference are retained. Consumers and validators
 depending only on that value do not rerun; other state or validator dependencies can still trigger
-validation. Default equality remains `Object.is`.
+validation. Internal storage and controls still accept the latest committed write. Public parents
+compose the field's exposed value, and `update()` callbacks receive that same exposed value.
+Default equality remains `Object.is`.
+
+The exposed value is a lazy `computed()`: its first evaluation publishes the current value without
+comparing, and later evaluations compare against the last exposed value. Several writes can be
+combined before a read. A comparator exception affects exposed reads after the write has committed;
+a later internal value change permits recovery. Identical writes are skipped by internal
+`Object.is` equality, even if the custom comparator would return `false`.
 
 <CodeBlock language="ts">{fieldEqualitySource}</CodeBlock>
 
@@ -235,14 +243,21 @@ Data views compare their offset, length, and complete backing buffers. BigInt pr
 by value; boxed BigInts and unsupported object kinds compare by identity.
 
 The option is captured at construction, applies only to this field, and is preserved in array
-template clones and configured field factories. It is not an option on `form()`, `group()`, or
-`array()` itself.
+template clones and configured field factories. `form()`, `group()`, and `array()` provide
+[aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality), which retains
+their exposed snapshot independently of child storage.
 
-Equality does not suppress control input, `dirty`, or `touched`. Equivalent control input cancels
-an earlier pending debounce and needs no new debounce; a different value still follows the normal
-debounce policy. `reset()` still clears interaction and validation lifecycle state and restores
-the committed value to the control. Mutating an object in place does not create an old snapshot
-for deep comparison; supply a new value when editing structured data.
+For equality that belongs to one consumer, including comparisons of complete forms, groups, or
+arrays, use [`computed()` with an equality function](../concepts/values-and-state.md#custom-equality-for-a-consumer).
+That derived signal can retain its previous value independently of the node's committed value.
+
+Equality does not suppress control input, `dirty`, or `touched`. Control input follows the normal
+debounce policy even when it is equivalent to the exposed value. Only input identical to the
+current internal value under `Object.is` cancels earlier work without scheduling another debounce.
+`reset()` clears interaction and validation lifecycle state and restores the latest internally
+committed value to the control. `reset(value)` stores the supplied value even if the exposed value
+remains unchanged. Mutating an object in place does not create an old snapshot for deep comparison;
+supply a new value when editing structured data.
 
 #### validators {#field-validators-option}
 
@@ -254,6 +269,8 @@ Assigns one validator, several validators, or a reactive validator source to thi
 const username = field('', {
   validators: [required, minLength(3)],
 });
+// or
+const username = field('', [required, minLength(3)]);
 
 username.invalid(); // true
 ```

@@ -205,6 +205,7 @@ const myForm = form({
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | [`validators`](#form-validators-option) | Validator, validator array, `null`, or `undefined` | Validates the complete object value. Child validators continue to run independently. |
+| [`equal`](#form-equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed aggregate values; defaults to `Object.is`. |
 | [`validatorMessages`](#form-validatormessages-option) | Message catalog or reactive catalog function | Overrides built-in validator messages for this subtree. |
 | [`debounce`](#form-debounce-option) | Milliseconds, `'blur'`, or cancelable asynchronous function | Provides the default control-value debounce inherited by descendants. |
 | [`hidden`](#form-hidden-option) | Boolean or reactive function | Sets or reactively derives hidden state for the complete subtree. |
@@ -225,6 +226,18 @@ object-valued `field()` instead.
 Each option includes its signature, default behavior, scope, and a complete example.
 
 ### Values and validation
+
+#### equal {#form-equal-option}
+
+**Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
+
+Controls the exposed value read by the callable form, its value signal, value-dependent validators,
+submission action, and update callbacks. Children and bound controls keep their current committed
+values even when the form retains an equivalent previous snapshot. Public parents compose the
+exposed child values; internal debounce invalidation remains independent.
+
+See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality) for the
+complete executable example, operation contract, lazy evaluation, and comparator behavior.
 
 #### validators {#form-validators-option}
 
@@ -588,6 +601,9 @@ profile.controlValue(); // { username: 'ada' }
 
 Pending descendant control values are not aggregated into this signal; read each descendant's
 `controlValue()` when that immediate buffered value is needed.
+
+With aggregate `equal`, this control-facing signal can contain newer committed child values than
+the exposed form value even without a pending debounce. See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality).
 
 #### nodeType()
 

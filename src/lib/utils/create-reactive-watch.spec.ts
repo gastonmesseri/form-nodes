@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Injector, runInInjectionContext, signal } from '@angular/core';
+import { Injector, computed, runInInjectionContext, signal } from '@angular/core';
 
 import { createReactiveWatch, createTrackedRunner } from './create-reactive-watch';
 
@@ -64,6 +64,25 @@ describe('createReactiveWatch', () => {
 });
 
 describe('createTrackedRunner', () => {
+  it('filters unchanged computed dependencies without losing later notifications', () => {
+    const source = signal('Marco');
+    const selected = computed(source, { equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    const target = { callback: null as (() => unknown) | null, notify: vi.fn() };
+    const runner = createTrackedRunner(target);
+    const read = vi.fn(() => selected());
+    expect(runner.run(read)).toBe('Marco');
+    source.set('MARCO');
+    expect(target.notify).toHaveBeenCalledOnce();
+    expect(runner.hasChanges()).toBe(false);
+    expect(read).toHaveBeenCalledOnce();
+    source.set('Lia');
+    expect(target.notify).toHaveBeenCalledTimes(2);
+    expect(runner.hasChanges()).toBe(true);
+    expect(runner.run(read)).toBe('Lia');
+    expect(read).toHaveBeenCalledTimes(2);
+    runner.destroy();
+  });
+
   it('tracks callback dependencies and notifies its owner', () => {
     const value = signal(1);
     const target = { callback: null as (() => unknown) | null, notify: vi.fn() };

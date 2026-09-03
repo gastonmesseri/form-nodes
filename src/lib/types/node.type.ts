@@ -324,6 +324,8 @@ export type NearestForm<TNode extends Node> = Node extends TNode ? NavigationFor
     : never;
 export type NodeType = 'field' | 'group' | 'form' | 'array';
 export type InternalNodeApi = NodeApi & {
+  /** Latest committed model used by internal aggregation, control synchronization, and buffers. */
+  _value: Signal<any>;
   _controlDebounce: Signal<ControlDebounce | undefined>;
   _controlValue: Signal<any>;
   _setControlValue(value: any): void;

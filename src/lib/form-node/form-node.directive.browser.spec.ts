@@ -18,7 +18,8 @@ import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
+import { useControlState } from '../control-state/control-state';
+import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
@@ -32,7 +33,141 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNode in Chromium', () => {
-  it.each(['formNode', 'formField'] as const)('preserves equivalent typed input through %s while retaining the committed value', (binding) => {
+  it.each(['formNode', 'formField'] as const)('exposes current committed control state through %s while public equality retains an older value', (binding) => {
+    @Component({ selector: 'equality-control-state', template: '' })
+    class EqualityControl {
+      value = model('');
+      state = useControlState<string>();
+    }
+    registerSignalModelForJit(EqualityControl, 'value');
+    registerSignalOutputForJit(EqualityControl, 'valueChange', 'value');
+    @Component({
+      template: binding === 'formNode'
+        ? `<equality-control-state [formNode]="profile.name" />`
+        : `<equality-control-state [formField]="profile.name.$field" />`,
+      imports: binding === 'formNode' ? [EqualityControl, FormNode] : [EqualityControl, FormField],
+    })
+    class Host {
+      profile = form({ name: field.strict<string>('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase() }) });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const profile = fixture.componentInstance.profile;
+    const control = fixture.debugElement.children[0]!.componentInstance as EqualityControl;
+    const initial = profile();
+    expect(control.state.value()).toBe('Marco');
+    profile.name.set('MARCO');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(profile()).toBe(initial);
+    expect(control.value()).toBe('MARCO');
+    expect(control.state.value()).toBe('MARCO');
+    control.value.set('marco');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(control.state.value()).toBe('marco');
+    expect(profile()).toBe(initial);
+    control.state.markAsTouched();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    profile.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(control.state.value()).toBe('marco');
+    expect(control.value()).toBe('marco');
+    expect(profile()).toBe(initial);
+    expect(control.state.dirty()).toBe(false);
+    expect(control.state.touched()).toBe(false);
+    fixture.destroy();
+    expect(control.state.connected()).toBe(false);
+    expect(control.state.value()).toBeUndefined();
+  });
+
+  it.each(['formNode', 'formField'] as const)('synchronizes array item controls through %s independently of array equality', (binding) => {
+    @Component({
+      template: binding === 'formNode'
+        ? `@for (person of profile.people.items(); track person) { <input [formNode]="person.name"> }`
+        : `@for (person of profile.people.items(); track person) { <input [formField]="person.name.$field"> }`,
+      imports: binding === 'formNode' ? [FormNode] : [FormField],
+    })
+    class Host {
+      profile = form({ people: array({ name: field.strict<string>('Marco') }, {
+        initialValue: 1,
+        equal: (a, b) => a.length === b.length && a.every((item, index) => item.name.toLowerCase() === b[index]!.name.toLowerCase()),
+      }) });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const profile = fixture.componentInstance.profile;
+    const initial = profile();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    profile.people[0]!.name.set('MARCO');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('MARCO');
+    expect(profile()).toBe(initial);
+    input.value = 'marco';
+    dispatch(input, 'input');
+    dispatch(input, 'blur');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(profile.people[0]!.name()).toBe('marco');
+    expect(profile()).toBe(initial);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    profile.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('marco');
+    expect(profile()).toBe(initial);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    fixture.destroy();
+  });
+
+  it.each(['formNode', 'formField'] as const)('synchronizes current child values through %s while the form retains its public value', (binding) => {
+    @Component({
+      template: binding === 'formNode' ? `<input [formNode]="profile.name">` : `<input [formField]="profile.name.$field">`,
+      imports: binding === 'formNode' ? [FormNode] : [FormField],
+    })
+    class Host {
+      profile = form({ name: field.strict<string>('Marco') }, {
+        equal: (a, b) => a.name.toLowerCase() === b.name.toLowerCase(),
+      });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const profile = fixture.componentInstance.profile;
+    const initial = profile();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    profile.name.set('MARCO');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('MARCO');
+    expect(profile()).toBe(initial);
+    input.value = 'marco';
+    dispatch(input, 'input');
+    dispatch(input, 'blur');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(profile.name()).toBe('marco');
+    expect(profile()).toBe(initial);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    profile.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('marco');
+    expect(profile.name()).toBe('marco');
+    expect(profile()).toBe(initial);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    fixture.destroy();
+  });
+
+  it.each(['formNode', 'formField'] as const)('synchronizes current field writes through %s while retaining the exposed value', (binding) => {
     @Component({
       template: binding === 'formNode' ? `<input [formNode]="profile.name">` : `<input [formField]="profile.name.$field">`,
       imports: binding === 'formNode' ? [FormNode] : [FormField],
@@ -42,7 +177,14 @@ describe('FormNode in Chromium', () => {
     }
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
+    const profile = fixture.componentInstance.profile;
+    const initial = profile();
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    profile.name.set('marco');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('marco');
+    expect(profile()).toBe(initial);
     input.value = 'MARCO';
     dispatch(input, 'input');
     TestBed.flushEffects();
@@ -57,8 +199,13 @@ describe('FormNode in Chromium', () => {
     fixture.componentInstance.profile.reset();
     TestBed.flushEffects();
     fixture.detectChanges();
-    expect(input.value).toBe('Marco');
+    expect(input.value).toBe('MARCO');
+    expect(profile()).toBe(initial);
+    expect(profile.name()).toBe('Marco');
+    expect(profile.name.controlValue()).toBe('MARCO');
     expect(fixture.componentInstance.profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    fixture.destroy();
   });
 
   it('binds an implicit field exactly like an explicit field', () => {

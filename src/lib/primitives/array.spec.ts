@@ -4,6 +4,7 @@ import { Injector, computed, signal } from '@angular/core';
 import { form } from './form';
 import { array } from './array';
 import { field } from './field';
+import { group } from './group';
 import { validator } from '../validation/validator';
 import type { InternalNode } from '../types/node.type';
 import { required } from '../validation/validators/required';
@@ -13,6 +14,148 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it.each(['shallow', 'deep'] as const)('compares exposed arrays with %s equality', (equal) => {
+    const values = array(field.strict<number>(1), { initialValue: 2, equal });
+    const initial = values();
+    const first = values[0]!;
+    const second = values[1]!;
+    values.swap(0, 1);
+    expect(values()).toBe(initial);
+    expect(values[0]).toBe(second);
+    expect(first.keyInParent()).toBe(1);
+    const objects = array(field.strict({ name: 'Marco' }), { initialValue: 1, equal });
+    const initialObjects = objects();
+    objects[0]!.set({ name: 'Marco' });
+    expect(objects() === initialObjects).toBe(equal === 'deep');
+    values.push(2);
+    expect(values()).toEqual([1, 1, 2]);
+  });
+
+  it.each(['swap', 'move', 'remove'] as const)('keeps structure, state and debounce current after an equivalent %s', (operation) => {
+    const values = array(field.strict<number>(1), {
+      initialValue: 2,
+      equal: (a, b) => a.every(value => value === 1) && b.every(value => value === 1),
+      debounce: 'blur',
+    });
+    const parent = form({ details: { values } });
+    const initial = parent();
+    const first = values[0]!;
+    const second = values[1]!;
+    first.markAsDirty();
+    first.markAsTouched();
+    (values as unknown as InternalNode).$api._setControlValue([9, 9]);
+    expect(values.debouncing()).toBe(true);
+    if (operation === 'swap') values.swap(0, 1);
+    else if (operation === 'move') values.move(0, 1);
+    else values.removeAt(0);
+    expect(parent()).toBe(initial);
+    expect(values.debouncing()).toBe(false);
+    values.flush();
+    expect(values[0]).toBe(second);
+    expect(second.keyInParent()).toBe(0);
+    expect(second.path()).toEqual(['details', 'values', '0']);
+    expect(values.length()).toBe(operation === 'remove' ? 1 : 2);
+    expect(first.parent()).toBe(operation === 'remove' ? null : values);
+    expect(first.keyInParent()).toBe(operation === 'remove' ? null : 1);
+    expect(parent.dirty()).toBe(true);
+    expect(parent.touched()).toBe(operation !== 'remove');
+    expect(values.controlValue()).toEqual(operation === 'remove' ? [1] : [1, 1]);
+    values.reset();
+    expect(parent.pristine()).toBe(true);
+    expect(parent.untouched()).toBe(true);
+    expect(parent()).toBe(initial);
+    values.clear();
+    expect(values.length()).toBe(0);
+    expect(second.parent()).toBeNull();
+    expect(values.controlValue()).toEqual([]);
+    expect(parent()).toBe(initial);
+  });
+
+  it('captures array equality and compares lazily without tracking comparator reads', () => {
+    const unrelated = signal(0);
+    const equal = vi.fn((a: (number | null)[], b: (number | null)[]) => { unrelated(); return a.length === b.length; });
+    const options: { initialValue: number[]; equal: (a: (number | null)[], b: (number | null)[]) => boolean } = { initialValue: [1], equal };
+    const values = array(field(0), options);
+    values.set([2]);
+    expect(values()).toEqual([2]);
+    expect(equal).not.toHaveBeenCalled();
+    const read = vi.fn(() => values());
+    const observed = computed(read);
+    const initial = observed();
+    options.equal = () => false;
+    values.set([3]);
+    values.set([4]);
+    expect(observed()).toBe(initial);
+    expect(equal).toHaveBeenCalledExactlyOnceWith([2], [4]);
+    unrelated.set(1);
+    expect(observed()).toBe(initial);
+    expect(read).toHaveBeenCalledOnce();
+    expect(equal).toHaveBeenCalledOnce();
+    values.push(5);
+    expect(observed()).toEqual([4, 5]);
+  });
+
+  it('preserves array equality in configured factories and cloned templates', () => {
+    const configured = createFormPrimitives({ nullable: false });
+    const template = configured.array({ name: configured.field('Marco') }, { equal: 'deep', initialValue: 1 });
+    const parent = configured.form({ batches: configured.array(template, { initialValue: 2 }) });
+    const first = parent.batches[0]!;
+    const second = parent.batches[1]!;
+    const initial = parent();
+    first[0]!.name.set('Lia');
+    first[0]!.name.set('Marco');
+    expect(parent()).toBe(initial);
+    first.reset([{ name: 'Marco' }]);
+    expect(parent()).toBe(initial);
+    const replaced = first.removeAt(0);
+    first.insert(0, { name: 'Marco' });
+    expect(replaced!.parent()).toBeNull();
+    expect(parent()).toBe(initial);
+    expect(first[0]).not.toBe(second[0]);
+    expect(template()).toEqual([{ name: 'Marco' }]);
+    first.push({ name: 'Ada' });
+    expect(parent().batches[0]).toEqual([{ name: 'Marco' }, { name: 'Ada' }]);
+    expect(second.length()).toBe(1);
+  });
+
+  it('keeps reconciliation committed when an array comparator throws and recovers after another change', () => {
+    let shouldThrow = true;
+    const failure = new Error('Comparison failed');
+    const values = array({ id: field.strict<number>(1) }, { initialValue: 1, trackBy: 'id', equal: (a, b) => {
+      if (shouldThrow) throw failure;
+      return a.length === b.length;
+    } });
+    const first = values[0]!;
+    expect(values()).toEqual([{ id: 1 }]);
+    values.set([{ id: 2 }]);
+    expect(first.parent()).toBeNull();
+    expect(values[0]!.id()).toBe(2);
+    expect(values.controlValue()).toEqual([{ id: 2 }]);
+    expect(() => values()).toThrow(failure);
+    values.reset();
+    expect(values.controlValue()).toEqual([{ id: 2 }]);
+    shouldThrow = false;
+    values.push({ id: 3 });
+    expect(values()).toEqual([{ id: 2 }, { id: 3 }]);
+  });
+
+  it('reconciles by committed keys when an item retains an older public value', () => {
+    const people = array(() => {
+      return group({ id: field.strict<number>(1), name: field.strict<string>('Marco') }, {
+        equal: (a, b) => a.name === b.name,
+      });
+    }, { initialValue: 1, trackBy: 'id' });
+    const item = people[0]!;
+    expect(people()).toEqual([{ id: 1, name: 'Marco' }]);
+    item.id.set(2);
+    expect(people()).toEqual([{ id: 1, name: 'Marco' }]);
+    expect(people.controlValue()).toEqual([{ id: 2, name: 'Marco' }]);
+    people.set([{ id: 2, name: 'Lia' }]);
+    expect(people[0]).toBe(item);
+    expect(people()).toEqual([{ id: 2, name: 'Lia' }]);
+    expect(item.parent()).toBe(people);
+  });
+
   it.each([1, [{ name: 'Initial' }]])('constructs computed arrays with initial value %j and preserves factory dependencies', (initialValue) => {
     const defaultName = signal('Marco');
     const create = vi.fn(() => array(() => ({ name: field(defaultName(), [required]) }), { initialValue }));

@@ -8,6 +8,29 @@ import { required } from '../validation/validators/required';
 import { createFormPrimitives } from './create-form-primitives';
 
 describe('group', () => {
+  it('preserves configured equality in group templates, updates, and independent array clones', () => {
+    const configured = createFormPrimitives({ nullable: false });
+    const template = configured.group({ name: configured.field('Marco') }, {
+      equal: (a, b) => a.name.toLowerCase() === b.name.toLowerCase(),
+    });
+    const people = array(template, { initialValue: 2 });
+    const first = people[0]!;
+    const second = people[1]!;
+    const initial = people();
+    first.name.set('MARCO');
+    second.name.set('MARCO');
+    expect(people()).toBe(initial);
+    expect(people.controlValue()).toEqual([{ name: 'MARCO' }, { name: 'MARCO' }]);
+    const updater = vi.fn(value => ({ name: `${value.name}!` }));
+    first.update(updater);
+    expect(updater).toHaveBeenCalledExactlyOnceWith(initial[0]);
+    expect(first.name()).toBe('Marco!');
+    expect(second()).toBe(initial[1]);
+    expect(template()).toEqual({ name: 'Marco' });
+    people.push({ name: 'Lia' });
+    expect(people()).toEqual([{ name: 'Marco!' }, { name: 'Marco' }, { name: 'Lia' }]);
+  });
+
   it('prefers positional validators over option validators and propagates their results to the form', () => {
     const positional = vi.fn(({ value }: { value: () => { city: string | null } }) => {
       return value().city ? null : { kind: 'cityRequired' };

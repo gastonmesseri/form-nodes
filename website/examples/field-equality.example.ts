@@ -30,6 +30,14 @@ if (profile.username() !== 'Marco' || profile.username.controlValue() !== 'MARCO
 }
 
 profile.username.reset();
-if (profile.username.controlValue() !== 'Marco' || profile.dirty()) {
-  throw new Error('Reset should restore the committed value to the control and clear interaction.');
+profile.username(); // 'Marco': equality retains the exposed value
+profile.username.controlValue(); // 'MARCO': reset preserves the latest committed write
+if (profile.username() !== 'Marco' || profile.username.controlValue() !== 'MARCO' || profile.dirty()) {
+  throw new Error('Reset should preserve the latest internal value in the control and clear interaction.');
+}
+
+profile.username.update(value => `${value}!`);
+profile.username(); // 'Marco!': update receives the exposed value
+if (profile.username() !== 'Marco!') {
+  throw new Error('Update should receive the same exposed value that consumers read.');
 }

@@ -25,6 +25,423 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('reconciles keyed array order and invalidates a parent buffer when public equality ignores order', () => {
+    const profile = form({ people: array({ id: field.strict<number>(0), name: field.strict<string>('') }, {
+      initialValue: [{ id: 1, name: 'Marco' }, { id: 2, name: 'Lia' }],
+      trackBy: 'id',
+      equal: (a, b) => a.length === b.length && a.every(item => b.some(next => item.id === next.id && item.name === next.name)),
+    }) }, { debounce: 'blur' });
+    const people = profile.people;
+    const first = people[0]!;
+    const second = people[1]!;
+    const initial = profile();
+    first.markAsTouched();
+    (profile as unknown as InternalNode).$api._setControlValue({ people: [{ id: 3, name: 'Pending' }] });
+    expect(profile.debouncing()).toBe(true);
+    people.set([{ id: 2, name: 'Lia' }, { id: 1, name: 'Marco' }]);
+    expect(profile()).toBe(initial);
+    expect(profile.debouncing()).toBe(false);
+    profile.flush();
+    expect(people.items()).toEqual([second, first]);
+    expect(first.path()).toEqual(['people', '1']);
+    expect(first.touched()).toBe(true);
+    expect(people.map(item => item.id())).toEqual([2, 1]);
+    expect(profile.controlValue().people.map(item => item.id)).toEqual([2, 1]);
+    first.name.set('Ada');
+    expect(profile().people).toEqual([{ id: 2, name: 'Lia' }, { id: 1, name: 'Ada' }]);
+  });
+
+  it('retains exposed array values through nested forms while children, controls and validation stay independent', async () => {
+    const externalError = signal(false);
+    const contexts: unknown[][] = [];
+    const action = vi.fn();
+    const validateParent = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
+    const profile = form({ details: form({
+      people: array({ name: field.strict<string>('Marco', [({ value }) => {
+        return value() === '' ? { kind: 'emptyName' } : null;
+      }]) }, {
+        initialValue: 1,
+        equal: (a, b) => a.length === b.length && a.every((item, index) => item.name.toLowerCase() === b[index]!.name.toLowerCase()),
+        validators: (ctx) => {
+          contexts.push([ctx.value(), ctx.node()(), ctx.field().value()]);
+          return externalError() ? { kind: 'external' } : null;
+        },
+      }),
+    }, [validateParent]) }, { validators: [validateParent], submission: { action } });
+    const people = profile.details.people;
+    const initial = profile();
+    expect(profile.valid()).toBe(true);
+    people[0]!.name.setControlValue('MARCO');
+    expect(people[0]!.name()).toBe('MARCO');
+    expect(profile()).toBe(initial);
+    expect(profile.controlValue()).toEqual({ details: { people: [{ name: 'MARCO' }] } });
+    expect(profile.valid()).toBe(true);
+    expect(contexts).toEqual([[initial.details.people, initial.details.people, initial.details.people]]);
+    expect(validateParent).toHaveBeenCalledTimes(2);
+    expect(await profile.submit()).toBe(true);
+    expect(action).toHaveBeenCalledExactlyOnceWith(profile, initial);
+    externalError.set(true);
+    expect(profile.invalid()).toBe(true);
+    expect(people.getError('external')).toBeDefined();
+    expect(contexts).toHaveLength(2);
+    externalError.set(false);
+    profile.markAsTouched();
+    profile.reset();
+    expect(people[0]!.name()).toBe('MARCO');
+    expect(profile()).toBe(initial);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    const updater = vi.fn(value => value.map((item: { name: string }) => ({ name: `${item.name}!` })));
+    people.update(updater);
+    expect(updater).toHaveBeenCalledExactlyOnceWith(initial.details.people);
+    expect(people[0]!.name()).toBe('Marco!');
+    people[0]!.name.set('');
+    expect(profile.invalid()).toBe(true);
+    expect(people[0]!.name.getError('emptyName')).toBeDefined();
+  });
+
+  it.each([false, true])('preserves pending array validation for equivalent values and cancels changed values (injector: %s)', async (withInjector) => {
+    const injector = withInjector ? Injector.create({ providers: [] }) : undefined;
+    const runs: { abortSignal: AbortSignal; finish: (result: null | { kind: string }) => void }[] = [];
+    const profile = form({ details: { people: array({ name: field.strict<string>('Marco') }, {
+      initialValue: 1,
+      equal: 'deep',
+      validators: asyncValidator<{ name: string }[]>((ctx) => {
+        ctx.value();
+        return new Promise<null | { kind: string }>((finish) => { runs.push({ abortSignal: ctx.abortSignal, finish }); });
+      }),
+    }) } }, injector ? { injector } : {});
+    const people = profile.details.people;
+    expect(profile.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(1);
+    const removed = people.removeAt(0);
+    people.insert(0, { name: 'Marco' });
+    expect(removed!.parent()).toBeNull();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.abortSignal.aborted).toBe(false);
+    people[0]!.name.set('Lia');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(2);
+    expect(runs[0]!.abortSignal.aborted).toBe(true);
+    runs[0]!.finish({ kind: 'stale' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(profile.pending()).toBe(true);
+    expect(people.errors()).toEqual([]);
+    runs[1]!.finish(null);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(profile.pending()).toBe(false);
+    expect(profile.valid()).toBe(true);
+    injector?.destroy();
+  });
+
+  it('uses exposed field values for validation, parent composition, updates, and submission', async () => {
+    const externalError = signal(false);
+    const contexts: unknown[][] = [];
+    const action = vi.fn();
+    const validateParent = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
+    const profile = form({
+      details: form({ name: field.strict('Marco', {
+        equal: (a, b) => a.toLowerCase() === b.toLowerCase(),
+        validators: (ctx) => {
+          contexts.push([ctx.value(), ctx.node()(), ctx.field().value()]);
+          return externalError() ? { kind: 'external' } : null;
+        },
+      }) }, [validateParent]),
+    }, { validators: [validateParent], submission: { action } });
+    const name = profile.details.name;
+    const initial = profile();
+    expect(profile.valid()).toBe(true);
+    name.setControlValue('MARCO');
+    expect(profile()).toBe(initial);
+    expect(profile.controlValue()).toEqual({ details: { name: 'MARCO' } });
+    expect(profile.valid()).toBe(true);
+    expect(contexts).toEqual([['Marco', 'Marco', 'Marco']]);
+    expect(validateParent).toHaveBeenCalledTimes(2);
+    expect(await profile.submit()).toBe(true);
+    expect(action).toHaveBeenCalledExactlyOnceWith(profile, initial);
+    externalError.set(true);
+    expect(profile.invalid()).toBe(true);
+    expect(name.getError('external')).toBeDefined();
+    expect(contexts).toHaveLength(2);
+    externalError.set(false);
+    profile.markAsTouched();
+    profile.reset();
+    expect(profile.controlValue()).toEqual({ details: { name: 'MARCO' } });
+    expect(profile()).toBe(initial);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    const updater = vi.fn(value => `${value}!`);
+    name.update(updater);
+    expect(updater).toHaveBeenCalledExactlyOnceWith('Marco');
+    expect(profile()).toEqual({ details: { name: 'Marco!' } });
+    expect(profile.valid()).toBe(true);
+    expect(validateParent).toHaveBeenCalledTimes(4);
+  });
+
+  it.each(['form', 'array'] as const)('invalidates pending %s control input when a field changes only internally', (kind) => {
+    const name = field.strict('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    const target = kind === 'form'
+      ? form({ name }, { debounce: 'blur' })
+      : array(() => name, { initialValue: 1, debounce: 'blur' });
+    const initial = target();
+    const pending = kind === 'form' ? { name: 'Pending' } : ['Pending'];
+    (target as unknown as InternalNode).$api._setControlValue(pending);
+    expect(target.debouncing()).toBe(true);
+    name.set('MARCO');
+    expect(target()).toBe(initial);
+    expect(target.debouncing()).toBe(false);
+    target.flush();
+    expect(name.controlValue()).toBe('MARCO');
+    expect(target.controlValue()).toEqual(kind === 'form' ? { name: 'MARCO' } : ['MARCO']);
+    target.reset();
+    expect(name.controlValue()).toBe('MARCO');
+    expect(target()).toBe(initial);
+  });
+
+  it.each(['form', 'group'] as const)('retains exposed %s values while preserving child validation and interaction', (kind) => {
+    const externalError = signal(false);
+    const validateChild = vi.fn(({ value }: Context<string>) => value() === 'MARCO' ? { kind: 'uppercase' } : null);
+    const validateAggregate = vi.fn(({ value }: Context<{ name: string }>) => {
+      value();
+      return externalError() ? { kind: 'external' } : null;
+    });
+    const definitions = { name: field.strict<string>('Marco', [validateChild]) };
+    const options = {
+      equal: (a: { name: string }, b: { name: string }) => a.name.toLowerCase() === b.name.toLowerCase(),
+      validators: [validateAggregate],
+    };
+    const target = kind === 'form' ? form(definitions, options) : group(definitions, options);
+    const parent = form({ target });
+    const initial = parent();
+    expect(parent.valid()).toBe(true);
+    expect(validateAggregate).toHaveBeenCalledOnce();
+    expect(validateChild).toHaveBeenCalledOnce();
+
+    target.name.setControlValue('MARCO');
+    expect(target.name()).toBe('MARCO');
+    expect(target()).toBe(initial.target);
+    expect(target.value()).toBe(target());
+    expect(target.$api.value()).toBe(target());
+    expect(parent()).toBe(initial);
+    expect(target.controlValue()).toEqual({ name: 'MARCO' });
+    expect(parent.controlValue()).toEqual({ target: { name: 'MARCO' } });
+    expect(parent.dirty()).toBe(true);
+    expect(parent.invalid()).toBe(true);
+    expect(target.errors()).toEqual([]);
+    expect(target.name.errors().some(error => error.kind === 'uppercase')).toBe(true);
+    expect(validateChild).toHaveBeenCalledTimes(2);
+    expect(validateAggregate).toHaveBeenCalledOnce();
+
+    externalError.set(true);
+    expect(target.errors().some(error => error.kind === 'external')).toBe(true);
+    expect(validateAggregate).toHaveBeenCalledTimes(2);
+    target.markAsTouched();
+    expect(parent.touched()).toBe(true);
+    parent.reset();
+    expect(parent.pristine()).toBe(true);
+    expect(parent.untouched()).toBe(true);
+    expect(target.name()).toBe('MARCO');
+    expect(target.controlValue()).toEqual({ name: 'MARCO' });
+    expect(parent()).toBe(initial);
+  });
+
+  it('uses the exposed value consistently in validation, update callbacks, and submission', async () => {
+    const contexts: unknown[][] = [];
+    const action = vi.fn();
+    const target = form({ name: field.strict<string>('Marco') }, {
+      equal: (a, b) => a.name.toLowerCase() === b.name.toLowerCase(),
+      validators: (ctx) => { contexts.push([ctx.value(), ctx.node()(), ctx.field().value()]); return null; },
+      submission: { action },
+    });
+    const initial = target();
+    expect(target.valid()).toBe(true);
+    target.name.set('MARCO');
+    expect(target.valid()).toBe(true);
+    expect(contexts).toEqual([[initial, initial, initial]]);
+    expect(await target.submit()).toBe(true);
+    expect(action).toHaveBeenCalledExactlyOnceWith(target, initial);
+    const updater = vi.fn(value => ({ name: `${value.name}!` }));
+    target.update(updater);
+    expect(updater).toHaveBeenCalledExactlyOnceWith(initial);
+    expect(target.name()).toBe('Marco!');
+    expect(target()).toEqual({ name: 'Marco!' });
+    expect(target.valid()).toBe(true);
+    expect(contexts).toHaveLength(2);
+    target.reset({ name: 'MARCO!' });
+    expect(target().name).toBe('Marco!');
+    expect(target.name()).toBe('MARCO!');
+    expect(target.controlValue().name).toBe('MARCO!');
+    expect(target.pristine()).toBe(true);
+    expect(target.untouched()).toBe(true);
+  });
+
+  it('keeps public parent composition independent of internal changes through groups and arrays', () => {
+    const makeItem = () => {
+      return group({ name: field.strict<string>('Marco') }, { equal: (a, b) => a.name.toLowerCase() === b.name.toLowerCase() });
+    };
+    const target = form({
+      details: { person: makeItem(), city: field('Zurich') },
+      people: array(makeItem, { initialValue: 1 }),
+    });
+    const initial = target();
+    target.details.person.name.set('MARCO');
+    target.people[0]!.name.set('MARCO');
+    expect(target()).toBe(initial);
+    expect(target.people()).toBe(initial.people);
+    expect(target.controlValue().details.person.name).toBe('MARCO');
+    expect(target.controlValue().people[0]!.name).toBe('MARCO');
+    target.details.city.set('Bern');
+    target.people.push({ name: 'Lia' });
+    expect(target().details).toEqual({ person: { name: 'Marco' }, city: 'Bern' });
+    expect(target().people).toEqual([{ name: 'Marco' }, { name: 'Lia' }]);
+    expect(target().people[0]).toBe(target.people[0]!());
+    const extra = target.add('extra', makeItem());
+    expect(target()).toHaveProperty('extra.name', 'Marco');
+    expect(target.controlValue()).toHaveProperty('extra.name', 'Marco');
+    extra.name.set('MARCO');
+    expect(target.controlValue()).toHaveProperty('extra.name', 'MARCO');
+    expect(target()).toHaveProperty('extra.name', 'Marco');
+    target.remove('extra');
+    expect(target()).not.toHaveProperty('extra');
+    expect(extra.parent()).toBeNull();
+  });
+
+  it.each(['target', 'parent', 'array'] as const)('invalidates pending %s control input when an equal public child changes internally', (bufferOwner) => {
+    const target = form({ name: field.strict<string>('Marco') }, {
+      equal: (a, b) => a.name.toLowerCase() === b.name.toLowerCase(),
+    });
+    const parent = bufferOwner === 'array'
+      ? array(() => target, { initialValue: 1, debounce: 'blur' })
+      : form({ target }, { debounce: 'blur' });
+    const owner = bufferOwner === 'target' ? target : parent;
+    const initial = parent();
+    const pending = bufferOwner === 'target' ? { name: 'Pending' }
+      : bufferOwner === 'array' ? [{ name: 'Pending' }] : { target: { name: 'Pending' } };
+    (owner as unknown as InternalNode).$api._setControlValue(pending);
+    expect(owner.debouncing()).toBe(true);
+    target.name.set('MARCO');
+    expect(parent()).toBe(initial);
+    expect(owner.debouncing()).toBe(false);
+    owner.flush();
+    expect(target.name()).toBe('MARCO');
+    expect(target()).toEqual({ name: 'Marco' });
+  });
+
+  it.each(['form', 'group'] as const)('preserves pending %s validation across equivalent writes and cancels stale non-equivalent work', async (kind) => {
+    const runs: { value: { name: string }; abortSignal: AbortSignal; finish: (result: null | { kind: string }) => void }[] = [];
+    const validate = asyncValidator<{ name: string }>((ctx) => {
+      const value = ctx.value();
+      return new Promise<null | { kind: string }>((finish) => { runs.push({ value, abortSignal: ctx.abortSignal, finish }); });
+    });
+    const definitions = { name: field.strict<string>('Marco') };
+    const options = {
+      equal: (a: { name: string }, b: { name: string }) => a.name.toLowerCase() === b.name.toLowerCase(),
+      validators: [validate],
+    };
+    const target = kind === 'form' ? form(definitions, options) : group(definitions, options);
+    const parent = form({ details: form({ target }) });
+    expect(parent.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(1);
+    target.name.set('MARCO');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.abortSignal.aborted).toBe(false);
+    expect(runs[0]!.value).toBe(target());
+    target.name.set('Lia');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(2);
+    expect(runs[0]!.abortSignal.aborted).toBe(true);
+    runs[0]!.finish({ kind: 'stale' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(parent.pending()).toBe(true);
+    expect(target.errors()).toEqual([]);
+    runs[1]!.finish(null);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(parent.pending()).toBe(false);
+    expect(parent.valid()).toBe(true);
+  });
+
+  it.each(['shallow', 'deep'] as const)('supports %s aggregate equality without changing child storage', (equal) => {
+    const target = form({ person: field.strict({ name: 'Marco' }) }, { equal });
+    const initial = target();
+    const replacement = { name: 'Marco' };
+    target.person.set(replacement);
+    expect(target.person()).toBe(replacement);
+    expect(target() === initial).toBe(equal === 'deep');
+    expect(target.controlValue().person).toBe(replacement);
+    const flat = form({ name: field.strict<string>('Marco') }, { equal });
+    const flatInitial = flat();
+    flat.name.set('Lia');
+    flat.name.set('Marco');
+    expect(flat()).toBe(flatInitial);
+  });
+
+  it('captures aggregate equality without tracking comparator reads or comparing initial storage', () => {
+    const dependency = signal(0);
+    const equal = vi.fn((a: { name: string }, b: { name: string }) => { dependency(); return a.name === b.name; });
+    const options: { equal: (a: { name: string }, b: { name: string }) => boolean } = { equal };
+    const declaration = computed(() => form({ name: field.strict<string>('Marco') }, options));
+    const target = declaration();
+    expect(target()).toEqual({ name: 'Marco' });
+    expect(equal).not.toHaveBeenCalled();
+    const observer = vi.fn(() => target());
+    const observed = computed(observer);
+    observed();
+    target.name.set('Lia');
+    observed();
+    expect(equal).toHaveBeenCalledOnce();
+    dependency.set(1);
+    expect(declaration()).toBe(target);
+    observed();
+    expect(observer).toHaveBeenCalledTimes(2);
+    expect(equal).toHaveBeenCalledOnce();
+    options.equal = () => true;
+    target.name.set('Mark');
+    expect(target().name).toBe('Mark');
+    expect(equal).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps committed model access usable when an exposed comparator throws and recovers on a later change', () => {
+    const failure = new Error('Equality failed');
+    let shouldThrow = true;
+    const target = form({ name: field.strict<string>('Marco') }, {
+      equal: (a, b) => { if (shouldThrow) throw failure; return a.name === b.name; },
+    });
+    target();
+    target.name.set('Lia');
+    expect(target.controlValue()).toEqual({ name: 'Lia' });
+    expect(() => target()).toThrow(failure);
+    expect(target.name()).toBe('Lia');
+    expect(() => target()).toThrow(failure);
+    shouldThrow = false;
+    target.name.set('Mark');
+    expect(target()).toEqual({ name: 'Mark' });
+  });
+
+  it('keeps public and control values synchronized without configured equality', () => {
+    const target = form({ name: field('Marco'), people: array({ name: field('Lia') }, { initialValue: 1 }) });
+    expect(target()).toEqual(target.controlValue());
+    expect(target.people()).toEqual(target.people.controlValue());
+    target.name.set('Mark');
+    target.people[0]!.name.set('Ada');
+    expect(target()).toEqual({ name: 'Mark', people: [{ name: 'Ada' }] });
+    expect(target()).toEqual(target.controlValue());
+    expect(target.people()).toEqual(target.people.controlValue());
+  });
+
   it('preserves aggregate values and validation when a field receives an equal value', () => {
     const validateField = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
     const validateForm = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
@@ -54,7 +471,13 @@ describe('form', () => {
     expect(validateForm).toHaveBeenCalledTimes(4);
   });
 
-  it.each(['field', 'form'] as const)('keeps pending %s validation for equal values and cancels it for different values', async (target) => {
+  it.each([
+    { target: 'field', withInjector: false },
+    { target: 'field', withInjector: true },
+    { target: 'form', withInjector: false },
+    { target: 'form', withInjector: true },
+  ])('keeps pending $target validation for equal values and cancels it for different values (injector: $withInjector)', async ({ target, withInjector }) => {
+    const injector = withInjector ? Injector.create({ providers: [] }) : undefined;
     const abortSignals: AbortSignal[] = [];
     const finish: Array<(result: null) => void> = [];
     const validate = vi.fn((ctx: Context<unknown> & { abortSignal: AbortSignal }) => {
@@ -64,7 +487,7 @@ describe('form', () => {
     });
     const profile = form({
       details: { person: field({ name: 'Marco' }, target === 'field' ? [asyncValidator(validate)] : [], { equal: 'deep' }) },
-    }, target === 'form' ? [asyncValidator(validate)] : []);
+    }, target === 'form' ? [asyncValidator(validate)] : [], injector ? { injector } : {});
     expect(profile.pending()).toBe(true);
     await Promise.resolve();
     await Promise.resolve();
@@ -86,6 +509,7 @@ describe('form', () => {
     await Promise.resolve();
     expect(profile.pending()).toBe(false);
     expect(profile.valid()).toBe(true);
+    injector?.destroy();
   });
 
   it('preserves field equality in configured factories and cloned array templates', () => {

@@ -9,6 +9,7 @@ import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
@@ -57,6 +58,8 @@ export class FormGroupNode<TNodes extends Nodes> {
   createDefinitions: ReturnType<typeof createNodeDefinitionFactory>;
 
   cloneOptions: FormOptions<FormValue<TNodes>, any> | undefined;
+
+  equal: (previous: FormValue<TNodes>, next: FormValue<TNodes>) => boolean = Object.is;
 
   controlBindings = new Set<NodeControlBinding>();
 
@@ -110,9 +113,15 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   value = computed(() => {
     const value = {} as FormValue<TNodes>;
-    this.getChildKeys().forEach((key) => { value[key] = this.children[key]!(); });
+    this.getChildKeys().forEach((key) => { value[key] = (this.children[key] as unknown as InternalNode).$api._value(); });
     return value;
   });
+
+  exposedValue = computed(() => {
+    const value = {} as FormValue<TNodes>;
+    this.getChildKeys().forEach((key) => { value[key] = this.children[key]!(); });
+    return value;
+  }, { equal: (previous, next) => this.equal(previous, next) });
 
   controlDebounce = computed(() => {
     return this.options?.debounce
@@ -226,6 +235,7 @@ export class FormGroupNode<TNodes extends Nodes> {
   ) {
     const validators = normalizeValidatorSource(this.initialValidatorSource);
     this.cloneOptions = this.options === undefined ? undefined : { ...this.options };
+    this.equal = resolveValueEquality(this.options?.equal);
     assertValidObjectDefinition(definitions, this.nodeType);
     this.children = mapObjectValues(definitions, normalizeDefinition) as TNodes;
     this.createDefinitions = createNodeDefinitionFactory(this.children);
@@ -242,7 +252,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       this.validators.set(validators);
     });
 
-    this.context = markAsFieldContext({ value: this.value });
+    this.context = markAsFieldContext({ value: this.exposedValue });
     this.metadata = createNodeMetadata(
       this.validators,
       computed(() => this.syncValidation().metadata),
@@ -415,7 +425,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     }
     this.selfSubmitting.set(true);
     try {
-      await untracked(() => submission.action(this.node, this.value()));
+      await untracked(() => submission.action(this.node, this.exposedValue()));
       return true;
     } finally {
       this.selfSubmitting.set(false);
@@ -488,10 +498,10 @@ export class FormGroupNode<TNodes extends Nodes> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
-      value: this.value,
+      value: this.exposedValue,
       controlValue: this.controlValueBuffer.controlValue,
       set: (value: FormSet<TNodes>) => this.set(value),
-      update: (updater: (value: FormValue<TNodes>) => FormSet<TNodes>) => untracked(() => this.set(updater(this.value()))),
+      update: (updater: (value: FormValue<TNodes>) => FormSet<TNodes>) => untracked(() => this.set(updater(this.exposedValue()))),
       patch: (value: FormPatch<TNodes>) => this.patch(value),
       reset: (...args: [] | [value: FormSet<TNodes>]) => this.reset(...args),
       validators: this.validators.asReadonly(),
@@ -534,6 +544,7 @@ export class FormGroupNode<TNodes extends Nodes> {
 
     const internalApi = {
       ...publicApi,
+      _value: this.value,
       _controlDebounce: this.controlDebounce,
       _controlValue: publicApi.controlValue,
       _setControlValue: this.controlValueBuffer.set,
@@ -547,7 +558,7 @@ export class FormGroupNode<TNodes extends Nodes> {
 
     // Child names can replace callable properties and API aliases; $api stays collision-safe.
     return Object.defineProperties(
-      () => this.value(),
+      () => this.exposedValue(),
       Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, ...this.children, $api: internalApi }),
     ) as Form<TNodes>;
   }

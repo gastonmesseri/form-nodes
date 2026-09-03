@@ -260,6 +260,16 @@ this.controlState.source(); // 'formNode'
 Reads the committed bound value. User-authored changes still travel through `model()` or the CVA
 callbacks; this signal is readonly.
 
+With `[formNode]`, it observes the latest internally committed node value even when `equal` retains
+an older public value. For example, the node can still expose `'Marco'` while this control-state
+signal reports a committed `'MARCO'`. Pending debounce input is separate: the component's `model()`
+shows that input immediately, while `controlState.value()` changes when it commits. Reset restores
+the latest internally committed value. Validation and errors continue following the node's public
+validation rules.
+
+The `[formField]` adapter reads Angular's committed field value, and Reactive Forms and `ngModel`
+adapters read their own control values.
+
 ```ts
 preview = computed(() => this.controlState.value() ?? 'No value');
 ```

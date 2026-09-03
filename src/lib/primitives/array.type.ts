@@ -251,7 +251,8 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
   /**
-   * Aggregated committed values of the current items.
+   * Exposed aggregate of item values. The `equal` option can retain an earlier equivalent array
+   * independently of current item values and structure.
    *
    * Prefer calling the array directly instead of using `names.value()` for ordinary value reads:
    *
@@ -265,7 +266,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * ```
    */
   value: Signal<ArrayValue<TItem>>;
-  /** Complete value represented by a control bound directly to this array. Pending descendant control values are not aggregated. */
+  /** Complete control-facing value, independent of exposed equality. Pending descendant control values are not aggregated. */
   controlValue: Signal<ArrayValue<TItem>>;
   /** Returns the live item node at `index`, or `undefined` when no item exists there. */
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
@@ -608,7 +609,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
 
 export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
   & {
-    /** Returns the array's current aggregate committed value and participates in signal dependency tracking. */
+    /** Returns the exposed array value, applying configured equality, and participates in signal dependency tracking. */
     (): ArrayValue<TItem>;
     /**
      * Complete array API and the recommended access path for application code.

@@ -11,6 +11,10 @@ consumer migration guide.
 
 ### Fixed
 
+- `useControlState().value()` with `[formNode]` now reports the latest committed value even when
+  node equality retains an older public value. Pending debounce input remains separate.
+- Asynchronous validators preserve pending work when a computed dependency compares equal, while
+  continuing to react to later value changes.
 - Nested forms, groups, and populated arrays can now be constructed inside `computed()`. Declaration
   inputs remain reactive, while internal initialization no longer makes node edits rebuild the tree.
 - Pending or cancelled control-value debounce work no longer retains otherwise unreachable fields,
@@ -20,10 +24,13 @@ consumer migration guide.
 
 ### Added
 
+- `field()`, `form()`, `group()`, and `array()` accept shallow, deep, or custom equality for exposed values,
+  validation, update callbacks, and submission. Public parents compose exposed child values;
+  internal writes, reset, controls, and debounce remain independent. Equality is evaluated lazily,
+  and comparator errors affect exposed reads after writes have committed. Array structure and
+  keyed reconciliation continue updating even when the exposed collection compares equal.
 - `FormNodeValue<typeof node>` extracts the committed value type of any form, group, array, or
   field, preserving nested objects, arrays, and field nullability.
-- `field()` accepts `equal: 'shallow'`, `'deep'`, or a typed comparator to retain equivalent committed
-  values and avoid value-triggered revalidation, while preserving control input and interaction state.
 - A reactive `root()` signal on every node returns the complete structural
   root, including standalone fields, groups, forms, and arrays.
 - An `error` option on every built-in validator for replacing a failed rule's standard error with
