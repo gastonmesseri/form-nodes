@@ -56,11 +56,13 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Gem Forms',
       hideOnScroll: true,
       logo: {
-        alt: 'Gem Forms',
-        src: 'img/favicon.svg',
+        alt: 'Form Nodes — Gem Forms documentation',
+        src: 'img/form-nodes-logo-header.png',
+        width: 170,
+        height: 40,
+        className: 'docs-header-logo',
       },
       items: [
         { type: 'docSidebar', sidebarId: 'consumerDocs', position: 'left', label: 'Docs' },

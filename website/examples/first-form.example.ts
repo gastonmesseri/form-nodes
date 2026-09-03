@@ -1,7 +1,7 @@
 import { email, field, form, minLength, required } from '@gem/ng-forms';
 
 const myForm = form({
-  name: field('Unknown', [required, minLength(2)]),
+  name: field('', [required, minLength(2)]),
   email: field('', [required, email]),
 });
 

@@ -59,6 +59,17 @@ body {
   letter-spacing: -0.025em;
 }
 
+.navbar__logo {
+  height: 2.5rem;
+  margin-right: 0;
+}
+
+.docs-header-logo {
+  object-fit: cover;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
 .navbar__title {
   font-weight: 750;
 }
@@ -147,6 +158,16 @@ body {
     radial-gradient(circle at 8% 8%, var(--docs-soft-purple), transparent 42%),
     radial-gradient(circle at 92% 92%, var(--docs-soft-mint), transparent 38%),
     var(--ifm-background-surface-color);
+}
+
+.docs-hero__logo {
+  display: block;
+  width: 10rem;
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  background: #fff;
 }
 
 .docs-hero__eyebrow,
