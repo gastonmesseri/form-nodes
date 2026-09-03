@@ -71,6 +71,7 @@ const sidebars: SidebarsConfig = {
           label: 'Other',
           items: [
             'reference/create-form-primitives',
+            'reference/form-node-value',
             'reference/form-value-contract',
             'reference/provide-form-node-config',
             'reference/provide-form-node-pass-through',

@@ -13,6 +13,8 @@ because a value is an array. When one control owns the complete array—for exam
 use a normal array-valued `field()` instead. Choose `array()` when items need independent nodes,
 bindings, validation state, or structural operations.
 
+Use [`FormNodeValue<typeof myArray>`](./form-node-value.md) to extract an array node's value type.
+
 :::info Safe outside Angular injection contexts
 
 `array()` can be safely created and used outside an Angular injection context. Value and structural

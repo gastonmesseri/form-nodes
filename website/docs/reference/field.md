@@ -12,6 +12,8 @@ import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.ex
 `field()` creates a leaf node for a scalar, object, date, or any other application value. Fields
 normally live inside a `form()` so their parent, path, validation, and state participate in a tree.
 
+Use [`FormNodeValue<typeof myField>`](./form-node-value.md) to extract a field's value type.
+
 Not sure whether a structured value should be a field or child nodes? See
 [Choosing a primitive](../guides/choosing-a-primitive.md).
 

@@ -1,6 +1,6 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, createFormPrimitives, field, form, group, required } from '@gem/ng-forms';
+import { FormNode, array, createFormPrimitives, field, form, group, required, type FormNodeValue } from '@gem/ng-forms';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -39,8 +39,15 @@ export class PackageConsumer {
     atomicAddress: field({ city: 'Bern' }),
   });
 
-  readonly name: string | null = this.profile.name();
-  readonly city: string | null = this.profile.addresses[0]!.city();
+  readonly profileValue: FormNodeValue<PackageConsumer['profile']> = this.profile();
+
+  readonly name: string | null = this.profileValue.name;
+  readonly city: FormNodeValue<NonNullable<PackageConsumer['profile']['addresses'][number]>['city']> = this.profile.addresses[0]!.city();
+
+  readonly addressValues: FormNodeValue<PackageConsumer['profile']['addresses']> = this.profile.addresses();
+
+  readonly preferenceValue: FormNodeValue<PackageConsumer['profile']['preferences']> = this.profile.preferences();
+
   readonly theme: string | null = this.profile.preferences.theme();
   readonly shorthandCity: string | null = this.profile.shorthandAddresses[0]!.city();
   readonly shorthandPostcode: number | null = this.profile.shorthandAddresses[0]!.postcode();

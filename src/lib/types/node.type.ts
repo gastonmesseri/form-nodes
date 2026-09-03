@@ -340,6 +340,26 @@ export type NodeDefinition = Node | NodeDefinitions;
 export interface NodeDefinitions {
   [key: string]: NodeDefinition;
 }
+/**
+ * Committed value inferred from any `form()`, `group()`, `array()`, or `field()` instance.
+ * Equivalent to `ReturnType<TNode>`; preserves nested values and field nullability.
+ *
+ * @example
+ * ```ts
+ * const profile = form({
+ *   name: field('Marco'),
+ *   address: { city: field('Zurich') },
+ *   contacts: array({ email: field('') }),
+ * });
+ *
+ * type ProfileValue = FormNodeValue<typeof profile>;
+ * type NameValue = FormNodeValue<typeof profile.name>; // string | null
+ * type AddressValue = FormNodeValue<typeof profile.address>; // { city: string | null }
+ * type ContactsValue = FormNodeValue<typeof profile.contacts>; // { email: string | null }[]
+ * ```
+ */
+export type FormNodeValue<TNode extends Node> = ReturnType<TNode>;
+
 export type NodeValue<TNode> = TNode extends () => infer TValue ? TValue : never;
 export type NodeKeyInParent<TParent extends Node> = Node extends TParent
   ? string | number | null

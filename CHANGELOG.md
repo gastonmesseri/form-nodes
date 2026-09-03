@@ -20,6 +20,8 @@ consumer migration guide.
 
 ### Added
 
+- `FormNodeValue<typeof node>` extracts the committed value type of any form, group, array, or
+  field, preserving nested objects, arrays, and field nullability.
 - `field()` accepts `equal: 'shallow'`, `'deep'`, or a typed comparator to retain equivalent committed
   values and avoid value-triggered revalidation, while preserving control input and interaction state.
 - A reactive `root()` signal on every node returns the complete structural

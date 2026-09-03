@@ -30,7 +30,7 @@ export { provideFormNodePassThrough } from './lib/form-node/form-node-pass-throu
 export { FORM_NODE, FormNode, _FormNode } from './lib/form-node/form-node.directive';
 export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/types/observable-like.type';
 export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/primitives/group';
-export type { DisabledReason, DisabledStateSource, DynamicNode, MarkAsTouchedOptions, Node, NodeApi } from './lib/types/node.type';
+export type { DisabledReason, DisabledStateSource, DynamicNode, FormNodeValue, MarkAsTouchedOptions, Node, NodeApi } from './lib/types/node.type';
 export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/form-node/form-node-config';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/validation/async-validator';
 export {

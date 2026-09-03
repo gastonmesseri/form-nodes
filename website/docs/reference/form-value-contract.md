@@ -147,6 +147,7 @@ does not affect values, state propagation, validators, or control bindings.
 
 ## Related reference
 
+- [`FormNodeValue`](./form-node-value.md) extracts a value model from an existing form instance.
 - [`form()`](./form.md) creates a submission workflow and infers its complete child tree.
 - [`group()`](./group.md) creates an object aggregate without an independent submission workflow.
 - [`array()`](./array.md) creates the dynamic collection preserved by the contract example.
