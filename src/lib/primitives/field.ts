@@ -128,7 +128,13 @@ export function field<TValue>(
   separateOptions?: FieldOptions<NoInfer<TValue>>,
 ): Field<TValue> {
   const initialValue = (arguments.length === 0 ? null : value) as TValue;
-  return createFieldNode<TValue>(initialValue, validatorsOrOptions, separateOptions);
+  const resolvedOptions = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions) || validatorsOrOptions === undefined
+    ? separateOptions
+    : validatorsOrOptions;
+  const validatorSource = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions)
+    ? validatorsOrOptions
+    : resolvedOptions?.validators ?? [];
+  return createFieldNode<TValue>(initialValue, validatorSource, resolvedOptions);
 }
 
 export namespace field {

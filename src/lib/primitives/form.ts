@@ -1,5 +1,6 @@
 import { createFormGroupNode } from './form-group-node';
 import type { ValidatorSource } from '../validation/validation.type';
+import { isValidatorSource } from '../validation/utils/validator-source';
 import type { Form, FormOptions, FormValue, NormalizedNodes, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, FormValueContract, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
@@ -60,10 +61,13 @@ export function form<TDefinitions extends ObjectNodeDefinitions>(
   validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
   separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
 ): Form<NormalizedNodes<TDefinitions>> {
-  return createFormGroupNode<TDefinitions>(
-    definitions,
-    validatorsOrOptions,
-    separateOptions,
-    'form',
-  ) as Form<NormalizedNodes<TDefinitions>>;
+  type TNodes = NormalizedNodes<TDefinitions>;
+  type TValue = FormValue<TNodes>;
+  const resolvedOptions = isValidatorSource<TValue, Form<TNodes>>(validatorsOrOptions) || validatorsOrOptions === undefined
+    ? separateOptions
+    : validatorsOrOptions;
+  const validatorSource = isValidatorSource<TValue, Form<TNodes>>(validatorsOrOptions)
+    ? validatorsOrOptions
+    : resolvedOptions?.validators ?? [];
+  return createFormGroupNode<TDefinitions>(definitions, validatorSource, resolvedOptions, 'form') as Form<TNodes>;
 }

@@ -16,8 +16,8 @@ Organize implementation code by responsibility directly under `src/lib/`:
 `src/public-api.ts` defines the package exports. Internal modules use direct relative imports.
 
 `primitives/field.ts` owns the public field overloads, nullability shortcuts, and the distinction
-between omitted and explicitly undefined initial values. It delegates validator/option resolution
-to `createFieldNode()` in `field-node.ts`. The internal `FieldNode` class owns signals and operations and
+between omitted and explicitly undefined initial values. It resolves validators and options, then
+passes them to `createFieldNode()` in `field-node.ts`. The internal `FieldNode` class owns signals and operations and
 assembles the callable node. The class is not exported from the package; node actions remain safe
 to pass as callbacks, and scheduled debounce work uses weak ownership.
 Callers use `FieldNode.getNode()` to retrieve the already assembled node. Its implementation members use plain names without `private`
@@ -27,22 +27,23 @@ properties use the node's public names, `touched` and `dirty`.
 See the [primitive state refactor guide](primitive-state-refactor.md) for the migration checklist,
 the completed migrations and their decisions.
 
-`primitives/array.ts` likewise keeps its public overloads and delegates to `createArrayNode()` in
-`array-node.ts`, which resolves templates, factories, initial contents, validators, and options.
+`primitives/array.ts` likewise keeps its public overloads, resolves templates, factories, initial
+contents, validators, and options, and passes them to `createArrayNode()` in `array-node.ts`.
 `ArrayNode` owns item creation,
 reconciliation, aggregate state, and callable proxy assembly. Both factories expose `getNode()` and
 keep clone recipes in `createClone()` methods that capture configuration without retaining the source
 instance. `array.utils.ts` contains validator-source detection for positional arguments and the
-object-template assertion shared by the construction entry and class.
-`primitives/form.ts` and `group.ts` retain their public overloads and delegate to the shared
-`createFormGroupNode()` entry in `form-group-node.ts`. It resolves validators and options and constructs
+object-template assertion shared by the public primitive and class.
+`primitives/form.ts` and `group.ts` retain their public overloads, resolve validators and options,
+and delegate to `createFormGroupNode()` in `form-group-node.ts`. That entry constructs
 `FormGroupNode`, which owns object children, aggregate state, dynamic edits, validation, control
 bindings, and callable assembly. The same entry accepts the custom normalizer used by
 `createFormPrimitives()` for initial children, later additions, and clones.
 
-Keep each construction entry beside its class. Public declaration files retain overloads and
-inference, construction entries prepare their arguments, and classes own live node state. Clone
-recipes call constructors directly because their configuration is already resolved.
+Keep each construction entry beside its class and limit its body to `new …Node(...).getNode()`.
+Public primitives own overloads, inference, and argument interpretation; configured primitives
+also resolve their defaults before calling these entries. Classes own live node state. Clone
+recipes retain their direct constructor calls and capture only declarative configuration.
 
 `FormGroupNode` serves both forms and structural groups through an explicit `nodeType`. Only forms
 expose `submit()` and establish their own owning-form boundary; groups inherit the nearest form

@@ -5,8 +5,8 @@ import type { Node } from '../types/node.type';
 import type { FieldOptions } from './field.type';
 import { createFormGroupNode } from './form-group-node';
 import { isPlainObject } from '../utils/is-plain-object';
-import type { ObjectNodeDefinitions } from './form.type';
 import type { ValidatorSource } from '../validation/validation.type';
+import type { FormOptions, ObjectNodeDefinitions } from './form.type';
 import { isValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeDefaultValidatorMessages } from '../validation/validator-messages';
 import type { FormPrimitives, FormPrimitivesOptions } from './create-form-primitives.type';
@@ -91,13 +91,19 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     validatorsOrOptions?: unknown,
     separateOptions?: unknown,
   ) => {
-    return registerDefaults(createFormGroupNode(
-      definitions,
-      isValidatorSource(validatorsOrOptions) ? validatorsOrOptions as never : mergeNodeOptions(validatorsOrOptions as object | undefined) as never,
-      isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined ? mergeNodeOptions(separateOptions as object | undefined) as never : undefined,
-      'form',
-      normalizeDefinition,
-    ));
+    const configuredValidatorsOrOptions = isValidatorSource(validatorsOrOptions)
+      ? validatorsOrOptions
+      : mergeNodeOptions(validatorsOrOptions as FormOptions | undefined);
+    const configuredSeparateOptions = isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined
+      ? mergeNodeOptions(separateOptions as FormOptions | undefined)
+      : undefined;
+    const resolvedOptions = isValidatorSource(configuredValidatorsOrOptions) || configuredValidatorsOrOptions === undefined
+      ? configuredSeparateOptions
+      : configuredValidatorsOrOptions;
+    const validatorSource = isValidatorSource(configuredValidatorsOrOptions)
+      ? configuredValidatorsOrOptions
+      : resolvedOptions?.validators ?? [];
+    return registerDefaults(createFormGroupNode(definitions, validatorSource, resolvedOptions, 'form', normalizeDefinition));
   }) as FormPrimitives<TNullable>['form'];
 
   const configuredGroup = ((
@@ -105,13 +111,19 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     validatorsOrOptions?: unknown,
     separateOptions?: unknown,
   ) => {
-    return registerDefaults(createFormGroupNode(
-      definitions,
-      isValidatorSource(validatorsOrOptions) ? validatorsOrOptions as never : mergeNodeOptions(validatorsOrOptions as object | undefined) as never,
-      isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined ? mergeNodeOptions(separateOptions as object | undefined) as never : undefined,
-      'group',
-      normalizeDefinition,
-    ));
+    const configuredValidatorsOrOptions = isValidatorSource(validatorsOrOptions)
+      ? validatorsOrOptions
+      : mergeNodeOptions(validatorsOrOptions as FormOptions | undefined);
+    const configuredSeparateOptions = isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined
+      ? mergeNodeOptions(separateOptions as FormOptions | undefined)
+      : undefined;
+    const resolvedOptions = isValidatorSource(configuredValidatorsOrOptions) || configuredValidatorsOrOptions === undefined
+      ? configuredSeparateOptions
+      : configuredValidatorsOrOptions;
+    const validatorSource = isValidatorSource(configuredValidatorsOrOptions)
+      ? configuredValidatorsOrOptions
+      : resolvedOptions?.validators ?? [];
+    return registerDefaults(createFormGroupNode(definitions, validatorSource, resolvedOptions, 'group', normalizeDefinition));
   }) as FormPrimitives<TNullable>['group'];
 
   const normalizeArrayDefinition = (definition: unknown): unknown => {

@@ -7,6 +7,7 @@ import { shallowEqual } from '../utils/shallow-equal';
 import { isPlainObject } from '../utils/is-plain-object';
 import { isNode, markAsNode } from './utils/node-marker';
 import type { ObjectNodeDefinitions } from './form.type';
+import { assertArrayObjectTemplate } from './array.utils';
 import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
@@ -17,9 +18,7 @@ import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { normalizeValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
-import { assertArrayObjectTemplate, looksLikeValidatorSource } from './array.utils';
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
-import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
@@ -34,43 +33,12 @@ import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode as ArrayNodeT
 type ArrayItemNode<TItem extends Node> = ArrayItemWithParent<TItem, ArrayNodeType<TItem>>;
 
 export function createArrayNode<TItem extends Node>(
-  source: Node | ObjectNodeDefinitions | (() => unknown),
-  initialOrValidatorsOrOptions?: number | ArraySet<TItem> | null | ValidatorSource<ArrayValue<TItem>, ArrayNodeType<TItem>> | ArrayOptions<ArrayValue<TItem>, ArrayNodeType<TItem>>,
-  validatorsOrOptions?: ValidatorSource<ArrayValue<TItem>, ArrayNodeType<TItem>> | ArrayOptions<ArrayValue<TItem>, ArrayNodeType<TItem>>,
-  separateOptions?: ArrayOptions<ArrayValue<TItem>, ArrayNodeType<TItem>>,
+  itemFactory: () => unknown,
+  initial: number | ArraySet<TItem>,
+  validatorSource: ValidatorSource<ArrayValue<TItem>, any>,
+  options?: ArrayOptions<ArrayValue<TItem>, any>,
 ): ArrayNodeType<TItem> {
-  type TValue = ArrayValue<TItem>;
-  type TSet = ArraySet<TItem>;
-  const secondIsValidators = looksLikeValidatorSource(initialOrValidatorsOrOptions);
-  const thirdIsValidators = looksLikeValidatorSource(validatorsOrOptions);
-  const hasInitial = initialOrValidatorsOrOptions === null
-    || typeof initialOrValidatorsOrOptions === 'number'
-    || (Array.isArray(initialOrValidatorsOrOptions) && (
-      !secondIsValidators || thirdIsValidators || separateOptions !== undefined
-    ));
-  const resolvedOptions = hasInitial
-    ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue, any> | undefined
-    : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue, any> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue, any> | undefined;
-  const configuredInitial = resolvedOptions?.initialValue;
-  const initial = hasInitial
-    ? initialOrValidatorsOrOptions as number | TSet | null
-    : configuredInitial as number | TSet | null | undefined;
-  const validatorSource = hasInitial
-    ? thirdIsValidators ? validatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? []
-    : secondIsValidators ? initialOrValidatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? [];
-  if (typeof initial === 'number' && (!Number.isSafeInteger(initial) || initial < 0)) {
-    throw new RangeError('array: initial count must be a non-negative safe integer');
-  }
-  const normalizedInitial = initial ?? [];
-
-  const sourceIsFactory = typeof source === 'function' && !isNode(source);
-  if (!sourceIsFactory && !isNode(source)) {
-    assertArrayObjectTemplate(source, 'template');
-  }
-  const factory = sourceIsFactory
-    ? source as () => unknown
-    : createNodeDefinitionFactory(source);
-  return new ArrayNode<TItem>(factory, normalizedInitial, validatorSource, resolvedOptions).getNode();
+  return new ArrayNode<TItem>(itemFactory, initial, validatorSource, options).getNode();
 }
 
 /** Owns a dynamic array's state and operations behind its callable public node. */

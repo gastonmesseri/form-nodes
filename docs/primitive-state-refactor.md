@@ -365,11 +365,17 @@ submitting state.
 
 ## Construction entry functions
 
-- [x] Add `createFieldNode()` in `field-node.ts` to resolve validators and options before constructing
-  `FieldNode`. Keep the `field()` versus `field(undefined)` distinction in the public facade.
-- [x] Add `createArrayNode()` in `array-node.ts` to select initial contents, validators, and options,
-  validate initial counts/templates, and prepare the item factory before constructing `ArrayNode`.
-  Keep public overloads and their inference-only aliases in `array.ts`.
+The initial extraction moved argument interpretation into the construction entries. After review,
+that responsibility returned to the public primitives; the entries now only construct and return
+nodes. This supersedes the earlier argument-resolution placement recorded in the migration steps.
+
+- [x] Keep `createFieldNode()` in `field-node.ts` as `new FieldNode(...).getNode()`. Resolve validators,
+  options, and the `field()` versus `field(undefined)` distinction in `field()`.
+- [x] Keep `createArrayNode()` in `array-node.ts` as `new ArrayNode(...).getNode()`. Let `array()` select
+  initial contents, validators, and options, validate counts/templates, and prepare the item factory.
+- [x] Keep `createFormGroupNode()` in `form-group-node.ts` as `new FormGroupNode(...).getNode()`.
+  Resolve validators and options in `form()`, `group()`, and their configured counterparts; preserve
+  existing default-merging order and custom definition normalizers.
 - [x] Align both entries with `createFormGroupNode()` while retaining each primitive's argument rules.
   Classes continue to own live state; clone recipes use constructors directly with resolved inputs.
 - [x] Move property-based array invariants to `primitives/tests/array.property.spec.ts`, alongside

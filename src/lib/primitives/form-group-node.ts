@@ -14,12 +14,12 @@ import { REQUIRED_METADATA } from '../validation/validators/required';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { normalizeValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import { assertValidObjectDefinition, normalizeObjectDefinition } from './form-group-node.utils';
-import { isValidatorSource, normalizeValidatorSource } from '../validation/utils/validator-source';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
@@ -32,20 +32,12 @@ import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, Form
 
 export function createFormGroupNode<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions,
-  validatorsOrOptions: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, any> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, any> | undefined,
-  separateOptions: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, any> | undefined,
+  validatorSource: ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, any>,
+  options: FormOptions<FormValue<NormalizedNodes<TDefinitions>>, any> | undefined,
   nodeType: 'form' | 'group',
   normalizeDefinition: (definition: unknown) => Node = normalizeObjectDefinition,
 ): Node {
-  type TNodes = NormalizedNodes<TDefinitions>;
-  type TValue = FormValue<TNodes>;
-  const resolvedOptions = isValidatorSource<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
-    ? separateOptions
-    : validatorsOrOptions;
-  const validatorSource = isValidatorSource<TValue>(validatorsOrOptions)
-    ? validatorsOrOptions
-    : resolvedOptions?.validators ?? [];
-  return new FormGroupNode<TNodes>(definitions, validatorSource, resolvedOptions, nodeType, normalizeDefinition).getNode();
+  return new FormGroupNode<NormalizedNodes<TDefinitions>>(definitions, validatorSource, options, nodeType, normalizeDefinition).getNode();
 }
 
 /**
@@ -205,9 +197,8 @@ export class FormGroupNode<TNodes extends Nodes> {
   ], { equal: shallowEqual });
 
   pending = computed(() => {
-    return !this.nonInteractive() && (
-      this.asyncValidation.pending() || this.getChildKeys().some(key => this.children[key]!.$api.pending())
-    );
+    return !this.nonInteractive()
+      && (this.asyncValidation.pending() || this.getChildKeys().some(key => this.children[key]!.$api.pending()));
   });
 
   validationStatus = computed<ValidationStatus>(() => {
