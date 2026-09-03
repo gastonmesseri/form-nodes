@@ -3,6 +3,8 @@ import { defineConfig } from 'eslint/config';
 import stylistic from '@stylistic/eslint-plugin';
 import unusedImports from 'eslint-plugin-unused-imports';
 
+import multilineArrowBody from './scripts/eslint-rules/multiline-arrow-body.js';
+
 export default defineConfig(
   {
     ignores: ['coverage/**', 'dist/**', 'node_modules/**', 'website/.docusaurus/**', 'website/build/**'],
@@ -20,6 +22,7 @@ export default defineConfig(
     plugins: {
       '@stylistic': stylistic,
       'unused-imports': unusedImports,
+      'project': { rules: { 'multiline-arrow-body': multilineArrowBody } },
     },
     rules: {
       '@angular-eslint/component-selector': ['error', { type: 'element', prefix: 'gem', style: 'kebab-case' }],
@@ -132,6 +135,7 @@ export default defineConfig(
       'no-var': 'error',
       'one-var': ['error', 'never'],
       'prefer-const': 'error',
+      'project/multiline-arrow-body': 'error',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': ['warn', {
         varsIgnorePattern: '^_',

@@ -16,6 +16,9 @@ for every primitive is not a requirement.
 - [x] Distinguish mutable `selfTouched`/`selfDirty` from computed `touched`/`dirty`, consistently with availability state.
 - [x] Order methods so main operations precede their supporting helpers: value and interaction operations, validator management and its watcher, hierarchy and focus, debounce helpers, then node assembly.
 - [x] Clarify node assembly names. The final assembly uses `publicApi` for shared node members and `internalApi` for that API plus internal hooks.
+- [x] Align callable assembly with array and form/group using `Object.defineProperties()` and
+  `Object.getOwnPropertyDescriptors()`. Preserve the field's descriptors and API aliases; array
+  requires this pattern to replace the callable's built-in `length` with its public signal.
 - [x] Extract custom debounce execution into `startCustomControlDebounce()` so `setControlValue()` shows the strategy selection directly. Preserve cancellation, synchronous failures, stale settlements, and weak callback ownership.
 - [x] Normalize computed callback formatting: concise simple expressions and array literals, explicit return blocks for longer conditions and decisions, and consistent statement terminators.
 - [x] Separate constructor phases with blank lines: prepare configuration, seed all signals in one
