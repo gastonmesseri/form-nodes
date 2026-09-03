@@ -397,37 +397,23 @@ export class FormGroupNode<TNodes extends Nodes> {
     this.getChildKeys().forEach(key => this.children[key]!.$api.flush());
   }
 
-  submit(): Promise<boolean> {
+  async submit(): Promise<boolean> {
+    if (untracked(this.submitting)) return false;
+    const submission = this.options?.submission;
+    this.node.$api.markAsTouched();
+    if (!submission) return false;
+    const shouldRun = submission.ignoreValidators === 'all'
+      || (submission.ignoreValidators === 'none' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
+    if (!shouldRun) {
+      untracked(() => submission.onInvalid?.(this.node));
+      return false;
+    }
+    this.selfSubmitting.set(true);
     try {
-      if (untracked(this.submitting)) return Promise.resolve(false);
-      const submission = this.options?.submission;
-      this.node.$api.markAsTouched();
-      if (!submission) return Promise.resolve(false);
-      const shouldRun = submission.ignoreValidators === 'all'
-        || (submission.ignoreValidators === 'none' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
-      if (!shouldRun) {
-        untracked(() => submission.onInvalid?.(this.node));
-        return Promise.resolve(false);
-      }
-      this.selfSubmitting.set(true);
-      try {
-        const completion = untracked(() => submission.action(this.node, this.value()));
-        return Promise.resolve(completion).then(
-          () => {
-            this.selfSubmitting.set(false);
-            return true;
-          },
-          (error) => {
-            this.selfSubmitting.set(false);
-            throw error;
-          },
-        );
-      } catch (error) {
-        this.selfSubmitting.set(false);
-        throw error;
-      }
-    } catch (error) {
-      return Promise.reject(error);
+      await untracked(() => submission.action(this.node, this.value()));
+      return true;
+    } finally {
+      this.selfSubmitting.set(false);
     }
   }
 

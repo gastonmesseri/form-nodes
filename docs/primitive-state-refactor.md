@@ -355,13 +355,13 @@ parent-link signal write in the child. Empty object nodes can be constructed the
 option-getter dependencies; public tests cover their initial availability and first validation.
 The child-parenting issue is recorded separately in `TODO.md` rather than folded into this refactor.
 
-After review, `FormGroupNode.submit()` returns `Promise<boolean>` explicitly without `async`.
-Keep its action and preflight synchronous, convert synchronous failures into promise rejections,
-and clear submitting immediately when an action throws. Successful synchronous actions, promises,
-and promise-like completions clear submitting when their completion is processed. The outer catch
-preserves promise rejection for preflight errors; the inner catch handles immediate action cleanup.
-Public tests cover these timing distinctions, invalid-submission callback failures, and inherited
-submitting state.
+After a further readability review, `FormGroupNode.submit()` uses `async` and one `try/finally`
+around the awaited action. This supersedes the earlier explicit-promise implementation and its
+brief extraction into a separate action method. Preflight and action invocation stay synchronous;
+`async` converts synchronous failures into promise rejections. The `finally` block clears submitting
+immediately if action invocation throws, or after the awaited completion otherwise. Public tests
+cover these timing distinctions, invalid-submission callback failures, promise-like actions, and
+inherited submitting state. The public signature remains `Promise<boolean>`.
 
 ## Construction entry functions
 
