@@ -1,14 +1,14 @@
 # Primitive state refactor guide
 
-The `field()` prototype moves implementation state and operations into an internal class while
-preserving the existing callable public API. The goal is easier reading and maintenance. Use the
-checklist below when evaluating the same approach for `form()`, `group()`, or `array()`; a separate
-class for every primitive is not a requirement.
+The `field()` and `array()` migrations move implementation state and operations into internal classes
+while preserving the existing callable public API. The goal is easier reading and maintenance. Use
+the checklist below when evaluating the same approach for `form()` and `group()`; a separate class
+for every primitive is not a requirement.
 
 ## Field prototype roadmap
 
 - [x] Keep public overloads, argument normalization, and nullability helpers in `field.ts`.
-- [x] Move state, operations, and node assembly into `FieldNodeFactory`; callers retrieve the existing node through `getNode()`.
+- [x] Move state, operations, and node assembly into `FieldNode`; callers retrieve the existing node through `getNode()`.
 - [x] Preserve callable nodes, action aliases, callback-safe actions, and weak debounce ownership.
 - [x] Use plain internal member names and a blank line between class members.
 - [x] Group properties by responsibility: non-signal members first, writable signals together immediately before `getError`, then computed signals in a separate block immediately before the constructor.
@@ -26,7 +26,7 @@ class for every primitive is not a requirement.
 ## Second readability audit
 
 The first six readability changes and the four follow-up improvements below are complete.
-The implementation remains a field-only prototype; selecting the next primitive is a separate step.
+That audit completed the field-only prototype. The subsequent array migration is recorded below.
 
 - [x] Use `FieldApi<TValue>['root']` for the internal root assertion. This replaces the narrower
   `Signal<Field<TValue>>` assertion and reflects the existing contract, including aggregate roots.
@@ -48,7 +48,7 @@ Review findings and boundaries:
   injector ownership. Combining or deleting them is not a cosmetic simplification.
 - Use `getNode()` as the existing-instance access point after review. It returns the node already
   assembled during construction; `createNode()` remains responsible for that assembly.
-- Use `FieldNodeFactory` for the internal class. The name emphasizes its role at the `field()`
+- Use `FieldNode` for the internal class. The name emphasizes its role at the `field()`
   entry point: receive configuration and provide a callable field node. The instance also owns
   the node's signals and operations throughout its lifetime.
 - Keep responsibility-based property groups instead of collecting all uninitialized properties
@@ -56,13 +56,17 @@ Review findings and boundaries:
 - `group()` already delegates to `createObjectNode()` in `form.ts`; inspect that shared boundary
   before proposing separate form and group implementation classes.
 
-The naming and instance-access decisions are resolved as `FieldNodeFactory` and `getNode()`.
+The naming and instance-access decisions are resolved as `FieldNode` and `getNode()`.
 Their decision history remains recorded in [TODO.md](../TODO.md).
+After completing the array migration, `FieldNodeFactory` and `ArrayNodeFactory` were renamed to
+`FieldNode` and `ArrayNode`, with files `field-node.ts` and `array-node.ts`. The public `ArrayNode`
+type keeps its name; implementation modules alias its import as `ArrayNodeType` where necessary.
 
 ## Third readability audit
 
 The three follow-up items are complete. The ownership correction also required isolating the
-existing form/group, array, and shorthand-object recipes; those primitives remain function-based.
+existing form/group, array, and shorthand-object recipes. Those primitives were still function-based
+at that stage; the subsequent array migration preserves the same ownership boundary.
 
 - [x] Isolate clone recipes from live instances. The field, form/group, and array recipes use separate
   function scopes containing only declarative inputs, and shorthand-object recipes
@@ -199,19 +203,19 @@ lifecycle are preserved by this refactor.
 
 ## Clone callback scope and placement
 
-Keep field clone creation in `FieldNodeFactory.createClone()`, alongside the other field operations.
+Keep field clone creation in `FieldNode.createClone()`, alongside the other field operations.
 `createNode()` calls this method once and stores the returned function as `_clone`.
 `createObjectClone()` remains near the top of `form.ts`, whose implementation is still function-based.
 Neither recipe needs a separate utility file.
 
 Array templates retain `_clone` callbacks so they can create items later. A callback that reads
-`this.initialValue` retains the original `FieldNodeFactory` through `this`; that state retains its node,
+`this.initialValue` retains the original `FieldNode` through `this`; that state retains its node,
 parent signal, and other live resources. Retaining the callback can therefore retain the source
 node and parent tree even when the application no longer keeps them directly.
 
 `createClone()` reads `this` only while extracting `initialValue`, `initialValidatorSource`, and
 `cloneOptions` into local bindings. Its returned callback uses those bindings and the module-level
-`FieldNodeFactory` constructor, without referencing `this`. `createObjectClone()` similarly captures the
+`FieldNode` constructor, without referencing `this`. `createObjectClone()` similarly captures the
 compiled child recipe, validators, options, node kind, and normalizer. Every invocation constructs
 fresh node state from that configuration.
 
@@ -228,6 +232,44 @@ recipe creation; checking the callback's syntax alone is insufficient.
 
 This isolation is not a deep copy. Application values, validator callbacks, state sources, and
 explicit injectors keep their original identity and may themselves retain application objects.
+
+## Array migration roadmap
+
+- [x] Keep every public overload and argument-selection rule in `array.ts`; hand normalized inputs
+  to `new ArrayNode<TItem>(...).getNode()`.
+- [x] Group plain members, writable signals, and computed signals as in the completed field factory.
+  Seed items and local availability/validator state before eager helpers read them. Keep the
+  aggregate `value` computed from its children rather than introducing a second writable value.
+- [x] Organize operations into structural edits, value/interaction changes, validation, hierarchy and
+  control bindings, item creation, reconciliation, and node assembly.
+- [x] Preserve positional and keyed reconciliation, item identity, parent keys, snapshot iteration,
+  lazy schema samples, and the reconciliation strategy selected at construction.
+- [x] Forward public actions through callbacks so extracting an action preserves its node. Invoke
+  user factories and tracking callbacks without introducing an implementation receiver.
+- [x] Keep `createClone()` in the class, capturing only the item factory, initial contents, original
+  validators, and copied options. Preserve weak ownership and future nested item creation.
+- [x] Preserve callable proxy indexing and public descriptors. `Object.defineProperties()` is still
+  needed to replace the function's built-in `length` property with the public length signal.
+- [x] Compare generated declarations and runtime API shape with the pre-migration baseline; verify
+  public tests, both class-field emit modes, template ownership, and control integration.
+
+The implementation class accepts the normalized item type directly, avoiding repeated evaluation of
+`NormalizedNode<TDefinition>` throughout its implementation. Public signatures and inference remain
+unchanged. The source-based performance fixture decreased from 88,145 types / 1,008,076
+instantiations to 71,479 types / 786,139 instantiations without changing its budgets.
+
+Angular `v22.1.5` (commit `468b65b74566537456c192ac4281795c5a1e1a5e`) was the inspected reference:
+`packages/forms/signals/src/field/structure.ts`, `packages/forms/signals/src/util/array.ts`, and the
+array structure, tracking, and removal tests in `packages/forms/signals/test/node/field_node.spec.ts`.
+Gem's existing explicit `trackBy` and template-cloning contracts remain unchanged.
+
+An additional forced-GC audit found existing retention while numeric/custom debounce work is pending
+in the shared control-value buffer. The pre-migration array and the class behave identically in both
+emit modes; an immediate-debounce control is collected. This separate ownership issue is recorded in
+`TODO.md`. Template-source collection and future item creation continue to pass their regression tests.
+
+`form()` and `group()` are the remaining candidates. Review their shared `createObjectNode()`
+boundary together before choosing the next class structure.
 
 ## Checklist for each subsequent primitive
 
