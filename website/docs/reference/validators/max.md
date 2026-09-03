@@ -1,0 +1,64 @@
+---
+title: max()
+---
+
+# max()
+
+## API map
+
+| I want to… | Details |
+| --- | --- |
+| See every accepted call style | [Signatures](#signatures) |
+| See common and advanced usage | [Usage and behavior](#usage-and-behavior) |
+| Customize messages | [Message configuration](#message-configuration) |
+| Understand reactive constraints | [Reactive behavior](#reactive-behavior) |
+| Return to the complete catalog | [Built-in validators](../built-in-validators.md) |
+
+## Signatures
+
+```ts
+max(maximum)
+max(maximum, message)
+max(maximum, options)
+```
+
+Reactive constraint arguments use a zero-argument function. The function may read signals and,
+where supported, return `undefined` to disable the constraint temporarily.
+
+## Usage and behavior
+
+Requires a number less than or equal to an inclusive maximum:
+
+```ts
+const myForm = form({
+  age: field(130, [max(120)]),
+  dependentAge: field(130, [max(() => maximumAge())]),
+  employeeAge: field(130, [max(120, 'Enter a realistic age.')]),
+});
+```
+
+`null` and `NaN` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint temporarily. A failure is `{ kind: 'max', max, actual, message }`. The resolved limit contributes to `max()` metadata.
+
+## Message configuration
+
+Every failure has a default English message. Where supported, pass a string as the final argument
+or use an options object for a static or reactive message, as shown above.
+
+A message function may read signals. Returning `undefined` continues through node, Angular
+provider, process-wide, and built-in message fallbacks. See
+[Validator messages](../../guides/validator-messages.md).
+
+## Reactive behavior
+
+Reactive constraint functions and message functions track the signals they read. When a resolved
+constraint becomes unavailable, validators that support optional constraint sources temporarily
+stop contributing their error and metadata.
+
+The validator runs synchronously as part of its node's validator source. Disabled, readonly, and
+hidden nodes skip validation until they become interactive again.
+
+## Related reference
+
+- [Built-in validators](../built-in-validators.md)
+- [Validation](../validation.md)
+- [`validator()`](../validator.md)

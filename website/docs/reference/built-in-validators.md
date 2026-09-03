@@ -31,14 +31,14 @@ Constraints passed as functions are reactive. Signals read by them are tracked, 
 
 | Need | Validators |
 | --- | --- |
-| Presence | [`required`](#required) |
-| Numeric limits and shape | [`min`](#min), [`max`](#max), [`between`](#between), [`integer`](#integer) |
-| Text or collection size | [`minLength`](#minlength), [`maxLength`](#maxlength) |
-| Word count | [`minWords`](#minwords), [`maxWords`](#maxwords) |
-| Text format | [`pattern`](#pattern), [`email`](#email), [`url`](#url) |
-| Date limits | [`minDate`](#mindate), [`maxDate`](#maxdate), [`dateBetween`](#datebetween) |
-| Allowed or matching values | [`oneOf`](#oneof), [`equalTo`](#equalto) |
-| Collection uniqueness | [`uniqueItems`](#uniqueitems) |
+| Presence | [`required`](./validators/required.md) |
+| Numeric limits and shape | [`min`](./validators/min.md), [`max`](./validators/max.md), [`between`](./validators/between.md), [`integer`](./validators/integer.md) |
+| Text or collection size | [`minLength`](./validators/min-length.md), [`maxLength`](./validators/max-length.md) |
+| Word count | [`minWords`](./validators/min-words.md), [`maxWords`](./validators/max-words.md) |
+| Text format | [`pattern`](./validators/pattern.md), [`email`](./validators/email.md), [`url`](./validators/url.md) |
+| Date limits | [`minDate`](./validators/min-date.md), [`maxDate`](./validators/max-date.md), [`dateBetween`](./validators/date-between.md) |
+| Allowed or matching values | [`oneOf`](./validators/one-of.md), [`equalTo`](./validators/equal-to.md) |
+| Collection uniqueness | [`uniqueItems`](./validators/unique-items.md) |
 | Native/custom-control constraint hints | [Constraint metadata](#constraint-metadata) |
 | Bundle behavior | [Tree shaking](#tree-shaking) |
 
