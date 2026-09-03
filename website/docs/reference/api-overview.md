@@ -28,9 +28,9 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Run Promise- or Observable-based validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
 | Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
 | Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
-| Configure validator messages through Angular DI | `provideValidatorMessages()` | [Configuration](./configuration.md#angular-application-scope) |
-| Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [Configuration](./configuration.md#process-wide-fallback) |
-| Add reactive status classes to every binding | `provideFormNodeConfig()` | [Binding configuration](./configuration.md#binding-configuration) |
+| Configure validator messages through Angular DI | `provideValidatorMessages()` | [`provideValidatorMessages()`](./provide-validator-messages.md) |
+| Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [`configureGlobalValidatorMessages()`](./configure-global-validator-messages.md) |
+| Add reactive status classes to every binding | `provideFormNodeConfig()` | [`provideFormNodeConfig()`](./provide-form-node-config.md) |
 | Inspect the API shared by all nodes | `Node`, `DynamicNode`, and `NodeApi` | [Node API](./node-api.md) |
 | Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
 | Use Angular Material controls | `FormNode` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
@@ -233,7 +233,7 @@ Main exports: `FormNode`, `FormNodeBinding`, and `FORM_NODE`. One `FormNode` imp
 | --- | --- |
 | `provideFormNodeConfig()` | Configures reactive CSS classes for descendant `[formNode]` and `$field`-backed `[formField]` bindings. |
 | `ANGULAR_FORMS_STATUS_CLASSES` | Optional Angular Forms-compatible validity and interaction class preset. |
-| `provideFormNodePassThrough()` | Marks a directive or host directive that delegates `formNode`. |
+| [`provideFormNodePassThrough()`](./provide-form-node-pass-through.md) | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |
 | `useControlState<T>()` | Reads normalized state from `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`. |
