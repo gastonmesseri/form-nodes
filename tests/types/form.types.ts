@@ -30,6 +30,22 @@ type _NestedRoot = Expect<Equal<ReturnType<typeof profile.address.city.form>, ty
 type _ChildKeyInParent = Expect<Equal<ReturnType<typeof profile.name.keyInParent>, string>>;
 type _NestedKeyInParent = Expect<Equal<ReturnType<typeof profile.address.city.keyInParent>, string>>;
 
+const expression = /forms/;
+class Account {
+  name = 'Marco';
+}
+const account = new Account();
+const objectValues = form({
+  expression,
+  lookup: new Map([['name', 'Marco']]),
+  account,
+  calculate: (value: number) => value * 2,
+});
+type _RegExpField = Expect<Equal<ReturnType<typeof objectValues.expression>, RegExp | null>>;
+type _MapField = Expect<Equal<ReturnType<typeof objectValues.lookup>, Map<string, string> | null>>;
+type _ClassField = Expect<Equal<ReturnType<typeof objectValues.account>, Account | null>>;
+type _FunctionField = Expect<Equal<ReturnType<typeof objectValues.calculate>, ((value: number) => number) | null>>;
+
 profile.set({ name: 'Daniel', age: 43, address: { city: 'Bern' } });
 profile.patch({ address: { city: 'Geneva' } });
 profile.update((value) => ({ ...value, age: value.age + 1 }));

@@ -1,7 +1,4 @@
-const isPlainObject = (value: object): value is Record<PropertyKey, unknown> => {
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-};
+import { isPlainObject } from './is-plain-object';
 
 export const shallowEqual = (left: unknown, right: unknown): boolean => {
   if (Object.is(left, right)) return true;

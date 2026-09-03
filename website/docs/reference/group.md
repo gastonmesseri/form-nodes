@@ -29,7 +29,8 @@ address.postcode(); // 8000
 ```
 
 Object literals remain nested groups. Arrays must be wrapped explicitly with `field([...])` or
-declared with `array(...)`. Use an explicit `field()` when a child needs validators or options.
+declared with `array(...)`. Every other value—including non-plain objects and functions—becomes an
+implicit field. Use an explicit `field()` when a child needs validators or options.
 
 :::tip Prefer object shorthand when the group needs no configuration
 

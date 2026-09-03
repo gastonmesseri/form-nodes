@@ -18,6 +18,61 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('form', () => {
+  it('normalizes concise values to fields and plain objects to groups', () => {
+    const birthday = new Date('1990-06-15T00:00:00.000Z');
+    const profile = form({
+      name: '',
+      age: null,
+      siblings: 2,
+      birthday,
+      sister: undefined,
+      address: {
+        city: 'Zurich',
+      },
+    });
+
+    expect(profile()).toEqual({
+      name: '',
+      age: null,
+      siblings: 2,
+      birthday,
+      sister: null,
+      address: { city: 'Zurich' },
+    });
+    profile.name.set('Marco');
+    profile.address.city.set('Bern');
+
+    expect(profile.name()).toBe('Marco');
+    expect(profile.address.city()).toBe('Bern');
+  });
+
+  it('rejects ambiguous array shorthand', () => {
+    expect(() => form({ roles: [] } as never)).toThrow(
+      'Array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...).',
+    );
+  });
+
+  it.each([
+    new RegExp('forms'),
+    new URL('https://example.com'),
+    new Map([['name', 'Marco']]),
+    new Set(['admin']),
+    new Uint8Array([1, 2]),
+    new (class Account { name = 'Marco'; })(),
+    () => 'computed',
+  ])('normalizes non-plain objects and functions to fields', (value) => {
+    const concise = form({ value });
+    expect(concise.value()).toBe(value);
+  });
+
+  it('accepts null-prototype objects as structural group shorthand', () => {
+    const address = Object.assign(Object.create(null), { city: 'Zurich' }) as { city: string };
+    const profile = form({ address });
+
+    expect(profile.address.city()).toBe('Zurich');
+    expect(profile()).toEqual({ address: { city: 'Zurich' } });
+  });
+
   it('aggregates between errors from nested numeric fields', () => {
     const reservation = form({ guests: field(11, [between(1, 10)]) });
 

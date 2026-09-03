@@ -80,6 +80,10 @@ Arrays deliberately have no shorthand yet because `[]` cannot communicate whethe
 one field value or a dynamic node collection. Use `field([...])` for one array-valued field or
 `array(...)` for dynamic items.
 
+Every other value becomes an implicit field. This includes `RegExp`, `URL`, maps, sets, typed
+arrays, Temporal or Moment-like values, custom class instances, and ordinary functions. Only plain
+objects—with `Object.prototype` or a `null` prototype—are interpreted as nested groups.
+
 ```ts
 const myForm = form({
   name: field(''),

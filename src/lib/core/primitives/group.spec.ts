@@ -8,6 +8,19 @@ import { required } from '../validation/validators/required';
 import type { InternalNode } from '../types/node.type';
 
 describe('group', () => {
+  it('normalizes concise values to fields', () => {
+    const address = group({ city: 'Zurich', postcode: 8000 });
+
+    expect(address()).toEqual({ city: 'Zurich', postcode: 8000 });
+    address.city.set('Bern');
+    expect(address.city()).toBe('Bern');
+  });
+
+  it('normalizes a non-plain object to a field', () => {
+    const expression = new RegExp('forms');
+    expect(group({ expression }).expression()).toBe(expression);
+  });
+
   it('exposes an internal runtime discriminant for every node kind', () => {
     const fieldNode = field('');
     const groupNode = group({ name: field('') });

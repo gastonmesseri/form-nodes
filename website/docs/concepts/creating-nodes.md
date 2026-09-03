@@ -126,6 +126,10 @@ const profile = form({
 profile.address.city(); // ''
 ```
 
+Only plain objects are interpreted as structural groups. Other object instances and ordinary
+functions become fields automatically. Arrays still require an explicit choice between
+`field([...])` and `array(...)`.
+
 Use an explicit `group()` when that level needs validators, state options, or validator messages:
 
 ```ts
