@@ -4,6 +4,7 @@ title: field()
 
 import CodeBlock from '@theme/CodeBlock';
 import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.ts';
+import fieldEqualitySource from '!!raw-loader!../../examples/field-equality.example.ts';
 import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.example.ts';
 
 # field()
@@ -173,6 +174,7 @@ const myForm = form({
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | [`validators`](#field-validators-option) | validator, validator array, or reactive source | Validates the field value |
+| [`equal`](#field-equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent committed values; defaults to `Object.is` |
 | [`injector`](#field-injector-option) | Angular `Injector` | Provides this node's preferred lifecycle owner |
 | [`adoptBindingInjector`](#field-adoptbindinginjector-option) | `boolean` | Temporarily adopts a direct `[formNode]` host injector; defaults to `true` |
 | [`inheritInjector`](#field-inheritinjector-option) | `boolean` | Uses the nearest ancestor injector when no own injector exists; defaults to `true` |
@@ -201,6 +203,44 @@ the inherited debounce.
 ## Option reference
 
 ### Value and validation
+
+#### equal {#field-equal-option}
+
+**Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
+
+Controls equality of the committed value returned by the field and its `value()` signal. When the
+comparison returns `true`, the previous value and reference are retained. Consumers and validators
+depending only on that value do not rerun; other state or validator dependencies can still trigger
+validation. Default equality remains `Object.is`.
+
+<CodeBlock language="ts">{fieldEqualitySource}</CodeBlock>
+
+- `'shallow'` compares arrays and plain objects one level deep with `Object.is`; other objects use
+  identity. Nested objects therefore need the same references.
+- `'deep'` follows lodash `isEqual`-style semantics without importing lodash: it compares nested
+  arrays, own enumerable string and symbol object properties, dates, errors, regular expressions,
+  maps, sets, array buffers, data views, typed arrays, and boxed primitives. Circular references are
+  supported. `NaN` equals `NaN`, and `0` equals `-0`. Functions and opaque values such as promises,
+  weak collections, and DOM nodes use identity. Class instances also compare their constructors.
+- Custom comparators receive the actual field value type, including `null` for nullable fields.
+  They must be pure and describe interchangeable values. Comparison reads are untracked, and
+  the comparator is not called for initial construction.
+
+Map and set comparisons ignore ordering recursively, including arrays nested within them. Following
+lodash's semantics, map entries are also compared as unordered pairs. Array properties outside
+indexed elements are ignored; object properties that are inherited or non-enumerable are ignored.
+Data views compare their offset, length, and complete backing buffers. BigInt primitives compare
+by value; boxed BigInts and unsupported object kinds compare by identity.
+
+The option is captured at construction, applies only to this field, and is preserved in array
+template clones and configured field factories. It is not an option on `form()`, `group()`, or
+`array()` itself.
+
+Equality does not suppress control input, `dirty`, or `touched`. Equivalent control input cancels
+an earlier pending debounce and needs no new debounce; a different value still follows the normal
+debounce policy. `reset()` still clears interaction and validation lifecycle state and restores
+the committed value to the control. Mutating an object in place does not create an old snapshot
+for deep comparison; supply a new value when editing structured data.
 
 #### validators {#field-validators-option}
 

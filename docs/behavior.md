@@ -262,6 +262,43 @@ name.api.value(); // ''
 
 These reads refer to the same value. Most field state and actions are exposed both on the callable field and under `field.api`. `patch()` is exposed in the public types through `field.api` and `field.$api`; for a leaf field it behaves exactly like `set()`. The callable field also carries the runtime method, but intentionally omits it from its public type.
 
+## Field value equality
+
+`FieldOptions<TValue>.equal` accepts `'shallow'`, `'deep'`, or a typed
+`(previous: TValue, next: TValue) => boolean` comparator. The default remains `Object.is`.
+The option is captured at construction and applies to the committed writable value signal, so the
+callable field, `value()`, validator context, and parent aggregate all observe the same retained
+value. Equal writes preserve the previous reference and do not invalidate value-dependent sync
+or async validation. Other dependencies, including interaction and explicit validation requests,
+retain their existing effects. Array template clones preserve the field's equality option.
+
+Comparators run untracked and are not invoked while seeding the temporary constructor storage.
+Actual nullable or undefined field values are still passed to comparators during later writes.
+Comparator exceptions propagate from a committed write without replacing its stored value.
+The option is currently field-only and is not inherited from ancestors.
+
+`shallow` uses the existing object/array own-key comparator with `Object.is` for direct values.
+`deep` is an independent implementation of lodash 4.18.1 `isEqual`-style value semantics, including
+own enumerable string/symbol keys, ordered arrays, dates, errors, regexes, boxed primitives,
+typed arrays, buffers, maps, sets, and circular references. Map/set comparisons propagate unordered
+comparison into nested arrays and map entry pairs. Functions and unsupported branded objects use
+identity. Numbers use SameValueZero (`NaN` equals itself; signed zeroes are equal). Shared references
+need not have identical aliasing in an otherwise equivalent acyclic graph. Deep comparison does
+not snapshot in-place mutations. The implementation does not depend on lodash or unwrap its
+library-specific chain objects.
+
+`controlValue()` retains the latest input independently of committed equality. Control changes
+still mark dirty. An equal input cancels obsolete debounce work without scheduling replacement
+work; non-equal input follows the existing debounce strategy. `set()` still cancels pending control
+work, and `reset()` still clears interaction, resets control bindings, and reconciles control value
+to the retained committed value, even if its explicit value compares equal.
+
+The Angular reference is `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`):
+`packages/core/primitives/signals/src/signal.ts` and `packages/core/test/signals/signal_spec.ts`
+govern retained values and custom comparison. Signal Forms projects children from a shared model
+through `packages/forms/signals/src/util/deep_signal.ts`; Gem deliberately adds per-field equality
+to its independently owned values. Control interaction remains separate from committed equality.
+
 ## Creating forms
 
 `form()` creates a container node:

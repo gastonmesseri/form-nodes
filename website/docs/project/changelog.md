@@ -21,6 +21,8 @@ canonical release record.
 
 ### Added
 
+- `field()` accepts `equal: 'shallow'`, `'deep'`, or a typed comparator to retain equivalent committed
+  values and avoid value-triggered revalidation, while preserving control input and interaction state.
 - A reactive `root()` signal on every node returns the complete structural
   root, including standalone fields, groups, forms, and arrays.
 - An `error` option on every built-in validator for replacing a failed rule's standard error with

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createWatch } from '@angular/core/primitives/signals';
 import { computed, Injector, isSignal, signal, type Signal } from '@angular/core';
 
 import { form } from './form';
@@ -26,6 +27,150 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it.each(['shallow', 'deep'] as const)('retains equal committed values with %s equality while preserving control input', (equal) => {
+    const initial = { name: 'Marco' };
+    const validate = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
+    const name = field(initial, [validate], { equal });
+    const read = vi.fn(() => name());
+    const observed = computed(read);
+    expect(observed()).toBe(initial);
+    expect(name.valid()).toBe(true);
+    const equivalent = { name: 'Marco' };
+    name.set(equivalent);
+    expect(name()).toBe(initial);
+    expect(name.value()).toBe(initial);
+    expect(name.controlValue()).toBe(equivalent);
+    expect(observed()).toBe(initial);
+    expect(name.valid()).toBe(true);
+    expect(read).toHaveBeenCalledOnce();
+    expect(validate).toHaveBeenCalledOnce();
+    name.update(() => ({ name: 'Lia' }));
+    expect(observed()).toEqual({ name: 'Lia' });
+    expect(name.valid()).toBe(true);
+    expect(validate).toHaveBeenCalledTimes(2);
+    name.set(null);
+    expect(name()).toBeNull();
+  });
+
+  it('distinguishes nested shallow values and retains deep dates and collections', () => {
+    const initial = { values: new Map([['date', new Date(0)]]) };
+    const shallow = field(initial, { equal: 'shallow' });
+    const deep = field(initial, { equal: 'deep' });
+    const next = { values: new Map([['date', new Date(0)]]) };
+    shallow.set(next);
+    deep.set(next);
+    expect(shallow()).toBe(next);
+    expect(deep()).toBe(initial);
+  });
+
+  it('initializes custom equality without comparing temporary values', () => {
+    const unrelated = signal(0);
+    const equal = vi.fn((a: string, b: string) => {
+      unrelated();
+      return a.toLowerCase() === b.toLowerCase();
+    });
+    const name = field.strict('Marco', { equal });
+    expect(equal).not.toHaveBeenCalled();
+    const create = vi.fn(() => field.strict('Marco', { equal }));
+    const model = computed(create);
+    expect(model()()).toBe('Marco');
+    expect(equal).not.toHaveBeenCalled();
+    name.set('MARCO');
+    expect(equal).toHaveBeenCalledExactlyOnceWith('Marco', 'MARCO');
+    expect(name()).toBe('Marco');
+    unrelated.set(1);
+    expect(model()()).toBe('Marco');
+    expect(create).toHaveBeenCalledOnce();
+    const alwaysDifferent = field.strict('a', { equal: () => false });
+    const validate = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
+    alwaysDifferent.setValidators([validate]);
+    alwaysDifferent.valid();
+    alwaysDifferent.set('a');
+    alwaysDifferent.valid();
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not subscribe a reactive writer to signals read by its comparator', () => {
+    const next = signal('MARCO');
+    const unrelated = signal(0);
+    const name = field.strict('Marco', { equal: (a, b) => {
+      unrelated();
+      return a.toLowerCase() === b.toLowerCase();
+    } });
+    const schedule = vi.fn();
+    const writer = createWatch(() => name.set(next()), schedule, true);
+    try {
+      writer.run();
+      expect(name()).toBe('Marco');
+      unrelated.set(1);
+      expect(schedule).not.toHaveBeenCalled();
+      next.set('Lia');
+      expect(schedule).toHaveBeenCalledOnce();
+      writer.run();
+      expect(name()).toBe('Lia');
+    } finally {
+      writer.destroy();
+    }
+  });
+
+  it.each([0, 'blur', 100] as const)('keeps interaction and cancellation for equal control input with debounce %s', (debounce) => {
+    const initial = { name: 'Marco' };
+    const name = field(initial, { equal: 'deep', debounce });
+    name.setControlValue({ name: 'Lia' });
+    name.setControlValue({ name: 'Marco' });
+    expect(name.dirty()).toBe(true);
+    expect(name.debouncing()).toBe(false);
+    if (debounce !== 0) expect(name()).toBe(initial);
+    expect(name()).toEqual(initial);
+    name.markAsTouched();
+    name.reset({ name: 'Marco' });
+    expect(name.touched()).toBe(false);
+    expect(name.pristine()).toBe(true);
+    expect(name.controlValue()).toBe(name());
+  });
+
+  it('propagates comparator errors without changing the committed value', () => {
+    const failure = new Error('Comparison failed');
+    const name = field.strict('Marco', { equal: () => { throw failure; } });
+    expect(() => name.set('Lia')).toThrow(failure);
+    expect(name()).toBe('Marco');
+    expect(name.controlValue()).toBe('Marco');
+  });
+
+  it('cancels custom debounce work when the latest input equals the committed value', async () => {
+    let finish!: () => void;
+    let abortSignal!: AbortSignal;
+    const debounce = vi.fn((signal: AbortSignal) => {
+      abortSignal = signal;
+      return new Promise<void>((resolve) => { finish = resolve; });
+    });
+    const name = field.strict('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase(), debounce });
+    name.setControlValue('Lia');
+    expect(name.debouncing()).toBe(true);
+    name.setControlValue('MARCO');
+    expect(abortSignal.aborted).toBe(true);
+    expect(name.debouncing()).toBe(false);
+    expect(debounce).toHaveBeenCalledOnce();
+    finish();
+    await Promise.resolve();
+    expect(name()).toBe('Marco');
+    expect(name.controlValue()).toBe('MARCO');
+    expect(name.dirty()).toBe(true);
+  });
+
+  it('captures equality at construction and accepts legitimate undefined values', () => {
+    const equal = vi.fn((a: number | null | undefined, b: number | null | undefined) => a === b);
+    const options = { equal };
+    const value = field<number>(undefined, options);
+    expect(equal).not.toHaveBeenCalled();
+    options.equal = vi.fn(() => true);
+    value.set(1);
+    expect(value()).toBe(1);
+    expect(equal).toHaveBeenCalledExactlyOnceWith(undefined, 1);
+    value.set(null);
+    expect(value()).toBeNull();
+  });
+
   it('keeps a computed field instance when validators or parent ownership change', () => {
     const initialName = signal('Marco');
     const create = vi.fn(() => field(initialName(), [required]));
