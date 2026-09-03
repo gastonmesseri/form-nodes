@@ -133,7 +133,7 @@ The package exports:
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, and `FormPatch` types.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
-- Built-in `required`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, `maxDate`, and `dateBetween` validators.
+- Built-in `required`, `requiredIf`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, `maxDate`, and `dateBetween` validators.
 
 The published package uses ESM and declares `sideEffects: false`. Validators and their default
 messages are independent exports internally, allowing consumer bundlers to remove validators that
@@ -821,6 +821,8 @@ name.required(); // true, even though the current value is valid
 ```
 
 This is comparable to Angular Signal Forms exposing required state for form controls. `required()` does not mean that the node is currently invalid; use `invalid()` or inspect `errors()` for validation status. Conditional validator composition updates the signal reactively when the marked `required` validator becomes active or inactive.
+
+`requiredIf(condition, options?)` packages that conditional behavior as a dedicated validator. Signals read by `condition` are dependencies of both validation and required metadata. While the condition is false, the validator contributes no error and `required()` remains false unless another rule contributes required state. While it is true, the validator uses the same empty-value test, error kind, message resolution, and required metadata as `required`. Custom static and reactive messages use the same string and options-object forms as `required`.
 
 ### Own and descendant errors
 

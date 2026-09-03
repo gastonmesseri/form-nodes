@@ -91,6 +91,7 @@ const sidebars: SidebarsConfig = {
               link: { type: 'doc', id: 'reference/built-in-validators' },
               items: [
                 'reference/validators/required',
+                'reference/validators/required-if',
                 'reference/validators/min',
                 'reference/validators/max',
                 'reference/validators/between',

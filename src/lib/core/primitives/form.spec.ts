@@ -10,6 +10,7 @@ import { oneOf } from '../validation/validators/one-of';
 import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { between } from '../validation/validators/between';
 import { dateBetween } from '../validation/validators/date-between';
@@ -1037,6 +1038,24 @@ describe('form', () => {
     expect(withoutValidators.required()).toBe(false);
     expect(withoutValidators.api.required()).toBe(false);
     expect(unrelatedValidator.required()).toBe(false);
+  });
+
+  it('aggregates a child requiredIf rule when its condition changes', () => {
+    const requireName = signal(false);
+    const formGroup = form({
+      name: field('', [requiredIf(() => requireName())]),
+    });
+
+    expect(formGroup.valid()).toBe(true);
+    expect(formGroup.name.required()).toBe(false);
+
+    requireName.set(true);
+    expect(formGroup.invalid()).toBe(true);
+    expect(formGroup.name.getError('required')).toMatchObject({ kind: 'required' });
+    expect(formGroup.name.required()).toBe(true);
+
+    formGroup.name.set('David');
+    expect(formGroup.valid()).toBe(true);
   });
 
   it('returns only the first matching own form error', () => {

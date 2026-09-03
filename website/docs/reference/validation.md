@@ -76,7 +76,7 @@ Use the options form when the node also needs configuration such as `disabled`, 
 
 | Entry | Example | Behavior |
 | --- | --- | --- |
-| Built-in validator | `required` | Runs synchronously |
+| Built-in validator | `required`, `requiredIf(() => condition)` | Runs synchronously |
 | Configured built-in | `minLength(3)` | Runs synchronously and exposes constraint metadata |
 | Inline callback | `({ value }) => ...` | Infers the node value type contextually |
 | `validator()` result | `adult` | Reusable typed synchronous validator |
