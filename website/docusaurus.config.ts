@@ -11,6 +11,7 @@ const config: Config = {
   baseUrl: process.env.DOCS_BASE_URL ?? '/ng-forms/',
   organizationName: 'gastonmesseri',
   projectName: 'ng-forms',
+  clientModules: ['./src/clientModules/fast-anchor-scroll.ts'],
   onBrokenLinks: 'throw',
   markdown: {
     hooks: {
