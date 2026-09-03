@@ -165,11 +165,28 @@ state, and stale-result handling remain owned by the node.
 
 ### Read-only signal-input compatibility
 
-Angular does not expose a public setter for an `input()` signal. To synchronize optional custom-control
-state inputs such as `disabled`, `required`, and `errors`, Gem Forms currently uses a narrowly isolated
-adapter around Angular's exported `ɵSIGNAL` and `ɵInputSignalNode` symbols. Angular explicitly excludes
-all `ɵ`-prefixed symbols from its supported public API, so this adapter is tested on every supported
-Angular upgrade rather than treated as version-stable.
+Angular does not expose a public setter for an `input()` signal on an existing host component. Gem
+Forms resolves aliases, property names, signal flags, and transforms through public
+`reflectComponentType()` metadata. A narrowly isolated compatibility adapter then discovers the
+private input-signal node through the signal's own symbols, without importing Angular's private
+`ɵSIGNAL` or `ɵInputSignalNode` exports. It uses Angular's component-definition input writer when
+available to preserve `ngOnChanges`, and marks the component for checking after a write.
+
+The structural input node, `applyValueToInputSignal()`, and the component-definition writer remain
+Angular implementation details. They are isolated under `form-node/angular-internals` and tested on
+every supported Angular upgrade rather than treated as version-stable.
+
+These private operations fail safely. If a future Angular release changes the component-definition
+writer, Gem Forms falls back to the smaller signal writer. If that signal mechanism also becomes
+incompatible, only synchronization of the affected optional state inputs—such as `disabled`,
+`readonly`, or `required`—is skipped. Value and event binding and the form node itself continue to
+work. Errors thrown by an application-defined input transform are still reported normally.
+
+Gem Forms emits one warning per affected control instance and input name when such a write is
+skipped. To avoid the private writer entirely, accept the bound node through a writable `node`
+signal and derive optional state from it. A `ControlValueAccessor` is another option when only
+value and disabled interoperability are needed; it does not provide channels for every optional
+state such as `readonly`, `required`, or errors.
 
 The edited `value = model<T>()` or `checked = model<boolean>()` path does not need this adapter because
 models are publicly writable. A custom control can also avoid read-only state-input writes by accepting

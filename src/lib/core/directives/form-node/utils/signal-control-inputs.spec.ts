@@ -3,8 +3,8 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import type { ValidationError } from '@angular/forms/signals';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Component, Injector, booleanAttribute, input, model, signal } from '@angular/core';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Component, Injector, Input, booleanAttribute, input, model, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { form } from '../../../primitives/form';
@@ -13,9 +13,10 @@ import { max } from '../../../validation/validators/max';
 import { min } from '../../../validation/validators/min';
 import { pattern } from '../../../validation/validators/pattern';
 import { required } from '../../../validation/validators/required';
-import { connectSignalControlInputs, writeComponentInput } from './signal-control-inputs';
+import { connectSignalControlInputs } from './signal-control-inputs';
 import { maxLength } from '../../../validation/validators/max-length';
 import { minLength } from '../../../validation/validators/min-length';
+import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
@@ -118,11 +119,199 @@ describe('connectSignalControlInputs', () => {
     registerSignalInputForJit(NonSignalInputControl, 'disabled', 'disabled');
     registerSignalInputForJit(NonSignalInputControl, 'dirty', 'dirty');
     const invalidFixture = TestBed.createComponent(NonSignalInputControl);
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const invalidConnection = connectSignalControlInputs(invalidFixture.componentInstance as never, () => name, invalidFixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
     expect(invalidConnection.inputNames).toEqual(new Set(['value', 'disabled', 'dirty']));
     expect(invalidFixture.componentInstance.disabled).toBe(false);
     expect(invalidFixture.componentInstance.dirty()).toBe(false);
     expect(writeComponentInput({}, 'disabled', true, invalidFixture.debugElement.injector.get(Injector))).toBe(false);
+    warning.mockRestore();
+  });
+
+  it('resolves aliases, applies signal transforms, and preserves ngOnChanges', () => {
+    @Component({
+      selector: 'aliased-state-control',
+      template: '',
+      standalone: true,
+    })
+    class AliasedStateControl implements OnChanges {
+      value = model('');
+      internalDisabled = input(false, { alias: 'disabled', transform: booleanAttribute });
+      changes: SimpleChanges[] = [];
+
+      ngOnChanges(changes: SimpleChanges) {
+        this.changes.push(changes);
+      }
+    }
+    registerSignalModelForJit(AliasedStateControl, 'value');
+    registerSignalInputForJit(AliasedStateControl, 'disabled', 'internalDisabled');
+
+    const fixture = TestBed.createComponent(AliasedStateControl);
+    const wrote = writeComponentInput(
+      fixture.componentInstance,
+      'disabled',
+      '',
+      fixture.debugElement.injector.get(Injector),
+    );
+    fixture.detectChanges();
+
+    expect(wrote).toBe(true);
+    expect(fixture.componentInstance.internalDisabled()).toBe(true);
+    expect(fixture.componentInstance.changes).toHaveLength(1);
+    expect(fixture.componentInstance.changes[0]?.['internalDisabled']).toMatchObject({
+      currentValue: true,
+      firstChange: true,
+    });
+
+    const definition = (AliasedStateControl as unknown as {
+      ɵcmp: { setInput: ((...args: unknown[]) => void) | null };
+    }).ɵcmp;
+    const originalSetInput = definition.setInput;
+    definition.setInput = () => { throw new Error('Changed Angular internal'); };
+    try {
+      expect(writeComponentInput(
+        fixture.componentInstance,
+        'disabled',
+        false,
+        fixture.debugElement.injector.get(Injector),
+      )).toBe(true);
+      expect(fixture.componentInstance.internalDisabled()).toBe(false);
+    } finally {
+      definition.setInput = originalSetInput;
+    }
+  });
+
+  it('writes aliased decorator inputs with transforms', () => {
+    @Component({ selector: 'decorator-state-control', template: '', standalone: true })
+    class DecoratorStateControl {
+      // eslint-disable-next-line @angular-eslint/prefer-signals -- Compatibility coverage for decorator inputs is intentional.
+      @Input({ alias: 'disabled', transform: booleanAttribute }) internalDisabled = false;
+    }
+
+    const fixture = TestBed.createComponent(DecoratorStateControl);
+    const wrote = writeComponentInput(
+      fixture.componentInstance,
+      'disabled',
+      '',
+      fixture.debugElement.injector.get(Injector),
+    );
+
+    expect(wrote).toBe(true);
+    expect(fixture.componentInstance.internalDisabled).toBe(true);
+  });
+
+  it('degrades safely when Angular input-signal internals are missing or throw', () => {
+    const throwingWriter = () => undefined;
+    Object.defineProperty(throwingWriter, Symbol('node'), {
+      value: {
+        applyValueToInputSignal: () => { throw new Error('Changed Angular internal'); },
+      },
+    });
+    expect(isInputSignal(throwingWriter)).toBe(true);
+    expect(writeInputSignal(throwingWriter, true)).toBe(false);
+
+    const unreadableSignal = () => undefined;
+    Object.defineProperty(unreadableSignal, Symbol('node'), {
+      get: () => { throw new Error('Changed Angular internal'); },
+    });
+    expect(isInputSignal(unreadableSignal)).toBe(false);
+    expect(writeInputSignal(unreadableSignal, true)).toBe(false);
+
+    const uninspectableSignal = new Proxy(() => undefined, {
+      ownKeys: () => { throw new Error('Changed Angular internal'); },
+    });
+    expect(isInputSignal(uninspectableSignal)).toBe(false);
+  });
+
+  it('keeps component input failures from breaking the binding', () => {
+    const name = field('', { nullable: false });
+    const unreadableComponent = Object.defineProperty({}, 'constructor', {
+      get: () => { throw new Error('Changed Angular internal'); },
+    });
+    const injector = TestBed.inject(Injector);
+
+    expect(writeComponentInput(unreadableComponent, 'disabled', true, injector)).toBe(false);
+    expect(connectSignalControlInputs(unreadableComponent, () => name, injector).inputNames).toEqual(new Set());
+
+    @Component({ selector: 'fragile-state-control', template: '', standalone: true })
+    class FragileStateControl {
+      disabled = input(false);
+    }
+    registerSignalInputForJit(FragileStateControl, 'disabled', 'disabled');
+    const fixture = TestBed.createComponent(FragileStateControl);
+
+    Object.defineProperty(fixture.componentInstance, 'disabled', {
+      configurable: true,
+      get: () => { throw new Error('Changed Angular internal'); },
+    });
+    expect(writeComponentInput(fixture.componentInstance, 'disabled', true, injector)).toBe(false);
+
+    const throwingWriter = () => undefined;
+    Object.defineProperty(throwingWriter, Symbol('node'), {
+      value: {
+        applyValueToInputSignal: () => { throw new Error('Changed Angular internal'); },
+      },
+    });
+    Object.defineProperty(fixture.componentInstance, 'disabled', {
+      configurable: true,
+      value: throwingWriter,
+    });
+    expect(writeComponentInput(fixture.componentInstance, 'disabled', true, injector)).toBe(false);
+  });
+
+  it('keeps a successful input write when change detection lookup fails', () => {
+    @Component({ selector: 'mark-for-check-control', template: '', standalone: true })
+    class MarkForCheckControl {
+      // eslint-disable-next-line @angular-eslint/prefer-signals -- A writable decorator input isolates the markForCheck fallback.
+      @Input() disabled = false;
+    }
+    const fixture = TestBed.createComponent(MarkForCheckControl);
+    const unavailableInjector = {
+      get: () => { throw new Error('Unavailable ChangeDetectorRef'); },
+    } as unknown as Injector;
+
+    expect(writeComponentInput(fixture.componentInstance, 'disabled', true, unavailableInjector)).toBe(true);
+    expect(fixture.componentInstance.disabled).toBe(true);
+  });
+
+  it('warns once when a recognized optional state input cannot be written', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const disabled = () => false;
+    Object.defineProperty(disabled, Symbol('node'), {
+      value: {
+        applyValueToInputSignal: () => { throw new Error('Changed Angular internal'); },
+      },
+    });
+    const control = { disabled };
+    const name = field('', { nullable: false });
+
+    connectSignalControlInputs(control, () => name, TestBed.inject(Injector));
+    TestBed.flushEffects();
+    name.disable();
+    TestBed.flushEffects();
+
+    expect(warning).toHaveBeenCalledTimes(1);
+    expect(warning).toHaveBeenCalledWith(expect.stringContaining(
+      'formNode: could not synchronize the \'disabled\' input',
+    ));
+    expect(warning).toHaveBeenCalledWith(expect.stringContaining(
+      'Prefer a writable node signal and derive state from the bound node',
+    ));
+    warning.mockRestore();
+  });
+
+  it('uses a generic name when a failed control cannot be inspected', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const control = new Proxy({}, {
+      get: () => { throw new Error('Unreadable control'); },
+    });
+
+    warnFailedInputWrite(control, 'required');
+
+    expect(warning).toHaveBeenCalledWith(expect.stringContaining(
+      'could not synchronize the \'required\' input on custom control',
+    ));
+    warning.mockRestore();
   });
 });

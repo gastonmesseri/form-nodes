@@ -49,9 +49,11 @@ export const FORM_NODE_CONTROL = new InjectionToken<FormNodeControl>('FORM_NODE_
 /**
  * Explicitly registers the host component as the signal-based control used by `[formNode]`.
  *
- * Prefer this provider when the component must remain reliably discoverable independently of
- * Angular's compiled component-metadata discovery. Standard `FormValueControl` and
- * `FormCheckboxControl` components are otherwise discovered automatically.
+ * Use this provider for controls implemented as directives or host directives, because Angular's
+ * public debug-node API exposes the host component rather than arbitrary directive instances. It
+ * is also an explicit fallback when a component must remain discoverable independently of
+ * compiled component metadata. Standard `FormValueControl` and `FormCheckboxControl` components
+ * are otherwise discovered automatically.
  *
  * The optional `node` signal from `FormNodeValueControl` or `FormNodeCheckboxControl` can be used
  * when the component needs direct access to the exact bound field and wants to derive its own UI

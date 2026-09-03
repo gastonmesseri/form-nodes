@@ -2,7 +2,8 @@ import { DestroyRef, effect, reflectComponentType, signal, untracked, type Injec
 
 import type { FormNodeControl } from './form-node-control';
 import type { InternalNode, Node, NodeValue } from '../../types/node.type';
-import { connectSignalControlInputs, writeComponentInput } from './utils/signal-control-inputs';
+import { connectSignalControlInputs } from './utils/signal-control-inputs';
+import { warnFailedInputWrite, writeComponentInput } from './angular-internals/component-input-writer';
 import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 
 export type SignalControlConnection = {
@@ -36,7 +37,7 @@ const getControlModel = <TNode extends Node>(
   const model = (() => lastValue as NodeValue<TNode>) as ModelSignal<NodeValue<TNode>>;
   model.set = (value) => {
     lastValue = value;
-    writeComponentInput(control, name, value, injector);
+    if (!writeComponentInput(control, name, value, injector)) warnFailedInputWrite(control, name);
   };
   model.subscribe = listener => output.subscribe((value) => {
     lastValue = value;

@@ -1441,7 +1441,8 @@ describe('FormNode in Chromium', () => {
     const transitiveButton = fixture.nativeElement.querySelector('aot-transitive-signal-control button') as HTMLButtonElement;
 
     expect(valueControl.value()).toBe('AOT initial');
-    expect(valueControl.required()).toBe(true);
+    expect(valueControl.requiredState()).toBe(true);
+    expect(valueControl.stateChanges.some(changes => changes['requiredState']?.currentValue === true)).toBe(true);
     expect(checkboxControl.checked()).toBe(false);
     expect(pairedControl.value()).toBe('AOT paired initial');
     expect(directiveControl.required()).toBe(true);

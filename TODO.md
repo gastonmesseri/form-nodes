@@ -11,17 +11,15 @@
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 
-- [ ] provideFormNodeControl, maybe is not even needed having into account that getDebugNode is safe to use
-  - try not using myInput[SIGNAL] and use Object.getOwnPropertySymbols (or something like that), and search for applyValueToInputSignal
-    or maybe just search for some way of setting the value in the signal (without applyValueToInputSignal) applying the transform mannually
-
-- [ ] In writeComponentInput, check if it is already taking into account that the input could have an alias @Input('myAlias') or input(undefined, { alias: 'myAlias' })
-
 - [ ] Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - [ ] Consider changing the @example to something different, like a heading with asterisks **Like this**
 - [ ] In the .add function of group() form() decide what api to use add('key', field('')) or add({ key: field('') })
   I think the second one is better, and it allows setting several at once (maybe not, to make it consistent with .removew)
   - [ ] rethink the return type of add (it does different depending on the signature)
+
+- Provide alternative for non-possible disabled = input() readonly = input(),
+  strong alternative like useFieldState() hook, compatible with all angular ways of declaring a form state (ngModel, formControl, new way, formNode)
+  this should also be notified in the component-input-writer console.warn
 
 - [ ] Decide the exact semantics and naming of object-node ancestry lookups.
   - [ ] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
@@ -239,9 +237,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [ ] Resolve the latest maintenance release or tag for every supported Angular major; record the inspected tag, commit, source paths, and relevant test paths.
   - [ ] Read the Angular release notes, changelog, deprecations, breaking changes, migrations, supported public API policy, and Signal Forms documentation for the complete version interval being adopted.
   - [ ] Compare the exported `@angular/core` and `@angular/forms` public types used by the library, including `Signal`, `InputSignal`, `ModelSignal`, `ComponentRef`, `ControlValueAccessor`, `NgControl`, validator tokens, reflection, debug-node, and rendering APIs.
-  - [ ] Re-check whether `mySignal[ɵSIGNAL]`, `ɵInputSignalNode`, and `applyValueToInputSignal()` still exist and whether their runtime and type shapes changed.
+  - [ ] Re-check whether structurally discovered input-signal nodes and `applyValueToInputSignal()` still exist and whether their runtime shapes changed.
+  - [ ] Re-check Angular's `ɵcmp.setInput` signature and `ngOnChanges` integration.
   - [ ] Re-check whether a public replacement now exists, such as supported access to the host component's `ComponentRef.setInput()` or a dedicated Signal Forms interoperability protocol.
-  - [ ] Keep the private signal-input adapter isolated; do not expand `ɵSIGNAL` usage while no public replacement exists.
+  - [ ] Keep all private component-input writing isolated under `form-node/angular-internals` while no public replacement exists.
 - Angular Signal Forms behavioral parity
   - [ ] Inspect the latest Signal Forms implementation and tests rather than relying only on documentation or previous-version behavior.
   - [ ] Compare node creation, parent/root ownership, paths and keys, removed/orphan nodes, array identity and reconciliation, and structural model changes.
@@ -317,6 +316,14 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Improve custom-component input writing for `[formNode]`.
+  - [x] Resolve public aliases and transforms through `reflectComponentType()`.
+  - [x] Preserve `ngOnChanges` through Angular's definition input writer when available.
+  - [x] Find input-signal nodes through own symbols without importing private Angular symbols.
+  - [x] Guard every private Angular lookup and write so incompatible internals only disable affected optional state-input synchronization.
+  - [x] Warn once per control and input when compatibility fallback cannot synchronize an optional state input, with safe alternatives.
+  - [x] Verify `getDebugNode()` component discovery in an isolated production-mode Chromium run with a full-AOT fixture.
+  - [x] Keep `provideFormNodeControl()` as the explicit fallback for directives and host directives, which `getDebugNode().componentInstance` cannot discover.
 - [x] Explain that form primitives use the familiar Angular signal value pattern while adding form-specific features.
 - [x] Add dynamic named children to `form()` and `group()`.
   - [x] Support `add(name, definition)` and atomic `add({ ... })` calls.
@@ -506,9 +513,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Both primitives share the same internal object-node engine, with capability-specific public types and runtime surfaces.
   - [x] The inference decision is recorded in behavior docs, website reference, the development changelog, and type tests. No consumer migration entry is needed before the first publication.
 - [x] Consolidate root-level `integration-tests`, `type-tests`, and `testing` infrastructure under `tests/integration`, `tests/types`, and `tests/helpers`.
-- [x] Determine whether accessing `mySignal[ɵSIGNAL]` is a supported Angular API.
+- [x] Determine whether accessing Angular's private input-signal node is a supported Angular API.
   - [x] It is exported from `@angular/core`, but Angular explicitly excludes every `ɵ`-prefixed symbol from its supported public API and compatibility guarantees.
-  - [x] Keep the current `ɵSIGNAL`/`ɵInputSignalNode` adapter isolated and covered by AOT, SSR, hydration, OnPush, and browser tests until Angular provides a public host-component input-writing mechanism.
+  - [x] Discover input-signal nodes structurally without importing `ɵSIGNAL` or `ɵInputSignalNode`, and isolate the adapter with `ɵcmp.setInput` under `form-node/angular-internals`.
 - [x] Infer `field(null)` as `Field<unknown>` instead of `Field<null>`, while preserving explicit generic inference such as `field<string>(null)` as `Field<string | null>`.
 - [x] Complete the consumer website documentation roadmap.
   - [x] Create an API overview page that maps common needs to the relevant public APIs.
