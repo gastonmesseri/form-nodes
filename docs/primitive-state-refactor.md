@@ -292,6 +292,20 @@ boundary together before choosing the next class structure.
 Keep `controlValueBuffer?.cancel()` in value/reset operations as an explicit defensive guard.
 Removing this optional chaining was considered and declined.
 
+## Second array readability audit
+
+- [x] Use the explicit `'set' | 'reset'` reconciliation mode instead of a boolean. Keep new-item
+  initialization through `reset()` in either mode.
+- [x] Name the keyed reconciliation map `remainingItemsByKey` and the incoming key list
+  `incomingKeys`; read each incoming `key` once before matching and consuming an existing item.
+- [x] Place `getSchemaSample()` next to `createItem()` and explain that the reserved sample becomes
+  the next real item instead of being discarded after schema inspection.
+- [x] Group snapshot queries and iteration together, and place `assertIndex()` beside structural
+  operations. Keep item creation, schema preparation, and definition validation together.
+
+Keep the indexed proxy inside `createNode()`. Extracting it into a separate method was considered
+and declined; retain the existing constructor, computed grouping, and optional buffer cancellation.
+
 ## Checklist for each subsequent primitive
 
 1. **Map the existing contract.** Identify overloads, inference, callable behavior, public members,
