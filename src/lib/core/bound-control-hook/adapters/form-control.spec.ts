@@ -135,6 +135,14 @@ describe('formControl bound-control adapter', () => {
     expect(state.touched()).toBe(false);
   });
 
+  it('marks the control as touched', async () => {
+    const { control, state } = await createBoundControl();
+    expect(control.touched).toBe(false);
+    state.markAsTouched();
+    expect(control.touched).toBe(true);
+    expect(state.touched()).toBe(true);
+  });
+
   it('provides neutral values for state unavailable from FormControl', async () => {
     const { state } = await createBoundControl();
     expect(state.disabledReasons()).toEqual([]);

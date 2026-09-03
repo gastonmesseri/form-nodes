@@ -60,6 +60,9 @@ export const injectFormNodeBoundControl = <TValue>(element: HTMLElement, destroy
     readonly: computed(() => node().$api.readonly()),
     required: computed(() => node().$api.required()),
     touched: computed(() => node().$api.touched()),
+    markAsTouched() {
+      node().$api.markAsTouched();
+    },
   };
 };
 

@@ -42,5 +42,8 @@ export const injectFormFieldBoundControl = <TValue>(): BoundControlAdapter<TValu
     readonly: computed(() => state().readonly()),
     required: computed(() => state().required()),
     touched: computed(() => state().touched()),
+    markAsTouched() {
+      state().markAsTouched();
+    },
   };
 };

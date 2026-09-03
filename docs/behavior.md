@@ -2224,6 +2224,8 @@ Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an
 
 The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'`. Every state member is a signal. Angular Signal Forms supplies the complete state surface, while `AbstractControl` sources supply value, disabled, dirty, touched, invalid, pending, and normalized errors. State unavailable from `AbstractControl`—such as readonly, hidden, disabled reasons, name, and constraint metadata—keeps the same neutral defaults used while disconnected. Reactive Forms `ValidationErrors` record entries become individual `{ kind, ...details }` objects; `true` becomes `{ kind }`, while primitive payloads use `{ kind, value }`. Errors never expose Angular's `fieldTree` or `formField` references. Disabled reasons are normalized to source-neutral `{ message? }` objects instead of exposing Gem `sourceNode` or Angular `fieldTree` references.
 
+`markAsTouched()` delegates to the active source's native operation. It marks the Gem or Angular Signal Forms field using that engine's normal descendant propagation, and marks the active `AbstractControl` for Reactive Forms or `ngModel`. Calling it while disconnected is a no-op.
+
 ## Internal structural behavior
 
 These details are not public API, but explain current propagation behavior:

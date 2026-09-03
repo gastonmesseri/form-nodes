@@ -52,5 +52,8 @@ export const injectAbstractControlBoundControl = <TValue>(source: AbstractContro
     readonly: computed(() => false),
     required: computed(() => false),
     touched: computed(() => currentControl().touched),
+    markAsTouched() {
+      currentControl().markAsTouched();
+    },
   };
 };

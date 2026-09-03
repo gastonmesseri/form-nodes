@@ -323,6 +323,10 @@ error representation. The remaining signals include `value`, `disabled`, `disabl
 Angular field tree. An unbound component receives neutral values such as `false`, `[]`, `undefined`,
 and `null` rather than an injection error.
 
+Call `markAsTouched()` from the custom control's blur interaction to notify whichever forms API is
+currently connected. The operation delegates to that API's native touched behavior and is a safe
+no-op while disconnected.
+
 ## ControlValueAccessor
 
 Existing CVA controls work without changes:

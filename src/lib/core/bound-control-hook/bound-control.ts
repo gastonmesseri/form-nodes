@@ -66,6 +66,8 @@ export type BoundControl<TValue = unknown> = {
   readonly required: Signal<boolean>;
   /** Whether the user has interacted with and left the bound control. */
   readonly touched: Signal<boolean>;
+  /** Marks the bound control touched. Does nothing when no supported binding is connected. */
+  markAsTouched(): void;
 };
 
 /**
@@ -114,5 +116,8 @@ export const injectBoundControl = <TValue = unknown>(): BoundControl<TValue> => 
     readonly: computed(() => active()?.readonly() ?? false),
     required: computed(() => active()?.required() ?? false),
     touched: computed(() => active()?.touched() ?? false),
+    markAsTouched() {
+      active()?.markAsTouched();
+    },
   };
 };

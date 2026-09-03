@@ -80,6 +80,9 @@ describe('injectBoundControl', () => {
     expect(state.pattern()).toEqual([/^[a-z]+$/i]);
     expect(state.errors()).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'required' })]));
     expect(state.name()).toContain('.form0');
+    state.markAsTouched();
+    expect(fixture.componentInstance.name.touched()).toBe(true);
+    fixture.componentInstance.name.markAsUntouched();
 
     fixture.componentInstance.name.set('Marco');
     fixture.componentInstance.name.markAsTouched();
@@ -178,6 +181,7 @@ describe('injectBoundControl', () => {
     expect(state.required()).toBe(false);
     expect(state.touched()).toBe(false);
     expect(state.name()).toBeUndefined();
+    expect(() => state.markAsTouched()).not.toThrow();
   });
 
   it('normalizes state from a formControl binding', async () => {
