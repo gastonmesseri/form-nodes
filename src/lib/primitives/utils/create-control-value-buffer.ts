@@ -10,6 +10,25 @@ export type ControlValueBuffer<TValue, TControlValue = TValue> = {
   set(value: TControlValue): void;
 };
 
+type DebounceTarget = {
+  commit(): void;
+  resolve(controller: WeakRef<AbortController>): void;
+  reject(controller: WeakRef<AbortController>): void;
+};
+
+// Separate scopes prevent scheduled closures from sharing the live buffer's environment.
+function scheduleCommit(target: WeakRef<DebounceTarget>, delay: number) {
+  return setTimeout(() => target.deref()?.commit(), delay);
+}
+
+function watchCompletion(target: WeakRef<DebounceTarget>, controller: WeakRef<AbortController>, completion: PromiseLike<void>) {
+  // The live state owns its active controller; cancelled work keeps only this weak reference.
+  Promise.resolve(completion).then(
+    () => target.deref()?.resolve(controller),
+    () => target.deref()?.reject(controller),
+  );
+}
+
 export const createControlValueBuffer = <TValue, TControlValue = TValue>(
   value: Signal<TValue>,
   debounce: Signal<ControlDebounce | undefined>,
@@ -38,10 +57,12 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
       state.cancel();
       commitValue(next);
     },
-    resolve: (controller: AbortController) => {
+    resolve: (controllerRef: WeakRef<AbortController>) => {
+      const controller = controllerRef.deref();
       if (state.controller === controller && !controller.signal.aborted) state.commit();
     },
-    reject: (controller: AbortController) => {
+    reject: (controllerRef: WeakRef<AbortController>) => {
+      const controller = controllerRef.deref();
       if (state.controller === controller) state.cancel();
     },
   };
@@ -73,13 +94,10 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
         state.commit();
         return;
       }
-      Promise.resolve(completion).then(
-        () => stateRef.deref()?.resolve(controller),
-        () => stateRef.deref()?.reject(controller),
-      );
+      watchCompletion(stateRef, new WeakRef(controller), completion);
       return;
     }
-    state.timer = setTimeout(() => stateRef.deref()?.commit(), strategy);
+    state.timer = scheduleCommit(stateRef, strategy);
   };
   return {
     controlValue: computed(() => isCurrent() ? pendingValue() as unknown as TValue : value()),

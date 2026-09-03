@@ -11,6 +11,8 @@ consumer migration guide.
 
 ### Fixed
 
+- Pending or cancelled control-value debounce work no longer retains otherwise unreachable fields,
+  forms, groups, arrays, or their parent trees through timers and custom debounce promises.
 - Compiled array templates no longer retain their source fields, forms, groups, arrays, or parent
   trees through clone callbacks. Later items still use the declared values, validators, and options.
 

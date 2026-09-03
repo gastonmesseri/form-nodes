@@ -501,6 +501,26 @@ Every new control update restarts the complete delay. `debounce: 'blur'` instead
 
 Programmatic operations are never debounced. On fields, forms, and arrays, `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `controlValue()` and `value()` immediately. `reset()` without a value aborts custom asynchronous debounce work, discards the buffered control value, and restores `controlValue()` and any bound custom control from the currently committed value. This prevents a stale completion from overwriting newer programmatic state. A control update marks its directly bound node dirty immediately; reset clears dirty and touched state as usual without dirtying aggregate descendants.
 
+Scheduled control-value debounce callbacks have weak ownership of their node state and per-update
+abort controller. Otherwise unreachable fields, forms, groups, arrays, and parent trees can be
+collected while timers or custom promises remain pending, including after cancellation. A callback
+that runs after collection does nothing. A retained node still owns its active controller and
+completes normally; replacement, reset, flushing, rejection, and stale-result checks are unchanged.
+Application-owned callbacks, values, control bindings, and injectors retain their existing ownership.
+
+The shared buffer creates scheduled callbacks in separate function scopes containing only weak
+references and scheduling inputs. Merely reading a `WeakRef` from a callback created alongside
+other live-state closures is insufficient to establish that ownership boundary. Custom settlements
+also use weak controller references so obsolete promises do not retain cancelled controllers and
+their abort reasons. The GC regression covers pending timers, resolving/rejecting custom work,
+cancelled promises, and live completion in both class-field emit modes.
+
+This ownership correction was checked against Angular Signal Forms `v22.1.5` at commit
+`468b65b74566537456c192ac4281795c5a1e1a5e`, specifically `packages/forms/signals/src/field/node.ts`
+and `packages/forms/signals/test/node/api/debounce.spec.ts` for completion, replacement, and touch
+semantics. Weak lifetime for standalone Gem nodes is an additional library contract, rather than a
+requirement inferred from Angular's injector-owned field lifecycle.
+
 Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. Every node exposes `controlValue()`, but it represents only the control bound directly to that node and does not aggregate pending control values from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
 
 This follows the control buffer semantics inspected in Angular Signal Forms 22.1.4 at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.

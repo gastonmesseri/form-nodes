@@ -1379,6 +1379,64 @@ describe('form', () => {
     expect(profile.debouncing()).toBe(false);
   });
 
+  it('completes only current custom control work and propagates reset and rejection', async () => {
+    const completions = Array.from({ length: 4 }, () => {
+      let resolve!: () => void;
+      let reject!: (reason: Error) => void;
+      const promise = new Promise<void>((resolvePromise, rejectPromise) => {
+        resolve = resolvePromise;
+        reject = rejectPromise;
+      });
+      return { promise, resolve, reject };
+    });
+    const abortSignals: AbortSignal[] = [];
+    const debounce = vi.fn((signal: AbortSignal) => {
+      abortSignals.push(signal);
+      return completions[abortSignals.length - 1]!.promise;
+    });
+    const root = form({ target: form({ name: field('initial') }, { debounce }) });
+    const target = root.target;
+    const { _setControlValue: setControlValue } = (target as unknown as InternalNode).$api;
+
+    setControlValue({ name: 'first' });
+    setControlValue({ name: 'latest' });
+    expect(debounce).toHaveBeenCalledTimes(2);
+    expect(abortSignals.map(signal => signal.aborted)).toEqual([true, false]);
+    expect(target()).toEqual({ name: 'initial' });
+    expect(target.controlValue()).toEqual({ name: 'latest' });
+    expect(root.debouncing()).toBe(true);
+    expect(root.dirty()).toBe(true);
+
+    completions[0]!.reject(new Error('Stale completion'));
+    await Promise.resolve();
+    expect(target()).toEqual({ name: 'initial' });
+    expect(root.debouncing()).toBe(true);
+
+    completions[1]!.resolve();
+    await Promise.resolve();
+    expect(target()).toEqual({ name: 'latest' });
+    expect(target.controlValue()).toEqual({ name: 'latest' });
+    expect(root.debouncing()).toBe(false);
+
+    setControlValue({ name: 'cancelled' });
+    root.reset();
+    expect(abortSignals[2]!.aborted).toBe(true);
+    expect(root.debouncing()).toBe(false);
+    expect(root.pristine()).toBe(true);
+    completions[2]!.resolve();
+    await Promise.resolve();
+    expect(target()).toEqual({ name: 'latest' });
+
+    setControlValue({ name: 'rejected' });
+    completions[3]!.reject(new Error('Current completion'));
+    await Promise.resolve();
+    expect(debounce).toHaveBeenCalledTimes(4);
+    expect(target()).toEqual({ name: 'latest' });
+    expect(target.controlValue()).toEqual({ name: 'latest' });
+    expect(root.debouncing()).toBe(false);
+    expect(root.dirty()).toBe(true);
+  });
+
   it('aborts and restores a pending direct control value on reset', () => {
     let abortSignal!: AbortSignal;
     const profile = form({ name: field('Marco') }, {
