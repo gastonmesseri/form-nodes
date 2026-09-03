@@ -506,8 +506,13 @@ a direct dynamic-property result when they need a dynamic value. Fixed-shape `se
 updated; omitted dynamic keys retain their values. Reset operations still clear their interaction
 state.
 
-This intentionally differs from Angular Signal Forms `v22.1.4` at commit
-`898380974d49cf7976e9d89cc74a0801a26ce7b1`. Angular derives changing child structure from its
+The overloads preserve input cardinality intentionally: `add(key, definition)` returns the exact
+attached node, while `add(definitions)` returns an exact keyed map of attached nodes. Dynamic
+properties are readonly lookup surfaces. Proxy assignment does not attach nodes because structural
+mutation, parentage, and aggregate-state changes remain explicit through `add()`.
+
+This intentionally differs from Angular Signal Forms `v22.1.5` at commit
+`468b65b74566537456c192ac4281795c5a1e1a5e`. Angular derives changing child structure from its
 writable model rather than exposing `add()` or `remove()` operations. The relevant implementation
 and identity behavior are in `packages/forms/signals/src/field/structure.ts`,
 `packages/forms/signals/src/field/proxy.ts`, and `packages/forms/signals/src/field/manager.ts`, with
@@ -2227,6 +2232,11 @@ The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'form
 Render-discovered adapters remain safely disconnected during server rendering and connect during the first browser render, including hydration. Their neutral signals make this transition safe. `[formNode]` uses its synchronous host registry and can already be connected during server rendering.
 
 `markAsTouched()` delegates to the active source's native operation. It marks the Gem or Angular Signal Forms field using that engine's normal descendant propagation, and marks the active `AbstractControl` for Reactive Forms or `ngModel`. Calling it while disconnected is a no-op.
+
+The facade otherwise remains read-only. User value changes travel through the custom control's
+`model()`, `FormValueControl`, or `ControlValueAccessor` integration, while programmatic mutations
+remain owned by the source forms API. `BoundControl` therefore does not duplicate `setValue()`,
+reset, availability, or validation operations.
 
 ## Internal structural behavior
 

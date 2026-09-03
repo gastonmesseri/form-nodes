@@ -335,6 +335,13 @@ Call `markAsTouched()` from the custom control's blur interaction to notify whic
 currently connected. The operation delegates to that API's native touched behavior and is a safe
 no-op while disconnected.
 
+`injectBoundControl()` is deliberately not a second form-control API. Read state from its signals
+and use `markAsTouched()` to report the control's blur interaction. Send user-authored value changes
+through the component's `model()`, Angular `FormValueControl`, or `ControlValueAccessor` callbacks.
+Programmatic value writes, reset, disabled state, and other form operations remain owned by the API
+that created the form. Consequently, the facade does not expose `setValue()`, `reset()`,
+`disable()`, or `enable()`.
+
 ## ControlValueAccessor
 
 Existing CVA controls work without changes:
