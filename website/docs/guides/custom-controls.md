@@ -2,6 +2,9 @@
 title: Custom controls
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import boundControlSource from '!!raw-loader!../../examples/bound-control.typecheck.ts';
+
 # Custom controls
 
 `[formNode]` works with standard Angular `ControlValueAccessor` components and signal-based controls.
@@ -294,6 +297,24 @@ Declare only the inputs the component uses. Public input aliases and transforms 
 both `input()` and decorator inputs, and components implementing `ngOnChanges` receive the state
 changes. The optional `touch` output marks the node touched; `focus(options?)` is used by
 `node.focus()`, and `reset()` is called during the binding reset lifecycle.
+
+## Read bound state without state inputs
+
+`injectBoundControl<T>()` is the stable alternative when a component does not want `[formNode]` to
+write optional `disabled`, `readonly`, `required`, or error inputs through Angular internals. Call
+it in the component injection context and read its signals directly:
+
+<CodeBlock language="ts">{boundControlSource}</CodeBlock>
+
+The facade currently recognizes `[formNode]`. Its source-neutral API is also reserved for future
+`[formField]`, `formControl`, `formControlName`, and `ngModel` integration. `connected()` reports
+whether a supported binding is present, and `source()` currently returns `'formNode'` or `null`.
+
+All errors are exposed as `readonly { kind: string; ... }[]`, regardless of the source-specific
+error representation. The remaining signals include `value`, `disabled`, `disabledReasons`,
+`dirty`, `hidden`, `invalid`, constraints, `name`, `pattern`, `pending`, `readonly`, `required`, and
+`touched`. An unbound component receives neutral values such as `false`, `[]`, `undefined`, and
+`null` rather than an injection error.
 
 ## ControlValueAccessor
 

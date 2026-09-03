@@ -2,6 +2,7 @@ import { NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Validators, type ControlVa
 import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterEveryRender, afterRenderEffect, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
 
 import type { Field } from '../../primitives/field';
+import { _hasBoundControlConsumer, _registerBoundControlBinding } from './bound-control';
 import { FORM_NODE_CONFIG } from './form-node-config';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
@@ -66,6 +67,8 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private bindingInjectorCleanups = new Set<() => void>();
 
+  private boundControlCleanup: (() => void) | undefined;
+
   private composing = false;
 
   private writingAccessorValue = false;
@@ -92,6 +95,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
+      this.boundControlCleanup?.();
       this.bindingInjectorCleanups.forEach(cleanup => cleanup());
       this.bindingInjectorCleanups.clear();
     });
@@ -118,6 +122,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     else if (signalControl) this.connectSignalCustomControl(signalControl as FormNodeControl<NodeValue<TNode>, TNode>);
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
     else throw new Error('formNode: the host must be a native form control, a recognized signal custom-control component, or provide ControlValueAccessor');
+    this.boundControlCleanup = _registerBoundControlBinding(this.element, this);
     this.bindNodeState();
     this.registerControlBinding();
     this.warnWhenHidden();
@@ -220,11 +225,11 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
       }, { injector: this.injector });
     }
     this.connectLegacyValidators();
-    this.customControlInputNames = connectSignalControlInputs(accessor, () => this._field, this.injector).inputNames;
+    this.customControlInputNames = connectSignalControlInputs(accessor, () => this._field, this.injector, _hasBoundControlConsumer(this.element)).inputNames;
   }
 
   private connectSignalCustomControl(control: FormNodeControl<NodeValue<TNode>, TNode>) {
-    const connection = connectSignalControl(control, () => this._field, this.injector);
+    const connection = connectSignalControl(control, () => this._field, this.injector, _hasBoundControlConsumer(this.element));
     this.focuser = connection.focus ?? this.focuser;
     this.customControlInputNames = connection.inputNames;
   }

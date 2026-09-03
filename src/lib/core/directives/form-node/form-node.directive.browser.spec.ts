@@ -1435,6 +1435,8 @@ describe('FormNode in Chromium', () => {
     const pairedButton = fixture.nativeElement.querySelector('aot-paired-value-control button') as HTMLButtonElement;
 
     expect(valueControl.value()).toBe('AOT initial');
+    expect(valueControl.boundControl.source()).toBe('formNode');
+    expect(valueControl.boundControl.required()).toBe(true);
     expect(valueControl.requiredState()).toBe(true);
     expect(valueControl.stateChanges.some(changes => changes['requiredState']?.currentValue === true)).toBe(true);
     expect(checkboxControl.checked()).toBe(false);
@@ -1457,6 +1459,7 @@ describe('FormNode in Chromium', () => {
     fixture.componentInstance.name.disable();
     fixture.detectChanges();
     expect(valueControl.disabled()).toBe(true);
+    expect(valueControl.boundControl.disabled()).toBe(true);
     expect(valueButton.disabled).toBe(true);
     fixture.destroy();
   });

@@ -19,6 +19,7 @@ type ModelCandidate<TValue> = (() => TValue) & {
 const getControlModel = <TNode extends Node>(
   control: FormNodeControl<NodeValue<TNode>, TNode>,
   injector: Injector,
+  usesBoundControl: boolean,
 ): ModelSignal<NodeValue<TNode>> => {
   const candidate = control as unknown as Record<PropertyKey, unknown>;
   const mirror = reflectComponentType((control as unknown as { constructor: Type<unknown> }).constructor);
@@ -37,7 +38,7 @@ const getControlModel = <TNode extends Node>(
   const model = (() => lastValue as NodeValue<TNode>) as ModelSignal<NodeValue<TNode>>;
   model.set = (value) => {
     lastValue = value;
-    if (!writeComponentInput(control, name, value, injector)) warnFailedInputWrite(control, name);
+    if (!writeComponentInput(control, name, value, injector)) warnFailedInputWrite(control, name, usesBoundControl);
   };
   model.subscribe = listener => output.subscribe((value) => {
     lastValue = value;
@@ -51,14 +52,15 @@ export const connectSignalControl = <TNode extends Node>(
   control: FormNodeControl<NodeValue<TNode>, TNode>,
   node: () => TNode,
   injector: Injector,
+  usesBoundControl = false,
 ): SignalControlConnection => {
-  const model = getControlModel(control, injector);
+  const model = getControlModel(control, injector, usesBoundControl);
   const nodeInput = control.node as WritableSignal<TNode | null> | undefined;
   const validationOwner = {};
   const noErrors = signal<readonly []>([]);
   let writingControlValue = false;
 
-  const { inputNames } = connectSignalControlInputs(control, node, injector);
+  const { inputNames } = connectSignalControlInputs(control, node, injector, usesBoundControl);
 
   const valueSubscription = model.subscribe((value) => {
     if (!writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);

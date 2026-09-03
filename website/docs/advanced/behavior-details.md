@@ -182,27 +182,26 @@ incompatible, only synchronization of the affected optional state inputs—such 
 work. Errors thrown by an application-defined input transform are still reported normally.
 
 Gem Forms emits one warning per affected control instance and input name when such a write is
-skipped. To avoid the private writer entirely, accept the bound node through a writable `node`
-signal and derive optional state from it. A `ControlValueAccessor` is another option when only
+skipped. When the component does not already use it, the warning recommends
+`injectBoundControl()` as the source-neutral state facade. A component already consuming that
+facade does not receive the redundant recommendation. A `ControlValueAccessor` is another option when only
 value and disabled interoperability are needed; it does not provide channels for every optional
 state such as `readonly`, `required`, or errors.
 
 The edited `value = model<T>()` or `checked = model<boolean>()` path does not need this adapter because
-models are publicly writable. A custom control can also avoid read-only state-input writes by accepting
-the bound node and deriving its UI state directly:
+models are publicly writable. A custom control can avoid read-only state-input writes through the
+stable bound-control facade:
 
 ```ts
 export class DatePicker {
   value = model<Date | null>(null);
-  node = signal<Field<Date | null> | null>(null);
-
-  disabled = computed(() => this.node()?.disabled() ?? false);
-  errors = computed(() => this.node()?.errors() ?? []);
+  boundControl = injectBoundControl<Date | null>();
 }
 ```
 
-This is the most future-proof signal-control integration when the component needs direct access to
-form state. See [Custom controls](../guides/custom-controls.md) for the complete contracts.
+`boundControl.disabled()`, `boundControl.readonly()`, and the other signals currently read
+`[formNode]` state. The same API is reserved for future `[formField]`, Reactive Forms, and `ngModel`
+adapters. See [Custom controls](../guides/custom-controls.md) for the complete contract.
 
 ## Server rendering and hydration
 

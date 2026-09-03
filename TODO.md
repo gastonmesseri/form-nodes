@@ -17,6 +17,9 @@
   I think the second one is better, and it allows setting several at once (maybe not, to make it consistent with .removew)
   - [ ] rethink the return type of add (it does different depending on the signature)
 
+- boundControl
+  - also allow markAsTouched (and other outputs)
+  - also allow setValue (i guess, maybe not)
 - Provide alternative for non-possible disabled = input() readonly = input(),
   strong alternative like useFieldState() hook, compatible with all angular ways of declaring a form state (ngModel, formControl, new way, formNode)
   this should also be notified in the component-input-writer console.warn
@@ -324,6 +327,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Add `injectBoundControl<T>()` as a source-neutral custom-component state facade, initially backed by `[formNode]`, with normalized `{ kind: string; ... }` errors and neutral disconnected state.
 - [x] Improve custom-component input writing for `[formNode]`.
   - [x] Resolve public aliases and transforms through `reflectComponentType()`.
   - [x] Preserve `ngOnChanges` through Angular's definition input writer when available.

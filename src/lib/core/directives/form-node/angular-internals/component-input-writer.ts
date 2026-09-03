@@ -22,7 +22,7 @@ type ComponentTypeWithDef = Type<unknown> & {
 const warnedInputs = new WeakMap<object, Set<string>>();
 
 /** Warns once when a recognized Angular input cannot be synchronized through this boundary. */
-export const warnFailedInputWrite = (control: object, name: string) => {
+export const warnFailedInputWrite = (control: object, name: string, usesBoundControl = false) => {
   let names = warnedInputs.get(control);
   if (!names) {
     names = new Set();
@@ -40,7 +40,7 @@ export const warnFailedInputWrite = (control: object, name: string) => {
   }
   console.warn(
     `formNode: could not synchronize the '${name}' input on ${controlName} because its Angular input internals are incompatible. `
-    + 'The control remains connected, but this input may be stale. Prefer a writable node signal and derive state from the bound node; '
+    + `The control remains connected, but this input may be stale.${usesBoundControl ? '' : ' Prefer injectBoundControl() to consume bound state without writable state inputs;'} `
     + 'a ControlValueAccessor is also an option for value and disabled interoperability.',
   );
 };
