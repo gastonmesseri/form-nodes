@@ -113,6 +113,14 @@ This keeps ordinary hierarchy visually obvious while making exceptional behavior
 
 ## Treat nullability as a domain decision
 
+:::tip Model absence deliberately
+
+Nullable is the default because empty controls commonly represent no value. Use
+`{ nullable: false }` only when `null` is invalid throughout the domain, not merely because the
+initial value happens to be present.
+
+:::
+
 Fields are nullable by default because an input can commonly represent no value:
 
 ```ts
@@ -238,6 +246,13 @@ causes, not as synchronization mechanisms for other application state.
 
 Angular control flow decides what is rendered. Gem Forms `hidden` state decides whether a node
 participates in validation and aggregate interaction state.
+
+:::warning Hidden is form state, not DOM state
+
+`hidden()` suppresses validation participation but does not remove an element. Use Angular `@if`
+for rendering, and combine both only when the branch should be absent from the DOM and the form.
+
+:::
 
 Use `@if` alone when a step is temporarily not visible but should remain part of form validity:
 

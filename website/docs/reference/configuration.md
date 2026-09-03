@@ -306,8 +306,13 @@ const restoreMessages = configureGlobalValidatorMessages({
 restoreMessages();
 ```
 
-This is shared module state. Do not change it per SSR request; concurrent requests must use scoped
-Angular providers or form catalogs. See [Validator messages and i18n](../guides/validator-messages.md).
+:::danger Do not mutate global messages per SSR request
+
+The global catalog is process-wide. Request-specific locale or wording belongs in an Angular
+provider or a form-scoped catalog so concurrent server renders cannot affect one another.
+See [Validator messages and i18n](../guides/validator-messages.md).
+
+:::
 
 ## Binding configuration
 

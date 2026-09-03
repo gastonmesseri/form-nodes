@@ -135,9 +135,15 @@ adapted `[formField]` control participate in the same validity and submission ch
 because generic error targets do not expose a statically known concrete node type. `focus()` is a
 no-op when that node has no rendered binding.
 
-Do not add Angular's separate form-root directive to the same `<form>`. The Angular `FormField`
-import is required for the controls only; Gem's `FormNode` remains the single root binding. Controls
-inside that form may mix `[formNode]` and `[formField]` when an integration needs both styles.
+The Angular `FormField` import is required for the controls only. Controls inside the form may mix
+`[formNode]` and `[formField]` when an integration needs both styles.
+
+:::warning Keep one form-root owner
+
+When Gem owns submission and reset, bind the native `<form>` with `[formNode]` only. Mixing two
+root directives on the same element creates competing lifecycle and submission ownership.
+
+:::
 
 Date-like controls can change native validity without emitting an input event. Browser bindings monitor those transitions; the mechanism is CSP nonce-aware and is not installed during server rendering.
 

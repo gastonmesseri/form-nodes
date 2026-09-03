@@ -1,5 +1,5 @@
 ---
-title: Bound control API
+title: useControlState()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
@@ -12,7 +12,7 @@ import ngModelSource from '!!raw-loader!../../examples/control-state-ng-model.ty
 
 # useControlState()
 
-`useControlState<TValue>()` gives a custom-control component one stable, signal-based view of the
+`useControlState()` gives a custom-control component one stable, signal-based view of the
 form binding attached to its host. The component can consume the same interface whether its caller
 uses `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`.
 
@@ -53,7 +53,7 @@ A signal custom control declares a `model()` and can optionally implement Angula
 export class DatePicker implements FormValueControl<string | null> {
   value = model<string | null>(null);
 
-  controlState = useControlState<string | null>();
+  controlState = useControlState();
 }
 ```
 
@@ -62,13 +62,17 @@ the source-neutral state signals; it does not replace `writeValue()` or the regi
 
 ```ts {2}
 export class DatePicker implements ControlValueAccessor {
-  controlState = useControlState<string | null>();
+  controlState = useControlState();
 
   writeValue(value: string | null) { /* update the view */ }
   registerOnChange(callback: (value: string | null) => void) { /* retain callback */ }
   registerOnTouched(callback: () => void) { /* retain callback */ }
 }
 ```
+
+The generic is optional and only narrows the type returned by `value()`. Omit it when the
+component only consumes state such as `required()`, `disabled()`, or `errors()`; specify it when
+the component needs a typed bound value.
 
 ## Bind with formNode
 

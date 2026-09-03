@@ -20,7 +20,7 @@ import { useControlState } from '@gem/ng-forms';
   `,
 })
 export class DatePicker implements ControlValueAccessor {
-  controlState = useControlState<string | null>();
+  controlState = useControlState();
   value: string | null = null;
 
   select(value: string | null) {

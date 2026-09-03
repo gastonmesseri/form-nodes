@@ -15,16 +15,16 @@ import { email, FormNode, field, form, minLength, required } from '@gem/ng-forms
   selector: 'app-registration',
   imports: [FormNode],
   template: `
-    <input [formNode]="myForm.fullName" />
+    <input [formNode]="myForm.username" />
     <input type="email" [formNode]="myForm.email" />
 
-    <p>Current full name: {{ myForm.fullName() }}</p>
+    <p>Current username: {{ myForm.username() }}</p>
     <p>Current email: {{ myForm.email() }}</p>
   `,
 })
 export class RegistrationComponent {
   myForm = form({
-    fullName: field('', [required, minLength(2)]),
+    username: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   });
 }
@@ -39,19 +39,19 @@ the view.
 Every node is callable. Calling it is the preferred way to read its committed value:
 
 ```ts
-myForm(); // { fullName: '', email: '' }
-myForm.fullName(); // ''
+myForm(); // { username: '', email: '' }
+myForm.username(); // ''
 myForm.email(); // ''
 ```
 
 Validation state is exposed as signals too:
 
 ```ts
-myForm.valid(); // false because fullName and email are required
+myForm.valid(); // false because username and email are required
 
 myForm.allErrors();
 // [
-//   { kind: 'required', message: 'This field is required.', targetNode: myForm.fullName },
+//   { kind: 'required', message: 'This field is required.', targetNode: myForm.username },
 //   { kind: 'required', message: 'This field is required.', targetNode: myForm.email },
 // ]
 ```
@@ -59,7 +59,7 @@ myForm.allErrors();
 ## Reactive state signals
 
 If you already use Angular writable signals, a field follows the same basic value pattern:
-`myForm.fullName()` reads its value and `myForm.fullName.set(value)` changes it. Unlike a plain
+`myForm.username()` reads its value and `myForm.username.set(value)` changes it. Unlike a plain
 `signal()`, the field also owns form-specific state and behavior such as validation, touched,
 dirty, disabled, reset, debounce, and control binding.
 
@@ -70,23 +70,23 @@ read it directly without subscriptions:
 myForm.valid(); // false
 myForm.disabled(); // false
 
-myForm.fullName.invalid(); // true
-myForm.fullName.touched(); // false
-myForm.fullName.dirty(); // false
+myForm.username.invalid(); // true
+myForm.username.touched(); // false
+myForm.username.dirty(); // false
 ```
 
 Angular tracks these reads automatically in templates:
 
 ```html
-@if (myForm.fullName.touched() && myForm.fullName.invalid()) {
-  <p>Please enter your full name.</p>
+@if (myForm.username.touched() && myForm.username.invalid()) {
+  <p>Please enter your username.</p>
 }
 ```
 
 Update a field programmatically with `set()`:
 
 ```ts
-myForm.fullName.set('Marco Polo');
+myForm.username.set('marco');
 ```
 
 `FormNode` is imported by the standalone component so `[formNode]` is available in its template.

@@ -26,7 +26,7 @@ import { field, form, useControlState, required, type ControlStateError } from '
 export class DatePicker implements FormValueControl<string | null> {
   value = model<string | null>(null);
 
-  controlState = useControlState<string | null>();
+  controlState = useControlState();
 
   errorMessage(error: ControlStateError) {
     return error.kind === 'required' ? 'Choose a date.' : 'The date is invalid.';
