@@ -38,7 +38,7 @@ export const appConfig: ApplicationConfig = {
 Each predicate tracks its own signal dependencies and toggles its class independently. The closest
 provider wins; class maps from ancestor providers are not merged automatically.
 
-No classes are configured by default. `ANGULAR_FORMS_STATUS_CLASSES` supplies `ng-valid`,
+No classes are configured by default. [`ANGULAR_FORMS_STATUS_CLASSES`](./angular-forms-status-classes.md) supplies `ng-valid`,
 `ng-invalid`, `ng-pending`, `ng-pristine`, `ng-dirty`, `ng-untouched`, and `ng-touched`.
 
 Do not combine this provider with `provideSignalFormsConfig({ classes })` in the same injector:

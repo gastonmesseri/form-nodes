@@ -35,7 +35,7 @@ and linker infrastructure.
 | I want to… | Start with | Details |
 | --- | --- | --- |
 | Query or inspect one concrete binding | `FormNode<TNode>`, `FormNodeBinding<TNode>` | [Binding instance](#binding-instance) |
-| Inject the binding on its host | `FORM_NODE` | [`FORM_NODE`](#form_node) |
+| Inject the binding on its host | `FORM_NODE` | [`FORM_NODE` reference](./form-node-token.md) |
 | Apply reactive CSS classes | `provideFormNodeConfig()` | [Automatic CSS classes](#automatic-css-classes) |
 | Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
 | Bind submit and reset on `<form>` | The same `FormNode` import | [Native form submission](#native-form-submission) |
@@ -257,7 +257,7 @@ Each predicate tracks its own signal dependencies independently. The nearest pro
 Register the provider in a route, component, or NgModule instead when the configuration should
 apply only to that injector subtree.
 
-`ANGULAR_FORMS_STATUS_CLASSES` is an optional compatibility preset for applications, component
+[`ANGULAR_FORMS_STATUS_CLASSES`](./angular-forms-status-classes.md) is an optional compatibility preset for applications, component
 libraries, and existing styles that expect Angular Forms status classes. It maps the node's reactive
 state to the following classes:
 
