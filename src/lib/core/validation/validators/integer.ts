@@ -1,8 +1,8 @@
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultIntegerMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
-import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator } from '../validation.type';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 const validateInteger = (
   { value }: FieldContext<number | null>,
@@ -39,6 +39,8 @@ const validateInteger = (
 export function integer(options: string | {
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
+  /** Reactive predicate deciding whether this validator is active. */
+  when?: (context: ValidatorContext<number | null>) => boolean;
 }): Validator<number | null>;
 /**
  * Validates a safe integer when passed directly in a validators array.
@@ -55,8 +57,14 @@ export function integer(options: string | {
  */
 export function integer(context: FieldContext<number | null>): ValidationResult;
 export function integer(
-  contextOrOptions: FieldContext<number | null> | string | { message?: string | (() => string | undefined) },
+  contextOrOptions: FieldContext<number | null> | string | {
+    message?: string | (() => string | undefined);
+    when?: (context: ValidatorContext<number | null>) => boolean;
+  },
 ): Validator<number | null> | ValidationResult {
   if (isFieldContext(contextOrOptions)) return validateInteger(contextOrOptions);
-  return context => validateInteger(context, resolveValidatorMessageOption(contextOrOptions));
+  return applyValidatorWhen(
+    context => validateInteger(context, resolveValidatorMessageOption(contextOrOptions)),
+    contextOrOptions,
+  );
 }

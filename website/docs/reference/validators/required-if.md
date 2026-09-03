@@ -25,6 +25,14 @@ requiredIf(condition, options)
 `condition` is a function returning `boolean`. The options customize only the failure message,
 which may itself be reactive.
 
+It is a concise alternative to `required({ when })` when the condition does not need the validator
+context:
+
+```ts
+requiredIf(() => businessAccount())
+required({ when: () => businessAccount() })
+```
+
 ## Usage and behavior
 
 Use `requiredIf()` when whether a value is mandatory depends on reactive application or form state:

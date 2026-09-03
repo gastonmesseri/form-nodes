@@ -908,6 +908,23 @@ describe('field', () => {
     expect(fieldNode.required()).toBe(false);
   });
 
+  it('provides the complete reactive validator context to a built-in when option', () => {
+    const enabled = signal(false);
+    const fieldNode = field('', [required({
+      when: ({ value, touched }) => enabled() && value() === '' && touched(),
+    })]);
+
+    expect(fieldNode.valid()).toBe(true);
+    expect(fieldNode.required()).toBe(false);
+
+    enabled.set(true);
+    expect(fieldNode.valid()).toBe(true);
+
+    fieldNode.markAsTouched();
+    expect(fieldNode.invalid()).toBe(true);
+    expect(fieldNode.required()).toBe(true);
+  });
+
   it('reacts to external signals read by a synchronous validator', () => {
     const blocked = signal(false);
     const validate = vi.fn(() => blocked() ? { kind: 'blocked' } : null);

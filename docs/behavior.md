@@ -600,6 +600,14 @@ Like every Angular `computed()`, synchronous validation is lazy: a dependency ch
 
 ### Validator sources and conditional synchronous validators
 
+Every built-in validator factory accepts a reactive `when(context)` option. The callback receives
+the same stable, complete validator context as the validator itself. While it returns `false`, the
+validator contributes no errors and none of its marked constraint metadata. Signals read by the
+callback invalidate both validation and metadata, including while the node is non-interactive.
+Message-string shorthand remains supported, while conditional rules use the options-object form.
+`requiredIf(condition)` remains as a concise equivalent to `required({ when: () => condition() })`
+for zero-argument conditions.
+
 `validators` accepts either one synchronous validator or a readonly array of validators. `null` and `undefined` entries in that array are ignored, enabling expressions such as `[required, condition() ? minLength(2) : null]`. The positional validator argument and `setValidators()` accept the same forms. Internally, the source is normalized, so `validators()` always returns a readonly array containing only effective validators:
 
 ```ts

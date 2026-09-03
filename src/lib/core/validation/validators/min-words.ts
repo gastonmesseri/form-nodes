@@ -1,8 +1,8 @@
 import { countWords } from './count-words';
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMinWordsMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a non-empty string to contain at least the configured number of words.
@@ -30,10 +30,12 @@ export const minWords = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<string | null>) => boolean;
   },
 ): Validator<string | null> => {
   const message = resolveValidatorMessageOption(options);
-  return ({ value }) => {
+  const validator: Validator<string | null> = ({ value }) => {
     const currentValue = value();
     if (currentValue === null || currentValue === '') return null;
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
@@ -43,4 +45,5 @@ export const minWords = (
       ? { kind: 'minWords', minWords: resolvedMinimum, actual, message: resolveValidatorMessage('minWords', { minWords: resolvedMinimum, actual }, message, () => defaultMinWordsMessage(resolvedMinimum)) }
       : null;
   };
+  return applyValidatorWhen(validator, options);
 };

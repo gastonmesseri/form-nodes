@@ -1,20 +1,15 @@
 import { isEmpty } from '../../utils/is-empty';
 import { createMetadataKey } from '../../metadata/metadata';
-import { resolveValidatorMessageOption, type ValidatorOptions } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 import { markValidatorMetadata } from '../validator-metadata';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultRequiredMessage } from './default-validator-messages';
-import type { FieldContext, ValidationError, ValidationResult, Validator } from '../validation.type';
+import type { FieldContext, ValidationError, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
-type RequiredMetadataSource = boolean | (() => boolean);
-
-export const REQUIRED_METADATA = createMetadataKey<RequiredMetadataSource, boolean>({
+export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
   getInitial: () => false,
-  reduce: (current, contribution) => {
-    const active = typeof contribution === 'function' ? contribution() : contribution;
-    return current || active;
-  },
+  reduce: (current, contribution) => current || contribution,
 });
 
 const validateRequired = (
@@ -49,6 +44,8 @@ const validateRequired = (
 export function required(options: string | {
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
+  /** Reactive predicate deciding whether this validator and its required metadata are active. */
+  when?: (context: ValidatorContext<unknown>) => boolean;
 }): Validator<unknown>;
 /**
  * Validates required presence when passed directly in a validators array.
@@ -69,15 +66,21 @@ export function required(options: string | {
  */
 export function required(context: FieldContext<unknown>): ValidationResult;
 export function required(
-  contextOrOptions: FieldContext<unknown> | string | ValidatorOptions,
+  contextOrOptions: FieldContext<unknown> | string | {
+    message?: string | (() => string | undefined);
+    when?: (context: ValidatorContext<unknown>) => boolean;
+  },
 ): Validator<unknown> | ValidationResult {
   if (isFieldContext(contextOrOptions)) {
     return validateRequired(contextOrOptions);
   }
-  return markValidatorMetadata(
-    context => validateRequired(context, resolveValidatorMessageOption(contextOrOptions)),
-    REQUIRED_METADATA,
-    true,
+  return applyValidatorWhen(
+    markValidatorMetadata(
+      context => validateRequired(context, resolveValidatorMessageOption(contextOrOptions)),
+      REQUIRED_METADATA,
+      true,
+    ),
+    contextOrOptions,
   );
 }
 

@@ -12,6 +12,7 @@ import { registerAngularField } from '../interop/angular-field';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { createValidatorContext } from '../validation/create-validator-context';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createAsyncValidation } from '../validation/create-async-validation';
@@ -21,7 +22,7 @@ import { createNodeDefinitionFactory } from '../utils/create-node-definition-fac
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import type { InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, NodeDefinitions } from '../types/node.type';
-import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
@@ -164,7 +165,11 @@ export function _createObjectNode<TDefinitions extends NodeDefinitions>(
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(formContext, formValidators(), formNode));
   const formSyncErrors = computed(() => formSyncValidation().errors);
-  const formMetadata = createNodeMetadata(formValidators, computed(() => formSyncValidation().metadata));
+  const formMetadata = createNodeMetadata(
+    formValidators,
+    computed(() => formSyncValidation().metadata),
+    () => createValidatorContext(formContext, formNode) as ValidatorContext<unknown>,
+  );
   const asyncValidation = createAsyncValidation(
     formContext,
     formValidators,

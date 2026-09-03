@@ -2,8 +2,8 @@ import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultUrlMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
-import type { FieldContext, ValidationResult, Validator } from '../validation.type';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import type { FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 const validateUrl = (
   { value }: FieldContext<string | null>,
@@ -42,6 +42,8 @@ const validateUrl = (
 export function url(options: string | {
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
+  /** Reactive predicate deciding whether this validator is active. */
+  when?: (context: ValidatorContext<string | null>) => boolean;
 }): Validator<string | null>;
 /**
  * Validates an absolute WHATWG URL when passed directly in a validators array.
@@ -58,8 +60,14 @@ export function url(options: string | {
  */
 export function url(context: FieldContext<string | null>): ValidationResult;
 export function url(
-  contextOrOptions: FieldContext<string | null> | string | { message?: string | (() => string | undefined) },
+  contextOrOptions: FieldContext<string | null> | string | {
+    message?: string | (() => string | undefined);
+    when?: (context: ValidatorContext<string | null>) => boolean;
+  },
 ): Validator<string | null> | ValidationResult {
   if (isFieldContext(contextOrOptions)) return validateUrl(contextOrOptions);
-  return context => validateUrl(context, resolveValidatorMessageOption(contextOrOptions));
+  return applyValidatorWhen(
+    context => validateUrl(context, resolveValidatorMessageOption(contextOrOptions)),
+    contextOrOptions,
+  );
 }

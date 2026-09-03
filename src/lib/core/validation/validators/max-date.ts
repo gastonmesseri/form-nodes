@@ -1,10 +1,10 @@
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { normalizeDateConstraintSource, type DateConstraintSource } from './date-constraint';
 import { MAX_DATE_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMaxDateMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a valid, non-empty date to be on or before a maximum date.
@@ -39,6 +39,8 @@ export const maxDate = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<Date | null>) => boolean;
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
     parseAs?: 'utc' | 'local';
   },
@@ -47,7 +49,7 @@ export const maxDate = (
   const message = resolveValidatorMessageOption(options);
   const normalizedMaximum = normalizeDateConstraintSource(maximum as DateConstraintSource, parseAs);
 
-  return markValidatorMetadata(({ value }) => {
+  const validator: Validator<Date | null> = markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (currentValue === null || Number.isNaN(currentValue.getTime())) return null;
     const resolvedMaximum = typeof normalizedMaximum === 'function' ? normalizedMaximum() : normalizedMaximum;
@@ -56,4 +58,5 @@ export const maxDate = (
       ? { kind: 'maxDate', maxDate: resolvedMaximum, actual: currentValue, message: resolveValidatorMessage('maxDate', { maxDate: resolvedMaximum, actual: currentValue }, message, () => defaultMaxDateMessage(resolvedMaximum)) }
       : null;
   }, MAX_DATE_METADATA, normalizedMaximum);
+  return applyValidatorWhen(validator, options);
 };

@@ -1,9 +1,9 @@
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMinMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a non-empty number to be greater than or equal to a minimum.
@@ -30,10 +30,12 @@ export const min = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<number | null>) => boolean;
   },
 ): Validator<number | null> => {
   const message = resolveValidatorMessageOption(options);
-  return markValidatorMetadata(({ value }) => {
+  const validator: Validator<number | null> = markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (currentValue === null || Number.isNaN(currentValue)) return null;
     const resolvedMinimum = typeof minimum === 'function' ? minimum() : minimum;
@@ -42,4 +44,5 @@ export const min = (
       ? { kind: 'min', min: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('min', { min: resolvedMinimum, actual: currentValue }, message, () => defaultMinMessage(resolvedMinimum)) }
       : null;
   }, MIN_METADATA, minimum);
+  return applyValidatorWhen(validator, options);
 };

@@ -13,6 +13,7 @@ import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { createValidatorContext } from '../validation/create-validator-context';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { normalizeValidatorSource } from '../validation/validator-source';
 import { createAsyncValidation } from '../validation/create-async-validation';
@@ -20,7 +21,7 @@ import { registerNodeValidatorMessages } from '../validation/validator-messages'
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
-import type { ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import type { InternalNode, Node, NodeControlBinding, NodeDefinition, NodeSet, NodeValue } from '../types/node.type';
@@ -331,7 +332,11 @@ export function array<TDefinition extends NodeDefinition>(
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(arrayContext, arrayValidators(), arrayNode));
   const arraySyncErrors = computed(() => arraySyncValidation().errors);
-  const arrayMetadata = createNodeMetadata(arrayValidators, computed(() => arraySyncValidation().metadata));
+  const arrayMetadata = createNodeMetadata(
+    arrayValidators,
+    computed(() => arraySyncValidation().metadata),
+    () => createValidatorContext(arrayContext, arrayNode) as ValidatorContext<unknown>,
+  );
   const asyncValidation = createAsyncValidation(
     arrayContext,
     arrayValidators,

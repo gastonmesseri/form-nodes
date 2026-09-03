@@ -1058,6 +1058,23 @@ describe('form', () => {
     expect(formGroup.valid()).toBe(true);
   });
 
+  it('aggregates a child built-in validator controlled by when', () => {
+    const requireName = signal(false);
+    const formGroup = form({
+      name: field('', [required({ when: () => requireName() })]),
+    });
+
+    expect(formGroup.valid()).toBe(true);
+
+    requireName.set(true);
+    expect(formGroup.invalid()).toBe(true);
+    expect(formGroup.name.required()).toBe(true);
+
+    requireName.set(false);
+    expect(formGroup.valid()).toBe(true);
+    expect(formGroup.name.required()).toBe(false);
+  });
+
   it('returns only the first matching own form error', () => {
     const formGroup = form({
       name: field('', [required]),

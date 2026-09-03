@@ -1,11 +1,12 @@
 import { isFieldContext } from '../../utils/field-context-marker';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultUniqueItemsMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
-import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator } from '../validation.type';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
-type UniqueItemsOptions = {
+type UniqueItemsOptions<TItem = unknown> = {
   message?: string | (() => string | undefined);
+  when?: (context: ValidatorContext<readonly TItem[] | null | undefined>) => boolean;
 };
 
 type UniqueItemsKeySelector<TItem> = keyof TItem | ((item: TItem, index: number) => unknown);
@@ -64,6 +65,8 @@ const validateUniqueItems = <TItem>(
 export function uniqueItems(options?: {
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
+  /** Reactive predicate deciding whether this validator is active. */
+  when?: (context: ValidatorContext<readonly unknown[] | null | undefined>) => boolean;
 }): Validator<readonly unknown[] | null | undefined>;
 /**
  * Validates array item identity when passed directly in a validators array.
@@ -109,11 +112,13 @@ export function uniqueItems<TItem>(
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator is active. */
+    when?: (context: ValidatorContext<readonly TItem[] | null | undefined>) => boolean;
   },
 ): Validator<readonly TItem[] | null | undefined>;
 export function uniqueItems<TItem>(
-  contextOrKeySelectorOrOptions?: FieldContext<readonly TItem[] | null | undefined> | UniqueItemsKeySelector<TItem> | UniqueItemsOptions,
-  selectedOptions?: string | UniqueItemsOptions,
+  contextOrKeySelectorOrOptions?: FieldContext<readonly TItem[] | null | undefined> | UniqueItemsKeySelector<TItem> | UniqueItemsOptions<TItem>,
+  selectedOptions?: string | UniqueItemsOptions<TItem>,
 ): Validator<readonly TItem[] | null | undefined> | ValidationResult {
   if (isFieldContext(contextOrKeySelectorOrOptions)) return validateUniqueItems(contextOrKeySelectorOrOptions);
   const hasKeySelector = typeof contextOrKeySelectorOrOptions === 'function'
@@ -121,6 +126,9 @@ export function uniqueItems<TItem>(
     || typeof contextOrKeySelectorOrOptions === 'number'
     || typeof contextOrKeySelectorOrOptions === 'symbol';
   const keySelector = hasKeySelector ? contextOrKeySelectorOrOptions as UniqueItemsKeySelector<TItem> : undefined;
-  const options = hasKeySelector ? selectedOptions : contextOrKeySelectorOrOptions as UniqueItemsOptions | undefined;
-  return context => validateUniqueItems(context, keySelector, resolveValidatorMessageOption(options));
+  const options = hasKeySelector ? selectedOptions : contextOrKeySelectorOrOptions as UniqueItemsOptions<TItem> | undefined;
+  return applyValidatorWhen(
+    context => validateUniqueItems(context, keySelector, resolveValidatorMessageOption(options)),
+    options,
+  );
 }

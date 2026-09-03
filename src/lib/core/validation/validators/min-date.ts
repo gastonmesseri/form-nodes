@@ -1,10 +1,10 @@
-import type { Validator } from '../validation.type';
+import type { Validator, ValidatorContext } from '../validation.type';
 import { normalizeDateConstraintSource, type DateConstraintSource } from './date-constraint';
 import { MIN_DATE_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
 import { defaultMinDateMessage } from './default-validator-messages';
-import { resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
 
 /**
  * Requires a valid, non-empty date to be on or after a minimum date.
@@ -39,6 +39,8 @@ export const minDate = (
   options?: string | {
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<Date | null>) => boolean;
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
     parseAs?: 'utc' | 'local';
   },
@@ -47,7 +49,7 @@ export const minDate = (
   const message = resolveValidatorMessageOption(options);
   const normalizedMinimum = normalizeDateConstraintSource(minimum as DateConstraintSource, parseAs);
 
-  return markValidatorMetadata(({ value }) => {
+  const validator: Validator<Date | null> = markValidatorMetadata(({ value }) => {
     const currentValue = value();
     if (currentValue === null || Number.isNaN(currentValue.getTime())) return null;
     const resolvedMinimum = typeof normalizedMinimum === 'function' ? normalizedMinimum() : normalizedMinimum;
@@ -56,4 +58,5 @@ export const minDate = (
       ? { kind: 'minDate', minDate: resolvedMinimum, actual: currentValue, message: resolveValidatorMessage('minDate', { minDate: resolvedMinimum, actual: currentValue }, message, () => defaultMinDateMessage(resolvedMinimum)) }
       : null;
   }, MIN_DATE_METADATA, normalizedMinimum);
+  return applyValidatorWhen(validator, options);
 };
