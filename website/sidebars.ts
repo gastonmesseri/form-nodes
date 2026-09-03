@@ -88,7 +88,7 @@ const sidebars: SidebarsConfig = {
             { type: 'link', label: 'uniqueItems', href: '/reference/built-in-validators#uniqueitems' },
           ],
         },
-        'reference/custom-validators',
+        'reference/validator',
         'reference/async-validator',
         'reference/form-node-binding',
         'reference/control-state',

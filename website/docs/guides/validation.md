@@ -157,4 +157,4 @@ name.required();
 
 See [Built-in validators](../reference/built-in-validators.md) and [Validator messages](./validator-messages.md).
 For reusable helpers, context types, result shapes, and conditional composition, see the
-[custom validator reference](../reference/custom-validators.md).
+[`validator()` reference](../reference/validator.md).
