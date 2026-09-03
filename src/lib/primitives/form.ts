@@ -35,6 +35,27 @@ export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormO
 type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 
 /**
+ * Creates a clone recipe without sharing createObjectNode()'s live-state closure scope.
+ * Arrays retain this callback for future items; it must retain only compiled child recipes and
+ * declarative configuration, not the source form/group. See docs/primitive-state-refactor.md.
+ */
+function createObjectClone(
+  createDefinitions: ReturnType<typeof createNodeDefinitionFactory>,
+  initialValidatorSource: ValidatorSource<any>,
+  options: FormOptions<any> | undefined,
+  nodeType: 'form' | 'group',
+  normalizeDefinition: (definition: unknown) => Node,
+) {
+  return () => createObjectNode<ObjectNodeDefinitions>(
+    createDefinitions() as ObjectNodeDefinitions,
+    initialValidatorSource,
+    options,
+    nodeType,
+    normalizeDefinition,
+  );
+}
+
+/**
  * ```ts
  * const profile = form({
  *   name: field(''),
@@ -471,21 +492,4 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   refreshInjector();
   ensureAsyncValidationWatch();
   return formNode;
-}
-
-// Capture declarative inputs without sharing the live object's closure environment.
-function createObjectClone(
-  createDefinitions: ReturnType<typeof createNodeDefinitionFactory>,
-  initialValidatorSource: ValidatorSource<any>,
-  options: FormOptions<any> | undefined,
-  nodeType: 'form' | 'group',
-  normalizeDefinition: (definition: unknown) => Node,
-) {
-  return () => createObjectNode<ObjectNodeDefinitions>(
-    createDefinitions() as ObjectNodeDefinitions,
-    initialValidatorSource,
-    options,
-    nodeType,
-    normalizeDefinition,
-  );
 }

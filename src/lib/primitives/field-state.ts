@@ -350,6 +350,12 @@ export class FieldState<TValue> {
     this.debouncing.set(false);
   }
 
+  createClone() {
+    // Capture configuration now so the retained callback does not reference this instance.
+    const { initialValue, initialValidatorSource, cloneOptions } = this;
+    return () => new FieldState<TValue>(initialValue, initialValidatorSource, cloneOptions).node;
+  }
+
   createNode(): Field<TValue> {
     const publicApi: FieldApi<TValue> = {
       nodeType: () => 'field' as const,
@@ -413,7 +419,7 @@ export class FieldState<TValue> {
       _controlValue: this.controlValue.asReadonly(),
       _setControlValue: publicApi.setControlValue,
       _flushControlValueOnBlur: () => this.flushControlValueOnBlur(),
-      _clone: createFieldClone(this),
+      _clone: this.createClone(),
       _setParent: (parent: Node | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => refreshNodeInjector(this.node),
       _registerControlBinding: (binding: NodeControlBinding) => this.registerControlBinding(binding),
@@ -426,9 +432,4 @@ export class FieldState<TValue> {
       { api: internalApi, $api: internalApi },
     ) as unknown as Field<TValue>;
   }
-}
-
-// Destructure only declarative inputs in a separate scope, without retaining the live field.
-function createFieldClone<TValue>({ initialValue, initialValidatorSource, cloneOptions }: FieldState<TValue>) {
-  return () => new FieldState<TValue>(initialValue, initialValidatorSource, cloneOptions).node;
 }
