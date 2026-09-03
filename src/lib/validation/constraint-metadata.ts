@@ -2,14 +2,16 @@ import { createMetadataKey } from '../metadata/metadata';
 
 export type ConstraintSource<TValue> = TValue | (() => TValue | undefined);
 
-const resolveConstraint = <TValue>(source: ConstraintSource<TValue>): TValue | undefined =>
-  typeof source === 'function' ? (source as () => TValue | undefined)() : source;
+const resolveConstraint = <TValue>(source: ConstraintSource<TValue>): TValue | undefined => {
+  return typeof source === 'function' ? (source as () => TValue | undefined)() : source;
+};
 
-const isInvalidLimit = (value: number | Date): boolean =>
-  Number.isNaN(value instanceof Date ? value.getTime() : value);
+const isInvalidLimit = (value: number | Date): boolean => {
+  return Number.isNaN(value instanceof Date ? value.getTime() : value);
+};
 
-const createMinimumMetadata = <TValue extends number | Date>() =>
-  createMetadataKey<ConstraintSource<TValue>, TValue | undefined>({
+const createMinimumMetadata = <TValue extends number | Date>() => {
+  return createMetadataKey<ConstraintSource<TValue>, TValue | undefined>({
     getInitial: () => undefined,
     reduce: (current, source) => {
       const next = resolveConstraint(source);
@@ -17,9 +19,10 @@ const createMinimumMetadata = <TValue extends number | Date>() =>
       return current === undefined || next > current ? next : current;
     },
   });
+};
 
-const createMaximumMetadata = <TValue extends number | Date>() =>
-  createMetadataKey<ConstraintSource<TValue>, TValue | undefined>({
+const createMaximumMetadata = <TValue extends number | Date>() => {
+  return createMetadataKey<ConstraintSource<TValue>, TValue | undefined>({
     getInitial: () => undefined,
     reduce: (current, source) => {
       const next = resolveConstraint(source);
@@ -27,6 +30,7 @@ const createMaximumMetadata = <TValue extends number | Date>() =>
       return current === undefined || next < current ? next : current;
     },
   });
+};
 
 export const MIN_METADATA = createMinimumMetadata<number>();
 export const MAX_METADATA = createMaximumMetadata<number>();

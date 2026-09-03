@@ -42,8 +42,9 @@ const operationArbitrary: fc.Arbitrary<Operation> = fc.oneof(
   fc.record({ kind: fc.constant<'clear'>('clear') }),
 );
 
-const normalizedIndex = (index: number, length: number): number =>
-  ((index % length) + length) % length;
+const normalizedIndex = (index: number, length: number): number => {
+  return ((index % length) + length) % length;
+};
 
 describe('array property-based invariants', () => {
   it('preserves structural invariants across arbitrary mutation sequences', () => {

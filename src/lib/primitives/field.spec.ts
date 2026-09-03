@@ -39,10 +39,12 @@ describe('field', () => {
     { label: 'function', initial: () => 'ready' },
   ])('exposes the supplied $label value on first use and after discarding a buffered edit', ({ initial }) => {
     const observed: unknown[][] = [];
-    const model = computed(() => field<unknown>(initial, ({ value, node }) => {
-      observed.push([value(), node().controlValue()]);
-      return null;
-    }, { debounce: 'blur' }));
+    const model = computed(() => {
+      return field<unknown>(initial, ({ value, node }) => {
+        observed.push([value(), node().controlValue()]);
+        return null;
+      }, { debounce: 'blur' });
+    });
     const node = model();
     expect(node()).toBe(initial);
     expect(node.controlValue()).toBe(initial);
@@ -528,7 +530,7 @@ describe('field', () => {
     let abortSignal: AbortSignal | undefined;
     const name = field('David', [asyncValidator(({ abortSignal: currentSignal }) => {
       abortSignal = currentSignal;
-      return new Promise<null>(() => {});
+      return new Promise<null>(() => { });
     })]);
     const injector = Injector.create({ providers: [] });
     form({ name }, { injector });
@@ -801,9 +803,11 @@ describe('field', () => {
       reject(): void;
     }> = [];
     const fieldNode = field('initial', {
-      debounce: abortSignal => new Promise<void>((resolve, reject) => {
-        runs.push({ signal: abortSignal, resolve, reject });
-      }),
+      debounce: (abortSignal) => {
+        return new Promise<void>((resolve, reject) => {
+          runs.push({ signal: abortSignal, resolve, reject });
+        });
+      },
     });
 
     fieldNode.setControlValue('first');
@@ -841,7 +845,7 @@ describe('field', () => {
   });
 
   it('handles synchronous custom control debouncers', () => {
-    const immediate = field('initial', { debounce: () => {} });
+    const immediate = field('initial', { debounce: () => { } });
     immediate.setControlValue('updated');
     expect(immediate()).toBe('updated');
     expect(immediate.debouncing()).toBe(false);
@@ -1058,7 +1062,7 @@ describe('field', () => {
   });
 
   it('suppresses pending validation state while non-interactive and restores it afterwards', () => {
-    const fieldNode = field('David', [asyncValidator(() => new Promise<null>(() => {}))]);
+    const fieldNode = field('David', [asyncValidator(() => new Promise<null>(() => { }))]);
     expect(fieldNode.pending()).toBe(true);
 
     fieldNode.disable();
@@ -1082,9 +1086,9 @@ describe('field', () => {
 
   it('reruns an asynchronous validator when a signal read by it changes', async () => {
     const available = signal(true);
-    const validate = vi.fn(async ({ value }: Context<string | null>) =>
-      available() || value() === null ? null : { kind: 'unavailable' },
-    );
+    const validate = vi.fn(async ({ value }: Context<string | null>) => {
+      return available() || value() === null ? null : { kind: 'unavailable' };
+    });
     const fieldNode = field('David', [asyncValidator(validate)]);
 
     await Promise.resolve();
@@ -1103,9 +1107,9 @@ describe('field', () => {
 
   it('restarts debounced asynchronous validation when its value changes', async () => {
     vi.useFakeTimers();
-    const validate = vi.fn(async ({ value }: Context<string | null>) =>
-      value() === 'David' ? { kind: 'nameTaken' } : null,
-    );
+    const validate = vi.fn(async ({ value }: Context<string | null>) => {
+      return value() === 'David' ? { kind: 'nameTaken' } : null;
+    });
     const fieldNode = field('Daniel', [asyncValidator(validate, { debounce: 100 })]);
 
     await Promise.resolve();
@@ -1121,9 +1125,9 @@ describe('field', () => {
 
   it('passes an explicit reactive params snapshot to an asynchronous validator', async () => {
     const country = signal('Switzerland');
-    const validate = vi.fn(async ({ params }: { params: { country: string; name: string | null } }) =>
-      params.country === 'Switzerland' && params.name === 'David' ? { kind: 'nameTaken' } : null,
-    );
+    const validate = vi.fn(async ({ params }: { params: { country: string; name: string | null } }) => {
+      return params.country === 'Switzerland' && params.name === 'David' ? { kind: 'nameTaken' } : null;
+    });
     const fieldNode = field('David', [asyncValidator({
       params: ({ value }) => ({ country: country(), name: value() }),
       validate,
@@ -1211,10 +1215,11 @@ describe('field', () => {
 
   it('collects the errors of several validators in order', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
-    const minLength = ({ value }: Context<string | null>) =>
-      value() !== null && value()!.length < 3
+    const minLength = ({ value }: Context<string | null>) => {
+      return value() !== null && value()!.length < 3
         ? { kind: 'minLength', minLength: 3, actualLength: value()!.length }
         : null;
+    };
     const fieldNode = field('', [required, minLength]);
     expect(fieldNode.errors()).toMatchObject([
       { kind: 'required' },
@@ -1225,8 +1230,9 @@ describe('field', () => {
 
   it('leaves out the keys of validators that pass', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
-    const minLength = ({ value }: Context<string | null>) =>
-      value() !== null && value()!.length < 3 ? { kind: 'minLength' } : null;
+    const minLength = ({ value }: Context<string | null>) => {
+      return value() !== null && value()!.length < 3 ? { kind: 'minLength' } : null;
+    };
     const fieldNode = field('ab', [required, minLength]);
     expect(fieldNode.errors()).toMatchObject([{ kind: 'minLength' }]);
   });

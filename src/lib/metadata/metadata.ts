@@ -33,11 +33,13 @@ export function createMetadataKey<TWrite, TAccumulator>(
 export const appendMetadataContributions = (
   target: Map<UntypedMetadataKey, unknown[]>,
   source: MetadataContributions,
-) => source.forEach((values, key) => {
-  const existing = target.get(key) ?? [];
-  existing.push(...values);
-  target.set(key, existing);
-});
+) => {
+  return source.forEach((values, key) => {
+    const existing = target.get(key) ?? [];
+    existing.push(...values);
+    target.set(key, existing);
+  });
+};
 
 export const readMetadata = <TWrite, TAccumulator>(
   contributions: MetadataContributions,

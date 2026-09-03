@@ -10,8 +10,9 @@ type ConditionalMetadataContribution = {
   readonly resolve: (context: ValidatorContext<unknown>) => { readonly active: boolean; readonly value: unknown };
 };
 
-const isConditionalMetadataContribution = (value: unknown): value is ConditionalMetadataContribution =>
-  typeof value === 'object' && value !== null && 'resolve' in value;
+const isConditionalMetadataContribution = (value: unknown): value is ConditionalMetadataContribution => {
+  return typeof value === 'object' && value !== null && 'resolve' in value;
+};
 
 const validatorMetadata = new WeakMap<Function, MutableValidatorMetadata>();
 

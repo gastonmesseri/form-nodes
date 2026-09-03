@@ -24,12 +24,14 @@ export const injectFormFieldControlStateAdapter = <TValue>(): ControlStateAdapte
     disabled: computed(() => state().disabled()),
     disabledReasons: computed(() => state().disabledReasons().map(({ message }) => message === undefined ? {} : { message })),
     dirty: computed(() => state().dirty()),
-    errors: computed(() => state().errors().map((error) => {
-      const { fieldTree, formField: errorFormField, ...details } = error;
-      void fieldTree;
-      void errorFormField;
-      return details;
-    })),
+    errors: computed(() => {
+      return state().errors().map((error) => {
+        const { fieldTree, formField: errorFormField, ...details } = error;
+        void fieldTree;
+        void errorFormField;
+        return details;
+      });
+    }),
     hidden: computed(() => state().hidden()),
     invalid: computed(() => state().invalid()),
     max: computed(() => state().max?.() as number | Date | undefined),

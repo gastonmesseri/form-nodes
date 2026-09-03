@@ -174,12 +174,14 @@ const synchronizeNodeState = (node: Node, fieldTree: FieldTree<any>, injector: I
     const unregister = fieldTree().formFieldBindings().flatMap((binding) => {
       const angularBinding = binding as AngularFieldBindingWithParseErrors;
       const adaptedBinding = getFormNodeBindingForAngularField(binding)!;
-      const parseErrors = computed(() => angularBinding.parseErrors().map((error) => {
-        const { fieldTree: angularFieldTree, formField: angularFormField, ...parseError } = error;
-        void angularFieldTree;
-        void angularFormField;
-        return { ...parseError, formNode: adaptedBinding };
-      }));
+      const parseErrors = computed(() => {
+        return angularBinding.parseErrors().map((error) => {
+          const { fieldTree: angularFieldTree, formField: angularFormField, ...parseError } = error;
+          void angularFieldTree;
+          void angularFormField;
+          return { ...parseError, formNode: adaptedBinding };
+        });
+      });
       return [
         (node as InternalNode).$api._registerControlBinding({
           element: binding.element,

@@ -90,25 +90,29 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     definitions: ObjectNodeDefinitions,
     validatorsOrOptions?: unknown,
     separateOptions?: unknown,
-  ) => registerDefaults(createObjectNode(
-    definitions,
-    isValidatorSource(validatorsOrOptions) ? validatorsOrOptions as never : mergeNodeOptions(validatorsOrOptions as object | undefined) as never,
-    isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined ? mergeNodeOptions(separateOptions as object | undefined) as never : undefined,
-    'form',
-    normalizeDefinition,
-  ))) as FormPrimitives<TNullable>['form'];
+  ) => {
+    return registerDefaults(createObjectNode(
+      definitions,
+      isValidatorSource(validatorsOrOptions) ? validatorsOrOptions as never : mergeNodeOptions(validatorsOrOptions as object | undefined) as never,
+      isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined ? mergeNodeOptions(separateOptions as object | undefined) as never : undefined,
+      'form',
+      normalizeDefinition,
+    ));
+  }) as FormPrimitives<TNullable>['form'];
 
   const configuredGroup = ((
     definitions: ObjectNodeDefinitions,
     validatorsOrOptions?: unknown,
     separateOptions?: unknown,
-  ) => registerDefaults(createObjectNode(
-    definitions,
-    isValidatorSource(validatorsOrOptions) ? validatorsOrOptions as never : mergeNodeOptions(validatorsOrOptions as object | undefined) as never,
-    isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined ? mergeNodeOptions(separateOptions as object | undefined) as never : undefined,
-    'group',
-    normalizeDefinition,
-  ))) as FormPrimitives<TNullable>['group'];
+  ) => {
+    return registerDefaults(createObjectNode(
+      definitions,
+      isValidatorSource(validatorsOrOptions) ? validatorsOrOptions as never : mergeNodeOptions(validatorsOrOptions as object | undefined) as never,
+      isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined ? mergeNodeOptions(separateOptions as object | undefined) as never : undefined,
+      'group',
+      normalizeDefinition,
+    ));
+  }) as FormPrimitives<TNullable>['group'];
 
   const normalizeArrayDefinition = (definition: unknown): unknown => {
     if (isNode(definition)) return definition;

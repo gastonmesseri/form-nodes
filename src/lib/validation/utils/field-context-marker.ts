@@ -13,7 +13,8 @@ export const markAsFieldContext = <TValue>(context: FieldContext<TValue>): Field
 };
 
 /** Checks whether a value was created as an internal field context. */
-export const isFieldContext = (value: unknown): value is FieldContext<unknown> =>
-  typeof value === 'object'
-  && value !== null
-  && (value as MarkedFieldContext)[fieldContextMarker] === true;
+export const isFieldContext = (value: unknown): value is FieldContext<unknown> => {
+  return typeof value === 'object'
+    && value !== null
+    && (value as MarkedFieldContext)[fieldContextMarker] === true;
+};

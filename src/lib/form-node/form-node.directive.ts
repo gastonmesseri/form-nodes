@@ -243,8 +243,9 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
         validator.registerOnValidatorChange(() => version.update(current => current + 1));
       }
     });
-    const validator = Validators.compose(validators.map(item =>
-      typeof item === 'function' ? item : item.validate.bind(item),
+    const validator = Validators.compose(validators.map((item) => {
+      return typeof item === 'function' ? item : item.validate.bind(item);
+    },
     ));
     const errors = computed(() => {
       version();
@@ -258,10 +259,12 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private connectNativeControl(control: NativeFormNodeControl) {
     const parseErrors = signal<readonly ValidationError.WithoutTargetNode[]>([]);
-    const bindingParseErrors = computed(() => parseErrors().map(error => ({
-      ...error,
-      formNode: this,
-    })));
+    const bindingParseErrors = computed(() => {
+      return parseErrors().map(error => ({
+        ...error,
+        formNode: this,
+      }));
+    });
     const commit = () => {
       if (this.composing || this.destroyed) return;
       if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;

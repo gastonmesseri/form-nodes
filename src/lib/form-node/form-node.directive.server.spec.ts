@@ -44,11 +44,12 @@ class TestSignalControl implements FormValueControl<string> {
 registerSignalModelForJit(TestSignalControl, 'value');
 registerSignalInputForJit(TestSignalControl, 'required', 'required');
 
-const render = (component: Parameters<typeof bootstrapApplication>[0]): Promise<string> =>
-  renderApplication(
+const render = (component: Parameters<typeof bootstrapApplication>[0]): Promise<string> => {
+  return renderApplication(
     context => bootstrapApplication(component, { providers: [provideServerRendering()] }, context),
     { document: '<app-root></app-root>', url: '/' },
   );
+};
 
 describe('FormNode server rendering', () => {
   it('renders a native input value and node state without browser globals', async () => {

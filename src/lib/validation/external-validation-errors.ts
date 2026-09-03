@@ -24,12 +24,13 @@ const getRegistry = (node: Node): WritableSignal<ExternalErrorSources> => {
 /** Reads errors contributed by integrations outside the node's configured validators. */
 export const readExternalValidationErrors = <TNode extends Node>(
   node: TNode,
-): readonly ValidationError.WithTargetNode<TNode>[] =>
-  Array.from(getRegistry(node)().values()).flatMap(({ source }) =>
-    (source() as readonly ValidationError.WithOptionalTargetNode<TNode>[]).map(error =>
+): readonly ValidationError.WithTargetNode<TNode>[] => {
+  return Array.from(getRegistry(node)().values()).flatMap(({ source }) => {
+    return (source() as readonly ValidationError.WithOptionalTargetNode<TNode>[]).map(error =>
       ({ ...error, targetNode: error.targetNode ?? node }),
-    ),
-  );
+    );
+  });
+};
 
 /** Notifies external validation integrations that their node was reset. */
 export const notifyExternalValidationReset = (node: Node) => {

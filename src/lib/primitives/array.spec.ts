@@ -913,10 +913,12 @@ describe('array', () => {
     const first = sons[0];
     const second = sons[1];
 
-    expect(() => sons.set([
-      { id: 'same', name: 'One' },
-      { id: 'same', name: 'Two' },
-    ])).toThrow('duplicate trackBy key same in incoming values');
+    expect(() => {
+      return sons.set([
+        { id: 'same', name: 'One' },
+        { id: 'same', name: 'Two' },
+      ]);
+    }).toThrow('duplicate trackBy key same in incoming values');
 
     expect(sons()).toEqual([{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }]);
     expect(sons[0]).toBe(first);
@@ -1086,7 +1088,7 @@ describe('array', () => {
     const names = array(field(''), ['Marco'], {
       debounce: (signal) => {
         abortSignal = signal;
-        return new Promise<void>(() => {});
+        return new Promise<void>(() => { });
       },
     });
     (names as unknown as InternalNode).$api._setControlValue(['pending']);
@@ -1220,8 +1222,9 @@ describe('array', () => {
 
   it('runs and aggregates asynchronous validation', async () => {
     const names = array(() => field(''), ['Mono'], {
-      validators: [asyncValidator(async ({ value }) =>
-        value().includes('blocked') ? { kind: 'blockedName' } : null,
+      validators: [asyncValidator(async ({ value }) => {
+        return value().includes('blocked') ? { kind: 'blockedName' } : null;
+      },
       )],
     });
 
@@ -1268,9 +1271,9 @@ describe('array', () => {
 
   it('stops array-level reactive validation when its owning injector is destroyed', async () => {
     const blockedName = signal('blocked');
-    const validate = vi.fn(async ({ value }) =>
-      value().includes(blockedName()) ? { kind: 'blockedName' } : null,
-    );
+    const validate = vi.fn(async ({ value }) => {
+      return value().includes(blockedName()) ? { kind: 'blockedName' } : null;
+    });
     const injector = Injector.create({ providers: [] });
     const names = array(field(''), ['Mono'], {
       validators: [asyncValidator(validate)],
@@ -1532,7 +1535,7 @@ describe('array', () => {
   });
 
   it('patches existing indexes and warns for indexes outside the current structure', () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => { });
     const names = array(field(''), ['Mono']);
 
     names.patch(['Lia', 'ignored']);
@@ -1563,8 +1566,7 @@ describe('array', () => {
           { id: 'lia', name: 'Lia' },
         ],
         trackBy: person => person.id,
-      },
-    );
+      });
     const defaultNames = array(() => field('default'), { initialValue: 2 });
     const requiredNames = array(field(''), [required], { initialValue: [''] });
 

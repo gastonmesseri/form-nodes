@@ -64,15 +64,17 @@ class PendingHost {
   amount = createAngularForm(this.value, (path) => {
     validateAsync(path, {
       params: ({ value }) => value(),
-      factory: params => resource({
-        params,
-        loader: () => {
-          if (this.validationRuns++ === 0) return Promise.resolve(null);
-          return new Promise<null>((resolve) => {
-            this.resolveValidation = () => resolve(null);
-          });
-        },
-      }),
+      factory: (params) => {
+        return resource({
+          params,
+          loader: () => {
+            if (this.validationRuns++ === 0) return Promise.resolve(null);
+            return new Promise<null>((resolve) => {
+              this.resolveValidation = () => resolve(null);
+            });
+          },
+        });
+      },
       onSuccess: () => null,
       onError: () => null,
     });

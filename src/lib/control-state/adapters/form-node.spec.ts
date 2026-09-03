@@ -63,9 +63,11 @@ class NumericHost {
 })
 class PendingHost {
   resolveValidation: (() => void) | undefined;
-  amount = field.strict(5, [asyncValidator(() => new Promise<null>((resolve) => {
-    this.resolveValidation = () => resolve(null);
-  }))]);
+  amount = field.strict(5, [asyncValidator(() => {
+    return new Promise<null>((resolve) => {
+      this.resolveValidation = () => resolve(null);
+    });
+  })]);
 }
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -137,7 +139,7 @@ describe('formNode control-state adapter', () => {
   });
 
   it('tracks hidden changes', () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => { });
     const { fixture, state } = createControlState(StringHost);
     expect(state.hidden()).toBe(false);
     fixture.componentInstance.name.hide();
@@ -218,7 +220,7 @@ describe('formNode control-state adapter', () => {
   });
 
   it('tracks readonly changes', () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => { });
     const { fixture, state } = createControlState(StringHost);
     expect(state.readonly()).toBe(false);
     fixture.componentInstance.name.markAsReadonly();

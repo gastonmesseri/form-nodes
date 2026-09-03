@@ -33,12 +33,14 @@ describe('validator messages', () => {
 
     try {
       const providerField = runInInjectionContext(injector, () => field('', [required]));
-      const profile = runInInjectionContext(injector, () => form({
-        inherited: field('', [required]),
-        local: field('', [required({ message: () => `local:${language()}` })]),
-      }, {
-        validatorMessages: () => ({ required: () => `form:${language()}` }),
-      }));
+      const profile = runInInjectionContext(injector, () => {
+        return form({
+          inherited: field('', [required]),
+          local: field('', [required({ message: () => `local:${language()}` })]),
+        }, {
+          validatorMessages: () => ({ required: () => `form:${language()}` }),
+        });
+      });
 
       expect(globalField.getError('required')?.message).toBe('global:en');
       expect(providerField.getError('required')?.message).toBe('provider:en');

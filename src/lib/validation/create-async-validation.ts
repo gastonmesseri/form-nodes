@@ -10,16 +10,18 @@ import { createTrackedRunner, type TrackedRunner } from '../utils/create-reactiv
 import { getAsyncValidatorOptions, isAsyncValidator } from './utils/async-validator-marker';
 import type { AsyncValidationResult, AsyncValidator, AsyncValidatorContext, AsyncValidatorState, FieldContext, ParameterizedAsyncValidatorContext, ValidationError, ValidationResult, Validators } from './validation.type';
 
-const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => new Promise((resolve) => {
-  if (milliseconds <= 0 || signal.aborted) return resolve();
-  const finish = () => {
-    clearTimeout(timeout);
-    signal.removeEventListener('abort', finish);
-    resolve();
-  };
-  const timeout = setTimeout(finish, milliseconds);
-  signal.addEventListener('abort', finish, { once: true });
-});
+const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => {
+  return new Promise((resolve) => {
+    if (milliseconds <= 0 || signal.aborted) return resolve();
+    const finish = () => {
+      clearTimeout(timeout);
+      signal.removeEventListener('abort', finish);
+      resolve();
+    };
+    const timeout = setTimeout(finish, milliseconds);
+    signal.addEventListener('abort', finish, { once: true });
+  });
+};
 
 export const createAsyncValidation = <TValue, TNode extends Node & { $api: AsyncValidatorState }>(
   context: FieldContext<TValue>,

@@ -9,6 +9,8 @@ export const shallowEqual = (left: unknown, right: unknown): boolean => {
   const leftKeys = Reflect.ownKeys(left);
   const rightKeys = Reflect.ownKeys(right);
   if (leftKeys.length !== rightKeys.length) return false;
-  return leftKeys.every(key => Object.prototype.hasOwnProperty.call(right, key)
-    && Object.is(Reflect.get(left, key), Reflect.get(right, key)));
+  return leftKeys.every((key) => {
+    return Object.prototype.hasOwnProperty.call(right, key)
+      && Object.is(Reflect.get(left, key), Reflect.get(right, key));
+  });
 };

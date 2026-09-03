@@ -45,9 +45,9 @@ const resolveComposableResult = <TValue>(
     if (validators.length !== items.length) {
       throw new Error('Synchronous validator composition cannot mix validators and validation errors in the same array.');
     }
-    return (items as Validators<TValue>).flatMap(validator =>
-      normalizeValidationResult(resolveComposableResult(validator, context, activeValidators, depth, metadata)),
-    );
+    return (items as Validators<TValue>).flatMap((validator) => {
+      return normalizeValidationResult(resolveComposableResult(validator, context, activeValidators, depth, metadata));
+    });
   }
 
   return result as ValidationResult;
@@ -73,8 +73,9 @@ export const runSyncValidators = <TValue, TNode extends Node & { $api: AsyncVali
       ...normalizeValidationResult(runWithValidatorMessages(
         targetNode,
         () => resolveComposableValidator(validator, validatorContext, metadata),
-      )).map(error =>
-        addDefaultTargetNode(error, targetNode),
+      )).map((error) => {
+        return addDefaultTargetNode(error, targetNode);
+      },
       ),
     );
   });

@@ -6,14 +6,20 @@ import { field } from '../field';
 import { required } from '../../validation/validators/required';
 import { asyncValidator } from '../../validation/async-validator';
 
-const createDeepTree = () => form({
-  teams: array(() => form({
-    name: field.strict('', [required]),
-    members: array(() => form({
-      email: field.strict('', [required]),
-    }), 1),
-  }), 2),
-});
+const createDeepTree = () => {
+  return form({
+    teams: array(() => {
+      return form({
+        name: field.strict('', [required]),
+        members: array(() => {
+          return form({
+            email: field.strict('', [required]),
+          });
+        }, 1),
+      });
+    }, 2),
+  });
+};
 
 /**
  * Structural contract tests for mixed form/array trees several levels deep.
@@ -144,11 +150,15 @@ describe('deep mixed form trees', () => {
     vi.useFakeTimers();
     try {
       const root = form({
-        groups: array(() => form({
-          members: array(() => form({
-            name: field.strict('David'),
-          }), 1),
-        }), 1),
+        groups: array(() => {
+          return form({
+            members: array(() => {
+              return form({
+                name: field.strict('David'),
+              });
+            }, 1),
+          });
+        }, 1),
       }, { debounce: 100 });
       const name = root.groups[0]!.members[0]!.name;
 
@@ -215,13 +225,17 @@ describe('deep mixed form trees', () => {
   it('stops aggregating pending validation and late errors from a directly removed subtree', async () => {
     let resolve!: (result: { kind: string }) => void;
     const root = form({
-      groups: array(() => form({
-        members: array(() => form({
-          name: field.strict('David', [
-            asyncValidator(() => new Promise<{ kind: string }>((done) => { resolve = done; })),
-          ]),
-        }), 1),
-      }), 1),
+      groups: array(() => {
+        return form({
+          members: array(() => {
+            return form({
+              name: field.strict('David', [
+                asyncValidator(() => new Promise<{ kind: string }>((done) => { resolve = done; })),
+              ]),
+            });
+          }, 1),
+        });
+      }, 1),
     });
     expect(root.pending()).toBe(true);
     await Promise.resolve();

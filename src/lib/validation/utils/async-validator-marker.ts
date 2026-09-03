@@ -89,5 +89,6 @@ export const markAsAsyncValidator = <TValue>(
 
 export const isAsyncValidator = (validator: Function): boolean => asyncValidators.has(validator);
 
-export const getAsyncValidatorOptions = <TValue>(validator: AsyncValidator<TValue>): StoredAsyncValidatorOptions<TValue> =>
-  asyncValidators.get(validator) ?? {};
+export const getAsyncValidatorOptions = <TValue>(validator: AsyncValidator<TValue>): StoredAsyncValidatorOptions<TValue> => {
+  return asyncValidators.get(validator) ?? {};
+};

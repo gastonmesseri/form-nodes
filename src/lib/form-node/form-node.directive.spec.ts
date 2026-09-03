@@ -42,9 +42,9 @@ const accessorWithPrototype = (prototype: object): ControlValueAccessor & { writ
   const accessor = Object.create(prototype) as ControlValueAccessor & { writes: unknown[] };
   accessor.writes = [];
   accessor.writeValue = (value: unknown) => { accessor.writes.push(value); };
-  accessor.registerOnChange = () => {};
-  accessor.registerOnTouched = () => {};
-  accessor.setDisabledState = () => {};
+  accessor.registerOnChange = () => { };
+  accessor.registerOnTouched = () => { };
+  accessor.setDisabledState = () => { };
   return accessor;
 };
 
@@ -55,7 +55,7 @@ describe('FormNode', () => {
     const validate = vi.fn(async ({ abortSignal: currentAbortSignal }) => {
       dependency();
       abortSignal = currentAbortSignal;
-      return new Promise<null>(() => {});
+      return new Promise<null>(() => { });
     });
     const boundName = field('', [asyncValidator(validate)]);
 
@@ -88,7 +88,7 @@ describe('FormNode', () => {
     let abortSignal: AbortSignal | undefined;
     const validate = vi.fn(async ({ abortSignal: currentAbortSignal }) => {
       abortSignal = currentAbortSignal;
-      return new Promise<null>(() => {});
+      return new Promise<null>(() => { });
     });
     const boundName = field('', [asyncValidator(validate)], { adoptBindingInjector: false });
 
@@ -1125,7 +1125,7 @@ describe('FormNode', () => {
   });
 
   it('warns in development when a hidden field remains rendered', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
     @Component({
       selector: 'hidden-form-node-host',
@@ -1151,7 +1151,7 @@ describe('FormNode', () => {
   });
 
   it('warns each time a rendered root field becomes hidden', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
     @Component({
       selector: 'reactive-hidden-form-node-host',
@@ -1195,7 +1195,7 @@ describe('FormNode', () => {
 
     const global = globalThis as typeof globalThis & { ngDevMode: unknown };
     const previousNgDevMode = global.ngDevMode;
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => { });
     try {
       global.ngDevMode = false;
       const fixture = TestBed.createComponent(Host);
@@ -1539,9 +1539,9 @@ describe('FormNode', () => {
     fixture.componentInstance.city.set('Paris');
     fixture.detectChanges();
     expect(city!.value).toBe('');
-    const optionMutation = new Promise<void>(resolve =>
-      new MutationObserver(() => resolve()).observe(city!, { childList: true }),
-    );
+    const optionMutation = new Promise<void>((resolve) => {
+      return new MutationObserver(() => resolve()).observe(city!, { childList: true });
+    });
     city!.append(new Option('Paris'));
     await optionMutation;
     expect(city!.value).toBe('Paris');
@@ -1568,9 +1568,9 @@ describe('FormNode', () => {
       value: unknown;
       disabled = false;
       rejectValue = false;
-      change = (_value: unknown) => {};
-      touch = () => {};
-      validatorChange = () => {};
+      change = (_value: unknown) => { };
+      touch = () => { };
+      validatorChange = () => { };
       writeValue(value: unknown) { this.value = value; }
       registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
       registerOnTouched(callback: () => void) { this.touch = callback; }
@@ -1654,9 +1654,9 @@ describe('FormNode', () => {
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => BlurDebounceCva), multi: true }],
     })
     class BlurDebounceCva implements ControlValueAccessor {
-      change = (_value: string) => {};
-      touched = () => {};
-      writeValue() {}
+      change = (_value: string) => { };
+      touched = () => { };
+      writeValue() { }
       registerOnChange(callback: (value: string) => void) { this.change = callback; }
       registerOnTouched(callback: () => void) { this.touched = callback; }
     }
@@ -1702,9 +1702,9 @@ describe('FormNode', () => {
 
   it('rejects multiple custom ControlValueAccessors on the same host', () => {
     const accessor = (): ControlValueAccessor => ({
-      writeValue: () => {},
-      registerOnChange: () => {},
-      registerOnTouched: () => {},
+      writeValue: () => { },
+      registerOnChange: () => { },
+      registerOnTouched: () => { },
     });
 
     @Component({
@@ -1716,7 +1716,7 @@ describe('FormNode', () => {
         { provide: NG_VALUE_ACCESSOR, useFactory: accessor, multi: true },
       ],
     })
-    class AmbiguousCva {}
+    class AmbiguousCva { }
 
     @Component({
       selector: 'ambiguous-cva-host',
@@ -1736,8 +1736,8 @@ describe('FormNode', () => {
     const custom: ControlValueAccessor & { writes: unknown[] } = {
       writes: [],
       writeValue(value: unknown) { this.writes.push(value); },
-      registerOnChange: () => {},
-      registerOnTouched: () => {},
+      registerOnChange: () => { },
+      registerOnTouched: () => { },
     };
 
     @Component({
@@ -1750,7 +1750,7 @@ describe('FormNode', () => {
         { provide: NG_VALUE_ACCESSOR, useValue: custom, multi: true },
       ],
     })
-    class PriorityControl {}
+    class PriorityControl { }
 
     @Component({
       selector: 'accessor-priority-host',
@@ -1780,7 +1780,7 @@ describe('FormNode', () => {
         multi: true,
       }],
     })
-    class SingleAccessorControl {}
+    class SingleAccessorControl { }
 
     @Component({
       selector: 'single-default-accessor-host',
@@ -1810,7 +1810,7 @@ describe('FormNode', () => {
         multi: true,
       }],
     })
-    class SingleAccessorControl {}
+    class SingleAccessorControl { }
 
     @Component({
       selector: 'single-built-in-accessor-host',
@@ -1837,7 +1837,7 @@ describe('FormNode', () => {
         { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(DefaultValueAccessor.prototype), multi: true },
       ],
     })
-    class DuplicateAccessorControl {}
+    class DuplicateAccessorControl { }
 
     @Component({
       selector: 'duplicate-default-accessor-host',
@@ -1863,7 +1863,7 @@ describe('FormNode', () => {
         { provide: NG_VALUE_ACCESSOR, useFactory: () => accessorWithPrototype(NumberValueAccessor.prototype), multi: true },
       ],
     })
-    class DuplicateAccessorControl {}
+    class DuplicateAccessorControl { }
 
     @Component({
       selector: 'duplicate-built-in-accessor-host',
@@ -1904,8 +1904,8 @@ describe('FormNode', () => {
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => MinimalCva), multi: true }],
     })
     class MinimalCva implements ControlValueAccessor {
-      change = (_value: unknown) => {};
-      touch = () => {};
+      change = (_value: unknown) => { };
+      touch = () => { };
       writes: unknown[] = [];
       writeValue(value: unknown) { this.writes.push(value); }
       registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
@@ -1940,14 +1940,14 @@ describe('FormNode', () => {
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => EchoingCva), multi: true }],
     })
     class EchoingCva implements ControlValueAccessor {
-      change = (_value: unknown) => {};
+      change = (_value: unknown) => { };
       writes: unknown[] = [];
       writeValue(value: unknown) {
         this.writes.push(value);
         this.change(value);
       }
       registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
-      registerOnTouched() {}
+      registerOnTouched() { }
     }
 
     @Component({
@@ -1986,8 +1986,8 @@ describe('FormNode', () => {
       value = model('signal initial');
       writes: unknown[] = [];
       writeValue(value: unknown) { this.writes.push(value); }
-      registerOnChange() {}
-      registerOnTouched() {}
+      registerOnChange() { }
+      registerOnTouched() { }
     }
 
     @Component({
@@ -2075,10 +2075,10 @@ describe('FormNode', () => {
     class SignalCva implements ControlValueAccessor {
       readonly value = signal<unknown>(undefined);
       readonly disabled = signal(false);
-      change = (_value: unknown) => {};
+      change = (_value: unknown) => { };
       writeValue(value: unknown) { this.value.set(value); }
       registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
-      registerOnTouched() {}
+      registerOnTouched() { }
       setDisabledState(disabled: boolean) { this.disabled.set(disabled); }
     }
 
@@ -2112,8 +2112,8 @@ describe('FormNode', () => {
       providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => RecreatedCva), multi: true }],
     })
     class RecreatedCva implements ControlValueAccessor {
-      change = (_value: unknown) => {};
-      touch = () => {};
+      change = (_value: unknown) => { };
+      touch = () => { };
       writes: unknown[] = [];
       constructor() { instances.push(this); }
       writeValue(value: unknown) { this.writes.push(value); }
@@ -2168,10 +2168,10 @@ describe('FormNode', () => {
     })
     class DynamicValidatorCva implements ControlValueAccessor, Validator {
       reject = false;
-      validatorChange = () => {};
-      writeValue() {}
-      registerOnChange() {}
-      registerOnTouched() {}
+      validatorChange = () => { };
+      writeValue() { }
+      registerOnChange() { }
+      registerOnTouched() { }
       validate(): ValidationErrors | null { return this.reject ? { dynamicLegacy: true } : null; }
       registerOnValidatorChange(callback: () => void) { this.validatorChange = callback; }
     }
@@ -2205,8 +2205,9 @@ describe('FormNode', () => {
   });
 
   it('adapts function-based legacy validators', () => {
-    const legacyValidator = (control: AbstractControl): ValidationErrors | null =>
-      control.value === 'invalid' ? { legacyFunction: true } : null;
+    const legacyValidator = (control: AbstractControl): ValidationErrors | null => {
+      return control.value === 'invalid' ? { legacyFunction: true } : null;
+    };
 
     @Component({
       selector: 'function-validator-cva',
@@ -2218,10 +2219,10 @@ describe('FormNode', () => {
       ],
     })
     class FunctionValidatorCva implements ControlValueAccessor {
-      change = (_value: unknown) => {};
-      writeValue() {}
+      change = (_value: unknown) => { };
+      writeValue() { }
       registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
-      registerOnTouched() {}
+      registerOnTouched() { }
     }
 
     @Component({

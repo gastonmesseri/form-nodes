@@ -46,13 +46,15 @@ function createObjectClone(
   nodeType: 'form' | 'group',
   normalizeDefinition: (definition: unknown) => Node,
 ) {
-  return () => createObjectNode<ObjectNodeDefinitions>(
-    createDefinitions() as ObjectNodeDefinitions,
-    initialValidatorSource,
-    options,
-    nodeType,
-    normalizeDefinition,
-  );
+  return () => {
+    return createObjectNode<ObjectNodeDefinitions>(
+      createDefinitions() as ObjectNodeDefinitions,
+      initialValidatorSource,
+      options,
+      nodeType,
+      normalizeDefinition,
+    );
+  };
 }
 
 /**
@@ -151,10 +153,10 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   const formSelfDisabled = signal<DisabledState>(getInitialDisabledState(resolvedOptions?.disabled));
   const formParent = signal<Node | null>(null);
   const formKeyInParent = signal<string | number | null>(null);
-  const formControlDebounce = computed(() =>
-    resolvedOptions?.debounce
-    ?? (formParent() as InternalNode | null)?.$api._controlDebounce(),
-  );
+  const formControlDebounce = computed(() => {
+    return resolvedOptions?.debounce
+      ?? (formParent() as InternalNode | null)?.$api._controlDebounce();
+  });
   const formPath = computed((): readonly string[] => {
     const parent = formParent();
     const key = formKeyInParent();
@@ -173,13 +175,13 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   ], { equal: shallowEqual });
   const formDisabled = computed(() => formDisabledReasons().length > 0);
   const formSelfReadonly = signal(getInitialMutableState(resolvedOptions?.readonly));
-  const formReadonly = computed(() =>
-    formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.$api.readonly() === true,
-  );
+  const formReadonly = computed(() => {
+    return formSelfReadonly() || readStateSource(resolvedOptions?.readonly) || formParent()?.$api.readonly() === true;
+  });
   const formSelfHidden = signal(getInitialMutableState(resolvedOptions?.hidden));
-  const formHidden = computed(() =>
-    formSelfHidden() || readStateSource(resolvedOptions?.hidden) || formParent()?.$api.hidden() === true,
-  );
+  const formHidden = computed(() => {
+    return formSelfHidden() || readStateSource(resolvedOptions?.hidden) || formParent()?.$api.hidden() === true;
+  });
   const formNonInteractive = computed(() => formHidden() || formDisabled() || formReadonly());
   const formValue = computed(() => {
     const value = {} as FormValue<TNodes>;
@@ -191,9 +193,11 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   const emptySyncMetadata = new Map();
   const owningForm = computed(() => nodeType === 'form' ? formNode : formParent()?.$api.form() ?? null);
   const rootNode = computed(() => formParent()?.$api.root() ?? formNode) as Signal<Form<TNodes>>;
-  const formSyncValidation = computed(() => formNonInteractive()
-    ? { errors: [], metadata: emptySyncMetadata }
-    : runSyncValidators(formContext, formValidators(), formNode));
+  const formSyncValidation = computed(() => {
+    return formNonInteractive()
+      ? { errors: [], metadata: emptySyncMetadata }
+      : runSyncValidators(formContext, formValidators(), formNode);
+  });
   const formSyncErrors = computed(() => formSyncValidation().errors);
   const formMetadata = createNodeMetadata(
     formValidators,
@@ -207,9 +211,11 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     () => formNode,
     () => !formNonInteractive(),
   );
-  const formControlErrors = computed(() => formNonInteractive()
-    ? []
-    : readExternalValidationErrors(formNode));
+  const formControlErrors = computed(() => {
+    return formNonInteractive()
+      ? []
+      : readExternalValidationErrors(formNode);
+  });
   const formErrors = computed(() => [...formSyncErrors(), ...asyncValidation.errors(), ...formControlErrors()]);
   const formAllErrors = computed(
     () => [
@@ -222,14 +228,14 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     (kind: string) => formErrors().find(error => error.kind === kind),
     { equal: shallowEqual, max: 20 },
   ) as FormApi<TNodes>['getError'];
-  const formPending = computed(() =>
-    !formNonInteractive() && (
+  const formPending = computed(() => {
+    return !formNonInteractive() && (
       asyncValidation.pending() || controlKeys().some(key => controls[key]!.$api.pending())
-    ),
-  );
-  const formSubmitting = computed(() =>
-    formSelfSubmitting() || formParent()?.$api.submitting() === true,
-  );
+    );
+  });
+  const formSubmitting = computed(() => {
+    return formSelfSubmitting() || formParent()?.$api.submitting() === true;
+  });
   const formValidationStatus = computed<ValidationStatus>(() => {
     if (formNonInteractive()) return 'valid';
     if (formErrors().length > 0 || controlKeys().some(key => controls[key]!.$api.invalid())) return 'invalid';
@@ -244,18 +250,18 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     asyncValidationWatchRef = createReactiveWatch(asyncValidationWatchTarget, null);
     watchNodeInjector(formNode, injector => asyncValidationWatchRef?.setInjector(injector));
   };
-  const formTouched = computed(() =>
-    !formNonInteractive() && (formSelfTouched() || controlKeys().some(key => controls[key]!.$api.touched())),
-  );
-  const formDirty = computed(() =>
-    !formNonInteractive() && (formSelfDirty() || controlKeys().some(key => controls[key]!.$api.dirty())),
-  );
+  const formTouched = computed(() => {
+    return !formNonInteractive() && (formSelfTouched() || controlKeys().some(key => controls[key]!.$api.touched()));
+  });
+  const formDirty = computed(() => {
+    return !formNonInteractive() && (formSelfDirty() || controlKeys().some(key => controls[key]!.$api.dirty()));
+  });
   // eslint-disable-next-line prefer-const -- Assigned after computed state that reads the buffer has been declared.
   let formControlValueBuffer!: ControlValueBuffer<FormValue<TNodes>, FormSet<TNodes>>;
-  const formDebouncing = computed(() =>
-    formControlValueBuffer.debouncing()
-    || controlKeys().some(key => controls[key]!.$api.debouncing()),
-  );
+  const formDebouncing = computed(() => {
+    return formControlValueBuffer.debouncing()
+      || controlKeys().some(key => controls[key]!.$api.debouncing());
+  });
   const set = (value: FormSet<TNodes>) => {
     formControlValueBuffer?.cancel();
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
@@ -410,9 +416,10 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     valid: computed(() => formValidationStatus() === 'valid'),
     invalid: computed(() => formValidationStatus() === 'invalid'),
     getError,
-    required: computed(() =>
-      readMetadata(formMetadata(), REQUIRED_METADATA)
-      || formErrors().some(error => error.kind === 'required')
+    required: computed(() => {
+      return readMetadata(formMetadata(), REQUIRED_METADATA)
+        || formErrors().some(error => error.kind === 'required');
+    }
     ),
     pending: formPending,
     submitting: formSubmitting,
