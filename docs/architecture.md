@@ -15,8 +15,9 @@ Organize implementation code by responsibility directly under `src/lib/`:
 
 `src/public-api.ts` defines the package exports. Internal modules use direct relative imports.
 
-`primitives/field.ts` owns the public field overloads, argument normalization, and nullability
-shortcuts. Its internal `FieldNode` class in `field-node.ts` owns the signals and operations and
+`primitives/field.ts` owns the public field overloads, nullability shortcuts, and the distinction
+between omitted and explicitly undefined initial values. It delegates validator/option resolution
+to `createFieldNode()` in `field-node.ts`. The internal `FieldNode` class owns signals and operations and
 assembles the callable node. The class is not exported from the package; node actions remain safe
 to pass as callbacks, and scheduled debounce work uses weak ownership.
 Callers use `FieldNode.getNode()` to retrieve the already assembled node. Its implementation members use plain names without `private`
@@ -26,14 +27,29 @@ properties use the node's public names, `touched` and `dirty`.
 See the [primitive state refactor guide](primitive-state-refactor.md) for the migration checklist,
 the completed migrations and their decisions.
 
-`primitives/array.ts` likewise keeps its public overloads and resolves templates, factories, initial
-contents, validators, and options. `ArrayNode` in `array-node.ts` owns item creation,
+`primitives/array.ts` likewise keeps its public overloads and delegates to `createArrayNode()` in
+`array-node.ts`, which resolves templates, factories, initial contents, validators, and options.
+`ArrayNode` owns item creation,
 reconciliation, aggregate state, and callable proxy assembly. Both factories expose `getNode()` and
 keep clone recipes in `createClone()` methods that capture configuration without retaining the source
-instance. `array.utils.ts` contains the object-template assertion shared by the facade and factory.
-Form and group still share the function-based implementation in `form.ts`.
+instance. `array.utils.ts` contains validator-source detection for positional arguments and the
+object-template assertion shared by the construction entry and class.
+`primitives/form.ts` and `group.ts` retain their public overloads and delegate to the shared
+`createFormGroupNode()` entry in `form-group-node.ts`. It resolves validators and options and constructs
+`FormGroupNode`, which owns object children, aggregate state, dynamic edits, validation, control
+bindings, and callable assembly. The same entry accepts the custom normalizer used by
+`createFormPrimitives()` for initial children, later additions, and clones.
 
-The implementation classes are named `FieldNode` and `ArrayNode`; neither is a package export.
+Keep each construction entry beside its class. Public declaration files retain overloads and
+inference, construction entries prepare their arguments, and classes own live node state. Clone
+recipes call constructors directly because their configuration is already resolved.
+
+`FormGroupNode` serves both forms and structural groups through an explicit `nodeType`. Only forms
+expose `submit()` and establish their own owning-form boundary; groups inherit the nearest form
+and its submission state. Its `createClone()` captures child recipes and configuration without
+retaining the source instance. The name also distinguishes it from the `[formNode]` directive.
+
+The implementation classes are named `FieldNode`, `ArrayNode`, and `FormGroupNode`; none is a package export.
 The existing public `ArrayNode` type still describes the callable node. Modules that also use the
 implementation class import that public type locally as `ArrayNodeType` to distinguish the two.
 
@@ -43,7 +59,7 @@ and form children named `name` or `length`, which `Object.assign()` cannot overw
 
 ## Helpers
 
-- Keep a companion utility file beside its implementation: `form.utils.ts` beside `form.ts`, and `form-node.utils.ts` beside `form-node.directive.ts`.
+- Keep a companion utility file beside its implementation: `form-group-node.utils.ts` beside `form-group-node.ts`, and `form-node.utils.ts` beside `form-node.directive.ts`.
 - Put other feature-specific helpers in that feature's `utils/` directory. For example, `primitives/utils/create-control-value-buffer.ts` serves the primitive implementations.
 - Use `lib/utils/` when a helper is general-purpose or supports multiple features. Choose ownership from its responsibility and consumers, not its filename alone.
 - Add folders when they clarify a responsibility; avoid extra layers or one folder per file merely for symmetry.

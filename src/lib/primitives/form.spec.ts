@@ -25,6 +25,77 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it.each(['form', 'group'] as const)('initializes empty %s nodes inside computed declarations and tracks option getters', (kind) => {
+    const locked = signal(false);
+    const validate = vi.fn(() => ({ kind: 'required' }));
+    const model = computed(() => {
+      const options = {
+        validators: validate,
+        get disabled() { return locked(); },
+        readonly: true,
+        hidden: true,
+      };
+      return kind === 'form' ? form({}, options) : group({}, options);
+    });
+    const first = model();
+    expect(first()).toEqual({});
+    expect(first.controlValue()).toEqual({});
+    expect(first.disabled()).toBe(false);
+    expect(first.readonly()).toBe(true);
+    expect(first.hidden()).toBe(true);
+    expect(first.valid()).toBe(true);
+    expect(validate).not.toHaveBeenCalled();
+    first.markAsWritable();
+    first.show();
+    expect(first.invalid()).toBe(true);
+    expect(first.required()).toBe(true);
+    expect(validate).toHaveBeenCalledOnce();
+
+    locked.set(true);
+    const second = model();
+    expect(second).not.toBe(first);
+    expect(second.disabled()).toBe(true);
+    expect(second.readonly()).toBe(true);
+    expect(second.hidden()).toBe(true);
+    expect(second.valid()).toBe(true);
+    expect(validate).toHaveBeenCalledOnce();
+    second.enable();
+    second.markAsWritable();
+    second.show();
+    expect(second.invalid()).toBe(true);
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps extracted actions bound through child-name collisions and submission', async () => {
+    const action = vi.fn();
+    const profile = form({ set: field('initial'), details: { city: field('Zurich') } }, { submission: { action } });
+    const { set, update, patch, reset, add, remove, submit } = profile.$api;
+
+    set({ set: 'next', details: { city: 'Bern' } });
+    update(value => ({ ...value, set: `${value.set}!` }));
+    patch({ details: { city: 'Basel' } });
+    expect(profile()).toEqual({ set: 'next!', details: { city: 'Basel' } });
+
+    const nickname = add('nickname', field('', [required]));
+    expect(nickname.parent()).toBe(profile);
+    expect(profile.invalid()).toBe(true);
+    expect(await submit()).toBe(false);
+    expect(action).not.toHaveBeenCalled();
+    expect(nickname.touched()).toBe(true);
+    expect(profile.details.city.touched()).toBe(true);
+
+    expect(remove('nickname')).toBe(nickname);
+    expect(nickname.parent()).toBeNull();
+    expect(profile.valid()).toBe(true);
+    reset();
+    expect(profile()).toEqual({ set: 'next!', details: { city: 'Basel' } });
+    expect(profile.untouched()).toBe(true);
+    reset({ set: 'ready', details: { city: 'Geneva' } });
+    expect(await submit()).toBe(true);
+    expect(action).toHaveBeenCalledExactlyOnceWith(profile, { set: 'ready', details: { city: 'Geneva' } });
+    expect(profile.submitting()).toBe(false);
+  });
+
   it('exposes complete initial child values before the first aggregate validation', () => {
     const payload = { name: 'ready' };
     const expected = { details: { count: 0, enabled: false, payload, missing: undefined } };
@@ -784,6 +855,79 @@ describe('form', () => {
     });
     await expect(profile.submit()).rejects.toBe(failure);
     expect(profile.submitting()).toBe(false);
+  });
+
+  it('starts synchronous submission actions immediately and clears state on promise completion', async () => {
+    const action = vi.fn();
+    const profile = form({ details: { name: field('Marco') } }, { submission: { action } });
+
+    const completion = profile.submit();
+    expect(action).toHaveBeenCalledExactlyOnceWith(profile, { details: { name: 'Marco' } });
+    expect(profile.submitting()).toBe(true);
+    expect(profile.details.submitting()).toBe(true);
+    expect(profile.details.name.touched()).toBe(true);
+    const concurrent = profile.submit();
+    expect(action).toHaveBeenCalledOnce();
+
+    await Promise.resolve();
+    expect(profile.submitting()).toBe(false);
+    expect(profile.details.submitting()).toBe(false);
+    expect(await completion).toBe(true);
+    expect(await concurrent).toBe(false);
+  });
+
+  it('rejects synchronous action failures and clears submitting before returning', async () => {
+    const failure = new Error('Synchronous action failure');
+    const action = vi.fn(() => { throw failure; });
+    const profile = form({ name: field('Marco') }, { submission: { action } });
+
+    const completion = profile.submit();
+    expect(action).toHaveBeenCalledOnce();
+    expect(profile.submitting()).toBe(false);
+    expect(profile.name.submitting()).toBe(false);
+    expect(profile.name.touched()).toBe(true);
+    await expect(completion).rejects.toBe(failure);
+  });
+
+  it('rejects synchronous invalid-submission callback failures without starting the action', async () => {
+    const failure = new Error('Invalid submission callback failure');
+    const action = vi.fn();
+    const onInvalid = vi.fn(() => { throw failure; });
+    const profile = form({ name: field('', [required]) }, { submission: { action, onInvalid } });
+
+    const completion = profile.submit();
+    expect(onInvalid).toHaveBeenCalledExactlyOnceWith(profile);
+    expect(action).not.toHaveBeenCalled();
+    expect(profile.submitting()).toBe(false);
+    expect(profile.name.touched()).toBe(true);
+    await expect(completion).rejects.toBe(failure);
+  });
+
+  it('waits for promise-like submission actions before clearing inherited submitting state', async () => {
+    let finish!: () => void;
+    const pending = new Promise<void>((resolve) => { finish = resolve; });
+    const then = vi.fn();
+    const promiseLike: PromiseLike<void> = {
+      then(onfulfilled, onrejected) {
+        then();
+        return pending.then(onfulfilled, onrejected);
+      },
+    };
+    const action = vi.fn(() => promiseLike);
+    const profile = form({ details: form({ name: field('Marco') }) }, { submission: { action } });
+
+    const completion = profile.submit();
+    expect(action).toHaveBeenCalledOnce();
+    expect(then).not.toHaveBeenCalled();
+    expect(profile.details.submitting()).toBe(true);
+    await Promise.resolve();
+    expect(then).toHaveBeenCalledOnce();
+    expect(profile.details.submitting()).toBe(true);
+
+    finish();
+    expect(await completion).toBe(true);
+    expect(profile.submitting()).toBe(false);
+    expect(profile.details.submitting()).toBe(false);
   });
 
   it('aggregates a dynamic array child through the public form api', () => {

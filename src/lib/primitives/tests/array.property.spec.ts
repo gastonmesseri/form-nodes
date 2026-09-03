@@ -1,8 +1,8 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { array } from './array';
-import { field } from './field';
+import { array } from '../array';
+import { field } from '../field';
 
 /**
  * Property-based tests for the public `array()` API.
@@ -17,8 +17,8 @@ import { field } from './field';
  * insertions, removals, updates, and reorderings, including preservation of interaction state.
  *
  * `fast-check` automatically shrinks a failure to a smaller counterexample and reports the
- * seed and path required to reproduce it. Keep these tests in this dedicated sibling file so
- * `array.spec.ts` remains focused on explicit user-facing examples and regression cases.
+ * seed and path required to reproduce it. Keep these tests with the other primitive invariants in `primitives/tests`;
+ * `array.spec.ts` contains explicit user-facing examples and regression cases.
  */
 
 type Operation =

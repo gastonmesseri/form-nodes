@@ -8,6 +8,32 @@ import { required } from '../validation/validators/required';
 import { createFormPrimitives } from './create-form-primitives';
 
 describe('group', () => {
+  it('keeps extracted actions bound while propagating changes to its owning form', () => {
+    const profile = form({ address: group({ city: field('Zurich') }) });
+    const { set, update, patch, reset, add, remove, markAsTouched } = profile.address;
+
+    set({ city: 'Bern' });
+    update(value => ({ city: `${value.city}!` }));
+    patch({ city: 'Basel' });
+    const postcode = add('postcode', field('', [required]));
+    expect(profile()).toEqual({ address: { city: 'Basel', postcode: '' } });
+    expect(postcode.form()).toBe(profile);
+    expect(profile.invalid()).toBe(true);
+
+    markAsTouched();
+    expect(profile.touched()).toBe(true);
+    expect(postcode.touched()).toBe(true);
+    expect(remove('postcode')).toBe(postcode);
+    expect(postcode.parent()).toBeNull();
+    expect(profile.valid()).toBe(true);
+    reset();
+    expect(profile()).toEqual({ address: { city: 'Basel' } });
+    expect(profile.untouched()).toBe(true);
+    reset({ city: 'Geneva' });
+    expect(profile()).toEqual({ address: { city: 'Geneva' } });
+    expect(profile.pristine()).toBe(true);
+  });
+
   it('exposes one node signal under both validator aliases', () => {
     let receivedNode: unknown;
     const validate = (context: { node: () => unknown; field: () => unknown }) => {
