@@ -25,6 +25,86 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('exposes complete initial child values before the first aggregate validation', () => {
+    const payload = { name: 'ready' };
+    const expected = { details: { count: 0, enabled: false, payload, missing: undefined } };
+    const observed: unknown[] = [];
+    const profile = form({
+      details: form({
+        count: field.strict(0),
+        enabled: field.strict(false),
+        payload: field.strict(payload),
+        missing: field(undefined),
+      }),
+    }, {
+      validators: ({ value }) => {
+        observed.push(value());
+        return null;
+      },
+    });
+    expect(profile()).toStrictEqual(expected);
+    expect(profile.controlValue()).toStrictEqual(expected);
+    expect(profile().details.payload).toBe(payload);
+    expect(profile.controlValue().details.payload).toBe(payload);
+    expect(observed).toEqual([]);
+    expect(profile.valid()).toBe(true);
+    expect(observed).toStrictEqual([expected]);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+  });
+
+  it('aggregates the first async field validation after nested form construction', async () => {
+    const observed: Array<string | null> = [];
+    const validate = vi.fn(async ({ value }: Context<string | null>) => {
+      observed.push(value());
+      return { kind: 'unavailable' };
+    });
+    const profile = form({ details: form({ name: field('initial', asyncValidator(validate)) }) });
+    expect(profile()).toEqual({ details: { name: 'initial' } });
+    expect(profile.controlValue()).toEqual({ details: { name: 'initial' } });
+    expect(profile.details.name.pending()).toBe(true);
+    expect(profile.details.pending()).toBe(true);
+    expect(profile.pending()).toBe(true);
+    expect(validate).not.toHaveBeenCalled();
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(observed).toEqual(['initial']);
+    expect(validate).toHaveBeenCalledOnce();
+    expect(profile.pending()).toBe(false);
+    expect(profile.details.pending()).toBe(false);
+    expect(profile.details.name.pending()).toBe(false);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.details.invalid()).toBe(true);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'unavailable', targetNode: profile.details.name }]);
+    expect(profile.pristine()).toBe(true);
+  });
+
+  it('propagates validation from a computed field with initial availability through nested forms', () => {
+    const validate = vi.fn(() => ({ kind: 'required' }));
+    const model = computed(() => field('', [validate], { disabled: 'Locked', readonly: true, hidden: true }));
+    const name = model();
+    const profile = form({ details: form({ name }) });
+    expect(profile.valid()).toBe(true);
+    expect(profile.details.valid()).toBe(true);
+    expect(profile.allErrors()).toEqual([]);
+    expect(validate).not.toHaveBeenCalled();
+
+    name.enable();
+    name.markAsWritable();
+    expect(profile.valid()).toBe(true);
+    expect(validate).not.toHaveBeenCalled();
+    name.show();
+    expect(profile.invalid()).toBe(true);
+    expect(profile.details.invalid()).toBe(true);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'required', targetNode: name }]);
+    expect(validate).toHaveBeenCalledOnce();
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(model()).toBe(name);
+  });
+
   it('tracks interaction state read through validator node aliases', () => {
     const validate = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().touched() && ctx.field().dirty() ? { kind: 'edited' } : null;

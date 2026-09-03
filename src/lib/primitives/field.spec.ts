@@ -26,6 +26,193 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it.each<{ label: string; initial: unknown }>([
+    { label: 'string', initial: 'ready' },
+    { label: 'zero', initial: 0 },
+    { label: 'negative zero', initial: -0 },
+    { label: 'NaN', initial: NaN },
+    { label: 'false', initial: false },
+    { label: 'null', initial: null },
+    { label: 'undefined', initial: undefined },
+    { label: 'object', initial: { name: 'ready' } },
+    { label: 'array', initial: [1, 2] },
+    { label: 'function', initial: () => 'ready' },
+  ])('exposes the supplied $label value on first use and after discarding a buffered edit', ({ initial }) => {
+    const observed: unknown[][] = [];
+    const model = computed(() => field<unknown>(initial, ({ value, node }) => {
+      observed.push([value(), node().controlValue()]);
+      return null;
+    }, { debounce: 'blur' }));
+    const node = model();
+    expect(node()).toBe(initial);
+    expect(node.controlValue()).toBe(initial);
+    expect(observed).toEqual([]);
+    expect(node.valid()).toBe(true);
+    expect(observed).toHaveLength(1);
+    expect(observed[0]![0]).toBe(initial);
+    expect(observed[0]![1]).toBe(initial);
+
+    node.setControlValue('draft');
+    expect(node()).toBe(initial);
+    expect(node.controlValue()).toBe('draft');
+    expect(node.debouncing()).toBe(true);
+    node.reset();
+    expect(node()).toBe(initial);
+    expect(node.controlValue()).toBe(initial);
+    expect(node.debouncing()).toBe(false);
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+  });
+
+  it('initializes validators before exposing metadata and the first synchronous result', () => {
+    const observed: Array<string | null> = [];
+    const validate = vi.fn(({ value }: Context<string | null>) => {
+      observed.push(value());
+      return null;
+    });
+    const length = minLength(3);
+    const model = computed(() => field.strict('x', [length, validate]));
+    const node = model();
+    expect(node()).toBe('x');
+    expect(node.controlValue()).toBe('x');
+    expect(node.validators()).toEqual([length, validate]);
+    expect(validate).not.toHaveBeenCalled();
+
+    expect(node.minLength()).toBe(3);
+    expect(node.errors()).toMatchObject([{ kind: 'minLength' }]);
+    expect(observed).toEqual(['x']);
+    expect(validate).toHaveBeenCalledOnce();
+    expect(node.invalid()).toBe(true);
+    expect(node.pristine()).toBe(true);
+  });
+
+  it.each([false, true])('initializes an async validator before its first run inside computed (array=%s)', async (asArray) => {
+    const initialValue = { name: 'initial' };
+    const observed: Array<typeof initialValue | null> = [];
+    const validate = vi.fn(async ({ value }: Context<typeof initialValue | null>) => {
+      observed.push(value());
+      return { kind: 'unavailable' };
+    });
+    const check = asyncValidator(validate);
+    const model = computed(() => field(initialValue, asArray ? [check] : check));
+    const node = model();
+    expect(node()).toBe(initialValue);
+    expect(node.controlValue()).toBe(initialValue);
+    expect(node.validators()).toEqual([check]);
+    expect(node.pending()).toBe(true);
+    expect(node.validationStatus()).toBe('unknown');
+    expect(validate).not.toHaveBeenCalled();
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(observed).toHaveLength(1);
+    expect(observed[0]).toBe(initialValue);
+    expect(validate).toHaveBeenCalledOnce();
+    expect(node.pending()).toBe(false);
+    expect(node.errors()).toMatchObject([{ kind: 'unavailable' }]);
+    expect(node.validationStatus()).toBe('invalid');
+    expect(node.pristine()).toBe(true);
+  });
+
+  it('creates a field inside computed and preserves the surrounding dependencies', () => {
+    const initialValue = signal('initial');
+    const create = vi.fn(() => {
+      const node = field(initialValue());
+      return node;
+    });
+    const model = computed(create);
+    const node = model();
+    expect(node()).toBe('initial');
+    expect(node.disabled()).toBe(false);
+    expect(node.readonly()).toBe(false);
+    expect(node.hidden()).toBe(false);
+    expect(create).toHaveBeenCalledOnce();
+
+    initialValue.set('next');
+    expect(model()()).toBe('next');
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves dependencies read by initial state option getters', () => {
+    const disabled = signal(false);
+    const create = vi.fn(() => field('initial', { get disabled() { return disabled(); } }));
+    const model = computed(create);
+    const initial = model();
+    expect(initial.disabled()).toBe(false);
+    expect(create).toHaveBeenCalledOnce();
+
+    disabled.set(true);
+    const next = model();
+    expect(next).not.toBe(initial);
+    expect(next.disabled()).toBe(true);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([true, 'Locked', ''])('applies initial availability before validation inside computed: %j', (disabled) => {
+    const validate = vi.fn(() => ({ kind: 'required' }));
+    const model = computed(() => field('', [validate], { disabled, readonly: true, hidden: true }));
+    const node = model();
+    expect(node.disabled()).toBe(true);
+    expect(node.disabledReasons()).toEqual([
+      typeof disabled === 'string' ? { sourceNode: node, message: disabled } : { sourceNode: node },
+    ]);
+    expect(node.readonly()).toBe(true);
+    expect(node.hidden()).toBe(true);
+    expect(node.valid()).toBe(true);
+    expect(validate).not.toHaveBeenCalled();
+
+    node.enable();
+    expect(node.disabled()).toBe(false);
+    expect(node.disabledReasons()).toEqual([]);
+    expect(node.valid()).toBe(true);
+    node.markAsWritable();
+    expect(node.readonly()).toBe(false);
+    expect(node.valid()).toBe(true);
+    expect(validate).not.toHaveBeenCalled();
+    node.show();
+    expect(node.hidden()).toBe(false);
+    expect(node.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(validate).toHaveBeenCalledOnce();
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+    expect(model()).toBe(node);
+  });
+
+  it('keeps availability sources reactive without recreating a computed field', () => {
+    const locked = signal(true);
+    const disabled = vi.fn(() => locked());
+    const readonly = vi.fn(() => locked());
+    const hidden = vi.fn(() => locked());
+    const create = vi.fn(() => field('', [required], { disabled, readonly, hidden }));
+    const model = computed(create);
+    const node = model();
+    expect(disabled).not.toHaveBeenCalled();
+    expect(readonly).not.toHaveBeenCalled();
+    expect(hidden).not.toHaveBeenCalled();
+    expect(node.disabled()).toBe(true);
+    expect(node.readonly()).toBe(true);
+    expect(node.hidden()).toBe(true);
+    expect(node.valid()).toBe(true);
+
+    node.enable();
+    node.markAsWritable();
+    node.show();
+    expect(node.disabled()).toBe(true);
+    expect(node.readonly()).toBe(true);
+    expect(node.hidden()).toBe(true);
+    locked.set(false);
+    expect(model()).toBe(node);
+    expect(create).toHaveBeenCalledOnce();
+    expect(node.disabled()).toBe(false);
+    expect(node.readonly()).toBe(false);
+    expect(node.hidden()).toBe(false);
+    expect(node.invalid()).toBe(true);
+    expect(disabled).toHaveBeenCalledTimes(2);
+    expect(readonly).toHaveBeenCalledTimes(2);
+    expect(hidden).toHaveBeenCalledTimes(2);
+  });
+
   it('tracks interaction state read through validator node aliases', () => {
     const validate = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().touched() && ctx.field().dirty() ? { kind: 'edited' } : null;
