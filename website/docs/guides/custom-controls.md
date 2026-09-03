@@ -306,20 +306,22 @@ it in the component injection context and read its signals directly:
 
 <CodeBlock language="ts">{boundControlSource}</CodeBlock>
 
-The facade currently recognizes `[formNode]` and `[formControl]`. Its source-neutral API is also
-reserved for future `[formField]`, `formControlName`, and `ngModel` integration. `connected()`
-reports whether a supported binding is present, and `source()` identifies the active adapter.
+The facade recognizes `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, and `ngModel`.
+`connected()` reports whether a supported binding is present, and `source()` identifies the active
+adapter without changing the component's API.
 
-For `[formControl]`, the adapter observes the public `AbstractControl.events` stream. It provides
-value, disabled, dirty, touched, invalid, pending, and errors. Properties that Reactive Forms does
-not expose, including readonly, hidden, disabled reasons, and constraint metadata, retain their
-safe neutral defaults.
+The Reactive Forms and template-driven adapters observe the public `AbstractControl.events` stream.
+They provide value, disabled, dirty, touched, invalid, pending, and errors. Properties these APIs do
+not expose, including readonly, hidden, disabled reasons, and constraint metadata, retain their safe
+neutral defaults. `[formField]` instead exposes Angular Signal Forms state, including constraints,
+required, readonly, hidden, and disabled reasons.
 
 All errors are exposed as `readonly { kind: string; ... }[]`, regardless of the source-specific
 error representation. The remaining signals include `value`, `disabled`, `disabledReasons`,
 `dirty`, `hidden`, `invalid`, constraints, `name`, `pattern`, `pending`, `readonly`, `required`, and
-`touched`. An unbound component receives neutral values such as `false`, `[]`, `undefined`, and
-`null` rather than an injection error.
+`touched`. Disabled reasons are normalized to `{ message?: string }`, without exposing a Gem node or
+Angular field tree. An unbound component receives neutral values such as `false`, `[]`, `undefined`,
+and `null` rather than an injection error.
 
 ## ControlValueAccessor
 

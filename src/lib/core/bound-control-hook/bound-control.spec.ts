@@ -4,7 +4,8 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Component, forwardRef, model } from '@angular/core';
-import { FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators, type ControlValueAccessor } from '@angular/forms';
+import { FormField } from '@angular/forms/signals';
+import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators, type ControlValueAccessor } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { field } from '../primitives/field';
@@ -231,5 +232,104 @@ describe('injectBoundControl', () => {
     expect(state.touched()).toBe(true);
     expect(state.disabled()).toBe(true);
     expect(state.errors()).toEqual([]);
+  });
+
+  it('selects the formField adapter', async () => {
+    @Component({
+      selector: 'signal-forms-bound-control',
+      template: '',
+      standalone: true,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SignalFormsBoundControl), multi: true }],
+    })
+    class SignalFormsBoundControl implements ControlValueAccessor {
+      boundControl = injectBoundControl<string>();
+      writeValue() {}
+      registerOnChange() {}
+      registerOnTouched() {}
+    }
+
+    @Component({
+      template: `<signal-forms-bound-control [formField]="name.$field" />`,
+      standalone: true,
+      imports: [SignalFormsBoundControl, FormField],
+    })
+    class Host {
+      name = field('Marco', { nullable: false });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const state = (fixture.debugElement.children[0]!.componentInstance as SignalFormsBoundControl).boundControl;
+
+    expect(state.source()).toBe('formField');
+    expect(state.value()).toBe('Marco');
+  });
+
+  it('selects the formControlName adapter', async () => {
+    @Component({
+      selector: 'control-name-bound-control',
+      template: '',
+      standalone: true,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ControlNameBoundControl), multi: true }],
+    })
+    class ControlNameBoundControl implements ControlValueAccessor {
+      boundControl = injectBoundControl<string>();
+      writeValue() {}
+      registerOnChange() {}
+      registerOnTouched() {}
+    }
+
+    @Component({
+      template: `<form [formGroup]="form"><control-name-bound-control formControlName="name" /></form>`,
+      standalone: true,
+      imports: [ControlNameBoundControl, ReactiveFormsModule],
+    })
+    class Host {
+      form = new FormGroup({ name: new FormControl('Marco', { nonNullable: true }) });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const state = (fixture.debugElement.children[0]!.children[0]!.componentInstance as ControlNameBoundControl).boundControl;
+
+    expect(state.source()).toBe('formControlName');
+    expect(state.value()).toBe('Marco');
+  });
+
+  it('selects the ngModel adapter', async () => {
+    @Component({
+      selector: 'ng-model-bound-control',
+      template: '',
+      standalone: true,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => NgModelBoundControl), multi: true }],
+    })
+    class NgModelBoundControl implements ControlValueAccessor {
+      boundControl = injectBoundControl<string>();
+      writeValue() {}
+      registerOnChange() {}
+      registerOnTouched() {}
+    }
+
+    @Component({
+      template: `<ng-model-bound-control [(ngModel)]="name" [ngModelOptions]="{ standalone: true }" />`,
+      standalone: true,
+      imports: [FormsModule, NgModelBoundControl],
+    })
+    class Host {
+      name = 'Marco';
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const state = (fixture.debugElement.children[0]!.componentInstance as NgModelBoundControl).boundControl;
+
+    expect(state.source()).toBe('ngModel');
+    expect(state.value()).toBe('Marco');
   });
 });

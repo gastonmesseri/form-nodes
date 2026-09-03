@@ -23,7 +23,7 @@ export { minLength } from './lib/core/validation/validators/min-length';
 export { dateBetween } from './lib/core/validation/validators/date-between';
 export { uniqueItems } from './lib/core/validation/validators/unique-items';
 export type { FormNodeBinding } from './lib/core/types/form-node-binding.type';
-export { injectBoundControl, type BoundControl, type BoundControlError, type BoundControlSource } from './lib/core/bound-control-hook/bound-control';
+export { injectBoundControl, type BoundControl, type BoundControlDisabledReason, type BoundControlError, type BoundControlSource } from './lib/core/bound-control-hook/bound-control';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export type { ValidatorOptions } from './lib/core/validation/validators/validator-options';
 export { provideFormNodePassThrough } from './lib/core/directives/form-node/form-node-pass-through';
