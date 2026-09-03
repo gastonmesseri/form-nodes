@@ -1,5 +1,80 @@
 # TODO
 
+## Declaration shorthand roadmap
+
+The goal is for shorthand declarations to be as predictable as explicit `field()`, `group()`,
+`form()`, and `array()` declarations, without making structurally ambiguous values guessable.
+
+### 1. Freeze the declaration contract
+
+- [x] Treat primitive values and `Date` instances as implicit `field()` declarations.
+- [x] Infer `field<unknown>` for `null` and `undefined` shorthand declarations.
+- [x] Treat plain object literals as implicit `group()` declarations.
+- [x] Preserve explicit node declarations without wrapping or replacing them.
+- [x] Reject array literals until their meaning is explicitly designed.
+- [ ] Define one shared leaf-versus-structure classification contract for both runtime normalization
+  and public TypeScript inference so they cannot drift apart.
+- [ ] Decide how every non-plain object category is handled, including `RegExp`, `URL`, `Map`,
+  `Set`, typed arrays, Temporal values, Moment-like values, and custom class instances.
+- [ ] Document `field(value)` as the unambiguous escape hatch for any value that could otherwise be
+  interpreted as structure.
+
+### 2. Harden type inference
+
+- [ ] Add public type tests for strings, numbers, booleans, bigints, symbols, `Date`, `null`,
+  `undefined`, nested object literals, explicit nodes, and mixed declarations.
+- [ ] Verify literal widening, `as const`, `satisfies`, readonly properties, optional properties,
+  unions, and predeclared model objects.
+- [ ] Verify that validators and node options retain useful contextual typing when shorthand and
+  explicit declarations are mixed.
+- [ ] Add compile-time failures for ambiguous arrays and unsupported declaration values with
+  actionable error types where practical.
+- [ ] Measure deeply nested and wide definitions to prevent excessive type instantiation or poor
+  editor performance.
+
+### 3. Harden runtime normalization
+
+- [ ] Centralize normalization and exercise the same behavior through `form()` and `group()`, at the
+  root and at every nested depth.
+- [ ] Add runtime tests for special numbers, empty strings, `false`, bigint, symbols, invalid dates,
+  `null`, `undefined`, null-prototype objects, symbol keys, and objects with unusual prototypes.
+- [ ] Define and test behavior for enumerable accessors, inherited properties, reserved child names,
+  and prototype-pollution-sensitive keys such as `__proto__`.
+- [ ] Verify that implicit fields behave exactly like `field(value)` for reset, set, patch, clone,
+  validation, disabled/readonly state, parent/root/path ownership, injector inheritance, and binding.
+- [ ] Ensure diagnostics identify the complete declaration path and recommend the correct explicit
+  primitive when normalization fails.
+
+### 4. Decide dynamic mutation semantics
+
+- [ ] Decide whether `group.add()` and related dynamic APIs accept shorthand values or continue to
+  require explicit node definitions.
+- [ ] If dynamic shorthand is supported, reuse the same normalization and inference contract rather
+  than creating a second set of rules.
+- [ ] Cover detach, reparent, replace, reset, and late-created child ownership for implicit nodes.
+
+### 5. Design array shorthand separately
+
+- [ ] Keep `items: []` rejected until deciding whether it means an array-valued field, an
+  `array()` node, a tuple-shaped group, or initial values for a template.
+- [ ] Evaluate scalar item templates such as `array('')` separately from arrays used as property
+  values; do not make one syntax silently imply the other.
+- [ ] If array shorthand is adopted, specify empty-array inference, tuples, readonly arrays, object
+  items, heterogeneous values, template cloning, `trackBy`, validators, and options first.
+- [ ] Require an explicit syntax whenever an array declaration cannot preserve both runtime intent
+  and useful static inference.
+
+### 6. Documentation, compatibility, and release
+
+- [ ] Add a declaration matrix comparing shorthand syntax with its explicit equivalent and showing
+  ambiguous values that require `field()`, `group()`, or `array()`.
+- [ ] Update the `form()`, `group()`, `field()`, array, creation, validation, and migration/reference
+  pages with executable examples and inference assertions.
+- [ ] Add package-consumer tests against emitted declarations, plus changelog and migration notes for
+  any newly accepted or newly rejected input category.
+- [ ] Before expanding the contract, verify focused behavior and type tests, lint, typecheck, build,
+  coverage, package tests, and documentation typecheck/build.
+
 ## Up next
 
 - [ ] website docs
@@ -13,18 +88,28 @@
 
 - [ ] Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
 - [ ] Consider changing the @example to something different, like a heading with asterisks **Like this**
-- [ ] In the .add function of group() form() decide what api to use add('key', field('')) or add({ key: field('') })
-  I think the second one is better, and it allows setting several at once (maybe not, to make it consistent with .removew)
-  - [ ] rethink the return type of add (it does different depending on the signature)
+- Validators internal (e.g. invalid date) [how to do that?]
 
-- boundControl
-  - also allow markAsTouched (and other outputs)
-  - also allow setValue (i guess, maybe not)
+- controlState
+  - [ ] Reconsider additional interaction notifications only when a supported forms API has a
+    source-neutral operation with consistent semantics.
+  - [ ] Consider naming if useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
+
+- In the same way that we implemented the { when } option into each builtin validator, also implement the { error } option (like in angular 22 signal forms) into every builtin validator
+
+- I think a field() should be able to host an "undefined" value, and specifically if the user initializes with this field(undefined), then the initial
+  value should be undefined and not null. (correct docs if required)
+  - maybe we should check the amount of args in the field initialization or something like that?
+
 - Provide alternative for non-possible disabled = input() readonly = input(),
   strong alternative like useFieldState() hook, compatible with all angular ways of declaring a form state (ngModel, formControl, new way, formNode)
   this should also be notified in the component-input-writer console.warn
   boundFieldState = useBoundFieldState<string | null>(); // Maybe infer type from value = model()
   boundField = useBoundField(); // maybe better
+
+- SHORTHANDS for FIELDS
+  - ...
+  - quiza tambien soporte para moment() aunque sea a traves de un interfaz generico sin importar moment() (_isAMomentObject creo)
 
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
@@ -327,7 +412,29 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
-- [x] Add `injectBoundControl<T>()` as a source-neutral custom-component state facade, initially backed by `[formNode]`, with normalized `{ kind: string; ... }` errors and neutral disconnected state.
+- [x] Implement requiredIf validator
+- [x] Rename `injectBoundControl()` and its related public types to the shorter, source-neutral
+  `useControlState()`, `ControlState`, `ControlStateSource`, `ControlStateError`, and
+  `ControlStateDisabledReason` names.
+- [x] Add a dedicated `useControlState()` reference page with a type-checked custom control and
+  examples for `formNode`, `formField`, `formControl`, `formControlName`, and `ngModel`.
+- [x] Finish `.add()` for dynamic `form()` and `group()` children.
+  - [x] Keep both `add('key', field(''))` and atomic `add({ key: field('') })` signatures.
+  - [x] Preserve input cardinality in the return: one definition returns its exact node, while an
+    object returns an exact keyed map of every attached node.
+  - [x] Do not overload proxy assignment such as `myForm.newProperty = field('')`; structural
+    mutation remains explicit through `add()` and dynamic properties remain readonly lookups.
+- [x] Keep `useControlState()` read-only except for `markAsTouched()`, which reports a native
+  control interaction to the owning forms API.
+  - [x] Do not add `setValue()`; custom controls write through `model()`, `FormValueControl`, or
+    `ControlValueAccessor`, while programmatic form writes belong to the owning forms API.
+- [x] Add `useControlState<T>()` as a source-neutral custom-component state facade, initially backed by `[formNode]`, with normalized `{ kind: string; ... }` errors and neutral disconnected state.
+- [x] Split control-state sources into dedicated adapters and add `[formControl]` through `AbstractControl.events`, with safe defaults for unsupported state.
+- [x] Make every control-state adapter own its complete common-state model and keep `useControlState()` limited to source selection and signal forwarding.
+- [x] Support `[formField]`, `formControlName`, and `ngModel` through dedicated control-state adapters.
+- [x] Let custom controls call `controlState.markAsTouched()` across every supported binding source.
+- [x] Harden `useControlState()` adapters for dynamic `AbstractControl` rebinding, silent `{ emitEvent: false }` mutations, reactive effects, source-specific names, deterministic source precedence, and server-to-browser connection.
+- [x] Keep normalized control-state disabled reasons as `{ message?: string }`, preserving unnamed active reasons as `{}` so only `[]` means no reason.
 - [x] Improve custom-component input writing for `[formNode]`.
   - [x] Resolve public aliases and transforms through `reflectComponentType()`.
   - [x] Preserve `ngOnChanges` through Angular's definition input writer when available.
@@ -445,7 +552,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Route control-originated Angular model changes through the bound node's control-value
     channel instead of `root.set()`, preserving `controlValue()`, numeric and blur debounce,
     `flush()`, cancellation, dirty state, and programmatic-versus-control write semantics.
-  - [x] Resolve same-turn Angular and node value conflicts deterministically: a real bound-control
+  - [x] Resolve same-turn Angular and node value conflicts deterministically: a real control-state
     edit takes precedence, while the node wins when no control edit occurred. Verify both operation
     orders, exact control-channel write counts, stable convergence, and absence of feedback loops.
   - [x] Extend independent `touched` and `dirty` adapter coverage beyond leaf nodes to forms,
