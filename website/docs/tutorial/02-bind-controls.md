@@ -2,6 +2,11 @@
 title: 2. Bind controls
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+
+import cvaControlBindingSource from '!!raw-loader!../../examples/cva-control-binding.typecheck.ts';
+import nativeControlsSource from '!!raw-loader!../../examples/tutorial-native-controls.typecheck.ts';
+
 # 2. Bind controls
 
 `[formNode]` binds naturally to native elements, signal custom controls, Angular Material, PrimeNG,
@@ -11,45 +16,10 @@ documentation requires, then bind your node with the same `[formNode]` syntax.
 
 ## Bind native controls
 
-Expand the initial name binding to every field with `[formNode]`.
+Expand the initial name binding to every field with `[formNode]`. The same directive also binds
+selects, checkboxes, and textareas:
 
-```ts
-import { Component } from '@angular/core';
-
-import { FormNode, field, form } from 'form-nodes';
-
-@Component({
-  selector: 'app-profile-editor',
-  imports: [FormNode],
-  template: `
-    <label>
-      Name
-      <input [formNode]="myForm.name" />
-    </label>
-
-    <label>
-      Age
-      <input type="number" [formNode]="myForm.age" />
-    </label>
-
-    <label>
-      Email
-      <input type="email" [formNode]="myForm.email" />
-    </label>
-
-    <p>Current name: {{ myForm.name() }}</p>
-    <p>Current age: {{ myForm.age() }}</p>
-    <p>Current email: {{ myForm.email() }}</p>
-  `,
-})
-export class ProfileEditor {
-  myForm = form({
-    name: field(''),
-    age: field<number>(null),
-    email: field(''),
-  });
-}
-```
+<CodeBlock language="ts" title="Native controls and their model">{nativeControlsSource}</CodeBlock>
 
 The directive handles both directions:
 
@@ -58,6 +28,9 @@ The directive handles both directions:
 - User input marks the field dirty.
 - Blur marks it touched.
 - Numeric inputs produce numbers rather than raw strings.
+- A `<select>` with string-valued options writes the selected option value, such as `'CH'`.
+- A checkbox writes `true` or `false`; `field.strict(false)` keeps this field non-nullable.
+- A `<textarea>` reads and writes text just like a text input.
 
 The model remains the source of truth; no `FormControl`, `formControlName`, or string path is required.
 
@@ -99,6 +72,27 @@ export class ReviewEditor {
 
 No Form Nodes-specific interface or provider is required for the conventional `value = model()`
 shape.
+
+## Bind a custom ControlValueAccessor
+
+A component registered through Angular's `NG_VALUE_ACCESSOR` token uses the same `[formNode]`
+binding. The control implements `ControlValueAccessor`; Form Nodes connects its callbacks to the
+field automatically:
+
+<CodeBlock language="ts" title="Custom control and parent component">{cvaControlBindingSource}</CodeBlock>
+
+- `writeValue()` displays programmatic field changes. It must not call `onChange()`.
+- The control calls the registered `onChange()` callback for user input; this updates the field
+  and marks it dirty.
+- Calling the registered `onTouched()` callback on blur marks the field touched.
+- `setDisabledState()` receives the field's disabled state and applies it to the inner input.
+
+`NG_VALUE_ACCESSOR` is the standard Angular provider for the custom control. The parent only
+imports `FormNode` and the control component; no `ngModel`, `FormControl`, or additional Form Nodes
+provider is needed. The same component can still be used with Angular's other forms APIs.
+
+See [ControlValueAccessor in the custom-controls guide](../guides/custom-controls.md#controlvalueaccessor)
+for accessor selection, validation integration, and other supported contracts.
 
 ## Bind Angular Material controls naturally
 

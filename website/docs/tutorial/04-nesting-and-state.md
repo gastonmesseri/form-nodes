@@ -37,13 +37,6 @@ myForm = form({
 });
 ```
 
-Add `signal` to the Angular import and `group` to the Form Nodes import:
-
-```ts
-import { Component, signal } from '@angular/core';
-import { group } from 'form-nodes';
-```
-
 The billing branch reacts to `useShippingAddress()` automatically. While disabled:
 
 - Its values remain readable and writable.
