@@ -24,6 +24,8 @@ canonical release record.
 
 ### Changed
 
+- Form and group callable values display their complete nested object shape in IntelliSense rather
+  than internal value and normalization helper types.
 - Nested object shorthand and object templates in `array()` now create structural `Group` nodes.
   `Form` is reserved for explicit submission workflow boundaries.
 - Object shorthand validates the complete declaration before construction, reports nested error

@@ -191,6 +191,25 @@ group({
   },
 });
 
+const nestedValueForm = form({
+  name: field(''),
+  address: {
+    city: field('', { nullable: false }),
+    details: {
+      country: field(''),
+    },
+  },
+});
+type _MaterializedNestedValue = Expect<Equal<ReturnType<typeof nestedValueForm>, {
+  name: string | null;
+  address: {
+    city: string;
+    details: {
+      country: string | null;
+    };
+  };
+}>>;
+
 form({ roles: ['admin'] });
 form({ roles: [] });
 form({ coordinates: [47.37, 8.54] as const });

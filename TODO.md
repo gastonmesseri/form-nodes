@@ -11,6 +11,11 @@
 
 ## Up next
 
+- create field.notNull or field.something para non nullable fields, lo mismo que field('', { nullable: false }) but shorter
+
+- Add validator texts i18n default to createFormPrimitives()
+
+
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -160,7 +165,6 @@
   - [ ] controlValue and setControlValue feel more like an internal thing
   - [ ] also maybe hide disabledReasons
 - [ ] maybe add "novalidate" html property by default to the parent form of the fields? (maybe not)
-- [ ] Allow creating a framework with predefined options (e.g. by default form() array() or field() has { nullable: true })
 - [ ] code style: functions declared with `export const` or `const` that return an expression directly should use braces
 - [ ] Implement shorthand for required in the field options similar to disbled
 - [ ] initial value should be null or undefined? (for field())
@@ -348,6 +352,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Display complete nested form and group value objects in IntelliSense without exposing
+  internal `FormValue` or normalization helpers.
+- [x] Allow creating an isolated form primitive set with an optional predefined `nullable` default
+  through `createFormPrimitives()`, including shorthands, dynamic children, and array templates.
 - [x] Make first generic of form() and group() to be the model of the form(). (what is it right now?)
   - [x] e.g.
   form<{
