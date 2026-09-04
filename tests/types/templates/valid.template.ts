@@ -9,6 +9,9 @@ import { array, field, form, group, FormNode } from '../../../src/public-api';
   template: `
     <input #binding="formNode" [formNode]="name">
     <input [formNode]="profile.age">
+    @if (profile.get('dynamicName'); as dynamicName) {
+      <input [formNode]="dynamicName">
+    }
     {{ binding.node()() }}
     {{ binding.errors().length }}
     <button (click)="binding.focus(); binding.flush(); binding.reset()">Reset</button>
@@ -17,6 +20,7 @@ import { array, field, form, group, FormNode } from '../../../src/public-api';
 class ValidFormNodeHost {
   readonly name = field('David', { nullable: false });
   readonly profile = form({ age: field(42, { nullable: false }) });
+  readonly dynamicName = this.profile.add('dynamicName', field('Ada'));
   readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('binding');
 
   focusName() {

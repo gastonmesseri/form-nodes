@@ -1,6 +1,7 @@
 import moment, { type Moment } from 'moment';
 
 import { field, form } from '../../src/public-api';
+import type { DynamicNode } from '../../src/public-api';
 
 form({ name: field('') }, { debounce: 'blur' });
 form({ name: field('') }, { debounce: abortSignal => Promise.resolve(void abortSignal.aborted) });
@@ -172,3 +173,12 @@ type _ApiReadonlyUnaffected = Expect<Equal<ReturnType<typeof collisions.api.read
 
 // @ts-expect-error children is a readonly map
 profile.children.name = field('Replacement');
+
+const dynamicAge = profile.add('dynamicAge', field(23));
+type _DynamicGet = Expect<Equal<ReturnType<typeof profile.get>, DynamicNode | undefined>>;
+type _DynamicChildMap = Expect<Equal<typeof profile.children['dynamicAge'], DynamicNode | undefined>>;
+type _ExactAddedNode = Expect<Equal<ReturnType<typeof dynamicAge>, number | null>>;
+// @ts-expect-error dynamically added children are not direct properties
+profile.dynamicAge;
+// @ts-expect-error undeclared child names must not compile
+profile.mistypedPropertyName;

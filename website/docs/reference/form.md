@@ -45,7 +45,7 @@ const myForm = form({
 | Create or configure a form | `form(...)`, `FormOptions` | [Signatures](#signatures) and [options](#options) |
 | Read its value or navigate children | `myForm()`, direct children, `children` | [Properties and methods](#properties-and-methods) |
 | Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Method reference](#method-reference) |
-| Add, find, or remove runtime children | `add()`, direct properties, `remove()` | [Dynamic children](#dynamic-children) |
+| Add, find, or remove runtime children | `add()`, `get()`, `children[key]`, `remove()` | [Dynamic children](#dynamic-children) |
 | Inspect or replace validation | `errors()`, `allErrors()`, `valid()`, `setValidators()` | [Validation properties](#validation-properties) |
 | Manage touched and dirty state | `markAsTouched()`, `markAsDirty()`, `reset()` | [Interaction properties](#interaction-properties) |
 | Manage disabled, readonly, or hidden state | `disable()`, `markAsReadonly()`, `hide()` | [Availability properties](#availability-properties) |
@@ -377,6 +377,7 @@ to read their current value; `children` is a stable readonly map rather than a s
 | **Dynamic children** | |
 | [`add(key, definition)`](#add) | Attaches and returns one runtime child with its exact inferred node type. |
 | [`add(definitions)`](#add) | Atomically attaches and returns several runtime children. |
+| [`get(key)`](#get) | Returns a current child by runtime key, or `undefined`. |
 | [`remove(key)`](#remove) | Detaches and returns a dynamically added child, or `undefined`. |
 | **Value updates** | |
 | [`set(value)`](#set) | Assigns a complete object value without marking nodes dirty. |
@@ -497,8 +498,8 @@ const profile = form({
 profile.children.username(); // 'ada'
 ```
 
-Direct child access is preferred. If a declared child is named `children`, use
-`profile.$api.children` for the map.
+Direct access is preferred for initially declared children. Use `get(key)` or `children[key]` for
+runtime keys. If a declared child is named `children`, use `profile.$api.children` for the map.
 
 #### value()
 
@@ -1018,6 +1019,8 @@ const profile = form({
 
 const age = profile.add('age', field(36));
 age(); // 36
+profile.get('age') === age; // true
+profile.children['age'] === age; // true
 
 const added = profile.add({
   nickname: field('countess'),
@@ -1028,10 +1031,37 @@ const added = profile.add({
 
 added.nickname(); // 'countess'
 added.preferences.theme(); // 'dark'
+profile.get('preferences') === added.preferences; // true
+profile.children['preferences'] === added.preferences; // true
 ```
 
 Keys must be new, definitions must be detached, and `$api` and `$field` are reserved. The object
-form is atomic: validation completes before any supplied child is attached.
+form is atomic: validation completes before any supplied child is attached. Keep the returned node
+for its exact type, or retrieve it later with `get()` or `children[key]`.
+
+#### get()
+
+**Signature:** `get(key: string): DynamicNode | undefined`
+
+Returns a current child by runtime key. Dynamically added children deliberately do not become
+direct properties, so misspelled names fail TypeScript and Angular template checking.
+
+:::important
+
+Use `profile.name` only for a child included in the original `form()` declaration. After
+`profile.add('age', ...)`, use the returned node, `profile.get('age')`, or
+`profile.children['age']`. Neither `profile.age` nor `profile['age']` is supported.
+
+:::
+
+```ts
+const profile = form({ username: field('ada') });
+profile.add('age', field(36));
+
+profile.get('age')?.value(); // 36
+profile.children['age']?.value(); // 36
+profile.get('missing'); // undefined
+```
 
 #### remove()
 

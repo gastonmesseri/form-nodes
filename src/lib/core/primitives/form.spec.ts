@@ -2467,8 +2467,9 @@ describe('form', () => {
     const age = profile.add('age', field(23));
 
     expect(age()).toBe(23);
-    expect(profile.age).toBe(age);
-    expect(profile.children.age).toBe(age);
+    expect(profile.get('age')).toBe(age);
+    expect(profile.children['age']).toBe(age);
+    expect((profile as unknown as Record<string, unknown>)['age']).toBeUndefined();
     expect(profile()).toEqual({ name: 'David', age: 23 });
     expect(age.parent()).toBe(profile);
     expect(age.form()).toBe(profile);
@@ -2479,7 +2480,8 @@ describe('form', () => {
 
     expect(profile.remove('missing')).toBeUndefined();
     expect(profile.remove('age')).toBe(age);
-    expect(profile.age).toBeUndefined();
+    expect(profile.get('age')).toBeUndefined();
+    expect(profile.children['age']).toBeUndefined();
     expect(profile()).toEqual({ name: 'David' });
     expect(age.parent()).toBeNull();
     expect(age.form()).toBeNull();
@@ -2494,8 +2496,8 @@ describe('form', () => {
       address: { city: field('Zurich') },
     });
 
-    expect(added.age).toBe(profile.age);
-    expect(added.address).toBe(profile.address);
+    expect(added.age).toBe(profile.get('age'));
+    expect(added.address).toBe(profile.get('address'));
     expect(added.address.city.parent()).toBe(added.address);
     expect(added.address.city.form()).toBe(profile);
     expect(profile()).toEqual({
@@ -2536,7 +2538,7 @@ describe('form', () => {
 
     profile.add('age', field(23));
     expect(() => profile.add({ city: field('Zurich'), age: field(24) })).toThrowError('form: child "age" already exists');
-    expect(profile.city).toBeUndefined();
+    expect(profile.get('city')).toBeUndefined();
   });
 
   it('keeps dynamic child values when reset receives only the fixed shape', () => {
@@ -2554,7 +2556,8 @@ describe('form', () => {
     const profile = form({ name: field('David') });
     const setChild = profile.add('set', field('dynamic'));
 
-    expect(profile.children.set).toBe(setChild);
+    expect(profile.children['set']).toBe(setChild);
+    expect(profile.get('set')).toBe(setChild);
     expect(typeof profile.set).toBe('function');
 
     profile.set({ name: 'Mark' });
