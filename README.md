@@ -6,6 +6,28 @@
 
 **Typed, signal-based forms for Angular.**
 
+<!-- example: quick-start.typecheck.ts -->
+```ts
+import { Component } from '@angular/core';
+
+import { field, FormNode, form } from 'form-nodes';
+
+@Component({
+  selector: 'app-profile-editor',
+  imports: [FormNode],
+  template: `
+    <input [formNode]="myForm.username" />
+    <p>Hello {{ myForm.username() }}</p>
+  `,
+})
+export class ProfileEditor {
+  myForm = form({
+    username: field(''),
+  });
+}
+```
+<!-- /example -->
+
 Build a form from `form()`, `field()`, `array()`, and nested objects. Read its values by calling the
 nodes, bind them to controls with `[formNode]`, and use Angular signals for validation and state.
 The same tree describes your data, your controls, and how they behave.

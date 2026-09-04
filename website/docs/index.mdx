@@ -8,7 +8,10 @@ description: Typed, signal-based form primitives for Angular 22.
 ---
 
 import Link from '@docusaurus/Link';
+import CodeBlock from '@theme/CodeBlock';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+
+import quickStartSource from '!!raw-loader!../examples/quick-start.typecheck.ts';
 
 <header className="docs-hero">
   <div className="docs-hero__content">
@@ -26,25 +29,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   </div>
   <div className="docs-hero__example" aria-label="Form Nodes example">
 
-```ts
-import { Component } from '@angular/core';
-
-import { field, FormNode, form } from 'form-nodes';
-
-@Component({
-  selector: 'app-profile-editor',
-  imports: [FormNode],
-  template: `
-    <input [formNode]="myForm.username" />
-    <p>Hello {{ myForm.username() }}</p>
-  `,
-})
-export class ProfileEditor {
-  myForm = form({
-    username: field(''),
-  });
-}
-```
+<CodeBlock language="ts">{quickStartSource}</CodeBlock>
 
   </div>
 </header>
