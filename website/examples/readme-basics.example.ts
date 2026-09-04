@@ -30,14 +30,15 @@ if (greeting() !== 'Hello, Ada!' || profile.address.city() !== 'London') {
 // #region writes
 profile.name.set('Grace');
 profile.name.update(name => name?.toUpperCase() ?? '');
-profile.patch({ address: { city: 'Paris' } });
+profile.address.city.set('Paris');
+profile.patch({ address: { country: 'France' } });
 
 profile.name(); // 'GRACE'
-profile.address(); // { city: 'Paris', country: 'UK' }
+profile.address(); // { city: 'Paris', country: 'France' }
 greeting(); // 'Hello, GRACE!'
 // #endregion writes
 
-if (greeting() !== 'Hello, GRACE!' || profile.address.country() !== 'UK' || profile.address.city() !== 'Paris') {
+if (greeting() !== 'Hello, GRACE!' || profile.address.country() !== 'France' || profile.address.city() !== 'Paris') {
   throw new Error('Field writes should update computed consumers and patch only the supplied branch.');
 }
 if (profile.dirty() || profile.touched()) {
@@ -91,8 +92,6 @@ const myForm = form({
     if (value() !== myForm.password()) {
       return { kind: 'passwordMismatch', message: 'Passwords must match.' };
     }
-
-    return null;
   }]),
 });
 // #endregion sibling-field

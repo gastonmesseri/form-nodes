@@ -26,7 +26,7 @@ import { field, FormNode, form, required } from 'form-nodes';
 export class ProfileEditor {
   myForm = form({
     username: field(''),
-    email: field('', [required])
+    email: field('', [required]),
   });
 }
 ```
@@ -226,10 +226,11 @@ children in the same object or array shape. These reads participate in Angular s
 ```ts
 profile.name.set('Grace');
 profile.name.update(name => name?.toUpperCase() ?? '');
-profile.patch({ address: { city: 'Paris' } });
+profile.address.city.set('Paris');
+profile.patch({ address: { country: 'France' } });
 
 profile.name(); // 'GRACE'
-profile.address(); // { city: 'Paris', country: 'UK' }
+profile.address(); // { city: 'Paris', country: 'France' }
 greeting(); // 'Hello, GRACE!'
 ```
 <!-- /example -->
