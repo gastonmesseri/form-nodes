@@ -5,64 +5,21 @@
 The goal is for shorthand declarations to be as predictable as explicit `field()`, `group()`,
 `form()`, and `array()` declarations, without making structurally ambiguous values guessable.
 
-### 1. Freeze the declaration contract
+- [x] Allow `array()` object templates to contain field shorthands, such as
+  `array({ name: '', age: 0 })`, with runtime normalization, template cloning, and TypeScript
+  inference matching the equivalent explicit `array({ name: field(''), age: field(0) })` declaration.
 
-- [x] Treat primitive values and `Date` instances as implicit `field()` declarations.
-- [x] Infer `field<unknown>` for `null` and `undefined` shorthand declarations.
-- [x] Treat plain object literals as implicit `group()` declarations.
-- [x] Preserve explicit node declarations without wrapping or replacing them.
-- [x] Reject array literals until their meaning is explicitly designed.
-- [ ] Define one shared leaf-versus-structure classification contract for both runtime normalization
-  and public TypeScript inference so they cannot drift apart.
-- [ ] Decide how every non-plain object category is handled, including `RegExp`, `URL`, `Map`,
-  `Set`, typed arrays, Temporal values, Moment-like values, and custom class instances.
-- [ ] Document `field(value)` as the unambiguous escape hatch for any value that could otherwise be
-  interpreted as structure.
+- Ensure that array().push is reactive, makes sort of reactive change (sort of immutability detected by effect/etc)
 
-### 2. Harden type inference
-
-- [ ] Add public type tests for strings, numbers, booleans, bigints, symbols, `Date`, `null`,
-  `undefined`, nested object literals, explicit nodes, and mixed declarations.
-- [ ] Verify literal widening, `as const`, `satisfies`, readonly properties, optional properties,
-  unions, and predeclared model objects.
-- [ ] Verify that validators and node options retain useful contextual typing when shorthand and
-  explicit declarations are mixed.
-- [ ] Add compile-time failures for ambiguous arrays and unsupported declaration values with
-  actionable error types where practical.
-- [ ] Measure deeply nested and wide definitions to prevent excessive type instantiation or poor
-  editor performance.
-
-### 3. Harden runtime normalization
-
-- [ ] Centralize normalization and exercise the same behavior through `form()` and `group()`, at the
-  root and at every nested depth.
-- [ ] Add runtime tests for special numbers, empty strings, `false`, bigint, symbols, invalid dates,
-  `null`, `undefined`, null-prototype objects, symbol keys, and objects with unusual prototypes.
-- [ ] Define and test behavior for enumerable accessors, inherited properties, reserved child names,
-  and prototype-pollution-sensitive keys such as `__proto__`.
-- [ ] Verify that implicit fields behave exactly like `field(value)` for reset, set, patch, clone,
-  validation, disabled/readonly state, parent/root/path ownership, injector inheritance, and binding.
-- [ ] Ensure diagnostics identify the complete declaration path and recommend the correct explicit
-  primitive when normalization fails.
-
-### 4. Decide dynamic mutation semantics
-
-- [ ] Decide whether `group.add()` and related dynamic APIs accept shorthand values or continue to
-  require explicit node definitions.
-- [ ] If dynamic shorthand is supported, reuse the same normalization and inference contract rather
-  than creating a second set of rules.
-- [ ] Cover detach, reparent, replace, reset, and late-created child ownership for implicit nodes.
-
-### 5. Design array shorthand separately
-
-- [ ] Keep `items: []` rejected until deciding whether it means an array-valued field, an
-  `array()` node, a tuple-shaped group, or initial values for a template.
-- [ ] Evaluate scalar item templates such as `array('')` separately from arrays used as property
-  values; do not make one syntax silently imply the other.
-- [ ] If array shorthand is adopted, specify empty-array inference, tuples, readonly arrays, object
-  items, heterogeneous values, template cloning, `trackBy`, validators, and options first.
-- [ ] Require an explicit syntax whenever an array declaration cannot preserve both runtime intent
-  and useful static inference.
+- Make first generic of form() and group() to be the model of the form(). (what is it right now?)
+  - e.g. 
+  form<{
+    username: string;
+    age: number;
+  }>({
+    username: field(''),
+    age: field(0),
+  });
 
 ### 6. Documentation, compatibility, and release
 
@@ -87,8 +44,8 @@ The goal is for shorthand declarations to be as predictable as explicit `field()
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 
 - [ ] Create something like the "params" concept of asyncvalidators also in the normal synchronous validators (only executed when shallow comparison is false)
-- [ ] Consider changing the @example to something different, like a heading with asterisks **Like this**
-- Validators internal (e.g. invalid date) [how to do that?]
+- [ ] Consider changing the @example to something different, like a heading with asterisks **Like this** (for better readability)
+- Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
 
 - controlState
   - [ ] Reconsider additional interaction notifications only when a supported forms API has a
@@ -110,6 +67,8 @@ The goal is for shorthand declarations to be as predictable as explicit `field()
 - SHORTHANDS for FIELDS
   - ...
   - quiza tambien soporte para moment() aunque sea a traves de un interfaz generico sin importar moment() (_isAMomentObject creo)
+  - decidir que hacer con los arrays
+  - document limitations of object like values in the group() form() field shorthands (notify that there could be discrepances between runtime and typescript, and suggest to only use shorthand with primitives like string | number | etc)
 
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
@@ -412,6 +371,72 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+### 5. Design array shorthand separately
+
+- [x] Resolve the former `items: []` ambiguity as an array-valued field. Every array used as an
+  object-node child is equivalent to `field(arrayValue)`, regardless of its length or contents.
+- [x] Keep scalar item templates such as `array('')` rejected. Require an explicit node template
+  such as `array(field(''))`; this keeps item configuration visible and does not imply anything
+  about arrays used as property values.
+- [x] Keep array-valued templates such as `array([])`, `array([''])`, and tuple templates rejected.
+  Require `array(field([...]))` for array-valued items or `array(array(...))` for nested dynamic
+  collections rather than guessing whether the first array describes a value, tuple, or structure.
+- [x] Decide against implicit `array()` inference for empty arrays, tuples, readonly arrays, object
+  items, and heterogeneous values. They consistently become atomic fields; template cloning,
+  `trackBy`, item validators, and array options belong only to explicit `array()` declarations.
+- [x] Require an explicit `array(...)` whenever a declaration intends a dynamic node collection,
+  preserving aligned runtime intent and useful static inference.
+- [x] Decide against the following proposed `array()` inference. It is retained here as decision
+  history; the declaration now intentionally infers `field([...])`, and consumers use explicit
+  `array(...)` when they need item nodes:
+  const myForm = form({
+    myArray: [{ name: 'Paul', age: 20 }, { name: 'Mark', age: 28 }],
+  });
+
+- [x] Field shorthand
+  - [x] Decide dynamic mutation semantics
+    - [x] Decide whether `group.add()` and related dynamic APIs accept shorthand values or continue to
+      require explicit node definitions: both `form.add()` and `group.add()` accept them.
+    - [x] If dynamic shorthand is supported, reuse the same normalization and inference contract rather
+      than creating a second set of rules.
+    - [x] Cover detach, reparent, replace, reset, and late-created child ownership for implicit nodes.
+  - [x] Harden runtime normalization
+    - [x] Centralize normalization and exercise the same behavior through `form()` and `group()`, at the
+      root and at every nested depth.
+    - [x] Add runtime tests for special numbers, empty strings, `false`, bigint, symbols, invalid dates,
+      `null`, `undefined`, null-prototype objects, symbol keys, and objects with unusual prototypes.
+    - [x] Define and test behavior for enumerable accessors, inherited properties, reserved child names,
+      and prototype-pollution-sensitive keys such as `__proto__`.
+    - [x] Verify that implicit fields behave exactly like `field(value)` for reset, set, patch, clone,
+      validation, disabled/readonly state, parent/root/path ownership, injector inheritance, and binding.
+    - [x] Ensure diagnostics identify the complete declaration path and recommend the correct explicit
+      primitive when normalization fails.
+  - [x] Add public type tests for strings, numbers, booleans, bigints, symbols, `Date`, `null`,
+    `undefined`, nested object literals, class instances, explicit nodes, and mixed declarations.
+  - [x] Verify literal widening, `as const`, `satisfies`, readonly properties, optional properties,
+    unions, and predeclared model objects.
+  - [x] Verify that validators and node options retain useful contextual typing when shorthand and
+    explicit declarations are mixed.
+  - [x] Add compile-time failures for ambiguous arrays and unsupported declaration values with
+    actionable error types where practical.
+  - [x] Measure deeply nested and wide definitions to prevent excessive type instantiation or poor
+    editor performance. Keep a 15-level mixed deep fixture and a 50-child mixed wide fixture under
+    budgets of 75,000 types and 1,100,000 instantiations with the package's supported TypeScript
+    version.
+  - [x] Treat primitive values and `Date` instances as implicit `field()` declarations.
+  - [x] Infer `field<unknown>` for `null` and `undefined` shorthand declarations.
+  - [x] Treat plain object literals as implicit `group()` declarations.
+  - [x] Preserve explicit node declarations without wrapping or replacing them.
+  - [x] Reject array literals until their meaning is explicitly designed.
+  - [x] Define one leaf-versus-structure contract for runtime normalization and public TypeScript
+    inference: preserve nodes, reject arrays, normalize plain structural definitions to groups, and
+    normalize every other value to a field.
+  - [x] Treat non-plain objects as implicit fields, including `RegExp`, `URL`, `Map`, `Set`, typed
+    arrays, Temporal values, Moment-like values, and custom class instances. Require an explicit
+    `field(value)` only at deliberately widened boundaries where TypeScript no longer carries the
+    concrete runtime type.
+  - [x] Document `field(value)` as the unambiguous escape hatch for any value that could otherwise be
+    interpreted as structure.
 - [x] Implement requiredIf validator
 - [x] Rename `injectBoundControl()` and its related public types to the shorter, source-neutral
   `useControlState()`, `ControlState`, `ControlStateSource`, `ControlStateError`, and
@@ -423,7 +448,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Preserve input cardinality in the return: one definition returns its exact node, while an
     object returns an exact keyed map of every attached node.
   - [x] Do not overload proxy assignment such as `myForm.newProperty = field('')`; structural
-    mutation remains explicit through `add()` and dynamic properties remain readonly lookups.
+    mutation remains explicit through `add()`.
+- [x] Prevent direct key access to dynamic `form()` and `group()` properties so incorrect names such
+  as `<input [formNode]="myForm.unexistingOrMistypedPropertyName">` fail Angular template checking.
+  Runtime keys use `.get()` or keyed access through `.children` instead.
 - [x] Keep `useControlState()` read-only except for `markAsTouched()`, which reports a native
   control interaction to the owning forms API.
   - [x] Do not add `setValue()`; custom controls write through `model()`, `FormValueControl`, or
@@ -447,7 +475,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Explain that form primitives use the familiar Angular signal value pattern while adding form-specific features.
 - [x] Add dynamic named children to `form()` and `group()`.
   - [x] Support `add(name, definition)` and atomic `add({ ... })` calls.
-  - [x] Expose safe `DynamicNode | undefined` direct dynamic properties.
+  - [x] Initially expose safe `DynamicNode | undefined` direct dynamic properties; subsequently
+    replace them with `.get()` and `.children[key]` so misspelled direct names fail type checking.
   - [x] Allow `remove(name)` for dynamically added children while preserving fixed-child types.
   - [x] Update behavior and consumer documentation with the complete dynamic-child contract.
 - [x] Add ESLINt with vt rules

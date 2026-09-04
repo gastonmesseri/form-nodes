@@ -1724,6 +1724,9 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
 - `includes()` and `indexOf()` compare node identity and accept the native optional `fromIndex` argument.
 - `forEach()`, `map()`, `filter()`, `find()`, `findIndex()`, `some()`, `every()`, `includes()`, `indexOf()`, and each iterator use the item snapshot captured when the operation begins; structural mutations during an active operation do not alter that traversal.
 - `length()` returns the current item count.
+- Every successful structural change publishes fresh `items()` and value-array snapshots. In
+  particular, `push()` invalidates reactive consumers of the array value and every ancestor value
+  while leaving previously read snapshots unchanged.
 - Item paths use decimal index segments such as `['sons', '0', 'name']`.
 - Items inherit `form()` from the root form containing the array.
 

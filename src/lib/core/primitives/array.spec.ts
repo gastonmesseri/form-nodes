@@ -1,4 +1,4 @@
-import { Injector, signal } from '@angular/core';
+import { Injector, computed, signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { form } from './form';
@@ -429,6 +429,28 @@ describe('array', () => {
       { name: 'Mono', age: 11 },
     ]);
     expect(sons.dirty()).toBe(false);
+  });
+
+  it('publishes immutable reactive snapshots when an item is pushed', () => {
+    const profile = form({ names: array(field(''), ['Marco']) });
+    const observedItems = computed(() => profile.names.items());
+    const observedValues = computed(() => profile.names());
+    const observedProfile = computed(() => profile());
+    const initialItems = observedItems();
+    const initialValues = observedValues();
+    const initialProfile = observedProfile();
+
+    const added = profile.names.push('Lia');
+
+    expect(observedItems()).not.toBe(initialItems);
+    expect(observedValues()).not.toBe(initialValues);
+    expect(observedProfile()).not.toBe(initialProfile);
+    expect(initialItems).toHaveLength(1);
+    expect(initialValues).toEqual(['Marco']);
+    expect(initialProfile).toEqual({ names: ['Marco'] });
+    expect(observedItems()).toEqual([profile.names[0], added]);
+    expect(observedValues()).toEqual(['Marco', 'Lia']);
+    expect(observedProfile()).toEqual({ names: ['Marco', 'Lia'] });
   });
 
   it('keeps structural mutations programmatic and preserves existing dirty state', () => {
