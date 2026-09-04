@@ -20,12 +20,13 @@ fallback validator-message catalog.
 | Node or subtree | `field()`, `form()`, `array()`, and `group()` options | The declared node; selected options inherit | Function sources are reactive |
 | Angular injector | `provideValidatorMessages()` | Nodes created in that injector scope | Selected message functions are reactive |
 | Angular injector | `provideFormNodeConfig()` | Descendant `[formNode]` and `$field`-backed `[formField]` bindings | Class predicates are reactive |
-| Factory set | `createFormPrimitives()` | Fields and shorthands created through that set | Explicit field options override the shared default |
+| Factory set | `createFormPrimitives()` | Nodes created through that set | Catalog sources are reactive; node options override shared defaults |
 | JavaScript process | `configureGlobalValidatorMessages()` | Fallback for every node | Catalog sources and selected messages are reactive |
 
 There is currently no process-wide API that changes defaults such as nullability, debounce,
-disabled state, or validators. Configure those decisions explicitly at the appropriate node or
-ancestor.
+disabled state, or validators. `createFormPrimitives()` can scope nullability, validator messages,
+and injector inheritance policies to one factory set; configure other decisions at the appropriate
+node or ancestor.
 
 ### Find configuration by concern
 
@@ -236,9 +237,10 @@ Message resolution uses the first definition that returns a message:
 
 1. The validator's local `message` option.
 2. The closest form or array `validatorMessages` catalog, walking toward the root.
-3. The closest captured `provideValidatorMessages()` catalog, walking toward the root.
-4. `configureGlobalValidatorMessages()`.
-5. The built-in English message.
+3. The closest `createFormPrimitives()` validator-message default, walking toward the root.
+4. The closest captured `provideValidatorMessages()` catalog, walking toward the root.
+5. `configureGlobalValidatorMessages()`.
+6. The built-in English message.
 
 Missing catalog entries and callbacks returning `undefined` continue to the next layer. A nested
 catalog therefore overrides individual keys without having to repeat every message.

@@ -163,9 +163,10 @@ Message configuration follows this precedence, from highest to lowest:
 
 1. Validator-local `message`.
 2. Closest form or array `validatorMessages` catalog.
-3. Closest `provideValidatorMessages()` provider.
-4. `configureGlobalValidatorMessages()`.
-5. Built-in English message.
+3. Closest `createFormPrimitives()` validator-message default.
+4. Closest `provideValidatorMessages()` provider.
+5. `configureGlobalValidatorMessages()`.
+6. Built-in English message.
 
 Use provider or form scopes for request-specific SSR locales. Process-wide configuration is better
 suited to non-Angular usage or one immutable application default.

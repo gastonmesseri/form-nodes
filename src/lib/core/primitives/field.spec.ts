@@ -51,11 +51,17 @@ describe('field', () => {
     const nonNullableFields = createFormPrimitives({ nullable: false }).field;
     const forcedNonNullable = nullableFields.strict('Marco');
     const forcedNullable = nonNullableFields.nullable('Lia');
+    const emptyNullable = nullableFields.nullable<string>();
+    const validatedNonNullable = nullableFields.strict('', [required]);
+    const validatedNullable = nonNullableFields.nullable('', [required]);
 
     forcedNullable.set(null);
 
     expect(forcedNonNullable()).toBe('Marco');
     expect(forcedNullable()).toBeNull();
+    expect(emptyNullable()).toBeNull();
+    expect(validatedNonNullable.invalid()).toBe(true);
+    expect(validatedNullable.invalid()).toBe(true);
   });
 
   it('defaults createFormPrimitives and its nullable option to nullable fields', () => {
@@ -64,6 +70,49 @@ describe('field', () => {
 
     expect(defaultField()).toBe('Marco');
     expect(emptyOptionsField()).toBe('Lia');
+  });
+
+  it('uses reactive validator message defaults from configured primitives', () => {
+    const language = signal<'en' | 'es'>('en');
+    const { field: configuredField } = createFormPrimitives({
+      validatorMessages: () => ({
+        required: () => language() === 'en' ? 'Enter a value.' : 'Introduce un valor.',
+      }),
+    });
+    const name = configuredField('', [required]);
+
+    expect(name.getError('required')?.message).toBe('Enter a value.');
+
+    language.set('es');
+
+    expect(name.getError('required')?.message).toBe('Introduce un valor.');
+  });
+
+  it('applies configured injector inheritance defaults and permits local overrides', async () => {
+    const dependency = signal('initial');
+    const blockedValidation = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const inheritedValidation = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const { field: configuredField } = createFormPrimitives({ inheritInjector: false });
+    const blocked = configuredField('', [asyncValidator(blockedValidation)]);
+    const inherited = configuredField('', [asyncValidator(inheritedValidation)], { inheritInjector: true });
+    const injector = Injector.create({ providers: [] });
+    form({ blocked, inherited }, { injector });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    injector.destroy();
+    dependency.set('after destroy');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(blockedValidation).toHaveBeenCalledTimes(2);
+    expect(inheritedValidation).toHaveBeenCalledOnce();
   });
 
   it('creates configured fields without an injection context', () => {
