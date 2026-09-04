@@ -402,8 +402,30 @@ and the [Built-in validator reference](https://gastonmesseri.github.io/ng-forms/
 
 ## Reactive rules and state
 
-Pass a function when a constraint or option should follow another signal. Import `signal` from
-`@angular/core` for the sources in this example:
+Start with `requiredIf()`: require a company name only for business accounts. Import `requiredIf`
+from `form-nodes` and `signal` from `@angular/core`:
+
+<!-- example: readme-basics.example.ts#required-if -->
+```ts
+const businessAccount = signal(false);
+
+const companyForm = form({
+  companyName: field('', [requiredIf(() => businessAccount())]),
+});
+
+companyForm.companyName.required(); // false
+companyForm.valid(); // true
+
+businessAccount.set(true);
+companyForm.companyName.required(); // true
+companyForm.valid(); // false — the company name is now required
+```
+<!-- /example -->
+
+The condition is reactive: changing `businessAccount` updates both validation and the field's
+`required()` state without rebuilding the form.
+
+The same callback pattern works with other constraints and state options:
 
 <!-- example: readme-basics.example.ts#reactive -->
 ```ts
