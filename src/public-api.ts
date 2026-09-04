@@ -24,7 +24,6 @@ export { minLength } from './lib/core/validation/validators/min-length';
 export { dateBetween } from './lib/core/validation/validators/date-between';
 export { uniqueItems } from './lib/core/validation/validators/unique-items';
 export type { FormNodeBinding } from './lib/core/types/form-node-binding.type';
-export { useControlState, type ControlState, type ControlStateDisabledReason, type ControlStateError, type ControlStateSource } from './lib/core/control-state-hook/control-state';
 export type { Field, FieldApi, FieldOptions } from './lib/core/primitives/field';
 export type { ValidatorOptions } from './lib/core/validation/validators/validator-options';
 export { provideFormNodePassThrough } from './lib/core/directives/form-node/form-node-pass-through';
@@ -34,6 +33,13 @@ export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } 
 export type { DisabledReason, DisabledStateSource, DynamicNode, MarkAsTouchedOptions, Node, NodeApi } from './lib/core/types/node.type';
 export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/core/directives/form-node/form-node-config';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/core/validation/async-validator';
+export {
+  useControlState,
+  type ControlState,
+  type ControlStateError,
+  type ControlStateSource,
+  type ControlStateDisabledReason,
+} from './lib/core/control-state-hook/control-state';
 export {
   provideValidatorMessages,
   configureGlobalValidatorMessages,
@@ -65,6 +71,7 @@ export type {
   FormSet,
   FormPatch,
   FormValue,
+  FormValueContract,
   FormOptions,
   FormSubmissionOptions,
 } from './lib/core/primitives/form';

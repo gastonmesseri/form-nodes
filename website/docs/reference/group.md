@@ -108,6 +108,9 @@ group(definitions, options?);
 group(definitions, validators, options?);
 ```
 
+Use [`FormValueContract<Model>`](./form-value-contract.md) with `satisfies` to check a group against
+a named aggregate value while preserving its inferred child-node types.
+
 ### `field()` shorthand
 
 Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as arrays

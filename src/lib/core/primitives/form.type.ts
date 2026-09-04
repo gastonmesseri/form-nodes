@@ -236,6 +236,30 @@ export type FormValue<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeValue<TNodes[K]>;
 };
 
+/**
+ * Structural contract for checking a form or group against an aggregate value type without
+ * replacing its inferred child-node types.
+ *
+ * @example Validate a named model while preserving an `ArrayNode` child.
+ * ```ts
+ * type Profile = {
+ *   username: string | null;
+ *   items: (string | null)[];
+ * };
+ *
+ * const profile = form({
+ *   username: field(''),
+ *   items: array(field('')),
+ * }) satisfies FormValueContract<Profile>;
+ *
+ * profile.items.push('Angular');
+ * ```
+ */
+export type FormValueContract<TValue extends object> = {
+  (): TValue;
+  value: Signal<TValue>;
+};
+
 /** Complete object accepted by a form's `set()`, recursively using each child's set type. */
 export type FormSet<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeSet<TNodes[K]>;

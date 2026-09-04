@@ -1,10 +1,10 @@
 import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { form } from './primitives/form';
 import { field } from './primitives/field';
 import { group } from './primitives/group';
 import { array } from './primitives/array';
+import { form, type FormValueContract } from './primitives/form';
 import { min } from './validation/validators/min';
 import type { DynamicNode, Node } from './types/node.type';
 import { required } from './validation/validators/required';
@@ -13,6 +13,19 @@ import { requiredIf } from './validation/validators/required-if';
 import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
 
 describe('types', () => {
+  it('checks an aggregate value contract without replacing inferred child nodes', () => {
+    type Profile = { username: string | null; items: (string | null)[] };
+    const profile = form({
+      username: field(''),
+      items: array(field('')),
+    }) satisfies FormValueContract<Profile>;
+
+    expectTypeOf(profile()).toEqualTypeOf<Profile>();
+    expectTypeOf(profile.value()).toEqualTypeOf<Profile>();
+    expectTypeOf(profile.items.nodeType()).toEqualTypeOf<'array'>();
+    expectTypeOf(profile.items.push).toBeCallableWith('Angular');
+  });
+
   it('infers concise field definitions and nested groups', () => {
     const profile = form({
       name: '',

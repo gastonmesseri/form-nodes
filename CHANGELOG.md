@@ -11,6 +11,8 @@ consumer migration guide.
 
 ### Added
 
+- `FormValueContract<TValue>` for checking an inferred form or group against a named aggregate value
+  with `satisfies` while preserving concrete child-node types such as `ArrayNode`.
 - Consumer documentation website, including tutorials, reference pages, recipes, integrations,
   executable examples, and an interactive playground.
 - Typed `field()`, `group()`, `form()`, and `array()` signal-based form primitives. `group()` owns

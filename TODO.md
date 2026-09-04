@@ -1,26 +1,3 @@
-# TODO
-
-## Declaration shorthand roadmap
-
-The goal is for shorthand declarations to be as predictable as explicit `field()`, `group()`,
-`form()`, and `array()` declarations, without making structurally ambiguous values guessable.
-
-- [x] Allow `array()` object templates to contain field shorthands, such as
-  `array({ name: '', age: 0 })`, with runtime normalization, template cloning, and TypeScript
-  inference matching the equivalent explicit `array({ name: field(''), age: field(0) })` declaration.
-
-- Ensure that array().push is reactive, makes sort of reactive change (sort of immutability detected by effect/etc)
-
-- Make first generic of form() and group() to be the model of the form(). (what is it right now?)
-  - e.g. 
-  form<{
-    username: string;
-    age: number;
-  }>({
-    username: field(''),
-    age: field(0),
-  });
-
 ### 6. Documentation, compatibility, and release
 
 - [ ] Add a declaration matrix comparing shorthand syntax with its explicit equivalent and showing
@@ -371,29 +348,40 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
-### 5. Design array shorthand separately
-
-- [x] Resolve the former `items: []` ambiguity as an array-valued field. Every array used as an
-  object-node child is equivalent to `field(arrayValue)`, regardless of its length or contents.
-- [x] Keep scalar item templates such as `array('')` rejected. Require an explicit node template
-  such as `array(field(''))`; this keeps item configuration visible and does not imply anything
-  about arrays used as property values.
-- [x] Keep array-valued templates such as `array([])`, `array([''])`, and tuple templates rejected.
-  Require `array(field([...]))` for array-valued items or `array(array(...))` for nested dynamic
-  collections rather than guessing whether the first array describes a value, tuple, or structure.
-- [x] Decide against implicit `array()` inference for empty arrays, tuples, readonly arrays, object
-  items, and heterogeneous values. They consistently become atomic fields; template cloning,
-  `trackBy`, item validators, and array options belong only to explicit `array()` declarations.
-- [x] Require an explicit `array(...)` whenever a declaration intends a dynamic node collection,
-  preserving aligned runtime intent and useful static inference.
-- [x] Decide against the following proposed `array()` inference. It is retained here as decision
-  history; the declaration now intentionally infers `field([...])`, and consumers use explicit
-  `array(...)` when they need item nodes:
-  const myForm = form({
-    myArray: [{ name: 'Paul', age: 20 }, { name: 'Mark', age: 28 }],
+- [x] Make first generic of form() and group() to be the model of the form(). (what is it right now?)
+  - [x] e.g.
+  form<{
+    username: string;
+    age: number;
+  }>({
+    username: field(''),
+    age: field(0),
   });
-
+- [x] Ensure that array().push is reactive, makes sort of reactive change (sort of immutability detected by effect/etc)
 - [x] Field shorthand
+  - [x] Design array shorthand separately
+    - [x] Resolve the former `items: []` ambiguity as an array-valued field. Every array used as an
+      object-node child is equivalent to `field(arrayValue)`, regardless of its length or contents.
+    - [x] Keep scalar item templates such as `array('')` rejected. Require an explicit node template
+      such as `array(field(''))`; this keeps item configuration visible and does not imply anything
+      about arrays used as property values.
+    - [x] Keep array-valued templates such as `array([])`, `array([''])`, and tuple templates rejected.
+      Require `array(field([...]))` for array-valued items or `array(array(...))` for nested dynamic
+      collections rather than guessing whether the first array describes a value, tuple, or structure.
+    - [x] Decide against implicit `array()` inference for empty arrays, tuples, readonly arrays, object
+      items, and heterogeneous values. They consistently become atomic fields; template cloning,
+      `trackBy`, item validators, and array options belong only to explicit `array()` declarations.
+    - [x] Require an explicit `array(...)` whenever a declaration intends a dynamic node collection,
+      preserving aligned runtime intent and useful static inference.
+    - [x] Decide against the following proposed `array()` inference. It is retained here as decision
+      history; the declaration now intentionally infers `field([...])`, and consumers use explicit
+      `array(...)` when they need item nodes:
+      const myForm = form({
+        myArray: [{ name: 'Paul', age: 20 }, { name: 'Mark', age: 28 }],
+      });
+  - [x] Allow `array()` object templates to contain field shorthands, such as
+    `array({ name: '', age: 0 })`, with runtime normalization, template cloning, and TypeScript
+    inference matching the equivalent explicit `array({ name: field(''), age: field(0) })` declaration.
   - [x] Decide dynamic mutation semantics
     - [x] Decide whether `group.add()` and related dynamic APIs accept shorthand values or continue to
       require explicit node definitions: both `form.add()` and `group.add()` accept them.
