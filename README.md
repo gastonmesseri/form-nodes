@@ -332,26 +332,19 @@ sync with the password entered elsewhere in the same form:
 ```ts
 const myForm = form({
   password: field('', [required]),
-  confirmation: field('', [required, ctx => {
-    const confirmation = ctx.value();
-    if (!confirmation) return null;
-
-    if (confirmation !== myForm.password()) {
+  confirmation: field('', [required, ({ value }) => {
+    if (value() !== myForm.password()) {
       return { kind: 'passwordMismatch', message: 'Passwords must match.' };
     }
-
-    return null;
   }]),
 });
 ```
 <!-- /example -->
 
-`ctx.value()` reads the confirmation, while `myForm.password()` reads its sibling. That sibling
+`value()` reads the confirmation, while `myForm.password()` reads its sibling. That sibling
 read is a reactive dependency: changing the password revalidates the confirmation even if the
 confirmation itself has not changed. The mismatch error belongs to `myForm.confirmation`, so it
 appears in that field's `errors()` and in the form's `allErrors()`.
-
-The empty-value check leaves missing confirmation values to `required`.
 
 Attach the rule to the form instead when the error should belong to the complete form:
 
@@ -372,7 +365,7 @@ const passwords = form({
 <!-- /example -->
 
 A validator returns `null`, `undefined`, or nothing when valid, and an error or array of errors
-when invalid. `ctx.value()` reads the value being validated; `ctx.node()` gives access to the
+when invalid. Destructure `value` to read the value being validated, or `node` for access to the
 validated node and its state. Use `validator<TValue>()` when authoring a separately declared,
 reusable validator with an explicit value type.
 

@@ -87,11 +87,8 @@ if (!account.valid() || account.allErrors().length !== 0) {
 // #region sibling-field
 const myForm = form({
   password: field('', [required]),
-  confirmation: field('', [required, ctx => {
-    const confirmation = ctx.value();
-    if (!confirmation) return null;
-
-    if (confirmation !== myForm.password()) {
+  confirmation: field('', [required, ({ value }) => {
+    if (value() !== myForm.password()) {
       return { kind: 'passwordMismatch', message: 'Passwords must match.' };
     }
 
@@ -101,7 +98,7 @@ const myForm = form({
 // #endregion sibling-field
 
 if (!myForm.confirmation.getError('required') || myForm.confirmation.getError('passwordMismatch')) {
-  throw new Error('An empty confirmation should be handled by required rather than the sibling rule.');
+  throw new Error('Matching empty values should fail required validation without a password mismatch.');
 }
 myForm.patch({ password: 'secret', confirmation: 'secret' });
 if (!myForm.valid()) throw new Error('Matching passwords should make the sibling-rule example valid.');
