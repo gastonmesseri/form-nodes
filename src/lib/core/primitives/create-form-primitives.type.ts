@@ -6,24 +6,22 @@ import type { ValidatorMessages } from '../validation/validator-messages';
 import type { ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
 import type { AddedNode, Form, FormOptions, FormValue, NormalizedNodeWithDefault, NormalizedNodesWithDefault, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
-type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { nullable?: true };
-type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { nullable?: false };
-type ForcedNullableFieldOptions<TValue> = Omit<FieldOptions<TValue | null>, 'nullable'>;
-type ForcedNonNullableFieldOptions<TValue> = Omit<FieldOptions<TValue>, 'nullable'>;
+type NullableFieldOptions<TValue> = FieldOptions<TValue | null>;
+type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
 
 interface FieldNullabilityOverrides {
   /** Creates a field that excludes `null`, independently of the configured default. */
-  strict<TValue extends {}>(value: TValue, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
-  strict<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  strict<TValue extends {}>(value: TValue, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  strict<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
   /**
    * Creates a field that includes `null`, independently of the configured default.
    * The package-level `field<T>()` already returns `Field<T | null>` by default; this method is
-   * useful for an explicit declaration or for overriding `{ nullable: false }`.
+   * useful for an explicit declaration or for overriding a non-nullable factory default.
    */
-  nullable(value: null | undefined, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;
-  nullable<TValue>(value?: TValue | null, options?: ForcedNullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
-  nullable(value: null | undefined, validators: ValidatorSource<unknown>, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;
-  nullable<TValue>(value: TValue | null | undefined, validators: ValidatorSource<NoInfer<TValue | null>>, options?: ForcedNullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  nullable(value: null | undefined, options?: NullableFieldOptions<unknown>): Field<unknown>;
+  nullable<TValue>(value?: TValue | null, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  nullable(value: null | undefined, validators: ValidatorSource<unknown>, options?: NullableFieldOptions<unknown>): Field<unknown>;
+  nullable<TValue>(value: TValue | null | undefined, validators: ValidatorSource<NoInfer<TValue | null>>, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
 }
 
 export interface NonNullableFieldFactory extends FieldNullabilityOverrides {
@@ -35,8 +33,6 @@ export interface NonNullableFieldFactory extends FieldNullabilityOverrides {
   <TValue>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>): Field<TValue>;
   <TValue extends {}>(value: TValue, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
   <TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
-  <TValue>(value: TValue | null, options: NullableFieldOptions<NoInfer<TValue>> & { nullable: true }): Field<TValue | null>;
-  <TValue>(value: TValue | null, validators: ValidatorSource<NoInfer<TValue | null>>, options: NullableFieldOptions<NoInfer<TValue>> & { nullable: true }): Field<TValue | null>;
 }
 
 export type FieldFactory<TNullable extends boolean> = ([TNullable] extends [false]
@@ -104,7 +100,7 @@ export interface ArrayFactory<TNullable extends boolean> {
 }
 
 export type FormPrimitivesOptions<TNullable extends boolean = true> = {
-  /** Default nullability for fields without an explicit `nullable` option. Defaults to `true`. */
+  /** Default nullability for fields created by this primitive set. Defaults to `true`. */
   nullable?: TNullable;
   /** Default built-in validator messages for nodes created by these factories. */
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);

@@ -1,7 +1,7 @@
 import type { Equal, Expect, HasKey } from './assert.types';
 import { FormNode, createFormPrimitives, field, useControlState, provideFormNodeConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
 
-const name = field('David', { nullable: false });
+const name = field.strict('David');
 const configuredForms: FormPrimitives<false> = createFormPrimitives({ nullable: false } satisfies FormPrimitivesOptions<false>);
 declare const nameBinding: FormNodeBinding<typeof name>;
 declare const nameDirective: FormNode<typeof name>;

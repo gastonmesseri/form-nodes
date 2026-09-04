@@ -105,7 +105,7 @@ myForm.name.set(null);
 
 Applications that prefer non-nullable fields by default can create an isolated primitive set with
 [`createFormPrimitives({ nullable: false })`](./create-form-primitives.md). The package-level `field()` remains
-nullable by default, and an explicit field option always takes precedence.
+nullable by default. Use the explicit field methods below for local overrides.
 
 Use the short methods when one declaration should be independent of that default:
 
@@ -158,7 +158,6 @@ const myForm = form({
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | [`validators`](#field-validators-option) | validator, validator array, or reactive source | Validates the field value |
-| [`nullable`](#field-nullable-option) | boolean | Includes or excludes `null` from the public value type |
 | [`injector`](#field-injector-option) | Angular `Injector` | Provides this node's preferred lifecycle owner |
 | [`adoptBindingInjector`](#field-adoptbindinginjector-option) | `boolean` | Temporarily adopts a direct `[formNode]` host injector; defaults to `true` |
 | [`inheritInjector`](#field-inheritinjector-option) | `boolean` | Uses the nearest ancestor injector when no own injector exists; defaults to `true` |
@@ -201,24 +200,6 @@ const username = field('', {
 
 username.invalid(); // true
 ```
-
-#### nullable {#field-nullable-option}
-
-**Signature:** `nullable?: boolean`
-
-Controls whether `null` belongs to the public value type. It defaults to `true`.
-
-```ts
-const username = field('', {
-  nullable: false,
-});
-
-username.set('ada');
-// username.set(null); // TypeScript error
-```
-
-For a local override, `field.strict(value)` is equivalent to setting `nullable: false`, and
-`field.nullable(value)` is equivalent to setting `nullable: true`.
 
 #### debounce {#field-debounce-option}
 

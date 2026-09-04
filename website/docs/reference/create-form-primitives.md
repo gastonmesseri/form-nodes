@@ -81,7 +81,7 @@ an injector to the relevant root or boundary node instead.
 
 ## Precedence
 
-An explicit field option takes precedence over the shared default:
+An explicit field method takes precedence over the shared default:
 
 ```ts
 const { field } = createFormPrimitives({ nullable: false });

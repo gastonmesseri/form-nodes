@@ -50,7 +50,7 @@ describe('array property-based invariants', () => {
     fc.assert(fc.property(
       fc.array(operationArbitrary, { minLength: 1, maxLength: 75 }),
       (operations) => {
-        const names = array(field('', { nullable: false }));
+        const names = array(field.strict(''));
         let model: string[] = [];
 
         const expectInvariants = () => {
@@ -138,8 +138,8 @@ describe('array property-based invariants', () => {
       fc.array(snapshotArbitrary, { minLength: 1, maxLength: 30 }),
       (snapshots) => {
         const people = array({
-          id: field(0, { nullable: false }),
-          name: field('', { nullable: false }),
+          id: field.strict(0),
+          name: field.strict(''),
         }, [], { trackBy: person => person.id });
 
         snapshots.forEach((snapshot) => {

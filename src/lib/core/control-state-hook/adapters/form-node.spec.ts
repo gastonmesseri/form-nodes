@@ -37,12 +37,12 @@ class StringHost {
   minimumLength = signal<number | undefined>(3);
   maximumLength = signal<number | undefined>(20);
   expression = signal<RegExp | undefined>(/^[a-z]+$/i);
-  name = field('', [
+  name = field.strict('', [
     required,
     minLength(() => this.minimumLength()),
     maxLength(() => this.maximumLength()),
     pattern(() => this.expression()),
-  ], { nullable: false });
+  ]);
 }
 
 @Component({
@@ -53,7 +53,7 @@ class StringHost {
 class NumericHost {
   minimum = signal<number | undefined>(1);
   maximum = signal<number | undefined>(10);
-  amount = field(5, [min(() => this.minimum()), max(() => this.maximum())], { nullable: false });
+  amount = field.strict(5, [min(() => this.minimum()), max(() => this.maximum())]);
 }
 
 @Component({
@@ -63,9 +63,9 @@ class NumericHost {
 })
 class PendingHost {
   resolveValidation: (() => void) | undefined;
-  amount = field(5, [asyncValidator(() => new Promise<null>((resolve) => {
+  amount = field.strict(5, [asyncValidator(() => new Promise<null>((resolve) => {
     this.resolveValidation = () => resolve(null);
-  }))], { nullable: false });
+  }))]);
 }
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');

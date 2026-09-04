@@ -147,7 +147,7 @@ describe('FormNode', () => {
       imports: [DelegatingControl, FormNode],
     })
     class PassThroughHost {
-      readonly name = field('initial', { nullable: false });
+      readonly name = field.strict('initial');
     }
 
     const fixture = TestBed.createComponent(PassThroughHost);
@@ -176,7 +176,7 @@ describe('FormNode', () => {
       imports: [DelegatesFormNode, FormNode],
     })
     class PassThroughHost {
-      readonly name = field('initial', { nullable: false });
+      readonly name = field.strict('initial');
     }
 
     const fixture = TestBed.createComponent(PassThroughHost);
@@ -203,7 +203,7 @@ describe('FormNode', () => {
       })],
     })
     class Host {
-      name = field('', [required], { nullable: false });
+      name = field.strict('', [required]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -250,7 +250,7 @@ describe('FormNode', () => {
       providers: [provideFormNodeConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES })],
     })
     class Host {
-      name = field('', [required], { nullable: false });
+      name = field.strict('', [required]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -286,7 +286,7 @@ describe('FormNode', () => {
       imports: [ExplicitSignalControl, FormNode],
     })
     class Host {
-      name = field('Marco', { nullable: false });
+      name = field.strict('Marco');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -322,7 +322,7 @@ describe('FormNode', () => {
       imports: [TransformedStateControl, FormNode],
     })
     class Host {
-      readonly name = field('Marco', { nullable: false });
+      readonly name = field.strict('Marco');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -357,8 +357,8 @@ describe('FormNode', () => {
       imports: [ReboundSignalControl, FormNode],
     })
     class Host {
-      readonly first = field('first', { nullable: false });
-      readonly second = field('second', { nullable: false });
+      readonly first = field.strict('first');
+      readonly second = field.strict('second');
       readonly selected = signal<Field<string>>(this.first);
     }
 
@@ -410,8 +410,8 @@ describe('FormNode', () => {
         imports: [ReboundAggregateControl, FormNode],
       })
       class Host {
-        readonly first = form({ name: field('first', { nullable: false }) }, { debounce: 100 });
-        readonly second = form({ name: field('second', { nullable: false }) }, { debounce: 100 });
+        readonly first = form({ name: field.strict('first') }, { debounce: 100 });
+        readonly second = form({ name: field.strict('second') }, { debounce: 100 });
         readonly selected = signal(this.first);
       }
 
@@ -465,7 +465,7 @@ describe('FormNode', () => {
         imports: [ResetDebounceSignalControl, FormNode],
       })
       class Host {
-        readonly name = field('initial', { debounce: 100, nullable: false });
+        readonly name = field.strict('initial', { debounce: 100 });
       }
 
       const fixture = TestBed.createComponent(Host);
@@ -510,7 +510,7 @@ describe('FormNode', () => {
       imports: [BlurDebounceSignalControl, FormNode],
     })
     class Host {
-      readonly profile = form({ name: field('initial', { nullable: false }) }, { debounce: 'blur' });
+      readonly profile = form({ name: field.strict('initial') }, { debounce: 'blur' });
       readonly name = this.profile.name;
     }
 
@@ -609,7 +609,7 @@ describe('FormNode', () => {
       imports: [DebouncedAggregateControl, FormNode],
     })
     class Host {
-      readonly profile = form({ name: field('David', { nullable: false }) }, { debounce: 'blur' });
+      readonly profile = form({ name: field.strict('David') }, { debounce: 'blur' });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -718,7 +718,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -778,9 +778,9 @@ describe('FormNode', () => {
     })
     class Host {
       readonly profile = form({
-        first: field('first', { nullable: false }),
-        second: field('second', { nullable: false }),
-        items: array(field('', { nullable: false }), 2),
+        first: field.strict('first'),
+        second: field.strict('second'),
+        items: array(field.strict(''), 2),
       });
     }
 
@@ -809,7 +809,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -836,8 +836,8 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly first = field('first', { nullable: false });
-      readonly second = field('second', { nullable: false });
+      readonly first = field.strict('first');
+      readonly second = field.strict('second');
       readonly active = signal(this.first);
     }
 
@@ -867,9 +867,9 @@ describe('FormNode', () => {
     })
     class Host {
       readonly profile = form({
-        name: field('David', { nullable: false }),
+        name: field.strict('David'),
         address: form({
-          city: field('Zurich', { nullable: false }),
+          city: field.strict('Zurich'),
         }),
       });
     }
@@ -905,8 +905,8 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly first = field('first', { nullable: false });
-      readonly second = field('second', { nullable: false });
+      readonly first = field.strict('first');
+      readonly second = field.strict('second');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -926,7 +926,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly profile = form({ age: field(23, min(30), { nullable: false }) });
+      readonly profile = form({ age: field.strict(23, min(30)) });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -976,7 +976,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly age = field(23, { nullable: false });
+      readonly age = field.strict(23);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1029,7 +1029,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly age = field(23, [min(30)], { nullable: false });
+      readonly age = field.strict(23, [min(30)]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1059,8 +1059,8 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly first = field(23, { nullable: false });
-      readonly second = field(42, { nullable: false });
+      readonly first = field.strict(23);
+      readonly second = field.strict(42);
       readonly selected = signal<Field<number>>(this.first);
     }
 
@@ -1103,7 +1103,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('', [required], { nullable: false });
+      readonly name = field.strict('', [required]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1133,7 +1133,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly profile = form({ name: field('David', { hidden: true, nullable: false }) });
+      readonly profile = form({ name: field.strict('David', { hidden: true }) });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1160,7 +1160,7 @@ describe('FormNode', () => {
     })
     class Host {
       readonly hidden = signal(false);
-      readonly name = field('David', { hidden: () => this.hidden(), nullable: false });
+      readonly name = field.strict('David', { hidden: () => this.hidden() });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1189,7 +1189,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('David', { hidden: true, nullable: false });
+      readonly name = field.strict('David', { hidden: true });
     }
 
     const global = globalThis as typeof globalThis & { ngDevMode: unknown };
@@ -1220,15 +1220,15 @@ describe('FormNode', () => {
     })
     class Host {
       readonly minimum = signal<number | undefined>(18);
-      readonly age = field(20, [min(() => this.minimum()), max(100)], { nullable: false });
-      readonly code = field('abc', [minLength(2), maxLength(5), pattern(/^[a-z]+$/), pattern(/^.{3}$/)], { nullable: false });
-      readonly date = field(new Date('2026-06-01T00:00:00.000Z'), [
+      readonly age = field.strict(20, [min(() => this.minimum()), max(100)]);
+      readonly code = field.strict('abc', [minLength(2), maxLength(5), pattern(/^[a-z]+$/), pattern(/^.{3}$/)]);
+      readonly date = field.strict(new Date('2026-06-01T00:00:00.000Z'), [
         minDate(new Date('2026-01-02T00:00:00.000Z')),
         maxDate(new Date('2026-12-03T00:00:00.000Z')),
-      ], { nullable: false });
-      readonly month = field(new Date('2026-06-01T00:00:00.000Z'), [
+      ]);
+      readonly month = field.strict(new Date('2026-06-01T00:00:00.000Z'), [
         minDate(new Date('2026-01-02T00:00:00.000Z')),
-      ], { nullable: false });
+      ]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1267,7 +1267,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly value = field(5, [min(1), max(9)], { nullable: false });
+      readonly value = field.strict(5, [min(1), max(9)]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1297,8 +1297,8 @@ describe('FormNode', () => {
     class Host {
       readonly numericType = signal('number');
       readonly textualType = signal('email');
-      readonly amount = field(15, [min(10), max(20)], { nullable: false });
-      readonly code = field('abc', [minLength(2), maxLength(10)], { nullable: false });
+      readonly amount = field.strict(15, [min(10), max(20)]);
+      readonly code = field.strict('abc', [minLength(2), maxLength(10)]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1326,7 +1326,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly value = field('abc', [minLength(2), maxLength(5)], { nullable: false });
+      readonly value = field.strict('abc', [minLength(2), maxLength(5)]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1353,7 +1353,7 @@ describe('FormNode', () => {
         imports: [FormNode],
       })
       class Host {
-        readonly name = field('David', { debounce: 100, nullable: false });
+        readonly name = field.strict('David', { debounce: 100 });
       }
 
       const fixture = TestBed.createComponent(Host);
@@ -1382,7 +1382,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('initial', { debounce: 'blur', nullable: false });
+      readonly name = field.strict('initial', { debounce: 'blur' });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1412,7 +1412,7 @@ describe('FormNode', () => {
         imports: [FormNode],
       })
       class Host {
-        readonly profile = form({ name: field('initial', { nullable: false }) }, { debounce: 100 });
+        readonly profile = form({ name: field.strict('initial') }, { debounce: 100 });
       }
 
       const fixture = TestBed.createComponent(Host);
@@ -1457,8 +1457,8 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly age = field(23, { nullable: false });
-      readonly active = field(false, { nullable: false });
+      readonly age = field.strict(23);
+      readonly active = field.strict(false);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1485,7 +1485,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly city = field('Zurich', { nullable: false });
+      readonly city = field.strict('Zurich');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1520,8 +1520,8 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly city = field('Zurich', { nullable: false });
-      readonly cities = field<string[]>(['Madrid'], { nullable: false });
+      readonly city = field.strict('Zurich');
+      readonly cities = field.strict<string[]>(['Madrid']);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1588,8 +1588,8 @@ describe('FormNode', () => {
       imports: [FormNode, TestCva],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
-      readonly alternative = field('Lia', { nullable: false });
+      readonly name = field.strict('David');
+      readonly alternative = field.strict('Lia');
       readonly active = signal(this.name);
     }
 
@@ -1666,7 +1666,7 @@ describe('FormNode', () => {
       imports: [BlurDebounceCva, FormNode],
     })
     class Host {
-      readonly name = field('initial', { debounce: 'blur', nullable: false });
+      readonly name = field.strict('initial', { debounce: 'blur' });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1692,7 +1692,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     expect(() => TestBed.createComponent(Host).detectChanges())
@@ -1724,7 +1724,7 @@ describe('FormNode', () => {
       imports: [AmbiguousCva, FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     expect(() => TestBed.createComponent(Host).detectChanges())
@@ -1758,7 +1758,7 @@ describe('FormNode', () => {
       imports: [FormNode, PriorityControl],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1788,7 +1788,7 @@ describe('FormNode', () => {
       imports: [FormNode, SingleAccessorControl],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1818,7 +1818,7 @@ describe('FormNode', () => {
       imports: [FormNode, SingleAccessorControl],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1845,7 +1845,7 @@ describe('FormNode', () => {
       imports: [DuplicateAccessorControl, FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     expect(() => TestBed.createComponent(Host).detectChanges())
@@ -1871,7 +1871,7 @@ describe('FormNode', () => {
       imports: [DuplicateAccessorControl, FormNode],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     expect(() => TestBed.createComponent(Host).detectChanges())
@@ -1918,7 +1918,7 @@ describe('FormNode', () => {
       imports: [FormNode, MinimalCva],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1956,7 +1956,7 @@ describe('FormNode', () => {
       imports: [FormNode, EchoingCva],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1995,7 +1995,7 @@ describe('FormNode', () => {
       imports: [CombinedControl, FormNode],
     })
     class Host {
-      name = field('David', { nullable: false });
+      name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -2020,7 +2020,7 @@ describe('FormNode', () => {
       imports: [WithViewContainer, FormNode],
     })
     class Host {
-      name = field('David', { nullable: false });
+      name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -2042,7 +2042,7 @@ describe('FormNode', () => {
       imports: [FormNode],
     })
     class DynamicForm {
-      country = field('ch', { nullable: false });
+      country = field.strict('ch');
     }
 
     @Component({
@@ -2088,7 +2088,7 @@ describe('FormNode', () => {
       imports: [FormNode, SignalCva],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -2128,7 +2128,7 @@ describe('FormNode', () => {
     })
     class Host {
       readonly visible = signal(true);
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -2182,7 +2182,7 @@ describe('FormNode', () => {
       imports: [FormNode, DynamicValidatorCva],
     })
     class Host {
-      readonly name = field('David', { nullable: false });
+      readonly name = field.strict('David');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -2230,7 +2230,7 @@ describe('FormNode', () => {
       imports: [FormNode, FunctionValidatorCva],
     })
     class Host {
-      readonly name = field('valid', { nullable: false });
+      readonly name = field.strict('valid');
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -2394,7 +2394,7 @@ describe('native control conversion', () => {
 
 describe('FormNodeNgControl', () => {
   it('projects field state through the Angular control compatibility surface', () => {
-    const name = field('', [required], { nullable: false });
+    const name = field.strict('', [required]);
     const control = new FormNodeNgControl(() => name as Field<unknown>);
 
     expect(control.control).toBe(control);

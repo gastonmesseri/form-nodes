@@ -12,7 +12,7 @@ import type { Equal, Expect } from './assert.types';
 
 const profile = form({
   name: field('David'),
-  age: field(42, { nullable: false }),
+  age: field.strict(42),
   address: {
     city: field('Zurich'),
   },
@@ -124,8 +124,8 @@ form({ name: field('David') }, { disabled: 'Managed externally' });
 form({ name: field('David') }, { disabled: () => 'Managed externally' });
 
 const submittedProfile = form({
-  name: field('Marco', { nullable: false }),
-  age: field(42, { nullable: false }),
+  name: field.strict('Marco'),
+  age: field.strict(42),
 }, {
   submission: {
     action: (formNode, value) => {

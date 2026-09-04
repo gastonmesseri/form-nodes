@@ -21,7 +21,7 @@ declare const __FORM_NODE_SIGNAL_CONTROL_HYDRATION_HTML__: string;
   imports: [FormNode],
 })
 class HydrationApp {
-  readonly age = field(23, [required], { nullable: false });
+  readonly age = field.strict(23, [required]);
 }
 
 const installServerDom = (encodedHtml: string, selector: string): { host: HTMLElement; nodes: Node[] } => {

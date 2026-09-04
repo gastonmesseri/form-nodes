@@ -56,7 +56,7 @@ const positive = validator<number>(({ value }) => {
   type _Value = Expect<Equal<ReturnType<typeof value>, number>>;
   return value() > 0 ? null : { kind: 'positive' };
 });
-field(1, [positive], { nullable: false });
+field.strict(1, [positive]);
 
 const completeProfile = validator<{ name: string | null; age: number | null }>(({ value }) => {
   type _Profile = Expect<Equal<ReturnType<typeof value>, { name: string | null; age: number | null }>>;

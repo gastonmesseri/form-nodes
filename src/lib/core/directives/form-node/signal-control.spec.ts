@@ -29,7 +29,7 @@ describe('connectSignalControl', () => {
       reset,
       focus,
     }));
-    const name = field('David', [required], { nullable: false });
+    const name = field.strict('David', [required]);
     const connection = connectSignalControl(control, () => name, injector);
     TestBed.flushEffects();
 
@@ -52,9 +52,9 @@ describe('connectSignalControl', () => {
   });
 
   it('supports a checked model and follows dynamically rebound fields', () => {
-    const first = field(false, { nullable: false });
+    const first = field.strict(false);
     const active = signal<Field<boolean>>(first);
-    const second = field(true, { nullable: false });
+    const second = field.strict(true);
     const node = signal<Field<boolean> | null>(null);
     const injector = TestBed.inject(Injector);
     const control = runInInjectionContext(injector, () => ({ checked: model(false), node }));
@@ -94,8 +94,8 @@ describe('connectSignalControl', () => {
 
     const signalFixture = TestBed.createComponent(SignalPairControl);
     const decoratorFixture = TestBed.createComponent(DecoratorPairControl);
-    const name = field('David', { nullable: false });
-    const active = field(false, { nullable: false });
+    const name = field.strict('David');
+    const active = field.strict(false);
     connectSignalControl(signalFixture.componentInstance as never, () => name, signalFixture.debugElement.injector.get(Injector));
     connectSignalControl(decoratorFixture.componentInstance as never, () => active, decoratorFixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
@@ -116,7 +116,7 @@ describe('connectSignalControl', () => {
 
   it('rejects an invalid signal-control shape', () => {
     const injector = TestBed.inject(Injector);
-    const name = field('', { nullable: false });
+    const name = field.strict('');
     expect(() => connectSignalControl({ checked: undefined } as never, () => name, injector)).toThrowError(
       'formNode: a signal custom control requires a \'checked\' model or \'checked\'/\'checkedChange\' input-output pair',
     );

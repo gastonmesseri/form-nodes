@@ -27,9 +27,9 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
  * profile.nickname(); // ''
  * ```
  *
- * Explicit field options take precedence. The default also applies to field shorthands, dynamic
- * children, and nodes created from array templates or factories. Existing nodes keep the policy
- * of the factory that created them.
+ * The default also applies to field shorthands, dynamic children, and nodes created from array
+ * templates or factories. Use `field.strict()` or `field.nullable()` for a local override.
+ * Existing nodes keep the policy of the factory that created them.
  *
  * @param options Defaults shared by the returned primitive factories.
  */
@@ -55,35 +55,27 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     validatorsOrOptions?: ValidatorSource<unknown> | FieldOptions<unknown>,
     separateOptions?: FieldOptions<unknown>,
   ) => {
-    const createField = field as (
-      initialValue: unknown,
-      initialValidatorsOrOptions?: ValidatorSource<unknown> | FieldOptions<unknown>,
-      initialOptions?: FieldOptions<unknown>,
-    ) => Node;
+    const createField = value === null || value === undefined || defaultNullable
+      ? field.nullable as (...args: any[]) => Node
+      : field.strict as (...args: any[]) => Node;
     if (isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined) {
-      return registerDefaults(createField(value, validatorsOrOptions, {
-        ...mergeNodeOptions(separateOptions),
-        nullable: separateOptions?.nullable ?? (value === null || value === undefined ? true : defaultNullable),
-      }));
+      return registerDefaults(createField(value, validatorsOrOptions, mergeNodeOptions(separateOptions)));
     }
-    return registerDefaults(createField(value, {
-      ...mergeNodeOptions(validatorsOrOptions),
-      nullable: validatorsOrOptions.nullable ?? (value === null || value === undefined ? true : defaultNullable),
-    }));
+    return registerDefaults(createField(value, mergeNodeOptions(validatorsOrOptions)));
   }) as FormPrimitives<TNullable>['field'];
   configuredField.strict = ((value: unknown, validatorsOrOptions?: unknown, separateOptions?: unknown) => {
     return isValidatorSource(validatorsOrOptions)
-      ? configuredField(value as never, validatorsOrOptions as never, { ...separateOptions as object, nullable: false } as never)
-      : configuredField(value as never, { ...validatorsOrOptions as object, nullable: false } as never);
-  }) as FormPrimitives<TNullable>['field']['strict'];
+      ? registerDefaults(field.strict(value as never, validatorsOrOptions as never, mergeNodeOptions(separateOptions as object | undefined) as never))
+      : registerDefaults(field.strict(value as never, mergeNodeOptions(validatorsOrOptions as object | undefined) as never));
+  }) as unknown as FormPrimitives<TNullable>['field']['strict'];
   configuredField.nullable = ((...args: unknown[]) => {
     const value = args.length === 0 ? null : args[0];
     const validatorsOrOptions = args[1];
     const separateOptions = args[2];
     return isValidatorSource(validatorsOrOptions)
-      ? configuredField(value as never, validatorsOrOptions as never, { ...separateOptions as object, nullable: true } as never)
-      : configuredField(value as never, { ...validatorsOrOptions as object, nullable: true } as never);
-  }) as FormPrimitives<TNullable>['field']['nullable'];
+      ? registerDefaults(field.nullable(value as never, validatorsOrOptions as never, mergeNodeOptions(separateOptions as object | undefined) as never))
+      : registerDefaults(field.nullable(value as never, mergeNodeOptions(validatorsOrOptions as object | undefined) as never));
+  }) as unknown as FormPrimitives<TNullable>['field']['nullable'];
 
   const normalizeDefinition = (definition: unknown): Node => {
     if (isNode(definition)) return definition;

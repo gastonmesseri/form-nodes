@@ -58,7 +58,7 @@ describe('connectSignalControlInputs', () => {
 
     const fixture = TestBed.createComponent(AllStateControl);
     const expectedPattern = /^[a-z]+$/;
-    const profile = form({ name: field('abc', [required, min(1), max(10), minLength(2), maxLength(5), pattern(expectedPattern)] as never, { nullable: false }) });
+    const profile = form({ name: field.strict('abc', [required, min(1), max(10), minLength(2), maxLength(5), pattern(expectedPattern)] as never) });
     const connection = connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
 
@@ -101,7 +101,7 @@ describe('connectSignalControlInputs', () => {
     class ModelOnlyControl { value = model(''); }
     registerSignalModelForJit(ModelOnlyControl, 'value');
     const modelFixture = TestBed.createComponent(ModelOnlyControl);
-    const name = field('', { nullable: false });
+    const name = field.strict('');
     const modelConnection = connectSignalControlInputs(modelFixture.componentInstance, () => name, modelFixture.debugElement.injector.get(Injector));
     expect(modelConnection.inputNames).toEqual(new Set(['value']));
 
@@ -225,7 +225,7 @@ describe('connectSignalControlInputs', () => {
   });
 
   it('keeps component input failures from breaking the binding', () => {
-    const name = field('', { nullable: false });
+    const name = field.strict('');
     const unreadableComponent = Object.defineProperty({}, 'constructor', {
       get: () => { throw new Error('Changed Angular internal'); },
     });
@@ -284,7 +284,7 @@ describe('connectSignalControlInputs', () => {
       },
     });
     const control = { disabled };
-    const name = field('', { nullable: false });
+    const name = field.strict('');
 
     connectSignalControlInputs(control, () => name, TestBed.inject(Injector));
     TestBed.flushEffects();

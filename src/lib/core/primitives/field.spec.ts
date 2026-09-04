@@ -118,9 +118,9 @@ describe('field', () => {
   it('creates configured fields without an injection context', () => {
     const { field: configuredField } = createFormPrimitives({ nullable: false });
     const name = configuredField('Marco');
-    const nickname = configuredField('Marco', { nullable: true });
+    const nickname = configuredField.nullable('Marco');
     const hiddenName = configuredField('Marco', { hidden: true });
-    const validatedName = configuredField('Marco', [], { nullable: false });
+    const validatedName = configuredField.strict('Marco', []);
     const emptyName = configuredField(null);
     const hiddenEmptyName = configuredField(null, { hidden: true });
 
@@ -300,7 +300,7 @@ describe('field', () => {
   });
 
   it('keeps a non-null initial value when nullable is false', () => {
-    const fieldNode = field('David', { nullable: false });
+    const fieldNode = field.strict('David');
     expect(fieldNode()).toBe('David');
     fieldNode.reset();
     expect(fieldNode()).toBe('David');

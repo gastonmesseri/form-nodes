@@ -54,8 +54,6 @@ export type FieldOptions<TValue = any> = {
    * `undefined` entries.
    */
   validators?: ValidatorSource<TValue>;
-  /** Whether the field value includes null. Defaults to true and affects the public value type. */
-  nullable?: boolean;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   injector?: Injector;
   /**

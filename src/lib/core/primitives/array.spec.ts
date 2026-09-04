@@ -701,7 +701,7 @@ describe('array', () => {
 
   it('reconciles object item nodes by an explicit trackBy key', () => {
     const sons = array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
       { trackBy: value => value.id },
     );
@@ -727,7 +727,7 @@ describe('array', () => {
 
   it('accepts a property name as a trackBy shorthand', () => {
     const people = array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
       { trackBy: 'id' },
     );
@@ -748,7 +748,7 @@ describe('array', () => {
 
   it('updates programmatically through keyed reconciliation', () => {
     const people = array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
       { trackBy: value => value.id },
     );
@@ -790,7 +790,7 @@ describe('array', () => {
 
   it('creates and detaches item nodes while reconciling by trackBy key', () => {
     const sons = array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
       { trackBy: value => value.id },
     );
@@ -807,7 +807,7 @@ describe('array', () => {
 
   it('preserves keyed node identity while reset clears interaction state', () => {
     const sons = array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
       { trackBy: value => value.id },
     );
@@ -829,7 +829,7 @@ describe('array', () => {
 
   it('rejects duplicate trackBy keys without changing the array', () => {
     const sons = array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       [{ id: 'alex', name: 'Alex' }, { id: 'kirill', name: 'Kirill' }],
       { trackBy: value => value.id },
     );
@@ -1476,7 +1476,7 @@ describe('array', () => {
 
   it('creates initial template and factory items through the options object', () => {
     const people = array(
-      { id: field('', { nullable: false }), name: field('') },
+      { id: field.strict(''), name: field('') },
       {
         initialValue: [
           { id: 'marco', name: 'Marco' },
@@ -1525,7 +1525,7 @@ describe('array', () => {
 
   it('rejects duplicate keys already present in current tracked items', () => {
     const names = array(
-      { id: field('', { nullable: false }) },
+      { id: field.strict('') },
       [{ id: 'one' }, { id: 'two' }],
       { trackBy: value => value.id },
     );

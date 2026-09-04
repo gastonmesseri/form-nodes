@@ -62,7 +62,7 @@ describe('useControlState', () => {
       imports: [BoundStateControl, FormNode],
     })
     class Host {
-      name = field('', [required, minLength(3), maxLength(20), pattern(/^[a-z]+$/i)], { nullable: false });
+      name = field.strict('', [required, minLength(3), maxLength(20), pattern(/^[a-z]+$/i)]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -136,7 +136,7 @@ describe('useControlState', () => {
       imports: [BoundNumberControl, FormNode],
     })
     class Host {
-      amount = field(5, [min(1), max(10), asyncValidator(() => new Promise<null>(() => {}))], { nullable: false });
+      amount = field.strict(5, [min(1), max(10), asyncValidator(() => new Promise<null>(() => {}))]);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -258,7 +258,7 @@ describe('useControlState', () => {
       imports: [SignalFormsControlState, FormField],
     })
     class Host {
-      name = field('Marco', { nullable: false });
+      name = field.strict('Marco');
     }
 
     const fixture = TestBed.createComponent(Host);
