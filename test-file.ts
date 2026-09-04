@@ -1,14 +1,20 @@
 import { signal } from '@angular/core';
 
 import { FormNode } from './dist/types/gem-ng-forms';
-import { array, asyncValidator, field, form, minLength, oneOf, required } from './src/public-api';
+import { array, asyncValidator, createFormPrimitives, field, form, FormValueContract, group, minLength, oneOf, required } from './src/public-api';
+import { boolean } from 'fast-check';
 
+type Company = { companyId: number; companyName: string }
+const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
+class Something { };
+const somethingInstance = new Something();
 
 const myForm = form({
   api: field('something'),
   // $api: field('somethong'),
   name: field<string>('David'),
   age: field<number>(23),
+  myArray: field.notnull(''),
   address: {
     city: field('Moscu'),
     country: field('Rusia'),
@@ -54,9 +60,36 @@ const myForm = form({
     trackBy: 'name',
   }),
   whatIsThis: field(undefined),
-  something: field('')
+  something: field(''),
   // a: field(2)
+
+  someNumber: 23,
+  someGroup: {
+    username: 'andres',
+    age: 20,
+  },
+
+  someDate: new Date(),
+  someNesting: {
+    for: '',
+    a: 2,
+    test: true,
+  },
+  company: appleCompany,
+  myMap: new Map(),
+  somethingInstance: somethingInstance,
 });
+
+
+myForm.company;
+myForm.someDate.value();
+myForm.somethingInstance
+myForm.someNesting.test()
+// const a = myForm.company()
+// myForm.company.
+
+
+myForm.someGroup.username()
 // claro creo que tampoco necesitariamos un arbol completo de FieldTree, es decir, solo con un nodo de FieldTree que se bindee a un [formField] yo creo que podriamos reflejar y recibir entre ese nodo y nuestro nodo de nuestra libreria
 
 myForm.whatIsThis.set(23);
@@ -69,7 +102,39 @@ myForm.$field.toString;
 myForm.name.debouncing;
 myForm.items[0]?.age.set(23);
 myForm.items[0]?.name.set('');
-myForm.age.set
+myForm.items.set;
+myForm.items.allErrors()
+
+const shorthandForm = form({
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+});
+
+const username = shorthandForm.username() // ''
+const email = shorthandForm.email() // ''
+const password = shorthandForm.password() // ''
+const confirmPassword = shorthandForm.confirmPassword() // ''
+shorthandForm.username.nodeType() === 'field' // true
+
+const addedWithShorthand = shorthandForm.add({
+  someStringField: '',
+  someNumberField: 23,
+});
+addedWithShorthand.someStringField();
+
+
+// myForm.
+
+// const boundControl = injectBoundControl();
+// boundControl.required();
+
+const addResult = myForm.add({ test: field('') })
+myForm.remove('');
+myForm.get('test')?.set('Lia');
+
+const tota = myForm.children.nonExisting?.value();
 
 myForm.sons1.insert(1)
 
@@ -123,6 +188,45 @@ const myForm2 = form({
   }, 1),
 });
 
+const _myForm2Value = myForm2();
+
+export const { form: fForm, group: fGroup, field: fField, array: fArray } = createFormPrimitives({ nullable: false });
+export const { form: xForm, group: xGroup, field: xField, array: xArray } = createFormPrimitives({ nullable: false });
+export const { form: aForm, group: aGroup, field: aField, array: aArray } = createFormPrimitives({ nullable: false });
+
+
+
+// const field = {} as any;
+
+// const myFormNon = form({
+//   username: field(''),
+//   email: field.nonNullable(''),
+//   company: field.notNull(''),
+//   url: field('', { nullable: false }),
+// });
+
+// const fForm = form;
+// const fField = field;
+// const fArray = array;
+// const fGroup = group;
+
+const myFormHere = fForm({
+  username: fField(''),
+  email: fField(''),
+});
+
+const myFormThere = xForm({
+  username: xField(''),
+  email: xField(''),
+});
+
+const myFormSomewhere= aForm({
+  username: aField(''),
+  email: aField(''),
+});
+
+const myFormHereValue = myFormHere();
+
 myForm2.address.api.errors().at(0)?.targetNode
 
 myForm2.sons.at(0);
@@ -137,6 +241,20 @@ myForm2.name.disable;
 myForm2.address.city.disabled();
 myForm2.address.subaddress.city.disabled();
 myForm2.address.pending();
+
+type MyForm = {
+  username: string | null;
+  items: string[] | null;
+}
+
+const typedForm = form({
+  username: field(''),
+  items: field<string[]>(),
+}) satisfies FormValueContract<MyForm>;
+
+const mySuperForm = form({
+  name: field(''),
+})
 
 function toto() {}
 
@@ -164,7 +282,7 @@ const myForm3 = form({
         value();
         return new Promise<{ kind: string }>(() => {});
       }, {
-        
+        // debounce: 'blur'
       }),
       // {
       //   type: 'async',
@@ -176,6 +294,11 @@ const myForm3 = form({
     hidden: true,
     nullable: false,
   }),
+});
+
+const myAsyncValidator = asyncValidator<string>(async ({ value }) => {
+  const val = value();
+  return { kind: '' };
 });
 
 class MyCompon {

@@ -10,6 +10,9 @@ field('', { debounce: 'change' });
 import type { Equal, Expect, HasKey } from './assert.types';
 
 const nullable = field('David');
+const explicitlyNullable = field.nullable('David');
+const explicitlyNonNullable = field.notnull('David');
+const emptyExplicitlyNullable = field.nullable<string>();
 type _FieldNodeType = Expect<Equal<ReturnType<typeof nullable.nodeType>, 'field'>>;
 const nonNullable = field('David', { nullable: false });
 const explicit = field<number>(undefined);
@@ -20,6 +23,9 @@ const unknownUndefined = field(undefined);
 const unknownUndefinedWithOptions = field(undefined, { debounce: 'blur' });
 
 type _NullableValue = Expect<Equal<ReturnType<typeof nullable>, string | null>>;
+type _ExplicitlyNullableValue = Expect<Equal<ReturnType<typeof explicitlyNullable>, string | null>>;
+type _ExplicitlyNonNullableValue = Expect<Equal<ReturnType<typeof explicitlyNonNullable>, string>>;
+type _EmptyExplicitlyNullableValue = Expect<Equal<ReturnType<typeof emptyExplicitlyNullable>, string | null>>;
 type _NonNullableValue = Expect<Equal<ReturnType<typeof nonNullable>, string>>;
 type _ExplicitValue = Expect<Equal<ReturnType<typeof explicit>, number | null>>;
 type _ExplicitNullValue = Expect<Equal<ReturnType<typeof explicitNull>, string | null>>;
@@ -62,6 +68,8 @@ nullable.set(42);
 nonNullable.set(null);
 // @ts-expect-error a null initial value cannot create a non-nullable field
 field(null, { nullable: false });
+// @ts-expect-error field.notnull requires a non-null initial value
+field.notnull(null);
 // @ts-expect-error an undefined initial value cannot create a non-nullable field
 field(undefined, { nullable: false });
 // @ts-expect-error field patching is intentionally exposed only through api

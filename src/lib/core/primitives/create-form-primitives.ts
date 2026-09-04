@@ -55,6 +55,8 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       nullable: validatorsOrOptions.nullable ?? (value === null || value === undefined ? true : defaultNullable),
     });
   }) as FormPrimitives<TNullable>['field'];
+  configuredField.notnull = field.notnull;
+  configuredField.nullable = field.nullable;
 
   const normalizeDefinition = (definition: unknown): Node => {
     if (isNode(definition)) return definition;

@@ -50,7 +50,12 @@ const { field } = createFormPrimitives({ nullable: false });
 field('');                            // Field<string>
 field('', { nullable: true });        // Field<string | null>
 field('', { nullable: false });       // Field<string>
+field.nullable('');                   // Field<string | null>
+field.notnull('');                    // Field<string>
 ```
+
+`field.nullable()` and `field.notnull()` always override the configured default, so local
+exceptions remain concise in either direction.
 
 Passing `null` or `undefined` still creates a nullable field because there is no non-null initial
 value to preserve:

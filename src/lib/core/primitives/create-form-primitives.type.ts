@@ -7,8 +7,21 @@ import type { AddedNode, Form, FormOptions, FormValue, NormalizedNodeWithDefault
 
 type NullableFieldOptions<TValue> = FieldOptions<TValue | null> & { nullable?: true };
 type NonNullableFieldOptions<TValue> = FieldOptions<TValue> & { nullable?: false };
+type ForcedNullableFieldOptions<TValue> = Omit<FieldOptions<TValue | null>, 'nullable'>;
+type ForcedNonNullableFieldOptions<TValue> = Omit<FieldOptions<TValue>, 'nullable'>;
 
-export interface NonNullableFieldFactory {
+interface FieldNullabilityOverrides {
+  /** Creates a field that excludes `null`, independently of the configured default. */
+  notnull<TValue extends {}>(value: TValue, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  notnull<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  /** Creates a field that includes `null`, independently of the configured default. */
+  nullable(value: null | undefined, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;
+  nullable<TValue>(value?: TValue | null, options?: ForcedNullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  nullable(value: null | undefined, validators: ValidatorSource<unknown>, options?: ForcedNullableFieldOptions<unknown>): Field<unknown>;
+  nullable<TValue>(value: TValue | null | undefined, validators: ValidatorSource<NoInfer<TValue | null>>, options?: ForcedNullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+}
+
+export interface NonNullableFieldFactory extends FieldNullabilityOverrides {
   (value: null, options?: NullableFieldOptions<unknown>): Field<unknown>;
   (value: null, validators: ValidatorSource<unknown>, options?: NullableFieldOptions<unknown>): Field<unknown>;
   (value: undefined, options?: NullableFieldOptions<unknown>): Field<unknown>;
@@ -21,9 +34,9 @@ export interface NonNullableFieldFactory {
   <TValue>(value: TValue | null, validators: ValidatorSource<NoInfer<TValue | null>>, options: NullableFieldOptions<NoInfer<TValue>> & { nullable: true }): Field<TValue | null>;
 }
 
-export type FieldFactory<TNullable extends boolean> = [TNullable] extends [false]
+export type FieldFactory<TNullable extends boolean> = ([TNullable] extends [false]
   ? NonNullableFieldFactory
-  : typeof import('./field').field;
+  : typeof import('./field').field) & FieldNullabilityOverrides;
 
 type ConfiguredAddedNode<TDefinition, TParent extends Node, TNullable extends boolean> = AddedNode<NormalizedNodeWithDefault<TDefinition, TNullable>, TParent>;
 

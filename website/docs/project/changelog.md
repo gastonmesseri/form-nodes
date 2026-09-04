@@ -12,6 +12,8 @@ canonical release record.
 
 ### Added
 
+- `field.notnull()` and `field.nullable()` provide concise local nullability overrides on package
+  and configured field factories.
 - `createFormPrimitives()` creates isolated form primitive factories with an optional field-nullability
   default for direct fields, shorthands, dynamic children, and future array items.
 - `FormValueContract<TValue>` checks an inferred form or group against a named aggregate value with

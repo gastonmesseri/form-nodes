@@ -11,8 +11,6 @@
 
 ## Up next
 
-- create field.notNull or field.something para non nullable fields, lo mismo que field('', { nullable: false }) but shorter
-
 - Add validator texts i18n default to createFormPrimitives()
 
 
@@ -352,6 +350,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Add `field.notnull()` and `field.nullable()` as short, explicit nullability overrides.
 - [x] Display complete nested form and group value objects in IntelliSense without exposing
   internal `FormValue` or normalization helpers.
 - [x] Allow creating an isolated form primitive set with an optional predefined `nullable` default
