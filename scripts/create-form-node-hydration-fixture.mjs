@@ -13,7 +13,7 @@ const { field, required, FormNode } = await import(packageUrl);
 const { AotSignalControlHost } = await import(signalControlUrl);
 
 class HydrationApp {
-  age = field(23, [required], { nullable: false });
+  age = field.strict(23, [required]);
 }
 
 Component({

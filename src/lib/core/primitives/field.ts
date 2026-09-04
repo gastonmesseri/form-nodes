@@ -142,7 +142,7 @@ export function field<TValue extends {}>(
  * ```
  *
  * The inferred value type includes `null`. Omitting the value initializes the field to `null`.
- * Use `{ nullable: false }` when the field must remain non-nullable.
+ * Use `field.strict()` when the field must remain non-nullable.
  *
  * @param value Initial committed value.
  * @param options Field configuration.
@@ -453,7 +453,7 @@ export namespace field {
    * Creates a field that excludes `null`, independently of the configured default.
    *
    * ```ts
-   * const name = field.notnull('Marco');
+   * const name = field.strict('Marco');
    *
    * name(); // 'Marco'
    * ```
@@ -461,20 +461,20 @@ export namespace field {
    * @param value Initial committed value.
    * @param options Field configuration.
    */
-  export function notnull<TValue extends {}>(value: TValue, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  export function strict<TValue extends {}>(value: TValue, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
   /**
    * Creates a non-nullable field with positional validators.
    *
    * ```ts
-   * const name = field.notnull('Marco', [required]);
+   * const name = field.strict('Marco', [required]);
    * ```
    *
    * @param value Initial committed value.
    * @param validators Validators for the field value.
    * @param options Field configuration.
    */
-  export function notnull<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
-  export function notnull<TValue extends {}>(
+  export function strict<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: ForcedNonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  export function strict<TValue extends {}>(
     value: TValue,
     validatorsOrOptions?: ValidatorSource<NoInfer<TValue>> | ForcedNonNullableFieldOptions<NoInfer<TValue>>,
     separateOptions?: ForcedNonNullableFieldOptions<NoInfer<TValue>>,
@@ -493,9 +493,15 @@ export namespace field {
   /**
    * Creates a field that includes `null`, independently of the configured default.
    *
+   * The package-level `field()` is already nullable by default, so `field<string>()` returns
+   * `Field<string | null>`. Use `field.nullable()` to make that choice explicit or to override a
+   * non-nullable `createFormPrimitives()` default.
+   *
    * ```ts
+   * const defaultName = field<string>();
    * const nickname = field.nullable('Marco');
    *
+   * defaultName.set(null);
    * nickname.set(null);
    * ```
    *

@@ -11,7 +11,7 @@ import type { Equal, Expect, HasKey } from './assert.types';
 
 const nullable = field('David');
 const explicitlyNullable = field.nullable('David');
-const explicitlyNonNullable = field.notnull('David');
+const explicitlyNonNullable = field.strict('David');
 const emptyExplicitlyNullable = field.nullable<string>();
 type _FieldNodeType = Expect<Equal<ReturnType<typeof nullable.nodeType>, 'field'>>;
 const nonNullable = field('David', { nullable: false });
@@ -68,8 +68,8 @@ nullable.set(42);
 nonNullable.set(null);
 // @ts-expect-error a null initial value cannot create a non-nullable field
 field(null, { nullable: false });
-// @ts-expect-error field.notnull requires a non-null initial value
-field.notnull(null);
+// @ts-expect-error field.strict requires a non-null initial value
+field.strict(null);
 // @ts-expect-error an undefined initial value cannot create a non-nullable field
 field(undefined, { nullable: false });
 // @ts-expect-error field patching is intentionally exposed only through api

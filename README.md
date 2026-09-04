@@ -39,7 +39,7 @@ import { field, FormNode } from '@gem/ng-forms';
   `,
 })
 export class ProfileEditor {
-  readonly name = field('', { nullable: false });
+  name = field.strict('');
   readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
 
   focusName() {

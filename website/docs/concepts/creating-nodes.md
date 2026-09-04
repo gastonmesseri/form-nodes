@@ -27,7 +27,7 @@ const myForm = form({
 Fields are nullable by default. `myForm.name` is therefore `Field<string | null>`, even though its initial value is a string. Opt out when null is not a valid business value:
 
 ```ts
-const name = field('', { nullable: false });
+const name = field.strict('');
 
 name.set('Lia');
 // name.set(null); // TypeScript error

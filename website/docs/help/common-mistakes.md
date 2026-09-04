@@ -86,7 +86,7 @@ Handle `null` as a business value or opt out explicitly when it is genuinely inv
 
 ```ts
 const myForm = form({
-  countryCode: field('CH', { nullable: false }),
+  countryCode: field.strict('CH'),
 });
 ```
 

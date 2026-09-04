@@ -184,7 +184,7 @@ import { array, field } from '@gem/ng-forms';
 describe('people array', () => {
   it('preserves item identity while reconciling by id', () => {
     const people = array({
-      id: field('', { nullable: false }),
+      id: field.strict(''),
       displayName: field(''),
     }, {
       initialValue: [

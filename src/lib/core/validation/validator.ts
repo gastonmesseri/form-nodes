@@ -9,8 +9,8 @@ import type { ComposableValidator } from './validation.type';
  * behavior.
  *
  * `TValue` is the exact value observed by the validator. Because `field()` is nullable by default,
- * its standalone validators normally use a type such as `number | null`. Omit `null` only when the
- * field uses `{ nullable: false }`. Form and array nodes use their non-nullable aggregate models.
+ * its standalone validators normally use a type such as `number | null`. Omit `null` only for a
+ * field created with `field.strict()`. Form and array nodes use their non-null aggregate models.
  *
  * @reactive The returned validator tracks every signal read while the validation pipeline executes it.
  *
@@ -32,7 +32,7 @@ import type { ComposableValidator } from './validation.type';
  *   return value() > 0 ? null : { kind: 'positive' };
  * });
  *
- * const quantity = field(1, [positive], { nullable: false });
+ * const quantity = field.strict(1, [positive]);
  * ```
  *
  * @example

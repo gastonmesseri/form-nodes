@@ -5,7 +5,7 @@ const { form, field, array } = createFormPrimitives({ nullable: false });
 const profile = form({
   username: field(''),
   nickname: field.nullable(''),
-  reference: field.notnull('REF-1'),
+  reference: field.strict('REF-1'),
   address: {
     city: '',
   },

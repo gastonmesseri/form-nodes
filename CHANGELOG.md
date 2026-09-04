@@ -11,7 +11,7 @@ consumer migration guide.
 
 ### Added
 
-- `field.notnull()` and `field.nullable()` shortcuts for forcing one field's nullability regardless
+- `field.strict()` and `field.nullable()` shortcuts for forcing one field's nullability regardless
   of the package or `createFormPrimitives()` default.
 - `createFormPrimitives()` for creating isolated `form`, `field`, `group`, and `array` factories with an
   optional field-nullability default that also applies to shorthands and future array items.
