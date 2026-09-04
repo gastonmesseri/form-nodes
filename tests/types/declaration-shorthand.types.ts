@@ -65,6 +65,30 @@ dynamic.add({ preferences: { roles: ['admin'] } });
 // @ts-expect-error group dynamic arrays require an explicit field() or array() node too
 dynamicGroup.add('roles', ['admin']);
 
+const shorthandRows = array({ name: '', age: 0, address: { city: '' } }, {
+  initialValue: [{ name: 'Marco', age: 36, address: { city: 'Zurich' } }],
+});
+const shorthandRow = shorthandRows[0]!;
+
+type _ArrayShorthandItem = Expect<Equal<ReturnType<typeof shorthandRow>, {
+  name: string | null;
+  age: number | null;
+  address: { city: string | null };
+}>>;
+type _ArrayShorthandName = Expect<Equal<ReturnType<typeof shorthandRow.name>, string | null>>;
+type _ArrayShorthandAge = Expect<Equal<ReturnType<typeof shorthandRow.age>, number | null>>;
+type _ArrayShorthandAddress = Expect<Equal<ReturnType<typeof shorthandRow.address>, { city: string | null }>>;
+
+const factoryRows = array(() => ({ name: '', user: new User() }), 1);
+const factoryRow = factoryRows[0]!;
+type _ArrayFactoryShorthandName = Expect<Equal<ReturnType<typeof factoryRow.name>, string | null>>;
+type _ArrayFactoryClassInstance = Expect<Equal<ReturnType<typeof factoryRow.user>, User | null>>;
+
+// @ts-expect-error arrays inside object templates remain ambiguous
+array({ roles: ['admin'] });
+// @ts-expect-error a root array is not an object-item template
+array([]);
+
 const explicitField = field('Ada');
 const explicitGroup = group({ city: field('Zurich') });
 const explicitForm = form({ step: field(1) });

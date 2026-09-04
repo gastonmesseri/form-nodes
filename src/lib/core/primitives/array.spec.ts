@@ -47,6 +47,102 @@ describe('array', () => {
     expect(template.name.parent()).toBeNull();
   });
 
+  it('normalizes field shorthands inside an object template before cloning', () => {
+    const template = {
+      name: '',
+      age: 0,
+      address: { city: '' },
+    };
+    const people = array(template, 2);
+
+    expect(people()).toEqual([
+      { name: '', age: 0, address: { city: '' } },
+      { name: '', age: 0, address: { city: '' } },
+    ]);
+    expect(people[0]!.nodeType()).toBe('group');
+    expect(people[0]!.name.nodeType()).toBe('field');
+    expect(people[0]!.age.nodeType()).toBe('field');
+    expect(people[0]!.address.nodeType()).toBe('group');
+    expect(people[0]!.address.city.nodeType()).toBe('field');
+    expect(people[0]!.name).not.toBe(people[1]!.name);
+    expect(people[0]!.address).not.toBe(people[1]!.address);
+    expect(template).toEqual({ name: '', age: 0, address: { city: '' } });
+
+    people[0]!.name.set('Marco');
+    expect(people[1]!.name()).toBe('');
+  });
+
+  it('applies initial values and later mutations to shorthand object templates', () => {
+    const people = array({ name: '', age: 0 }, {
+      initialValue: [{ name: 'Marco', age: 36 }],
+    });
+
+    const added = people.push({ name: 'Lia', age: 32 });
+    expect(added.name.nodeType()).toBe('field');
+    expect(added()).toEqual({ name: 'Lia', age: 32 });
+
+    people.reset([{ name: 'Noa', age: 8 }]);
+    expect(people()).toEqual([{ name: 'Noa', age: 8 }]);
+    expect(people[0]!.pristine()).toBe(true);
+    expect(people[0]!.untouched()).toBe(true);
+  });
+
+  it('normalizes field shorthands returned by an object-template factory', () => {
+    const people = array(() => ({ name: '', age: 0 }), 2);
+
+    expect(people()).toEqual([{ name: '', age: 0 }, { name: '', age: 0 }]);
+    expect(people[0]!.name.nodeType()).toBe('field');
+    expect(people[0]!.name).not.toBe(people[1]!.name);
+  });
+
+  it('preserves special field shorthand values while cloning object templates', () => {
+    class User {
+      name = 'Marco';
+    }
+    const birthday = new Date('1990-06-15T00:00:00.000Z');
+    const user = new User();
+    const people = array({ birthday, user, empty: null, missing: undefined }, 2);
+
+    expect(people[0]!.birthday()).toBe(birthday);
+    expect(people[0]!.user()).toBe(user);
+    expect(people[0]!.empty()).toBeNull();
+    expect(people[0]!.missing()).toBeNull();
+    expect(people[0]!.birthday.nodeType()).toBe('field');
+    expect(people[0]!.user.nodeType()).toBe('field');
+    expect(people[0]!.user).not.toBe(people[1]!.user);
+  });
+
+  it('allows a factory to reuse one non-plain object as an atomic field value', () => {
+    class User {
+      name = 'Marco';
+    }
+    const user = new User();
+    const people = array(() => ({ user }), 2);
+
+    expect(people[0]!.user()).toBe(user);
+    expect(people[1]!.user()).toBe(user);
+    expect(people[0]!.user).not.toBe(people[1]!.user);
+  });
+
+  it('validates shorthand object templates before creating array items', () => {
+    const read = vi.fn(() => 'unsafe');
+    const template = Object.defineProperty({}, 'name', { enumerable: true, get: read });
+
+    expect(() => array(template as never, 1)).toThrow(
+      'array: accessor shorthand is not supported at "name"; declare a data property with an explicit node or, if this object is intended as a field value, wrap it with field(value)',
+    );
+    expect(read).not.toHaveBeenCalled();
+    expect(() => array({ roles: [] } as never, 1)).toThrow(
+      'array: array shorthand is ambiguous at "roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
+    );
+    expect(() => array([] as never, 1)).toThrow(
+      'array: template must be a node or object definition; use field([...]) for an array-valued item',
+    );
+    expect(() => array((() => []) as never, 1)).toThrow(
+      'array: factory must be a node or object definition; use field([...]) for an array-valued item',
+    );
+  });
+
   it('exposes current items through readonly numeric properties while remaining callable', () => {
     const sons = array({ name: field('') }, [{ name: 'Mono' }, { name: 'Lia' }]);
     const mono = sons[0]!;
