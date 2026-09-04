@@ -1,10 +1,10 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { FormField, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
+import { NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, forwardRef, input, model, output, signal, type OnDestroy } from '@angular/core';
+import { CSP_NONCE, Component, EventEmitter, Injector, Input, Output, ViewEncapsulation, forwardRef, inject, input, model, output, signal, type OnDestroy } from '@angular/core';
 
 import { form } from '../primitives/form';
 import { array } from '../primitives/array';
@@ -33,6 +33,160 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNode in Chromium', () => {
+  it('accepts parsing errors from a date CVA through NgControl.control.setErrors', () => {
+    @Component({
+      selector: 'imperative-date-control',
+      template: `<input #input [value]="text()" (input)="inputDate(input.value)" (blur)="touch()" />`,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DateControl), multi: true }],
+    })
+    class DateControl implements ControlValueAccessor {
+      injector = inject(Injector);
+
+      control: AbstractControl | null = null;
+
+      text = signal('');
+
+      change: (value: Date | null) => void = () => {};
+
+      touch: () => void = () => {};
+
+      ngAfterContentInit() { this.control = this.injector.get(NgControl).control; }
+
+      writeValue(value: Date | null) {
+        this.text.set(value?.toISOString().slice(0, 10) ?? '');
+        this.control?.setErrors(null);
+      }
+
+      registerOnChange(callback: (value: Date | null) => void) { this.change = callback; }
+
+      registerOnTouched(callback: () => void) { this.touch = callback; }
+
+      inputDate(text: string) {
+        this.text.set(text);
+        const date = new Date(`${text}T00:00:00.000Z`);
+        const valid = !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === text;
+        this.change(valid ? date : null);
+        this.control!.setErrors(text && !valid ? { invalidDateFormat: { message: 'Use YYYY-MM-DD', actual: text } } : null);
+      }
+    }
+    @Component({
+      selector: 'imperative-date-host',
+      template: `<imperative-date-control [formNode]="profile.appointment" />`,
+      imports: [FormNode, DateControl],
+    })
+    class Host {
+      profile = form({ appointment: field<Date | null>(null, [required]) });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const cva = fixture.debugElement.children[0]!.componentInstance as DateControl;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const profile = fixture.componentInstance.profile;
+    input.value = '2026-02-30';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+    expect(input.value).toBe('2026-02-30');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.appointment.dirty()).toBe(true);
+    expect(profile.appointment.errors().map(error => error.kind)).toEqual(['required', 'invalidDateFormat']);
+    expect(cva.control!.errors?.['invalidDateFormat']).toEqual({ message: 'Use YYYY-MM-DD', actual: '2026-02-30' });
+    input.value = '2026-09-07';
+    dispatch(input, 'input');
+    dispatch(input, 'blur');
+    fixture.detectChanges();
+    expect(profile.valid()).toBe(true);
+    expect(profile.appointment()).toEqual(new Date('2026-09-07T00:00:00.000Z'));
+    expect(profile.appointment.touched()).toBe(true);
+    input.value = 'invalid';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+    expect(profile.appointment.getError('invalidDateFormat')).toBeDefined();
+    profile.appointment.set(new Date('2026-09-08T00:00:00.000Z'));
+    fixture.detectChanges();
+    expect(input.value).toBe('2026-09-08');
+    expect(profile.valid()).toBe(true);
+    fixture.destroy();
+  });
+
+  it.each(['ngAfterContentInit', 'ngAfterViewInit'] as const)('supports a legacy CVA that resolves NgControl and subscribes in %s', (hook) => {
+    @Component({
+      selector: 'late-ng-control-cva',
+      template: `<input #input [value]="value()" (input)="changeValue(input.value)" (blur)="touch()" />`,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => LegacyCva), multi: true }],
+      host: { 'data-lifecycle': hook },
+    })
+    class LegacyCva implements ControlValueAccessor {
+      injector = inject(Injector);
+
+      value = signal('');
+
+      errors: ValidationErrors | null = null;
+
+      statuses: string[] = [];
+
+      values: unknown[] = [];
+
+      complete = vi.fn();
+
+      change: (value: string) => void = () => {};
+
+      touch: () => void = () => {};
+
+      changeValue(value: string) {
+        this.value.set(value);
+        this.change(value);
+      }
+
+      writeValue(value: string) { this.value.set(value); }
+
+      registerOnChange(callback: (value: string) => void) { this.change = callback; }
+
+      registerOnTouched(callback: () => void) { this.touch = callback; }
+
+      [hook]() {
+        const ngControl = this.injector.get(NgControl, null, { self: true })!;
+        this.errors = ngControl.errors;
+        ngControl.statusChanges!.subscribe({
+          next: (status) => {
+            this.statuses.push(status);
+            this.errors = ngControl.errors;
+          },
+          complete: this.complete,
+        });
+        ngControl.control!.valueChanges.subscribe(value => this.values.push(value));
+      }
+    }
+    @Component({
+      selector: 'late-ng-control-host',
+      template: `<late-ng-control-cva [formNode]="profile.name" />`,
+      imports: [FormNode, LegacyCva],
+      host: { 'data-lifecycle': hook },
+    })
+    class Host {
+      profile = form({ name: field.strict('', [required]) });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const cva = fixture.debugElement.children[0]!.componentInstance as LegacyCva;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(cva.errors?.['required']).toMatchObject({ kind: 'required' });
+    input.value = 'Ada';
+    dispatch(input, 'input');
+    dispatch(input, 'blur');
+    fixture.detectChanges();
+    expect(cva.values.at(-1)).toBe('Ada');
+    expect(cva.statuses.at(-1)).toBe('VALID');
+    expect(cva.errors).toBeNull();
+    expect(fixture.componentInstance.profile.name.touched()).toBe(true);
+    fixture.componentInstance.profile.name.reset('');
+    fixture.detectChanges();
+    expect(input.value).toBe('');
+    expect(cva.statuses.at(-1)).toBe('INVALID');
+    expect(cva.errors?.['required']).toMatchObject({ kind: 'required' });
+    fixture.destroy();
+    expect(cva.complete).toHaveBeenCalledOnce();
+  });
+
   it.each(['formNode', 'formField'] as const)('exposes current committed control state through %s while public equality retains an older value', (binding) => {
     @Component({ selector: 'equality-control-state', template: '' })
     class EqualityControl {

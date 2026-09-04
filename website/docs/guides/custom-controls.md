@@ -4,6 +4,8 @@ title: Custom controls
 
 import CodeBlock from '@theme/CodeBlock';
 import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
+import ngControlSource from '!!raw-loader!../../examples/cva-ng-control-subscriptions.typecheck.ts';
+import dateErrorsSource from '!!raw-loader!../../examples/cva-date-errors.typecheck.ts';
 
 # Custom controls
 
@@ -371,6 +373,89 @@ cancellation, debounce, and stale-result handling.
 
 A CVA component can also declare the standard signal state inputs listed above. Those inputs receive
 the same node state as a signal-model control.
+
+### Existing controls that inject NgControl
+
+A CVA can obtain `NgControl` from its host injector in `ngAfterContentInit()` or
+`ngAfterViewInit()` and keep its existing subscriptions. `[formNode]` supplies the adapter automatically; no extra provider or Angular
+`FormControl` is needed in the application.
+
+<CodeBlock language="ts">{ngControlSource}</CodeBlock>
+
+Both `ngControl` and `ngControl.control` expose current `value`, `errors`, validation status,
+disabled state, and dirty/touched state. Error keys come from each node error's `kind`. Validator errors retain the complete Form Nodes
+error; errors supplied through `control.setErrors()` return their original Angular payload.
+`value` includes pending debounced input, even when the
+node's committed or equality-filtered public value still differs.
+
+The adapter supports these observable subscriptions:
+
+- `ngControl.valueChanges` and `ngControl.control.valueChanges` report control-value changes.
+- `ngControl.statusChanges` and `ngControl.control.statusChanges` report validation status,
+  including error-detail or pending-state changes when the status string stays the same.
+- `ngControl.control.events` emits Angular `ValueChangeEvent`, `StatusChangeEvent`,
+  `TouchedChangeEvent`, and `PristineChangeEvent` objects. Their `source` is the adapter control.
+
+Getters are current immediately. Observables run during Angular effect synchronization, so several
+writes before synchronization can produce one notification with the latest state. The first
+synchronization publishes the current state; subscriptions added afterward do not replay it.
+Read the getters for initial state, or use `startWith(control.status)` as the example does. This timing differs from the synchronous
+notifications of Reactive Forms.
+
+Replacing `[formNode]` with another node preserves the adapter and its subscriptions and publishes
+the replacement's state. Destroying the binding completes all three streams.
+
+The adapter supports state observation and control-originated errors through `control.setErrors()`.
+Keep value writes in the CVA change callback and programmatic operations on the Form Nodes node.
+`control.setValue()` and Reactive Forms tree traversal are not provided.
+
+If an existing component copies these errors into its own Angular `FormControl`, check the order
+of its operations: `setErrors(externalErrors)` followed by `enable()` runs the internal validators
+again and replaces those manual errors, even if the internal control was already enabled.
+`disable()` clears its errors too. The injected adapter still exposes the original node errors.
+An internal validator that returns the external errors can preserve them during validation;
+alternatively, enable the internal control before copying errors while it is enabled.
+`emitEvent: false` suppresses notifications but does not prevent this revalidation.
+
+Reading component signals such as `disabledInput()` inside a subscription does not subscribe to
+those signals. If those inputs can change independently, the component needs its own mechanism
+to synchronize them; `statusChanges` reports the bound node's state.
+
+### Reporting parsing errors with setErrors
+
+A custom control can report an error that originates in its own UI, such as an unparseable date,
+through its injected `NgControl.control.setErrors()`:
+
+<CodeBlock language="ts">{dateErrorsSource}</CodeBlock>
+
+In this example, `2026-02-30` produces `invalidDateFormat`. The error makes the appointment field
+and its parent form invalid. The component preserves the typed text and sends `null` through its
+normal CVA callback; `required` remains an independent validator. Correcting the date calls
+`setErrors(null)` to remove the parsing error. `writeValue()` also clears it when the application
+supplies a new date.
+
+Each binding owns one imperative error source. `setErrors(errors)` replaces that source, and
+`setErrors(null)` or `setErrors({})` clears it. Pass the errors produced by this component; Form Nodes
+already merges them with configured validators and other bindings. Clearing this source preserves
+all other errors. Changes immediately update node and ancestor validity, including submission checks.
+
+Angular payloads keep their shape in `ngControl.errors`: for example,
+`{ invalidDateFormat: { message: 'Invalid date' } }`. On the node, the corresponding error has
+`kind: 'invalidDateFormat'`, the original payload in `context`, and `targetNode` and `formNode`
+identifying its owners. A string `payload.message` is also exposed as the node error's `message`.
+Validator-originated errors continue using the complete Form Nodes error object in `ngControl.errors`.
+
+These are control-owned errors, so they persist across value changes and validation runs until the
+component replaces or clears them. A node reset, binding replacement, or binding destruction also
+clears them. Disabled, readonly, and hidden nodes suppress them using normal Form Nodes state rules;
+they become visible again when the node becomes interactive unless the component cleared them.
+This lifetime deliberately differs from Reactive Forms, which replaces manual errors on its next
+validation run.
+
+`setErrors(errors, { emitEvent: false })` suppresses the resulting `statusChanges` and
+`StatusChangeEvent` notification on this adapter. Getters, node signals, and ancestor state still
+update, and other bindings remain reactive. Independent state changes still produce notifications.
+Notifications otherwise follow the effect timing described above.
 
 ## Wrapper components
 

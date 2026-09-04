@@ -38,7 +38,6 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
   exportAs: 'formNode',
 })
 export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNode>, OnInit {
-  /** @internal */
   readonly _formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
   readonly injector = inject(Injector);
@@ -129,7 +128,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     this.installClassBindingEffect();
   }
 
-  /** @internal Handles submission only when this binding is hosted by a native form. */
+  /** Handles submission only when this binding is hosted by a native form. */
   _submitNativeForm(event: Event) {
     if (!this.nativeForm) return;
     event.preventDefault();
@@ -142,7 +141,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     api.flush();
   }
 
-  /** @internal Handles reset only when this binding is hosted by a native form. */
+  /** Handles reset only when this binding is hosted by a native form. */
   _resetNativeForm(event: Event) {
     if (!this.nativeForm) return;
     event.preventDefault();
@@ -188,9 +187,9 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     return node;
   }
 
-  /** @internal Fake `NgControl` exposed only through Angular dependency injection. */
+  /** Observable `NgControl` view exposed only through Angular dependency injection. */
   get _ngControl(): FormNodeNgControl {
-    return (this.interopNgControl ??= new FormNodeNgControl(() => this._field));
+    return (this.interopNgControl ??= new FormNodeNgControl(() => this._field, this.injector, this));
   }
 
   private connectAccessor(accessor: ControlValueAccessor) {
