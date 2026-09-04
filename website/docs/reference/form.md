@@ -1201,7 +1201,7 @@ profile.set({
 profile(); // { username: 'grace', active: false }
 ```
 
-Unknown runtime keys are ignored with a warning.
+Unknown runtime keys are ignored with a warning in development mode.
 
 #### update()
 
@@ -1248,7 +1248,7 @@ profile.patch({
 profile.address(); // { city: 'Zurich', country: 'UK' }
 ```
 
-Unknown runtime keys are ignored with a warning.
+Unknown runtime keys are ignored with a warning in development mode.
 
 #### reset()
 

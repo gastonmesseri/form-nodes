@@ -489,7 +489,7 @@ This is a Signal Forms reset contract, with intentional differences from Reactiv
 
 - No-argument reset preserves current committed values, rather than returning to null or an initial value.
 - Values are raw node values. `{ value, disabled }` is ordinary data, not an Angular `FormControlState` wrapper; reset preserves disabled configuration.
-- `onlySelf: true` and `overwriteDefaultValue: true` are ignored with one `console.warn` per reset call. Reset continues and respects `emitEvent`; ancestors still update, and no reset default is stored. False or omitted options produce no warning.
+- `onlySelf: true` and `overwriteDefaultValue: true` are ignored with one `console.warn` per reset call in development mode. Production mode suppresses the warning. Reset continues and respects `emitEvent`; ancestors still update, and no reset default is stored. False or omitted options produce no warning.
 - `undefined` means no replacement value on this adapter. Use the node API when explicitly assigning `undefined` is required.
 
 ### Inspecting errors and observing state

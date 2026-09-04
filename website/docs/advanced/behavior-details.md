@@ -181,7 +181,7 @@ incompatible, only synchronization of the affected optional state inputs—such 
 `readonly`, or `required`—is skipped. Value and event binding and the form node itself continue to
 work. Errors thrown by an application-defined input transform are still reported normally.
 
-Form Nodes emits one warning per affected control instance and input name when such a write is
+In development mode, Form Nodes emits one warning per affected control instance and input name when such a write is
 skipped. When the component does not already use it, the warning recommends
 `useControlState()` as the source-neutral state facade. A component already consuming that
 facade does not receive the redundant recommendation. A `ControlValueAccessor` is another option when only
@@ -217,7 +217,7 @@ details and do not change node behavior outside the browser.
 
 TypeScript rejects incomplete complete-value writes and unknown object keys. If unsafe casts or
 untyped data bypass those checks, unknown form keys and array patch indexes are ignored with a
-console warning rather than becoming new nodes.
+console warning in development mode rather than becoming new nodes.
 
 Array movement and insertion indexes must identify valid positions and throw `RangeError` when they
 do not. Duplicate `trackBy` keys are detected before reconciliation mutates the array. A factory
@@ -233,3 +233,11 @@ Continue with [Async validation](../guides/async-validation.md),
 [Dynamic object children](../guides/dynamic-object-children.md),
 [Dynamic arrays](../guides/dynamic-arrays.md), [Control binding](../guides/control-binding.md), or
 [Interaction and availability](../guides/interaction-and-availability.md) for task-oriented usage.
+
+## Development diagnostics
+
+Form Nodes console warnings are emitted only in Angular development mode. This includes unknown
+form keys, extra array patch indexes, unsupported reset options, hidden rendered nodes, and
+custom-control input synchronization warnings. Angular production mode suppresses these messages;
+the underlying operations keep the same behavior. This also applies to standalone nodes declared
+outside an injection context. Angular's optimized CLI builds enable production mode automatically.

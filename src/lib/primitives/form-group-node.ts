@@ -5,6 +5,7 @@ import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isPlainObject } from '../utils/is-plain-object';
 import { isNode, markAsNode } from './utils/node-marker';
+import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
@@ -359,7 +360,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = this.children[key];
       if (control === undefined) {
-        console.warn(`form: unknown key "${String(key)}" ignored on set`);
+        warnInDevMode(`form: unknown key "${String(key)}" ignored on set`);
         return;
       }
       control.$api.set(value[key]);
@@ -371,7 +372,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
       const control = this.children[key] as Node | undefined;
       if (control === undefined) {
-        console.warn(`form: unknown key "${String(key)}" ignored on patch`);
+        warnInDevMode(`form: unknown key "${String(key)}" ignored on patch`);
         return;
       }
       control.$api.patch(value[key]);
