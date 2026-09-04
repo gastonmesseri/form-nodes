@@ -156,6 +156,20 @@ describe('form', () => {
     expect(profile.company.companyName()).toBe('Apple');
   });
 
+  it('normalizes an inline company object to a group and a class instance to a field', () => {
+    class User {}
+    const user = new User();
+    const myForm = form({
+      company: { companyId: 23, companyName: 'Apple' },
+      user,
+    });
+
+    expect(myForm.company.nodeType()).toBe('group');
+    expect(myForm.company()).toEqual({ companyId: 23, companyName: 'Apple' });
+    expect(myForm.user.nodeType()).toBe('field');
+    expect(myForm.user()).toBe(user);
+  });
+
   it('uses the runtime prototype when a structural annotation hides a class instance', () => {
     type Company = { companyId: number; companyName: string };
     class CompanyModel implements Company {

@@ -66,6 +66,15 @@ type _TypedCompanyValue = Expect<Equal<ReturnType<typeof companyForm.company>, {
 type _InlineCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.inlineCompany.companyId>, number | null>>;
 type _TypedCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.company.companyId>, number | null>>;
 
+class User {}
+const user = new User();
+const shorthandNodeTypes = form({
+  company: { companyId: 23, companyName: 'Apple' },
+  user,
+});
+type _CompanyNodeType = Expect<Equal<ReturnType<typeof shorthandNodeTypes.company.nodeType>, 'group'>>;
+type _UserNodeType = Expect<Equal<ReturnType<typeof shorthandNodeTypes.user.nodeType>, 'field'>>;
+
 interface CompanyInterface {
   companyId: number;
   companyName: string;

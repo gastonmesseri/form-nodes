@@ -57,6 +57,18 @@ that edit a structured value atomically, such as a multi-select editing `string[
 `form()` or `array()` nodes only when the value's parts need independent bindings and state. See
 [Choosing a primitive](../guides/choosing-a-primitive.md).
 
+Inside `form()` or `group()` definitions, use `field(value)` as the unambiguous escape hatch for
+any value that could otherwise be interpreted as structure. In particular, a plain object shorthand
+creates a nested group; wrapping that same object with `field()` guarantees one atomic field:
+
+```ts
+const defaultCompany = { companyId: 23, companyName: 'Apple' };
+
+const profile = form({
+  company: field(defaultCompany),
+});
+```
+
 ## A container is optional
 
 You do not have to place fields inside `form()` or `group()`. A normal JavaScript object can organize
