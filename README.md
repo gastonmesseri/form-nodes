@@ -303,7 +303,35 @@ pattern is to show a field's errors after `touched()` becomes true, as in the fi
 
 ### Custom and cross-field rules
 
-Attach a rule to a form when it needs to compare several values:
+A field validator can read another field directly. For example, keep a password confirmation in
+sync with the password entered elsewhere in the same form:
+
+<!-- example: readme-basics.example.ts#sibling-field -->
+```ts
+const myForm = form({
+  password: field('', [required]),
+  confirmation: field('', [required, ctx => {
+    const confirmation = ctx.value();
+    if (!confirmation) return null;
+
+    if (confirmation !== myForm.password()) {
+      return { kind: 'passwordMismatch', message: 'Passwords must match.' };
+    }
+
+    return null;
+  }]),
+});
+```
+<!-- /example -->
+
+`ctx.value()` reads the confirmation, while `myForm.password()` reads its sibling. That sibling
+read is a reactive dependency: changing the password revalidates the confirmation even if the
+confirmation itself has not changed. The mismatch error belongs to `myForm.confirmation`, so it
+appears in that field's `errors()` and in the form's `allErrors()`.
+
+The empty-value check leaves missing confirmation values to `required`.
+
+Attach the rule to the form instead when the error should belong to the complete form:
 
 <!-- example: readme-basics.example.ts#cross-field -->
 ```ts
