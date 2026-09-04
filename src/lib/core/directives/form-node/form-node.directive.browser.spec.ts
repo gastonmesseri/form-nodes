@@ -6,17 +6,18 @@ import { FormField, type FormCheckboxControl, type FormValueControl } from '@ang
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { CSP_NONCE, Component, EventEmitter, Input, Output, ViewEncapsulation, forwardRef, input, model, output, signal, type OnDestroy } from '@angular/core';
 
+import { form } from '../../primitives/form';
 import { array } from '../../primitives/array';
 import { field } from '../../primitives/field';
-import { form } from '../../primitives/form';
 import { group } from '../../primitives/group';
 import { FormNode } from './form-node.directive';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
-import { maxLength } from '../../validation/validators/max-length';
-import { minLength } from '../../validation/validators/min-length';
 import { provideFormNodeConfig } from './form-node-config';
 import { required } from '../../validation/validators/required';
+import { asyncValidator } from '../../validation/async-validator';
+import { maxLength } from '../../validation/validators/max-length';
+import { minLength } from '../../validation/validators/min-length';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -1423,6 +1424,382 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('binds a typed plain-object shorthand group to a company selector', async () => {
+    type Company = { companyId: number; companyName: string };
+    type CompanyValue = { companyId: number | null; companyName: string | null };
+    const myCompany: Company = { companyId: 23, companyName: 'Apple' };
+
+    @Component({
+      selector: 'my-company-selector',
+      template: `
+        <button
+          type="button"
+          [disabled]="disabled() || readonly()"
+          (click)="value.set({ companyId: 24, companyName: 'Microsoft' })"
+          (blur)="touch.emit()"
+        >
+          {{ value().companyName }}
+        </button>
+      `,
+      standalone: true,
+    })
+    class CompanySelector {
+      value = model<CompanyValue>({ companyId: null, companyName: null });
+      touch = output<void>();
+      disabled = input(false);
+      readonly = input(false);
+      touched = input(false);
+      dirty = input(false);
+      invalid = input(false);
+      pending = input(false);
+      required = input(false);
+      errors = input<readonly { readonly kind: string }[]>([]);
+      disabledReasons = input<readonly { readonly sourceNode: unknown; readonly message?: string }[]>([]);
+      node = signal<unknown>(null);
+      focusOptions: FocusOptions | undefined;
+      resetCalls = 0;
+      focus(options?: FocusOptions) { this.focusOptions = options; }
+      reset() { this.resetCalls += 1; }
+    }
+
+    registerSignalModelForJit(CompanySelector, 'value');
+    registerSignalInputForJit(CompanySelector, 'disabled', 'disabled');
+    registerSignalInputForJit(CompanySelector, 'readonly', 'readonly');
+    registerSignalInputForJit(CompanySelector, 'touched', 'touched');
+    registerSignalInputForJit(CompanySelector, 'dirty', 'dirty');
+    registerSignalInputForJit(CompanySelector, 'invalid', 'invalid');
+    registerSignalInputForJit(CompanySelector, 'pending', 'pending');
+    registerSignalInputForJit(CompanySelector, 'required', 'required');
+    registerSignalInputForJit(CompanySelector, 'errors', 'errors');
+    registerSignalInputForJit(CompanySelector, 'disabledReasons', 'disabledReasons');
+
+    @Component({
+      template: `<my-company-selector [formNode]="myForm.company" />`,
+      standalone: true,
+      imports: [CompanySelector, FormNode],
+    })
+    class Host {
+      myForm = form({
+        name: '',
+        company: myCompany,
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as CompanySelector;
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    const { myForm } = fixture.componentInstance;
+    const { company } = myForm;
+    const companyIdNode = company.companyId;
+    const companyNameNode = company.companyName;
+
+    expect(company.nodeType()).toBe('group');
+    expect(control.node()).toBe(company);
+    expect(control.value()).toEqual({ companyId: 23, companyName: 'Apple' });
+    expect(control.invalid()).toBe(false);
+    expect(control.pending()).toBe(false);
+    expect(control.required()).toBe(false);
+    expect(control.errors()).toEqual([]);
+
+    myForm.patch({ company: { companyName: 'Alphabet' } });
+    fixture.detectChanges();
+    expect(control.value()).toEqual({ companyId: 23, companyName: 'Alphabet' });
+    expect(company.companyId).toBe(companyIdNode);
+    expect(company.companyName).toBe(companyNameNode);
+
+    myForm.set({ name: 'Company profile', company: { companyId: 7, companyName: 'Google' } });
+    fixture.detectChanges();
+    expect(control.value()).toEqual({ companyId: 7, companyName: 'Google' });
+    expect(company.companyId).toBe(companyIdNode);
+    expect(company.companyName).toBe(companyNameNode);
+
+    company.companyName.set('Gem');
+    fixture.detectChanges();
+    expect(control.value()).toEqual({ companyId: 7, companyName: 'Gem' });
+
+    button.click();
+    fixture.detectChanges();
+    expect(company()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.companyId()).toBe(24);
+    expect(company.companyName()).toBe('Microsoft');
+    expect(company.dirty()).toBe(true);
+    expect(company.companyId.pristine()).toBe(true);
+    expect(company.companyName.pristine()).toBe(true);
+    expect(control.dirty()).toBe(true);
+
+    dispatch(button, 'blur');
+    fixture.detectChanges();
+    expect(company.touched()).toBe(true);
+    expect(company.companyId.touched()).toBe(true);
+    expect(company.companyName.touched()).toBe(true);
+    expect(control.touched()).toBe(true);
+
+    let resolveValidation!: (result: null) => void;
+    company.companyName.setValidators(asyncValidator(() => new Promise<null>((resolve) => {
+      resolveValidation = resolve;
+    })));
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(company.pending()).toBe(true);
+    expect(control.pending()).toBe(true);
+
+    resolveValidation(null);
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(company.pending()).toBe(false);
+    expect(control.pending()).toBe(false);
+
+    company.companyName.setValidators(required);
+    company.companyName.set('');
+    fixture.detectChanges();
+    expect(company.invalid()).toBe(true);
+    expect(control.invalid()).toBe(true);
+    expect(control.errors()).toEqual([]);
+
+    company.companyName.set('Microsoft');
+    fixture.detectChanges();
+    expect(control.invalid()).toBe(false);
+
+    company.disable('Company is locked');
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(true);
+    expect(button.disabled).toBe(true);
+    expect(company.companyId.disabled()).toBe(true);
+    expect(company.companyName.disabled()).toBe(true);
+    expect(control.disabledReasons()).toEqual([{ sourceNode: company, message: 'Company is locked' }]);
+
+    company.enable();
+    company.markAsReadonly();
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(false);
+    expect(control.readonly()).toBe(true);
+    expect(button.disabled).toBe(true);
+    expect(company.companyId.readonly()).toBe(true);
+    expect(company.companyName.readonly()).toBe(true);
+
+    company.focus({ preventScroll: true });
+    expect(control.focusOptions).toEqual({ preventScroll: true });
+
+    company.markAsWritable();
+    company.reset();
+    fixture.detectChanges();
+    expect(control.readonly()).toBe(false);
+    expect(control.resetCalls).toBe(1);
+    expect(company.pristine()).toBe(true);
+    expect(company.untouched()).toBe(true);
+    expect(control.dirty()).toBe(false);
+    expect(control.touched()).toBe(false);
+    fixture.destroy();
+    expect(control.node()).toBeNull();
+  });
+
+  it('debounces and flushes a shorthand group bound to a company selector', async () => {
+    type Company = { companyId: number; companyName: string };
+    type CompanyValue = { companyId: number | null; companyName: string | null };
+    const myCompany: Company = { companyId: 23, companyName: 'Apple' };
+
+    @Component({
+      selector: 'debounced-company-selector',
+      template: '',
+      standalone: true,
+    })
+    class CompanySelector implements FormValueControl<CompanyValue> {
+      value = model<CompanyValue>({ companyId: null, companyName: null });
+      touch = output<void>();
+      resetCalls = 0;
+      reset() { this.resetCalls += 1; }
+    }
+
+    registerSignalModelForJit(CompanySelector, 'value');
+
+    @Component({
+      template: `<debounced-company-selector [formNode]="myForm.company" />`,
+      standalone: true,
+      imports: [CompanySelector, FormNode],
+    })
+    class Host {
+      myForm = form({
+        company: myCompany,
+      }, { debounce: 'blur' });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as CompanySelector;
+    const { company } = fixture.componentInstance.myForm;
+
+    control.value.set({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.controlValue()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company()).toEqual({ companyId: 23, companyName: 'Apple' });
+    expect(company.companyId()).toBe(23);
+    expect(company.companyName()).toBe('Apple');
+    expect(company.debouncing()).toBe(true);
+
+    control.touch.emit();
+    fixture.detectChanges();
+    expect(company()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.companyId()).toBe(24);
+    expect(company.companyName()).toBe('Microsoft');
+    expect(company.debouncing()).toBe(false);
+    expect(company.touched()).toBe(true);
+
+    control.value.set({ companyId: 25, companyName: 'Pending' });
+    company.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(control.resetCalls).toBe(1);
+    expect(company.controlValue()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.debouncing()).toBe(false);
+    expect(company.pristine()).toBe(true);
+    expect(company.untouched()).toBe(true);
+    fixture.destroy();
+  });
+
+  it('keeps multiple company selectors synchronized and releases a shorthand group on rebinding', () => {
+    type CompanyValue = { companyId: number | null; companyName: string | null };
+
+    @Component({
+      selector: 'rebindable-company-selector',
+      template: `{{ value().companyName }}`,
+      standalone: true,
+    })
+    class CompanySelector implements FormValueControl<CompanyValue> {
+      value = model<CompanyValue>({ companyId: null, companyName: null });
+      node = signal<unknown>(null);
+    }
+
+    registerSignalModelForJit(CompanySelector, 'value');
+
+    @Component({
+      template: `
+        <rebindable-company-selector [formNode]="selectedCompany()" />
+        <rebindable-company-selector [formNode]="selectedCompany()" />
+      `,
+      standalone: true,
+      imports: [CompanySelector, FormNode],
+    })
+    class Host {
+      myForm = form({
+        primaryCompany: { companyId: 23, companyName: 'Apple' },
+        secondaryCompany: { companyId: 7, companyName: 'Google' },
+      });
+      selectedCompany = signal(this.myForm.primaryCompany);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const controls = fixture.debugElement.children.map(child => child.componentInstance as CompanySelector);
+    const [firstControl, secondControl] = controls as [CompanySelector, CompanySelector];
+    const { myForm } = fixture.componentInstance;
+
+    expect(firstControl.node()).toBe(myForm.primaryCompany);
+    expect(secondControl.node()).toBe(myForm.primaryCompany);
+    expect(firstControl.value()).toEqual({ companyId: 23, companyName: 'Apple' });
+    expect(secondControl.value()).toEqual({ companyId: 23, companyName: 'Apple' });
+
+    firstControl.value.set({ companyId: 24, companyName: 'Microsoft' });
+    fixture.detectChanges();
+    expect(myForm.primaryCompany()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(secondControl.value()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+
+    fixture.componentInstance.selectedCompany.set(myForm.secondaryCompany);
+    fixture.detectChanges();
+    expect(firstControl.node()).toBe(myForm.secondaryCompany);
+    expect(secondControl.node()).toBe(myForm.secondaryCompany);
+    expect(firstControl.value()).toEqual({ companyId: 7, companyName: 'Google' });
+    expect(secondControl.value()).toEqual({ companyId: 7, companyName: 'Google' });
+
+    myForm.primaryCompany.set({ companyId: 25, companyName: 'Former binding' });
+    fixture.detectChanges();
+    expect(firstControl.value()).toEqual({ companyId: 7, companyName: 'Google' });
+    expect(secondControl.value()).toEqual({ companyId: 7, companyName: 'Google' });
+
+    secondControl.value.set({ companyId: 8, companyName: 'DeepMind' });
+    fixture.detectChanges();
+    expect(myForm.secondaryCompany()).toEqual({ companyId: 8, companyName: 'DeepMind' });
+    expect(firstControl.value()).toEqual({ companyId: 8, companyName: 'DeepMind' });
+
+    fixture.destroy();
+    expect(firstControl.node()).toBeNull();
+    expect(secondControl.node()).toBeNull();
+  });
+
+  it('binds a shorthand group through an aggregate ControlValueAccessor', () => {
+    type CompanyValue = { companyId: number | null; companyName: string | null };
+
+    @Component({
+      selector: 'company-cva-selector',
+      template: `
+        <button type="button" [disabled]="disabled()" (click)="selectMicrosoft()" (blur)="touch()">
+          {{ value().companyName }}
+        </button>
+      `,
+      standalone: true,
+      providers: [{
+        provide: NG_VALUE_ACCESSOR,
+        useExisting: forwardRef(() => CompanyCvaSelector),
+        multi: true,
+      }],
+    })
+    class CompanyCvaSelector implements ControlValueAccessor {
+      value = signal<CompanyValue>({ companyId: null, companyName: null });
+      disabled = signal(false);
+      private change: (value: CompanyValue) => void = () => {};
+      private touched: () => void = () => {};
+
+      writeValue(value: CompanyValue) { this.value.set(value); }
+      registerOnChange(change: (value: CompanyValue) => void) { this.change = change; }
+      registerOnTouched(touched: () => void) { this.touched = touched; }
+      setDisabledState(disabled: boolean) { this.disabled.set(disabled); }
+      selectMicrosoft() { this.change({ companyId: 24, companyName: 'Microsoft' }); }
+      touch() { this.touched(); }
+    }
+
+    @Component({
+      template: `<company-cva-selector [formNode]="myForm.company" />`,
+      standalone: true,
+      imports: [CompanyCvaSelector, FormNode],
+    })
+    class Host {
+      myForm = form({
+        company: { companyId: 23, companyName: 'Apple' },
+      });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as CompanyCvaSelector;
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    const { company } = fixture.componentInstance.myForm;
+
+    expect(control.value()).toEqual({ companyId: 23, companyName: 'Apple' });
+
+    button.click();
+    fixture.detectChanges();
+    expect(company()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.companyId()).toBe(24);
+    expect(company.companyName()).toBe('Microsoft');
+    expect(company.dirty()).toBe(true);
+
+    dispatch(button, 'blur');
+    expect(company.touched()).toBe(true);
+
+    company.set({ companyId: 7, companyName: 'Google' });
+    fixture.detectChanges();
+    expect(control.value()).toEqual({ companyId: 7, companyName: 'Google' });
+
+    company.disable();
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(true);
+    expect(button.disabled).toBe(true);
+    fixture.destroy();
+  });
+
   it('automatically integrates with production-style AOT signal controls', async () => {
     const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../../tests/integration/form-node-signal-control.fixture');
     const fixture = TestBed.createComponent(module.AotSignalControlHost);
@@ -1461,6 +1838,33 @@ describe('FormNode in Chromium', () => {
     expect(valueControl.disabled()).toBe(true);
     expect(valueControl.controlState.disabled()).toBe(true);
     expect(valueButton.disabled).toBe(true);
+    fixture.destroy();
+  });
+
+  it('binds a typed shorthand group to a production-style AOT company selector', async () => {
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../../../tests/integration/form-node-signal-control.fixture');
+    const fixture = TestBed.createComponent(module.AotCompanySelectorHost);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as InstanceType<typeof module.AotCompanySelector>;
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    const { company } = fixture.componentInstance.myForm;
+
+    expect(company.nodeType()).toBe('group');
+    expect(control.value()).toEqual({ companyId: 23, companyName: 'Apple' });
+
+    button.click();
+    dispatch(button, 'blur');
+    fixture.detectChanges();
+    expect(company()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.dirty()).toBe(true);
+    expect(company.touched()).toBe(true);
+    expect(control.dirty()).toBe(true);
+    expect(control.touched()).toBe(true);
+
+    company.disable();
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(true);
+    expect(button.disabled).toBe(true);
     fixture.destroy();
   });
 
