@@ -132,6 +132,9 @@ empty or what its items contain. Declare `array(...)` explicitly when the items 
 nodes, validation, interaction state, or structural operations. An empty `[]` shorthand widens to
 `unknown[]`; use `field<Item[]>([])` when the eventual item type is known.
 
+See the [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix)
+for the explicit equivalent and inferred value of every shorthand category.
+
 :::info Declaration property rules
 
 Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable

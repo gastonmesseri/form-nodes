@@ -116,6 +116,10 @@ The template above is equivalent to `array({ name: field(''), age: field(0) }, .
 receives fresh field and group nodes; only the declared initial values are shared. This also works
 for object templates returned by a factory.
 
+The [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix)
+compares these template declarations with their explicit equivalents and explains when a nested
+`array()` is required.
+
 An array inside the object template becomes one array-valued `Field`; its length and contents do
 not affect that decision. Use an explicit nested `array(...)` when its items need independent
 nodes. Use `field(objectValue)` when a plain object is an atomic application value rather than

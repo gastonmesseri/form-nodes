@@ -106,6 +106,10 @@ The equivalent explicit declarations are `field('')`, `field(null)`, `field(2)`,
 Use an explicit `field()` when the child needs validators, state options, debounce, or a more
 specific generic than the initial value can provide.
 
+See the [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix)
+for every normalization category, its explicit equivalent, and the cases that require
+`field()`, `group()`, or `array()`.
+
 Every array value, including an empty array, populated array, readonly tuple, or array of plain
 objects, becomes one `Field`. Its interpretation never depends on its length or first item. To
 create a dynamic `ArrayNode` with independently addressable item nodes, declare `array(...)`

@@ -1,18 +1,6 @@
-### 6. Documentation, compatibility, and release
-
-- [ ] Add a declaration matrix comparing shorthand syntax with its explicit equivalent and showing
-  ambiguous values that require `field()`, `group()`, or `array()`.
-- [ ] Update the `form()`, `group()`, `field()`, array, creation, validation, and migration/reference
-  pages with executable examples and inference assertions.
-- [ ] Add package-consumer tests against emitted declarations, plus changelog and migration notes for
-  any newly accepted or newly rejected input category.
-- [ ] Before expanding the contract, verify focused behavior and type tests, lint, typecheck, build,
-  coverage, package tests, and documentation typecheck/build.
-
 ## Up next
 
 - Add validator texts i18n default to createFormPrimitives()
-
 
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
@@ -38,17 +26,14 @@
   value should be undefined and not null. (correct docs if required)
   - maybe we should check the amount of args in the field initialization or something like that?
 
-- Provide alternative for non-possible disabled = input() readonly = input(),
-  strong alternative like useFieldState() hook, compatible with all angular ways of declaring a form state (ngModel, formControl, new way, formNode)
-  this should also be notified in the component-input-writer console.warn
-  boundFieldState = useBoundFieldState<string | null>(); // Maybe infer type from value = model()
-  boundField = useBoundField(); // maybe better
 
 - SHORTHANDS for FIELDS
   - ...
   - quiza tambien soporte para moment() aunque sea a traves de un interfaz generico sin importar moment() (_isAMomentObject creo)
-  - decidir que hacer con los arrays
+  - [x] decidir que hacer con los arrays
   - document limitations of object like values in the group() form() field shorthands (notify that there could be discrepances between runtime and typescript, and suggest to only use shorthand with primitives like string | number | etc)
+    MAYBE WE ALREADY SOLVED ALL THE POSSIBLE DISCREPANCES BETWEEN RUNTIME AND TYPESCRIPT, AS WE DECIDED TO MAKE ARRAYS AS field() OF ARRAY TYPE
+
 
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
@@ -350,7 +335,23 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
-- [x] Add `field.notnull()` and `field.nullable()` as short, explicit nullability overrides.
+### 6. Documentation, compatibility, and release
+
+- [x] Provide alternative for non-possible disabled = input() readonly = input(),
+  strong alternative like useFieldState() hook, compatible with all angular ways of declaring a form state (ngModel, formControl, new way, formNode)
+  this should also be notified in the component-input-writer console.warn
+  boundFieldState = useBoundFieldState<string | null>(); // Maybe infer type from value = model()
+  boundField = useBoundField(); // maybe better
+- [x] Add a declaration matrix comparing shorthand syntax with its explicit equivalent and showing
+  ambiguous values that require `field()`, `group()`, or `array()`.
+- [x] Update the `form()`, `group()`, `field()`, array, creation, validation, and migration/reference
+  pages with executable examples and inference assertions.
+- [x] Add package-consumer tests against emitted declarations, plus changelog and migration notes for
+  any newly accepted or newly rejected input category.
+- [x] Before expanding the contract, verify focused behavior and type tests, lint, typecheck, build,
+  coverage, package tests, and documentation typecheck/build.
+
+- [x] Add `field.strict()` and `field.nullable()` as short, explicit nullability overrides.
 - [x] Display complete nested form and group value objects in IntelliSense without exposing
   internal `FormValue` or normalization helpers.
 - [x] Allow creating an isolated form primitive set with an optional predefined `nullable` default

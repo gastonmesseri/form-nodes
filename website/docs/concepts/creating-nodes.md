@@ -2,6 +2,10 @@
 title: Creating nodes
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+
+import declarationShorthandMatrixSource from '!!raw-loader!../../examples/declaration-shorthand-matrix.example.ts';
+
 # Creating nodes
 
 Gem Forms models a workflow as a tree of `field()`, `form()`, `array()`, and `group()` nodes.
@@ -76,10 +80,35 @@ const profile = form({
 ```
 
 Structural shorthand reads only own enumerable string-keyed data properties. It ignores inherited
-and non-enumerable properties and rejects accessors, symbol keys, `__proto__`, and ambiguous array
-values before creating the tree. A normalization error reports the complete declaration path and,
+and non-enumerable properties and rejects accessors, symbol keys, and `__proto__` before creating
+the tree. A normalization error reports the complete declaration path and,
 when the object may be application data rather than structure, recommends wrapping it with
 `field(value)`.
+
+## Declaration shorthand matrix
+
+Shorthand is intentionally predictable: atomic values become fields, plain objects become groups,
+and dynamic collections require an explicit `array()`.
+
+| Declaration inside `form()`, `group()`, or an object array template | Explicit equivalent | Inferred node value | Prefer an explicit primitive when… |
+| --- | --- | --- | --- |
+| `name: ''` | `name: field('')` | `string \| null` | The field needs validators, options, or a generic |
+| `age: 0` | `age: field(0)` | `number \| null` | The field must be strict or configured |
+| `active: false` | `active: field(false)` | `boolean \| null` | The field needs configuration |
+| `birthday: new Date()` | `birthday: field(new Date())` | `Date \| null` | The date needs field configuration |
+| `empty: null` or `undefined` | `empty: field(null)` | `unknown` | The future type is known: use `field<T>()` |
+| `roles: ['admin']` | `roles: field(['admin'])` | `string[] \| null` | Items need nodes: use `array(field(''))` |
+| `address: { city: '' }` | `address: group({ city: field('') })` | `{ city: string \| null }` | The branch needs validators or options: use `group()` |
+| `company: classInstance` | `company: field(classInstance)` | `Company \| null` | Making the atomic boundary explicit improves readability |
+| `company: { ...data }` | `company: group({ ... })` | Object assembled from child values | The object is one atomic value: use `field(company)` |
+| `child: existingNode` | Unchanged | Existing node value | Never—explicit nodes are preserved |
+
+<CodeBlock language="ts" title="declaration-shorthand-matrix.example.ts">{declarationShorthandMatrixSource}</CodeBlock>
+
+An empty array shorthand is also one atomic field and widens to `unknown[] | null`. Root
+`array([])` is rejected because an empty array cannot describe an item-node template; use
+`array(field<T>())` for a dynamic collection. Definition objects reject symbol child keys,
+enumerable accessors, and `__proto__` before creating any node.
 
 ## A container is optional
 

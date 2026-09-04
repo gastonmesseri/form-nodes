@@ -110,6 +110,10 @@ synchronous validator.
 | `form()` | Object assembled from enabled children | Aggregates child state and errors | Adds submission state and operations |
 | `array()` | Array assembled from enabled item nodes | Aggregates item state and errors | Paths and ownership follow reconciled items |
 
+These node boundaries are unchanged by concise declarations. The
+[declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix) shows
+which primitive owns validation for every shorthand category.
+
 ### field()
 
 A field validator observes the complete field value. If a field stores an object or array, the
