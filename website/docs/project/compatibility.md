@@ -46,6 +46,37 @@ and `@angular/forms` first, then select the matching Form Nodes release line.
 
 :::
 
+## Angular 21 assessment
+
+The current package is incompatible with Angular 21. An audit against Angular 21.2.22 and
+TypeScript 5.9.3 found that the core form and `[formNode]` tests largely pass, but the package
+build fails on Angular Signal Forms exports and signatures that differ from Angular 22.
+The `$field` integration also needs work for constraint metadata, touch events, and reset behavior.
+
+TypeScript language features are not the main blocker: the existing public inference tests pass
+with TypeScript 5.9.3 when checked against the current Angular declarations. Angular 21 requires
+TypeScript `>=5.9.0 <6.0.0`; see [Angular's version table](https://angular.dev/reference/versions).
+Supporting Angular 21 requires a compatible implementation, build toolchain, and integration
+verification before the peer range can be expanded.
+
+## Repository compatibility checks
+
+The repository checks a packed copy of the library in isolated Angular 22.1.5 / TypeScript 6.0.3
+and Angular 21.2.22 / TypeScript 5.9.3 consumers. Angular 22 is required in CI; Angular 21 is an
+experimental diagnostic whose failures remain visible in the workflow summary.
+
+```bash
+npm run build
+npm run test:compatibility -- 22
+npm run test:compatibility -- 21
+```
+
+These checks compile the public declarations and templates and run three Node runtime smoke tests.
+They supplement the browser, hydration, and full behavioral checks required for a supported release.
+The experimental Angular 21 run bypasses peer checks inside a temporary test directory to expose
+underlying failures; it does not make Angular 21 supported. The package is still built with Angular
+22, and `$field` remains available.
+
 ## Unlisted Angular versions
 
 An unlisted version is unsupported, not necessarily known to be incompatible. Before expanding the
