@@ -1,7 +1,7 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
-import { group } from './group';
 import { isNotNil } from '../utils/is-nil';
+import { isPlainObject } from '../utils/is-plain-object';
 import { assertValidObjectDefinition, normalizeObjectDefinition } from './form.utils';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
@@ -27,23 +27,12 @@ import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } 
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import type { FieldShorthand, Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinitions } from './form.type';
+import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
-type FormDefinition<TDefinition> =
-  TDefinition extends Node ? TDefinition
-    : TDefinition extends readonly unknown[] ? never
-      : TDefinition extends FieldShorthand ? TDefinition
-        : TDefinition extends ObjectNodeDefinitions ? FormDefinitions<TDefinition> : TDefinition;
-
-type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends symbol ? never
-    : TKey extends '$api' | '$field' ? never
-      : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
-        : FormDefinition<TDefinitions[TKey]>;
-};
+type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 
 /**
  * ```ts
@@ -302,23 +291,20 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
       throw new Error(`${nodeType}: child "${key}" already exists`);
     }
   };
-  const assertDetachedDefinition = (definition: Node | NodeDefinitions) => {
+  const assertDetachedDefinition = (definition: unknown) => {
     if (isNode(definition)) {
       if ((definition as Node & { $api: { parent(): Node | null } }).$api.parent() === null) return;
       throw new Error(`${nodeType}: a dynamic child must not already have a parent`);
     }
-    if (!definition || typeof definition !== 'object') {
-      throw new Error(`${nodeType}: a dynamic child must be a node or object definition`);
+    if (definition !== null && typeof definition === 'object' && isPlainObject(definition)) {
+      Object.values(definition).forEach(child => assertDetachedDefinition(child));
     }
-    Object.values(definition).forEach(child => assertDetachedDefinition(child));
   };
-  const normalizeDynamicDefinition = (definition: Node | NodeDefinitions): Node => {
-    assertDetachedDefinition(definition);
-    return isNode(definition) ? definition : group(definition);
-  };
-  const addDynamicChildren = (entries: readonly (readonly [string, Node | NodeDefinitions])[]) => {
+  const addDynamicChildren = (definitions: ObjectNodeDefinitions, entries: readonly (readonly [string, unknown])[]) => {
     entries.forEach(([key]) => assertAvailableDynamicKey(key));
-    const nodes = entries.map(([key, definition]) => [key, normalizeDynamicDefinition(definition)] as const);
+    assertValidObjectDefinition(definitions, nodeType);
+    entries.forEach(([, definition]) => assertDetachedDefinition(definition));
+    const nodes = entries.map(([key, definition]) => [key, normalizeObjectDefinition(definition)] as const);
     nodes.forEach(([key, node]) => {
       controlsRecord[key] = node;
       dynamicKeys.add(key);
@@ -327,12 +313,15 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     structureVersion.update(version => version + 1);
     return Object.fromEntries(nodes);
   };
-  const add = ((keyOrDefinitions: string | NodeDefinitions, definition?: Node | NodeDefinitions) => {
+  const add = ((...args: [string | ObjectNodeDefinitions, unknown?]) => {
+    const [keyOrDefinitions, definition] = args;
     if (typeof keyOrDefinitions === 'string') {
-      const added = addDynamicChildren([[keyOrDefinitions, definition!]]);
+      if (args.length < 2) throw new Error(`${nodeType}: add(key, definition) requires a definition argument`);
+      const definitions = { [keyOrDefinitions]: definition };
+      const added = addDynamicChildren(definitions, [[keyOrDefinitions, definition]]);
       return added[keyOrDefinitions];
     }
-    return addDynamicChildren(Object.entries(keyOrDefinitions));
+    return addDynamicChildren(keyOrDefinitions, Object.entries(keyOrDefinitions));
   }) as FormApi<TNodes>['add'];
   const remove = (key: string) => {
     const node = controlsRecord[key];

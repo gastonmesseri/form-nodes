@@ -7,7 +7,7 @@ import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
-import type { DisabledReason, DynamicNode, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, DynamicNode, Node, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 /** Values inferred as concise `field()` definitions inside an object node. */
 export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | ((...args: any[]) => any);
@@ -19,6 +19,22 @@ export type ObjectNodeDefinition = Node | FieldShorthand | ObjectNodeDefinitions
 export interface ObjectNodeDefinitions {
   [key: string]: unknown;
 }
+
+/** Validates one inferred object-node child definition while preserving its original type. */
+export type ObjectNodeDefinitionInput<TDefinition> =
+  TDefinition extends Node ? TDefinition
+    : TDefinition extends readonly unknown[] ? never
+      : TDefinition extends FieldShorthand ? TDefinition
+        : TDefinition extends ObjectNodeDefinitions ? ObjectNodeDefinitionInputs<TDefinition>
+          : TDefinition;
+
+/** Validates an inferred map of object-node child definitions. */
+export type ObjectNodeDefinitionInputs<TDefinitions extends ObjectNodeDefinitions> = {
+  [TKey in keyof TDefinitions]: TKey extends symbol ? never
+    : TKey extends '$api' | '$field' ? never
+      : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
+        : ObjectNodeDefinitionInput<TDefinitions[TKey]>;
+};
 
 type WidenFieldShorthand<TValue> =
   TValue extends string ? string
@@ -241,8 +257,8 @@ export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;
 };
 
-/** Result of attaching a node definition dynamically to an object node. */
-export type AddedNode<TDefinition extends NodeDefinition, TParent extends Node> =
+/** Result of attaching a node definition or shorthand dynamically to an object node. */
+export type AddedNode<TDefinition, TParent extends Node> =
   NodeWithParent<NormalizedNode<TDefinition>, TParent>;
 
 /** Readonly runtime-key map of dynamic and initially declared children. */
@@ -281,8 +297,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /**
    * Adds one child node at runtime and returns that live node with its exact inferred type.
    *
-   * The key must not already belong to this form. The supplied node must not currently have a
-   * parent. Plain object definitions are normalized to `group()` nodes.
+   * The key must not already belong to this form. Concise values are normalized to `field()` and
+   * plain object definitions to `group()`. An explicitly supplied node must not have a parent.
    * Dynamic children are not installed as direct properties. Read them through `get()`,
    * `children[key]`, or the exact node returned by this method.
    *
@@ -296,7 +312,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * profile.children['age'] === age; // true
    * ```
    */
-  add<TKey extends string, TDefinition extends NodeDefinition>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: TDefinition): AddedNode<TDefinition, Form<TNodes, TParent>>;
+  add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Form<TNodes, TParent>>;
   /**
    * Adds several child definitions atomically and returns an exact keyed map of their attached
    * live nodes.
@@ -316,7 +332,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * profile.children['address'] === added.address; // true
    * ```
    */
-  add<TDefinitions extends NodeDefinitions>(definitions: TDefinitions & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
+  add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
     readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Form<TNodes, TParent>>;
   };
   /**

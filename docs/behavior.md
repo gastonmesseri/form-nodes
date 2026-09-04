@@ -527,8 +527,12 @@ Calling reset on a nested form only resets that subtree. State belonging to sibl
 ### Dynamic object children
 
 `form()` and `group()` accept named children after creation through `add(key, definition)` or an
-atomic `add(definitions)` call. A plain object definition is normalized to a `group()` exactly as
-it is during initial construction. The returned nodes retain their exact inferred types. Dynamic
+atomic `add(definitions)` call. Both signatures accept the same field and nested-object shorthands
+as initial construction: concise values normalize to `field()`, while plain objects normalize to
+`group()`. Arrays remain ambiguous and require explicit `field([...])` or `array(...)`. The returned
+nodes retain their exact inferred types. The complete input is validated and every explicit node is
+confirmed detached before normalization, so an invalid batch cannot attach or construct only some
+of its children. Dynamic
 children are not installed as direct properties: this makes an undeclared or misspelled property a
 TypeScript and Angular strict-template error. `get(key)` and `children[key]` return
 `DynamicNode | undefined`; initially declared children keep their original precise and non-optional
@@ -541,6 +545,14 @@ and injector. They participate in aggregate value, errors, validation status, pe
 dirty, focus, reset, and control operations as soon as the structural version changes. Duplicate
 keys and reserved `$api` or `$field` keys throw before any entry in a batch is attached. A node that
 already has a parent is rejected rather than silently stolen from another tree.
+
+An implicit field returned by `add()` is an ordinary live field. Removing it releases its parent,
+path, root, inherited availability state, debounce, and injector ownership while preserving its own
+value and interaction state. The detached node can subsequently be added to another form or group,
+where it adopts that parent's ownership and inherited state. Replacing a dynamic key remains an
+explicit `remove(key)` followed by `add(key, definition)` operation; there is no separate implicit
+replacement path. Resetting a parent includes every currently attached implicit child and clears
+its interaction state under the same rules as an explicitly declared field.
 
 `remove(key)` only detaches children introduced through `add()`. Initially declared children cannot
 be removed because their public types guarantee their presence. A removed node remains usable,

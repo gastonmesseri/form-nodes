@@ -1016,11 +1016,12 @@ Each entry includes its consumer-facing signature, behavior, and return value.
 
 #### add()
 
-**Signatures:** `add(key: string, definition: NodeDefinition): AddedNode` ·
-`add(definitions: NodeDefinitions): AddedNodes`
+**Signatures:** `add(key: string, definition): AddedNode` ·
+`add(definitions): AddedNodes`
 
 Attaches one child or several children at runtime. A single definition returns its exact attached
 node; an object returns an exact keyed map. Plain nested objects become `group()` nodes.
+Concise values use the same `field()` shorthand as the initial declaration.
 
 ```ts
 const profile = form({
@@ -1047,7 +1048,9 @@ profile.children['preferences'] === added.preferences; // true
 
 Keys must be new, definitions must be detached, and `$api` and `$field` are reserved. The object
 form is atomic: validation completes before any supplied child is attached. Keep the returned node
-for its exact type, or retrieve it later with `get()` or `children[key]`.
+for its exact type, or retrieve it later with `get()` or `children[key]`. Arrays require explicit
+`field([...])` or `array(...)`; wrap a plain application object with `field(value)` when it should
+remain one atomic value.
 
 #### get()
 

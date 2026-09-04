@@ -2640,23 +2640,99 @@ describe('form', () => {
     expect(age.path()).toEqual([]);
   });
 
+  it('normalizes one dynamically added field shorthand', () => {
+    class Account {
+      name = 'Gem';
+    }
+    const profile = form({ name: field('David') });
+    const age = profile.add('age', 23);
+    const accountValue = new Account();
+    const account = profile.add('account', accountValue);
+    const missing = profile.add('missing', undefined);
+
+    expect(age.nodeType()).toBe('field');
+    expect(age()).toBe(23);
+    expect(age.parent()).toBe(profile);
+    expect(account.nodeType()).toBe('field');
+    expect(account()).toBe(accountValue);
+    expect(missing()).toBeNull();
+    expect(profile()).toEqual({ name: 'David', age: 23, account: accountValue, missing: null });
+  });
+
   it('adds several dynamic children atomically and normalizes shorthand groups', () => {
     const profile = form({ name: field('David') });
 
     const added = profile.add({
-      age: field(23),
-      address: { city: field('Zurich') },
+      age: 23,
+      nickname: null,
+      missing: undefined,
+      address: { city: 'Zurich' },
     });
 
     expect(added.age).toBe(profile.get('age'));
+    expect(added.age.nodeType()).toBe('field');
+    expect(added.nickname.nodeType()).toBe('field');
+    expect(added.missing.nodeType()).toBe('field');
+    expect(added.missing()).toBeNull();
     expect(added.address).toBe(profile.get('address'));
+    expect(added.address.nodeType()).toBe('group');
+    expect(added.address.city.nodeType()).toBe('field');
     expect(added.address.city.parent()).toBe(added.address);
     expect(added.address.city.form()).toBe(profile);
     expect(profile()).toEqual({
       name: 'David',
       age: 23,
+      nickname: null,
+      missing: null,
       address: { city: 'Zurich' },
     });
+  });
+
+  it('detaches, reparents, replaces, and resets dynamically added shorthand fields', () => {
+    const source = form({ name: 'David' });
+    const target = group({ enabled: true }, { readonly: true });
+    const status = source.add('status', 'draft');
+
+    status.markAsDirty();
+    status.markAsTouched();
+    source.disable();
+    expect(status.disabled()).toBe(true);
+    expect(status.parent()).toBe(source);
+    expect(status.form()).toBe(source);
+
+    expect(source.remove('status')).toBe(status);
+    expect(status.parent()).toBeNull();
+    expect(status.form()).toBeNull();
+    expect(status.disabled()).toBe(false);
+    expect(status.dirty()).toBe(true);
+    expect(status.touched()).toBe(true);
+
+    expect(target.add('status', status)).toBe(status);
+    expect(status.parent()).toBe(target);
+    expect(status.form()).toBe(target);
+    expect(status.readonly()).toBe(true);
+
+    status.set('published');
+    target.reset();
+    expect(status()).toBe('published');
+    expect(status.pristine()).toBe(true);
+    expect(status.untouched()).toBe(true);
+
+    expect(target.remove('status')).toBe(status);
+    const replacement = target.add('status', 'archived');
+    expect(replacement).not.toBe(status);
+    expect(replacement()).toBe('archived');
+    expect(target()).toEqual({ enabled: true, status: 'archived' });
+  });
+
+  it('rejects an invalid shorthand batch before attaching any child', () => {
+    const profile = form({ name: 'David' });
+
+    expect(() => profile.add({ age: 23, roles: [] } as never)).toThrow(
+      'form: array shorthand is ambiguous at "roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
+    );
+    expect(profile.get('age')).toBeUndefined();
+    expect(profile()).toEqual({ name: 'David' });
   });
 
   it('includes dynamic children in validation and interaction aggregation', () => {
@@ -2686,7 +2762,7 @@ describe('form', () => {
     expect(() => (profile.add as any)('name', field('Mark'))).toThrowError('form: child "name" already exists');
     expect(() => (profile.add as any)('$api', field(1))).toThrowError('form: "$api" is reserved and cannot be added as a dynamic child');
     expect(() => profile.add('age', other.age)).toThrowError('form: a dynamic child must not already have a parent');
-    expect(() => (profile.add as any)('invalid')).toThrowError('form: a dynamic child must be a node or object definition');
+    expect(() => (profile.add as any)('invalid')).toThrowError('form: add(key, definition) requires a definition argument');
 
     profile.add('age', field(23));
     expect(() => profile.add({ city: field('Zurich'), age: field(24) })).toThrowError('form: child "age" already exists');

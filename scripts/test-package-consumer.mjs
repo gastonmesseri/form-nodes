@@ -86,6 +86,10 @@ try {
     if (profile.name.valid()) throw new Error('Required validation was not preserved in the package.');
     if (profile.addresses[0].city() !== 'Zurich') throw new Error('Array values were not preserved in the package.');
     if (profile.preferences.theme() !== 'dark') throw new Error('Group values were not preserved in the package.');
+    const age = profile.add('age', 36);
+    const added = profile.preferences.add({ locale: 'en', range: { minimum: 0 } });
+    if (age.nodeType() !== 'field' || age() !== 36) throw new Error('Dynamic field shorthand was not preserved in the package.');
+    if (added.range.nodeType() !== 'group' || added.range.minimum() !== 0) throw new Error('Dynamic group shorthand was not preserved in the package.');
   `);
   run(process.execPath, [join(temporaryDirectory, 'runtime.mjs')]);
 
