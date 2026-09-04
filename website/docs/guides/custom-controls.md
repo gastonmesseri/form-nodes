@@ -410,6 +410,30 @@ one runtime object for `ngControl` and `ngControl.control`, so both have the sam
 A local `useNgControl` helper can capture the host injector during construction and resolve
 `NgControl` in a lifecycle hook, following the same deferred lookup as the example above.
 
+### CVA value changes and validation refresh requests
+
+Send control input through the callback supplied to `registerOnChange()`, and report blur through
+`registerOnTouched()`. `[formNode]` uses those callbacks to update the control value, apply node
+debounce, mark interaction, and validate the committed value. The callbacks follow binding
+replacement and become inactive when the binding is destroyed.
+
+`viewToModelUpdate()` is not supported. In Angular's Forms directives, that method updates their
+view-model cache and emits `ngModelChange`; Angular writes the control value separately.
+`[formNode]` has no `ngModelChange` output. A CVA that directly calls that directive method must
+use its registered change callback for value input instead.
+
+`control.updateValueAndValidity()` remains a no-op, following Angular Signal Forms. Values and
+validation are current when read and update through their signal dependencies. Calling it does
+not force validator execution, clear errors, flush pending input, mark interaction, or emit
+additional events. It does not restart or cancel asynchronous validation. Its `onlySelf` and
+`emitEvent` arguments have no effect: they cannot isolate reactive ancestors or silence an
+independent value change or asynchronous completion.
+
+Use the node API to replace configured validators. If an `NG_VALIDATORS` CVA changes a rule that
+depends on ordinary properties, invoke the callback received through `registerOnValidatorChange()`.
+Calling `updateValueAndValidity()` is not a substitute for that notification. Reactive rule
+dependencies update normally without either call.
+
 ### Validator functions and node validation
 
 Both `ngControl.validator` / `asyncValidator` and the corresponding `control` properties return

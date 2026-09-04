@@ -2468,6 +2468,35 @@ The directive currently provides these behaviors:
   follow `_controlValue()`, including pending debounce input and writes suppressed by public equality.
   Status precedence remains disabled, valid, invalid, then pending. Error details are the node's own
   errors indexed by `kind`; aggregate validity and interaction still include descendants.
+- CVA value input uses the callback registered through `registerOnChange()`. The existing
+  binding routes it to the current node's control-value pipeline, tracks the last view value to
+  avoid write-back echoes, and ignores changes during `writeValue()` and after destruction.
+  `registerOnTouched()` updates interaction and flushes blur debounce. Binding replacement changes
+  which node those callbacks address. `viewToModelUpdate()` remains unsupported: Angular's
+  directive implementation updates a view-model cache and emits `ngModelChange`, while its
+  shared pipeline writes the control separately. `[formNode]` has no such output or cache, so
+  forwarding that method to a node write would implement different semantics; a dummy method
+  would discard an application action. Consumers must use the registered CVA change callback.
+- `control.updateValueAndValidity()` deliberately remains a no-op like Angular Signal Forms.
+  Reactive state is current when read, with no imperative refresh lifecycle in the adapter.
+  Calls do not execute configured or binding-owned validators again, clear imperative or settled
+  async errors, change dirty/touched state, commit debounce input, restart/cancel pending
+  validation, or force notifications. `emitEvent` and `onlySelf` have no effect; independent
+  changes and later async completion still notify normally, and parents remain reactive.
+  Nonreactive CVA rule changes must notify the existing `registerOnValidatorChange()` callback.
+  Replacing node validators uses the node API. Reactive rule dependencies need no refresh call.
+  Focused field/nested-form tests verify callbacks, debounce, rebinding, cleanup, errors, validator
+  counts, and async ownership; browser tests verify real input and a CVA rule-change callback.
+  This audit preserves existing runtime behavior and defines `viewToModelUpdate()` as outside
+  the supported contract. Latest stable Angular 22 was re-resolved as `v22.1.5`, commit
+  `468b65b74566537456c192ac4281795c5a1e1a5e`. Inspected
+  `packages/forms/src/directives/shared.ts` (view-change/blur pipelines and `updateControl`),
+  `packages/forms/src/directives/ng_model.ts`, `reactive_directives/form_control_directive.ts`,
+  and `reactive_directives/form_control_name.ts` (`viewToModelUpdate`),
+  `packages/forms/src/model/abstract_model.ts` (imperative recalculation and async cancellation),
+  `packages/forms/test/reactive_integration_spec.ts` (forced value/status notifications),
+  `packages/forms/signals/src/controls/interop_ng_control.ts` (no-op refresh), and
+  `packages/forms/signals/test/web/interop.spec.ts` (CVA input and validator-change integration).
 - `NgControl.validator`, `NgControl.asyncValidator`, and both corresponding `control` properties
   are read-only and return `null`: the combined adapter exposes no transferable Angular
   `ValidatorFn`/`AsyncValidatorFn`. This deliberately does not describe whether the node has
