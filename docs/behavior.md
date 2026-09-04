@@ -2468,6 +2468,23 @@ The directive currently provides these behaviors:
   follow `_controlValue()`, including pending debounce input and writes suppressed by public equality.
   Status precedence remains disabled, valid, invalid, then pending. Error details are the node's own
   errors indexed by `kind`; aggregate validity and interaction still include descendants.
+- Both the injected `NgControl` and its `control` implement `getError(code, path?)` and
+  `hasError(code, path?)`. Queries use the same own-error projection as `control.errors`, including
+  original imperative payloads and the last error for a duplicate kind. Without a path they inspect
+  only the bound node, independently of aggregate invalidity. Relative dot-separated paths and
+  arrays of string/number segments select actual descendants; numeric negative array indices count
+  from the end. Segment arrays preserve literal dots and empty child names. An empty string selects
+  the current node, while an empty segment array resolves no node. Queries never traverse field
+  values, inherited properties, or API members. Child names that collide with API members remain
+  accessible. Signal dependencies follow rebinding, dynamic children, and array positions even when
+  public aggregate equality retains a previous value.
+- Error queries follow Angular `v22.1.5` `packages/forms/src/model/abstract_model.ts`
+  (`get`, `getError`, `hasError`), `form_group.ts` and `form_array.ts` (`_find`, `at`), and
+  `packages/forms/test/form_group_spec.ts` (`getError`, `hasError`). `getError` returns `null` for
+  unresolved paths or absent error maps, and `undefined` for an absent key in an existing map.
+  `hasError` uses payload truthiness, including `false` for falsy imperative payloads despite node
+  invalidity. Unlike Angular's plain dictionary lookup, inherited error-map properties are excluded.
+  This extends Signal Forms' lightweight interop adapter, which omits these methods.
 - `NgControl.control.setErrors(errors, { emitEvent? })` lets a CVA contribute control-originated
   errors, including parsing failures, to the bound node. Each binding owns one source in the existing
   external-error registry. Calls replace that source; `null` and `{}` clear it without clearing
@@ -2513,7 +2530,8 @@ The directive currently provides these behaviors:
 - Rebinding keeps the injected adapter and subscriptions stable, publishes the replacement's complete
   snapshot, and drops the previous node's reactive dependencies. Binding destruction removes the
   observation effect and completes the streams. This bridge serves state inspection, subscriptions, and binding-owned `setErrors()`;
-  other Reactive Forms mutation and tree-traversal APIs are not provided. CVA changes still enter through the
+  error queries can select descendants, but other Reactive Forms mutation and tree-traversal APIs
+  such as `control.get()` are not provided. CVA changes still enter through the
   registered change/touch callbacks, and programmatic operations belong to the node API.
 - Angular reference: latest stable tag `v22.1.5`, commit
   `468b65b74566537456c192ac4281795c5a1e1a5e`, resolved from remote tags. Inspected

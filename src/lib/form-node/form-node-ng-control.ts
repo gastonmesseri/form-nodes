@@ -2,8 +2,11 @@ import { DestroyRef, EventEmitter, computed, effect, signal, untracked, type Inj
 import { PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 
 import { shallowEqual } from '../utils/shallow-equal';
+import type { FormApi } from '../primitives/form.type';
+import type { ArrayApi } from '../primitives/array.type';
+import { isNode } from '../primitives/utils/node-marker';
 import { arrayToObject } from '../utils/array-to-object';
-import type { InternalNode, Node } from '../types/node.type';
+import type { InternalNode, Node, Nodes } from '../types/node.type';
 import type { ValidationError } from '../validation/validation.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
@@ -114,6 +117,46 @@ export class FormNodeNgControl {
       // Silence this adapter's status notification, while the node and its parents still update.
       this.silentStatus = options.emitEvent === false ? this.readState() : undefined;
     });
+  }
+
+  /**
+   * Reads Angular error payloads from this node or a relative descendant path.
+   * @reactive Tracks the selected node's errors and changes along the path.
+   */
+  getError(errorCode: string, path?: string | (string | number)[]): unknown {
+    const node = path ? this.findErrorNode(path) : this.getNode();
+    const errors = node ? toValidationErrors(node) : null;
+    if (!errors) return null;
+    return Object.hasOwn(errors, errorCode) ? errors[errorCode] : undefined;
+  }
+
+  /** @reactive Tracks the error query and follows Angular's payload truthiness check. */
+  hasError(errorCode: string, path?: string | (string | number)[]): boolean {
+    return !!this.getError(errorCode, path);
+  }
+
+  findErrorNode(path: string | (string | number)[]): Node | undefined {
+    const segments = typeof path === 'string' ? path.split('.') : path;
+    if (segments.length === 0) return undefined;
+    let node: Node | undefined = this.getNode();
+    for (const segment of segments) {
+      if (!node) return undefined;
+      const kind = node.$api.nodeType();
+      if (kind === 'field') return undefined;
+      let child: unknown;
+      if (kind === 'array') {
+        const items = (node.$api as ArrayApi<Node>).items();
+        const index = typeof segment === 'number' && segment < 0 ? items.length + segment : segment;
+        child = Object.hasOwn(items, index) ? items[index as number] : undefined;
+      } else {
+        // Track dynamic children independently of equality on the exposed aggregate value.
+        (node as InternalNode).$api._value();
+        const children = (node.$api as FormApi<Nodes>).children;
+        child = Object.hasOwn(children, segment) ? children[segment] : undefined;
+      }
+      node = isNode(child) ? child : undefined;
+    }
+    return node;
   }
 
   releasePreviousErrors(node: Node | undefined) {

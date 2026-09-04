@@ -5,12 +5,13 @@ import { startWith } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { Component, DestroyRef, Injector, forwardRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Injector, computed, forwardRef, inject, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { FormControl, NG_VALUE_ACCESSOR, NgControl, PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors } from '@angular/forms';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
+import { array } from '../primitives/array';
 import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
 import { required } from '../validation/validators/required';
@@ -137,6 +138,124 @@ describe('FormNode NgControl required validator compatibility', () => {
     expect(cva.hasRequiredValidator()).toBe(true);
     expect(profile.valid()).toBe(true);
     fixture.destroy();
+  });
+});
+
+describe('FormNode NgControl error queries', () => {
+  it('lets a CVA query validator errors and original imperative payloads through NgControl and control', () => {
+    const profile = form({ name: field.strict('', [required]) });
+    const { fixture, cva, control } = bind(profile.name);
+    const requiredError = profile.name.getError('required');
+    expect(cva.ngControl.getError('required')).toBe(requiredError);
+    expect(control.getError('required')).toBe(requiredError);
+    expect(cva.ngControl.hasError('required')).toBe(true);
+    expect(control.hasError('required')).toBe(true);
+    expect(control.getError('missing')).toBeUndefined();
+    expect(control.hasError('missing')).toBe(false);
+    expect(control.getError('toString')).toBeUndefined();
+    expect(control.hasError('constructor')).toBe(false);
+
+    const payload = { message: 'Invalid date format' };
+    control.setErrors({ invalidDateFormat: payload, falsePayload: false, nullPayload: null, undefinedPayload: undefined });
+    expect(cva.ngControl.getError('invalidDateFormat')).toBe(payload);
+    expect(cva.ngControl.hasError('invalidDateFormat')).toBe(true);
+    expect(control.getError('falsePayload')).toBe(false);
+    expect(control.getError('nullPayload')).toBeNull();
+    expect(control.getError('undefinedPayload')).toBeUndefined();
+    expect(control.hasError('falsePayload')).toBe(false);
+    expect(control.hasError('nullPayload')).toBe(false);
+    expect(control.hasError('undefinedPayload')).toBe(false);
+    control.setErrors(null);
+    profile.name.set('Ada');
+    expect(control.getError('required')).toBeNull();
+    expect(control.hasError('required')).toBe(false);
+    expect(control.getError('required', 'child')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('queries groups, nested forms, and array items using relative string and segment paths', () => {
+    const profile = form({
+      address: { city: field.strict('', [required]), 'city.name': field.strict('', [required]) },
+      details: form({ code: field.strict('', [required]) }),
+      contacts: array({ email: field.strict('', [required]) }, { initialValue: [{ email: 'ada@example.com' }, { email: '' }] }),
+      api: field.strict('', [required]),
+      children: field.strict('', [required]),
+      constructor: field.strict('', [required]),
+      '': field.strict('', [required]),
+    }, [() => ({ kind: 'rootRule' })]);
+    const { fixture, cva, control } = bind(profile);
+    const rootError = profile.$api.getError('rootRule');
+    expect(control.getError('rootRule')).toBe(rootError);
+    expect(control.getError('rootRule', '')).toBe(rootError);
+    expect(control.getError('rootRule', [])).toBeNull();
+    expect(control.getError('required')).toBeUndefined();
+    expect(control.hasError('required')).toBe(false);
+    expect(cva.ngControl.getError('required', 'address.city')).toBe(profile.address.city.getError('required'));
+    expect(control.hasError('required', ['address', 'city'])).toBe(true);
+    expect(control.hasError('required', ['address', 'city.name'])).toBe(true);
+    expect(control.getError('required', ['details', 'code'])).toBe(profile.details.code.getError('required'));
+    expect(control.hasError('required', ['contacts', 0, 'email'])).toBe(false);
+    expect(control.getError('required', 'contacts.1.email')).toBe(profile.contacts[1]!.email.getError('required'));
+    expect(control.hasError('required', ['contacts', -1, 'email'])).toBe(true);
+    for (const key of ['api', 'children', 'constructor', '']) {
+      expect(control.hasError('required', [key])).toBe(true);
+    }
+    for (const path of ['missing', 'missing.deeper', 'address.city.child', 'contacts.99.email', 'contacts.length', 'contacts.constructor', 'contacts.01.email']) {
+      expect(control.getError('required', path)).toBeNull();
+      expect(control.hasError('required', path)).toBe(false);
+    }
+    expect(control.getError('required', ['contacts', -3, 'email'])).toBeNull();
+    expect(control.hasError('required', ['toString'])).toBe(false);
+    fixture.destroy();
+  });
+
+  it('tracks dynamic children and binding replacement even when exposed aggregate values compare equal', () => {
+    const profile = form({ details: {} }, { equal: () => true });
+    const retainedValue = profile();
+    const { fixture, control } = bind(profile);
+    const missing = computed(() => control.hasError('required', 'details.extra'));
+    expect(missing()).toBe(false);
+    const extra = field.strict('', [required]);
+    profile.details.add('extra', extra);
+    expect(profile()).toBe(retainedValue);
+    expect(missing()).toBe(true);
+    extra.set('Ada');
+    expect(missing()).toBe(false);
+    extra.set('');
+    expect(missing()).toBe(true);
+    profile.details.remove('extra');
+    expect(missing()).toBe(false);
+    profile.details.add('extra', field.strict('', [required]));
+    expect(missing()).toBe(true);
+    fixture.componentInstance.active.set(form({ details: { extra: field.strict('Optional') } }));
+    fixture.detectChanges();
+    expect(missing()).toBe(false);
+    fixture.destroy();
+  });
+
+  it('follows current array positions and returns a descendant control error without adopting it', () => {
+    const profile = form({ contacts: array({ email: field.strict('') }, { initialValue: 2 }) }, { equal: () => true });
+    const retainedValue = profile();
+    const parent = bind(profile);
+    const child = bind(profile.contacts[1]!.email);
+    const payload = { message: 'Malformed input' };
+    const firstHasError = computed(() => parent.control.hasError('parse', ['contacts', 0, 'email']));
+    const secondHasError = computed(() => parent.control.hasError('parse', ['contacts', 1, 'email']));
+    child.control.setErrors({ parse: payload });
+    expect(parent.control.invalid).toBe(true);
+    expect(parent.control.getError('parse')).toBeNull();
+    expect(parent.cva.ngControl.getError('parse', 'contacts.1.email')).toBe(payload);
+    expect(firstHasError()).toBe(false);
+    expect(secondHasError()).toBe(true);
+    profile.contacts.swap(0, 1);
+    expect(profile()).toBe(retainedValue);
+    expect(firstHasError()).toBe(true);
+    expect(secondHasError()).toBe(false);
+    profile.contacts.removeAt(0);
+    expect(firstHasError()).toBe(false);
+    expect(parent.control.valid).toBe(true);
+    child.fixture.destroy();
+    parent.fixture.destroy();
   });
 });
 

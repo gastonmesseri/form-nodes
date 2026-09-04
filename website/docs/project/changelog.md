@@ -16,6 +16,7 @@ canonical release record.
   and Angular control-state events follow the bound node, survive rebinding, and complete on destruction.
   CVAs can also report parsing errors through `control.setErrors()`: binding-owned errors affect node
   and ancestor validity and clear independently of configured validators on correction, reset, or detachment.
+  `getError()` and `hasError()` expose these error payloads and support relative descendant paths.
 - `useControlState().value()` with `[formNode]` now reports the latest committed value even when
   node equality retains an older public value. Pending debounce input remains separate.
 - Asynchronous validators preserve pending work when a computed dependency compares equal, while
