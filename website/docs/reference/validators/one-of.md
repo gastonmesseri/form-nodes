@@ -57,9 +57,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const restrictStatus = signal(false);
-const status = field('archived', [oneOf(['draft', 'published'], {
-  when: () => restrictStatus(),
-})]);
+const status = field('archived', [
+  oneOf(['draft', 'published'], { when: () => restrictStatus() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

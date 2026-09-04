@@ -705,6 +705,15 @@ Message-string shorthand remains supported, while conditional rules use the opti
 `requiredIf(condition)` remains as a concise equivalent to `required({ when: () => condition() })`
 for zero-argument conditions.
 
+Every built-in validator factory also accepts an `error` option containing one custom validation
+error, an array of errors, or a reactive `(context) => result` function. It is evaluated only when
+the built-in rule fails and replaces that rule's normal structured error. Returning an empty array,
+`null`, or `undefined` suppresses the failure. Signals read by an error function are tracked while
+the rule is failing. `message` and `error` are mutually exclusive because a custom error owns its
+complete message and shape. `when` runs first, so an inactive rule evaluates neither its built-in
+logic nor its error override. Constraint and required metadata remain governed by the rule and its
+`when` condition rather than by whether a custom error suppresses the failure.
+
 `validators` accepts either one synchronous validator or a readonly array of validators. `null` and `undefined` entries in that array are ignored, enabling expressions such as `[required, condition() ? minLength(2) : null]`. The positional validator argument and `setValidators()` accept the same forms. Internally, the source is normalized, so `validators()` always returns a readonly array containing only effective validators:
 
 ```ts
@@ -1219,8 +1228,8 @@ marker, allowing overloaded validators to recognize genuine contexts without rel
 structural shape or exposing the marker in the public `FieldContext` type.
 
 Built-in validator signatures expose the static-string shorthand and inline their small options object so IntelliSense shows
-`message?: string | (() => string | undefined)` directly at the call site instead of hiding it
-behind `ValidatorOptions`. Date validators additionally show `parseAs?: 'utc' | 'local'` inline.
+the mutually exclusive `message` and `error` choices directly at the call site instead of hiding
+them behind `ValidatorOptions`. Date validators additionally show `parseAs?: 'utc' | 'local'` inline.
 These consumer-created option properties are intentionally mutable in the type declaration;
 marking them `readonly` would add IntelliSense noise without protecting library-owned state. The
 exported `ValidatorOptions` type remains available for reusable options values.

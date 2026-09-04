@@ -1,5 +1,5 @@
 import { isEmpty } from '../../utils/is-empty';
-import type { Validator, ValidatorContext } from '../validation.type';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { MAX_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from './resolve-validator-message';
@@ -30,9 +30,15 @@ import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-len
  */
 export const maxLength = (
   maximum: number | (() => number | undefined),
-  options?: string | {
+  options?: string | ({
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
     message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<ValueWithLengthOrSize | null>) => ValidationResult);
+  }) & {
     /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
     when?: (context: ValidatorContext<ValueWithLengthOrSize | null>) => boolean;
   },

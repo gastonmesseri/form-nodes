@@ -41,9 +41,15 @@ const validateRequired = (
  *
  * @param options Optional static message string, or an object containing a static or reactive message. Omitting `message`, or returning `undefined`, uses the default.
  */
-export function required(options: string | {
+export function required(options: string | ({
   /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
   message?: string | (() => string | undefined);
+  error?: never;
+} | {
+  message?: never;
+  /** Custom error or errors returned instead of the built-in error. */
+  error?: ValidationResult | ((context: ValidatorContext<unknown>) => ValidationResult);
+}) & {
   /** Reactive predicate deciding whether this validator and its required metadata are active. */
   when?: (context: ValidatorContext<unknown>) => boolean;
 }): Validator<unknown>;

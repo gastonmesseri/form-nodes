@@ -11,6 +11,8 @@ consumer migration guide.
 
 ### Added
 
+- An `error` option on every built-in validator for replacing a failed rule's standard error with
+  one or more static or reactively produced custom errors.
 - `field.strict()` and `field.nullable()` shortcuts for forcing one field's nullability regardless
   of the package or `createFormPrimitives()` default.
 - `createFormPrimitives()` for creating isolated `form`, `field`, `group`, and `array` factories with

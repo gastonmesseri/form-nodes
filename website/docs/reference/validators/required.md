@@ -62,9 +62,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const requireCompanyName = signal(false);
-const companyName = field('', [required({
-  when: () => requireCompanyName(),
-})]);
+const companyName = field('', [
+  required({ when: () => requireCompanyName() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

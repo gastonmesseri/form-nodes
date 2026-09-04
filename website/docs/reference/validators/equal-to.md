@@ -60,9 +60,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 ```ts
 const requireConfirmation = signal(false);
 const password = signal('secret');
-const confirmation = field('', [equalTo(() => password(), {
-  when: () => requireConfirmation(),
-})]);
+const confirmation = field('', [
+  equalTo(() => password(), { when: () => requireConfirmation() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

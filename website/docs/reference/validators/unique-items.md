@@ -84,9 +84,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const enforceUniqueRoles = signal(false);
-const roles = field(['admin', 'admin'], [uniqueItems({
-  when: () => enforceUniqueRoles(),
-})]);
+const roles = field(['admin', 'admin'], [
+  uniqueItems({ when: () => enforceUniqueRoles() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

@@ -3,6 +3,10 @@ title: Built-in validators
 description: Signatures, examples, empty-value behavior, errors, and metadata for every built-in Gem Forms validator.
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+
+import builtInValidatorErrorSource from '!!raw-loader!../../examples/built-in-validator-error.example.ts';
+
 # Built-in validators
 
 This page documents every built-in validator, including every supported call style and the values each rule intentionally does not reject.
@@ -36,14 +40,28 @@ contributes neither an error nor constraint metadata:
 const businessAccount = signal(false);
 
 const myForm = form({
-  companyName: field('', [required({
-    when: () => businessAccount(),
-  })]),
+  companyName: field('', [
+    required({ when: () => businessAccount() })
+  ]),
 });
 ```
 
 Calls that pass a message string directly remain unchanged. Use the options object when `when` is
 needed.
+
+## Custom errors
+
+Every built-in validator accepts an `error` option that replaces its standard error when the rule
+fails. Supply one error, an array of errors, or a function receiving the validator context. The
+function is reactive and runs only while the rule fails. An empty array, `null`, or `undefined`
+suppresses the failure. Because the replacement owns its complete shape, `error` and `message`
+cannot be used together.
+
+<CodeBlock language="ts" title="built-in-validator-error.example.ts">{builtInValidatorErrorSource}</CodeBlock>
+
+The validator's constraint metadata remains active even when the replacement function suppresses
+the error. A false `when` predicate disables both the rule and its metadata before `error` is
+evaluated.
 
 ## Validator map
 

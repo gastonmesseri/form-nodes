@@ -45,6 +45,19 @@ Every exposed error contains `kind` and `targetNode`; built-in errors also conta
 
 See [Errors and validation status](./errors-and-status.md) for ownership, aggregate ordering, typed custom kinds, binding errors, and the exact status table.
 
+Built-in validators can replace their normal structured error through `error`. The option accepts
+one error, several errors, or a reactive function receiving the validator context:
+
+```ts
+const age = field(16, [
+  min(18, { error: ({ value }) => ({ kind: 'minimumAge', actual: value(), minimum: 18 }) })
+]);
+```
+
+The replacement is evaluated only while the built-in rule fails. It cannot be combined with
+`message`; return an empty array, `null`, or `undefined` when the failed rule should currently
+contribute no error. See [Built-in validator custom errors](../reference/built-in-validators.md#custom-errors).
+
 ## Custom validators
 
 A synchronous validator receives a stable context containing the node's value and readonly state signals:

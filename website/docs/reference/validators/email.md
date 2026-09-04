@@ -56,9 +56,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const validateWorkEmail = signal(false);
-const emailAddress = field('invalid', [email({
-  when: () => validateWorkEmail(),
-})]);
+const emailAddress = field('invalid', [
+  email({ when: () => validateWorkEmail() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

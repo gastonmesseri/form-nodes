@@ -56,9 +56,9 @@ tracked; while it returns `false`, the rule contributes neither errors nor const
 
 ```ts
 const requireAbsoluteUrl = signal(false);
-const website = field('/account', [url({
-  when: () => requireAbsoluteUrl(),
-})]);
+const website = field('/account', [
+  url({ when: () => requireAbsoluteUrl() })
+]);
 ```
 
 Reactive constraint functions and message functions track the signals they read. When a resolved

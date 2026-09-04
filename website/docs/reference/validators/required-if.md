@@ -78,9 +78,9 @@ field('', [requiredIf(() => businessAccount(), 'Enter a company name.')]);
 Use an options object for a reactive message:
 
 ```ts
-field('', [requiredIf(() => businessAccount(), {
-  message: () => translations().companyNameRequired,
-})]);
+field('', [
+  requiredIf(() => businessAccount(), { message: () => translations().companyNameRequired })
+]);
 ```
 
 Returning `undefined` from the message function continues through node, Angular provider,
