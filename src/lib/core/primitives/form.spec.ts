@@ -110,8 +110,157 @@ describe('form', () => {
 
   it('rejects ambiguous array shorthand', () => {
     expect(() => form({ roles: [] } as never)).toThrow(
-      'Array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...).',
+      'form: array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...) at "roles"',
     );
+  });
+
+  it('preserves special atomic shorthand values at every nested depth', () => {
+    const invalidDate = new Date(Number.NaN);
+    const marker = Symbol('marker');
+    const values = form({
+      emptyText: '',
+      disabledFlag: false,
+      notANumber: Number.NaN,
+      positiveInfinity: Number.POSITIVE_INFINITY,
+      negativeInfinity: Number.NEGATIVE_INFINITY,
+      negativeZero: -0,
+      largeCount: 1n,
+      marker,
+      invalidDate,
+      empty: null,
+      missing: undefined,
+      nested: {
+        invalidDate,
+        negativeZero: -0,
+      },
+    });
+
+    expect(values.emptyText()).toBe('');
+    expect(values.disabledFlag()).toBe(false);
+    expect(values.notANumber()).toBeNaN();
+    expect(values.positiveInfinity()).toBe(Number.POSITIVE_INFINITY);
+    expect(values.negativeInfinity()).toBe(Number.NEGATIVE_INFINITY);
+    expect(Object.is(values.negativeZero(), -0)).toBe(true);
+    expect(values.largeCount()).toBe(1n);
+    expect(values.marker()).toBe(marker);
+    expect(values.invalidDate()).toBe(invalidDate);
+    expect(values.empty()).toBeNull();
+    expect(values.missing()).toBeNull();
+    expect(values.nested.invalidDate()).toBe(invalidDate);
+    expect(Object.is(values.nested.negativeZero(), -0)).toBe(true);
+  });
+
+  it('validates structural declaration surfaces without evaluating accessors', () => {
+    const read = vi.fn(() => 'unsafe');
+    const accessorDefinition = {
+      profile: Object.defineProperty({}, 'name', { enumerable: true, get: read }),
+    };
+    const symbolKey = Symbol('secret');
+    const symbolDefinition = { [symbolKey]: field('hidden') };
+    const prototypeDefinition = Object.fromEntries([['__proto__', field('unsafe')]]);
+
+    expect(() => form(accessorDefinition as never)).toThrow(
+      'form: accessor shorthand is not supported; declare a data property with an explicit node at "profile.name"',
+    );
+    expect(read).not.toHaveBeenCalled();
+    expect(() => form(symbolDefinition as never)).toThrow(
+      'form: symbol child key Symbol(secret) is not supported; use a string key',
+    );
+    expect(() => form(prototypeDefinition as never)).toThrow(
+      'form: unsafe child key "__proto__" is not supported at "__proto__"',
+    );
+    expect(() => form({ profile: { 'postal-code': [] } } as never)).toThrow(
+      'form: array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...) at "profile[\\"postal-code\\"]"',
+    );
+  });
+
+  it('uses only own enumerable properties from a declaration', () => {
+    const inherited = { inherited: field('ignored') };
+    const own = field('included');
+    const definitions = Object.create(inherited) as { own: typeof own; inherited?: typeof own };
+    definitions.own = own;
+    Object.defineProperty(definitions, 'hidden', { enumerable: false, value: field('ignored') });
+
+    const values = form(definitions);
+
+    expect(values()).toEqual({ own: 'included' });
+    expect(values.children['inherited']).toBeUndefined();
+    expect(values.children['hidden']).toBeUndefined();
+  });
+
+  it('makes an implicit field behaviorally equivalent to field(value)', () => {
+    const profile = form({ implicit: '', explicit: field('') });
+
+    expect(profile.implicit.nodeType()).toBe('field');
+    expect(profile.implicit.parent()).toBe(profile);
+    expect(profile.explicit.parent()).toBe(profile);
+    expect(profile.implicit.form()).toBe(profile);
+    expect(profile.implicit.path()).toEqual(['implicit']);
+    expect(profile.explicit.path()).toEqual(['explicit']);
+
+    profile.implicit.setValidators(required);
+    profile.explicit.setValidators(required);
+    expect(profile.implicit.errors().map(({ kind, message }) => ({ kind, message }))).toEqual(
+      profile.explicit.errors().map(({ kind, message }) => ({ kind, message })),
+    );
+
+    profile.set({ implicit: 'set', explicit: 'set' });
+    expect(profile.implicit()).toBe(profile.explicit());
+    profile.patch({ implicit: 'patched', explicit: 'patched' });
+    expect(profile.implicit()).toBe(profile.explicit());
+
+    profile.implicit.markAsTouched();
+    profile.explicit.markAsTouched();
+    profile.implicit.markAsDirty();
+    profile.explicit.markAsDirty();
+    profile.reset({ implicit: 'reset', explicit: 'reset' });
+
+    expect(profile.implicit()).toBe(profile.explicit());
+    expect(profile.implicit.touched()).toBe(profile.explicit.touched());
+    expect(profile.implicit.dirty()).toBe(profile.explicit.dirty());
+    expect(profile.implicit.errors().map(({ kind, message }) => ({ kind, message }))).toEqual(
+      profile.explicit.errors().map(({ kind, message }) => ({ kind, message })),
+    );
+  });
+
+  it('propagates availability and injector ownership equally to implicit and explicit fields', async () => {
+    const dependency = signal(0);
+    const implicitValidator = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const explicitValidator = vi.fn(async () => {
+      dependency();
+      return null;
+    });
+    const injector = Injector.create({ providers: [] });
+    const unavailable = form({ implicit: '', explicit: field('') }, {
+      disabled: true,
+      readonly: true,
+    });
+
+    expect(unavailable.implicit.disabled()).toBe(true);
+    expect(unavailable.explicit.disabled()).toBe(true);
+    expect(unavailable.implicit.readonly()).toBe(true);
+    expect(unavailable.explicit.readonly()).toBe(true);
+
+    const profile = form({ implicit: '', explicit: field('') }, { injector });
+    profile.implicit.setValidators(asyncValidator(implicitValidator));
+    profile.explicit.setValidators(asyncValidator(explicitValidator));
+
+    expect(profile.implicit.pending()).toBe(true);
+    expect(profile.explicit.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(implicitValidator).toHaveBeenCalledOnce();
+    expect(explicitValidator).toHaveBeenCalledOnce();
+
+    injector.destroy();
+    dependency.set(1);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(implicitValidator).toHaveBeenCalledOnce();
+    expect(explicitValidator).toHaveBeenCalledOnce();
   });
 
   it.each([
@@ -522,6 +671,7 @@ describe('form', () => {
       bind: field('bind'),
       call: field('call'),
       caller: field('caller'),
+      constructor: field('constructor'),
       length: field('length'),
       name: field('name'),
       prototype: field('prototype'),
@@ -534,12 +684,14 @@ describe('form', () => {
     expect(formGroup.bind).toBe(controls.bind);
     expect(formGroup.call).toBe(controls.call);
     expect(formGroup.caller).toBe(controls.caller);
+    expect(formGroup.constructor).toBe(controls.constructor);
     expect(formGroup.length).toBe(controls.length);
     expect(formGroup.name).toBe(controls.name);
     expect(formGroup.prototype).toBe(controls.prototype);
     expect(formGroup.toString).toBe(controls.toString);
     expect(formGroup.apply()).toBe('apply');
     expect(formGroup.arguments()).toBe('arguments');
+    expect(formGroup.constructor()).toBe('constructor');
     expect(formGroup.name()).toBe('name');
   });
 

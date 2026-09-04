@@ -15,6 +15,52 @@ describe('group', () => {
     expect(address.city()).toBe('Bern');
   });
 
+  it('normalizes special shorthand values consistently at the root and nested depths', () => {
+    const invalidDate = new Date(Number.NaN);
+    const marker = Symbol('marker');
+    const values = group({
+      emptyText: '',
+      disabledFlag: false,
+      notANumber: Number.NaN,
+      positiveInfinity: Number.POSITIVE_INFINITY,
+      negativeZero: -0,
+      largeCount: 1n,
+      marker,
+      invalidDate,
+      empty: null,
+      missing: undefined,
+      nested: { invalidDate, negativeZero: -0 },
+    });
+
+    expect(values.emptyText()).toBe('');
+    expect(values.disabledFlag()).toBe(false);
+    expect(values.notANumber()).toBeNaN();
+    expect(values.positiveInfinity()).toBe(Number.POSITIVE_INFINITY);
+    expect(Object.is(values.negativeZero(), -0)).toBe(true);
+    expect(values.largeCount()).toBe(1n);
+    expect(values.marker()).toBe(marker);
+    expect(values.invalidDate()).toBe(invalidDate);
+    expect(values.empty()).toBeNull();
+    expect(values.missing()).toBeNull();
+    expect(values.nested.invalidDate()).toBe(invalidDate);
+    expect(Object.is(values.nested.negativeZero(), -0)).toBe(true);
+  });
+
+  it('reports complete group paths for invalid structural shorthand', () => {
+    const read = vi.fn(() => 'unsafe');
+    const accessorDefinition = {
+      address: Object.defineProperty({}, 'city', { enumerable: true, get: read }),
+    };
+
+    expect(() => group({ account: { roles: [] } } as never)).toThrow(
+      'group: array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...) at "account.roles"',
+    );
+    expect(() => group(accessorDefinition as never)).toThrow(
+      'group: accessor shorthand is not supported; declare a data property with an explicit node at "address.city"',
+    );
+    expect(read).not.toHaveBeenCalled();
+  });
+
   it('normalizes a non-plain object to a field', () => {
     const expression = new RegExp('forms');
     expect(group({ expression }).expression()).toBe(expression);
@@ -89,6 +135,28 @@ describe('group', () => {
     expect(people[0]).not.toHaveProperty('submit');
     expect(people[1]).not.toHaveProperty('submit');
     expect(people()).toEqual([{ name: 'Marco' }, { name: 'Lia' }]);
+  });
+
+  it('clones implicit and explicit fields with equivalent independent state', () => {
+    const rows = array(form({ implicit: '', explicit: field('') }), [{ implicit: 'one', explicit: 'one' }]);
+    const first = rows[0]!;
+    const second = rows.push({ implicit: 'two', explicit: 'two' });
+
+    expect(first.implicit.nodeType()).toBe('field');
+    expect(second.implicit.nodeType()).toBe('field');
+    expect(first.implicit()).toBe(first.explicit());
+    expect(second.implicit()).toBe(second.explicit());
+    expect(second.implicit).not.toBe(first.implicit);
+    expect(second.explicit).not.toBe(first.explicit);
+
+    second.implicit.markAsTouched();
+    second.explicit.markAsTouched();
+    second.implicit.markAsDirty();
+    second.explicit.markAsDirty();
+    second.reset();
+
+    expect(second.implicit.touched()).toBe(second.explicit.touched());
+    expect(second.implicit.dirty()).toBe(second.explicit.dirty());
   });
 
   it('inherits submission state from its owning form', async () => {

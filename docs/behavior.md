@@ -308,6 +308,21 @@ ordinary functions and non-plain objects such as `RegExp`, `URL`, maps, sets, ty
 or Moment-like values, and custom class instances. Only objects whose prototype is
 `Object.prototype` or `null` become structural groups. Explicit nodes always retain their existing
 behavior.
+
+Object-node declarations use only own enumerable string-keyed data properties. Inherited and
+non-enumerable properties are ignored. Enumerable accessors are rejected without invoking their
+getter, symbol child keys are rejected because node paths are string-based, and an own
+`__proto__` key is rejected to prevent prototype-sensitive assignment. Ordinary string keys such
+as `constructor` and `prototype` remain supported children. Diagnostics identify the complete path
+from the `form()` or `group()` declaration root and recommend an explicit node for ambiguous
+values. This validation runs before any child is normalized, so a failing definition cannot leave
+a partially constructed tree.
+
+The same `normalizeObjectDefinition()` boundary is used by `form()`, `group()`, and their nested
+shorthand objects. Cloning an explicit form or group that contains implicit fields preserves those
+fields as independent nodes. Whether raw scalar shorthand belongs directly inside an `array()`
+object template remains a separate array-shorthand design decision.
+
 Inline object literals and object `type` aliases satisfy the structural definition contract. A
 value typed through an `interface` does not imply a string index signature in TypeScript. Spread it
 into a fresh object to declare a group (`{ ...company }`), or use `field(company)` to declare one

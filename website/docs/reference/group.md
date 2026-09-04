@@ -126,6 +126,15 @@ address.postcode(); // 8000
 This shorthand is especially convenient and unambiguous for strings, numbers, booleans, and
 dates. Arrays must be wrapped explicitly with `field([...])` or declared with `array(...)`.
 
+:::info Declaration property rules
+
+Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
+properties are ignored. Enumerable getters/setters, symbol keys, and the prototype-sensitive
+`__proto__` key are rejected before any node is created. Errors include the complete path from the
+`group()` root. String keys such as `constructor` and `prototype` remain valid children.
+
+:::
+
 Take more care with object values. Plain objects are interpreted as nested groups, whereas
 functions, class instances, and other non-plain objects become atomic fields. If an object is
 intended to be one field value, prefer an explicit `field(myObject)`. This makes the intended node

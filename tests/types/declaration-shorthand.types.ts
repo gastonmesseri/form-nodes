@@ -7,6 +7,7 @@ class User {
 }
 
 const token = Symbol('token');
+const childKey = Symbol('child');
 const createdAt = new Date('2026-09-04T00:00:00.000Z');
 const shorthand = form({
   text: 'draft',
@@ -131,6 +132,10 @@ form({ roles: ['admin'] });
 form({ roles: [] });
 // @ts-expect-error readonly tuples remain ambiguous array declarations
 form({ coordinates: [47.37, 8.54] as const });
+// @ts-expect-error symbol keys cannot be represented by object-node runtime paths
+form({ [childKey]: field('value') });
+// @ts-expect-error groups reject symbol child keys for the same reason
+group({ [childKey]: field('value') });
 
 form({ roles: field(['admin']) });
 form({ roles: array(field(''), ['admin']) });

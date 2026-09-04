@@ -32,6 +32,50 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNode in Chromium', () => {
+  it('binds an implicit field exactly like an explicit field', () => {
+    @Component({
+      template: `
+        <input data-implicit [formNode]="profile.implicit">
+        <input data-explicit [formNode]="profile.explicit">
+      `,
+      imports: [FormNode],
+    })
+    class Host {
+      profile = form({ implicit: 'initial', explicit: field('initial') });
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const implicit = fixture.nativeElement.querySelector('[data-implicit]') as HTMLInputElement;
+    const explicit = fixture.nativeElement.querySelector('[data-explicit]') as HTMLInputElement;
+
+    expect(implicit.value).toBe(explicit.value);
+    implicit.value = 'updated';
+    explicit.value = 'updated';
+    dispatch(implicit, 'input');
+    dispatch(explicit, 'input');
+    dispatch(implicit, 'blur');
+    dispatch(explicit, 'blur');
+    TestBed.flushEffects();
+
+    expect(fixture.componentInstance.profile.implicit()).toBe(fixture.componentInstance.profile.explicit());
+    expect(fixture.componentInstance.profile.implicit.dirty()).toBe(fixture.componentInstance.profile.explicit.dirty());
+    expect(fixture.componentInstance.profile.implicit.touched()).toBe(fixture.componentInstance.profile.explicit.touched());
+
+    fixture.componentInstance.profile.disable();
+    fixture.componentInstance.profile.markAsReadonly();
+    fixture.detectChanges();
+    expect(implicit.disabled).toBe(explicit.disabled);
+    expect(implicit.readOnly).toBe(explicit.readOnly);
+
+    fixture.componentInstance.profile.reset({ implicit: 'reset', explicit: 'reset' });
+    fixture.detectChanges();
+    expect(implicit.value).toBe(explicit.value);
+    expect(fixture.componentInstance.profile.implicit.pristine()).toBe(true);
+    expect(fixture.componentInstance.profile.explicit.pristine()).toBe(true);
+    fixture.destroy();
+  });
+
   it('binds a library field through the Angular formField adapter', () => {
     @Component({
       template: `<input [formField]="profile.name.$field">`,

@@ -91,6 +91,16 @@ Arrays deliberately have no shorthand yet because `[]` cannot communicate whethe
 one field value or a dynamic node collection. Use `field([...])` for one array-valued field or
 `array(...)` for dynamic items.
 
+:::info Declaration property rules
+
+Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
+properties are ignored. Enumerable getters/setters, symbol keys, and the prototype-sensitive
+`__proto__` key are rejected before any node is created. The error includes the complete path, for
+example `profile.roles`, and recommends an explicit primitive where applicable. String keys such
+as `constructor` and `prototype` remain valid children.
+
+:::
+
 Every other value becomes an implicit field. This includes ordinary functions and non-plain
 objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal or Moment-like values, and
 custom class instances. Only plain objects—with `Object.prototype` or a `null` prototype—are
