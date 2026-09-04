@@ -2487,8 +2487,9 @@ The directive currently provides these behaviors:
   coalesced state-change notifications follow; unchanged value/status do not force emissions.
   Direct node reset does not generate an adapter `FormResetEvent`. Angular's directive type
   accepts only the value; use `control.reset()` for notification options. `onlySelf: true` and
-  `overwriteDefaultValue: true` throw before mutation because reactive node parents cannot be
-  isolated and nodes have no stored reset default. Both options accept false/omission.
+  `overwriteDefaultValue: true` are ignored with one `console.warn` per reset call because
+  reactive node parents cannot be isolated and nodes have no stored reset default. Reset still
+  completes and respects `emitEvent`. False/omitted options produce no warning.
   Unlike the node API, adapter `reset(undefined)` means no replacement value, matching Angular's
   directive forwarding and Signal Forms reset argument handling.
   Reference re-resolved to latest stable Angular 22 `v22.1.5`, commit

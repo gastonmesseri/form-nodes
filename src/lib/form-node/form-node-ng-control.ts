@@ -107,7 +107,7 @@ export class FormNodeNgControl {
   reset(value?: unknown, options: { emitEvent?: boolean; onlySelf?: boolean; overwriteDefaultValue?: boolean } = {}) {
     if (this.destroyed) return;
     if (options.onlySelf || options.overwriteDefaultValue) {
-      throw new Error('formNode: reset() does not support onlySelf or overwriteDefaultValue; node ancestors remain reactive and reset has no stored default value.');
+      console.warn('formNode: reset() ignores onlySelf and overwriteDefaultValue; node ancestors remain reactive and reset has no stored default value.');
     }
     untracked(() => {
       const node = this.getNode();

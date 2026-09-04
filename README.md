@@ -2,7 +2,7 @@
   <img src="./website/static/img/form-nodes-logo-big.png" alt="Form Nodes logo" width="280" height="280" />
 </p>
 
-<h1 align="center">Signal-based forms for Angular</h1>
+<h1 align="center">Easy Signal-based forms for Angular</h1>
 
 <p align="center">A typed forms library for <strong>Angular 22</strong>.</p>
 
