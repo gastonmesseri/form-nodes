@@ -410,6 +410,30 @@ one runtime object for `ngControl` and `ngControl.control`, so both have the sam
 A local `useNgControl` helper can capture the host injector during construction and resolve
 `NgControl` in a lifecycle hook, following the same deferred lookup as the example above.
 
+### Validator functions and node validation
+
+Both `ngControl.validator` / `asyncValidator` and the corresponding `control` properties return
+`null`. This means the adapter exposes **no transferable Angular validator functions**, not that
+the bound node has no validation. These properties are read-only compatibility views.
+
+Angular's functions accept an `AbstractControl` and execute its validation. Form Nodes validators
+instead read a reactive node context, and asynchronous validators also depend on the node's
+scheduling and cancellation. Returning cached node errors from a function would not validate the
+supplied Angular control; exporting the underlying callbacks would bypass that ownership.
+Consequently, invoking or copying validators through these properties is unsupported. Do not use
+their nullness to decide whether a field is optional or valid.
+
+Use `errors`, `getError()`, `pending`, and `statusChanges` to observe validation. For the required
+indicator, `control.hasValidator(Validators.required)` reads node required metadata, including
+reactive `requiredIf`. Other Angular validator identities have no defined mapping. Configure or
+replace rules through the node API. A CVA that depends on executing an injected validator against
+a fabricated `AbstractControl` must adapt to these state queries.
+
+CVA rules supplied through `NG_VALIDATORS` still contribute binding-owned errors and respond to
+`registerOnValidatorChange()`. They are not exported as a second executable function. Existing
+node asynchronous validation continues normally when these properties are inspected, including
+pending results, reactive dependency changes, cancellation, and rebinding.
+
 ### Resetting from an existing CVA
 
 `ngControl.reset()` and `ngControl.control.reset()` reset the currently bound node and its

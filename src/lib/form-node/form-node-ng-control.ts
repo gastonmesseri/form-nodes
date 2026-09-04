@@ -1,5 +1,5 @@
 import { DestroyRef, EventEmitter, computed, effect, signal, untracked, type Injector } from '@angular/core';
-import { FormResetEvent, PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors, type ValidatorFn } from '@angular/forms';
+import { FormResetEvent, PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type AsyncValidatorFn, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 
 import { shallowEqual } from '../utils/shallow-equal';
 import type { FormApi } from '../primitives/form.type';
@@ -243,34 +243,15 @@ export class FormNodeNgControl {
     return 'PENDING';
   }
 
+  /** No transferable Angular validator function is exposed; read errors and required metadata. */
+  get validator(): ValidatorFn | null { return null; }
+
+  /** Async execution belongs to the node; observe pending, errors, and statusChanges instead. */
+  get asyncValidator(): AsyncValidatorFn | null { return null; }
+
   hasValidator(validator: ValidatorFn): boolean {
     return validator === Validators.required && this.getNode().$api.required();
   }
 
   updateValueAndValidity() {}
 }
-
-/**
- * asyncValidator
- * control
- * dirty
- * disabled
- * enabled
- * errors
- * getError
- * hasError
- * invalid
- * pending
- * pristine
- * reset
- * status
- * statusChanges
- * touched
- * untouched
- * valid
- * validator
- * value
- * valueAccessor
- * valueChanges
- * viewToModelUpdate
- */

@@ -90,6 +90,106 @@ const bind = (node: Node) => {
   return { fixture, cva, control: cva.ngControl.control! };
 };
 
+describe('FormNode NgControl validator function boundary', () => {
+  it.each(['field', 'nested form'] as const)('exposes no transferable functions while preserving reactive validation on a %s', (kind) => {
+    const message = signal('first');
+    const validate = vi.fn(() => ({ kind: 'custom', message: message() }));
+    const node = kind === 'field'
+      ? field.strict('value', [validate])
+      : form({ details: form({ name: field.strict('value') }) }, [validate]);
+    const root = form({ node });
+    const { fixture, cva, control } = bind(node);
+    const errors = computed(() => control.errors);
+    expect(errors()?.['custom']).toMatchObject({ message: 'first' });
+    const initialCalls = validate.mock.calls.length;
+    for (let read = 0; read < 3; read++) {
+      expect(cva.ngControl.validator).toBeNull();
+      expect(cva.ngControl.asyncValidator).toBeNull();
+      expect(control.validator).toBeNull();
+      expect(control.asyncValidator).toBeNull();
+      expect(control.invalid).toBe(true);
+    }
+    expect(validate).toHaveBeenCalledTimes(initialCalls);
+    message.set('second');
+    expect(errors()?.['custom']).toMatchObject({ message: 'second' });
+    expect(validate).toHaveBeenCalledTimes(initialCalls + 1);
+    expect(root.invalid()).toBe(true);
+    fixture.detectChanges();
+    expect(cva.statuses.at(-1)).toBe('INVALID');
+    const payload = { raw: 'unparseable' };
+    control.setErrors({ parsing: payload });
+    expect(errors()?.['parsing']).toBe(payload);
+    expect(control.validator).toBeNull();
+    expect(validate).toHaveBeenCalledTimes(initialCalls + 1);
+    node.$api.disable();
+    expect(control.errors).toBeNull();
+    node.$api.enable();
+    expect(control.errors?.['custom']).toMatchObject({ message: 'second' });
+    const replacement = field.strict('');
+    fixture.componentInstance.active.set(replacement);
+    fixture.detectChanges();
+    expect(errors()).toBeNull();
+    const needsValue = signal(true);
+    replacement.setValidators(requiredIf(needsValue));
+    expect(control.validator).toBeNull();
+    expect(control.hasValidator(Validators.required)).toBe(true);
+    expect(errors()?.['required']).toBeDefined();
+    needsValue.set(false);
+    expect(control.hasValidator(Validators.required)).toBe(false);
+    expect(errors()).toBeNull();
+    expect(control.asyncValidator).toBeNull();
+    fixture.destroy();
+  });
+
+  it.each(['field', 'nested form'] as const)('leaves async dependencies and cancellation with the %s node when functions are inspected', async (kind) => {
+    const dependency = signal('first');
+    const requests: { abortSignal: AbortSignal; resolve: (result: ValidationResult) => void }[] = [];
+    const validate = vi.fn(({ value, abortSignal }: AsyncValidatorContext<unknown>) => {
+      value();
+      dependency();
+      return new Promise<ValidationResult>(resolve => requests.push({ abortSignal, resolve }));
+    });
+    const options = { adoptBindingInjector: false, inheritInjector: false };
+    const node = kind === 'field'
+      ? field.strict('value', [asyncValidator(validate)], options)
+      : form({ details: form({ name: field.strict('value') }) }, [asyncValidator(validate)], options);
+    const root = form({ node });
+    const { fixture, cva, control } = bind(node);
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledOnce());
+    expect(control.pending).toBe(true);
+    expect(root.pending()).toBe(true);
+    for (let read = 0; read < 3; read++) {
+      expect(cva.ngControl.asyncValidator).toBeNull();
+      expect(control.asyncValidator).toBeNull();
+      expect(control.validator).toBeNull();
+      expect(control.errors).toBeNull();
+    }
+    expect(validate).toHaveBeenCalledOnce();
+    expect(requests[0]!.abortSignal.aborted).toBe(false);
+    dependency.set('second');
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    expect(requests[0]!.abortSignal.aborted).toBe(true);
+    requests[0]!.resolve({ kind: 'stale' });
+    await Promise.resolve();
+    expect(control.errors).toBeNull();
+    expect(control.pending).toBe(true);
+    requests[1]!.resolve({ kind: 'remote' });
+    await vi.waitFor(() => expect(control.pending).toBe(false));
+    fixture.detectChanges();
+    expect(control.errors?.['remote']).toBeDefined();
+    expect(cva.statuses.at(-1)).toBe('INVALID');
+    expect(root.invalid()).toBe(true);
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(control.asyncValidator).toBeNull();
+    fixture.componentInstance.active.set(field.strict('replacement'));
+    fixture.detectChanges();
+    expect(control.errors).toBeNull();
+    expect(control.pending).toBe(false);
+    expect(control.asyncValidator).toBeNull();
+    fixture.destroy();
+  });
+});
+
 describe('FormNode NgControl reset compatibility', () => {
   it.each(['field', 'nested form'] as const)('resets a %s subtree while retaining sibling state and configured validation', (kind) => {
     const name = field.strict('initial', [required]);
