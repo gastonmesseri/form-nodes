@@ -380,6 +380,9 @@ A CVA can obtain `NgControl` from its host injector in `ngAfterContentInit()` or
 `ngAfterViewInit()` and keep its existing subscriptions. `[formNode]` supplies the adapter automatically; no extra provider or Angular
 `FormControl` is needed in the application.
 
+Use the documented Angular members through the injected `NgControl`. Members prefixed with `_`
+are adapter implementation details and are not supported CVA integration points.
+
 <CodeBlock language="ts">{ngControlSource}</CodeBlock>
 
 Both `ngControl` and `ngControl.control` expose current `value`, `errors`, validation status,
