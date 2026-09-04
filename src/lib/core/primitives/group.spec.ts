@@ -52,13 +52,20 @@ describe('group', () => {
       address: Object.defineProperty({}, 'city', { enumerable: true, get: read }),
     };
 
-    expect(() => group({ account: { roles: [] } } as never)).toThrow(
-      'group: array shorthand is ambiguous at "account.roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
-    );
     expect(() => group(accessorDefinition as never)).toThrow(
       'group: accessor shorthand is not supported at "address.city"; declare a data property with an explicit node or, if this object is intended as a field value, wrap it with field(value)',
     );
     expect(read).not.toHaveBeenCalled();
+  });
+
+  it('normalizes array values to fields at every nested depth', () => {
+    const roles = ['admin'];
+    const settings = group({ roles, account: { permissions: [] } });
+
+    expect(settings.roles.nodeType()).toBe('field');
+    expect(settings.roles()).toBe(roles);
+    expect(settings.account.permissions.nodeType()).toBe('field');
+    expect(settings()).toEqual({ roles: ['admin'], account: { permissions: [] } });
   });
 
   it('normalizes a non-plain object to a field', () => {
@@ -195,12 +202,13 @@ describe('group', () => {
 
   it('normalizes batch field and group shorthands added dynamically', () => {
     const filters = group({ query: '' });
-    const added = filters.add({ page: 1, range: { minimum: 0, maximum: 100 } });
+    const added = filters.add({ page: 1, roles: ['admin'], range: { minimum: 0, maximum: 100 } });
 
     expect(added.page.nodeType()).toBe('field');
+    expect(added.roles.nodeType()).toBe('field');
     expect(added.range.nodeType()).toBe('group');
     expect(added.range.minimum.nodeType()).toBe('field');
     expect(added.range.maximum.nodeType()).toBe('field');
-    expect(filters()).toEqual({ query: '', page: 1, range: { minimum: 0, maximum: 100 } });
+    expect(filters()).toEqual({ query: '', page: 1, roles: ['admin'], range: { minimum: 0, maximum: 100 } });
   });
 });

@@ -301,11 +301,14 @@ owns an independent submission workflow.
 Inside `form()` and `group()` definitions, strings, numbers, booleans, bigints, symbols, `Date`
 instances, `null`, and `undefined` are shorthand for `field(initialValue)`. Primitive literal types
 are widened in the same way as a direct `field()` call. `null` and `undefined` produce
-`Field<unknown>`, and `undefined` is normalized to the field's runtime `null` value. Arrays are
-intentionally rejected as ambiguous shorthand: use `field([...])` for one array-valued field or
-`array(...)` for a dynamic node collection. Every other value becomes an implicit field, including
-ordinary functions and non-plain objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal
-or Moment-like values, and custom class instances. Only objects whose prototype is
+`Field<unknown>`, and `undefined` is normalized to the field's runtime `null` value. Every array is
+also an implicit field, including empty arrays, populated arrays, readonly tuples, nested arrays,
+and arrays of plain objects. A mutable empty-array shorthand widens from `never[]` to `unknown[]`,
+while an empty readonly tuple widens to `readonly unknown[]`; consumers can use an explicit
+`field<T[]>([])` when the eventual item type is known. Array length and contents never select a
+node shape; only an explicit `array(...)` creates a dynamic collection of item nodes. Every other value becomes an implicit
+field, including ordinary functions and non-plain objects such as `RegExp`, `URL`, maps, sets,
+typed arrays, Temporal or Moment-like values, and custom class instances. Only objects whose prototype is
 `Object.prototype` or `null` become structural groups. Explicit nodes always retain their existing
 behavior.
 
@@ -319,9 +322,10 @@ values. This validation runs before any child is normalized, so a failing defini
 a partially constructed tree.
 
 The same `normalizeObjectDefinition()` boundary is used by `form()`, `group()`, and their nested
-shorthand objects. Cloning an explicit form or group that contains implicit fields preserves those
-fields as independent nodes. Whether raw scalar shorthand belongs directly inside an `array()`
-object template remains a separate array-shorthand design decision.
+shorthand objects and object templates passed to `array()`. Cloning an explicit form, group, or
+object template that contains implicit fields preserves those fields as independent nodes. An
+array-valued leaf is cloned as a fresh field node while retaining the declared array value identity,
+just like an explicit `field(arrayValue)` template leaf.
 
 Inline object literals and object `type` aliases satisfy the structural definition contract. A
 value typed through an `interface` does not imply a string index signature in TypeScript. Spread it
@@ -529,8 +533,8 @@ Calling reset on a nested form only resets that subtree. State belonging to sibl
 `form()` and `group()` accept named children after creation through `add(key, definition)` or an
 atomic `add(definitions)` call. Both signatures accept the same field and nested-object shorthands
 as initial construction: concise values normalize to `field()`, while plain objects normalize to
-`group()`. Arrays remain ambiguous and require explicit `field([...])` or `array(...)`. The returned
-nodes retain their exact inferred types. The complete input is validated and every explicit node is
+`group()`. Arrays normalize to atomic fields; a dynamic collection still requires an explicit
+`array(...)`. The returned nodes retain their exact inferred types. The complete input is validated and every explicit node is
 confirmed detached before normalization, so an invalid batch cannot attach or construct only some
 of its children. Dynamic
 children are not installed as direct properties: this makes an undeclared or misspelled property a
@@ -1589,8 +1593,8 @@ Object templates may contain the same field shorthands as `form()` and `group()`
 For example, `array({ name: '', age: 0 })` is normalized and inferred like
 `array({ name: field(''), age: field(0) })`: every item is a fresh group containing independent
 field nodes. Static templates are validated before any item is created, while factory results are
-validated on each invocation. Ambiguous array-valued children still require explicit `field([...])`
-or `array(...)` declarations.
+validated on each invocation. Array-valued children normalize to fields, while nested dynamic
+collections require explicit `array(...)` declarations.
 Templates may also define a `field()`, an explicit `group()`, an explicit `form()`, or another
 `array()`:
 

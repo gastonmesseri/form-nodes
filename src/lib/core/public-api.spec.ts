@@ -38,10 +38,11 @@ describe('types', () => {
       address: { city: string | null };
     }>();
 
-    if (false) {
-      // @ts-expect-error arrays require an explicit field() or array() declaration
-      form({ roles: [] });
-    }
+    const arrays = form({ roles: ['admin'], empty: [] });
+    expectTypeOf(arrays.roles()).toEqualTypeOf<string[] | null>();
+    expectTypeOf(arrays.empty()).toEqualTypeOf<unknown[] | null>();
+    expectTypeOf(arrays.roles.nodeType()).toEqualTypeOf<'field'>();
+    expectTypeOf(arrays.empty.nodeType()).toEqualTypeOf<'field'>();
   });
 
   it('contextually types built-in validator when callbacks', () => {

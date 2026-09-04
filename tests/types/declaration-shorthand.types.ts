@@ -22,6 +22,11 @@ const shorthand = form({
     city: 'Zurich',
   },
   user: new User(),
+  roles: ['admin'],
+  emptyList: [],
+  readonlyEmptyList: [] as const,
+  coordinates: [47.37, 8.54] as const,
+  companies: [{ companyId: 23, companyName: 'Apple' }],
 });
 
 type _String = Expect<Equal<ReturnType<typeof shorthand.text>, string | null>>;
@@ -34,11 +39,17 @@ type _Null = Expect<Equal<ReturnType<typeof shorthand.empty>, unknown>>;
 type _Undefined = Expect<Equal<ReturnType<typeof shorthand.missing>, unknown>>;
 type _NestedObject = Expect<Equal<ReturnType<typeof shorthand.nested>, { city: string | null }>>;
 type _ClassInstance = Expect<Equal<ReturnType<typeof shorthand.user>, User | null>>;
+type _Array = Expect<Equal<ReturnType<typeof shorthand.roles>, string[] | null>>;
+type _EmptyArray = Expect<Equal<ReturnType<typeof shorthand.emptyList>, unknown[] | null>>;
+type _ReadonlyEmptyArray = Expect<Equal<ReturnType<typeof shorthand.readonlyEmptyList>, readonly unknown[] | null>>;
+type _ReadonlyTuple = Expect<Equal<ReturnType<typeof shorthand.coordinates>, readonly [47.37, 8.54] | null>>;
+type _ObjectArray = Expect<Equal<ReturnType<typeof shorthand.companies>, Array<{ companyId: number; companyName: string }> | null>>;
 
 const dynamic = form({ fixed: '' });
 const dynamicCount = dynamic.add('count', 1);
 const dynamicEmpty = dynamic.add('empty', null);
 const dynamicUser = dynamic.add('user', new User());
+const dynamicRoles = dynamic.add('roles', ['admin']);
 const dynamicBatch = dynamic.add({
   enabled: false,
   address: { city: 'Zurich' },
@@ -47,6 +58,7 @@ const dynamicBatch = dynamic.add({
 type _DynamicNumber = Expect<Equal<ReturnType<typeof dynamicCount>, number | null>>;
 type _DynamicNull = Expect<Equal<ReturnType<typeof dynamicEmpty>, unknown>>;
 type _DynamicClassInstance = Expect<Equal<ReturnType<typeof dynamicUser>, User | null>>;
+type _DynamicArray = Expect<Equal<ReturnType<typeof dynamicRoles>, string[] | null>>;
 type _DynamicBoolean = Expect<Equal<ReturnType<typeof dynamicBatch.enabled>, boolean | null>>;
 type _DynamicGroup = Expect<Equal<ReturnType<typeof dynamicBatch.address>, { city: string | null }>>;
 
@@ -58,25 +70,25 @@ type _DynamicGroupString = Expect<Equal<ReturnType<typeof dynamicCategory>, stri
 type _DynamicGroupNumber = Expect<Equal<ReturnType<typeof dynamicGroupBatch.page>, number | null>>;
 type _DynamicNestedGroup = Expect<Equal<ReturnType<typeof dynamicGroupBatch.range>, { minimum: number | null }>>;
 
-// @ts-expect-error array-valued dynamic fields must use field([...]) explicitly
-dynamic.add('roles', ['admin']);
-// @ts-expect-error arrays remain ambiguous inside dynamically added object definitions
-dynamic.add({ preferences: { roles: ['admin'] } });
-// @ts-expect-error group dynamic arrays require an explicit field() or array() node too
-dynamicGroup.add('roles', ['admin']);
+const dynamicPreferences = dynamic.add({ preferences: { roles: ['admin'] } });
+const dynamicGroupRoles = dynamicGroup.add('roles', ['admin']);
+type _DynamicNestedArray = Expect<Equal<ReturnType<typeof dynamicPreferences.preferences.roles>, string[] | null>>;
+type _DynamicGroupArray = Expect<Equal<ReturnType<typeof dynamicGroupRoles>, string[] | null>>;
 
-const shorthandRows = array({ name: '', age: 0, address: { city: '' } }, {
-  initialValue: [{ name: 'Marco', age: 36, address: { city: 'Zurich' } }],
+const shorthandRows = array({ name: '', age: 0, roles: ['viewer'], address: { city: '' } }, {
+  initialValue: [{ name: 'Marco', age: 36, roles: ['admin'], address: { city: 'Zurich' } }],
 });
 const shorthandRow = shorthandRows[0]!;
 
 type _ArrayShorthandItem = Expect<Equal<ReturnType<typeof shorthandRow>, {
   name: string | null;
   age: number | null;
+  roles: string[] | null;
   address: { city: string | null };
 }>>;
 type _ArrayShorthandName = Expect<Equal<ReturnType<typeof shorthandRow.name>, string | null>>;
 type _ArrayShorthandAge = Expect<Equal<ReturnType<typeof shorthandRow.age>, number | null>>;
+type _ArrayShorthandRoles = Expect<Equal<ReturnType<typeof shorthandRow.roles>, string[] | null>>;
 type _ArrayShorthandAddress = Expect<Equal<ReturnType<typeof shorthandRow.address>, { city: string | null }>>;
 
 const factoryRows = array(() => ({ name: '', user: new User() }), 1);
@@ -84,7 +96,6 @@ const factoryRow = factoryRows[0]!;
 type _ArrayFactoryShorthandName = Expect<Equal<ReturnType<typeof factoryRow.name>, string | null>>;
 type _ArrayFactoryClassInstance = Expect<Equal<ReturnType<typeof factoryRow.user>, User | null>>;
 
-// @ts-expect-error arrays inside object templates remain ambiguous
 array({ roles: ['admin'] });
 // @ts-expect-error a root array is not an object-item template
 array([]);
@@ -180,11 +191,8 @@ group({
   },
 });
 
-// @ts-expect-error array-valued fields must use field([...]) explicitly
 form({ roles: ['admin'] });
-// @ts-expect-error empty arrays do not imply an array node or an array-valued field
 form({ roles: [] });
-// @ts-expect-error readonly tuples remain ambiguous array declarations
 form({ coordinates: [47.37, 8.54] as const });
 // @ts-expect-error symbol keys cannot be represented by object-node runtime paths
 form({ [childKey]: field('value') });

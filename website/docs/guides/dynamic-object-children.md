@@ -48,10 +48,9 @@ added.address.city(); // 'Zurich'
 ```
 
 The operation validates every destination key and definition before normalizing or attaching
-anything. Existing keys, `$api`, and `$field` are rejected. Arrays remain intentionally ambiguous:
-use `field([...])` for one array-valued field or `array(...)` for a dynamic collection. Use
-`field(objectValue)` whenever a plain object should remain one atomic value instead of becoming a
-group.
+anything. Existing keys, `$api`, and `$field` are rejected. Array values become fields; use an
+explicit `array(...)` for a dynamic collection with item nodes. Use `field(objectValue)` whenever
+a plain object should remain one atomic value instead of becoming a group.
 
 Both `add()` signatures intentionally preserve the cardinality of their input. Adding one named
 definition returns that exact attached node; adding an object returns an exact keyed map containing

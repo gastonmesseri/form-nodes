@@ -110,8 +110,8 @@ group(definitions, validators, options?);
 
 ### `field()` shorthand
 
-Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as class
-instances, can stand in for `field()` when defining a group:
+Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as arrays
+and class instances, can stand in for `field()` when defining a group:
 
 ```ts
 const address = group({
@@ -123,8 +123,11 @@ address.city(); // 'Zurich'
 address.postcode(); // 8000
 ```
 
-This shorthand is especially convenient and unambiguous for strings, numbers, booleans, and
-dates. Arrays must be wrapped explicitly with `field([...])` or declared with `array(...)`.
+This shorthand is especially convenient and unambiguous for strings, numbers, booleans, dates,
+and arrays used as one control value. Every array becomes a `Field`, regardless of whether it is
+empty or what its items contain. Declare `array(...)` explicitly when the items need their own
+nodes, validation, interaction state, or structural operations. An empty `[]` shorthand widens to
+`unknown[]`; use `field<Item[]>([])` when the eventual item type is known.
 
 :::info Declaration property rules
 
@@ -1085,7 +1088,7 @@ Each entry includes its consumer-facing signature, behavior, and return value.
 
 Attaches one child or several children at runtime. A single definition returns its exact attached
 node; an object returns an exact keyed map. Plain nested objects become `group()` nodes.
-Concise values use the same `field()` shorthand as the initial declaration.
+Concise values, including arrays, use the same `field()` shorthand as the initial declaration.
 
 ```ts
 const filters = group({
@@ -1113,9 +1116,9 @@ filters.children['range'] === added.range; // true
 
 Keys must be new, definitions must be detached, and `$api` and `$field` are reserved. The object
 form validates every supplied definition before attaching any child. Keep the returned node for
-its exact type, or retrieve it later with `get()` or `children[key]`. Arrays require explicit
-`field([...])` or `array(...)`; wrap a plain application object with `field(value)` when it should
-remain one atomic value.
+its exact type, or retrieve it later with `get()` or `children[key]`. Array values become fields;
+declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application object
+with `field(value)` when it should remain one atomic value.
 
 #### get()
 

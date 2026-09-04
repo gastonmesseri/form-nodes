@@ -22,6 +22,7 @@ export class PackageConsumer {
     preferences: group({ theme: field('dark') }),
     addresses: array({ city: field('Zurich') }, [{ city: 'Madrid' }]),
     shorthandAddresses: array({ city: '', postcode: 0 }, [{ city: 'Bern', postcode: 3000 }]),
+    roles: ['admin'],
   });
 
   readonly name: string | null = this.profile.name();
@@ -29,6 +30,7 @@ export class PackageConsumer {
   readonly theme: string | null = this.profile.preferences.theme();
   readonly shorthandCity: string | null = this.profile.shorthandAddresses[0]!.city();
   readonly shorthandPostcode: number | null = this.profile.shorthandAddresses[0]!.postcode();
+  readonly roles: string[] | null = this.profile.roles();
   readonly dynamicAge = this.profile.add('age', 36);
   readonly dynamic = this.profile.add({ nickname: '', location: { city: 'Zurich' } });
   readonly dynamicAgeValue: number | null = this.dynamicAge();

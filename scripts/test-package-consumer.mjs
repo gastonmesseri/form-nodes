@@ -82,10 +82,12 @@ try {
       name: field('', [required]),
       preferences: group({ theme: field('dark') }),
       addresses: array({ city: field('') }, [{ city: 'Zurich' }]),
+      roles: ['admin'],
     });
     if (profile.name.valid()) throw new Error('Required validation was not preserved in the package.');
     if (profile.addresses[0].city() !== 'Zurich') throw new Error('Array values were not preserved in the package.');
     if (profile.preferences.theme() !== 'dark') throw new Error('Group values were not preserved in the package.');
+    if (profile.roles.nodeType() !== 'field' || profile.roles()[0] !== 'admin') throw new Error('Array-valued field shorthand was not preserved in the package.');
     const shorthandRows = array({ name: '', age: 0 }, [{ name: 'Marco', age: 36 }]);
     if (shorthandRows[0].name.nodeType() !== 'field' || shorthandRows[0].age() !== 36) throw new Error('Array object-template shorthand was not preserved in the package.');
     const age = profile.add('age', 36);

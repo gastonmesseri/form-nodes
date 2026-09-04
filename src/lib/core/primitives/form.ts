@@ -51,8 +51,8 @@ type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDef
  *
  * Creates a root form from an initially fixed object of node definitions and optional configuration.
  *
- * Concise values are normalized to fields, while plain nested objects become structural groups.
- * Arrays remain explicit through `field([...])` or `array(...)`. Use the options object for
+ * Concise values, including arrays, are normalized to fields, while plain nested objects become
+ * structural groups. Only an explicit `array(...)` creates a dynamic array node. Use the options object for
  * form-level validators, submission, state, debounce, and validator messages.
  * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
  * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is

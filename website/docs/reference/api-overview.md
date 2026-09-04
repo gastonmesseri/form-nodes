@@ -62,10 +62,10 @@ Creates the typed object tree that owns a submission workflow. It has the same s
 as a group plus `submission` configuration and `submit()`. Root application workflows normally
 start with `form()`; explicit nested forms are reserved for independent subflows.
 
-Values such as `name: ''`, `age: 23`, `birthday: new Date()`, `value: null`, and
-`value: undefined` are concise field definitions. Object literals remain group definitions;
-arrays require an explicit `field([...])` or `array(...)` choice. Ordinary functions and non-plain
-object instances become concise fields too.
+Values such as `name: ''`, `age: 23`, `birthday: new Date()`, `value: null`, `value: undefined`,
+and `roles: ['admin']` are concise field definitions. Object literals remain group definitions.
+An array value always becomes a field; only an explicit `array(...)` creates a dynamic collection
+of item nodes. Ordinary functions and non-plain object instances become concise fields too.
 
 Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormSet`, `FormPatch`, and
 `FormSubmissionOptions`.

@@ -27,14 +27,7 @@ const definitionError = (
 
 const assertDefinitionValue = (definition: unknown, nodeType: ObjectNodeKind, path: readonly string[]) => {
   if (isNode(definition)) return;
-  if (Array.isArray(definition)) {
-    throw definitionError(
-      nodeType,
-      path,
-      'array shorthand is ambiguous',
-      'wrap the value with field([...]) or declare a dynamic array with array(...)',
-    );
-  }
+  if (Array.isArray(definition)) return;
   if (definition !== null && typeof definition === 'object' && isPlainObject(definition)) {
     assertValidObjectDefinition(definition as ObjectNodeDefinitions, nodeType, path);
   }
@@ -77,9 +70,7 @@ export const assertValidObjectDefinition = (
 
 export const normalizeObjectDefinition = (definition: unknown): Node => {
   if (isNode(definition)) return definition;
-  if (Array.isArray(definition)) {
-    throw new Error('Array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...).');
-  }
+  if (Array.isArray(definition)) return field(definition);
   if (definition !== null && typeof definition === 'object') {
     if (definition instanceof Date) return field(definition);
     if (isPlainObject(definition)) return group(definition as ObjectNodeDefinitions);
