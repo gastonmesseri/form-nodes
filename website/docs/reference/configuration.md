@@ -20,6 +20,7 @@ fallback validator-message catalog.
 | Node or subtree | `field()`, `form()`, `array()`, and `group()` options | The declared node; selected options inherit | Function sources are reactive |
 | Angular injector | `provideValidatorMessages()` | Nodes created in that injector scope | Selected message functions are reactive |
 | Angular injector | `provideFormNodeConfig()` | Descendant `[formNode]` and `$field`-backed `[formField]` bindings | Class predicates are reactive |
+| Factory set | `createFormPrimitives()` | Fields and shorthands created through that set | Explicit field options override the shared default |
 | JavaScript process | `configureGlobalValidatorMessages()` | Fallback for every node | Catalog sources and selected messages are reactive |
 
 There is currently no process-wide API that changes defaults such as nullability, debounce,

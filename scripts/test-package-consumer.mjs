@@ -77,7 +77,10 @@ try {
 
   writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
     import '@angular/compiler';
-    import { array, field, form, group, required } from '@gem/ng-forms';
+    import { array, createFormPrimitives, field, form, group, required } from '@gem/ng-forms';
+    const configuredForms = createFormPrimitives({ nullable: false });
+    const configuredProfile = configuredForms.form({ name: '' });
+    if (configuredProfile.name() !== '') throw new Error('Configured form factories were not preserved in the package.');
     const profile = form({
       name: field('', [required]),
       preferences: group({ theme: field('dark') }),

@@ -82,6 +82,19 @@ example.apply(); // 'value'
 - Signals expose reactive state while actions are declared as methods in public types, allowing editors to distinguish state from behavior in IntelliSense.
 - Values remain programmatically readable and writable regardless of disabled, readonly, or hidden state.
 
+## Configured primitive factories
+
+`createFormPrimitives({ nullable })` returns an isolated `field`, `form`, `group`, and `array` factory set.
+The options object and `nullable` property are optional; both default to `true`. The package-level
+factories retain their nullable-by-default behavior. A configured default applies
+to direct fields, object field shorthands, dynamically added children, and nodes created later from
+array templates or factories. An explicit field `nullable` option takes precedence, and an existing
+node attached to a configured form retains the policy of the factory that originally created it.
+
+Nullish initial values remain nullable even in a non-nullable factory set because no non-null value
+exists to preserve. Consumers can declare the intended future type with an explicit nullable field,
+such as `field<string>(null, { nullable: true })`.
+
 Every runtime node exposes `nodeType()`, which returns the precise public discriminant `'field'`,
 `'group'`, `'form'`, or `'array'`. The literal is stable for the node's lifetime and is preserved by
 template cloning. Generic infrastructure can read the same method through `$api.nodeType()` when a

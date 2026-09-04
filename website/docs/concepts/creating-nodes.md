@@ -33,6 +33,9 @@ name.set('Lia');
 // name.set(null); // TypeScript error
 ```
 
+Use [`createFormPrimitives({ nullable: false })`](../reference/create-form-primitives.md) when non-nullable fields and
+field shorthands should be the default throughout an application.
+
 A field created without an initial value starts at `null`:
 
 ```ts

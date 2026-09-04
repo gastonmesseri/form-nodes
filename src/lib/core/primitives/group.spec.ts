@@ -3,10 +3,21 @@ import { describe, expect, it, vi } from 'vitest';
 import { form } from './form';
 import { field } from './field';
 import { group } from './group';
+import { createFormPrimitives } from './create-form-primitives';
 import { array } from './array';
 import { required } from '../validation/validators/required';
 
 describe('group', () => {
+  it('creates shorthand descendants with configured field defaults', () => {
+    const { group: configuredGroup } = createFormPrimitives({ nullable: false });
+    const address = configuredGroup({ city: '' });
+
+    const added = address.add({ postcode: '' });
+
+    expect(address()).toEqual({ city: '', postcode: '' });
+    expect(added.postcode()).toBe('');
+  });
+
   it('normalizes concise values to fields', () => {
     const address = group({ city: 'Zurich', postcode: 8000 });
 

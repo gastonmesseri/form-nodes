@@ -270,12 +270,18 @@ export type FormPatch<TNodes extends Nodes> = {
   [K in keyof TNodes]?: NodePatch<TNodes[K]>;
 };
 
-export type NormalizedNode<TNode> =
+export type NormalizedNodeWithDefault<TNode, TNullable extends boolean> =
   [TNode] extends [Node] ? TNode
     : [TNode] extends [null | undefined] ? Field<unknown>
-      : [TNode] extends [FieldShorthand] ? Field<WidenFieldShorthand<TNode> | null>
-        : [TNode] extends [ObjectNodeDefinitions] ? Group<NormalizedNodes<TNode>>
-          : Field<TNode | null>;
+      : [TNode] extends [FieldShorthand] ? Field<WidenFieldShorthand<TNode> | (TNullable extends true ? null : never)>
+        : [TNode] extends [ObjectNodeDefinitions] ? Group<NormalizedNodesWithDefault<TNode, TNullable>>
+          : Field<TNode | (TNullable extends true ? null : never)>;
+
+export type NormalizedNode<TNode> = NormalizedNodeWithDefault<TNode, true>;
+
+export type NormalizedNodesWithDefault<TNodes extends ObjectNodeDefinitions, TNullable extends boolean> = {
+  [K in keyof TNodes]: NormalizedNodeWithDefault<TNodes[K], TNullable>;
+};
 
 export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = {
   [K in keyof TNodes]: NormalizedNode<TNodes[K]>;

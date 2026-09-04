@@ -101,6 +101,7 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   validatorsOrOptions: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
   separateOptions: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | undefined,
   nodeType: 'form' | 'group',
+  normalizeDefinition: (definition: unknown) => Node = normalizeObjectDefinition,
 ): Node {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = FormValue<TNodes>;
@@ -113,7 +114,7 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   const validators = normalizeValidatorSource(validatorSource);
   const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
   assertValidObjectDefinition(definitions, nodeType);
-  const controls = mapObjectValues(definitions, normalizeObjectDefinition) as TNodes;
+  const controls = mapObjectValues(definitions, normalizeDefinition) as TNodes;
   const createDefinitions = createNodeDefinitionFactory(controls as NodeDefinitions);
   const controlsRecord = controls as Record<string, Node>;
   const structureVersion = signal(0);
@@ -304,7 +305,7 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     entries.forEach(([key]) => assertAvailableDynamicKey(key));
     assertValidObjectDefinition(definitions, nodeType);
     entries.forEach(([, definition]) => assertDetachedDefinition(definition));
-    const nodes = entries.map(([key, definition]) => [key, normalizeObjectDefinition(definition)] as const);
+    const nodes = entries.map(([key, definition]) => [key, normalizeDefinition(definition)] as const);
     nodes.forEach(([key, node]) => {
       controlsRecord[key] = node;
       dynamicKeys.add(key);
@@ -443,6 +444,7 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
       validatorSource as ValidatorSource<any>,
       cloneOptions as FormOptions<any> | undefined,
       nodeType,
+      normalizeDefinition,
     ),
     _setParent: (parent: Node | null, key?: string) => {
       formParent.set(parent);
