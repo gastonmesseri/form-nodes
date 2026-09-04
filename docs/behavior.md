@@ -82,12 +82,12 @@ example.apply(); // 'value'
 - Signals expose reactive state while actions are declared as methods in public types, allowing editors to distinguish state from behavior in IntelliSense.
 - Values remain programmatically readable and writable regardless of disabled, readonly, or hidden state.
 
-Every runtime node carries an internal readonly discriminant at `$api._nodeType`. Its value is one
-of `'field'`, `'group'`, `'form'`, or `'array'` and is preserved by template cloning. The property is
-intentionally absent from public node API types: it supports internal capability checks, debugging,
-and implementation selection without making structural checks such as the presence of `submit()`
-the source of truth. The separate private symbol used by `isNode()` remains responsible only for
-answering whether an arbitrary value is a library node.
+Every runtime node exposes `nodeType()`, which returns the precise public discriminant `'field'`,
+`'group'`, `'form'`, or `'array'`. The literal is stable for the node's lifetime and is preserved by
+template cloning. Generic infrastructure can read the same method through `$api.nodeType()` when a
+named child shadows the direct member. The internal readonly `$api._nodeType` discriminant remains
+the implementation source of truth for capability selection. The separate private symbol used by
+`isNode()` remains responsible only for answering whether an arbitrary value is a library node.
 
 ## Public API documentation conventions
 
@@ -303,11 +303,24 @@ instances, `null`, and `undefined` are shorthand for `field(initialValue)`. Prim
 are widened in the same way as a direct `field()` call. `null` and `undefined` produce
 `Field<unknown>`, and `undefined` is normalized to the field's runtime `null` value. Arrays are
 intentionally rejected as ambiguous shorthand: use `field([...])` for one array-valued field or
-`array(...)` for a dynamic node collection. Every other value becomes an implicit field. This
-includes non-plain objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal or Moment-like
-values, custom class instances, and ordinary functions. Only objects whose prototype is
+`array(...)` for a dynamic node collection. Every other value becomes an implicit field, including
+ordinary functions and non-plain objects such as `RegExp`, `URL`, maps, sets, typed arrays, Temporal
+or Moment-like values, and custom class instances. Only objects whose prototype is
 `Object.prototype` or `null` become structural groups. Explicit nodes always retain their existing
 behavior.
+Inline object literals and object `type` aliases satisfy the structural definition contract. A
+value typed through an `interface` does not imply a string index signature in TypeScript. Spread it
+into a fresh object to declare a group (`{ ...company }`), or use `field(company)` to declare one
+atomic value. Without that explicit choice, TypeScript can infer the interface as an atomic field
+while runtime sees the actual plain object and constructs a group.
+
+Type annotations cannot carry runtime prototype information. A class instance can legally be
+assigned to an object `type` alias and therefore look like a group definition to TypeScript while
+runtime correctly recognizes its non-plain prototype as a field. Consumers that intentionally
+widen or erase an object's concrete type at factory, deserialization, or other broadly typed
+boundaries should use `field(value)` or spread a verified plain record according to their intended
+ownership. Direct object literals, object `type` aliases containing plain values, built-in object
+types, Moment-like values, and concrete class types retain matching inference and runtime behavior.
 
 Angular 22.1.x Signal Forms derives its tree from an existing model signal and enumerates object
 keys in `packages/forms/signals/src/field/structure.ts`; it does not expose Gem's declaration

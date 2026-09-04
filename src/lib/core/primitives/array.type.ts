@@ -203,6 +203,8 @@ export type ArrayIndexes<TItem extends Node, TParent extends Node> = {
 };
 
 export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
+  /** Returns the concrete primitive represented by this node. */
+  nodeType(): 'array';
   /**
    * Readonly signal containing the array node's current item nodes.
    * Reading it participates in reactive tracking, and its array reference changes when the

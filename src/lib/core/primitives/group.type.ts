@@ -156,8 +156,10 @@ export type GroupChildren<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
-  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'getError' | 'add' | 'remove' | 'submit' | 'submitting' | 'validationStatus'>
+  & Omit<FormApi<TNodes, TParent>, 'children' | 'errors' | 'allErrors' | 'form' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
   & {
+    /** Returns the concrete primitive represented by this node. */
+    nodeType(): 'group';
     /** Stable readonly map of this group's immediate child nodes. */
     readonly children: GroupChildren<TNodes, TParent> & DynamicFormChildren;
     /** Adds one child at runtime and returns the attached node with its exact inferred type. */

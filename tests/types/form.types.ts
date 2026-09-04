@@ -1,3 +1,5 @@
+import moment, { type Moment } from 'moment';
+
 import { field, form } from '../../src/public-api';
 
 form({ name: field('') }, { debounce: 'blur' });
@@ -34,17 +36,71 @@ const expression = /forms/;
 class Account {
   name = 'Marco';
 }
+class EmptyType {}
 const account = new Account();
+const emptyType = new EmptyType();
 const objectValues = form({
   expression,
   lookup: new Map([['name', 'Marco']]),
   account,
+  emptyType,
   calculate: (value: number) => value * 2,
 });
 type _RegExpField = Expect<Equal<ReturnType<typeof objectValues.expression>, RegExp | null>>;
 type _MapField = Expect<Equal<ReturnType<typeof objectValues.lookup>, Map<string, string> | null>>;
 type _ClassField = Expect<Equal<ReturnType<typeof objectValues.account>, Account | null>>;
+type _EmptyClassField = Expect<Equal<ReturnType<typeof objectValues.emptyType>, EmptyType | null>>;
 type _FunctionField = Expect<Equal<ReturnType<typeof objectValues.calculate>, ((value: number) => number) | null>>;
+
+type Company = {
+  companyId: number;
+  companyName: string;
+};
+const defaultCompany: Company = { companyId: 23, companyName: 'Apple' };
+const companyForm = form({
+  inlineCompany: { companyId: 7, companyName: 'Google' },
+  company: defaultCompany,
+});
+type _InlineCompanyValue = Expect<Equal<ReturnType<typeof companyForm.inlineCompany>, { companyId: number | null; companyName: string | null }>>;
+type _TypedCompanyValue = Expect<Equal<ReturnType<typeof companyForm.company>, { companyId: number | null; companyName: string | null }>>;
+type _InlineCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.inlineCompany.companyId>, number | null>>;
+type _TypedCompanyIdField = Expect<Equal<ReturnType<typeof companyForm.company.companyId>, number | null>>;
+
+interface CompanyInterface {
+  companyId: number;
+  companyName: string;
+}
+const interfaceCompany: CompanyInterface = { companyId: 23, companyName: 'Apple' };
+const interfaceCompanyForm = form({ company: { ...interfaceCompany } });
+type _SpreadInterfaceCompanyValue = Expect<Equal<ReturnType<typeof interfaceCompanyForm.company>, { companyId: number | null; companyName: string | null }>>;
+
+declare const textOrDate: string | Date;
+const unionForm = form({ value: textOrDate });
+type _AtomicUnionField = Expect<Equal<ReturnType<typeof unionForm.value>, string | Date | null>>;
+
+const uniqueValue = Symbol('value');
+const shorthandMatrix = form({
+  text: 'draft',
+  count: 1,
+  enabled: false,
+  largeCount: 1n,
+  uniqueValue,
+  empty: null,
+  missing: undefined,
+  createdAt: new Date(),
+  calculate: (value: number) => value * 2,
+} as const);
+type _ShorthandText = Expect<Equal<ReturnType<typeof shorthandMatrix.text>, string | null>>;
+type _ShorthandCount = Expect<Equal<ReturnType<typeof shorthandMatrix.count>, number | null>>;
+type _ShorthandBoolean = Expect<Equal<ReturnType<typeof shorthandMatrix.enabled>, boolean | null>>;
+type _ShorthandBigint = Expect<Equal<ReturnType<typeof shorthandMatrix.largeCount>, bigint | null>>;
+type _ShorthandSymbol = Expect<Equal<ReturnType<typeof shorthandMatrix.uniqueValue>, symbol | null>>;
+type _ShorthandNull = Expect<Equal<ReturnType<typeof shorthandMatrix.empty>, unknown>>;
+type _ShorthandUndefined = Expect<Equal<ReturnType<typeof shorthandMatrix.missing>, unknown>>;
+type _ShorthandDate = Expect<Equal<ReturnType<typeof shorthandMatrix.createdAt>, Date | null>>;
+
+const momentForm = form({ appointment: moment('2026-09-03T14:30:00Z') });
+type _MomentField = Expect<Equal<ReturnType<typeof momentForm.appointment>, Moment | null>>;
 
 profile.set({ name: 'Daniel', age: 43, address: { city: 'Bern' } });
 profile.patch({ address: { city: 'Geneva' } });
@@ -72,6 +128,8 @@ const submittedProfile = form({
 
 type _SubmittingSignal = Expect<Equal<ReturnType<typeof submittedProfile.submitting>, boolean>>;
 type _SubmitResult = Expect<Equal<ReturnType<typeof submittedProfile.submit>, Promise<boolean>>>;
+type _FormNodeType = Expect<Equal<ReturnType<typeof submittedProfile.nodeType>, 'form'>>;
+type _FieldNodeType = Expect<Equal<ReturnType<typeof submittedProfile.name.nodeType>, 'field'>>;
 
 // @ts-expect-error set requires every form property
 profile.set({ name: 'Daniel', age: 43 });

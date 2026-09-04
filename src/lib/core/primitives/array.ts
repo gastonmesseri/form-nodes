@@ -531,6 +531,7 @@ export function array<TDefinition extends NodeDefinition>(
     () => arraySelfDirty.set(true),
   );
   const api: ArrayApi<TItem> = {
+    nodeType: () => 'array',
     items: arrayItems.asReadonly() as Signal<ArrayItems<TItem, Node>>,
     length: computed(() => arrayItems().length),
     form: rootForm,

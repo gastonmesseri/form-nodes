@@ -5,7 +5,6 @@ import { field } from './field';
 import { group } from './group';
 import { array } from './array';
 import { required } from '../validation/validators/required';
-import type { InternalNode } from '../types/node.type';
 
 describe('group', () => {
   it('normalizes concise values to fields', () => {
@@ -21,16 +20,16 @@ describe('group', () => {
     expect(group({ expression }).expression()).toBe(expression);
   });
 
-  it('exposes an internal runtime discriminant for every node kind', () => {
+  it('exposes a public runtime discriminant for every node kind', () => {
     const fieldNode = field('');
     const groupNode = group({ name: field('') });
     const formNode = form({ name: field('') });
     const arrayNode = array(field(''));
 
-    expect((fieldNode as unknown as InternalNode).$api._nodeType).toBe('field');
-    expect((groupNode as unknown as InternalNode).$api._nodeType).toBe('group');
-    expect((formNode as unknown as InternalNode).$api._nodeType).toBe('form');
-    expect((arrayNode as unknown as InternalNode).$api._nodeType).toBe('array');
+    expect(fieldNode.nodeType()).toBe('field');
+    expect(groupNode.nodeType()).toBe('group');
+    expect(formNode.nodeType()).toBe('form');
+    expect(arrayNode.nodeType()).toBe('array');
   });
 
   it('preserves the node type when object and array templates are cloned', () => {
@@ -40,8 +39,8 @@ describe('group', () => {
     const person = people.push();
     const workflow = workflows.push();
 
-    expect((person as unknown as InternalNode).$api._nodeType).toBe('group');
-    expect((workflow as unknown as InternalNode).$api._nodeType).toBe('form');
+    expect(person.nodeType()).toBe('group');
+    expect(workflow.nodeType()).toBe('form');
   });
 
   it('creates a fixed object aggregate without submission behavior', () => {

@@ -25,6 +25,13 @@ import { minLength } from '../validation/validators/min-length';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('exposes its public node type', () => {
+    const name = field('Marco');
+
+    expect(name.nodeType()).toBe('field');
+    expect(name.$api.nodeType()).toBe('field');
+  });
+
   it('normalizes an explicit undefined initial value to null', () => {
     const fieldNode = field(undefined);
 

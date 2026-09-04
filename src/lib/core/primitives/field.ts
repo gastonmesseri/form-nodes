@@ -348,6 +348,7 @@ export function field<TValue>(
     fieldControlBindings.forEach(binding => binding.reset?.());
   };
   const members = {
+    nodeType: () => 'field' as const,
     form: fieldForm,
     parent: fieldParent.asReadonly(),
     path: fieldPath,

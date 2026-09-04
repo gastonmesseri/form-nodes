@@ -1,9 +1,8 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { group } from './group';
-import { field } from './field';
 import { isNotNil } from '../utils/is-nil';
-import { isPlainObject } from '../utils/is-plain-object';
+import { normalizeObjectDefinition } from './form.utils';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
@@ -28,28 +27,21 @@ import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } 
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitions } from './form.type';
+import type { FieldShorthand, Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinitions } from './form.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
 
 export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
-type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field'
-    ? never
-    : TDefinitions[TKey] extends Node ? TDefinitions[TKey]
-      : TDefinitions[TKey] extends readonly unknown[] ? never
-        : TDefinitions[TKey] extends ObjectNodeDefinitions ? FormDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
-};
+type FormDefinition<TDefinition> =
+  TDefinition extends Node ? TDefinition
+    : TDefinition extends readonly unknown[] ? never
+      : TDefinition extends FieldShorthand ? TDefinition
+        : TDefinition extends ObjectNodeDefinitions ? FormDefinitions<TDefinition> : TDefinition;
 
-const normalizeObjectDefinition = (definition: ObjectNodeDefinition): Node => {
-  if (isNode(definition)) return definition;
-  if (Array.isArray(definition)) {
-    throw new Error('Array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...).');
-  }
-  if (definition !== null && typeof definition === 'object') {
-    if (isPlainObject(definition)) return group(definition as ObjectNodeDefinitions);
-  }
-  return field(definition);
+type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
+  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field' ? never
+    : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
+      : FormDefinition<TDefinitions[TKey]>;
 };
 
 /**
@@ -383,6 +375,7 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     }
   };
   const api = {
+    nodeType: () => nodeType,
     children: controls as FormChildren<TNodes, Node>,
     add,
     remove,

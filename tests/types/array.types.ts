@@ -18,6 +18,7 @@ const people = array({
     return _value.id ?? _index;
   },
 });
+type _ArrayNodeType = Expect<Equal<ReturnType<typeof people.nodeType>, 'array'>>;
 const names = array(field(''), ['David']);
 const lockedNames = array(field(''), { disabled: 'Collection is locked' });
 type _StableApiValue = Expect<Equal<ReturnType<typeof names.$api.value>, (string | null)[]>>;

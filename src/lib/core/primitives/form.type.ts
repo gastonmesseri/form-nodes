@@ -10,10 +10,10 @@ import type { CustomValidationError, ValidationError, ValidationErrorMap, Valida
 import type { DisabledReason, DynamicNode, Node, NodeDefinition, NodeDefinitions, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 
 /** Values inferred as concise `field()` definitions inside an object node. */
-export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | RegExp | URL | Map<unknown, unknown> | Set<unknown> | ArrayBufferView | ((...args: any[]) => any);
+export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | ((...args: any[]) => any);
 
 /** One child definition accepted by `form()` and `group()`. */
-export type ObjectNodeDefinition = unknown;
+export type ObjectNodeDefinition = Node | FieldShorthand | ObjectNodeDefinitions;
 
 /** Recursive definitions accepted by `form()` and `group()`. Arrays remain explicit. */
 export interface ObjectNodeDefinitions {
@@ -230,11 +230,11 @@ export type FormPatch<TNodes extends Nodes> = {
 };
 
 export type NormalizedNode<TNode> =
-  TNode extends Node ? TNode
+  [TNode] extends [Node] ? TNode
     : [TNode] extends [null | undefined] ? Field<unknown>
-      : TNode extends readonly unknown[] ? never
-        : TNode extends FieldShorthand ? Field<WidenFieldShorthand<TNode> | null>
-          : TNode extends ObjectNodeDefinitions ? Group<NormalizedNodes<TNode>>
+      : [TNode] extends [readonly unknown[]] ? never
+        : [TNode] extends [FieldShorthand] ? Field<WidenFieldShorthand<TNode> | null>
+          : [TNode] extends [ObjectNodeDefinitions] ? Group<NormalizedNodes<TNode>>
             : Field<TNode | null>;
 
 export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = {
@@ -255,6 +255,8 @@ export type FormRoot<TNodes extends Nodes, TParent extends Node> = Node extends 
   : RootNode<TParent>;
 
 export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
+  /** Returns the concrete primitive represented by this node. */
+  nodeType(): 'form';
   /** Stable readonly map of this form's immediate child nodes. */
   readonly children: FormChildren<TNodes, TParent> & DynamicFormChildren;
   /**

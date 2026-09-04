@@ -12,6 +12,13 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('exposes its public node type', () => {
+    const names = array(field(''));
+
+    expect(names.nodeType()).toBe('array');
+    expect(names.$api.nodeType()).toBe('array');
+  });
+
   it('exposes the same API through api and $api', () => {
     const names = array(field(''), []);
 

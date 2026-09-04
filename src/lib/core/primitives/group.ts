@@ -1,17 +1,21 @@
 import type { ValidatorSource } from '../validation/validation.type';
 import type { Node } from '../types/node.type';
 import { createObjectNode } from './form';
-import type { Form, FormOptions, ObjectNodeDefinitions } from './form.type';
+import type { FieldShorthand, Form, FormOptions, ObjectNodeDefinitions } from './form.type';
 import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
 
 export type { Group, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
 
+type GroupDefinition<TDefinition> =
+  TDefinition extends Node ? TDefinition
+    : TDefinition extends readonly unknown[] ? never
+      : TDefinition extends FieldShorthand ? TDefinition
+        : TDefinition extends ObjectNodeDefinitions ? GroupDefinitions<TDefinition> : TDefinition;
+
 type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = {
-  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field'
-    ? never
-    : TDefinitions[TKey] extends Node ? TDefinitions[TKey]
-      : TDefinitions[TKey] extends readonly unknown[] ? never
-        : TDefinitions[TKey] extends ObjectNodeDefinitions ? GroupDefinitions<TDefinitions[TKey]> : TDefinitions[TKey];
+  [TKey in keyof TDefinitions]: TKey extends '$api' | '$field' ? never
+    : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
+      : GroupDefinition<TDefinitions[TKey]>;
 };
 
 /**

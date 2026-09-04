@@ -32,6 +32,8 @@ export type NodeControlBinding = {
 };
 
 export type NodeApi = {
+  /** Returns the concrete primitive represented by this node. */
+  nodeType(): NodeType;
   /** Complete root node containing this node, or `null` when detached generic infrastructure cannot resolve one. */
   form: Signal<Node | null>;
   /** Immediate structural parent of this node, or `null` when it is a root or has been detached. */
