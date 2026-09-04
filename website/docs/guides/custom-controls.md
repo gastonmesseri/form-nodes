@@ -388,6 +388,28 @@ error; errors supplied through `control.setErrors()` return their original Angul
 `value` includes pending debounced input, even when the
 node's committed or equality-filtered public value still differs.
 
+The injected directive's `name` and `path` describe the bound node's current structural location:
+
+| Bound node | `name` | `path` |
+| --- | --- | --- |
+| Root or detached node | `null` | `[]` |
+| Group or nested form `profile.address` | `'address'` | `['address']` |
+| Leaf `profile.address.city` | `'city'` | `['address', 'city']` |
+| Array item `profile.contacts[0]` | `0` | `['contacts', '0']` |
+
+Nested forms remain part of the full structural path. Detaching a subtree makes that subtree
+its own root; its descendants keep their relative paths within it. Reads track structural
+changes and binding replacement, including array reordering, independently of public value equality.
+Each `path` read returns a fresh array, so modifying it cannot modify node metadata.
+These properties are read-only views: use node operations to change structure.
+
+This intentionally differs from Angular's directive-container paths: DOM nesting, HTML `name`
+attributes, and a custom control's `name` input do not determine this identity. Read these members
+from `ngControl`; Angular's `AbstractControl` type has neither member. The combined adapter uses
+one runtime object for `ngControl` and `ngControl.control`, so both have the same runtime values.
+A local `useNgControl` helper can capture the host injector during construction and resolve
+`NgControl` in a lifecycle hook, following the same deferred lookup as the example above.
+
 Both surfaces also support `getError(code, path?)` and `hasError(code, path?)`. For example,
 after the date control below reports an invalid date:
 

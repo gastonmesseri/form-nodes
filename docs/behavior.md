@@ -2468,6 +2468,31 @@ The directive currently provides these behaviors:
   follow `_controlValue()`, including pending debounce input and writes suppressed by public equality.
   Status precedence remains disabled, valid, invalid, then pending. Error details are the node's own
   errors indexed by `kind`; aggregate validity and interaction still include descendants.
+- The injected `NgControl.name` reads the node's structural `keyInParent()` (`string`, numeric
+  array index, or `null` for roots/detached nodes). `path` returns a fresh mutable copy of the
+  node's string-segment path from its current structural root. Groups and nested forms contribute
+  their keys; nested forms do not restart paths. Detaching a subtree clears its own name/path,
+  while descendants retain their paths relative to that subtree. Array moves, reattachment, and
+  binding replacement update reactive reads independently of public value equality. Reads do
+  not mutate values, validation, interaction state, or pending work. Consumers cannot rename
+  nodes through this read-only adapter or mutate metadata by changing a returned path array.
+  HTML names, control name inputs, and DOM/container nesting do not determine these properties.
+  Angular declares these members on directives, not `AbstractControl`; use the injected directive
+  surface in typed CVAs. The existing combined runtime adapter exposes identical values on
+  `control`, without adding a separate control object or a new public type. Deferred same-host
+  lookup through a component-local `useNgControl` helper is covered in browser integration tests.
+  This is an intentional extension of Angular Signal Forms, whose adapter leaves name/path as
+  TODOs. Latest stable Angular 22 was re-resolved as `v22.1.5`, commit
+  `468b65b74566537456c192ac4281795c5a1e1a5e`. Inspected sources:
+  `packages/forms/signals/src/controls/interop_ng_control.ts` and
+  `packages/forms/signals/test/web/interop.spec.ts` (combined adapter and separate CVA name input);
+  `packages/forms/src/directives/ng_control.ts`, `abstract_control_directive.ts`,
+  `reactive_directives/form_control_name.ts`, `reactive_directives/form_control_directive.ts`,
+  and `shared.ts` (nullable name, named string-segment paths, standalone empty path);
+  `packages/forms/src/model/abstract_model.ts` (no control name/path members) and
+  `packages/forms/test/directives_spec.ts` (named/nested path diagnostics and directive/control
+  property forwarding). Form Nodes follows structural node ownership rather than requiring
+  Angular `ControlContainer` registration.
 - Both the injected `NgControl` and its `control` implement `getError(code, path?)` and
   `hasError(code, path?)`. Queries use the same own-error projection as `control.errors`, including
   original imperative payloads and the last error for a duplicate kind. Without a path they inspect

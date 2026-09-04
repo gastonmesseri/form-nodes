@@ -90,6 +90,73 @@ const bind = (node: Node) => {
   return { fixture, cva, control: cva.ngControl.control! };
 };
 
+describe('FormNode NgControl structural identity', () => {
+  it('reports root, group, nested form, array, and literal child keys through the directive', () => {
+    const profile = form({
+      address: { city: field.strict('Zurich') },
+      details: form({ code: field.strict('CH') }),
+      contacts: array({ email: field.strict('') }, { initialValue: 1 }),
+      'city.name': field.strict(''),
+      '': field.strict(''),
+    });
+    const cases: [Node, string | number | null, string[]][] = [
+      [field.strict(''), null, []],
+      [profile, null, []],
+      [profile.address, 'address', ['address']],
+      [profile.address.city, 'city', ['address', 'city']],
+      [profile.details, 'details', ['details']],
+      [profile.details.code, 'code', ['details', 'code']],
+      [profile.contacts, 'contacts', ['contacts']],
+      [profile.contacts[0]!, 0, ['contacts', '0']],
+      [profile.contacts[0]!.email, 'email', ['contacts', '0', 'email']],
+      [profile['city.name'], 'city.name', ['city.name']],
+      [profile[''], '', ['']],
+    ];
+    for (const [node, name, path] of cases) {
+      const { fixture, cva, control } = bind(node);
+      expect(cva.ngControl.name).toBe(name);
+      expect(cva.ngControl.path).toEqual(path);
+      // The combined runtime adapter also exposes these on control; AbstractControl does not type them.
+      expect(control).toBe(cva.ngControl);
+      cva.ngControl.path!.push('consumer mutation');
+      expect(cva.ngControl.path).toEqual(path);
+      expect(node.$api.path()).toEqual(path);
+      fixture.destroy();
+    }
+  });
+
+  it('reactively follows moves, ancestor detachment, reattachment, and binding replacement', () => {
+    const profile = form({ contacts: array({ email: field.strict('') }, { initialValue: 2 }) }, { equal: () => true });
+    const retainedValue = profile();
+    const item = profile.contacts[1]!;
+    const boundItem = bind(item);
+    const boundLeaf = bind(item.email);
+    const identity = computed(() => [boundItem.cva.ngControl.name, boundItem.cva.ngControl.path]);
+    const leafPath = computed(() => boundLeaf.cva.ngControl.path);
+    expect(identity()).toEqual([1, ['contacts', '1']]);
+    expect(leafPath()).toEqual(['contacts', '1', 'email']);
+    profile.contacts.move(1, 0);
+    expect(profile()).toBe(retainedValue);
+    expect(identity()).toEqual([0, ['contacts', '0']]);
+    expect(leafPath()).toEqual(['contacts', '0', 'email']);
+    profile.contacts.removeAt(0);
+    expect(identity()).toEqual([null, []]);
+    expect(leafPath()).toEqual(['email']);
+    const destination = form({});
+    destination.add('moved', item);
+    expect(identity()).toEqual(['moved', ['moved']]);
+    expect(leafPath()).toEqual(['moved', 'email']);
+    boundItem.fixture.componentInstance.active.set(profile.contacts);
+    boundItem.fixture.detectChanges();
+    expect(identity()).toEqual(['contacts', ['contacts']]);
+    destination.remove('moved');
+    expect(identity()).toEqual(['contacts', ['contacts']]);
+    expect(leafPath()).toEqual(['email']);
+    boundItem.fixture.destroy();
+    boundLeaf.fixture.destroy();
+  });
+});
+
 describe('FormNode NgControl required validator compatibility', () => {
   it('lets a CVA recognize Form Nodes required through Angular Validators.required', () => {
     const profile = form({ name: field.strict('', [required]) });

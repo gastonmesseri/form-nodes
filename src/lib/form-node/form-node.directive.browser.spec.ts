@@ -112,6 +112,62 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
+  it('lets a CVA use a deferred useNgControl hook to render structural identity after rebinding', () => {
+    const useNgControl = () => {
+      const injector = inject(Injector);
+      return () => injector.get(NgControl, null, { self: true })!;
+    };
+    @Component({
+      selector: 'identity-cva',
+      template: `<input [attr.data-name]="ngControl?.name" [attr.data-path]="ngControl?.path?.join('/')" />`,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => IdentityCva), multi: true }],
+    })
+    class IdentityCva implements ControlValueAccessor {
+      resolveNgControl = useNgControl();
+
+      ngControl: NgControl | undefined;
+
+      ngAfterContentInit() { this.ngControl = this.resolveNgControl(); }
+
+      writeValue(_value: unknown) {}
+
+      registerOnChange(_callback: (value: unknown) => void) {}
+
+      registerOnTouched(_callback: () => void) {}
+    }
+    @Component({
+      template: `<identity-cva name="html-name" [formNode]="active()" />`,
+      imports: [FormNode, IdentityCva],
+    })
+    class Host {
+      profile = form({ contacts: array(field.strict(''), { initialValue: 2 }) });
+
+      active = signal(this.profile.contacts[1]!);
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const cva = fixture.debugElement.children[0]!.componentInstance as IdentityCva;
+    const adapter = cva.ngControl;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(input.getAttribute('data-name')).toBe('1');
+    expect(input.getAttribute('data-path')).toBe('contacts/1');
+    host.profile.contacts.move(1, 0);
+    fixture.detectChanges();
+    expect(input.getAttribute('data-name')).toBe('0');
+    expect(input.getAttribute('data-path')).toBe('contacts/0');
+    host.profile.contacts.removeAt(0);
+    fixture.detectChanges();
+    expect(input.hasAttribute('data-name')).toBe(false);
+    expect(input.getAttribute('data-path')).toBe('');
+    host.active.set(host.profile.contacts[0]!);
+    fixture.detectChanges();
+    expect(cva.resolveNgControl()).toBe(adapter);
+    expect(input.getAttribute('data-name')).toBe('0');
+    expect(input.getAttribute('data-path')).toBe('contacts/0');
+    fixture.destroy();
+  });
+
   it.each(['ngAfterContentInit', 'ngAfterViewInit'] as const)('supports a legacy CVA that resolves NgControl and subscribes in %s', (hook) => {
     @Component({
       selector: 'late-ng-control-cva',
