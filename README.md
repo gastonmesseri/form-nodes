@@ -2,8 +2,6 @@
   <img src="./website/static/img/form-nodes-logo-big.png" alt="Form Nodes logo" width="280" height="280" />
 </p>
 
-# form-nodes
-
 **Typed, signal-based forms for Angular.**
 
 <!-- example: quick-start.typecheck.ts -->
@@ -63,7 +61,6 @@ The same tree describes your data, your controls, and how they behave.
 - [Dynamic arrays](#dynamic-arrays)
 - [Submission](#submission)
 - [Control-value debounce](#control-value-debounce)
-- [More ways to bind controls](#more-ways-to-bind-controls)
 - [Where to go next](#where-to-go-next)
 
 ## Install
@@ -569,27 +566,6 @@ and `reset(value)` are never delayed by control-value debounce.
 
 This is separate from an asynchronous validator's `debounce` option, which delays validation work.
 See [Value flow and debounce](https://gastonmesseri.github.io/ng-forms/guides/value-flow-and-debounce).
-
-## More ways to bind controls
-
-`[formNode]` supports native controls and compatible custom or `ControlValueAccessor` components.
-A wrapper can accept an input named `formNode` and delegate the binding to its inner control.
-
-You can also use Angular Signal Forms' `[formField]` with a node's `$field` adapter. For example,
-with `FormField` imported from `@angular/forms/signals` and added to the component's `imports`:
-
-```html
-<input [formField]="myForm.email.$field" />
-```
-
-Select the Form Nodes node first, then use `$field` only for the template binding. Keep programmatic
-operations on the node itself, and keep `[formNode]` on the native `<form>` when Form Nodes owns
-submission and reset.
-
-See [Control binding](https://gastonmesseri.github.io/ng-forms/guides/control-binding),
-[Custom controls](https://gastonmesseri.github.io/ng-forms/guides/custom-controls),
-[Angular Material](https://gastonmesseri.github.io/ng-forms/integrations/angular-material), and
-[PrimeNG](https://gastonmesseri.github.io/ng-forms/integrations/primeng).
 
 ## Where to go next
 
