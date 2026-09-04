@@ -7,7 +7,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Component, DestroyRef, Injector, computed, forwardRef, inject, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { FormControl, NG_VALUE_ACCESSOR, NgControl, PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors } from '@angular/forms';
+import { FormResetEvent, FormControl, NG_VALUE_ACCESSOR, NgControl, PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors } from '@angular/forms';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
@@ -89,6 +89,258 @@ const bind = (node: Node) => {
   cva.values.length = cva.statuses.length = cva.events.length = 0;
   return { fixture, cva, control: cva.ngControl.control! };
 };
+
+describe('FormNode NgControl reset compatibility', () => {
+  it.each(['field', 'nested form'] as const)('resets a %s subtree while retaining sibling state and configured validation', (kind) => {
+    const name = field.strict('initial', [required]);
+    const node = kind === 'field' ? name : form({ details: form({ name }) });
+    const sibling = field.strict('sibling');
+    const root = form({ node, sibling });
+    const bound = bind(node);
+    const leaf = bind(name);
+    name.setControlValue('edited');
+    name.markAsTouched();
+    sibling.setControlValue('other');
+    sibling.markAsTouched();
+    bound.control.setErrors({ parentParsing: true });
+    leaf.control.setErrors({ leafParsing: { raw: 'invalid' } });
+    bound.fixture.detectChanges();
+    bound.cva.events.length = 0;
+    bound.cva.ngControl.reset();
+    expect(name()).toBe('edited');
+    expect(node.$api.pristine()).toBe(true);
+    expect(node.$api.untouched()).toBe(true);
+    expect(bound.control.errors).toBeNull();
+    expect(leaf.control.errors).toBeNull();
+    expect(root.dirty()).toBe(true);
+    expect(root.touched()).toBe(true);
+    expect(sibling()).toBe('other');
+    expect(bound.cva.events).toEqual([new FormResetEvent(bound.control)]);
+    bound.control.reset(kind === 'field' ? '' : { details: { name: '' } });
+    expect(name()).toBe('');
+    expect(name.getError('required')).toBeDefined();
+    expect(root.invalid()).toBe(true);
+    expect(node.$api.pristine()).toBe(true);
+    expect(name.untouched()).toBe(true);
+    bound.fixture.detectChanges();
+    expect(bound.cva.statuses.at(-1)).toBe('INVALID');
+    leaf.fixture.destroy();
+    bound.fixture.destroy();
+  });
+
+  it.each([null, false, 0, '', { value: 'data', disabled: true }])('passes the raw reset value %j without interpreting Angular state wrappers', (value) => {
+    const node = field<unknown>('initial');
+    const { fixture, control } = bind(node);
+    control.reset(value);
+    expect(node()).toEqual(value);
+    expect(control.enabled).toBe(true);
+    node.disable();
+    control.reset();
+    expect(node()).toEqual(value);
+    expect(control.disabled).toBe(true);
+    fixture.destroy();
+  });
+
+  it('treats undefined as an omitted value and restores the latest committed data despite public equality', () => {
+    const node = field.strict('initial', { equal: () => true, debounce: 'blur' });
+    const { fixture, control } = bind(node);
+    expect(node()).toBe('initial');
+    node.set('committed');
+    node.setControlValue('buffered');
+    expect(node()).toBe('initial');
+    expect(control.value).toBe('buffered');
+    control.reset(undefined);
+    expect(node()).toBe('initial');
+    expect(control.value).toBe('committed');
+    expect(node.debouncing()).toBe(false);
+    expect(node.pristine()).toBe(true);
+    node.markAsTouched();
+    expect(control.value).toBe('committed');
+    fixture.destroy();
+  });
+
+  it.each(['field', 'nested form'] as const)('aborts pending control debounce on a %s and ignores its stale completion', async (kind) => {
+    let resolve!: () => void;
+    let pendingSignal!: AbortSignal;
+    const debounce = vi.fn((abortSignal: AbortSignal) => {
+      pendingSignal = abortSignal;
+      return new Promise<void>((done) => { resolve = done; });
+    });
+    const name = field.strict('committed', kind === 'field' ? { debounce } : {});
+    const node = kind === 'field' ? name : form({ details: form({ name }) }, { debounce });
+    const { fixture, cva, control } = bind(node);
+    cva.onChange(kind === 'field' ? 'buffered' : { details: { name: 'buffered' } });
+    expect(debounce).toHaveBeenCalledOnce();
+    expect(node.$api.debouncing()).toBe(true);
+    expect(name()).toBe('committed');
+    control.reset();
+    expect(pendingSignal.aborted).toBe(true);
+    expect(node.$api.debouncing()).toBe(false);
+    expect(node.$api.pristine()).toBe(true);
+    expect(control.value).toEqual(kind === 'field' ? 'committed' : { details: { name: 'committed' } });
+    resolve();
+    await Promise.resolve();
+    expect(name()).toBe('committed');
+    expect(node.$api.pristine()).toBe(true);
+    expect(debounce).toHaveBeenCalledOnce();
+    fixture.destroy();
+  });
+
+  it('reconciles array reset values through the node API and clears descendant errors', () => {
+    const profile = form({ contacts: array({ email: field.strict('', [required]) }, { initialValue: 2 }) });
+    const bound = bind(profile.contacts);
+    const first = profile.contacts[0]!;
+    const removed = profile.contacts[1]!;
+    const child = bind(first.email);
+    child.control.setErrors({ parsing: true });
+    first.email.setControlValue('edited');
+    profile.contacts.markAsTouched();
+    bound.control.reset([{ email: 'reset' }]);
+    expect(profile()).toEqual({ contacts: [{ email: 'reset' }] });
+    expect(profile.contacts[0]).toBe(first);
+    expect(removed.parent()).toBeNull();
+    expect(child.control.errors).toBeNull();
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(profile.valid()).toBe(true);
+    bound.control.reset();
+    expect(profile.contacts.items()).toHaveLength(1);
+    child.fixture.destroy();
+    bound.fixture.destroy();
+  });
+
+  it.each(['field', 'nested form'] as const)('silences only the resetting %s adapter and observes later writes', (kind) => {
+    const name = field.strict('initial', [required]);
+    const node = kind === 'field' ? name : form({ details: form({ name }) });
+    const root = form({ node });
+    const bound = bind(node);
+    const parent = bind(root);
+    name.setControlValue('edited');
+    name.markAsTouched();
+    bound.control.setErrors({ parsing: true });
+    bound.fixture.detectChanges();
+    parent.fixture.detectChanges();
+    bound.cva.values.length = bound.cva.statuses.length = bound.cva.events.length = 0;
+    parent.cva.values.length = 0;
+    bound.control.reset(kind === 'field' ? 'reset' : { details: { name: 'reset' } }, { emitEvent: false });
+    expect(name()).toBe('reset');
+    expect(root.valid()).toBe(true);
+    expect(root.pristine()).toBe(true);
+    expect(root.untouched()).toBe(true);
+    bound.fixture.detectChanges();
+    parent.fixture.detectChanges();
+    expect(bound.cva.values).toEqual([]);
+    expect(bound.cva.statuses).toEqual([]);
+    expect(bound.cva.events).toEqual([]);
+    expect(parent.cva.values).toHaveLength(1);
+    name.setControlValue('');
+    name.markAsTouched();
+    bound.fixture.detectChanges();
+    expect(bound.cva.values).toHaveLength(1);
+    expect(bound.cva.statuses).toEqual(['INVALID']);
+    expect(bound.cva.events.slice(-2)).toEqual([
+      new TouchedChangeEvent(true, bound.control),
+      new PristineChangeEvent(false, bound.control),
+    ]);
+    parent.fixture.destroy();
+    bound.fixture.destroy();
+  });
+
+  it('preserves changes after a silent reset in the same observation turn and across rebinding', () => {
+    const node = field.strict('initial', [required]);
+    const { fixture, cva, control } = bind(node);
+    control.reset('silent', { emitEvent: false });
+    node.setControlValue('');
+    fixture.detectChanges();
+    expect(cva.values).toEqual(['']);
+    expect(cva.statuses).toEqual(['INVALID']);
+    control.reset(undefined, { emitEvent: false });
+    const replacement = field.strict('replacement');
+    fixture.componentInstance.active.set(replacement);
+    fixture.detectChanges();
+    expect(cva.values.at(-1)).toBe('replacement');
+    control.setErrors({ parsing: true });
+    control.reset('new');
+    expect(replacement()).toBe('new');
+    expect(replacement.errors()).toEqual([]);
+    expect(node()).toBe('');
+    fixture.destroy();
+    control.reset('stale');
+    expect(replacement()).toBe('new');
+  });
+
+  it('reports repeated unchanged resets and keeps a later unsuppressed reset observable', () => {
+    const node = field.strict('initial');
+    const { fixture, cva, control } = bind(node);
+    control.reset(undefined, { emitEvent: false });
+    control.reset();
+    control.reset();
+    fixture.detectChanges();
+    expect(cva.values).toEqual([]);
+    expect(cva.statuses).toEqual([]);
+    expect(cva.events).toEqual([new FormResetEvent(control), new FormResetEvent(control)]);
+    control.reset('silent', { emitEvent: false });
+    control.reset('visible');
+    fixture.detectChanges();
+    expect(cva.values).toEqual(['visible']);
+    expect(cva.events.filter(event => event instanceof FormResetEvent)).toHaveLength(3);
+    node.reset();
+    fixture.detectChanges();
+    expect(cva.events.filter(event => event instanceof FormResetEvent)).toHaveLength(3);
+    fixture.destroy();
+  });
+
+  it('rejects unsupported state ownership options before changing the node', () => {
+    const node = field.strict('initial');
+    const { fixture, control } = bind(node);
+    node.markAsTouched();
+    for (const options of [{ onlySelf: true }, { overwriteDefaultValue: true }]) {
+      expect(() => control.reset('new', options)).toThrow('does not support onlySelf or overwriteDefaultValue');
+      expect(node()).toBe('initial');
+      expect(node.touched()).toBe(true);
+    }
+    control.reset('supported', { onlySelf: false, overwriteDefaultValue: false });
+    expect(node()).toBe('supported');
+    fixture.destroy();
+  });
+
+  it.each(['field', 'nested form'] as const)('keeps async ownership on a %s while cancelling only obsolete work', async (kind) => {
+    const requests: { abortSignal: AbortSignal; resolve: (result: ValidationResult) => void }[] = [];
+    const validate = vi.fn(({ value, abortSignal }: AsyncValidatorContext<string>) => {
+      value();
+      return new Promise<ValidationResult>(resolve => requests.push({ abortSignal, resolve }));
+    });
+    const name = field.strict('initial', [asyncValidator(validate)], { adoptBindingInjector: false, inheritInjector: false });
+    const node = kind === 'field' ? name : form({ details: form({ name }) });
+    const { fixture, cva, control } = bind(node);
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledOnce());
+    control.setErrors({ parsing: true });
+    control.reset();
+    expect(control.pending).toBe(true);
+    expect(control.errors).toBeNull();
+    expect(requests[0]!.abortSignal.aborted).toBe(false);
+    expect(validate).toHaveBeenCalledOnce();
+    control.reset(kind === 'field' ? 'new' : { details: { name: 'new' } }, { emitEvent: false });
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    expect(requests[0]!.abortSignal.aborted).toBe(true);
+    expect(control.pending).toBe(true);
+    fixture.detectChanges();
+    cva.statuses.length = 0;
+    requests[0]!.resolve({ kind: 'stale' });
+    await Promise.resolve();
+    expect(node.$api.allErrors()).toEqual([]);
+    expect(control.pending).toBe(true);
+    requests[1]!.resolve({ kind: 'remote' });
+    await vi.waitFor(() => expect(control.pending).toBe(false));
+    fixture.detectChanges();
+    expect(cva.statuses).toEqual(['INVALID']);
+    expect(node.$api.allErrors().map(error => error.kind)).toEqual(['remote']);
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(node.$api.pristine()).toBe(true);
+    expect(node.$api.untouched()).toBe(true);
+    fixture.destroy();
+  });
+});
 
 describe('FormNode NgControl structural identity', () => {
   it('reports root, group, nested form, array, and literal child keys through the directive', () => {

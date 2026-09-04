@@ -1,5 +1,5 @@
 import { DestroyRef, EventEmitter, computed, effect, signal, untracked, type Injector } from '@angular/core';
-import { PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors, type ValidatorFn } from '@angular/forms';
+import { FormResetEvent, PristineChangeEvent, StatusChangeEvent, TouchedChangeEvent, Validators, ValueChangeEvent, type AbstractControl, type ControlEvent, type ControlValueAccessor, type FormControlStatus, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 
 import { shallowEqual } from '../utils/shallow-equal';
 import type { FormApi } from '../primitives/form.type';
@@ -46,6 +46,8 @@ export class FormNodeNgControl {
 
   silentStatus: NgControlState | undefined;
 
+  _silentReset: NgControlState | undefined;
+
   destroyed = false;
 
   manualErrorSource = computed<readonly ValidationError.WithOptionalTargetNode<Node>[]>(() => {
@@ -65,7 +67,9 @@ export class FormNodeNgControl {
       untracked(() => this.releasePreviousErrors(node));
       const current = this.readState();
       // A replacement node starts a new observation, keeping existing subscriptions connected.
-      const last = previous?.node === current.node ? previous : undefined;
+      const baseline = this._silentReset ?? previous;
+      this._silentReset = undefined;
+      const last = baseline?.node === current.node ? baseline : undefined;
       previous = current;
       const silentStatus = this.silentStatus;
       this.silentStatus = undefined;
@@ -93,6 +97,26 @@ export class FormNodeNgControl {
       this.valueEmitter.complete();
       this.statusEmitter.complete();
       this.eventEmitter.complete();
+    });
+  }
+
+  /**
+   * Resets the bound subtree through the node API. Undefined preserves committed values.
+   * Notification suppression applies only to this adapter's synchronous reset result.
+   */
+  reset(value?: unknown, options: { emitEvent?: boolean; onlySelf?: boolean; overwriteDefaultValue?: boolean } = {}) {
+    if (this.destroyed) return;
+    if (options.onlySelf || options.overwriteDefaultValue) {
+      throw new Error('formNode: reset() does not support onlySelf or overwriteDefaultValue; node ancestors remain reactive and reset has no stored default value.');
+    }
+    untracked(() => {
+      const node = this.getNode();
+      this.releasePreviousErrors(node);
+      if (value === undefined) node.$api.reset();
+      else node.$api.reset(value);
+      this.silentStatus = undefined;
+      if (options.emitEvent === false) this._silentReset = this.readState();
+      else this.eventEmitter.emit(new FormResetEvent(this.control));
     });
   }
 
