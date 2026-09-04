@@ -110,7 +110,7 @@ describe('form', () => {
 
   it('rejects ambiguous array shorthand', () => {
     expect(() => form({ roles: [] } as never)).toThrow(
-      'form: array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...) at "roles"',
+      'form: array shorthand is ambiguous at "roles"; wrap the value with field([...]) or declare a dynamic array with array(...)',
     );
   });
 
@@ -160,17 +160,17 @@ describe('form', () => {
     const prototypeDefinition = Object.fromEntries([['__proto__', field('unsafe')]]);
 
     expect(() => form(accessorDefinition as never)).toThrow(
-      'form: accessor shorthand is not supported; declare a data property with an explicit node at "profile.name"',
+      'form: accessor shorthand is not supported at "profile.name"; declare a data property with an explicit node or, if this object is intended as a field value, wrap it with field(value)',
     );
     expect(read).not.toHaveBeenCalled();
     expect(() => form(symbolDefinition as never)).toThrow(
-      'form: symbol child key Symbol(secret) is not supported; use a string key',
+      'form: symbol child key Symbol(secret) is not supported; use a string key, or if this object is intended as a field value, wrap it with field(value)',
     );
     expect(() => form(prototypeDefinition as never)).toThrow(
-      'form: unsafe child key "__proto__" is not supported at "__proto__"',
+      'form: unsafe child key "__proto__" is not supported at "__proto__"; if this object is intended as a field value, wrap it with field(value)',
     );
     expect(() => form({ profile: { 'postal-code': [] } } as never)).toThrow(
-      'form: array shorthand is ambiguous; wrap the value with field([...]) or declare a dynamic array with array(...) at "profile[\\"postal-code\\"]"',
+      'form: array shorthand is ambiguous at "profile[\\"postal-code\\"]"; wrap the value with field([...]) or declare a dynamic array with array(...)',
     );
   });
 
