@@ -309,7 +309,7 @@ bind directly only to a custom signal control or CVA that represents its complet
 <app-address-editor [formNode]="myForm.address" />
 ```
 
-See [Custom controls](../guides/custom-controls.md#aggregate-value-models).
+See [Advanced custom controls](../guides/custom-controls-advanced.md#aggregate-value-models).
 
 ## Using NG_ASYNC_VALIDATORS for node async validation
 

@@ -201,7 +201,7 @@ export class DatePicker {
 
 `controlState.disabled()`, `controlState.readonly()`, and the other signals currently read
 `[formNode]` state. The same API is reserved for future `[formField]`, Reactive Forms, and `ngModel`
-adapters. See [Custom controls](../guides/custom-controls.md) for the complete contract.
+adapters. See [Advanced custom controls](../guides/custom-controls-advanced.md) for the complete contract.
 
 ## Server rendering and hydration
 

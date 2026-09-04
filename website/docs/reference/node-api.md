@@ -137,6 +137,6 @@ A `FormNode<TNode>` obtained through `viewChild()` exposes:
 Import public APIs only from `form-nodes`. `_FormNode` is exported solely for Angular AOT/linker infrastructure and is not an application API.
 
 For compatibility with Angular `model()`, input/output pairs, `ControlValueAccessor`, `NgControl`,
-and native controls, see [Custom controls](../guides/custom-controls.md#angular-api-compatibility).
+and native controls, see [Advanced custom controls](../guides/custom-controls-advanced.md#angular-api-compatibility).
 For scheduling, detached-node lifetime, multiple bindings, and defensive runtime behavior, see
 [Advanced behavior and edge cases](../advanced/behavior-details.md).
