@@ -52,7 +52,7 @@ inferred as `Field<unknown>`:
 ```ts
 const myForm = form({
   unspecifiedValue: field(null),      // Field<unknown>
-  deferredValue: field(undefined),    // Field<unknown>, initial value is null
+  deferredValue: field(undefined),    // Field<unknown>, initial value is undefined
   nickname: field<string>(null),      // Field<string | null>
 });
 ```
@@ -96,7 +96,7 @@ and dynamic collections require an explicit `array()`.
 | `age: 0` | `age: field(0)` | `number \| null` | The field must be strict or configured |
 | `active: false` | `active: field(false)` | `boolean \| null` | The field needs configuration |
 | `birthday: new Date()` | `birthday: field(new Date())` | `Date \| null` | The date needs field configuration |
-| `empty: null` or `undefined` | `empty: field(null)` | `unknown` | The future type is known: use `field<T>()` |
+| `empty: null` or `undefined` | `empty: field(null)` or `field(undefined)` | `unknown` | The future type is known: use `field<T>()` |
 | `roles: ['admin']` | `roles: field(['admin'])` | `string[] \| null` | Items need nodes: use `array(field(''))` |
 | `address: { city: '' }` | `address: group({ city: field('') })` | `{ city: string \| null }` | The branch needs validators or options: use `group()` |
 | `company: classInstance` | `company: field(classInstance)` | `Company \| null` | Making the atomic boundary explicit improves readability |

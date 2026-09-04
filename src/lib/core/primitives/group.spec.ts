@@ -68,7 +68,7 @@ describe('group', () => {
     expect(values.marker()).toBe(marker);
     expect(values.invalidDate()).toBe(invalidDate);
     expect(values.empty()).toBeNull();
-    expect(values.missing()).toBeNull();
+    expect(values.missing()).toBeUndefined();
     expect(values.nested.invalidDate()).toBe(invalidDate);
     expect(Object.is(values.nested.negativeZero(), -0)).toBe(true);
   });

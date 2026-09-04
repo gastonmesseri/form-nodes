@@ -177,7 +177,8 @@ const optionalName = field<string>();
 Fields are nullable by default. The examples above have types `Field<string | null>`, `Field<number | null>`, and `Field<string | null>`. A field created without a value starts at `null`.
 
 A field created from the literal `null` or `undefined` without an explicit generic is inferred as
-`Field<unknown>`. Both absence values start at runtime as `null`:
+`Field<unknown>`. Their runtime values remain distinct: `null` stays `null`, while an explicitly
+provided `undefined` stays `undefined`:
 
 ```ts
 const unspecified = field(null);
@@ -185,7 +186,7 @@ unspecified.set('David');
 unspecified.set(42);
 
 const alsoUnspecified = field(undefined);
-alsoUnspecified(); // null
+alsoUnspecified(); // undefined
 
 const known = field<string>(null);
 // Field<string | null>
@@ -329,7 +330,7 @@ owns an independent submission workflow.
 Inside `form()` and `group()` definitions, strings, numbers, booleans, bigints, symbols, `Date`
 instances, `null`, and `undefined` are shorthand for `field(initialValue)`. Primitive literal types
 are widened in the same way as a direct `field()` call. `null` and `undefined` produce
-`Field<unknown>`, and `undefined` is normalized to the field's runtime `null` value. Every array is
+`Field<unknown>`, and each shorthand preserves its `null` or `undefined` runtime value. Every array is
 also an implicit field, including empty arrays, populated arrays, readonly tuples, nested arrays,
 and arrays of plain objects. A mutable empty-array shorthand widens from `never[]` to `unknown[]`,
 while an empty readonly tuple widens to `readonly unknown[]`; consumers can use an explicit
@@ -410,10 +411,12 @@ const emptyName = field<string>(null, []);
 
 const unspecified = field(null);
 const unspecifiedFromUndefined = field(undefined);
-// Both are Field<unknown>; both start at null and accept future values of any type
+// Both are Field<unknown>; they start at null and undefined respectively
 ```
 
-The nullable type affects the complete field API. `value`, `set`, `patch`, `reset`, and validators all use `TValue | null`.
+The nullable type affects the complete field API. `value`, `set`, `patch`, `reset`, and validators
+all use `TValue | null`. Supplying an explicitly typed `undefined` also adds `undefined` to those
+surfaces so the declared runtime value remains type-safe.
 
 Use `field.strict()` to remove null from the field type:
 

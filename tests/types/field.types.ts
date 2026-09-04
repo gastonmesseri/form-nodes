@@ -29,7 +29,7 @@ type _ExplicitlyNullableValue = Expect<Equal<ReturnType<typeof explicitlyNullabl
 type _ExplicitlyNonNullableValue = Expect<Equal<ReturnType<typeof explicitlyNonNullable>, string>>;
 type _EmptyExplicitlyNullableValue = Expect<Equal<ReturnType<typeof emptyExplicitlyNullable>, string | null>>;
 type _NonNullableValue = Expect<Equal<ReturnType<typeof nonNullable>, string>>;
-type _ExplicitValue = Expect<Equal<ReturnType<typeof explicit>, number | null>>;
+type _ExplicitValue = Expect<Equal<ReturnType<typeof explicit>, number | null | undefined>>;
 type _ExplicitNullValue = Expect<Equal<ReturnType<typeof explicitNull>, string | null>>;
 type _UnknownNullableValue = Expect<Equal<ReturnType<typeof unknownNullable>, unknown>>;
 type _UnknownNullableOptionsValue = Expect<Equal<ReturnType<typeof unknownNullableWithOptions>, unknown>>;
@@ -55,6 +55,7 @@ unknownNullable.set(null);
 unknownUndefined.set('Daniel');
 unknownUndefined.set(42);
 unknownUndefined.set(null);
+explicit.set(undefined);
 nonNullable.set('Daniel');
 nullable.update((value) => value?.toUpperCase() ?? null);
 nullable.reset();

@@ -28,6 +28,8 @@ canonical release record.
 
 ### Changed
 
+- `field(undefined)` preserves `undefined` as its initial value, while an omitted initial value
+  continues to start at `null`. Explicitly typed calls include `undefined` in the field value type.
 - Field-level `nullable` options have been removed. Use `field.strict()` or `field.nullable()` for
   local nullability choices; `createFormPrimitives({ nullable })` remains the factory-wide default.
 - Form and group callable values display their complete nested object shape in IntelliSense rather

@@ -153,7 +153,7 @@ describe('array', () => {
     expect(people[0]!.birthday()).toBe(birthday);
     expect(people[0]!.user()).toBe(user);
     expect(people[0]!.empty()).toBeNull();
-    expect(people[0]!.missing()).toBeNull();
+    expect(people[0]!.missing()).toBeUndefined();
     expect(people[0]!.birthday.nodeType()).toBe('field');
     expect(people[0]!.user.nodeType()).toBe('field');
     expect(people[0]!.user).not.toBe(people[1]!.user);
