@@ -261,7 +261,7 @@ Reads the committed bound value. User-authored changes still travel through `mod
 callbacks; this signal is readonly.
 
 ```ts
-const preview = computed(() => this.controlState.value() ?? 'No value');
+preview = computed(() => this.controlState.value() ?? 'No value');
 ```
 
 #### errors {#control-state-errors}
@@ -271,7 +271,7 @@ const preview = computed(() => this.controlState.value() ?? 'No value');
 Returns source-neutral errors with a required `kind`.
 
 ```ts
-const requiredError = computed(() =>
+requiredError = computed(() =>
   this.controlState.errors().find(error => error.kind === 'required'),
 );
 ```
@@ -293,7 +293,7 @@ showErrors = computed(() => this.controlState.touched() && this.controlState.inv
 Reports unresolved asynchronous validation.
 
 ```ts
-const statusText = computed(() => this.controlState.pending() ? 'Checking…' : 'Ready');
+statusText = computed(() => this.controlState.pending() ? 'Checking…' : 'Ready');
 ```
 
 ### Interaction and availability properties
@@ -315,7 +315,7 @@ Reports whether user interaction is disabled.
 Returns normalized reasons when the active API exposes them.
 
 ```ts
-const disabledMessage = computed(() => this.controlState.disabledReasons()[0]?.message);
+disabledMessage = computed(() => this.controlState.disabledReasons()[0]?.message);
 ```
 
 #### dirty {#control-state-dirty}
@@ -325,7 +325,7 @@ const disabledMessage = computed(() => this.controlState.disabledReasons()[0]?.m
 Reports whether user interaction changed the bound control.
 
 ```ts
-const hasUnsavedChange = computed(() => this.controlState.dirty());
+hasUnsavedChange = computed(() => this.controlState.dirty());
 ```
 
 #### hidden {#control-state-hidden}
@@ -423,7 +423,7 @@ Returns the effective maximum-length constraint.
 Returns every effective regular-expression constraint.
 
 ```ts
-const accepts = computed(() =>
+accepts = computed(() =>
   this.controlState.pattern().every(pattern => pattern.test(this.previewValue())),
 );
 ```
