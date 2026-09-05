@@ -667,7 +667,7 @@ This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but
 
 Synchronous and asynchronous validators share one readonly validator array. Asynchronous validators must be explicitly wrapped with `asyncValidator()`; the library does not invoke a validator merely to detect whether it returns a Promise or Observable.
 
-Validator callbacks receive a flat readonly facade of the field or form being validated. It includes `value`, `form`, `parent`, `path`, and the interaction and availability signals (`touched`, `dirty`, `disabled`, `readonly`, `hidden`, and their complements). `field` references the real callable node being validated, including when that node is a form, while `api` exposes its complete API as an escape hatch for validation state and mutable operations:
+Validator callbacks receive a flat readonly facade of the field or form being validated. It includes `value`, `node`, `field`, `parent`, `path`, and the interaction and availability signals (`touched`, `dirty`, `disabled`, `readonly`, `hidden`, and their complements). `node()` and its alias `field()` return the real callable node being validated, including when that node is a form, while `api` exposes its complete API as an escape hatch for validation state and mutable operations:
 
 ```ts
 field('David', {
@@ -682,7 +682,7 @@ field('David', {
 });
 ```
 
-The flat properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` defaults to the common callable `Node` type.
+The flat properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` is a readonly signal of the generic field/form/group/array API union.
 
 Synchronous validators execute inside the node's internal `computed()`. Any Angular signal read directly by the callback becomes a dependency, including signals external to the form tree. No additional `computed()` wrapper is required:
 
@@ -811,10 +811,40 @@ arrays follow the same rules. Removed array items and dynamically detached nodes
 roots; reattaching or reparenting them updates both signals immediately.
 
 Both lookups are reactive. Attaching, detaching, or reparenting a node retriggers automatic async
-validators that read the affected signal. Validator callbacks can use `context.form()` and
-`context.root()`, or the equivalent API signals. A validator declared before its owner is known
-retains general node types; supplying a refined field API explicitly preserves the exact nearest
-form and structural-root types.
+validators that read the affected signal. Validator callbacks use `context.node().form()` and
+`context.node().root()`. Flat `context.form` and `context.root` properties are absent at runtime and
+in the public types; `parent` remains flat. The full `context.api` retains node navigation.
+
+`context.node` and `context.field` are the same readonly Angular signal of the validated node.
+Neither returns `null`. Inline callbacks, including inline `validator()` and `asyncValidator()`
+helpers, infer the node from `field`, `form`, `group`, or `array`, preserving value nullability,
+aggregate child types, and array item types. Configured primitives and field nullability overrides
+retain their defaults. Array validator overloads precede positional initial-value overloads so
+helper calls in validator arrays receive the validator's contextual type. Runtime array argument
+interpretation is unchanged.
+
+Separately declared helpers retain a generic authoring context and remain reusable. Supplying only
+a helper's value generic uses its default owner; omit helper generics for inline inference or
+supply the owner generic explicitly. `context.api` retains its common surface unless specialized.
+Knowing the local node does not infer ancestors or siblings from an enclosing declaration.
+Generic nearest-form and field-root lookups now expose complete node APIs, so navigation through
+the validated node remains usable without the removed flat shortcuts. Explicit `TField` context
+types remain exact under `Signal<TField>` on both aliases. Read values with `context.value()` for
+the inferred `TValue`, or with `context.node().value()` / `context.field().value()` through the node.
+
+The signal and its result retain their identities across value changes, validation runs, attachment,
+and detachment. Reading only `field()` does not subscribe to the node's value or ancestry. Reading
+`field().value()` or a returned node's state or navigation signals tracks those separate dependencies.
+Parameterized async validators therefore rerun when their actual params dependencies change, not
+merely because an identity-only `field()` read exists. Callback async validators retain their
+existing implicit value dependency. The signal is created without requiring an injection context.
+
+This API shape intentionally differs from Angular 22.1.5, verified against the latest stable
+Angular 22 tag `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`). Angular's
+`packages/forms/signals/src/field/context.ts` exposes `fieldTree` as a getter returning the node's
+proxy, separately from its value signal; `packages/forms/signals/test/node/field_context.spec.ts`
+tests those distinct `fieldTree`, `state`, and `value` accesses. Gem preserves that distinction
+between node identity and reactive node state while adding an explicit readonly signal wrapper.
 
 Structural-root type resolution follows at most ten parent links. This limit affects TypeScript
 inference only: paths within ten levels retain the exact root type, while deeper paths safely fall
@@ -920,8 +950,8 @@ asyncValidator(async (): Promise<ValidationResult> => {
 ```
 
 When coupling a validator to its owning class is undesirable, `context.api.form()` and
-`context.api.root()` are available as fallbacks. Their default types are general callable nodes, so
-they support common node operations but do not expose exact sibling keys:
+`context.api.root()` are available as fallbacks. Their default types expose the generic form API
+and the union of structural node APIs, respectively, without inferring exact sibling keys:
 
 ```ts
 const workflow = context.api.form();

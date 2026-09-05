@@ -54,6 +54,11 @@ const myForm = form({
 | Run a configured action | `submit()`, `submitting()` | [Submission methods](#submission-methods) |
 | Handle a child/API name collision | `$api` | [API properties](#api-properties) |
 
+Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
+value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+helpers retain that inference when their generics are omitted. See
+[Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
+
 ## Signatures
 
 ```ts
@@ -69,10 +74,10 @@ inferred from `definitions`:
 
 <CodeBlock language="ts">{formValueContractSource}</CodeBlock>
 
-Here `profile()` and `profile.value()` conform to `Profile`, while `profile.items` remains the
-concrete `ArrayNode` selected by `array()` and continues to expose `push()`, `at()`, and its other
-structural operations. An incompatible child value produces a TypeScript error at the `satisfies`
-expression. The same contract can check a `group()` because both primitives expose a callable
+Here `profile()` and `profile.value()` conform to `Profile`, while each child retains its inferred
+field type. `field.strict<string>('Switzerland')` gives `country` the non-nullable `string` type
+required by the model; ordinary `field()` declarations keep `username` and `age` nullable. An
+incompatible child value produces a TypeScript error at the `satisfies` expression. The same contract can check a `group()` because both primitives expose a callable
 aggregate value and a `value` signal. See the dedicated
 [`FormValueContract` reference](./form-value-contract.md) for nullability, incompatible-model,
 annotation, and structural-compatibility details.
@@ -210,7 +215,7 @@ Each option includes its signature, default behavior, scope, and a complete exam
 
 #### validators {#form-validators-option}
 
-**Signature:** `validators?: ValidatorSource<FormValue>`
+**Signature:** `validators?: ValidatorSource<FormValue, Form<TNodes>>`
 
 Assigns one validator, several validators, or a reactive validator source to the complete form
 value. Validators declared by descendants remain independent.
@@ -1241,7 +1246,7 @@ profile.pristine(); // true
 
 #### setValidators()
 
-**Signature:** `setValidators(validators: ValidatorSource<FormValue>): void`
+**Signature:** `setValidators(validators: ValidatorSource<FormValue, Form<TNodes>>): void`
 
 Replaces validators owned by the form and immediately evaluates its current aggregate value. Child
 validators are unchanged.

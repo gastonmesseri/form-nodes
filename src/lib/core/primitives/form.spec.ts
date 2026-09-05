@@ -1,22 +1,22 @@
 import moment from 'moment';
 import { describe, expect, it, vi } from 'vitest';
-import { Injector, signal, type Signal } from '@angular/core';
+import { computed, Injector, isSignal, signal, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
 import { array } from './array';
 import { group } from './group';
-import { createFormPrimitives } from './create-form-primitives';
 import { validator } from '../validation/validator';
-import type { InternalNode, Node, NodeType } from '../types/node.type';
 import { oneOf } from '../validation/validators/one-of';
+import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { createFormPrimitives } from './create-form-primitives';
 import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
-import { between } from '../validation/validators/between';
 import { dateBetween } from '../validation/validators/date-between';
+import type { InternalNode, Node, NodeType } from '../types/node.type';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -25,6 +25,90 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('exposes a stable readonly validator field signal independently of the node value', () => {
+    const references: Signal<Node>[] = [];
+    const validators = (context: { field: Signal<Node>; node: Signal<Node> }) => {
+      references.push(context.field);
+      expect(context.node).toBe(context.field);
+      expect(isSignal(context.field)).toBe(true);
+      expect(Object.hasOwn(context.field, 'set')).toBe(false);
+      return null;
+    };
+    const node = form({ name: field('initial') }, { validators });
+    expect(node.errors()).toEqual([]);
+    const readIdentity = vi.fn(() => references[0]!());
+    const identity = computed(readIdentity);
+    const readValue = vi.fn(() => references[0]!()());
+    const value = computed(readValue);
+    expect(identity()).toBe(node);
+    expect(value()).toEqual(node());
+
+    node.set({ name: 'updated' });
+    expect(node.errors()).toEqual([]);
+    expect(references.at(-1)).toBe(references[0]);
+    expect(identity()).toBe(node);
+    expect(value()).toEqual({ name: 'updated' });
+    expect(readIdentity).toHaveBeenCalledTimes(1);
+    expect(readValue).toHaveBeenCalledTimes(2);
+
+    const owner = form({ fixed: field(true) });
+    owner.add('node', node);
+    expect(identity()).toBe(node);
+    owner.remove('node');
+    expect(identity()).toBe(node);
+    expect(readIdentity).toHaveBeenCalledTimes(1);
+  });
+
+  it('tracks async validator field identity separately from reading its node value', async () => {
+    const readValue = signal(false);
+    const references: Signal<Node>[] = [];
+    const params = vi.fn((context: { field: Signal<Node>; node: Signal<Node> }) => {
+      references.push(context.field);
+      expect(context.node).toBe(context.field);
+      return readValue() ? context.field()() : context.field();
+    });
+    const validate = vi.fn(async () => null);
+    const validators = asyncValidator({ params, validate });
+    const node = form({ name: field('initial') }, { validators });
+    expect(node.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(params).toHaveBeenCalledTimes(1);
+    expect(node.pending()).toBe(false);
+    expect(references[0]!()).toBe(node);
+
+    node.set({ name: 'updated' });
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(params).toHaveBeenCalledTimes(1);
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(node.valid()).toBe(true);
+
+    readValue.set(true);
+    await Promise.resolve();
+    expect(node.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(params).toHaveBeenCalledTimes(2);
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(node.pending()).toBe(false);
+
+    node.set({ name: 'final' });
+    await Promise.resolve();
+    expect(node.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(params).toHaveBeenCalledTimes(3);
+    expect(validate).toHaveBeenCalledTimes(3);
+    expect(references.every(reference => Object.is(reference, references[0]))).toBe(true);
+    expect(node.valid()).toBe(true);
+  });
+
   it('creates shorthand descendants with configured field defaults', () => {
     const { form: configuredForm } = createFormPrimitives({ nullable: false });
     const explicit = field('existing');
@@ -907,9 +991,9 @@ describe('form', () => {
       address: {
         city: field('Zurich', [(context) => {
           validatorApi = context.api;
-          validatorField = context.field;
-          validatorForm = context.form();
-          validatorRoot = context.root();
+          validatorField = context.field();
+          validatorForm = context.node().form();
+          validatorRoot = context.node().root();
           validatorParent = context.parent();
           validatorPath = context.path();
           return null;
@@ -934,7 +1018,7 @@ describe('form', () => {
     let validatorField: unknown;
     const profile = form({ name: field('David') }, [(context) => {
       validatorApi = context.api;
-      validatorField = context.field;
+      validatorField = context.field();
       return null;
     }]);
 
@@ -949,8 +1033,8 @@ describe('form', () => {
   it('keeps a nested form as validator workflow owner while tracking its structural root', async () => {
     const ancestry: [unknown, unknown][] = [];
     const payment = form({ card: field('4242') }, {
-      validators: asyncValidator(async ({ form: owningForm, root }) => {
-        ancestry.push([owningForm(), root()]);
+      validators: asyncValidator(async ({ node }) => {
+        ancestry.push([node().form(), node().root()]);
         return null;
       }),
     });

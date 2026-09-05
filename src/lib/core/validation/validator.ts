@@ -1,12 +1,16 @@
-import type { ComposableValidator } from './validation.type';
+import type { Node } from '../types/node.type';
+import type { ComposableValidator, ValidatorOwner } from './validation.type';
 
 /**
  * Gives a reusable synchronous validator a fully typed authoring context.
  *
- * Use this helper when declaring a validator separately from `field()`, `form()`, or `array()`,
+ * Use this helper when declaring a validator separately from `field()`, `form()`, `group()`, or `array()`,
  * where contextual inference from the consuming node is unavailable. The returned function is the
  * original function: `validator()` adds no wrapper, dependency-injection requirement, or runtime
  * behavior.
+ *
+ * Inline use also infers the concrete node for `context.node()` and its `context.field()` alias.
+ * Omit helper type arguments to infer both the value and owner from the consuming primitive.
  *
  * `TValue` is the exact value observed by the validator. Because `field()` is nullable by default,
  * its standalone validators normally use a type such as `number | null`. Omit `null` only for a
@@ -23,7 +27,7 @@ import type { ComposableValidator } from './validation.type';
  *     : null;
  * });
  *
- * const age = field<number>(null, [adult]);
+ * const age = field<number>(null, [isAdult]);
  * ```
  *
  * @example
@@ -44,10 +48,11 @@ import type { ComposableValidator } from './validation.type';
  * });
  * ```
  *
- * @template TValue Exact field, form, or array value observed by the validator.
+ * @template TValue Exact field, form, group, or array value observed by the validator.
+ * @template TField Concrete owning node, inferred when the helper is declared inline.
  * @param validate Synchronous validation function to type and reuse.
  * @returns The same validation function, without a runtime wrapper.
  */
-export const validator = <TValue>(validate: ComposableValidator<TValue>): ComposableValidator<TValue> => {
-  return validate;
+export const validator = <TValue, TField extends Node = Node>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField> => {
+  return validate as unknown as ComposableValidator<TValue, TField>;
 };

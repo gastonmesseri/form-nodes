@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 
-const maximumTypes = 82_000;
+// Full inline node contexts retain concrete aggregate children and array item APIs.
+const maximumTypes = 88_000;
 const maximumInstantiations = 1_100_000;
 const result = spawnSync(
   process.execPath,

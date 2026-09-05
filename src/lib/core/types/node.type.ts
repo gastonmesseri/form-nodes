@@ -1,5 +1,9 @@
 import type { Signal } from '@angular/core';
 
+import type { Field } from '../primitives/field.type';
+import type { FormApi } from '../primitives/form.type';
+import type { GroupApi } from '../primitives/group.type';
+import type { ArrayNode } from '../primitives/array.type';
 import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 
@@ -308,7 +312,13 @@ export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = Roo
         : TNode
       : TNode
     : Node;
-export type NearestForm<TNode extends Node> = Node extends TNode ? Node
+/** Generic form navigation without asserting unknown child names or hiding valid child collisions. */
+export type NavigationForm = Node & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
+
+/** Complete structural node APIs when an ancestor's exact declaration is unavailable. */
+export type NavigationRoot = Field<any> | NavigationForm | (Node & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> }) | ArrayNode<any>;
+
+export type NearestForm<TNode extends Node> = Node extends TNode ? NavigationForm
   : TNode extends { $api: { form: Signal<infer TForm> } }
     ? Exclude<TForm, null> extends Node ? Exclude<TForm, null> : never
     : never;

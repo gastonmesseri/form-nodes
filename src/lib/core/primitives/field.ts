@@ -4,23 +4,23 @@ import { isNotNil } from '../utils/is-nil';
 import { markAsNode } from '../utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
-import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
-import { registerAngularField } from '../interop/angular-field';
 import { computedFunction } from '../utils/computed-function';
+import { registerAngularField } from '../interop/angular-field';
 import type { Field, FieldApi, FieldOptions } from './field.type';
 import { isAsyncValidator } from '../utils/async-validator-marker';
 import { markAsFieldContext } from '../utils/field-context-marker';
 import { runSyncValidators } from '../validation/run-sync-validators';
-import { createValidatorContext } from '../validation/create-validator-context';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { createValidatorContext } from '../validation/create-validator-context';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/validator-source';
-import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
+import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
+import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
@@ -63,7 +63,7 @@ export function field(
  */
 export function field(
   value: null,
-  validators: ValidatorSource<unknown>,
+  validators: ValidatorSource<unknown, Field<unknown>>,
   options?: NullableFieldOptions<unknown>,
 ): Field<unknown>;
 /**
@@ -95,7 +95,7 @@ export function field(
  */
 export function field(
   value: undefined,
-  validators: ValidatorSource<unknown>,
+  validators: ValidatorSource<unknown, Field<unknown>>,
   options?: NullableFieldOptions<unknown>,
 ): Field<unknown>;
 /** Creates a nullable field that preserves an explicitly typed `undefined` initial value. */
@@ -106,7 +106,7 @@ export function field<TValue>(
 /** Creates a nullable field with validators that preserves an explicitly typed `undefined` initial value. */
 export function field<TValue>(
   value: undefined,
-  validators: ValidatorSource<NoInfer<TValue | null | undefined>>,
+  validators: ValidatorSource<NoInfer<TValue | null | undefined>, Field<NoInfer<TValue | null | undefined>>>,
   options?: FieldOptions<NoInfer<TValue | null | undefined>>,
 ): Field<TValue | null | undefined>;
 /**
@@ -142,26 +142,26 @@ export function field<TValue>(): Field<TValue | null>;
  */
 export function field<TValue>(
   value: TValue | null,
-  validators?: ValidatorSource<NoInfer<TValue | null>>,
+  validators?: ValidatorSource<NoInfer<TValue | null>, Field<NoInfer<TValue | null>>>,
   options?: NullableFieldOptions<NoInfer<TValue>>,
 ): Field<TValue | null>;
 export function field<TValue>(
   value?: TValue,
-  validatorsOrOptions?: ValidatorSource<NoInfer<TValue>> | FieldOptions<NoInfer<TValue>>,
+  validatorsOrOptions?: ValidatorSource<NoInfer<TValue>, Field<NoInfer<TValue>>> | FieldOptions<NoInfer<TValue>>,
   separateOptions?: FieldOptions<NoInfer<TValue>>,
 ): Field<TValue> {
   const initialValue = (arguments.length === 0 ? null : value) as TValue;
-  const resolvedOptions = isValidatorSource<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined
+  const resolvedOptions = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions) || validatorsOrOptions === undefined
     ? separateOptions
     : validatorsOrOptions;
-  const validatorSource = isValidatorSource<TValue>(validatorsOrOptions)
+  const validatorSource = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions)
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
   const validators = normalizeValidatorSource(validatorSource);
   const cloneOptions = resolvedOptions === undefined ? undefined : { ...resolvedOptions };
   const recreateField = field as unknown as (
     initialValue: TValue,
-    initialValidators: ValidatorSource<TValue>,
+    initialValidators: ValidatorSource<TValue, Field<TValue>>,
     initialOptions?: FieldOptions<TValue>,
   ) => Field<TValue>;
   const fieldValue = signal<TValue>(initialValue);
@@ -206,7 +206,7 @@ export function field<TValue>(
   );
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   const emptySyncMetadata = new Map();
-  const fieldForm = computed(() => fieldParent()?.$api.form() ?? null);
+  const fieldForm = computed(() => fieldParent()?.$api.form() ?? null) as FieldApi<TValue>['form'];
   const fieldRoot = computed(() => fieldParent()?.$api.root() ?? fieldNode) as Signal<Field<TValue>>;
   const fieldSyncValidation = computed(() => fieldNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
@@ -346,7 +346,7 @@ export function field<TValue>(
     focus: (options?: FocusOptions) => getControlBindingForFocus()?.focus(options),
     reset,
     validators: fieldValidators.asReadonly(),
-    setValidators: (next: ValidatorSource<TValue>) => {
+    setValidators: (next: ValidatorSource<TValue, Field<TValue>>) => {
       fieldValidators.set(normalizeValidatorSource(next));
       ensureAsyncValidationWatch();
     },
@@ -454,18 +454,18 @@ export namespace field {
    * @param validators Validators for the field value.
    * @param options Field configuration.
    */
-  export function strict<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>>, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  export function strict<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>, Field<NoInfer<TValue>>>, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
   export function strict<TValue extends {}>(
     value: TValue,
-    validatorsOrOptions?: ValidatorSource<NoInfer<TValue>> | NonNullableFieldOptions<NoInfer<TValue>>,
+    validatorsOrOptions?: ValidatorSource<NoInfer<TValue>, Field<NoInfer<TValue>>> | NonNullableFieldOptions<NoInfer<TValue>>,
     separateOptions?: NonNullableFieldOptions<NoInfer<TValue>>,
   ): Field<TValue> {
     const createField = field as unknown as (
       initialValue: TValue,
-      initialValidatorsOrOptions?: ValidatorSource<TValue> | FieldOptions<TValue>,
+      initialValidatorsOrOptions?: ValidatorSource<TValue, Field<TValue>> | FieldOptions<TValue>,
       initialOptions?: FieldOptions<TValue>,
     ) => Field<TValue>;
-    if (isValidatorSource<TValue>(validatorsOrOptions) || validatorsOrOptions === undefined) {
+    if (isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions) || validatorsOrOptions === undefined) {
       return createField(value, validatorsOrOptions, separateOptions);
     }
     return createField(value, validatorsOrOptions);
@@ -504,24 +504,24 @@ export namespace field {
    * @param validators Validators for the nullable field value.
    * @param options Field configuration.
    */
-  export function nullable(value: null | undefined, validators: ValidatorSource<unknown>, options?: NullableFieldOptions<unknown>): Field<unknown>;
-  export function nullable<TValue>(value: undefined, validators: ValidatorSource<NoInfer<TValue | null | undefined>>, options?: FieldOptions<NoInfer<TValue | null | undefined>>): Field<TValue | null | undefined>;
-  export function nullable<TValue>(value: TValue | null, validators: ValidatorSource<NoInfer<TValue | null>>, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  export function nullable(value: null | undefined, validators: ValidatorSource<unknown, Field<unknown>>, options?: NullableFieldOptions<unknown>): Field<unknown>;
+  export function nullable<TValue>(value: undefined, validators: ValidatorSource<NoInfer<TValue | null | undefined>, Field<NoInfer<TValue | null | undefined>>>, options?: FieldOptions<NoInfer<TValue | null | undefined>>): Field<TValue | null | undefined>;
+  export function nullable<TValue>(value: TValue | null, validators: ValidatorSource<NoInfer<TValue | null>, Field<NoInfer<TValue | null>>>, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
   export function nullable<TValue>(
     value?: TValue | null,
-    validatorsOrOptions?: ValidatorSource<NoInfer<TValue | null>> | NullableFieldOptions<NoInfer<TValue>>,
+    validatorsOrOptions?: ValidatorSource<NoInfer<TValue | null>, Field<NoInfer<TValue | null>>> | NullableFieldOptions<NoInfer<TValue>>,
     separateOptions?: NullableFieldOptions<NoInfer<TValue>>,
   ): Field<TValue | null | undefined> {
     const initialValue = arguments.length === 0 ? null : value;
     const createField = field as unknown as (
       initialValue: TValue | null | undefined,
-      initialValidatorsOrOptions?: ValidatorSource<TValue | null | undefined> | FieldOptions<TValue | null | undefined>,
+      initialValidatorsOrOptions?: ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>> | FieldOptions<TValue | null | undefined>,
       initialOptions?: FieldOptions<TValue | null | undefined>,
     ) => Field<TValue | null | undefined>;
-    if (isValidatorSource<TValue | null | undefined>(validatorsOrOptions) || validatorsOrOptions === undefined) {
+    if (isValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>>(validatorsOrOptions) || validatorsOrOptions === undefined) {
       return createField(
         initialValue,
-        validatorsOrOptions as ValidatorSource<TValue | null | undefined> | undefined,
+        validatorsOrOptions as ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>> | undefined,
         separateOptions as FieldOptions<TValue | null | undefined> | undefined,
       );
     }

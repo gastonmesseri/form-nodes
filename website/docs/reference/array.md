@@ -67,6 +67,11 @@ const myForm = form({
 | Inspect aggregate state | Validation, interaction, and availability signals | [Validation](#validation-properties-and-methods), [interaction](#interaction-properties-and-methods), and [availability](#availability-properties-and-methods) |
 | Commit, focus, or inspect submission state | `flush()`, `focus()`, `submitting()` | [Control and submission](#control-and-submission-properties-and-methods) |
 
+Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
+value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+helpers retain that inference when their generics are omitted. See
+[Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
+
 ## Signatures
 
 ```ts
@@ -220,7 +225,7 @@ users();
 
 #### validators {#validators-option}
 
-**Signature:** `validators?: ValidatorSource<ArrayValue>`
+**Signature:** `validators?: ValidatorSource<ArrayValue, ArrayNode<TItem>>`
 
 Assigns one validator or an array of validators to the complete collection value. Item-template
 validators still validate each item independently.
@@ -1700,7 +1705,7 @@ usernames(); // ['linus', 'noa']
 
 #### setValidators()
 
-**Signature:** `setValidators(validators: ValidatorSource<ArrayValue>): void`
+**Signature:** `setValidators(validators: ValidatorSource<ArrayValue, ArrayNode<TItem>>): void`
 
 Replaces the validators owned by the array and immediately evaluates its current aggregate value.
 It does not replace validators owned by item nodes.

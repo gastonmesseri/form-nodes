@@ -2,7 +2,7 @@ import type { Injector, Signal } from '@angular/core';
 
 import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, NearestForm, Node, NodeKeyInParent, RootNode } from '../types/node.type';
+import type { DisabledReason, NavigationRoot, NearestForm, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
 export type FieldOptions<TValue = any> = {
@@ -53,7 +53,7 @@ export type FieldOptions<TValue = any> = {
    * Arrays may also contain validators created with `asyncValidator()` and ignored `null` or
    * `undefined` entries.
    */
-  validators?: ValidatorSource<TValue>;
+  validators?: ValidatorSource<TValue, Field<TValue>>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */
   injector?: Injector;
   /**
@@ -147,7 +147,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    * Complete structural root containing this field. A standalone or detached field returns itself.
    * Use this signal when traversal must cross nested form workflow boundaries.
    */
-  root: Signal<Node extends TParent ? Node : RootNode<TParent>>;
+  root: Signal<Node extends TParent ? NavigationRoot : RootNode<TParent>>;
   /** Immediate structural parent of this field, or `null` when it is a root or has been detached. */
   parent: Signal<TParent | null>;
   /**
@@ -240,7 +240,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   /** Current normalized validators assigned directly to this field, in declaration order. */
   validators: Signal<Validators<TValue>>;
   /** Replaces this field's validators and immediately validates the current committed value. */
-  setValidators(validators: ValidatorSource<TValue>): void;
+  setValidators(validators: ValidatorSource<TValue, Field<TValue>>): void;
   /**
   * A signal containing the validation errors of **this field itself**.
   *

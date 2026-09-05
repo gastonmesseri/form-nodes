@@ -73,6 +73,11 @@ When a value appears directly inside an object-node definition, consult the
 [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix) to see
 whether it becomes an implicit field or structural group.
 
+Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
+value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+helpers retain that inference when their generics are omitted. See
+[Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
+
 ## Signatures
 
 ```ts
@@ -195,7 +200,7 @@ the inherited debounce.
 
 #### validators {#field-validators-option}
 
-**Signature:** `validators?: ValidatorSource<TValue>`
+**Signature:** `validators?: ValidatorSource<TValue, Field<TValue>>`
 
 Assigns one validator, several validators, or a reactive validator source to this field.
 
@@ -1021,7 +1026,7 @@ Focuses the first `[formNode]` control bound to the field in DOM order. It forwa
 
 #### setValidators()
 
-**Signature:** `setValidators(validators: ValidatorSource<TValue>): void`
+**Signature:** `setValidators(validators: ValidatorSource<TValue, Field<TValue>>): void`
 
 Replaces the field's validator source and immediately validates the current committed value. The
 source may itself be reactive.

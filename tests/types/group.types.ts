@@ -17,7 +17,7 @@ type AddressValue = {
 };
 
 type _Value = Expect<Equal<ReturnType<typeof address>, AddressValue>>;
-type _NestedGroupForm = Expect<Equal<ReturnType<typeof address.location.latitude.form>, Node | null>>;
+type _NestedGroupForm = Expect<Equal<ReturnType<NonNullable<ReturnType<typeof address.location.latitude.form>>['nodeType']>, 'form'>>;
 type _NestedGroupRoot = Expect<Equal<ReturnType<typeof address.location.latitude.root>, typeof address>>;
 
 address.set({ city: 'Bern', location: { latitude: 46.95 } });

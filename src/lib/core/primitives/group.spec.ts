@@ -3,11 +3,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { form } from './form';
 import { field } from './field';
 import { group } from './group';
-import { createFormPrimitives } from './create-form-primitives';
 import { array } from './array';
 import { required } from '../validation/validators/required';
+import { createFormPrimitives } from './create-form-primitives';
 
 describe('group', () => {
+  it('exposes one node signal under both validator aliases', () => {
+    let receivedNode: unknown;
+    const validate = (context: { node: () => unknown; field: () => unknown }) => {
+      expect(context.node).toBe(context.field);
+      receivedNode = context.node();
+      return null;
+    };
+    const target = group({ email: field('') }, { validators: validate });
+    expect(target.errors()).toEqual([]);
+    expect(receivedNode).toBe(target);
+  });
+
   it('creates shorthand descendants with configured field defaults', () => {
     const { group: configuredGroup } = createFormPrimitives({ nullable: false });
     const address = configuredGroup({ city: '' });
