@@ -833,6 +833,11 @@ Separately declared helpers retain a generic authoring context and remain reusab
 a helper's value generic uses its default owner; omit helper generics for inline inference or
 supply the owner generic explicitly. `context.node().api` follows the inferred or explicitly supplied node type.
 Knowing the local node does not infer ancestors or siblings from an enclosing declaration.
+Inline validator contexts reuse the concrete node API value signal type for `value`, so IntelliSense
+shows the expanded aggregate model instead of `NoInfer<FormValue<NormalizedNodes<...>>>`. Generic
+contexts keep their `TApi` value signal and `TValue`. This is a type-only presentation change:
+`NoInfer` remains on primitive inputs, runtime signals are unchanged, and arrays, nullable values,
+unions, tuples, and nominal field values retain their types.
 Generic nearest-form and field-root lookups now expose complete node APIs, so navigation through
 the validated node remains usable without the removed flat shortcuts. Explicit `TField` context
 types remain exact under `Signal<TField>` on both aliases. Read values with `context.value()` for

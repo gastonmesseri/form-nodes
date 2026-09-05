@@ -325,7 +325,9 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
 };
 
 /** Reactive context provided to synchronous validators. */
-export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = ValidatorNode> = Pick<TApi, keyof ValidatorReadonlyApi<TValue>> & {
+export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = ValidatorNode> = Pick<TApi, 'parent' | 'path'> & {
+  /** Current committed value of the node being validated. */
+  readonly value: ValidatorNode extends TField ? TApi['value'] : TField['$api']['value'];
   /**
    * Readonly signal of the node being validated.
    * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.
