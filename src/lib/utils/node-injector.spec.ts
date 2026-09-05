@@ -1,12 +1,97 @@
-import { InjectionToken, Injector } from '@angular/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { DestroyRef, InjectionToken, Injector, runInInjectionContext } from '@angular/core';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import { registerNodeBindingInjector, resolveNodeInjector } from './node-injector';
+import { refreshNodeInjector, registerNodeInjector, watchNodeInjector, registerNodeBindingInjector, resolveNodeInjector } from './node-injector';
 
 describe('node injector resolution', () => {
   const bindingMarker = new InjectionToken<string>('binding marker');
+
+  it('captures the current injection context while preferring an explicit injector', () => {
+    const capturedInjector = Injector.create({ providers: [] });
+    const explicitInjector = Injector.create({ providers: [] });
+    const captured = field('');
+    const explicit = field('');
+
+    try {
+      expect(resolveNodeInjector(captured)).toBeUndefined();
+      runInInjectionContext(capturedInjector, () => {
+        registerNodeInjector(captured, undefined, true, true);
+        registerNodeInjector(explicit, explicitInjector, true, true);
+      });
+
+      expect(resolveNodeInjector(captured)).toBe(capturedInjector);
+      expect(resolveNodeInjector(explicit)).toBe(explicitInjector);
+    } finally {
+      capturedInjector.destroy();
+      explicitInjector.destroy();
+    }
+  });
+
+  it('reports the current injector immediately and refreshes only active subscribers', () => {
+    const injector = Injector.create({ providers: [] });
+    const name = field('');
+    const first = vi.fn();
+    const second = vi.fn();
+    const stopFirst = watchNodeInjector(name, first);
+    const stopSecond = watchNodeInjector(name, second);
+
+    try {
+      expect(first.mock.calls).toEqual([[undefined]]);
+      expect(second.mock.calls).toEqual([[undefined]]);
+
+      registerNodeInjector(name, injector, true, true);
+      refreshNodeInjector(name);
+      expect(first.mock.calls).toEqual([[undefined], [injector]]);
+      expect(second.mock.calls).toEqual([[undefined], [injector]]);
+
+      stopFirst();
+      registerNodeInjector(name, undefined, true, true);
+      refreshNodeInjector(name);
+      expect(first).toHaveBeenCalledTimes(2);
+      expect(second.mock.calls).toEqual([[undefined], [injector], [undefined]]);
+
+      stopSecond();
+      refreshNodeInjector(name);
+      expect(first).toHaveBeenCalledTimes(2);
+      expect(second).toHaveBeenCalledTimes(3);
+    } finally {
+      stopFirst();
+      stopSecond();
+      injector.destroy();
+    }
+  });
+
+  it('destroys released binding leases once while keeping other leases active', () => {
+    const injector = Injector.create({ providers: [] });
+    const name = field('');
+    const releaseFirst = registerNodeBindingInjector(name, injector);
+    const firstLease = resolveNodeInjector(name)!;
+    const destroyed = vi.fn();
+    firstLease.get(DestroyRef).onDestroy(destroyed);
+    const releaseSecond = registerNodeBindingInjector(name, injector);
+
+    try {
+      expect(resolveNodeInjector(name)).toBe(firstLease);
+      releaseFirst();
+      const secondLease = resolveNodeInjector(name);
+      expect(secondLease).toBeDefined();
+      expect(secondLease).not.toBe(firstLease);
+      expect(destroyed).toHaveBeenCalledOnce();
+
+      releaseFirst();
+      expect(resolveNodeInjector(name)).toBe(secondLease);
+      expect(destroyed).toHaveBeenCalledOnce();
+
+      releaseSecond();
+      expect(resolveNodeInjector(name)).toBeUndefined();
+    } finally {
+      releaseFirst();
+      releaseSecond();
+      injector.destroy();
+    }
+  });
 
   it('prefers an own injector over binding and ancestor injectors', () => {
     const ownInjector = Injector.create({ providers: [] });

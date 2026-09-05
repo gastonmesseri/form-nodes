@@ -15,12 +15,12 @@
   - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
   - this should also allow support for [formControl] [formControlNAme] [formField] bindings somehow
 
-- [ ] Add tests for every function in lib/utils
-
 - controlState
-  - [ ] Consider naming if useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
+  - [ ] Maybe: Consider naming if useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
 
 - Consider removing support for myForm.name.$field (maybe right now with useControlState() we don't need to support that)
+
+- Maybe: In the folder tests/types maybe structure each file with JS Comments like if we do something like it('should do....')
 
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
@@ -351,6 +351,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Add tests for every function in `src/lib/utils`.
+  - Add direct coverage for object classification, word counting, subscription detection, empty values, collection lengths, and DOM binding order. Extend injector tests for captured ownership, subscriber notifications, and binding-lease cleanup.
 
 - [x] Think about how to better structure project folders given current knowledge and existing files
   - [x] should i move public-api.spec.ts next to public-api.ts ?
