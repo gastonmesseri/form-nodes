@@ -7,7 +7,7 @@ Angular packages or resolve Form Nodes through source paths.
 | Consumer | Angular | TypeScript | Policy |
 | --- | --- | --- | --- |
 | `angular-22` | 22.1.5 | 6.0.3 | Required |
-| `angular-21` | 21.2.22 | 5.9.3 | Required |
+| `angular-21` | 21.0.7 | 5.9.3 | Required |
 
 Use Node.js 22.22.3 for the same environment as CI. The versions above are selected test points,
 not proof of compatibility with every earlier minor or patch in either major.
@@ -46,7 +46,7 @@ Use the actual filename printed by `npm pack` if the package version changes. A 
    attempted so logs expose separate declaration and runtime blockers.
 
 Both consumers install with strict peer checks. A failure in either consumer fails the CI workflow.
-The library is built once using Angular 21.2.22 and TypeScript 5.9.3; that identical tarball is then
+The library is built once using Angular 21.0.7 and TypeScript 5.9.3; that identical tarball is then
 checked with both Angular versions. Node.js 22.22.3 is the development baseline (`.nvmrc`).
 
 ## CI and release verification

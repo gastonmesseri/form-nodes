@@ -8,15 +8,19 @@ The current development line supports these verified minimum Angular patches:
 
 | Form Nodes | Angular | TypeScript |
 | --- | --- | --- |
-| `0.1.x` | `^21.2.22` | `>=5.9.0 <6.0.0` |
+| `0.1.x` | `^21.0.7` | `>=5.9.0 <6.0.0` |
 | `0.1.x` | `^22.1.5` | `>=6.0.0 <6.1.0` |
 
 Both `@angular/core` and `@angular/forms` must satisfy the peer range. Keep all Angular packages
 on mutually compatible versions. Earlier Angular 21 and 22 patches are outside the verified range.
 Use the Node.js and TypeScript versions supported by your Angular version; see
 [Angular's version table](https://angular.dev/reference/versions). The repository uses Node.js
-22.22.3 (`.nvmrc`), Angular 21.2.22, and TypeScript 5.9.3 to build the package. The package's Node.js
+22.22.3 (`.nvmrc`), Angular 21.0.7, and TypeScript 5.9.3 to build the package. The package's Node.js
 engine range also applies; Node.js 22.22.3 is a shared supported choice for both Angular versions.
+
+Angular 21.0.7 is the minimum because it introduces `FormField` and `FORM_FIELD`, which
+`useControlState()` uses to observe Angular Signal Forms. The supported range includes later
+Angular 21 releases such as 21.2.18.
 
 ## Installing
 
@@ -43,7 +47,7 @@ continue to follow the inspected Angular 22 baseline even when running on Angula
 ## Repository verification
 
 The compatibility workflow builds one archive with Angular 21 and installs it into independently
-locked Angular 21.2.22 / TypeScript 5.9.3 and Angular 22.1.5 / TypeScript 6.0.3 consumers. Both checks
+locked Angular 21.0.7 / TypeScript 5.9.3 and Angular 22.1.5 / TypeScript 6.0.3 consumers. Both checks
 are required and use strict peer resolution:
 
 ```bash

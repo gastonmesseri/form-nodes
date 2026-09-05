@@ -2,7 +2,6 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import type { ValidationError } from '@angular/forms/signals';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { Component, Injector, Input, booleanAttribute, input, model, signal, type OnChanges, type SimpleChanges } from '@angular/core';
@@ -16,6 +15,7 @@ import { required } from '../../validation/validators/required';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
 import { connectSignalControlInputs } from './signal-control-inputs';
+import type { ValidationError } from '../../validation/validation.type';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
 
@@ -37,7 +37,7 @@ describe('connectSignalControlInputs', () => {
       disabled = input(false, { transform: booleanAttribute });
       disabledReasons = input<readonly unknown[]>([]);
       dirty = input(false);
-      errors = input<readonly ValidationError.WithOptionalFieldTree[]>([]);
+      errors = input<readonly ValidationError[]>([]);
       hidden = input(false);
       invalid = input(false);
       max = input<number | undefined>(undefined);
