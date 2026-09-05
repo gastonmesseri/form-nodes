@@ -1,8 +1,8 @@
 # TODO Validators
 
-Compilación unificada de validadores comunes incluidos de forma oficial en librerías de validación para Vue como **VeeValidate**, **Vuelidate** y **FormKit**.
+Consolidated list of common validators officially included in Vue validation libraries such as **VeeValidate**, **Vuelidate**, and **FormKit**.
 
-> Los nombres están normalizados para evitar diferencias de nomenclatura entre librerías. Por ejemplo, `minLength` se diferencia explícitamente de `minValue`.
+> Names are normalized to avoid naming differences between libraries. For example, `minLength` is explicitly distinguished from `minValue`.
 
 ## Presence
 
