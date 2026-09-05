@@ -10,6 +10,14 @@ canonical release record.
 
 ## Unreleased
 
+### Fixed
+
+- Angular 21 consumers can now install Form Nodes on Node.js 20.19.0+, 22.12.0+, and 24.0.0+ within those majors without an engine mismatch. Angular 22 retains its higher Node.js requirements.
+
+### Added
+
+- The npm package now provides repository, issue-reporting, and author links, clearer search metadata, and a bundled changelog.
+
 ## 1.0.0 — Pending publication
 
 First public release, establishing the stable public API. Supports Angular `^21.0.7 || ^22.1.5`.

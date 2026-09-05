@@ -9,7 +9,8 @@ Angular packages or resolve Form Nodes through source paths.
 | `angular-22` | 22.1.5 | 6.0.3 | Required |
 | `angular-21` | 21.0.7 | 5.9.3 | Required |
 
-Use Node.js 22.22.3 for the same environment as CI. The versions above are selected test points,
+CI checks both consumers on Node.js 22.22.3 and additionally checks Angular 21 on Node.js 20.19.0.
+Consumer installation uses strict peer and engine resolution. Node.js 20 is supported only with Angular 21. The versions above are selected test points,
 not proof of compatibility with every earlier minor or patch in either major.
 
 ## Run locally

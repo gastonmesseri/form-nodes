@@ -16,7 +16,11 @@ on mutually compatible versions. Earlier Angular 21 and 22 patches are outside t
 Use the Node.js and TypeScript versions supported by your Angular version; see
 [Angular's version table](https://angular.dev/reference/versions). The repository uses Node.js
 22.22.3 (`.nvmrc`), Angular 21.0.7, and TypeScript 5.9.3 to build the package. The package's Node.js
-engine range also applies; Node.js 22.22.3 is a shared supported choice for both Angular versions.
+engine range also applies. Angular 21 consumers can use Node.js `^20.19.0`, `^22.12.0`, or
+`^24.0.0`; Angular 22 consumers require Node.js `^22.22.3`, `^24.15.0`, or `^26.0.0`.
+Node.js 20.19.4 is therefore supported with Angular 21, but not Angular 22. Node.js 22.22.3
+is a shared supported choice for both Angular versions. The repository development baseline
+does not set the minimum Node.js version for consuming the published library.
 
 Angular 21.0.7 is the minimum because it introduces `FormField` and `FORM_FIELD`, which
 `useFormNodeState()` uses to observe Angular Signal Forms. The supported range includes later
@@ -48,7 +52,8 @@ continue to follow the inspected Angular 22 baseline even when running on Angula
 
 The compatibility workflow builds one archive with Angular 21 and installs it into independently
 locked Angular 21.0.7 / TypeScript 5.9.3 and Angular 22.1.5 / TypeScript 6.0.3 consumers. Both checks
-are required and use strict peer resolution:
+are required and use strict peer and engine resolution. CI also checks the Angular 21 consumer
+on Node.js 20.19.0, the minimum supported Node.js 20 patch:
 
 ```bash
 npm run build

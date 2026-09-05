@@ -19,6 +19,9 @@ import { field, form, required } from 'form-nodes';
 The package is distributed as side-effect-free ESM. Consumer bundlers can remove validators and
 other exports that are not imported.
 
+The published package includes TypeScript declarations, source maps, the MIT license, and a changelog.
+Use the [GitHub issue tracker](https://github.com/gastonmesseri/ng-forms/issues) to report bugs.
+
 ## Requirements
 
 - Angular `^21.0.7 || ^22.1.5`

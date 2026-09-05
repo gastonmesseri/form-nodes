@@ -1,8 +1,31 @@
 {
   "name": "form-nodes",
   "version": "1.0.0",
-  "description": "Easy, small, typed, signal-based form primitives for Angular.",
+  "description": "Typed, signal-based forms for Angular with reactive validation, dynamic arrays, and native and custom control integration.",
   "license": "MIT",
+  "homepage": "https://github.com/gastonmesseri/ng-forms#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gastonmesseri/ng-forms.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gastonmesseri/ng-forms/issues"
+  },
+  "author": {
+    "name": "Gaston Meseri",
+    "url": "https://github.com/gastonmesseri"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "files": [
+    "fesm2022/",
+    "types/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "type": "module",
   "workspaces": [
     "website"
@@ -52,11 +75,22 @@
     "vitest": "^3.2.0"
   },
   "engines": {
-    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+    "node": "^20.19.0 || ^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "keywords": [
     "angular",
+    "angular-forms",
+    "angular-signals",
+    "signal-forms",
     "forms",
+    "form-validation",
+    "reactive-validation",
+    "async-validation",
+    "typed-forms",
+    "dynamic-forms",
+    "form-array",
+    "custom-controls",
+    "control-value-accessor",
     "signals",
     "typescript"
   ]

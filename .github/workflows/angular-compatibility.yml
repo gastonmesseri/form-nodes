@@ -32,7 +32,7 @@ jobs:
           if-no-files-found: error
 
   consumer:
-    name: Angular ${{ matrix.angular }} consumer
+    name: Angular ${{ matrix.angular }} / Node ${{ matrix.node }} consumer
     needs: package
     runs-on: ubuntu-latest
     strategy:
@@ -40,12 +40,16 @@ jobs:
       matrix:
         include:
           - angular: '22'
+            node: '22.22.3'
           - angular: '21'
+            node: '22.22.3'
+          - angular: '21'
+            node: '20.19.0'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.22.3'
+          node-version: ${{ matrix.node }}
           cache: npm
           cache-dependency-path: tests/compatibility/angular-${{ matrix.angular }}/package-lock.json
       - uses: actions/download-artifact@v4
@@ -54,6 +58,8 @@ jobs:
           path: artifacts
       - name: Check packed consumer
         id: compatibility
+        env:
+          npm_config_engine_strict: true
         shell: bash
         run: |
           packages=(artifacts/*.tgz)
@@ -62,7 +68,8 @@ jobs:
       - name: Report compatibility result
         if: always()
         env:
+          NODE_VERSION: ${{ matrix.node }}
           ANGULAR_MAJOR: ${{ matrix.angular }}
           OUTCOME: ${{ steps.compatibility.outcome }}
         run: |
-          echo "Angular ${ANGULAR_MAJOR}: ${OUTCOME}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Angular ${ANGULAR_MAJOR} / Node ${NODE_VERSION}: ${OUTCOME}" >> "$GITHUB_STEP_SUMMARY"
