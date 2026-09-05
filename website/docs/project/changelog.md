@@ -5,10 +5,14 @@ title: Changelog
 # Changelog
 
 This page summarizes consumer-visible changes. The repository's
-[complete changelog](https://github.com/gastonmesseri/ng-forms/blob/main/CHANGELOG.md) is the
+[complete changelog](https://github.com/gastonmesseri/ng-forms/blob/master/CHANGELOG.md) is the
 canonical release record.
 
 ## Unreleased
+
+## 1.0.0 — Pending publication
+
+First public release, establishing the stable public API. Supports Angular `^21.0.7 || ^22.1.5`.
 
 ### Fixed
 
@@ -128,11 +132,6 @@ canonical release record.
   become atomic `Field` nodes. Only an explicit `array(...)` creates a dynamic collection, so the
   inferred node never depends on array length or contents. Empty mutable array shorthands infer
   `unknown[]` instead of `never[]`.
-
-## 0.1.0
-
-Initial development version. It is not presented as a stable 1.0 API. Review
-[Versioning and releases](./versioning.md) before adopting a pre-1.0 update.
 
 ## Changelog categories
 

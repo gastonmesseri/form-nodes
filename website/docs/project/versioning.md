@@ -5,22 +5,23 @@ title: Versioning and releases
 # Versioning and releases
 
 Form Nodes versions describe the library itself; they do **not** mirror Angular's version number.
-For example, Form Nodes `0.1.x` supports Angular 21 and 22, but that does not imply that Angular 22 requires
+For example, Form Nodes `1.x` supports Angular 21 and 22, but that does not imply that Angular 22 requires
 Form Nodes 22.
 
 ## Version policy
 
 Form Nodes follows [Semantic Versioning](https://semver.org/):
 
-| Release | After 1.0 | During the current 0.x phase |
-| --- | --- | --- |
-| Patch, such as `1.2.3` | Backward-compatible fixes | Backward-compatible fixes |
-| Minor, such as `1.3.0` | Backward-compatible features | Features and possible breaking API changes |
-| Major, such as `2.0.0` | Breaking changes | Reserved for a significant project milestone |
+| Release | Meaning |
+| --- | --- |
+| Patch, such as `1.0.1` | Backward-compatible fixes |
+| Minor, such as `1.1.0` | Backward-compatible features |
+| Major, such as `2.0.0` | Breaking changes |
 
-Before 1.0, review the changelog and migration guide before every minor upgrade. Breaking changes
-must be identified explicitly; upgrading should never require discovering them through compiler or
-runtime failures alone.
+The first public release is `1.0.0`, establishing the stable public API. Review the changelog
+and migration guide before every major upgrade. Breaking changes must be identified explicitly.
+Dropping a supported Angular version requires a major release. Adding support for a new Angular
+major without breaking existing consumers does not require matching that Angular version number.
 
 ## Angular support policy
 

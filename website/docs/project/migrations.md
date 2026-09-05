@@ -6,7 +6,7 @@ title: Migration guides
 
 ## Renaming the custom-control state hook
 
-In the current unreleased development version, `useControlState()` is renamed to
+In the upcoming first public release, `1.0.0`, `useControlState()` is renamed to
 `useFormNodeState()`. Update imports from `form-nodes` and every call to the hook. The old
 name is no longer exported.
 
@@ -16,7 +16,7 @@ see the [`useFormNodeState()` reference](../reference/form-node-state.md).
 
 ## Removing the field adapter
 
-In the current unreleased development version, Form Nodes no longer exposes `$field`.
+In the upcoming first public release, `1.0.0`, Form Nodes no longer exposes `$field`.
 Change each Form Nodes binding from:
 
 ```html
@@ -44,11 +44,11 @@ and read state with `binding.node()` instead of `binding.state()`.
 
 Custom components may implement the Form Nodes control types without depending on Angular's
 version-specific `FormUiControl` type. The supported Angular ranges are now `^21.0.7 || ^22.1.5`;
-update older Angular installations to a verified patch before upgrading this development version.
+update older Angular installations to a verified patch before adopting `1.0.0`.
 
 ## Upgrade checklist
 
-Use this process for every minor pre-1.0 release and every major stable release:
+Use this process for every major release:
 
 1. Read the source and target entries in the [changelog](./changelog.md).
 2. Verify Angular, Node.js, and TypeScript expectations in [Compatibility](./compatibility.md).
@@ -58,7 +58,7 @@ Use this process for every minor pre-1.0 release and every major stable release:
 6. Run tests that cover validation, submission, arrays, and `[formNode]` control bindings.
 
 ```bash
-npm install --save form-nodes@^0.1
+npm install --save form-nodes@^1
 npx tsc --noEmit
 ng build
 ng test
@@ -76,10 +76,10 @@ Every breaking migration will identify:
 - Observable behavior changes, not only renamed TypeScript symbols.
 - Any automated migration or temporary compatibility path, when available.
 
-## Moving to 0.1.0
+## Moving to 1.0.0
 
-`0.1.0` is the initial development version, so there is no earlier Form Nodes version to migrate
-from. For a new application, start with [Installation](../getting-started/installation.md) and then
+`1.0.0` is the first public release, so there is no earlier public Form Nodes version to migrate
+from. The development migration notes on this page apply to users of earlier repository snapshots. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
 
 ### Package name
@@ -163,7 +163,7 @@ factory-wide default rather than one field's local choice.
 
 ### Declaration shorthand contract
 
-The initial `0.1.0` contract accepts primitive values, `Date`, functions, class instances, other
+The initial `1.0.0` contract accepts primitive values, `Date`, functions, class instances, other
 non-plain objects, and arrays as atomic field shorthand inside `form()`, `group()`, dynamic
 `add()`, and object templates passed to `array()`. Plain objects create structural groups. Existing
 nodes are attached unchanged.

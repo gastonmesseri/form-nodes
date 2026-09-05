@@ -79,7 +79,7 @@ Import from the package entry point:
 import { form, field, array } from 'form-nodes';
 ```
 
-The current `0.1.x` line supports Angular `^21.0.7 || ^22.1.5`. Both `@angular/core` and `@angular/forms` must use
+The current `1.0.x` line supports Angular `^21.0.7 || ^22.1.5`. Both `@angular/core` and `@angular/forms` must use
 compatible Angular versions. See [Compatibility](https://gastonmesseri.github.io/ng-forms/project/compatibility)
 for the Node.js and TypeScript requirements.
 

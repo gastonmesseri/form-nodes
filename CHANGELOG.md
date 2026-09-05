@@ -3,11 +3,15 @@
 All notable changes to Form Nodes are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
-uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the package is below 1.0,
-a minor release may contain breaking changes; every such change must be called out here and in the
-consumer migration guide.
+uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Starting with 1.0.0, breaking changes require a major release and must be called out here and in
+the consumer migration guide. Minor releases add backward-compatible features; patch releases
+provide backward-compatible fixes.
 
 ## [Unreleased]
+
+## [1.0.0] - Pending publication
+
+First public release, establishing the stable public API. Supports Angular `^21.0.7 || ^22.1.5`.
 
 ### Fixed
 
@@ -130,9 +134,5 @@ consumer migration guide.
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-## [0.1.0] - Unreleased
-
-Initial development version. This version has not yet been recorded as a published stable release.
-
-[Unreleased]: https://github.com/gastonmesseri/ng-forms/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/gastonmesseri/ng-forms/releases/tag/v0.1.0
+[Unreleased]: https://github.com/gastonmesseri/ng-forms/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/gastonmesseri/ng-forms/releases/tag/v1.0.0
