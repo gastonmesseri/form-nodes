@@ -275,8 +275,15 @@ const myFormNon = form({
     email: field('', [email]),
   }, {
     validators: [minLength(2)],
-  })
+  }),
+  a: field(),
+  b: field<string>(),
+  c: field.nullable<string>(),
+  // d: field.strict<string>(),
 });
+myFormNon.a()
+myFormNon.b()
+myFormNon.c()
 
 // const fForm = form;
 // const fField = field;

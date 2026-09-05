@@ -94,17 +94,20 @@ field.nullable('');                   // Field<string | null>
 `field.nullable()` and `field.strict()` always override the configured default, so local
 exceptions remain concise in either direction.
 
-Passing `null` or `undefined` still creates a nullable field because there is no non-null initial
-value to preserve:
+Omitting the value or passing `null` or `undefined` produces `Field<unknown>` because there is no
+concrete initial value from which to infer a future type. An omitted value starts at `null`, while
+an explicit `undefined` is preserved:
 
 ```ts
 const { field } = createFormPrimitives({ nullable: false });
 
-field(null);      // Field<unknown>
-field(undefined); // Field<unknown>
+field();          // Field<unknown>; starts at null
+field(null);      // Field<unknown>; starts at null
+field(undefined); // Field<unknown>; starts at undefined
 ```
 
-Provide the future type and opt into nullability when it is known:
+When the future type is known, use `field.nullable<T>()` to start without a value. A configured
+`field<T>()` with `nullable: false` still requires an initial value:
 
 ```ts
 const nickname = field.nullable<string>();

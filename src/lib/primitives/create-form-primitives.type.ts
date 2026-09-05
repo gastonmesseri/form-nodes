@@ -28,6 +28,8 @@ interface FieldNullabilityOverrides {
 }
 
 export interface NonNullableFieldFactory extends FieldNullabilityOverrides {
+  /** Creates an unknown-valued field initialized to `null` when no initial value is supplied. */
+  (): Field<unknown>;
   (value: null, options?: NullableFieldOptions<unknown>): Field<unknown>;
   (value: null, validators: ValidatorSource<unknown, Field<unknown>>, options?: NullableFieldOptions<unknown>): Field<unknown>;
   (value: undefined, options?: NullableFieldOptions<unknown>): Field<unknown>;

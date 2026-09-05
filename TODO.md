@@ -356,6 +356,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Allow an untyped no-argument field declaration from a non-nullable configured factory to typecheck as `Field<unknown>`, matching its existing `null` initial value.
+  - Preserve the initial-value requirement for explicit generic calls and document `field.nullable<T>()` for typed empty declarations. Cover configured inference and executable documentation examples.
+
 - [x] Consolidate validator-message consumer documentation in the website guide, preserving callback parameter details and removing the superseded internal copy. Update README and behavior-reference links while retaining the completed work history.
 
 - [x] Place `public-api.spec.ts` beside `src/public-api.ts` and import its tested contracts through the public entry point.

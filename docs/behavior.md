@@ -92,9 +92,16 @@ to direct fields, object field shorthands, dynamically added children, and nodes
 array templates or factories. An explicit `field.strict()` or `field.nullable()` call takes precedence, and an existing
 node attached to a configured form retains the policy of the factory that originally created it.
 
-Nullish initial values remain nullable even in a non-nullable factory set because no non-null value
-exists to preserve. Consumers can declare the intended future type with an explicit nullable field,
-such as `field.nullable<string>()`.
+In a non-nullable factory set, an untyped `field()`, `field(null)`, or `field(undefined)` returns
+`Field<unknown>` because no concrete initial value exists to infer a future type. An omitted value
+starts at `null`; an explicit `undefined` is preserved. A typed `field<T>()` still requires an
+initial value. Consumers can instead declare `field.nullable<T>()` to start at `null` with type
+`Field<T | null>`.
+
+This initialization convenience belongs to Gem's API. Angular v22.1.5 requires an existing model
+signal in `packages/forms/signals/src/api/structure.ts`, passed through by
+`src/util/normalize_form_args.ts`; its `test/node/form.spec.ts` and `test/node/field_node.spec.ts`
+cover model-backed creation and values. Angular has no corresponding no-argument field factory.
 
 The configured validator catalog is a fallback for every node created by the set, including a
 standalone field. Explicit node and ancestor catalogs take precedence, followed by the configured
