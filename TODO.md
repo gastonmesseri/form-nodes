@@ -356,6 +356,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Rename `form-root.directive.spec.ts` to `form-node.directive.form.spec.ts` to describe its existing coverage of FormNode on native forms. Preserve the test contents.
+
 - [x] Rename `src/lib/control-state-hook` to `src/lib/control-state` to match the feature and its files.
   - Preserve the adapter structure and tests; update the public entry point, FormNode integration, and shared test-helper imports without changing behavior or the public API.
 
