@@ -43,12 +43,7 @@ try {
   run('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund']);
 
   const installArguments = ['install', tarball, '--no-save', '--package-lock=false', '--ignore-scripts', '--no-audit', '--no-fund'];
-  if (major === '21') {
-    console.warn('EXPERIMENTAL Angular 21 probe: bypassing peer checks only in this temporary consumer to expose compiler and runtime blockers. A passing probe does not establish supported peers or an Angular 21 publication toolchain.');
-    installArguments.push('--legacy-peer-deps');
-  } else {
-    installArguments.push('--strict-peer-deps');
-  }
+  installArguments.push('--strict-peer-deps');
   run('npm', installArguments);
 
   const consumer = JSON.parse(readFileSync(join(temporaryDirectory, 'package.json'), 'utf8'));

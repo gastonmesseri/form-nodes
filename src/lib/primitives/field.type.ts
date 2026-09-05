@@ -1,6 +1,5 @@
 import type { Injector, Signal } from '@angular/core';
 
-import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NavigationRoot, NearestForm, Node, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -452,19 +451,6 @@ export type Field<TValue, TParent extends Node = Node> =
      * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
      */
     $api: FieldApi<TValue, TParent>;
-    /**
-     * Opaque Angular Signal Forms adapter for binding with `[formField]`.
-     *
-     * This property is supported and is not planned for removal. Use it only as the terminal value
-     * passed to Angular's `[formField]` binding.
-     *
-     * @example
-     * ```html
-     * <input [formField]="form.user.$field" />
-     * ```
-     *
-     */
-    readonly $field: OpaqueAngularField;
   }
   & Omit<FieldApi<TValue, TParent>, 'patch'>
   & HiddenFunctionMembers;

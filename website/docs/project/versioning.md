@@ -5,7 +5,7 @@ title: Versioning and releases
 # Versioning and releases
 
 Form Nodes versions describe the library itself; they do **not** mirror Angular's version number.
-For example, Form Nodes `0.1.x` supports Angular 22, but that does not imply that Angular 22 requires
+For example, Form Nodes `0.1.x` supports Angular 21 and 22, but that does not imply that Angular 22 requires
 Form Nodes 22.
 
 ## Version policy

@@ -1,5 +1,8 @@
 # Angular 21 compatibility audit
 
+> Historical audit: the implementation has since removed `$field` and enabled the verified
+> Angular 21.2.22 / Angular 22.1.5 range. The findings below describe the pre-change package.
+
 Audited on 2026-09-07 against Form Nodes commit `ff2ea8a`.
 
 Angular 21 support appears feasible for the Form Nodes engine and `[formNode]`, but the current
@@ -127,3 +130,25 @@ read as evidence; the Angular repository's own test suite was not executed.
 Recommendation: retain Angular 22 as the supported line while treating Angular 21 support as a
 separate implementation task. The language and core engine results are encouraging, but full
 control interoperability is not a dependency-only change.
+
+## Implementation verification (2026-09-07)
+
+The completed implementation removes the field adapter, builds the package with Angular 21.2.22
+and TypeScript 5.9.3, and requires both pinned consumers in CI. Angular 22.1.5 remains the
+behavioral reference identified above.
+
+Local verification used Node.js 22.22.3:
+
+| Check | Angular 21.2.22 / TypeScript 5.9.3 | Angular 22.1.5 / TypeScript 6.0.3 |
+| --- | --- | --- |
+| `npm run typecheck` (lint, specifications, inference, template fixtures) | Passed | Passed |
+| `npm run build` | Passed | Passed |
+| `npm run test:coverage` | 79 files, 1,174 tests passed | 79 files, 1,174 tests passed |
+| `npm run test:browser` (including production AOT, SSR fixtures, hydration) | 47 browser tests + 2 production AOT tests passed | 47 browser tests + 2 production AOT tests passed |
+| Shared Angular 21-built tarball: strict installation, template/declaration compilation, runtime smoke tests | Passed; 3 runtime tests | Passed; 3 runtime tests |
+
+Both coverage runs reached 100% statements, functions, and lines, and 99.13% branches.
+The Angular 21 workspace also passed `npm run test:package`, `npm run docs:typecheck`
+(including 21 executable documentation examples), and `npm run docs:build`.
+Angular 22 source checks ran in an isolated temporary copy; the repository's development
+dependencies remain on Angular 21. Browser binaries were installed before successful runs.

@@ -4,7 +4,7 @@
 
 <h1 align="center">Easy Signal-based forms for Angular</h1>
 
-<p align="center">A typed forms library for <strong>Angular 22</strong>.</p>
+<p align="center">A typed forms library for <strong>Angular 21 and 22</strong>.</p>
 
 <!-- example: quick-start.typecheck.ts -->
 ```ts
@@ -67,7 +67,7 @@ The same tree describes your data, your controls, and how they behave.
 
 ## Install
 
-In an Angular 22 application:
+In an Angular 21.2.22+ or 22.1.5+ application:
 
 ```sh
 npm install form-nodes
@@ -79,7 +79,7 @@ Import from the package entry point:
 import { form, field, array } from 'form-nodes';
 ```
 
-The current `0.1.x` line supports Angular 22. Both `@angular/core` and `@angular/forms` must use
+The current `0.1.x` line supports Angular `^21.2.22 || ^22.1.5`. Both `@angular/core` and `@angular/forms` must use
 compatible Angular versions. See [Compatibility](https://gastonmesseri.github.io/ng-forms/project/compatibility)
 for the Node.js and TypeScript requirements.
 
@@ -585,7 +585,7 @@ See [Value flow and debounce](https://gastonmesseri.github.io/ng-forms/guides/va
 
 ## Development
 
-Use a supported Node.js version: `^22.22.3`, `^24.15.0`, or `>=26.0.0`.
+For development, use Node.js 22.22.3 from `.nvmrc` (`nvm use`). The package builds with Angular 21.2.22 and TypeScript 5.9.3 and is also tested with Angular 22.1.5.
 
 ```sh
 npm install

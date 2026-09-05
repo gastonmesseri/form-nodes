@@ -387,7 +387,6 @@ state API. Signal properties must be called to read their current value.
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
 | [`api`](#api) | Complete field API. Direct members are preferred in application code. |
 | [`$api`](#api-1) | Collision-safe alias of `api` for generic infrastructure. |
-| [`$field`](#field-adapter) | Opaque terminal adapter for Angular's `[formField]` directive. |
 | **Value and control** | |
 | [`set(value)`](#set) | Immediately assigns a committed value without marking the field dirty. |
 | [`update(updater)`](#update) | Derives and assigns a value from the current committed value. |
@@ -613,19 +612,6 @@ profile.api(); // 'public-profile-api'
 profile.$api.valid(); // true
 profile.username.$api.valid(); // true
 ```
-
-#### $field adapter {#field-adapter}
-
-**Signature:** `readonly $field: any`
-
-Returns the opaque terminal adapter used by Angular's `[formField]` directive.
-
-```html
-<input [formField]="profile.username.$field" />
-```
-
-Select the Form Nodes field first and use `$field` only in the template binding. Its public type is
-intentionally erased; programmatic operations belong to the Form Nodes node API.
 
 ### Validation properties
 

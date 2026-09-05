@@ -215,35 +215,13 @@ The binding supports native controls, `ControlValueAccessor`, Angular-compatible
 and input/output control pairs. Its public query type exposes `node()`, `errors()`, `element`,
 `injector`, `focus()`, `flush()`, and `reset()`.
 
-To use Angular Signal Forms' own directive instead, bind the node's lazy `$field` adapter:
-
-```ts
-import { Component } from '@angular/core';
-import { FormField } from '@angular/forms/signals';
-
-import { field, form } from 'form-nodes';
-
-@Component({
-  imports: [FormField],
-  template: `<input [formField]="myForm.displayName.$field" />`,
-})
-export class ProfileComponent {
-  myForm = form({
-    displayName: field(''),
-  });
-}
-```
-
-See [Advanced custom controls](../guides/custom-controls-advanced.md#use-angulars-own-formfield-directive) for the
-standalone and NgModule import options and the complete synchronization behavior.
-
 Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNode` import supports native controls, custom controls, and native form roots.
 
 ### Custom-control and binding configuration
 
 | API | Purpose |
 | --- | --- |
-| `provideFormNodeConfig()` | Configures reactive CSS classes for descendant `[formNode]` and `$field`-backed `[formField]` bindings. |
+| `provideFormNodeConfig()` | Configures reactive CSS classes for descendant `[formNode]`. |
 | [`ANGULAR_FORMS_STATUS_CLASSES`](./angular-forms-status-classes.md) | Optional Angular Forms-compatible validity and interaction class preset. |
 | [`provideFormNodePassThrough()`](./provide-form-node-pass-through.md) | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
@@ -271,7 +249,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-The configuration applies to `[formNode]` bindings and `$field`-backed `[formField]` bindings created
+The configuration applies to `[formNode]` bindings created
 below that injector. Put the same provider in a route, component, or NgModule `providers` array when
 only that subtree should use it; the nearest provider wins. No automatic classes are installed
 unless this provider is configured.

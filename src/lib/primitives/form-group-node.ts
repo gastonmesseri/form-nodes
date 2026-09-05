@@ -8,7 +8,6 @@ import { isNode, markAsNode } from './utils/node-marker';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
-import { registerAngularField } from '../interop/angular-field';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
@@ -280,7 +279,6 @@ export class FormGroupNode<TNodes extends Nodes> {
     });
     markAsNode(this.node);
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
-    registerAngularField(this.node);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {
       this.refreshInjector();
@@ -337,7 +335,7 @@ export class FormGroupNode<TNodes extends Nodes> {
   }
 
   assertAvailableDynamicKey(key: string) {
-    if (key === '$api' || key === '$field') {
+    if (key === '$api') {
       throw new Error(`${this.nodeType}: "${key}" is reserved and cannot be added as a dynamic child`);
     }
     if (Object.prototype.hasOwnProperty.call(this.childrenRecord, key)) {

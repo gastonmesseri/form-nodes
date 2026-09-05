@@ -133,8 +133,8 @@ readonly state, constraints, and normalized errors.
 
 Angular's `formField` binding expects a Signal Forms-compatible control such as
 `FormValueControl`. This date control waits until it is touched, then reads `invalid()` and
-`errors()` to render its own accessible error list. A Form Nodes node supplies its opaque `$field`
-adapter:
+`errors()` to render its own accessible error list. The parent creates an Angular Signal Forms
+model; `useControlState()` observes its state without converting it into Form Nodes:
 
 <CodeBlock language="ts" metastring="{13,15,17,19,29}">{formFieldSource}</CodeBlock>
 

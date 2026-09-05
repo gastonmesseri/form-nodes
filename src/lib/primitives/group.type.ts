@@ -1,6 +1,5 @@
 import type { Signal } from '@angular/core';
 
-import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DynamicNode, NearestForm, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
@@ -177,7 +176,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * filters.children['category'] === category; // true
      * ```
      */
-    add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Group<TNodes, TParent>>;
+    add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Group<TNodes, TParent>>;
     /**
      * Adds several child definitions atomically and returns an exact keyed map of their attached
      * live nodes.
@@ -200,7 +199,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * filters.children['range'] === added.range; // true
      * ```
      */
-    add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
+    add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {
       readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Group<TNodes, TParent>>;
     };
     /** Detaches a dynamically added child. Initially declared children cannot be removed. */
@@ -270,19 +269,6 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
    * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
   $api: GroupApi<TNodes, TParent>;
-  /**
-   * Opaque Angular Signal Forms adapter for binding with `[formField]`.
-   *
-   * This property is supported and is not planned for removal. Use it only as the terminal value
-   * passed to Angular's `[formField]` binding.
-   *
-   * @example
-   * ```html
-   * <input [formField]="form.user.$field" />
-   * ```
-   *
-   */
-  readonly $field: OpaqueAngularField;
 };
 
 /** An object-shaped structural node without its own submission workflow. */
