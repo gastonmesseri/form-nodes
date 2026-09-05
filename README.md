@@ -77,26 +77,8 @@ Use it as `<app-text-field [formNode]="name" />`. The input must be exposed unde
 - [Behavior reference](docs/behavior.md) records the complete implemented semantics and deliberate
   differences from Angular 22 Signal Forms.
 
-Consumers should import from the package entry point. Internal code is organized by role:
-
-```text
-src/
-├── public-api.ts
-└── lib/
-    └── core/
-        ├── public-api.spec.ts
-        ├── primitives/
-        │   ├── field.spec.ts
-        │   ├── field.ts
-        │   ├── form.spec.ts
-        │   └── form.ts
-        ├── types/
-        │   ├── hidden-function-members.type.ts
-        │   └── node.type.ts
-        └── validation/
-            ├── run-sync-validators.ts
-            └── validation.type.ts
-```
+Consumers should import from the package entry point. See [Project organization](docs/architecture.md)
+for internal directory responsibilities and conventions for helpers and tests.
 
 ## Development
 
