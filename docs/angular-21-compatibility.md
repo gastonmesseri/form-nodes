@@ -97,11 +97,11 @@ and [Angular 22 source and tests](https://github.com/angular/angular/tree/v22.1.
 The focused run used these existing suites:
 
 ```bash
-npx vitest run src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts src/lib/form-node/form-node.directive.spec.ts src/lib/interop/angular-field.spec.ts src/lib/control-state/adapters/form-field.spec.ts
+npx vitest run src/lib/primitives/field.spec.ts src/lib/primitives/form.spec.ts src/lib/form-node/form-node.directive.spec.ts src/lib/interop/angular-field.spec.ts src/lib/form-node-state/adapters/form-field.spec.ts
 ```
 
 The Angular 21 full run passed `field`, `form`, `array`, `group`, `[formNode]`, CVA/`NgControl`,
-and server-rendering suites. Of the 53 failures, 49 were Signal Forms adapter/control-state tests
+and server-rendering suites. Of the 53 failures, 49 were Signal Forms adapter/form-node-state tests
 blocked by missing constraint metadata; four ownership tests failed during subprocess bundling
 because of the same missing runtime exports. Passing tests under Vitest's transformation do not
 override the package build failures or demonstrate that an Angular 21 application can consume it.

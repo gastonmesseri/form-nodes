@@ -226,11 +226,11 @@ Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token
 | [`provideFormNodePassThrough()`](./provide-form-node-pass-through.md) | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |
-| `useControlState<T>()` | Reads normalized state from `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`. |
-| `ControlState<T>` | Source-neutral signal facade returned by `useControlState()`. |
+| `useFormNodeState<T>()` | Reads normalized state from `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`. |
+| `ControlState<T>` | Source-neutral signal facade returned by `useFormNodeState()`. |
 | `ControlStateDisabledReason` | Source-neutral disabled reason containing an optional message. |
 
-See the [`useControlState()` reference](./control-state.md) for its complete signal surface,
+See the [`useFormNodeState()` reference](./form-node-state.md) for its complete signal surface,
 source precedence, normalization rules, lifecycle, and examples for every supported binding API.
 
 Configure binding classes once in the application providers for the common application-wide case:

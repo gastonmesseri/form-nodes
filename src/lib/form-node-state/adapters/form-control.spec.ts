@@ -54,7 +54,7 @@ const createControlState = async () => {
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('formControl control-state adapter', () => {
+describe('formControl form-node-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
 

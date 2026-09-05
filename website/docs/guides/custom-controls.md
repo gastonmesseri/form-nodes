@@ -4,7 +4,7 @@ title: Custom controls
 
 import CodeBlock from '@theme/CodeBlock';
 import customInputsSource from '!!raw-loader!../../examples/custom-control-inputs.typecheck.ts';
-import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
+import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
 
 # Custom controls
 
@@ -20,11 +20,11 @@ component should manage them.
 
 ## Create a signal model control
 
-This text input exposes its value through `model('')` and uses `useControlState()` to read
+This text input exposes its value through `model('')` and uses `useFormNodeState()` to read
 required and disabled state and report blur. The parent imports `FormNode` and the custom
 component, then binds a field:
 
-<CodeBlock language="ts">{controlStateSource}</CodeBlock>
+<CodeBlock language="ts">{formNodeStateSource}</CodeBlock>
 
 `[formNode]` discovers the value model automatically. Updating `value` from the component
 sends the user's input to the field; updating the field updates the component. No custom
@@ -33,8 +33,8 @@ provider, base class, or Form Nodes interface is required.
 The component has three responsibilities:
 
 - Render the model value and update it when the user edits the control.
-- Apply the state it needs, such as `controlState.disabled()`, to its interactive element.
-- Call `controlState.markAsTouched()` when the user leaves the control.
+- Apply the state it needs, such as `formNodeState.disabled()`, to its interactive element.
+- Call `formNodeState.markAsTouched()` when the user leaves the control.
 
 Initialize the value model with a default, such as `model('')`, instead of `model.required()`.
 The bound field supplies its value during setup. For a checkbox-style component, expose
@@ -58,7 +58,7 @@ Editing the value still updates `profile.name`, and changes to the node still up
 Checkbox controls using `checked = model(false)` work the same way.
 
 This option leaves the node's state unchanged. If the node is disabled, its form behavior stays
-disabled even when the component's input says otherwise. Use `useControlState()` when the
+disabled even when the component's input says otherwise. Use `useFormNodeState()` when the
 component needs to read node state explicitly.
 
 The setting defaults to `true`. You can also place `provideFormNodeConfig()` in a component's
@@ -103,6 +103,6 @@ object and array values, optional state inputs and hooks, wrapper components, An
 ## Related guides and reference
 
 - [Build a custom rating control](../cookbook/custom-rating-control.md) shows a button-based control.
-- [`useControlState()`](../reference/control-state.md) documents the available state signals.
+- [`useFormNodeState()`](../reference/form-node-state.md) documents the available state signals.
 - [Control binding](./control-binding.md) covers native elements and shared binding behavior.
 - [Advanced custom controls](./custom-controls-advanced.md) documents the full compatibility contract.

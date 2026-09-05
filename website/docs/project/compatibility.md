@@ -19,7 +19,7 @@ Use the Node.js and TypeScript versions supported by your Angular version; see
 engine range also applies; Node.js 22.22.3 is a shared supported choice for both Angular versions.
 
 Angular 21.0.7 is the minimum because it introduces `FormField` and `FORM_FIELD`, which
-`useControlState()` uses to observe Angular Signal Forms. The supported range includes later
+`useFormNodeState()` uses to observe Angular Signal Forms. The supported range includes later
 Angular 21 releases such as 21.2.18.
 
 ## Installing
@@ -36,7 +36,7 @@ Resolve peer conflicts by aligning Angular packages rather than bypassing npm's 
 
 Use `[formNode]` to bind Form Nodes fields, forms, groups, and arrays. The former `$field` adapter
 has been removed; see the [migration instructions](./migrations.md#removing-the-field-adapter).
-`useControlState()` still observes `[formNode]`, Angular `[formField]`, Reactive Forms, and `ngModel`.
+`useFormNodeState()` still observes `[formNode]`, Angular `[formField]`, Reactive Forms, and `ngModel`.
 For Angular `[formField]`, the form model is created by Angular Signal Forms itself.
 
 Custom controls can use `model()`, input/output pairs, or `ControlValueAccessor` on either major.

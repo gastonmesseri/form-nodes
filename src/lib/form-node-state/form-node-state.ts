@@ -83,15 +83,21 @@ export type ControlState<TValue = unknown> = {
  * export class DatePicker {
  *   value = model<string | null>(null);
  *
- *   controlState = useControlState();
- * 
- *   shouldDisplayRequiredAsterisk = computed(() => controlState.required());
+ *   formNodeState = useFormNodeState();
+ *
+ *   shouldDisplayRequiredAsterisk = computed(() => this.formNodeState.required());
+ *
+ *   isDisabled = computed(() => this.formNodeState.disabled());
+ *
+ *   visibleErrors = computed(() => {
+ *     return this.formNodeState.touched() ? this.formNodeState.errors() : [];
+ *   });
  * }
  * ```
  *
  * @throws When called outside an Angular injection context.
  */
-export const useControlState = <TValue = unknown>(): ControlState<TValue> => {
+export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
   const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   const destroyRef = inject(DestroyRef);
   const appId = inject(APP_ID);

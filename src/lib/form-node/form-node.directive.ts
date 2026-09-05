@@ -17,7 +17,7 @@ import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../types/node.type';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';
-import { hasControlStateConsumer, registerControlStateBinding } from '../control-state/adapters/form-node';
+import { hasControlStateConsumer, registerControlStateBinding } from '../form-node-state/adapters/form-node';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
 import { elementAcceptsMinMax, formatNativeLimit, formatNativePattern, isTextualFormElement, isValidatorObject, selectValueAccessor, toControlErrors } from './form-node.utils';
@@ -67,7 +67,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private bindingInjectorCleanups = new Set<() => void>();
 
-  private controlStateCleanup: (() => void) | undefined;
+  private formNodeStateCleanup: (() => void) | undefined;
 
   private composing = false;
 
@@ -95,7 +95,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
-      this.controlStateCleanup?.();
+      this.formNodeStateCleanup?.();
       this.bindingInjectorCleanups.forEach(cleanup => cleanup());
       this.bindingInjectorCleanups.clear();
     });
@@ -122,7 +122,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     else if (signalControl) this.connectSignalCustomControl(signalControl as FormNodeControl<NodeValue<TNode>, TNode>);
     else if (this.nativeControl) this.connectNativeControl(this.nativeControl);
     else throw new Error('formNode: the host must be a native form control, a recognized signal custom-control component, or provide ControlValueAccessor');
-    this.controlStateCleanup = registerControlStateBinding(this.element, this);
+    this.formNodeStateCleanup = registerControlStateBinding(this.element, this);
     this.bindNodeState();
     this.registerControlBinding();
     this.warnWhenHidden();

@@ -1,13 +1,12 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { FormField, form as createAngularForm, required as angularRequired, provideSignalFormsConfig, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
-import { FormResetEvent, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { FormResetEvent, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 import { CSP_NONCE, Component, EventEmitter, Injector, Input, Output, ViewEncapsulation, forwardRef, inject, input, model, output, signal, type OnDestroy } from '@angular/core';
+import { FormField, form as createAngularForm, required as angularRequired, provideSignalFormsConfig, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 
 import { form } from '../primitives/form';
-import { provideFormNodeConfig } from './form-node-config';
 import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { group } from '../primitives/group';
@@ -15,9 +14,10 @@ import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import { provideFormNodeConfig } from './form-node-config';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
-import { useControlState } from '../control-state/control-state';
+import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -438,7 +438,7 @@ describe('FormNode in Chromium', () => {
     class ExternalControl {
       value = model('');
 
-      state = useControlState<string>();
+      state = useFormNodeState<string>();
     }
     registerSignalModelForJit(ExternalControl, 'value');
     registerSignalOutputForJit(ExternalControl, 'valueChange', 'value');
@@ -487,15 +487,15 @@ describe('FormNode in Chromium', () => {
   });
 
   it('exposes current committed control state through formNode while public equality retains an older value', () => {
-    @Component({ selector: 'equality-control-state', template: '' })
+    @Component({ selector: 'equality-form-node-state', template: '' })
     class EqualityControl {
       value = model('');
-      state = useControlState<string>();
+      state = useFormNodeState<string>();
     }
     registerSignalModelForJit(EqualityControl, 'value');
     registerSignalOutputForJit(EqualityControl, 'valueChange', 'value');
     @Component({
-      template: `<equality-control-state [formNode]="profile.name" />`,
+      template: `<equality-form-node-state [formNode]="profile.name" />`,
       imports: [EqualityControl, FormNode],
     })
     class Host {
@@ -2140,8 +2140,8 @@ describe('FormNode in Chromium', () => {
     const pairedButton = fixture.nativeElement.querySelector('aot-paired-value-control button') as HTMLButtonElement;
 
     expect(valueControl.value()).toBe('AOT initial');
-    expect(valueControl.controlState.source()).toBe('formNode');
-    expect(valueControl.controlState.required()).toBe(true);
+    expect(valueControl.formNodeState.source()).toBe('formNode');
+    expect(valueControl.formNodeState.required()).toBe(true);
     expect(valueControl.requiredState()).toBe(true);
     expect(valueControl.stateChanges.some(changes => changes['requiredState']?.currentValue === true)).toBe(true);
     expect(checkboxControl.checked()).toBe(false);
@@ -2164,7 +2164,7 @@ describe('FormNode in Chromium', () => {
     fixture.componentInstance.name.disable();
     fixture.detectChanges();
     expect(valueControl.disabled()).toBe(true);
-    expect(valueControl.controlState.disabled()).toBe(true);
+    expect(valueControl.formNodeState.disabled()).toBe(true);
     expect(valueButton.disabled).toBe(true);
     fixture.destroy();
   });

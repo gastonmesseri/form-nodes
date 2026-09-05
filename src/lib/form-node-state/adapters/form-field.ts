@@ -1,7 +1,7 @@
 import { FORM_FIELD, type FormField } from '@angular/forms/signals';
 import { DestroyRef, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 
-import type { ControlStateAdapter } from '../control-state-adapter';
+import type { ControlStateAdapter } from '../form-node-state-adapter';
 
 /** Resolves and observes a same-host Angular Signal Forms `[formField]`. */
 export const injectFormFieldControlStateAdapter = <TValue>(): ControlStateAdapter<TValue> => {

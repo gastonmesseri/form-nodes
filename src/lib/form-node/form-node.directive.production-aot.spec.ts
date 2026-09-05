@@ -78,8 +78,8 @@ describe('FormNode production AOT discovery in Chromium', () => {
     expect(component).toBeInstanceOf(module.AotSignalValueControl);
     expect(component).toBe(fixture.debugElement.children[0]!.componentInstance);
     expect((component as InstanceType<typeof module.AotSignalValueControl>).value()).toBe('AOT initial');
-    expect((component as InstanceType<typeof module.AotSignalValueControl>).controlState.source()).toBe('formNode');
-    expect((component as InstanceType<typeof module.AotSignalValueControl>).controlState.required()).toBe(true);
+    expect((component as InstanceType<typeof module.AotSignalValueControl>).formNodeState.source()).toBe('formNode');
+    expect((component as InstanceType<typeof module.AotSignalValueControl>).formNodeState.required()).toBe(true);
     fixture.destroy();
   });
 });

@@ -1,7 +1,7 @@
 import { Component, forwardRef } from '@angular/core';
-import { FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
+import { FormControl, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
 
-import { useControlState } from 'form-nodes';
+import { useFormNodeState } from 'form-nodes';
 
 // Custom control component
 
@@ -11,17 +11,16 @@ import { useControlState } from 'form-nodes';
   template: `
     <button
       type="button"
-      [disabled]="controlState.disabled()"
+      [disabled]="formNodeState.disabled()"
       (click)="select('2026-09-03')"
       (blur)="markAsTouched()"
-      >
+    >
       {{ value }}
     </button>
   `,
 })
 export class DatePicker implements ControlValueAccessor {
-  controlState = useControlState();
-
+  formNodeState = useFormNodeState();
   value: string | null = null;
 
   select(value: string | null) {
@@ -30,17 +29,15 @@ export class DatePicker implements ControlValueAccessor {
   }
 
   markAsTouched() {
-    this.controlState.markAsTouched();
+    this.formNodeState.markAsTouched();
+    this.onTouched();
   }
 
   // ControlValueAccessor implementation
-
-  onChange = (_value: string | null) => {};
-  onTouched = () => {};
-
+  private onChange = (_value: string | null) => {};
+  private onTouched = () => {};
   registerOnChange(fn: any) { this.onChange = fn }
   registerOnTouched(fn: any) { this.onTouched = fn }
-
   writeValue(value: string | null) {
     this.value = value;
   }
@@ -51,8 +48,12 @@ export class DatePicker implements ControlValueAccessor {
 
 @Component({
   imports: [DatePicker, ReactiveFormsModule],
-  template: `<app-date-picker [formControl]="birthDate" />`,
+  template: `
+    <form [formGroup]="profile">
+      <app-date-picker formControlName="birthDate" />
+    </form>
+  `,
 })
 export class ProfileEditor {
-  birthDate = new FormControl<string | null>(null);
+  profile = new FormGroup({ birthDate: new FormControl<string | null>(null) });
 }

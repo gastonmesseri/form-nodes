@@ -63,7 +63,7 @@ const sidebars: SidebarsConfig = {
         'reference/field',
         'reference/array',
         'reference/group',
-        'reference/control-state',
+        { type: 'doc', id: 'reference/form-node-state', label: 'useFormNodeState()' },
         { type: 'doc', id: 'reference/form-node-binding', label: '[formNode]' },
         'reference/configuration',
         'reference/node-api',

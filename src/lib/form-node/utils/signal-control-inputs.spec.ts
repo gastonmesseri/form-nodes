@@ -324,7 +324,7 @@ describe('connectSignalControlInputs', () => {
       'formNode: could not synchronize the \'disabled\' input',
     ));
     expect(warning).toHaveBeenCalledWith(expect.stringContaining(
-      'Prefer useControlState() to consume bound state without writable state inputs',
+      'Prefer useFormNodeState() to consume bound state without writable state inputs',
     ));
     warning.mockRestore();
   });
@@ -343,12 +343,12 @@ describe('connectSignalControlInputs', () => {
     warning.mockRestore();
   });
 
-  it('does not recommend useControlState when the component already uses it', () => {
+  it('does not recommend useFormNodeState when the component already uses it', () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     warnFailedInputWrite({}, 'readonly', true);
 
-    expect(warning).toHaveBeenCalledWith(expect.not.stringContaining('Prefer useControlState()'));
+    expect(warning).toHaveBeenCalledWith(expect.not.stringContaining('Prefer useFormNodeState()'));
     expect(warning).toHaveBeenCalledWith(expect.stringContaining('could not synchronize the \'readonly\' input'));
     warning.mockRestore();
   });

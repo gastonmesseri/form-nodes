@@ -32,7 +32,7 @@ the control connects and remains effective when the bound node changes.
 Value/checked synchronization, the optional `node` signal, touch, focus, and reset hooks remain
 connected. Native controls still receive their state, and CVAs still receive `setDisabledState()`.
 Disabling input synchronization does not change the node's own disabled state, validation, or
-value behavior. `useControlState()` remains available for explicit state reads.
+value behavior. `useFormNodeState()` remains available for explicit state reads.
 
 See [Keep control of your component's inputs](../guides/custom-controls.md#keep-control-of-your-components-inputs)
 for a complete application example. Angular's own binding directives use their own configuration.

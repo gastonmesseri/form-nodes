@@ -7,7 +7,7 @@ Organize implementation code by responsibility directly under `src/lib/`:
 | `primitives/` | Field, form, group, and array declarations, types, and state. |
 | `validation/` | Validator execution, messages, metadata, and built-in `validators/`. |
 | `form-node/` | The `[formNode]` directive and its control integration. |
-| `control-state/` | Shared control-state access and source-specific `adapters/`. |
+| `form-node-state/` | Shared `useFormNodeState()` access and source-specific `adapters/`. |
 | `interop/` | The Angular Signal Forms adapter used by `$field`. |
 | `metadata/` | Node metadata storage and access. |
 | `types/` | Contracts shared across features. Keep feature-specific types with their feature. |

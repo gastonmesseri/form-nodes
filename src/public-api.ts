@@ -44,12 +44,12 @@ export {
   type NonNullableFieldFactory,
 } from './lib/primitives/create-form-primitives';
 export {
-  useControlState,
+  useFormNodeState,
   type ControlState,
   type ControlStateError,
   type ControlStateSource,
   type ControlStateDisabledReason,
-} from './lib/control-state/control-state';
+} from './lib/form-node-state/form-node-state';
 export {
   type ValidatorMessages,
   provideValidatorMessages,

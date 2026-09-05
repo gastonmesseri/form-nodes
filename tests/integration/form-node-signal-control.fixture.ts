@@ -1,7 +1,7 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 
-import { field, form, FormNode, useControlState, required, type Field } from '../../src/public-api';
+import { field, form, FormNode, useFormNodeState, required, type Field } from '../../src/public-api';
 import { useLegacyNgControl } from '../helpers/legacy-ng-control-hook';
 
 type Company = { companyId: number; companyName: string };
@@ -15,7 +15,7 @@ type CompanyValue = { companyId: number | null; companyName: string | null };
 })
 export class AotSignalValueControl implements FormValueControl<string>, OnChanges {
   value = model('');
-  controlState = useControlState<string>();
+  formNodeState = useFormNodeState<string>();
   touch = output<void>();
   disabled = input(false, { transform: booleanAttribute });
   dirty = input(false);

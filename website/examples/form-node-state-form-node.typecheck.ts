@@ -1,6 +1,6 @@
 import { Component, input, model } from '@angular/core';
 
-import { FormNode, field, form, useControlState, required } from 'form-nodes';
+import { FormNode, field, form, useFormNodeState, required } from 'form-nodes';
 
 // Custom control component
 
@@ -9,15 +9,15 @@ import { FormNode, field, form, useControlState, required } from 'form-nodes';
   template: `
     <label>
       {{ label() }}
-      @if (controlState.required()) {
+      @if (formNodeState.required()) {
         <span aria-hidden="true">*</span>
       }
       <input
         [value]="value()"
-        [disabled]="controlState.disabled()"
-        [required]="controlState.required()"
+        [disabled]="formNodeState.disabled()"
+        [required]="formNodeState.required()"
         (input)="value.set($any($event.target).value)"
-        (blur)="controlState.markAsTouched()"
+        (blur)="formNodeState.markAsTouched()"
       />
     </label>
   `,
@@ -27,7 +27,7 @@ export class MyTextInput {
 
   value = model('');
 
-  controlState = useControlState();
+  formNodeState = useFormNodeState();
 }
 
 

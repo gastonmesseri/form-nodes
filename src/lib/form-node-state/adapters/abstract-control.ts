@@ -1,8 +1,8 @@
 import { NgControl, type AbstractControl } from '@angular/forms';
 import { DestroyRef, Injector, afterEveryRender, computed, inject, signal } from '@angular/core';
 
-import type { ControlStateSource } from '../control-state';
-import type { ControlStateAdapter } from '../control-state-adapter';
+import type { ControlStateSource } from '../form-node-state';
+import type { ControlStateAdapter } from '../form-node-state-adapter';
 
 type AbstractControlSource = Extract<ControlStateSource, 'formControl' | 'formControlName' | 'ngModel'>;
 

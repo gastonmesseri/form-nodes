@@ -4,8 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import type { AbstractControl } from '@angular/forms';
 import type { ComponentFixture } from '@angular/core/testing';
 
-import type { ControlStateSource } from '../../src/lib/control-state/control-state';
-import type { ControlStateAdapter } from '../../src/lib/control-state/control-state-adapter';
+import type { ControlStateSource } from '../../src/lib/form-node-state/form-node-state';
+import type { ControlStateAdapter } from '../../src/lib/form-node-state/form-node-state-adapter';
 
 export type AbstractControlContractFixture = {
   control: AbstractControl<string>;

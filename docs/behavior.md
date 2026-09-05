@@ -89,7 +89,7 @@ touch output, and focus/reset methods. They use Angular core signal types, witho
 version-specific Signal Forms UI interface. Runtime discovery and state propagation remain unchanged.
 The former `$field` adapter and its schema samples are removed; `$api` is the sole reserved child key.
 `provideFormNodeConfig()` configures only `[formNode]`, using a token independent of Angular's config.
-`useControlState()` retains all adapters, including external Angular Signal Forms; tests create real
+`useFormNodeState()` retains all adapters, including external Angular Signal Forms; tests create real
 Angular forms and use their native operations instead of converting Form Nodes trees.
 Angular 21 `v21.0.7` (`8fd585cc0b4a7fc70ecb306c0c7b17f15393d0bf`) was additionally inspected
 at `api/form_field_directive.ts` and `api/rules/validation/validation_errors.ts`.
@@ -2279,7 +2279,7 @@ submission-owning form.
 ## Control binding with `[formNode]`
 
 Form Nodes binds its own nodes through `[formNode]`. The `$field` adapter has been removed.
-`useControlState()` still observes independently created Angular Signal Forms through `[formField]`;
+`useFormNodeState()` still observes independently created Angular Signal Forms through `[formField]`;
 it does not create or synchronize a second Angular form tree for Form Nodes nodes.
 
 `FormNode` binds a field node to a native form control, and binds field, group, form, or array nodes
@@ -2659,16 +2659,16 @@ errors normally.
 
 In development mode, the first skipped write for each control instance and input name emits one descriptive console
 warning; subsequent reactive attempts do not repeat it. The warning confirms that the control
-remains connected and recommends `useControlState()` as the stable way to consume bound state
+remains connected and recommends `useFormNodeState()` as the stable way to consume bound state
 without writable state inputs, unless the component already consumes that facade. It also mentions
 `ControlValueAccessor` as an alternative for value and disabled interoperability, not as a
 replacement for `readonly`, `required`, errors, or the rest of the optional state surface.
 
 This adapter is intentionally a temporary compatibility boundary. Angular's relevant implementation is `packages/core/src/render3/instructions/write_to_directive_input.ts`, `packages/core/src/render3/features/ng_onchanges_feature.ts`, `packages/core/src/render3/apply_value_input_field.ts`, and `packages/core/src/render3/component_ref.ts`. Neither the structurally discovered input node, its `applyValueToInputSignal()` method, nor `ɵcmp.setInput` is covered by Angular's public compatibility guarantees.
 
-Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an existing component host has no public API for obtaining that `ComponentRef`. Public `getDebugNode()` safely exposes the component instance, not arbitrary directive or host-directive instances and not a supported input writer. Its component discovery is covered separately in a production-mode Chromium process using a component compiled with full AOT, so the automatic path does not rely on development-mode debug metadata. Signal-control discovery is therefore intentionally limited to components. Every Angular upgrade must re-evaluate whether public APIs can replace the input writer. Consumers that want to avoid the input-writing compatibility boundary can call `useControlState()` in the custom component and read its normalized signals instead.
+Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an existing component host has no public API for obtaining that `ComponentRef`. Public `getDebugNode()` safely exposes the component instance, not arbitrary directive or host-directive instances and not a supported input writer. Its component discovery is covered separately in a production-mode Chromium process using a component compiled with full AOT, so the automatic path does not rely on development-mode debug metadata. Signal-control discovery is therefore intentionally limited to components. Every Angular upgrade must re-evaluate whether public APIs can replace the input writer. Consumers that want to avoid the input-writing compatibility boundary can call `useFormNodeState()` in the custom component and read its normalized signals instead.
 
-### Universal control-state state
+### Universal form node state
 
 The facade's `value()` reports current committed binding data. For `[formNode]`, it reads the
 node's internal `_value`, so public equality cannot hide committed changes from a custom control.
@@ -2678,7 +2678,7 @@ The `[formField]` adapter reads Angular's own committed `FieldState.value`, and 
 adapters read their source control values. Those are external forms APIs, not Form Nodes public reads
 that should be rewritten to `_value`.
 
-`useControlState<TValue>()` returns a read-only `ControlState<TValue>` facade from a custom-control component's injection context. Each source adapter lives in its own file and owns the complete translation from its source into the common signal model, including source-specific defaults and normalization. The main facade only selects the first connected adapter and forwards its signals; it contains no source-specific state mapping. Its explicit precedence is `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, then `ngModel`. The `[formNode]` adapter rendezvous through the shared host element without injecting `_FormNode` during component construction. The `[formField]` adapter resolves Angular's public same-host `FORM_FIELD` token after rendering and forwards its `FieldState` signals. The `[formControl]`, `formControlName`, and `ngModel` adapters resolve their concrete same-host `NgControl` after rendering, avoiding CVA construction cycles, observe the public `AbstractControl.events` stream, and reconcile directive/control identity and silent state changes after each browser render. Replacing a bound `FormControl` unsubscribes the previous control. Silent `{ emitEvent: false }` mutations become visible on the next render rather than synchronously. Every adapter cleans up through `DestroyRef`.
+`useFormNodeState<TValue>()` returns a read-only `ControlState<TValue>` facade from a custom-control component's injection context. Each source adapter lives in its own file and owns the complete translation from its source into the common signal model, including source-specific defaults and normalization. The main facade only selects the first connected adapter and forwards its signals; it contains no source-specific state mapping. Its explicit precedence is `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, then `ngModel`. The `[formNode]` adapter rendezvous through the shared host element without injecting `_FormNode` during component construction. The `[formField]` adapter resolves Angular's public same-host `FORM_FIELD` token after rendering and forwards its `FieldState` signals. The `[formControl]`, `formControlName`, and `ngModel` adapters resolve their concrete same-host `NgControl` after rendering, avoiding CVA construction cycles, observe the public `AbstractControl.events` stream, and reconcile directive/control identity and silent state changes after each browser render. Replacing a bound `FormControl` unsubscribes the previous control. Silent `{ emitEvent: false }` mutations become visible on the next render rather than synchronously. Every adapter cleans up through `DestroyRef`.
 
 The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'`. Every state member is a signal. Angular Signal Forms supplies the complete state surface, while `AbstractControl` sources supply value, disabled, dirty, touched, invalid, pending, normalized errors, and directive names where applicable. State unavailable from `AbstractControl`—such as readonly, hidden, disabled reasons, and constraint metadata—keeps the same neutral defaults used while disconnected. Reactive Forms `ValidationErrors` record entries become individual `{ kind, ...details }` objects; `true` becomes `{ kind }`, while primitive payloads use `{ kind, value }`. Errors never expose Angular's `fieldTree` or `formField` references. Disabled reasons are normalized to source-neutral `{ message? }` objects instead of exposing Form Nodes `sourceNode` or Angular `fieldTree` references. Unnamed active reasons are preserved as `{}`; only `[]` means that no reason is known.
 
@@ -2705,12 +2705,12 @@ Form Nodes node-value reads. The relevant routing is:
 | Internal aggregate computations and array `trackBy` matching | Child `$api._value()`. |
 | Control-buffer baseline/invalidation and field commits/reset | Internal class `value`, exposed across nodes as `$api._value`. |
 | Angular adapter model initialization, synchronization, and bound-control reset | `$api._value()`. |
-| `useControlState()` for a Form Nodes `[formNode]` binding | `$api._value()`, independently of exposed equality. |
+| `useFormNodeState()` for a Form Nodes `[formNode]` binding | `$api._value()`, independently of exposed equality. |
 | Native controls, signal control models, and CVA rendering/validation | `_controlValue()` (or equivalent field `controlValue()`), including pending input. |
 | Public aggregate construction, built-in/custom validators, metadata contexts, submit, and update callbacks | Exposed values, intentionally respecting public equality. |
 | Array-template/definition cloning | Captured initial values and definition recipes; no current node-value read. |
 
-The audit found and corrected the `[formNode]` control-state adapter's public callable read.
+The audit found and corrected the `[formNode]` form-node-state adapter's public callable read.
 Remaining direct callable reads in runtime infrastructure construct the public form/group and
 array aggregates. Angular reference: `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`),
 `packages/forms/signals/src/field/node.ts`, `util/deep_signal.ts`, and the deep-signal and debounce

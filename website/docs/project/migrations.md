@@ -4,6 +4,16 @@ title: Migration guides
 
 # Migration guides
 
+## Renaming the custom-control state hook
+
+In the current unreleased development version, `useControlState()` is renamed to
+`useFormNodeState()`. Update imports from `form-nodes` and every call to the hook. The old
+name is no longer exported.
+
+The return type remains `ControlState<TValue>`, and all `ControlState*` types retain their
+names. Supported bindings, signal behavior, and injection-context requirements are unchanged;
+see the [`useFormNodeState()` reference](../reference/form-node-state.md).
+
 ## Removing the field adapter
 
 In the current unreleased development version, Form Nodes no longer exposes `$field`.
@@ -28,9 +38,9 @@ configures its own `[formField]` controls independently; both providers can coex
 previously came from Angular's provider on an adapted control, move them to `provideFormNodeConfig()`
 and read state with `binding.node()` instead of `binding.state()`.
 
-`useControlState()` remains available for all supported forms APIs. Use Angular's `form()` and
+`useFormNodeState()` remains available for all supported forms APIs. Use Angular's `form()` and
 `signal()` for controls bound through Angular `[formField]`; see the
-[control-state example](../reference/control-state.md#bind-with-formfield).
+[`useFormNodeState()` example](../reference/form-node-state.md#bind-with-formfield).
 
 Custom components may implement the Form Nodes control types without depending on Angular's
 version-specific `FormUiControl` type. The supported Angular ranges are now `^21.0.7 || ^22.1.5`;

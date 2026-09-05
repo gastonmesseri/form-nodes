@@ -183,23 +183,23 @@ work. Errors thrown by an application-defined input transform are still reported
 
 In development mode, Form Nodes emits one warning per affected control instance and input name when such a write is
 skipped. When the component does not already use it, the warning recommends
-`useControlState()` as the source-neutral state facade. A component already consuming that
+`useFormNodeState()` as the source-neutral state facade. A component already consuming that
 facade does not receive the redundant recommendation. A `ControlValueAccessor` is another option when only
 value and disabled interoperability are needed; it does not provide channels for every optional
 state such as `readonly`, `required`, or errors.
 
 The edited `value = model<T>()` or `checked = model<boolean>()` path does not need this adapter because
 models are publicly writable. A custom control can avoid read-only state-input writes through the
-stable control-state facade:
+stable `useFormNodeState()` facade:
 
 ```ts
 export class DatePicker {
   value = model<Date | null>(null);
-  controlState = useControlState();
+  formNodeState = useFormNodeState();
 }
 ```
 
-`controlState.disabled()`, `controlState.readonly()`, and the other signals currently read
+`formNodeState.disabled()`, `formNodeState.readonly()`, and the other signals currently read
 `[formNode]` state. The same API is reserved for future `[formField]`, Reactive Forms, and `ngModel`
 adapters. See [Advanced custom controls](../guides/custom-controls-advanced.md) for the complete contract.
 

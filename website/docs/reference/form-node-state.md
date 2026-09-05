@@ -1,24 +1,24 @@
 ---
-title: useControlState()
+title: useFormNodeState()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import controlStateComponentSource from '!!raw-loader!../../examples/control-state-component.typecheck.ts';
-import formNodeSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
-import formFieldSource from '!!raw-loader!../../examples/control-state-form-field.typecheck.ts';
-import formControlSource from '!!raw-loader!../../examples/control-state-form-control.typecheck.ts';
-import formControlNameSource from '!!raw-loader!../../examples/control-state-form-control-name.typecheck.ts';
-import ngModelSource from '!!raw-loader!../../examples/control-state-ng-model.typecheck.ts';
+import formNodeStateComponentSource from '!!raw-loader!../../examples/form-node-state-component.typecheck.ts';
+import formNodeSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
+import formFieldSource from '!!raw-loader!../../examples/form-node-state-form-field.typecheck.ts';
+import formControlSource from '!!raw-loader!../../examples/form-node-state-form-control.typecheck.ts';
+import formControlNameSource from '!!raw-loader!../../examples/form-node-state-form-control-name.typecheck.ts';
+import ngModelSource from '!!raw-loader!../../examples/form-node-state-ng-model.typecheck.ts';
 
-# useControlState()
+# useFormNodeState()
 
-`useControlState()` gives a custom-control component one stable, signal-based view of the
+`useFormNodeState()` gives a custom-control component one stable, signal-based view of the
 form binding attached to its host. The component can consume the same interface whether its caller
 uses `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`.
 
 :::info Optional convenience utility
 
-Using `useControlState()` is not required to create or bind a custom control. Value integration
+Using `useFormNodeState()` is not required to create or bind a custom control. Value integration
 continues to work through a signal `model()`, `FormValueControl`, or `ControlValueAccessor` without
 this hook.
 
@@ -31,7 +31,7 @@ and does not replace the control's existing value contract.
 
 :::tip Signal-based by design
 
-`useControlState()` is designed for modern signal-based Angular components. Call the hook once as
+`useFormNodeState()` is designed for modern signal-based Angular components. Call the hook once as
 a component field; every state member it returns—such as `required`, `disabled`, `errors`, and
 `touched`—is an Angular `Signal`.
 
@@ -40,19 +40,21 @@ Angular tracks the dependencies and updates an `OnPush` component without manual
 `ChangeDetectorRef` calls.
 
 ```ts
-controlState = useControlState();
+formNodeState = useFormNodeState();
 
 showErrors = computed(() =>
-  this.controlState.touched() && this.controlState.invalid()
+  this.formNodeState.touched() && this.formNodeState.invalid()
 );
 ```
 
 :::
 
 Call it in the component's injection context. This custom input derives its required mark, native
-state, accessibility attributes, and error list from whichever supported form API binds it:
+state, accessibility attributes, and error list from whichever supported form API binds it.
+`shouldDisplayRequiredAsterisk` and `isDisabled` reflect the bound state, while `visibleErrors`
+shows validation errors only after the control is touched:
 
-<CodeBlock language="ts" metastring="{10,18-21,23,26,28,38}">{controlStateComponentSource}</CodeBlock>
+<CodeBlock language="ts" metastring="{10,18-21,23,26,28,38,40-46}">{formNodeStateComponentSource}</CodeBlock>
 
 No provider or adapter selection is required.
 
@@ -60,7 +62,7 @@ No provider or adapter selection is required.
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
-| Create the state facade | `useControlState<TValue>()` | [Signature](#signature) |
+| Create the state facade | `useFormNodeState<TValue>()` | [Signature](#signature) |
 | Support a binding API | Host binding | [Component integration styles](#component-integration-styles) |
 | Identify the active binding | `connected()`, `source()` | [Connection properties](#connection-properties) |
 | Read value or validation | `value()`, `errors()`, `invalid()`, `pending()` | [Value and validation properties](#value-and-validation-properties) |
@@ -72,16 +74,16 @@ No provider or adapter selection is required.
 ## Signature
 
 ```ts
-useControlState<TValue = unknown>(): ControlState<TValue>;
+useFormNodeState<TValue = unknown>(): ControlState<TValue>;
 ```
 
 The hook has no arguments or configuration object. `TValue` affects only the type returned by
 `value()`; it does not select an adapter or change runtime behavior.
 
 ```ts
-controlState = useControlState<string | null>();
+formNodeState = useFormNodeState<string | null>();
 
-this.controlState.value(); // string | null | undefined
+this.formNodeState.value(); // string | null | undefined
 ```
 
 The additional `undefined` represents the disconnected state. Without a generic, `value()` is
@@ -97,16 +99,16 @@ A signal custom control declares a `model()` and can optionally implement Angula
 export class DatePicker implements FormValueControl<string | null> {
   value = model<string | null>(null);
 
-  controlState = useControlState();
+  formNodeState = useFormNodeState();
 }
 ```
 
-A `ControlValueAccessor` continues to own its normal value callbacks. `useControlState()` adds
+A `ControlValueAccessor` continues to own its normal value callbacks. `useFormNodeState()` adds
 the source-neutral state signals; it does not replace `writeValue()` or the registered callbacks:
 
 ```ts {2}
 export class DatePicker implements ControlValueAccessor {
-  controlState = useControlState();
+  formNodeState = useFormNodeState();
 
   writeValue(value: string | null) { /* update the view */ }
   registerOnChange(callback: (value: string | null) => void) { /* retain callback */ }
@@ -134,7 +136,7 @@ readonly state, constraints, and normalized errors.
 Angular's `formField` binding expects a Signal Forms-compatible control such as
 `FormValueControl`. This date control waits until it is touched, then reads `invalid()` and
 `errors()` to render its own accessible error list. The parent creates an Angular Signal Forms
-model; `useControlState()` observes its state without converting it into Form Nodes:
+model; `useFormNodeState()` observes its state without converting it into Form Nodes:
 
 <CodeBlock language="ts" metastring="{13,15,17,19,29}">{formFieldSource}</CodeBlock>
 
@@ -146,15 +148,15 @@ through the same `ControlState` signals.
 Use the state signals to make the component adapt to whichever form owns it:
 
 ```html {1,6-9}
-@if (controlState.required()) {
+@if (formNodeState.required()) {
   <span aria-hidden="true">*</span>
 }
 
 <input
-  [disabled]="controlState.disabled()"
-  [readonly]="controlState.readonly()"
-  [attr.aria-invalid]="controlState.invalid()"
-  (blur)="controlState.markAsTouched()"
+  [disabled]="formNodeState.disabled()"
+  [readonly]="formNodeState.readonly()"
+  [attr.aria-invalid]="formNodeState.invalid()"
+  (blur)="formNodeState.markAsTouched()"
 />
 ```
 
@@ -162,9 +164,9 @@ Render validation feedback after interaction rather than coupling the component 
 engine:
 
 ```html {1,3}
-@if (controlState.touched() && controlState.invalid()) {
+@if (formNodeState.touched() && formNodeState.invalid()) {
   <ul aria-live="polite">
-    @for (error of controlState.errors(); track $index) {
+    @for (error of formNodeState.errors(); track $index) {
       <li>{{ errorMessage(error) }}</li>
     }
   </ul>
@@ -202,23 +204,23 @@ Every state member is a signal and is safe to read while disconnected.
 
 | Signal | Disconnected default | Meaning |
 | --- | --- | --- |
-| [`connected()`](#control-state-connected) | `false` | Whether a supported binding is attached. |
-| [`source()`](#control-state-source) | `null` | Active binding API. |
-| [`value()`](#control-state-value) | `undefined` | Current committed bound value. |
-| [`disabled()`](#control-state-disabled) | `false` | Whether interaction is disabled. |
-| [`disabledReasons()`](#control-state-disabledreasons) | `[]` | Source-neutral `{ message?: string }` reasons. |
-| [`dirty()`](#control-state-dirty) | `false` | Whether the bound control changed through interaction. |
-| [`errors()`](#control-state-errors) | `[]` | Source-neutral `{ kind: string; ... }` errors. |
-| [`hidden()`](#control-state-hidden) | `false` | Whether form state hides the control. |
-| [`invalid()`](#control-state-invalid) | `false` | Whether validation currently fails. |
-| [`pending()`](#control-state-pending) | `false` | Whether asynchronous validation is pending. |
-| [`touched()`](#control-state-touched) | `false` | Whether the user interacted with and left the control. |
-| [`readonly()`](#control-state-readonly) | `false` | Whether editing is disallowed without disabling interaction. |
-| [`required()`](#control-state-required) | `false` | Whether a non-empty value is required. |
-| [`min()`](#control-state-min), [`max()`](#control-state-max) | `undefined` | Effective numeric or date limits. |
-| [`minLength()`](#control-state-minlength), [`maxLength()`](#control-state-maxlength) | `undefined` | Effective length limits. |
-| [`pattern()`](#control-state-pattern) | `[]` | Effective regular-expression constraints. |
-| [`name()`](#control-state-name) | `undefined` | Generated or declared control name when available. |
+| [`connected()`](#form-node-state-connected) | `false` | Whether a supported binding is attached. |
+| [`source()`](#form-node-state-source) | `null` | Active binding API. |
+| [`value()`](#form-node-state-value) | `undefined` | Current committed bound value. |
+| [`disabled()`](#form-node-state-disabled) | `false` | Whether interaction is disabled. |
+| [`disabledReasons()`](#form-node-state-disabledreasons) | `[]` | Source-neutral `{ message?: string }` reasons. |
+| [`dirty()`](#form-node-state-dirty) | `false` | Whether the bound control changed through interaction. |
+| [`errors()`](#form-node-state-errors) | `[]` | Source-neutral `{ kind: string; ... }` errors. |
+| [`hidden()`](#form-node-state-hidden) | `false` | Whether form state hides the control. |
+| [`invalid()`](#form-node-state-invalid) | `false` | Whether validation currently fails. |
+| [`pending()`](#form-node-state-pending) | `false` | Whether asynchronous validation is pending. |
+| [`touched()`](#form-node-state-touched) | `false` | Whether the user interacted with and left the control. |
+| [`readonly()`](#form-node-state-readonly) | `false` | Whether editing is disallowed without disabling interaction. |
+| [`required()`](#form-node-state-required) | `false` | Whether a non-empty value is required. |
+| [`min()`](#form-node-state-min), [`max()`](#form-node-state-max) | `undefined` | Effective numeric or date limits. |
+| [`minLength()`](#form-node-state-minlength), [`maxLength()`](#form-node-state-maxlength) | `undefined` | Effective length limits. |
+| [`pattern()`](#form-node-state-pattern) | `[]` | Effective regular-expression constraints. |
+| [`name()`](#form-node-state-name) | `undefined` | Generated or declared control name when available. |
 
 `formNode` and `formField` can supply their richer state models. `formControl`, `formControlName`,
 and `ngModel` supply the state available from `AbstractControl`; unsupported properties retain the
@@ -230,17 +232,17 @@ defaults above. `formControlName` and named `ngModel` bindings expose their dire
 
 ### Connection properties
 
-#### connected {#control-state-connected}
+#### connected {#form-node-state-connected}
 
 **Signature:** `connected: Signal<boolean>`
 
 Reports whether a supported binding currently owns the component host.
 
 ```ts
-if (this.controlState.connected()) setupFormOnlyBehavior();
+if (this.formNodeState.connected()) setupFormOnlyBehavior();
 ```
 
-#### source {#control-state-source}
+#### source {#form-node-state-source}
 
 **Signature:** `source: Signal<ControlStateSource | null>`
 
@@ -248,12 +250,12 @@ Identifies the selected adapter as `'formNode'`, `'formField'`, `'formControl'`,
 `'formControlName'`, or `'ngModel'`; returns `null` while disconnected.
 
 ```ts
-this.controlState.source(); // 'formNode'
+this.formNodeState.source(); // 'formNode'
 ```
 
 ### Value and validation properties
 
-#### value {#control-state-value}
+#### value {#form-node-state-value}
 
 **Signature:** `value: Signal<TValue | undefined>`
 
@@ -261,9 +263,9 @@ Reads the committed bound value. User-authored changes still travel through `mod
 callbacks; this signal is readonly.
 
 With `[formNode]`, it observes the latest internally committed node value even when `equal` retains
-an older public value. For example, the node can still expose `'Marco'` while this control-state
+an older public value. For example, the node can still expose `'Marco'` while this form-node-state
 signal reports a committed `'MARCO'`. Pending debounce input is separate: the component's `model()`
-shows that input immediately, while `controlState.value()` changes when it commits. Reset restores
+shows that input immediately, while `formNodeState.value()` changes when it commits. Reset restores
 the latest internally committed value. Validation and errors continue following the node's public
 validation rules.
 
@@ -271,10 +273,10 @@ The `[formField]` adapter reads Angular's committed field value, and Reactive Fo
 adapters read their own control values.
 
 ```ts
-preview = computed(() => this.controlState.value() ?? 'No value');
+preview = computed(() => this.formNodeState.value() ?? 'No value');
 ```
 
-#### errors {#control-state-errors}
+#### errors {#form-node-state-errors}
 
 **Signature:** `errors: Signal<readonly ControlStateError[]>`
 
@@ -282,151 +284,151 @@ Returns source-neutral errors with a required `kind`.
 
 ```ts
 requiredError = computed(() =>
-  this.controlState.errors().find(error => error.kind === 'required'),
+  this.formNodeState.errors().find(error => error.kind === 'required'),
 );
 ```
 
-#### invalid {#control-state-invalid}
+#### invalid {#form-node-state-invalid}
 
 **Signature:** `invalid: Signal<boolean>`
 
 Reports whether validation currently fails.
 
 ```ts
-showErrors = computed(() => this.controlState.touched() && this.controlState.invalid());
+showErrors = computed(() => this.formNodeState.touched() && this.formNodeState.invalid());
 ```
 
-#### pending {#control-state-pending}
+#### pending {#form-node-state-pending}
 
 **Signature:** `pending: Signal<boolean>`
 
 Reports unresolved asynchronous validation.
 
 ```ts
-statusText = computed(() => this.controlState.pending() ? 'Checking…' : 'Ready');
+statusText = computed(() => this.formNodeState.pending() ? 'Checking…' : 'Ready');
 ```
 
 ### Interaction and availability properties
 
-#### disabled {#control-state-disabled}
+#### disabled {#form-node-state-disabled}
 
 **Signature:** `disabled: Signal<boolean>`
 
 Reports whether user interaction is disabled.
 
 ```html
-<input [disabled]="controlState.disabled()" />
+<input [disabled]="formNodeState.disabled()" />
 ```
 
-#### disabledReasons {#control-state-disabledreasons}
+#### disabledReasons {#form-node-state-disabledreasons}
 
 **Signature:** `disabledReasons: Signal<readonly ControlStateDisabledReason[]>`
 
 Returns normalized reasons when the active API exposes them.
 
 ```ts
-disabledMessage = computed(() => this.controlState.disabledReasons()[0]?.message);
+disabledMessage = computed(() => this.formNodeState.disabledReasons()[0]?.message);
 ```
 
-#### dirty {#control-state-dirty}
+#### dirty {#form-node-state-dirty}
 
 **Signature:** `dirty: Signal<boolean>`
 
 Reports whether user interaction changed the bound control.
 
 ```ts
-hasUnsavedChange = computed(() => this.controlState.dirty());
+hasUnsavedChange = computed(() => this.formNodeState.dirty());
 ```
 
-#### hidden {#control-state-hidden}
+#### hidden {#form-node-state-hidden}
 
 **Signature:** `hidden: Signal<boolean>`
 
 Reports form-owned visibility state. APIs without hidden state return `false`.
 
 ```html
-@if (!controlState.hidden()) {
+@if (!formNodeState.hidden()) {
   <input [value]="value()" />
 }
 ```
 
-#### readonly {#control-state-readonly}
+#### readonly {#form-node-state-readonly}
 
 **Signature:** `readonly: Signal<boolean>`
 
 Reports whether editing should be prevented without disabling interaction.
 
 ```html
-<input [readonly]="controlState.readonly()" />
+<input [readonly]="formNodeState.readonly()" />
 ```
 
-#### required {#control-state-required}
+#### required {#form-node-state-required}
 
 **Signature:** `required: Signal<boolean>`
 
 Reports whether the effective validation rules require a non-empty value.
 
 ```html
-@if (controlState.required()) {
+@if (formNodeState.required()) {
   <span aria-hidden="true">*</span>
 }
 ```
 
-#### touched {#control-state-touched}
+#### touched {#form-node-state-touched}
 
 **Signature:** `touched: Signal<boolean>`
 
 Reports whether the user interacted with and left the control.
 
 ```html
-@if (controlState.touched() && controlState.invalid()) {
+@if (formNodeState.touched() && formNodeState.invalid()) {
   <p>Please correct this value.</p>
 }
 ```
 
 ### Constraint properties
 
-#### min {#control-state-min}
+#### min {#form-node-state-min}
 
 **Signature:** `min: Signal<number | Date | undefined>`
 
 Returns the effective minimum numeric or date constraint.
 
 ```ts
-const minimum = this.controlState.min();
+const minimum = this.formNodeState.min();
 ```
 
-#### max {#control-state-max}
+#### max {#form-node-state-max}
 
 **Signature:** `max: Signal<number | Date | undefined>`
 
 Returns the effective maximum numeric or date constraint.
 
 ```ts
-const maximum = this.controlState.max();
+const maximum = this.formNodeState.max();
 ```
 
-#### minLength {#control-state-minlength}
+#### minLength {#form-node-state-minlength}
 
 **Signature:** `minLength: Signal<number | undefined>`
 
 Returns the effective minimum-length constraint.
 
 ```html
-<input [attr.minlength]="controlState.minLength()" />
+<input [attr.minlength]="formNodeState.minLength()" />
 ```
 
-#### maxLength {#control-state-maxlength}
+#### maxLength {#form-node-state-maxlength}
 
 **Signature:** `maxLength: Signal<number | undefined>`
 
 Returns the effective maximum-length constraint.
 
 ```html
-<input [attr.maxlength]="controlState.maxLength()" />
+<input [attr.maxlength]="formNodeState.maxLength()" />
 ```
 
-#### pattern {#control-state-pattern}
+#### pattern {#form-node-state-pattern}
 
 **Signature:** `pattern: Signal<readonly RegExp[]>`
 
@@ -434,18 +436,18 @@ Returns every effective regular-expression constraint.
 
 ```ts
 accepts = computed(() =>
-  this.controlState.pattern().every(pattern => pattern.test(this.previewValue())),
+  this.formNodeState.pattern().every(pattern => pattern.test(this.previewValue())),
 );
 ```
 
-#### name {#control-state-name}
+#### name {#form-node-state-name}
 
 **Signature:** `name: Signal<string | undefined>`
 
 Returns a generated or declared control name when the active binding exposes one.
 
 ```html
-<input [attr.name]="controlState.name()" />
+<input [attr.name]="formNodeState.name()" />
 ```
 
 ## Method reference
@@ -457,7 +459,7 @@ Returns a generated or declared control name when the active binding exposes one
 Reports a touched interaction to the active binding and safely does nothing while disconnected.
 
 ```html
-<input (blur)="controlState.markAsTouched()" />
+<input (blur)="formNodeState.markAsTouched()" />
 ```
 
 </div>
@@ -467,7 +469,7 @@ Reports a touched interaction to the active binding and safely does nothing whil
 Errors always contain a `kind`, independently of their source:
 
 ```ts
-controlState.errors();
+formNodeState.errors();
 // [{ kind: 'required' }, { kind: 'server', message: 'Unavailable' }]
 ```
 
@@ -485,7 +487,7 @@ Call `markAsTouched()` when the custom control loses focus:
 
 ```ts
 markAsTouched() {
-  this.controlState.markAsTouched();
+  this.formNodeState.markAsTouched();
 }
 ```
 
@@ -520,7 +522,7 @@ registry. Always use `connected()` when behavior depends on an active source.
 
 | Type | Purpose |
 | --- | --- |
-| `ControlState<TValue>` | Complete facade returned by `useControlState<TValue>()`. |
+| `ControlState<TValue>` | Complete facade returned by `useFormNodeState<TValue>()`. |
 | `ControlStateSource` | Union of supported source names. |
 | `ControlStateError` | Normalized error with a required `kind`. |
 | `ControlStateDisabledReason` | Normalized disabled reason with an optional `message`. |

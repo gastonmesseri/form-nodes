@@ -1,5 +1,5 @@
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNode, createFormPrimitives, field, useControlState, provideFormNodeConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
+import { FormNode, createFormPrimitives, field, useFormNodeState, provideFormNodeConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
 
 const name = field.strict('David');
 const configuredForms: FormPrimitives<false> = createFormPrimitives({ nullable: false } satisfies FormPrimitivesOptions<false>);
@@ -34,9 +34,9 @@ const classConfig = {
 classConfig.classes.touched = () => true;
 provideFormNodeConfig(classConfig);
 
-declare const controlState: ControlState<string | null>;
-const injectedControlState = useControlState<string | null>();
-const boundValue: string | null | undefined = controlState.value();
+declare const formNodeState: ControlState<string | null>;
+const injectedControlState = useFormNodeState<string | null>();
+const boundValue: string | null | undefined = formNodeState.value();
 const boundErrors: readonly ControlStateError[] = injectedControlState.errors();
 const boundErrorKind: string | undefined = boundErrors[0]?.kind;
 

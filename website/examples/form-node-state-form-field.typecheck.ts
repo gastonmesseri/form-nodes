@@ -1,7 +1,7 @@
 import { Component, model, signal } from '@angular/core';
 import { FormField, form, required, type FormValueControl } from '@angular/forms/signals';
 
-import { useControlState, type ControlStateError } from 'form-nodes';
+import { useFormNodeState, type ControlStateError } from 'form-nodes';
 
 // Custom control component
 
@@ -10,13 +10,13 @@ import { useControlState, type ControlStateError } from 'form-nodes';
   template: `
     <input
       [value]="value() ?? ''"
-      [disabled]="controlState.disabled()"
+      [disabled]="formNodeState.disabled()"
       (input)="value.set($any($event.target).value)"
-      (blur)="controlState.markAsTouched()"
+      (blur)="formNodeState.markAsTouched()"
     />
-    @if (controlState.touched() && controlState.invalid()) {
+    @if (formNodeState.touched() && formNodeState.invalid()) {
       <ul aria-live="polite">
-        @for (error of controlState.errors(); track $index) {
+        @for (error of formNodeState.errors(); track $index) {
           <li>{{ errorMessage(error) }}</li>
         }
       </ul>
@@ -26,7 +26,7 @@ import { useControlState, type ControlStateError } from 'form-nodes';
 export class DatePicker implements FormValueControl<string> {
   value = model('');
 
-  controlState = useControlState();
+  formNodeState = useFormNodeState();
 
   errorMessage(error: ControlStateError) {
     return error.kind === 'required' ? 'Choose a date.' : 'The date is invalid.';

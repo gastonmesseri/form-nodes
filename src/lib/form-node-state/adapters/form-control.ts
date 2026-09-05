@@ -1,6 +1,6 @@
 import { FormControlDirective } from '@angular/forms';
 
-import type { ControlStateAdapter } from '../control-state-adapter';
+import type { ControlStateAdapter } from '../form-node-state-adapter';
 import { injectAbstractControlStateAdapter } from './abstract-control';
 
 /** Resolves and observes a same-host `[formControl]` without creating a CVA construction cycle. */

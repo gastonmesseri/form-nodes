@@ -42,7 +42,7 @@ export const warnFailedInputWrite = (control: object, name: string, usesControlS
   }
   warnInDevMode(
     `formNode: could not synchronize the '${name}' input on ${controlName} because its Angular input internals are incompatible. `
-    + `The control remains connected, but this input may be stale.${usesControlState ? '' : ' Prefer useControlState() to consume bound state without writable state inputs;'} `
+    + `The control remains connected, but this input may be stale.${usesControlState ? '' : ' Prefer useFormNodeState() to consume bound state without writable state inputs;'} `
     + 'a ControlValueAccessor is also an option for value and disabled interoperability.',
   );
 };

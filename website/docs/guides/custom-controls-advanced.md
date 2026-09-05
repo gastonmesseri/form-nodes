@@ -4,7 +4,7 @@ title: Advanced custom controls
 
 import CodeBlock from '@theme/CodeBlock';
 import directNgControlSource from '!!raw-loader!../../examples/direct-ng-control.typecheck.ts';
-import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
+import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
 import ngControlSource from '!!raw-loader!../../examples/cva-ng-control-subscriptions.typecheck.ts';
 import dateErrorsSource from '!!raw-loader!../../examples/cva-date-errors.typecheck.ts';
 
@@ -135,14 +135,14 @@ changes. The optional `touch` output marks the node touched; `focus(options?)` i
 
 ## Read bound state without state inputs
 
-The [`useControlState()` reference](../reference/control-state.md) lists the complete API,
+The [`useFormNodeState()` reference](../reference/form-node-state.md) lists the complete API,
 defaults, source precedence, and lifecycle behavior.
 
-`useControlState()` is the stable alternative when a component does not want `[formNode]` to
+`useFormNodeState()` is the stable alternative when a component does not want `[formNode]` to
 write optional `disabled`, `readonly`, `required`, or error inputs through Angular internals. Call
 it in the component injection context and read its signals directly:
 
-<CodeBlock language="ts">{controlStateSource}</CodeBlock>
+<CodeBlock language="ts">{formNodeStateSource}</CodeBlock>
 
 The facade recognizes `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, and `ngModel`.
 `connected()` reports whether a supported binding is present, and `source()` identifies the active
@@ -173,7 +173,7 @@ Call `markAsTouched()` from the custom control's blur interaction to notify whic
 currently connected. The operation delegates to that API's native touched behavior and is a safe
 no-op while disconnected.
 
-`useControlState()` is deliberately not a second form-control API. Read state from its signals
+`useFormNodeState()` is deliberately not a second form-control API. Read state from its signals
 and use `markAsTouched()` to report the control's blur interaction. Send user-authored value changes
 through the component's `model()`, Angular `FormValueControl`, or `ControlValueAccessor` callbacks.
 Programmatic value writes, reset, disabled state, and other form operations remain owned by the API
@@ -484,5 +484,5 @@ These internal signals are compatibility details, not an additional public node 
 The injected control remains a Form Nodes adapter, not a complete Angular `FormControl`.
 In particular, a hook's optional `validator`/`asyncValidator` callbacks that depend on
 `addValidators()`/`addAsyncValidators()` are not supported. Configure those rules on the node,
-or use the documented `NG_VALIDATORS` CVA integration. Use `useControlState()` for new
+or use the documented `NG_VALIDATORS` CVA integration. Use `useFormNodeState()` for new
 components that need a supported state facade without patching Angular control methods.

@@ -1,6 +1,6 @@
 import { NgModel } from '@angular/forms';
 
-import type { ControlStateAdapter } from '../control-state-adapter';
+import type { ControlStateAdapter } from '../form-node-state-adapter';
 import { injectAbstractControlStateAdapter, normalizeAbstractControlName } from './abstract-control';
 
 /** Resolves and observes a same-host `ngModel` binding. */

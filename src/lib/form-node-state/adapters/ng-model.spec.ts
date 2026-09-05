@@ -8,7 +8,7 @@ import { FormControl, FormsModule, NG_VALUE_ACCESSOR, NgControl, type ControlVal
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { injectNgModelControlStateAdapter } from './ng-model';
-import { runAbstractControlAdapterContract } from '../../../../tests/helpers/control-state-adapter-contract';
+import { runAbstractControlAdapterContract } from '../../../../tests/helpers/form-node-state-adapter-contract';
 
 @Component({
   selector: 'ng-model-adapter-control',
@@ -46,7 +46,7 @@ const createControlState = async () => {
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('ngModel control-state adapter', () => {
+describe('ngModel form-node-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
   runAbstractControlAdapterContract('ngModel', createControlState, 'name');

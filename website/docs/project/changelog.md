@@ -29,7 +29,7 @@ canonical release record.
   Unsupported `onlySelf` and `overwriteDefaultValue` reset options warn and are ignored instead of interrupting reset.
   `validator` and `asyncValidator` now explicitly return `null` on both adapter surfaces: no Angular
   validator functions are exported; node validation remains observable through errors, pending, and status.
-- `useControlState().value()` with `[formNode]` now reports the latest committed value even when
+- `useFormNodeState().value()` with `[formNode]` now reports the latest committed value even when
   node equality retains an older public value. Pending debounce input remains separate.
 - Asynchronous validators preserve pending work when a computed dependency compares equal, while
   continuing to react to later value changes.
@@ -69,11 +69,13 @@ canonical release record.
 
 ### Changed
 
+- **Breaking:** Rename `useControlState()` to `useFormNodeState()`. Update imports and calls; the returned `ControlState` types and supported bindings are unchanged.
+
 - Support Angular `^21.0.7 || ^22.1.5`, building the library with Angular 21 and TypeScript 5.9.
   Custom-control types now expose the Form Nodes contract consistently across both majors.
 - **Breaking:** Remove the `$field` adapter. Bind Form Nodes with `[formNode]="node"` instead of
   `[formField]="node.$field"`. `provideFormNodeConfig()` now configures `[formNode]` only and can
-  coexist with Angular's class configuration. `useControlState()` still observes independently
+  coexist with Angular's class configuration. `useFormNodeState()` still observes independently
   created Angular Signal Forms, Reactive Forms, and template-driven controls.
 
 - **Breaking:** The package is now named `form-nodes`. Update dependencies, imports, and module

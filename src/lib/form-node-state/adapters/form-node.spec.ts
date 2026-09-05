@@ -83,7 +83,7 @@ const createControlState = <THost>(host: Type<THost>) => {
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('formNode control-state adapter', () => {
+describe('formNode form-node-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
 
