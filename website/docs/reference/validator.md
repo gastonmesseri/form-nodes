@@ -115,7 +115,8 @@ callback is written directly inside a node's `validators` source.
 | [`value()`](#custom-validator-context-value) | Current committed node value with its inferred type. |
 | [`field`](#custom-validator-context-field) | Real callable node being validated, including when it is a form or array. |
 | [`api`](#custom-validator-context-api) | Typed common API for validation, state, navigation, and node operations. |
-| [`form()`](#custom-validator-context-form) | Root aggregate that owns the node, or `null` for a standalone field. |
+| [`form()`](#custom-validator-context-form) | Nearest explicit form workflow, or `null` when none owns the node. |
+| [`root()`](#custom-validator-context-root) | Complete structural root containing the node. |
 | [`parent()`](#custom-validator-context-parent) | Direct parent node, or `null` at the root. |
 | [`path()`](#custom-validator-context-path) | Reactive path from the root. |
 | [State signals](#custom-validator-context-state) | `touched`, `dirty`, `disabled`, `readonly`, `hidden`, `required`, `submitting`, and their complements. |
@@ -130,7 +131,8 @@ reactive dependency.
 | [`value`](#custom-validator-context-value) | `Signal<TValue>` | Current committed value |
 | [`field`](#custom-validator-context-field) | callable node | Real node being validated |
 | [`api`](#custom-validator-context-api) | `ValidatorApi<TValue>` | Common node state and operations |
-| [`form`](#custom-validator-context-form) | root-node signal | Root aggregate or `null` |
+| [`form`](#custom-validator-context-form) | nearest-form signal | Owning workflow or `null` |
+| [`root`](#custom-validator-context-root) | structural-root signal | Complete tree root |
 | [`parent`](#custom-validator-context-parent) | parent-node signal | Direct parent or `null` |
 | [`path`](#custom-validator-context-path) | path signal | Location from the root |
 | [`submitting`](#custom-validator-context-state) | `Signal<boolean>` | Submission state |
@@ -186,10 +188,20 @@ validator<string>(({ api }) => api.dirty() && !api.value() ? { kind: 'blank' } :
 
 **Signature:** `form: Signal<PublicNode<Node> | null>`
 
-The root aggregate owning this node, or `null` for a standalone node.
+The nearest explicit form workflow owning this node, or `null` when none exists.
 
 ```ts
 validator<string>(({ form }) => form() === null ? { kind: 'mustBelongToForm' } : null);
+```
+
+#### root {#custom-validator-context-root}
+
+**Signature:** `root: Signal<PublicNode<Node>>`
+
+The complete structural root containing the validated node. A standalone node returns itself.
+
+```ts
+validator<string>(({ field: node, root }) => root() === node ? null : { kind: 'mustBeRoot' });
 ```
 
 #### parent {#custom-validator-context-parent}

@@ -151,6 +151,16 @@ describe('group', () => {
     expect(profile.address).not.toHaveProperty('submit');
     expect(profile.address.parent()).toBe(profile);
     expect(profile.address.city.form()).toBe(profile);
+    expect(profile.address.root()).toBe(profile);
+  });
+
+  it('keeps a standalone group outside a form workflow while exposing its structural root', () => {
+    const address = group({ city: field('Zurich') });
+
+    expect(address.form()).toBeNull();
+    expect(address.city.form()).toBeNull();
+    expect(address.root()).toBe(address);
+    expect(address.city.root()).toBe(address);
   });
 
   it('retains an explicit nested form as an independent submission boundary', async () => {
@@ -159,6 +169,10 @@ describe('group', () => {
 
     expect(await profile.payment.submit()).toBe(true);
     expect(action).toHaveBeenCalledWith(profile.payment, { card: '4242' });
+    expect(profile.payment.form()).toBe(profile.payment);
+    expect(profile.payment.card.form()).toBe(profile.payment);
+    expect(profile.payment.root()).toBe(profile);
+    expect(profile.payment.card.root()).toBe(profile);
   });
 
   it('uses groups for shorthand array item templates and clones them as groups', () => {
@@ -218,7 +232,8 @@ describe('group', () => {
     expect(address.children['zip']).toBe(zip);
     expect((address as unknown as Record<string, unknown>)['zip']).toBeUndefined();
     expect(zip.parent()).toBe(address);
-    expect(zip.form()).toBe(address);
+    expect(zip.form()).toBeNull();
+    expect(zip.root()).toBe(address);
     expect(address).not.toHaveProperty('submit');
 
     expect(address.remove('zip')).toBe(zip);

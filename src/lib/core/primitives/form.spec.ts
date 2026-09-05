@@ -709,6 +709,15 @@ describe('form', () => {
     expect(profile()).toEqual({ api: 'updated', age: 23 });
   });
 
+  it('gives a child named root precedence while preserving the ancestry lookup through $api', () => {
+    const rootField = field('child root');
+    const profile = form({ root: rootField, age: field(23) });
+
+    expect(profile.root).toBe(rootField);
+    expect(profile.root()).toBe('child root');
+    expect(profile.$api.root()).toBe(profile);
+  });
+
   it('gives the real $api runtime precedence over illegally declared children', () => {
     const illegalRootField = field('root child');
     const illegalNestedField = field('nested child');
@@ -878,15 +887,20 @@ describe('form', () => {
     expect(profile.address.api.parent()).toBe(profile);
     expect(profile.address.city.api.parent()).toBe(profile.address);
     expect(profile.api.form()).toBe(profile);
+    expect(profile.api.root()).toBe(profile);
     expect(profile.name.api.form()).toBe(profile);
+    expect(profile.name.api.root()).toBe(profile);
     expect(profile.address.api.form()).toBe(profile);
+    expect(profile.address.api.root()).toBe(profile);
     expect(profile.address.city.api.form()).toBe(profile);
+    expect(profile.address.city.api.root()).toBe(profile);
   });
 
   it('exposes tree navigation through a field synchronous validator api', () => {
     let validatorApi: unknown;
     let validatorField: unknown;
     let validatorForm: unknown;
+    let validatorRoot: unknown;
     let validatorParent: unknown;
     let validatorPath: readonly string[] = [];
     const profile = form({
@@ -895,6 +909,7 @@ describe('form', () => {
           validatorApi = context.api;
           validatorField = context.field;
           validatorForm = context.form();
+          validatorRoot = context.root();
           validatorParent = context.parent();
           validatorPath = context.path();
           return null;
@@ -906,6 +921,7 @@ describe('form', () => {
     expect(validatorApi).toBe(profile.address.city.api);
     expect(validatorField).toBe(profile.address.city);
     expect(validatorForm).toBe(profile);
+    expect(validatorRoot).toBe(profile);
     expect(validatorParent).toBe(profile.address);
     expect(validatorPath).toEqual(['address', 'city']);
     expect(profile.address.city.api.path()).toEqual(['address', 'city']);
@@ -913,7 +929,7 @@ describe('form', () => {
     expect(profile.address.city.api.form()).toBe(profile);
   });
 
-  it('exposes the root form api to synchronous form validators', () => {
+  it('exposes form and root ancestry to synchronous form validators', () => {
     let validatorApi: unknown;
     let validatorField: unknown;
     const profile = form({ name: field('David') }, [(context) => {
@@ -928,6 +944,32 @@ describe('form', () => {
     expect(profile.api.path()).toEqual([]);
     expect(profile.api.parent()).toBeNull();
     expect(profile.api.form()).toBe(profile);
+  });
+
+  it('keeps a nested form as validator workflow owner while tracking its structural root', async () => {
+    const ancestry: [unknown, unknown][] = [];
+    const payment = form({ card: field('4242') }, {
+      validators: asyncValidator(async ({ form: owningForm, root }) => {
+        ancestry.push([owningForm(), root()]);
+        return null;
+      }),
+    });
+    const checkout = form({ cartId: field('cart') });
+
+    expect(payment.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ancestry.at(-1)).toEqual([payment, payment]);
+
+    checkout.add('payment', payment);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ancestry.at(-1)).toEqual([payment, checkout]);
+
+    checkout.remove('payment');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ancestry.at(-1)).toEqual([payment, payment]);
   });
 
   it('exposes each field under its own key', () => {
@@ -2788,7 +2830,8 @@ describe('form', () => {
 
     expect(target.add('status', status)).toBe(status);
     expect(status.parent()).toBe(target);
-    expect(status.form()).toBe(target);
+    expect(status.form()).toBeNull();
+    expect(status.root()).toBe(target);
     expect(status.readonly()).toBe(true);
 
     status.set('published');

@@ -370,8 +370,16 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * Initially declared children are fixed and cannot be removed.
    */
   remove(key: string): DynamicNode | undefined;
-  /** Complete root node containing this form. A root form returns itself. */
-  form: Signal<FormRoot<TNodes, TParent>>;
+  /**
+   * This explicit form workflow. Descendants resolve this form until another nested form begins.
+   * Unlike `root()`, this signal deliberately does not cross the form's workflow boundary.
+   */
+  form: Signal<Form<TNodes, TParent>>;
+  /**
+   * Complete structural root containing this form. A root or detached form returns itself.
+   * A nested form therefore returns itself from `form()` and its outermost ancestor from `root()`.
+   */
+  root: Signal<FormRoot<TNodes, TParent>>;
   /** Immediate structural parent of this form, or `null` when it is a root or has been detached. */
   parent: Signal<TParent | null>;
   /**

@@ -860,7 +860,10 @@ describe('array', () => {
     expect(sons[1]!.parent()).toBe(sons);
     expect(sons[1]!.path()).toEqual(['1']);
     expect(sons[1]!.name.path()).toEqual(['1', 'name']);
-    expect(sons[1]!.form()).toBe(sons);
+    expect(sons.form()).toBeNull();
+    expect(sons.root()).toBe(sons);
+    expect(sons[1]!.form()).toBeNull();
+    expect(sons[1]!.root()).toBe(sons);
     expect(factory).toHaveBeenCalledTimes(2);
     expect(sons.dirty()).toBe(false);
   });

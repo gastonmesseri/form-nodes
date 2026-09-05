@@ -283,7 +283,32 @@ describe('field', () => {
     expect(name.api.path()).toEqual([]);
     expect(name.api.parent()).toBeNull();
     expect(name.api.form()).toBeNull();
+    expect(name.api.root()).toBe(name);
     expect(name.keyInParent()).toBeNull();
+  });
+
+  it('reactively updates validator ancestry when a field is attached and detached', async () => {
+    const ancestry: [unknown, unknown][] = [];
+    const name = field('David', [asyncValidator(async ({ form: owningForm, root }) => {
+      ancestry.push([owningForm(), root()]);
+      return null;
+    })]);
+    const profile = form({ fixed: field(true) });
+
+    expect(name.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ancestry.at(-1)).toEqual([null, name]);
+
+    profile.add('name', name);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ancestry.at(-1)).toEqual([profile, profile]);
+
+    profile.remove('name');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ancestry.at(-1)).toEqual([null, name]);
   });
 
   it('exposes the initial value when called and through value()', () => {

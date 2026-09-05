@@ -20,7 +20,7 @@ const createDeepTree = () => form({
  * These scenarios complement the primitive-specific suites by exercising complete root-to-leaf flows.
  */
 describe('deep mixed form trees', () => {
-  it('maintains parent, root form, and path navigation at every level', () => {
+  it('maintains parent, nearest form, structural root, and path navigation at every level', () => {
     const root = createDeepTree();
     const firstTeam = root.teams[0]!;
     const firstMember = firstTeam.members[0]!;
@@ -28,6 +28,7 @@ describe('deep mixed form trees', () => {
 
     expect(root.parent()).toBeNull();
     expect(root.form()).toBe(root);
+    expect(root.root()).toBe(root);
     expect(root.path()).toEqual([]);
     expect(root.teams.parent()).toBe(root);
     expect(root.teams.path()).toEqual(['teams']);
@@ -39,7 +40,10 @@ describe('deep mixed form trees', () => {
     expect(firstMember.path()).toEqual(['teams', '0', 'members', '0']);
     expect(email.parent()).toBe(firstMember);
     expect(email.path()).toEqual(['teams', '0', 'members', '0', 'email']);
-    expect(email.form()).toBe(root);
+    expect(firstTeam.form()).toBe(firstTeam);
+    expect(firstMember.form()).toBe(firstMember);
+    expect(email.form()).toBe(firstMember);
+    expect(email.root()).toBe(root);
   });
 
   it('propagates a deeply nested control update into every aggregate value and interaction state', () => {
@@ -182,7 +186,8 @@ describe('deep mixed form trees', () => {
     expect(secondMember.path()).toEqual(['teams', '0', 'members', '0']);
     expect(movedMember.path()).toEqual(['teams', '0', 'members', '1']);
     expect(movedEmail.path()).toEqual(['teams', '0', 'members', '1', 'email']);
-    expect(movedEmail.form()).toBe(root);
+    expect(movedEmail.form()).toBe(movedMember);
+    expect(movedEmail.root()).toBe(root);
   });
 
   it('detaches a removed subtree while keeping it independently usable', () => {
@@ -194,10 +199,12 @@ describe('deep mixed form trees', () => {
     expect(removed.parent()).toBeNull();
     expect(removed.path()).toEqual([]);
     expect(removed.form()).toBe(removed);
+    expect(removed.root()).toBe(removed);
     expect(removed.members.parent()).toBe(removed);
     expect(removedMember.path()).toEqual(['members', '0']);
     expect(removedEmail.path()).toEqual(['members', '0', 'email']);
-    expect(removedEmail.form()).toBe(removed);
+    expect(removedEmail.form()).toBe(removedMember);
+    expect(removedEmail.root()).toBe(removed);
     expect(root.teams[0]!.path()).toEqual(['teams', '0']);
 
     removedEmail.set('detached@example.com');

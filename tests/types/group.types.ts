@@ -1,4 +1,4 @@
-import { field, form, group } from '../../src/public-api';
+import { field, form, group, type Node } from '../../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 
@@ -17,7 +17,8 @@ type AddressValue = {
 };
 
 type _Value = Expect<Equal<ReturnType<typeof address>, AddressValue>>;
-type _NestedGroupRoot = Expect<Equal<ReturnType<typeof address.location.latitude.form>, typeof address | null>>;
+type _NestedGroupForm = Expect<Equal<ReturnType<typeof address.location.latitude.form>, Node | null>>;
+type _NestedGroupRoot = Expect<Equal<ReturnType<typeof address.location.latitude.root>, typeof address>>;
 
 address.set({ city: 'Bern', location: { latitude: 46.95 } });
 address.patch({ location: { latitude: 47 } });
@@ -39,6 +40,9 @@ profile.address.submit();
 profile.independentWorkflow.submit();
 
 type _RootThroughGroup = Expect<Equal<ReturnType<typeof profile.address.city.form>, typeof profile | null>>;
+type _StructuralRootThroughGroup = Expect<Equal<ReturnType<typeof profile.address.city.root>, typeof profile>>;
+type _NestedWorkflow = Expect<Equal<ReturnType<typeof profile.independentWorkflow.form>, typeof profile.independentWorkflow>>;
+type _NestedWorkflowRoot = Expect<Equal<ReturnType<typeof profile.independentWorkflow.root>, typeof profile>>;
 
 type Company = { companyId: number; companyName: string };
 const company: Company = { companyId: 23, companyName: 'Apple' };

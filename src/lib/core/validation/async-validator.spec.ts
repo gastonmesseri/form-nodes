@@ -341,10 +341,12 @@ describe('asyncValidator', () => {
   it('provides the validated node path through its API', async () => {
     let path: readonly string[] = [];
     let receivedForm: unknown;
+    let receivedRoot: unknown;
     let receivedField: unknown;
-    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ field: fieldNode, form, path: fieldPath }) => {
+    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ field: fieldNode, form, root, path: fieldPath }) => {
       path = fieldPath();
       receivedForm = form();
+      receivedRoot = root();
       receivedField = fieldNode;
       return null;
     })]) } });
@@ -353,6 +355,7 @@ describe('asyncValidator', () => {
 
     expect(path).toEqual(['profile', 'age']);
     expect(receivedForm).toBe(rootForm);
+    expect(receivedRoot).toBe(rootForm);
     expect(receivedField).toBe(rootForm.profile.age);
   });
 

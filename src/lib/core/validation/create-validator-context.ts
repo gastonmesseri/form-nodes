@@ -3,6 +3,7 @@ import type { AsyncValidatorState, FieldContext, ValidatorApi, ValidatorContext 
 
 const readonlyApiKeys = [
   'form',
+  'root',
   'parent',
   'path',
   'value',

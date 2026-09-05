@@ -1,4 +1,4 @@
-import { computed, signal, untracked } from '@angular/core';
+import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { isNotNil } from '../utils/is-nil';
 import { markAsNode } from '../utils/node-marker';
@@ -207,6 +207,7 @@ export function field<TValue>(
   const fieldNonInteractive = computed(() => fieldHidden() || fieldDisabled() || fieldReadonly());
   const emptySyncMetadata = new Map();
   const fieldForm = computed(() => fieldParent()?.$api.form() ?? null);
+  const fieldRoot = computed(() => fieldParent()?.$api.root() ?? fieldNode) as Signal<Field<TValue>>;
   const fieldSyncValidation = computed(() => fieldNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(fieldContext, fieldValidators(), fieldNode));
@@ -331,6 +332,7 @@ export function field<TValue>(
   const members = {
     nodeType: () => 'field' as const,
     form: fieldForm,
+    root: fieldRoot,
     parent: fieldParent.asReadonly(),
     path: fieldPath,
     keyInParent: fieldKeyInParent.asReadonly(),

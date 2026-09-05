@@ -401,7 +401,8 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`items()`](#items) | Readonly array of current live item nodes. Its reference changes with the structure. |
 | [`length()`](#length) | Current number of item nodes. |
 | [`nodeType()`](#nodetype) | Returns the literal `'array'`. |
-| [`form()`](#form) | Root form that owns the array, or the array itself when it is a root. |
+| [`form()`](#form) | Nearest explicit form workflow, or `null` when none owns the array. |
+| [`root()`](#root) | Complete structural root; a root array returns itself. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
@@ -769,9 +770,10 @@ usernames.nodeType(); // 'array'
 
 #### form()
 
-**Signature:** `form: Signal<RootNode>`
+**Signature:** `form: Signal<Form | null>`
 
-Returns the complete root node containing the array, or the array itself when it is a root.
+Returns the nearest explicit `form()` containing the array. A standalone or detached array returns
+`null` because it does not own a form workflow.
 
 ```ts
 const profile = form({
@@ -781,6 +783,19 @@ const profile = form({
 });
 
 profile.usernames.form() === profile; // true
+```
+
+#### root()
+
+**Signature:** `root: Signal<RootNode>`
+
+Returns the complete structural root containing the array. A standalone or detached array returns
+itself.
+
+```ts
+const usernames = array(field(''));
+
+usernames.root() === usernames; // true
 ```
 
 #### parent()

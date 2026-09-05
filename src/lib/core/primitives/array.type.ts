@@ -5,7 +5,7 @@ import type { Group } from './group.type';
 import type { Form, FormOptions } from './form.type';
 import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, NearestForm, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
 export type ArrayOptions<TValue = any> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
@@ -214,8 +214,16 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   items: Signal<ArrayItems<TItem, TParent>>;
   /** Current number of live item nodes. Equivalent to `items().length`. */
   length: Signal<number>;
-  /** Complete root node containing this array, or this array itself when it is the root node. */
-  form: Signal<ArrayRoot<TItem, TParent>>;
+  /**
+   * Nearest explicit `form()` containing this array, or `null` when no form workflow owns it.
+   * A nested explicit form is the workflow owner instead of the complete structural root.
+   */
+  form: Signal<NearestForm<TParent> | null>;
+  /**
+   * Complete structural root containing this array. A root or detached array returns itself.
+   * Use this signal when traversal must cross nested form workflow boundaries.
+   */
+  root: Signal<ArrayRoot<TItem, TParent>>;
   /** Immediate structural parent of this array, or `null` when it is a root or has been detached. */
   parent: Signal<TParent | null>;
   /**

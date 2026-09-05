@@ -283,7 +283,8 @@ executions, and `params` only to parameterized `validate`.
 | [`value`](#async-validator-context-value) | `Signal<TValue>` | All callbacks |
 | [`field`](#async-validator-context-field) | callable node | All callbacks |
 | [`api`](#async-validator-context-api) | `TApi` | All callbacks |
-| [`form`](#async-validator-context-form) | root-node signal | All callbacks |
+| [`form`](#async-validator-context-form) | nearest-form signal | All callbacks |
+| [`root`](#async-validator-context-root) | structural-root signal | All callbacks |
 | [`parent`](#async-validator-context-parent) | parent-node signal | All callbacks |
 | [`path`](#async-validator-context-path) | path signal | All callbacks |
 | [`submitting`](#async-validator-context-state) | `Signal<boolean>` | All callbacks |
@@ -339,10 +340,20 @@ asyncValidator(({ api }) => api.dirty() ? checkValue(api.value()) : Promise.reso
 
 **Signature:** `form: Signal<PublicNode<Node> | null>`
 
-The root aggregate owning this node, or `null` for a standalone node.
+The nearest explicit form workflow owning this node, or `null` when none exists.
 
 ```ts
 asyncValidator(({ form }) => form() ? validateInForm(form()!) : Promise.resolve(null));
+```
+
+#### root {#async-validator-context-root}
+
+**Signature:** `root: Signal<PublicNode<Node>>`
+
+The complete structural root containing the validated node. A standalone node returns itself.
+
+```ts
+asyncValidator(({ root }) => validateInTree(root()));
 ```
 
 #### parent {#async-validator-context-parent}

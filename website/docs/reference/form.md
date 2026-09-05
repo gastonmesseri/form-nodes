@@ -403,7 +403,8 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`value()`](#value) | Current committed aggregate value. Equivalent to calling the form directly. |
 | [`controlValue()`](#controlvalue) | Complete value from a control bound directly to the form. |
 | [`nodeType()`](#nodetype) | Returns the literal `'form'`. |
-| [`form()`](#form-1) | Complete root node; a root form returns itself. |
+| [`form()`](#form-1) | This explicit form workflow. |
+| [`root()`](#root) | Complete structural root; a root form returns itself. |
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
@@ -587,9 +588,10 @@ profile.nodeType(); // 'form'
 
 #### form()
 
-**Signature:** `form: Signal<RootNode>`
+**Signature:** `form: Signal<Form>`
 
-Returns the complete root node containing this form. A root form returns itself.
+Returns this explicit form because every `form()` owns a submission workflow boundary. Descendants
+return their nearest explicit form, so a nested form becomes the workflow owner for its subtree.
 
 ```ts
 const profile = form({
@@ -597,6 +599,24 @@ const profile = form({
 });
 
 profile.form() === profile; // true
+```
+
+#### root()
+
+**Signature:** `root: Signal<RootNode>`
+
+Returns the complete structural root containing this form. A root or detached form returns itself;
+a nested form returns the outermost node in the complete tree.
+
+```ts
+const checkout = form({
+  payment: form({
+    card: field(''),
+  }),
+});
+
+checkout.payment.form() === checkout.payment; // true
+checkout.payment.root() === checkout; // true
 ```
 
 #### parent()

@@ -23,6 +23,7 @@ const names = array(field(''), ['David']);
 const lockedNames = array(field(''), { disabled: 'Collection is locked' });
 type _StableApiValue = Expect<Equal<ReturnType<typeof names.$api.value>, (string | null)[]>>;
 type _ControlValue = Expect<Equal<ReturnType<typeof names.controlValue>, (string | null)[]>>;
+type _StandaloneRoot = Expect<Equal<ReturnType<typeof names.root>, typeof names>>;
 lockedNames.disable('Temporarily unavailable');
 const matrix = array(array(field(0), []), [[1, 2]]);
 const forms = array(form({ enabled: field.strict(true) }), [{ enabled: true }]);
@@ -48,6 +49,8 @@ type _ArrayItemKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof names[0]
 type _ArrayFormKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof people[0]>['keyInParent']>, number | null>>;
 type _NestedArrayKeyInParent = Expect<Equal<ReturnType<typeof directory.people.keyInParent>, string>>;
 type _NestedArrayItemKeyInParent = Expect<Equal<ReturnType<NonNullable<typeof directory.people[0]>['keyInParent']>, number | null>>;
+type _NestedArrayForm = Expect<Equal<ReturnType<typeof directory.people.form>, typeof directory | null>>;
+type _NestedArrayRoot = Expect<Equal<ReturnType<typeof directory.people.root>, typeof directory>>;
 type _MappedNames = Expect<Equal<ReturnType<typeof names.map<string | null>>, (string | null)[]>>;
 
 people.push({ id: 'two', name: 'Daniel', age: 35 });

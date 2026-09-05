@@ -30,6 +30,8 @@ type _ControlValue = Expect<Equal<ReturnType<typeof profile.controlValue>, Profi
 type _NestedValue = Expect<Equal<ReturnType<typeof profile.address.city>, string | null>>;
 type _ChildParent = Expect<Equal<ReturnType<typeof profile.name.parent>, typeof profile | null>>;
 type _NestedRoot = Expect<Equal<ReturnType<typeof profile.address.city.form>, typeof profile | null>>;
+type _FormRoot = Expect<Equal<ReturnType<typeof profile.root>, typeof profile>>;
+type _NestedStructuralRoot = Expect<Equal<ReturnType<typeof profile.address.city.root>, typeof profile>>;
 type _ChildKeyInParent = Expect<Equal<ReturnType<typeof profile.name.keyInParent>, string>>;
 type _NestedKeyInParent = Expect<Equal<ReturnType<typeof profile.address.city.keyInParent>, string>>;
 
@@ -162,6 +164,7 @@ const collisions = form({
   name: field('name'),
   apply: field('apply'),
   focus: field('focus'),
+  root: field('root'),
 });
 
 type _ReadonlyCollision = Expect<Equal<ReturnType<typeof collisions.readonly>, boolean | null>>;
@@ -169,7 +172,9 @@ type _ResetCollision = Expect<Equal<ReturnType<typeof collisions.reset>, string 
 type _NameCollision = Expect<Equal<ReturnType<typeof collisions.name>, string | null>>;
 type _ApplyCollision = Expect<Equal<ReturnType<typeof collisions.apply>, string | null>>;
 type _FocusCollision = Expect<Equal<ReturnType<typeof collisions.focus>, string | null>>;
+type _RootCollision = Expect<Equal<ReturnType<typeof collisions.root>, string | null>>;
 type _ApiReadonlyUnaffected = Expect<Equal<ReturnType<typeof collisions.api.readonly>, boolean>>;
+type _ApiRootUnaffected = Expect<Equal<ReturnType<typeof collisions.api.root>, typeof collisions>>;
 
 // @ts-expect-error children is a readonly map
 profile.children.name = field('Replacement');

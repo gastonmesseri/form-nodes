@@ -168,7 +168,8 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   const formContext = markAsFieldContext({ value: formValue });
   const formValidators = signal<Validators<FormValue<TNodes>>>(validators);
   const emptySyncMetadata = new Map();
-  const rootForm = computed(() => formParent()?.$api.form() ?? formNode) as Signal<Form<TNodes>>;
+  const owningForm = computed(() => nodeType === 'form' ? formNode : formParent()?.$api.form() ?? null);
+  const rootNode = computed(() => formParent()?.$api.root() ?? formNode) as Signal<Form<TNodes>>;
   const formSyncValidation = computed(() => formNonInteractive()
     ? { errors: [], metadata: emptySyncMetadata }
     : runSyncValidators(formContext, formValidators(), formNode));
@@ -367,7 +368,8 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
     get: (key: string) => controlsRecord[key] as DynamicNode | undefined,
     add,
     remove,
-    form: rootForm,
+    form: owningForm,
+    root: rootNode,
     parent: formParent.asReadonly(),
     path: formPath,
     keyInParent: formKeyInParent.asReadonly(),

@@ -162,13 +162,17 @@ See [Interaction and availability](../guides/interaction-and-availability.md) fo
 
 ## Tree navigation
 
-Every node exposes reactive `parent()`, `form()`, `path()`, and `keyInParent()` signals:
+Every node exposes reactive `parent()`, `form()`, `root()`, `path()`, and `keyInParent()` signals:
 
 ```ts
 profileForm.address.city.path(); // ['address', 'city']
 profileForm.address.city.parent(); // profileForm.address
 profileForm.address.city.form(); // profileForm
+profileForm.address.city.root(); // profileForm
 ```
+
+`form()` identifies the nearest explicit submission workflow, while `root()` returns the topmost
+structural node. They differ when an explicit form is nested inside another tree.
 
 Forms expose a stable readonly `children` map. Arrays expose an `items()` signal and index access.
 

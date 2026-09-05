@@ -581,7 +581,7 @@ direct-property types. `DynamicNode` exposes the state and
 operations common to every primitive directly, including `value`, `disabled`, validation, and
 interaction state, while hiding native function members and omitting primitive-specific methods.
 
-New children immediately receive their parent, key, path, root form, inherited state, debounce,
+New children immediately receive their parent, key, path, nearest form, structural root, inherited state, debounce,
 and injector. They participate in aggregate value, errors, validation status, pending, touched,
 dirty, focus, reset, and control operations as soon as the structural version changes. Duplicate
 keys and reserved `$api` or `$field` keys throw before any entry in a batch is attached. A node that
@@ -598,7 +598,8 @@ its interaction state under the same rules as an explicitly declared field.
 `remove(key)` only detaches children introduced through `add()`. Initially declared children cannot
 be removed because their public types guarantee their presence. A removed node remains usable,
 loses its parent relationship, and no longer contributes to its former ancestor aggregates. A
-standalone removed field reports `form() === null`; a removed aggregate becomes its own root.
+standalone removed node reports `form() === null` unless it is itself an explicit form, and every
+removed node becomes its own structural root.
 
 The form's statically inferred value type remains based on its initial definition. Runtime values
 contain current dynamic properties, but callers should retain the typed result of `add()` or narrow
@@ -800,19 +801,33 @@ Every field and form API exposes `path: Signal<readonly string[]>`. The root pat
 
 Every API also exposes `parent: Signal<Node | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `Node | null` parent type even after being inserted into a form; access through the form provides the refined type.
 
-Nodes returned by the common validator API's `parent()` and `form()` remain callable, but native JavaScript function members such as `apply`, `bind`, `call`, `name`, and `prototype` are intentionally hidden from the public type and IntelliSense. Exact `Field` and `Form` return types apply the same hiding while preserving form keys that intentionally use one of those names.
+Nodes returned by the common validator API's `parent()`, `form()`, and `root()` remain callable, but native JavaScript function members such as `apply`, `bind`, `call`, `name`, and `prototype` are intentionally hidden from the public type and IntelliSense. Exact node return types apply the same hiding while preserving form keys that intentionally use one of those names.
 
-`api.form` resolves the root object node for the current node. A root form or standalone group
-returns itself; every nested group, form, array, and field returns the same root object node; and a
-standalone field returns `null`. Nodes reached through a form refine the signal to that exact root
-form type, including across groups and nested forms. Because it is reactive, inserting a standalone
-field into a form updates `form()` and retriggers automatic async validators that read it. Validator
-callbacks can use the flat `context.form()` or the equivalent `context.api.form()`. A validator
-declared before its owner is known retains `Node | null`; supplying the refined field API explicitly,
-such as `asyncValidator<TValue, typeof profile.age.api>(...)`, exposes `typeof profile | null`
-through both surfaces inside the callback.
+`api.form` resolves the nearest explicit `form()` workflow. Every form returns itself even when it
+is nested, and its descendants resolve that form until another explicit form begins. A standalone
+field, group, or array returns `null`. `api.root` independently resolves the topmost structural node
+and never returns `null`: any standalone field, group, form, or array returns itself. Groups inside
+arrays follow the same rules. Removed array items and dynamically detached nodes become independent
+roots; reattaching or reparenting them updates both signals immediately.
 
-Root-form type resolution follows at most ten parent links. This limit affects TypeScript inference only: paths within ten levels retain the exact root form type, while deeper paths safely fall back to `Node`. Runtime parent and root traversal remains correct and has no depth limit.
+Both lookups are reactive. Attaching, detaching, or reparenting a node retriggers automatic async
+validators that read the affected signal. Validator callbacks can use `context.form()` and
+`context.root()`, or the equivalent API signals. A validator declared before its owner is known
+retains general node types; supplying a refined field API explicitly preserves the exact nearest
+form and structural-root types.
+
+Structural-root type resolution follows at most ten parent links. This limit affects TypeScript
+inference only: paths within ten levels retain the exact root type, while deeper paths safely fall
+back to `Node`. Runtime traversal remains correct and has no depth limit. Nearest-form inference
+uses the form type exposed by the immediate parent and preserves explicit nested workflow boundaries.
+
+This ownership split is library-specific. Angular 22.1.5 Signal Forms, inspected at tag `22.1.5`
+(`468b65b74566537456c192ac4281795c5a1e1a5e`) in
+`packages/forms/signals/src/api/structure.ts`, `packages/forms/signals/src/field/structure.ts`, and
+`packages/forms/signals/test/node/form.spec.ts`, creates one `FieldTree` root from a model signal and
+does not expose Gem's explicit nested-form workflow primitive or separate `form()` and `root()`
+lookups. Gem retains comparable reactive parent/path behavior while defining these ownership
+semantics for its explicit node architecture.
 
 `when(context)` is reactive. While it returns `false`, the validator does not evaluate explicit params, invoke the service, expose pending state, or contribute errors. A transition to `true` starts normal validation. A transition to `false` cancels any debounce timer or in-flight Promise or Observable, clears that asynchronous validation state, and makes stale results unobservable.
 
@@ -904,11 +919,15 @@ asyncValidator(async (): Promise<ValidationResult> => {
 });
 ```
 
-When coupling a validator to its owning class is undesirable, `context.api.form()` is always available as a fallback. Its default type is the general callable `Node | null`, so it supports common form operations but does not expose exact sibling keys:
+When coupling a validator to its owning class is undesirable, `context.api.form()` and
+`context.api.root()` are available as fallbacks. Their default types are general callable nodes, so
+they support common node operations but do not expose exact sibling keys:
 
 ```ts
-const root = context.api.form();
-root?.api.valid();
+const workflow = context.api.form();
+const tree = context.api.root();
+workflow?.api.valid();
+tree.api.valid();
 ```
 
 The exact API can still be supplied explicitly where supported, but class-property access is the simplest option for inline, fully typed cross-node validation. Reusable validators should prefer explicit dependencies or the common `api.form()` view instead of closing over a component instance.
@@ -1775,7 +1794,8 @@ Leaf field values are not deep-cloned. A clone gets a fresh signal initialized w
   particular, `push()` invalidates reactive consumers of the array value and every ancestor value
   while leaving previously read snapshots unchanged.
 - Item paths use decimal index segments such as `['sons', '0', 'name']`.
-- Items inherit `form()` from the root form containing the array.
+- Items resolve `form()` to their nearest explicit form and `root()` to the array's complete
+  structural root. An explicit form item owns its own workflow.
 
 The array-style read methods are convenience shortcuts, not separate collection state. Their purpose is to make common node queries less verbose. Except for the callback's third argument, these calls are behaviorally equivalent to reading `items()` and invoking the corresponding native array method:
 
@@ -1931,7 +1951,7 @@ profile.set({
 });
 ```
 
-The complete value propagates immediately to the array and every ancestor. Existing nodes in the common index prefix are updated and retain their identity and runtime state. Additional values create fresh nodes from the configured template or factory, with correct parent, root form, and index-derived paths. Surplus nodes are removed and detached from the tree; retained external references to those removed nodes remain usable as independent roots. Descendants remain attached to that removed root, and their paths are recalculated relative to it. Their values, interaction state, pending validation, and eventual errors no longer contribute to the former array or form ancestors. Setting an empty array removes every item, and a later `form.set()` can create a new collection from the same definition recipe.
+The complete value propagates immediately to the array and every ancestor. Existing nodes in the common index prefix are updated and retain their identity and runtime state. Additional values create fresh nodes from the configured template or factory, with correct parent, nearest form, structural root, and index-derived paths. Surplus nodes are removed and detached from the tree; retained external references to those removed nodes remain usable as independent roots. Descendants remain attached to that removed root, and their paths are recalculated relative to it. Their values, interaction state, pending validation, and eventual errors no longer contribute to the former array or form ancestors. Setting an empty array removes every item, and a later `form.set()` can create a new collection from the same definition recipe.
 
 A node removed directly through `removeAt()` keeps ownership of its already-running validation as an independent root. A node removed as part of keyed `set()` or `reset(value)` reconciliation has its previous reconciliation-owned asynchronous execution invalidated; late results from that stale execution are ignored. In both cases the former array stops aggregating the removed node immediately.
 
