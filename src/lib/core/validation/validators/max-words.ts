@@ -1,8 +1,8 @@
-import { countWords } from './count-words';
+import { countWords } from '../../utils/count-words';
+import { resolveValidatorMessage } from '../utils/resolve-validator-message';
+import { defaultMaxWordsMessage } from '../utils/default-validator-messages';
 import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
-import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultMaxWordsMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 
 /**
  * Requires a non-empty string to contain no more than the configured number of words.

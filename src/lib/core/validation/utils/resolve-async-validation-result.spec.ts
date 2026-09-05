@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ObservableLike, ObserverLike } from '../types/observable-like.type';
+import type { ValidationResult } from '../validation.type';
 import { resolveAsyncValidationResult } from './resolve-async-validation-result';
-import type { ValidationResult } from './validation.type';
+import type { ObservableLike, ObserverLike } from '../../types/observable-like.type';
 
 const controller = (): AbortController => new AbortController();
 

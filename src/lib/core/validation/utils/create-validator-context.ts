@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 
-import type { Node } from '../types/node.type';
-import type { AsyncValidatorState, FieldContext, ValidatorApi, ValidatorContext } from './validation.type';
+import type { Node } from '../../types/node.type';
+import type { AsyncValidatorState, FieldContext, ValidatorApi, ValidatorContext } from '../validation.type';
 
 /** Adds the stable readonly node facade used by validator callbacks. */
 export const createValidatorContext = <TValue>(

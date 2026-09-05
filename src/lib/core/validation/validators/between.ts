@@ -1,9 +1,9 @@
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
-import { MAX_METADATA, MIN_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
-import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultBetweenMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { MAX_METADATA, MIN_METADATA } from '../constraint-metadata';
+import { defaultBetweenMessage } from '../utils/default-validator-messages';
+import { resolveValidatorMessage } from '../utils/resolve-validator-message';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 
 type ResolvedBounds = {
   minimum: number;

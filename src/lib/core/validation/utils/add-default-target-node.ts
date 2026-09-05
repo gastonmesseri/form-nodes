@@ -1,4 +1,4 @@
-import type { ValidationError } from '../validation/validation.type';
+import type { ValidationError } from '../validation.type';
 
 type WritableTargetNode = {
   targetNode?: unknown;

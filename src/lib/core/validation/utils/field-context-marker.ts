@@ -1,4 +1,4 @@
-import type { FieldContext } from '../validation/validation.type';
+import type { FieldContext } from '../validation.type';
 
 const fieldContextMarker = Symbol('FieldContext');
 

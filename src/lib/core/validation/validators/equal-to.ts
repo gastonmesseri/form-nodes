@@ -1,7 +1,7 @@
+import { defaultEqualToMessage } from '../utils/default-validator-messages';
+import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
-import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultEqualToMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 
 /**
  * Requires a value to equal a static or reactive expected value using `Object.is()`.

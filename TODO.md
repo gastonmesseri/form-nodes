@@ -13,6 +13,8 @@
 
 - [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
 
+- [ ] Add tests for every function in lib/core/utils
+
 - controlState
   - [ ] Consider naming if useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
 
@@ -23,6 +25,8 @@
   - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
 
 - [ ] Think about how to better structure project folders given current knowledge and existing files
+  - should i move public-api.spec.ts next to public-api.ts ?
+  - what is the best way of organizing the folders? lib/core is needed? maybe just lib? maybe just core?
 
 - [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
   - consider possibilities and help me deciding, what does it make sense?
@@ -347,6 +351,20 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Keep `validation/validators` focused on concrete validators and their tests.
+  - Moved message resolution, default messages, date constraints, and shared validator options into `validation/utils`; moved the independent string helper `count-words` into `core/utils`. Updated imports and the `ValidatorOptions` re-export without changing the public API or behavior.
+
+- [x] Move shared built-in validator tests into `core/validation/tests`.
+  - Group `builtin-validator-error`, `builtin-validator-when`, and `reactive-validator-messages` with the IntelliSense suite. Keep each individual validator's tests beside its implementation.
+
+- [x] Move the cross-primitive validator IntelliSense test into `core/validation/tests`, preserving its language-service fixture and assertions.
+
+- [x] Group the remaining validation helpers in `core/validation/utils`.
+  - Moved `validator-source`, `resolve-async-validation-result`, and `create-validator-context`, together with the existing async-result resolver tests. Updated relative imports without changing behavior or the public API.
+
+- [x] Move validation-specific helpers from `core/utils` into `core/validation/utils`, keeping their existing tests alongside them.
+  - Relocated `async-validator-marker`, `field-context-marker`, `add-default-target-node`, and `normalize-validation-result`; updated their imports and re-exports without changing behavior or the public API.
 
 - [x] Document where to configure validator messages in Angular applications.
   - Show a separate message catalog, an explicit `configureGlobalValidatorMessages()` call in `main.ts` before bootstrap, and the application-scoped alternative in `app.config.ts` or `AppModule.providers`.

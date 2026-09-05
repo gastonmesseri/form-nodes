@@ -1,8 +1,8 @@
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { isNil } from '../../utils/is-nil';
-import { resolveValidatorMessage } from './resolve-validator-message';
-import { defaultOneOfMessage } from './default-validator-messages';
-import { applyValidatorWhen, resolveValidatorMessageOption } from './validator-options';
+import { defaultOneOfMessage } from '../utils/default-validator-messages';
+import { resolveValidatorMessage } from '../utils/resolve-validator-message';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 
 /**
  * Requires a non-empty value to equal one of the allowed values.

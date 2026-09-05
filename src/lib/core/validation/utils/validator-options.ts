@@ -1,5 +1,5 @@
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { copyConditionalValidatorMetadata } from '../validator-metadata';
+import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 /** Common options supported by built-in validators. */
 export type ValidatorOptions<TValue = unknown> = ({
