@@ -14,8 +14,6 @@ const modelNullableName = nonNullableForms.field<string | null>(null);
 const validatedName = nonNullableForms.field('', ({ value }) => value().length > 0 ? null : { kind: 'required' });
 const forcedNullableName = nonNullableForms.field.nullable('Marco');
 const forcedNonNullableName = nullableForms.field.strict('Marco');
-// @ts-expect-error configured field nullability is selected with field.strict() or field.nullable()
-nonNullableForms.field('Marco', { nullable: true });
 
 type _Name = Expect<Equal<typeof name, Field<string>>>;
 type _NullableName = Expect<Equal<typeof nullableName, Field<string | null>>>;

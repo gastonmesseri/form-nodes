@@ -6,8 +6,6 @@ field('', { inheritInjector: false });
 field('', { adoptBindingInjector: false });
 // @ts-expect-error Unsupported debounce strategy.
 field('', { debounce: 'change' });
-// @ts-expect-error nullability is selected with field.strict() or field.nullable()
-field('', { nullable: false });
 
 import type { Equal, Expect, HasKey } from './assert.types';
 

@@ -60,6 +60,7 @@
 
 ## Public API testing
 
+- When removing or renaming an API, remove or update its obsolete tests instead of adding tests whose sole purpose is proving that the retired API no longer exists. This includes runtime absence assertions, negative export checks, and `@ts-expect-error` assertions for retired names, properties, signatures, or options. Test the supported replacement and its observable behavior instead. Keep negative tests that enforce current contracts, such as invalid input types, readonly state, node-kind restrictions, and private implementation boundaries.
 - Treat `field()` and `form()` as the library's primary public API and maintain comprehensive behavioral coverage in `field.spec.ts` and `form.spec.ts`.
 - Test public behavior through these primitives even when the underlying utility, validator runner, marker, watcher, or state helper already has focused unit tests of its own.
 - Cover complete observable state transitions rather than isolated implementation details. This includes values, errors, validation status, pending state, interaction state, inherited state, cancellation, reset behavior, and parent-child propagation.

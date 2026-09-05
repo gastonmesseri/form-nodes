@@ -1,12 +1,6 @@
 ## Up next
 
-- the file create-validator-context does weird things, probably unnecesarily complex Object.defineProperties when we could simply just create an object maybe?
-  - let's explore alternatives for simplification
-
-- Remove tests that the agent has created when we removed properties
-  - e.g. when we removed root() and form() from the ctx of validators, it created tests to ensure they don't exist (remove this type of tests in case they were created in the past with other feature removal)
-
-- Consider that validators could be strictly typed for some specific type of nodes. E.g. something like the following would be only allowed to be put in a Field (not in form() group() or array())
+- Consider that validators declarated not-inline could be strictly typed [OPTIONALLY, SO WE SHOULD KEEP CURRENT TYPING BEHAVIOR] for some specific type of nodes. E.g. something like the following would be only allowed to be put in a Field (not in form() group() or array())
   const myValidatorCustom1 = validator<string | null, 'field'>((ctx) => {
     if (ctx.value()) return { kind: 'somo', message: '' }
   });
@@ -18,9 +12,12 @@
   - this could also improve the type of the union provided in ctx.node() and ctx.field() because we already provide some info to validator<>
   - if we do this we should be sure that we don't disturb the automatic inference for inline validators
   - what do you think, do you have any other api suggestion? is it a good idea/bad/complex/unnecesarily-complex
+  - OR MAYBE JUST INTRODUCE GUARDS FOR STRICTLY TYPED validators? e.g. if validator<string | null> then it could only be used in a field<string> 
+  or validator<number[]> could be only used in a field<number[]> or in an array() that contains a value of number[]. WHAT DO YOU THINK?
 
 - Recomend WHERE to execute the function to define globalSettings for the library (the one that defines validator messages)
-  where to call it? app module? app init file? where, just separated file and import it somewhere? What would be the cleanest way of setting this global?
+  where to call it in an angular app? app module? app init file? where?, just separated file and import it somewhere? What would be the cleanest way of setting this global?
+  let's think about that
 
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
@@ -381,6 +378,17 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Audit and remove tests whose sole purpose is rejecting retired API names or options.
+  - Removed seven type assertions for per-field `nullable`, `FormRoot` / `FormRootDirective`, binding/directive `field`, and directive `ngOnInit`.
+  - Confirmed that no absence assertions for flat validator-context `root()` / `form()` remain in the current tests.
+  - Retained positive coverage of replacement APIs and negative tests for current contracts: node-kind restrictions, private implementation members, readonly signals, input types, error ownership, and control adapters. No runtime or public API changes.
+
+- [x] Evaluate simplifying `create-validator-context` by replacing `Object.defineProperties` with an object literal or `Object.assign`.
+  - Keep the current implementation: it enriches the marked context once, preserves the shared context and readonly node-signal identities, and prevents replacing or deleting its navigation properties.
+  - `Object.assign` saves descriptor syntax but removes the runtime property protection. A separate object literal needs coordinated initialization or caching and must preserve the non-enumerable context marker; this is not a net simplification for the current callers.
+  - Reconsider a complete object literal if the node/context initialization lifecycle is redesigned for another concrete requirement. No runtime or public API changes are needed for this review.
+  - Reviewed Angular `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`) field context implementation and tests; the descriptor choice is library-specific. The tag was resolved in the preceding review; refreshing remote tags during this follow-up failed because GitHub DNS resolution was unavailable.
+  - Verification: 365 tests passed across `field.spec.ts`, `form.spec.ts`, `async-validator.spec.ts`, and `run-sync-validators.spec.ts`.
 - [x] Preserve the declared value type on standalone validator nodes (`ctx.field().value()` and `ctx.node().value()`), including nullable values and asynchronous contexts.
 - [x] fix signature in test-file myFormTestSomething (it should be valid to declare validators array there)
 - [x] Clean validators context 
