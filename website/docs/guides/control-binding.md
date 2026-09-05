@@ -26,7 +26,7 @@ It supports native `input`, `select`, and `textarea` elements, Angular `ControlV
 components, `value = model<T>()` controls, `checked = model<boolean>()` checkbox controls, and
 equivalent input/output pairs. Native controls bind scalar `field()` nodes; aggregate forms and
 arrays require a custom control that represents their complete value. See
-[Custom controls](./custom-controls.md#angular-api-compatibility) for the complete compatibility
+[Advanced custom controls](./custom-controls-advanced.md#angular-api-compatibility) for the complete compatibility
 matrix and integration boundaries.
 
 ## Native controls

@@ -1,0 +1,72 @@
+name: Angular compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build shared package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Pack the library
+        run: |
+          mkdir -p artifacts
+          npm pack ./dist --pack-destination artifacts --ignore-scripts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: form-nodes-package
+          path: artifacts/*.tgz
+          if-no-files-found: error
+
+  consumer:
+    name: Angular ${{ matrix.angular }} consumer
+    needs: package
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - angular: '22'
+            experimental: false
+          - angular: '21'
+            experimental: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          cache: npm
+          cache-dependency-path: tests/compatibility/angular-${{ matrix.angular }}/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: form-nodes-package
+          path: artifacts
+      - name: Check packed consumer
+        id: compatibility
+        continue-on-error: ${{ matrix.experimental }}
+        shell: bash
+        run: |
+          packages=(artifacts/*.tgz)
+          test "${#packages[@]}" -eq 1
+          node scripts/test-angular-compatibility.mjs '${{ matrix.angular }}' "${packages[0]}"
+      - name: Report compatibility result
+        if: always()
+        env:
+          ANGULAR_MAJOR: ${{ matrix.angular }}
+          EXPERIMENTAL: ${{ matrix.experimental }}
+          OUTCOME: ${{ steps.compatibility.outcome }}
+        run: |
+          echo "Angular ${ANGULAR_MAJOR}: ${OUTCOME}; experimental=${EXPERIMENTAL}" >> "$GITHUB_STEP_SUMMARY"

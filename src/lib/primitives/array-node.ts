@@ -8,6 +8,7 @@ import { isPlainObject } from '../utils/is-plain-object';
 import { isNode, markAsNode } from './utils/node-marker';
 import type { ObjectNodeDefinitions } from './form.type';
 import { assertArrayObjectTemplate } from './array.utils';
+import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
@@ -380,7 +381,7 @@ export class ArrayNode<TItem extends Node> {
     value.forEach((itemValue, index) => {
       const item = this.items()[index];
       if (item) item.$api.patch(itemValue);
-      else console.warn(`array: unknown index ${index} ignored on patch`);
+      else warnInDevMode(`array: unknown index ${index} ignored on patch`);
     });
   }
 

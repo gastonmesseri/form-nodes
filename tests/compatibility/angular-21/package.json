@@ -1,0 +1,17 @@
+{
+  "name": "form-nodes-angular-21-consumer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@angular/common": "21.2.22",
+    "@angular/compiler": "21.2.22",
+    "@angular/compiler-cli": "21.2.22",
+    "@angular/core": "21.2.22",
+    "@angular/forms": "21.2.22",
+    "@angular/platform-browser": "21.2.22",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1",
+    "typescript": "5.9.3"
+  }
+}

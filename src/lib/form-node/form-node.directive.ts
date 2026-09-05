@@ -6,6 +6,7 @@ import { FORM_NODE_CONFIG } from './form-node-config';
 import { shallowEqual } from '../utils/shallow-equal';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
+import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { FormNodeNgControl } from './form-node-ng-control';
 import type { FormNodeControl } from './form-node-control';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
@@ -356,7 +357,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
       const node = this.node();
       if (!node.$api.hidden()) return;
       const path = node.$api.path().join('.') || '<root>';
-      console.warn(`formNode: field '${path}' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.`);
+      warnInDevMode(`formNode: field '${path}' is hidden but is being rendered. Hidden fields should be removed from the DOM using @if.`);
     }, { injector: this.injector });
   }
 

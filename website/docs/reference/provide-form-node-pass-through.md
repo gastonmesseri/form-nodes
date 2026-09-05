@@ -38,4 +38,4 @@ public runtime input reflection for them.
 Without the provider, the outer directive host may be treated as the control and fail because it is
 not a native control, recognized signal-control component, or `ControlValueAccessor`.
 
-See [`[formNode]`](./form-node-binding.md#pass-through-wrappers) and [Custom controls](../guides/custom-controls.md).
+See [`[formNode]`](./form-node-binding.md#pass-through-wrappers) and [Wrapper components](../guides/custom-controls-advanced.md#wrapper-components).
