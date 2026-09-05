@@ -1,12 +1,13 @@
-import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 import type { Equal, Expect, HasKey } from './assert.types';
+import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 
 type IsAny<TValue> = 0 extends (1 & TValue) ? true : false;
 type _NoExampleCustomError = Expect<Equal<HasKey<ValidationErrorMap, 'unavailableUsername'>, false>>;
 
 const nameValidator = (context: ValidatorContext<string | null>) => {
   type _Value = Expect<Equal<ReturnType<typeof context.value>, string | null>>;
-  type _ApiValue = Expect<Equal<ReturnType<typeof context.api.value>, string | null>>;
+  const node = context.node();
+  type _ApiPath = Expect<Equal<ReturnType<typeof node.api.path>, readonly string[]>>;
   type _Path = Expect<Equal<ReturnType<typeof context.path>, readonly string[]>>;
   return context.value() ? null : { kind: 'missingName' };
 };
@@ -42,9 +43,10 @@ field<Date>(null, [dateBetween('today', () => '2026-12-31')]);
 const angularProfile = form({ name: field('David'), age: field(30) });
 type _OpaqueAngularProfileField = Expect<IsAny<typeof angularProfile.$field>>;
 
-const adult = validator<number | null>(({ value, api, field: targetField }) => {
+const adult = validator<number | null>(({ value, field: targetField }) => {
+  const api = targetField().api;
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;
-  type _ApiValue = Expect<Equal<ReturnType<typeof api.value>, number | null>>;
+  type _ApiPath = Expect<Equal<ReturnType<typeof api.path>, readonly string[]>>;
   void targetField;
   return value() !== null && value()! < 18
     ? { kind: 'adult', minimumAge: 18, actual: value() }
@@ -143,7 +145,7 @@ const profile = form({
   age: field(42, {
     validators: [context => {
       const _value: number | null = context.value();
-      const _fieldValue: number | null = context.api.value();
+      const _fieldValue: number | null = context.node().api.value();
       void [_value, _fieldValue];
       return null;
     }],

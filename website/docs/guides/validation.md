@@ -60,7 +60,7 @@ contribute no error. See [Built-in validator custom errors](../reference/built-i
 
 ## Custom validators
 
-A synchronous validator receives a stable context containing the node's value and readonly state signals:
+A synchronous validator receives a stable context with its value signal and access to the validated node:
 
 ```ts
 import { field, validator } from '@gem/ng-forms';
@@ -78,7 +78,9 @@ const age = field<number>(null, [adult]);
 
 Return `null`, `undefined`, or nothing for success; return one error or an array of errors for failure. `validator()` only provides a typed reusable authoring context—it does not add runtime behavior.
 
-Validators can inspect `value`, `field`, `api`, `form`, `parent`, `path`, and node-state signals. Signals read by a synchronous validator become dependencies, so external constraints are naturally reactive:
+Validators can inspect `value`, `node`, `field`, `parent`, and `path`. Read state through the node,
+such as `ctx.node().touched()` or `ctx.field().dirty()`. These reads become reactive dependencies,
+as do external constraints:
 
 ```ts
 const minimumAge = signal(18);

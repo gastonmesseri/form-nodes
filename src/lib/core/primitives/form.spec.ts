@@ -25,6 +25,76 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('tracks interaction state read through validator node aliases', () => {
+    const validate = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      return ctx.node().touched() && ctx.field().dirty() ? { kind: 'edited' } : null;
+    });
+    const model = form({ name: field('initial') }, { validators: validate });
+
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(1);
+    model.markAsTouched();
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(2);
+    model.markAsDirty();
+    expect(model.errors()).toMatchObject([{ kind: 'edited' }]);
+    expect(validate).toHaveBeenCalledTimes(3);
+    model.markAsPristine();
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(4);
+  });
+
+  it('tracks node state in async conditions and params and exposes it to error handlers', async () => {
+    const params = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      return ctx.node().dirty();
+    });
+    const states: boolean[] = [];
+    const onError = vi.fn((_error: unknown, ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      return ctx.node().dirty() ? { kind: 'edited' } : null;
+    });
+    const validate = vi.fn(async (ctx: { params: boolean; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+      states.push(ctx.field().dirty());
+      throw new Error('Unavailable');
+    });
+    const validators = asyncValidator({
+      when: ctx => ctx.node().touched(),
+      params,
+      validate,
+      onError,
+    });
+    const model = form({ name: field('initial') }, { validators });
+
+    expect(model.valid()).toBe(true);
+    expect(params).not.toHaveBeenCalled();
+    expect(validate).not.toHaveBeenCalled();
+    model.markAsTouched({ skipDescendants: true });
+    await Promise.resolve();
+    expect(model.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(model.valid()).toBe(true);
+    expect(params).toHaveBeenCalledTimes(1);
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+
+    model.markAsDirty();
+    await Promise.resolve();
+    expect(model.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(model.errors()).toMatchObject([{ kind: 'edited' }]);
+    expect(params).toHaveBeenCalledTimes(2);
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(onError).toHaveBeenCalledTimes(2);
+    expect(states).toEqual([false, true]);
+
+    model.markAsUntouched();
+    await Promise.resolve();
+    expect(model.pending()).toBe(false);
+    expect(model.errors()).toEqual([]);
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
   it('exposes a stable readonly validator field signal independently of the node value', () => {
     const references: Signal<Node>[] = [];
     const validators = (context: { field: Signal<Node>; node: Signal<Node> }) => {
@@ -990,7 +1060,7 @@ describe('form', () => {
     const profile = form({
       address: {
         city: field('Zurich', [(context) => {
-          validatorApi = context.api;
+          validatorApi = context.node().api;
           validatorField = context.field();
           validatorForm = context.node().form();
           validatorRoot = context.node().root();
@@ -1017,7 +1087,7 @@ describe('form', () => {
     let validatorApi: unknown;
     let validatorField: unknown;
     const profile = form({ name: field('David') }, [(context) => {
-      validatorApi = context.api;
+      validatorApi = context.node().api;
       validatorField = context.field();
       return null;
     }]);
@@ -1975,7 +2045,8 @@ describe('form', () => {
 
   it('exposes its aggregate interaction state to an asynchronous validator', async () => {
     const states: Array<{ dirty: boolean; touched: boolean }> = [];
-    const formGroup = form({ country: field('Switzerland') }, [asyncValidator(async ({ api }) => {
+    const formGroup = form({ country: field('Switzerland') }, [asyncValidator(async ({ node }) => {
+      const api = node().api;
       states.push({ dirty: api.dirty(), touched: api.touched() });
       return null;
     })]);

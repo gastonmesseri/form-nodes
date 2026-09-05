@@ -174,7 +174,8 @@ form({
   name: '',
   age: field(18),
 }, {
-  validators: ({ value, api }) => {
+  validators: ({ value, node }) => {
+    const api = node().api;
     type _ValueContext = Expect<Equal<ReturnType<typeof value>, { name: string | null; age: number | null }>>;
     type _ApiContext = Expect<Equal<ReturnType<typeof api.value>, { name: string | null; age: number | null }>>;
     return value().name && value().age! >= 18 ? null : { kind: 'invalidProfile' };

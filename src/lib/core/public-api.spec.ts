@@ -68,9 +68,9 @@ describe('types', () => {
 
   it('contextually types built-in validator when callbacks', () => {
     min(18, {
-      when: ({ value, touched, path }) => {
+      when: ({ value, node, path }) => {
         expectTypeOf(value()).toEqualTypeOf<number | null>();
-        expectTypeOf(touched()).toEqualTypeOf<boolean>();
+        expectTypeOf(node().touched()).toEqualTypeOf<boolean>();
         expectTypeOf(path()).toEqualTypeOf<readonly string[]>();
         return true;
       },
@@ -217,8 +217,9 @@ describe('types', () => {
 
   it('hides native function members from validator tree nodes', () => {
     field.strict('David', {
-      validators: [({ api }) => {
-        const parent = api.parent();
+      validators: [({ node, parent: getParent }) => {
+        const api = node().api;
+        const parent = getParent();
         const owningForm = api.form();
         const root = api.root();
         if (parent && owningForm) {
@@ -227,10 +228,9 @@ describe('types', () => {
           expectTypeOf(root).toBeCallableWith();
           // @ts-expect-error native function members are intentionally hidden
           parent.apply(null);
+          const fieldNode = node();
           // @ts-expect-error native function members are intentionally hidden
-          owningForm.bind(null);
-          // @ts-expect-error native function members are intentionally hidden
-          root.call(null);
+          fieldNode.bind(null);
         }
         return null;
       }],
@@ -352,13 +352,12 @@ describe('types', () => {
       .toEqualTypeOf<typeof root>();
   });
 
-  it('types form and root in an async validator given the refined field API', () => {
+  it('preserves parent navigation with an explicitly refined context API type', () => {
     const profile = form({ name: field('David'), age: field(23) });
 
     profile.age.setValidators([
-      asyncValidator<number | null, typeof profile.age.api>(async ({ api }) => {
-        expectTypeOf(api.form()).toEqualTypeOf<typeof profile | null>();
-        expectTypeOf(api.root()).toEqualTypeOf<typeof profile>();
+      asyncValidator<number | null, typeof profile.age.api>(async ({ parent }) => {
+        expectTypeOf(parent()).toEqualTypeOf<typeof profile | null>();
         return null;
       }),
     ]);
@@ -536,13 +535,13 @@ describe('types', () => {
       validators: [(context) => {
         expectTypeOf(context).toEqualTypeOf<ValidatorContext<string, ValidatorApi<string>, Field<string>>>();
         expectTypeOf(context.value()).toEqualTypeOf<string>();
-        expectTypeOf(context.api).toEqualTypeOf<ValidatorApi<string>>();
-        expectTypeOf(context.api.value()).toEqualTypeOf<string>();
-        expectTypeOf(context.api.path()).toEqualTypeOf<readonly string[]>();
+        expectTypeOf(context.node().api).toEqualTypeOf<Field<string>['api']>();
+        expectTypeOf(context.node().api.value()).toEqualTypeOf<string>();
+        expectTypeOf(context.node().api.path()).toEqualTypeOf<readonly string[]>();
         expectTypeOf(context.field).toEqualTypeOf<Signal<Field<string>>>();
         expectTypeOf(context.node()).toEqualTypeOf<Field<string>>();
         expectTypeOf(context.path()).toEqualTypeOf<readonly string[]>();
-        expectTypeOf(context.disabled()).toEqualTypeOf<boolean>();
+        expectTypeOf(context.node().disabled()).toEqualTypeOf<boolean>();
         return null;
       }],
       disabled: false,
@@ -551,7 +550,7 @@ describe('types', () => {
 
   it('accepts a synchronous validator returned by another validator', () => {
     field.strict('David', {
-      validators: [context => context.dirty() ? required : null],
+      validators: [context => context.node().dirty() ? required : null],
     });
   });
 

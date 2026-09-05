@@ -667,22 +667,22 @@ This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but
 
 Synchronous and asynchronous validators share one readonly validator array. Asynchronous validators must be explicitly wrapped with `asyncValidator()`; the library does not invoke a validator merely to detect whether it returns a Promise or Observable.
 
-Validator callbacks receive a flat readonly facade of the field or form being validated. It includes `value`, `node`, `field`, `parent`, `path`, and the interaction and availability signals (`touched`, `dirty`, `disabled`, `readonly`, `hidden`, and their complements). `node()` and its alias `field()` return the real callable node being validated, including when that node is a form, while `api` exposes its complete API as an escape hatch for validation state and mutable operations:
+Validator callbacks receive a stable context containing `value`, `node`, `field`, `parent`, and `path`. Read interaction, availability, required, and submission signals through `node()` or `field()`; those signals are no longer copied onto the context. `node()` and its alias `field()` return the real callable node being validated, including when that node is a form, while `node().api` and `field().api` expose the node API when an alias is needed:
 
 ```ts
 field('David', {
   validators: [context => {
     context.value();
-    context.disabled();
+    context.node().disabled();
     context.path();
     context.field();
-    context.api.errors();
+    context.node().api.errors();
     return null;
   }],
 });
 ```
 
-The flat properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` is a readonly signal of the generic field/form/group/array API union.
+The value and navigation properties reference the same stable signals as `api`; they are not copied state snapshots. The synchronous context object also remains stable between executions. Signals read through either surface participate in normal reactive dependency tracking. `ValidatorApi<TValue>` preserves the validated value type, while `field` is a readonly signal of the generic field/form/group/array API union.
 
 Synchronous validators execute inside the node's internal `computed()`. Any Angular signal read directly by the callback becomes a dependency, including signals external to the form tree. No additional `computed()` wrapper is required:
 
@@ -759,7 +759,7 @@ Configured validators can be returned in the same way:
 const requiredName = required({ message: 'Name is required' });
 
 field('', {
-  validators: [context => context.touched() ? requiredName : null],
+  validators: [context => context.node().touched() ? requiredName : null],
 });
 ```
 
@@ -788,16 +788,22 @@ const username = field('', [
 ]);
 ```
 
-`AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context extends the same flat readonly facade with an `abortSignal` belonging only to that execution. Parameterized validators additionally receive their `params` snapshot. Neither execution-specific property is added to or mutated on `field`. Validators can pass the signal to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
+`AsyncValidatorOptions` supports `debounce`, a `when(context)` condition, and `onError(error, context)`. The asynchronous context extends the same shared context with an `abortSignal` belonging only to that execution. Parameterized validators additionally receive their `params` snapshot. Neither execution-specific property is added to or mutated on `field`. Validators can pass the signal to APIs such as `fetch`; stale results are ignored even when the underlying operation does not honor cancellation.
 
 The `asyncValidator()` overloads inline these accepted option shapes so editor completion exposes
 `debounce`, `when`, `onError`, `params`, and `validate` without navigating through a type alias.
 The named option and configuration types remain exported for separately constructed reusable
 configuration objects.
 
-Asynchronous callbacks also receive the complete runtime node `api`. By default it is typed as `AsyncValidatorApi<TValue>`, so value access, validation and interaction state, and common node operations preserve the validated value type. Automatic validators react to API signals they read. Parameterized validators may read API signals explicitly inside `params`; their `validate` callback remains untracked. The exact owner type can be supplied explicitly as the second generic argument for a callback validator, for example `asyncValidator<string | null, FieldApi<string | null>>(...)`. Parameterized validators use the third generic argument: `asyncValidator<TValue, TParams, TApi>({...})`. A future owner-contextual validator declaration signature may infer the exact `FieldApi` or `FormApi` automatically.
+Asynchronous callbacks access the runtime node API through `node().api` or `field().api`. Inline
+validators infer the owning primitive and its API. Separately declared helpers use the generic
+node union unless their `TField` generic supplies an exact node. The existing `TApi` generic stays
+in its original position and specializes only the remaining context `parent` and `path` signals;
+it no longer exposes a separate `api` member. Use `value()` for typed values without an exact node.
+Automatic validators track node API signals they read. Parameterized validators track those reads
+inside `params`, while their `validate` callback remains untracked.
 
-Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Validator callbacks access the same reactive path through either `context.path()` or `context.api.path()`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
+Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Validator callbacks access the same reactive path through either `context.path()` or `context.node().api.path()`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
 
 Every API also exposes `parent: Signal<Node | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `Node | null` parent type even after being inserted into a form; access through the form provides the refined type.
 
@@ -813,7 +819,7 @@ roots; reattaching or reparenting them updates both signals immediately.
 Both lookups are reactive. Attaching, detaching, or reparenting a node retriggers automatic async
 validators that read the affected signal. Validator callbacks use `context.node().form()` and
 `context.node().root()`. Flat `context.form` and `context.root` properties are absent at runtime and
-in the public types; `parent` remains flat. The full `context.api` retains node navigation.
+in the public types; `parent` remains flat. The full `context.node().api` retains node navigation.
 
 `context.node` and `context.field` are the same readonly Angular signal of the validated node.
 Neither returns `null`. Inline callbacks, including inline `validator()` and `asyncValidator()`
@@ -825,7 +831,7 @@ interpretation is unchanged.
 
 Separately declared helpers retain a generic authoring context and remain reusable. Supplying only
 a helper's value generic uses its default owner; omit helper generics for inline inference or
-supply the owner generic explicitly. `context.api` retains its common surface unless specialized.
+supply the owner generic explicitly. `context.node().api` follows the inferred or explicitly supplied node type.
 Knowing the local node does not infer ancestors or siblings from an enclosing declaration.
 Generic nearest-form and field-root lookups now expose complete node APIs, so navigation through
 the validated node remains usable without the removed flat shortcuts. Explicit `TField` context
@@ -845,6 +851,9 @@ Angular 22 tag `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`). Angular's
 proxy, separately from its value signal; `packages/forms/signals/test/node/field_context.spec.ts`
 tests those distinct `fieldTree`, `state`, and `value` accesses. Gem preserves that distinction
 between node identity and reactive node state while adding an explicit readonly signal wrapper.
+State reads through the node keep their existing dependency tracking and state propagation; removing
+flat context state and API properties changes only the public access path. The context constructor
+reuses its existing `node` signal when synchronous and asynchronous validation share the context.
 
 Structural-root type resolution follows at most ten parent links. This limit affects TypeScript
 inference only: paths within ten levels retain the exact root type, while deeper paths safely fall
@@ -917,7 +926,7 @@ or inserted dynamically.
 
 The node value and the `when` condition are tracked before the debounce timer starts. A debounced validator that discovers automatic dependencies starts its publication timer immediately and invokes the service in the next microtask without waiting for that timer. Every signal it reads becomes a dependency, including external signals. Its result is not published until the initial debounce period has elapsed. If any discovered dependency changes during that period, the first operation is cancelled and the replacement invocation waits for a full debounce period before running. Later changes use the same cancellation and debounce behavior.
 
-Synchronous validators remain lazy and first run when validation state is consumed. Both synchronous and asynchronous validators can therefore refer to a class-owned form from a field initializer, such as `this.profile.name()`, without observing an uninitialized `this.profile`. Such callbacks are coupled to that class instance; `context.api.form()` remains preferable for reusable validators.
+Synchronous validators remain lazy and first run when validation state is consumed. Both synchronous and asynchronous validators can therefore refer to a class-owned form from a field initializer, such as `this.profile.name()`, without observing an uninitialized `this.profile`. Such callbacks are coupled to that class instance; `context.node().api.form()` remains preferable for reusable validators.
 
 ### Typed cross-node validation
 
@@ -949,13 +958,13 @@ asyncValidator(async (): Promise<ValidationResult> => {
 });
 ```
 
-When coupling a validator to its owning class is undesirable, `context.api.form()` and
-`context.api.root()` are available as fallbacks. Their default types expose the generic form API
+When coupling a validator to its owning class is undesirable, `context.node().api.form()` and
+`context.node().api.root()` are available as fallbacks. Their default types expose the generic form API
 and the union of structural node APIs, respectively, without inferring exact sibling keys:
 
 ```ts
-const workflow = context.api.form();
-const tree = context.api.root();
+const workflow = context.node().api.form();
+const tree = context.node().api.root();
 workflow?.api.valid();
 tree.api.valid();
 ```
@@ -1058,7 +1067,7 @@ Invalidity propagates upward through any number of nested forms. Fixing the fail
 ### Reusable custom validators
 
 Use `validator<TValue>()` to give a reusable synchronous validator a contextually typed `value`,
-readonly state, `api`, and target `field` when it is declared outside a node definition:
+node state and API through `node()` or `field()` when it is declared outside a node definition:
 
 ```ts
 export const adult = validator<number | null>(({ value }) => {

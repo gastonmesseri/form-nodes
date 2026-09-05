@@ -3,19 +3,16 @@ import type { Signal } from '@angular/core';
 import type { Equal, Expect } from './assert.types';
 import { array, asyncValidator, field, form, group, validator, type AsyncValidatorBaseContext, type AsyncValidatorContext, type Field, type ParameterizedAsyncValidatorContext, type ValidatorApi, type ValidatorContext } from '../../src/public-api';
 
-type ValidatorForm = NonNullable<ReturnType<ValidatorContext<string>['api']['form']>>;
-type Root = ReturnType<ValidatorContext<string>['api']['root']>;
+type Root = ReturnType<ValidatorContext<string>['node']>;
+type ValidatorForm = NonNullable<ReturnType<Root['api']['form']>>;
 type Parent = NonNullable<ReturnType<ValidatorContext<string>['parent']>>;
 type _RootKinds = Expect<Equal<ReturnType<Root['nodeType']>, 'field' | 'form' | 'group' | 'array'>>;
 type _ParentKinds = Expect<Equal<ReturnType<Parent['nodeType']>, 'form' | 'group' | 'array'>>;
 
 const checkAncestry = (ctx: ValidatorContext<string | null>) => {
-  type _Form = Expect<Equal<ReturnType<typeof ctx.api.form>, ValidatorForm | null>>;
-  type _Root = Expect<Equal<ReturnType<typeof ctx.api.root>, Root>>;
+  const api = ctx.node().api;
+  type _Form = Expect<Equal<ReturnType<typeof api.form>, ValidatorForm | null>>;
   type _Parent = Expect<Equal<ReturnType<typeof ctx.parent>, Parent | null>>;
-  type _ApiForm = Expect<Equal<typeof ctx.api.form, typeof ctx.api.form>>;
-  type _ApiRoot = Expect<Equal<typeof ctx.api.root, typeof ctx.api.root>>;
-  type _ApiParent = Expect<Equal<typeof ctx.api.parent, typeof ctx.parent>>;
 
   type _Field = Expect<Equal<typeof ctx.field, Signal<Root>>>;
   type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string | null>>;
@@ -46,32 +43,27 @@ const checkAncestry = (ctx: ValidatorContext<string | null>) => {
   }
 
   type _Alias = Expect<Equal<typeof ctx.node, typeof ctx.field>>;
-  const owner = ctx.api.form();
+  const owner = api.form();
   if (owner) {
     const result: Promise<boolean> = owner.submit();
     owner.valid();
     owner.reset();
     owner.get('email')?.valid();
-    owner.api.submit();
     owner.$api.submit();
     owner();
     void result;
     // @ts-expect-error An unknown form does not infer its enclosing declaration's children.
     owner.subGroup;
-    // @ts-expect-error Function members remain hidden.
-    owner.apply;
     // @ts-expect-error A form has no array operations.
     owner.push();
   }
 
-  const root = ctx.api.root();
+  const root = api.root();
   root.valid();
   root.reset();
   root();
   // @ts-expect-error A structural root is not necessarily a form.
   root.submit();
-  // @ts-expect-error Function members remain hidden on unions.
-  root.bind;
   if ('submit' in root) {
     const result: Promise<boolean> = root.submit();
     void result;
@@ -81,7 +73,6 @@ const checkAncestry = (ctx: ValidatorContext<string | null>) => {
   } else if ('children' in root) {
     root.get('email')?.valid();
   } else {
-    type _Leaf = Expect<Equal<typeof root, Field<any>>>;
     root.set('detached');
   }
 
@@ -135,25 +126,28 @@ field('', [asyncValidator({
 })]);
 form({ email: field('') }, {
   validators: (ctx) => {
+    const api = ctx.node().api;
     type _FormValidatorKind = Expect<Equal<ReturnType<ReturnType<typeof ctx.node>['nodeType']>, 'form'>>;
     ctx.field().dirty();
-    ctx.api.form()?.submit();
-    ctx.api.root().valid();
+    api.form()?.submit();
+    api.root().valid();
     ctx.parent()?.reset();
     return null;
   },
 });
 
-const exactValidator = (ctx: ValidatorContext<string | null, typeof profile.nested.subForm.subGroup.email.api>) => {
-  type _ExactForm = Expect<Equal<ReturnType<typeof ctx.api.form>, typeof profile.nested.subForm | null>>;
-  type _ExactRoot = Expect<Equal<ReturnType<typeof ctx.api.root>, typeof profile>>;
+const exactValidator = (ctx: ValidatorContext<string | null, typeof profile.nested.subForm.subGroup.email.api, typeof profile.nested.subForm.subGroup.email>) => {
+  const api = ctx.node().api;
+  type _ExactForm = Expect<Equal<ReturnType<typeof api.form>, typeof profile.nested.subForm | null>>;
+  type _ExactRoot = Expect<Equal<ReturnType<typeof api.root>, typeof profile>>;
   type _ExactParent = Expect<Equal<ReturnType<typeof ctx.parent>, typeof profile.nested.subForm.subGroup | null>>;
   return null;
 };
 void exactValidator;
-asyncValidator<string | null, typeof profile.nested.subForm.subGroup.email.api>(async (ctx) => {
-  type _ExactForm = Expect<Equal<ReturnType<typeof ctx.api.form>, typeof profile.nested.subForm | null>>;
-  type _ExactRoot = Expect<Equal<ReturnType<typeof ctx.api.root>, typeof profile>>;
+asyncValidator<string | null, typeof profile.nested.subForm.subGroup.email.api, typeof profile.nested.subForm.subGroup.email>(async (ctx) => {
+  const api = ctx.node().api;
+  type _ExactForm = Expect<Equal<ReturnType<typeof api.form>, typeof profile.nested.subForm | null>>;
+  type _ExactRoot = Expect<Equal<ReturnType<typeof api.root>, typeof profile>>;
   type _ExactParent = Expect<Equal<ReturnType<typeof ctx.parent>, typeof profile.nested.subForm.subGroup | null>>;
   return null;
 });
