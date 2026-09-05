@@ -7,6 +7,13 @@ export type { FormNodeBinding } from '../types/form-node-binding.type';
 /** Configuration inherited by `[formNode]` bindings. */
 export type FormNodeConfig = {
   /**
+   * Synchronizes matching custom-control state and constraint inputs. Defaults to true.
+   * Set false to let component defaults or template bindings own those inputs.
+   * Value/checked models, interaction hooks, native controls, and CVA setDisabledState still work.
+   */
+  syncControlInputs?: boolean;
+
+  /**
    * CSS class names and their reactive activation predicates.
    *
    * Each predicate runs in a reactive context. Signals read from the binding or elsewhere cause
@@ -45,7 +52,7 @@ export const ANGULAR_FORMS_STATUS_CLASSES: NonNullable<FormNodeConfig['classes']
 export const FORM_NODE_CONFIG = new InjectionToken<FormNodeConfig>('FORM_NODE_CONFIG');
 
 /**
- * Configures reactive CSS classes for every `[formNode]` binding below this provider.
+ * Configures custom-control input synchronization and reactive CSS classes for every `[formNode]` binding below this provider.
  * Angular's `provideSignalFormsConfig()` independently configures `[formField]` bindings.
  *
  * @example Configure application-wide Angular-style states and one custom class.
@@ -69,6 +76,9 @@ export const FORM_NODE_CONFIG = new InjectionToken<FormNodeConfig>('FORM_NODE_CO
  * @param config Binding configuration installed in the current Angular injector scope.
  */
 export const provideFormNodeConfig = (config: {
+  /** Sync custom-control state inputs (default true). False preserves consumer bindings; value/checked and CVA setDisabledState remain connected. */
+  syncControlInputs?: boolean;
+
   /** Reactive class predicates keyed by the CSS class to toggle on each supported binding. */
   classes?: Record<string, (binding: FormNodeBinding) => boolean>;
 }): Provider[] => {

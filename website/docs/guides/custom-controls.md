@@ -3,6 +3,7 @@ title: Custom controls
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import customInputsSource from '!!raw-loader!../../examples/custom-control-inputs.typecheck.ts';
 import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
 
 # Custom controls
@@ -10,6 +11,12 @@ import controlStateSource from '!!raw-loader!../../examples/control-state-form-n
 Bind a custom component with `[formNode]`, just as you would a native input. For a new
 component, expose a `value = model(...)`. Existing `ControlValueAccessor` components
 can use the same binding.
+
+:::tip Already binding disabled or readonly?
+By default, `[formNode]` also writes matching state inputs on your custom component.
+Use [`syncControlInputs: false`](#keep-control-of-your-components-inputs) if your template or
+component should manage them.
+:::
 
 ## Create a signal model control
 
@@ -32,6 +39,39 @@ The component has three responsibilities:
 Initialize the value model with a default, such as `model('')`, instead of `model.required()`.
 The bound field supplies its value during setup. For a checkbox-style component, expose
 `checked = model(false)` instead of `value`.
+
+## Keep control of your component's inputs
+
+If your component has inputs such as `disabled`, `readonly`, `required`, or `name`,
+`[formNode]` normally supplies their values from the bound node. This also applies when the
+node supplies `false` or an empty value. An explicit template binding does not automatically
+take priority over that synchronization.
+
+Set `syncControlInputs: false` in your application's providers to let your component defaults
+and template bindings own those inputs:
+
+<CodeBlock language="ts">{customInputsSource}</CodeBlock>
+
+Register the exported `appConfig` when bootstrapping your application. In this example,
+`saving()` controls the component's disabled input and `locked()` controls its readonly input.
+Editing the value still updates `profile.name`, and changes to the node still update the control.
+Checkbox controls using `checked = model(false)` work the same way.
+
+This option leaves the node's state unchanged. If the node is disabled, its form behavior stays
+disabled even when the component's input says otherwise. Use `useControlState()` when the
+component needs to read node state explicitly.
+
+The setting defaults to `true`. You can also place `provideFormNodeConfig()` in a component's
+`providers` to configure an injector scope; a nearer provider can set `syncControlInputs: true`
+to restore automatic input synchronization.
+
+**Native inputs and the CVA `setDisabledState()` callback still receive disabled state.**
+Touch, focus, reset, and value/checked bindings stay connected. The option only controls
+Form Nodes' automatic custom-control state and constraint inputs; it does not configure
+Angular's own `[formField]`, `formControl`, or `ngModel` directives.
+
+See [the configuration reference](../reference/provide-form-node-config.md#custom-control-inputs)
+for the complete input list and provider inheritance rules.
 
 ## ControlValueAccessor
 

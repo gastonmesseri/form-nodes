@@ -37,6 +37,7 @@ node or ancestor.
 | Application, route, feature, or SSR scopes | [Angular application scope](#angular-application-scope) |
 | One form subtree | [Form-tree scope](#form-tree-scope) |
 | Non-Angular or process-wide defaults | [Process-wide fallback](#process-wide-fallback) |
+| Custom-control state inputs | [Input synchronization](#custom-control-input-synchronization) |
 | Reactive classes on rendered controls | [Binding configuration](#binding-configuration) |
 | Async watcher cleanup and explicit injectors | [Injector ownership](#injector-ownership) |
 | One consolidated resolution table | [Precedence at a glance](#precedence-at-a-glance) |
@@ -326,7 +327,7 @@ See [Validator messages and i18n](../guides/validator-messages.md).
 
 ## Binding configuration
 
-`provideFormNodeConfig()` configures automatic CSS classes for `[formNode]` bindings below the
+`provideFormNodeConfig()` configures custom-control input synchronization and automatic CSS classes for `[formNode]` bindings below the
 closest Angular provider. Predicates run independently in reactive contexts:
 
 ```ts
@@ -420,3 +421,13 @@ export class ProfileEditor {
 | Array identity | Exact array's `trackBy` only |
 
 For runtime symptoms caused by configuration, see [Troubleshooting](../help/troubleshooting.md).
+
+
+## Custom-control input synchronization
+
+Automatic synchronization of custom-control state inputs is enabled by default.
+Use `provideFormNodeConfig({ syncControlInputs: false })` when your component or template
+should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
+Native controls and CVA `setDisabledState()` remain connected.
+See [the simple example](../guides/custom-controls.md#keep-control-of-your-components-inputs)
+and [all configuration details](./provide-form-node-config.md#custom-control-inputs).
