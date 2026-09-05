@@ -116,7 +116,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
       return;
     }
     if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) return;
-    const accessor = selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
+    const accessor = this.interopNgControl?.valueAccessor ?? selectValueAccessor(this.injector.get<readonly ControlValueAccessor[] | null>(NG_VALUE_ACCESSOR, null, { self: true }));
     const signalControl = discoverSignalControl(this.element);
     if (accessor) this.connectAccessor(accessor);
     else if (signalControl) this.connectSignalCustomControl(signalControl as FormNodeControl<NodeValue<TNode>, TNode>);

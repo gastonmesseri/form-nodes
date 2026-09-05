@@ -3,6 +3,7 @@ title: Advanced custom controls
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import directNgControlSource from '!!raw-loader!../../examples/direct-ng-control.typecheck.ts';
 import controlStateSource from '!!raw-loader!../../examples/control-state-form-node.typecheck.ts';
 import ngControlSource from '!!raw-loader!../../examples/cva-ng-control-subscriptions.typecheck.ts';
 import dateErrorsSource from '!!raw-loader!../../examples/cva-date-errors.typecheck.ts';
@@ -239,7 +240,7 @@ This intentionally differs from Angular's directive-container paths: DOM nesting
 attributes, and a custom control's `name` input do not determine this identity. Read these members
 from `ngControl`; Angular's `AbstractControl` type has neither member. The combined adapter uses
 one runtime object for `ngControl` and `ngControl.control`, so both have the same runtime values.
-A local `useNgControl` helper can capture the host injector during construction and resolve
+A local helper can capture the host injector during construction and resolve
 `NgControl` in a lifecycle hook, following the same deferred lookup as the example above.
 
 ### CVA value changes and validation refresh requests
@@ -448,3 +449,40 @@ The wrapper is detected as pass-through, so only the inner control creates a bin
 See [Control binding](./control-binding.md) for native element behavior and state propagation.
 The [advanced binding details](../advanced/behavior-details.md#binding-selection-and-compatibility)
 cover selection precedence, ambiguous accessors, binding ownership, and server rendering semantics.
+
+
+## Hooks that assign NgControl.valueAccessor
+
+A component may use a utility such as `useCustomValueAccessor()` to inject `NgControl` and assign an
+accessor directly. `[formNode]` recognizes that accessor at initialization; the component does
+not need a `model()`, a `ControlValueAccessor` interface declaration, or an `NG_VALUE_ACCESSOR`
+provider as well.
+
+<CodeBlock language="ts">{directNgControlSource}</CodeBlock>
+
+This example's local `useCustomValueAccessor()` illustrates the registration pattern; it is not exported
+by Form Nodes. Register the accessor synchronously during component construction, before
+`[formNode]` initializes. A directly assigned accessor takes precedence over one discovered
+through `NG_VALUE_ACCESSOR`. Replacing the accessor after initialization is not supported.
+
+Form Nodes calls `writeValue()` for node-to-control updates and `setDisabledState()` for disabled
+state. User edits must update the component's own view before calling `emitChange()`; the same
+change is not echoed back through `writeValue()`. Always invoke the touched callback on blur,
+even if the control is already touched: later interactions can still need to flush pending
+input when the node uses `debounce: 'blur'`. A hook that suppresses repeated touched callbacks
+must remove that guard to support repeated blur-debounced edits.
+
+### State-observing hooks
+
+Hooks that wrap `control.updateValueAndValidity()` to invalidate untracked value/error reads
+can observe node changes. The adapter also provides the internal reactive status, touched, and
+pristine signals used by the supplied `useFormControlState()` pattern. Updates propagate through
+Angular's reactive synchronization, including programmatic writes, async validation results,
+disabled state, reset, and node rebinding. Reading data this way does not rerun validators.
+These internal signals are compatibility details, not an additional public node API.
+
+The injected control remains a Form Nodes adapter, not a complete Angular `FormControl`.
+In particular, a hook's optional `validator`/`asyncValidator` callbacks that depend on
+`addValidators()`/`addAsyncValidators()` are not supported. Configure those rules on the node,
+or use the documented `NG_VALIDATORS` CVA integration. Use `useControlState()` for new
+components that need a supported state facade without patching Angular control methods.

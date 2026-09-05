@@ -75,8 +75,9 @@ for the complete input list and provider inheritance rules.
 
 ## ControlValueAccessor
 
-If your component already implements Angular's `ControlValueAccessor` and registers
-`NG_VALUE_ACCESSOR`, bind it directly:
+If your component already implements Angular's `ControlValueAccessor`, bind it directly.
+Both `NG_VALUE_ACCESSOR` providers and hooks that assign `inject(NgControl).valueAccessor`
+during construction are supported:
 
 ```html
 <app-existing-date-picker [formNode]="myForm.appointment" />
@@ -84,6 +85,8 @@ If your component already implements Angular's `ControlValueAccessor` and regist
 
 Import `FormNode` in the parent component. `[formNode]` writes values, registers change and
 touch callbacks, and forwards disabled state through the normal CVA contract.
+
+For utility-based components, see [direct NgControl registration](./custom-controls-advanced.md#hooks-that-assign-ngcontrolvalueaccessor).
 
 See the [Angular Material](../integrations/angular-material.md) and
 [PrimeNG](../integrations/primeng.md) guides for library-specific examples.

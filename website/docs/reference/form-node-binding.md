@@ -436,3 +436,11 @@ should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindi
 Native controls and CVA `setDisabledState()` remain connected.
 See [the simple example](../guides/custom-controls.md#keep-control-of-your-components-inputs)
 and [all configuration details](./provide-form-node-config.md#custom-control-inputs).
+
+
+## Direct NgControl accessors
+
+Hooks that assign `inject(NgControl).valueAccessor` during component construction work with
+`[formNode]` without an `NG_VALUE_ACCESSOR` provider. The direct accessor takes precedence;
+value/change and touched callbacks follow rebinding and stop changing nodes after destruction.
+See [the complete example and compatibility boundaries](../guides/custom-controls-advanced.md#hooks-that-assign-ngcontrolvalueaccessor).
