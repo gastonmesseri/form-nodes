@@ -6,9 +6,11 @@
 
 <p align="center">A typed forms library for <strong>Angular 21 and 22</strong>.</p>
 
-[**Documentation**](https://gastonmesseri.github.io/form-nodes/) ·
-[Step-by-step tutorial](https://gastonmesseri.github.io/form-nodes/tutorial) ·
-[API reference](https://gastonmesseri.github.io/form-nodes/reference/api-overview)
+<p align="center">
+  <a href="https://gastonmesseri.github.io/form-nodes/"><strong>Documentation</strong></a> ·
+  <a href="https://gastonmesseri.github.io/form-nodes/tutorial">Step-by-step tutorial</a> ·
+  <a href="https://gastonmesseri.github.io/form-nodes/reference/api-overview">API reference</a>
+</p>
 
 <!-- example: quick-start.typecheck.ts -->
 ```ts
