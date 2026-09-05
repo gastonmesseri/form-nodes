@@ -25,7 +25,7 @@ import { createValidatorContext } from '../validation/utils/create-validator-con
 import type { InternalNode, Node, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
-import { createControlValueBuffer, type ControlValueBuffer } from '../utils/create-control-value-buffer';
+import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
 import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';

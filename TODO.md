@@ -356,6 +356,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Move `create-control-value-buffer.ts` and its tests to `src/lib/primitives/utils`, alongside its primitive consumers' other helpers.
+  - Keep `form.utils.ts` and `form-node.utils.ts` beside their corresponding implementation files.
+
 - [x] Group primitive-specific helpers in `src/lib/primitives/utils`.
   - Move node definition factories, node markers, disabled-reason handling, and state-source readers out of the general utilities directory, preserving behavior and public APIs.
 

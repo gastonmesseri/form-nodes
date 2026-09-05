@@ -1,7 +1,7 @@
 import { computed, signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ControlDebounce } from '../types/node.type';
+import type { ControlDebounce } from '../../types/node.type';
 import { createControlValueBuffer } from './create-control-value-buffer';
 
 const deferred = () => {
