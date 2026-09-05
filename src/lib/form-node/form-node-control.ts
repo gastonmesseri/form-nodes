@@ -1,8 +1,8 @@
-import type { FormCheckboxControl, FormUiControl, FormValueControl } from '@angular/forms/signals';
 import type { WritableSignal } from '@angular/core';
+import type { FormCheckboxControl, FormUiControl, FormValueControl } from '@angular/forms/signals';
 
-import type { Field } from '../../primitives/field';
-import type { Node } from '../../types/node.type';
+import type { Node } from '../types/node.type';
+import type { Field } from '../primitives/field';
 
 /**
  * Shared signal-based UI contract for custom controls bound through `[formNode]`.

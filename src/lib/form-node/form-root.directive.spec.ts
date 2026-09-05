@@ -6,12 +6,12 @@ import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { form } from '../../primitives/form';
-import { field } from '../../primitives/field';
-import { group } from '../../primitives/group';
+import { form } from '../primitives/form';
+import { field } from '../primitives/field';
+import { group } from '../primitives/group';
 import { FormNode } from './form-node.directive';
-import { required } from '../../validation/validators/required';
-import { registerSignalInputForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { required } from '../validation/validators/required';
+import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 

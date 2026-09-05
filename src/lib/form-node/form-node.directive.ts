@@ -1,25 +1,25 @@
 import { NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Validators, type ControlValueAccessor, type Validator, type ValidatorFn } from '@angular/forms';
 import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterEveryRender, afterRenderEffect, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
 
-import type { Field } from '../../primitives/field';
-import { hasControlStateConsumer, registerControlStateBinding } from '../../control-state-hook/adapters/form-node';
+import type { Field } from '../primitives/field';
 import { FORM_NODE_CONFIG } from './form-node-config';
+import { shallowEqual } from '../utils/shallow-equal';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
-import { shallowEqual } from '../../utils/shallow-equal';
-import { registerNodeBindingInjector } from '../../utils/node-injector';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
-import type { ValidationError } from '../../validation/validation.type';
-import type { FormNodeBinding } from '../../types/form-node-binding.type';
-import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../../types/node.type';
-import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import type { FormNodeControl } from './form-node-control';
-import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
+import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
+import { registerNodeBindingInjector } from '../utils/node-injector';
+import type { ValidationError } from '../validation/validation.type';
+import type { FormNodeBinding } from '../types/form-node-binding.type';
+import { connectSignalControlInputs } from './utils/signal-control-inputs';
+import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../types/node.type';
+import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
-import { elementAcceptsMinMax, formatNativeLimit, formatNativePattern, isTextualFormElement, isValidatorObject, selectValueAccessor, toControlErrors } from './form-node.utils';
+import { hasControlStateConsumer, registerControlStateBinding } from '../control-state-hook/adapters/form-node';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
+import { elementAcceptsMinMax, formatNativeLimit, formatNativePattern, isTextualFormElement, isValidatorObject, selectValueAccessor, toControlErrors } from './form-node.utils';
 
 /** Public injection token for the nearest `[formNode]` binding. */
 export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');

@@ -1,8 +1,8 @@
 import { computed, signal, type DestroyRef, type Signal, type WritableSignal } from '@angular/core';
 
-import type { FormNodeBinding } from '../../types/form-node-binding.type';
 import type { ControlStateAdapter } from '../control-state-adapter';
-import { getFormNodeName } from '../../directives/form-node/utils/form-node-name';
+import { getFormNodeName } from '../../form-node/utils/form-node-name';
+import type { FormNodeBinding } from '../../types/form-node-binding.type';
 
 type FormNodeEntry = {
   binding: FormNodeBinding | null;

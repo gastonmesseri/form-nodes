@@ -1,10 +1,10 @@
 import { DestroyRef, effect, reflectComponentType, signal, untracked, type Injector, type ModelSignal, type Type, type WritableSignal } from '@angular/core';
 
 import type { FormNodeControl } from './form-node-control';
-import type { InternalNode, Node, NodeValue } from '../../types/node.type';
+import type { InternalNode, Node, NodeValue } from '../types/node.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
+import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 import { warnFailedInputWrite, writeComponentInput } from './angular-internals/component-input-writer';
-import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 
 export type SignalControlConnection = {
   focus?: (options?: FocusOptions) => void;

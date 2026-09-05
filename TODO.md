@@ -1,5 +1,9 @@
 ## Up next
 
+- [ ] Think about how to better structure project folders given current knowledge and existing files
+  - should i move public-api.spec.ts next to public-api.ts ?
+  - what is the best way of organizing the folders? lib/core is needed? maybe just lib? maybe just core?
+
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -27,10 +31,6 @@
   - I instantiate my component like this: <my-component [formNode]="myNode" [disabled]="true" />
   - i set myNode.enable()
   - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
-
-- [ ] Think about how to better structure project folders given current knowledge and existing files
-  - should i move public-api.spec.ts next to public-api.ts ?
-  - what is the best way of organizing the folders? lib/core is needed? maybe just lib? maybe just core?
 
 - [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
   - consider possibilities and help me deciding, what does it make sense?
@@ -355,6 +355,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Move `src/lib/directives/form-node` to `src/lib/form-node` and remove the empty `directives` directory.
+  - Keep the feature's existing files, tests, utilities, and Angular internals together. Update imports and public entry-point paths without changing the public API or behavior.
 
 - [x] Remove the redundant `src/lib/core` directory level.
   - Keep the existing implementation areas directly under `src/lib`. Update public entry-point exports, test-helper imports, browser fixture type imports, and playground imports; preserve the existing API and behavior.

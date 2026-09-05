@@ -26,12 +26,12 @@ export { uniqueItems } from './lib/validation/validators/unique-items';
 export type { FormNodeBinding } from './lib/types/form-node-binding.type';
 export type { Field, FieldApi, FieldOptions } from './lib/primitives/field';
 export type { ValidatorOptions } from './lib/validation/utils/validator-options';
-export { provideFormNodePassThrough } from './lib/directives/form-node/form-node-pass-through';
-export { FORM_NODE, FormNode, _FormNode } from './lib/directives/form-node/form-node.directive';
+export { provideFormNodePassThrough } from './lib/form-node/form-node-pass-through';
+export { FORM_NODE, FormNode, _FormNode } from './lib/form-node/form-node.directive';
 export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/types/observable-like.type';
 export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/primitives/group';
 export type { DisabledReason, DisabledStateSource, DynamicNode, MarkAsTouchedOptions, Node, NodeApi } from './lib/types/node.type';
-export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/directives/form-node/form-node-config';
+export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/form-node/form-node-config';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/validation/async-validator';
 export {
   type FormFactory,
@@ -61,7 +61,7 @@ export {
   type FormNodeUiControl,
   type FormNodeValueControl,
   type FormNodeCheckboxControl,
-} from './lib/directives/form-node/form-node-control';
+} from './lib/form-node/form-node-control';
 export type {
   ArrayApi,
   ArraySet,

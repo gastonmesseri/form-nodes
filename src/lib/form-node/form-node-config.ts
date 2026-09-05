@@ -1,10 +1,10 @@
 import { InjectionToken, type Provider } from '@angular/core';
 import { provideSignalFormsConfig, type FormFieldBinding } from '@angular/forms/signals';
 
-import { getFormNodeBindingForAngularField } from '../../interop/angular-field';
-import type { FormNodeBinding } from '../../types/form-node-binding.type';
+import type { FormNodeBinding } from '../types/form-node-binding.type';
+import { getFormNodeBindingForAngularField } from '../interop/angular-field';
 
-export type { FormNodeBinding } from '../../types/form-node-binding.type';
+export type { FormNodeBinding } from '../types/form-node-binding.type';
 
 /** Configuration inherited by `[formNode]` and interoperable Angular `[formField]` bindings. */
 export type FormNodeConfig = {
