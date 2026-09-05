@@ -247,7 +247,9 @@ catalog therefore overrides individual keys without having to repeat every messa
 
 ### Angular application scope
 
-Register provider configuration in `ApplicationConfig` for a standalone Angular application:
+Register provider configuration in `app.config.ts` and pass that `ApplicationConfig` to
+`bootstrapApplication(AppComponent, appConfig)` for a standalone Angular application. See the
+[complete provider example](./provide-validator-messages.md#example):
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
@@ -298,7 +300,12 @@ failing.
 
 ### Process-wide fallback
 
-Outside Angular, or for one immutable application default, configure the global catalog:
+For a shared fallback in an Angular browser application, call `configureGlobalValidatorMessages()`
+in `main.ts`, before `bootstrapApplication()` (or before bootstrapping `AppModule`). Keep the catalog
+in a separate data file and perform setup explicitly at the entry point; no initializer is needed
+for a static catalog. See the [complete startup example](./configure-global-validator-messages.md#where-to-call-it).
+
+Keep startup configuration active. The following fragment shows how to restore a temporary override:
 
 ```ts
 const restoreMessages = configureGlobalValidatorMessages({

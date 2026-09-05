@@ -1,24 +1,5 @@
 ## Up next
 
-- Consider that validators declarated not-inline could be strictly typed [OPTIONALLY, SO WE SHOULD KEEP CURRENT TYPING BEHAVIOR] for some specific type of nodes. E.g. something like the following would be only allowed to be put in a Field (not in form() group() or array())
-  const myValidatorCustom1 = validator<string | null, 'field'>((ctx) => {
-    if (ctx.value()) return { kind: 'somo', message: '' }
-  });
-  // Maybe the following could only be used in form() or group()
-  const myValidatorCustom2 = validator<string | null, 'form' | 'group'>((ctx) => {
-    if (ctx.value()) return { kind: 'somo', message: '' }
-  });
-  // so... doing later myField = field('', [myValidatorCustom2]) // this should fail the type because the validator is only allowed in field
-  - this could also improve the type of the union provided in ctx.node() and ctx.field() because we already provide some info to validator<>
-  - if we do this we should be sure that we don't disturb the automatic inference for inline validators
-  - what do you think, do you have any other api suggestion? is it a good idea/bad/complex/unnecesarily-complex
-  - OR MAYBE JUST INTRODUCE GUARDS FOR STRICTLY TYPED validators? e.g. if validator<string | null> then it could only be used in a field<string> 
-  or validator<number[]> could be only used in a field<number[]> or in an array() that contains a value of number[]. WHAT DO YOU THINK?
-
-- Recomend WHERE to execute the function to define globalSettings for the library (the one that defines validator messages)
-  where to call it in an angular app? app module? app init file? where?, just separated file and import it somewhere? What would be the cleanest way of setting this global?
-  let's think about that
-
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -41,21 +22,10 @@
   - i set myNode.enable()
   - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
 
-- [x] Decide the exact semantics and naming of object-node ancestry lookups.
-  - [x] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
-    an explicit nested form the workflow owner observed by all of its descendants.
-  - [x] Add a separate `root()` signal for retrieving the actual root of the
-    complete node tree instead of overloading `form()` with both workflow ownership and root lookup.
-  - [x] Let `root()` return any root node (`Field`, `Group`, `Form`, or `ArrayNode`) and keep
-    `form()` as the nearest `Form | null` lookup instead of adding a redundant `rootForm()`.
-  - [x] Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
-    groups inside arrays, detached array items, and nodes that are reparented at runtime.
-  - [x] Review validator contexts, public root-type inference, async dependency tracking, submission
-    inheritance, documentation, and migration impact before changing the current behavior.
-
 - [ ] Think about how to better structure project folders given current knowledge and existing files
 
 - [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
+  - consider possibilities and help me deciding, what does it make sense?
 
 - [ ] Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
   e.g. validator functions, disabled, readonly, etc... (maybe not)
@@ -378,11 +348,40 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Document where to configure validator messages in Angular applications.
+  - Show a separate message catalog, an explicit `configureGlobalValidatorMessages()` call in `main.ts` before bootstrap, and the application-scoped alternative in `app.config.ts` or `AppModule.providers`.
+  - Explain startup lifetime, when restoration is appropriate, and why static catalogs need no initializer or side-effect-only import. Include compiler-checked Angular examples and links from the guide and configuration reference.
+- [x] Decide the exact semantics and naming of object-node ancestry lookups.
+  - [x] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
+    an explicit nested form the workflow owner observed by all of its descendants.
+  - [x] Add a separate `root()` signal for retrieving the actual root of the
+    complete node tree instead of overloading `form()` with both workflow ownership and root lookup.
+  - [x] Let `root()` return any root node (`Field`, `Group`, `Form`, or `ArrayNode`) and keep
+    `form()` as the nearest `Form | null` lookup instead of adding a redundant `rootForm()`.
+  - [x] Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
+    groups inside arrays, detached array items, and nodes that are reparented at runtime.
+  - [x] Review validator contexts, public root-type inference, async dependency tracking, submission
+    inheritance, documentation, and migration impact before changing the current behavior.
 - [x] Audit and remove tests whose sole purpose is rejecting retired API names or options.
   - Removed seven type assertions for per-field `nullable`, `FormRoot` / `FormRootDirective`, binding/directive `field`, and directive `ngOnInit`.
   - Confirmed that no absence assertions for flat validator-context `root()` / `form()` remain in the current tests.
   - Retained positive coverage of replacement APIs and negative tests for current contracts: node-kind restrictions, private implementation members, readonly signals, input types, error ownership, and control adapters. No runtime or public API changes.
-
+- [d] Consider that validators declarated not-inline could be strictly typed [OPTIONALLY, SO WE SHOULD KEEP CURRENT TYPING BEHAVIOR] for some specific type of nodes. E.g. something like the following would be only allowed to be put in a Field (not in form() group() or array())
+  const myValidatorCustom1 = validator<string | null, 'field'>((ctx) => {
+    if (ctx.value()) return { kind: 'somo', message: '' }
+  });
+  // Maybe the following could only be used in form() or group()
+  const myValidatorCustom2 = validator<string | null, 'form' | 'group'>((ctx) => {
+    if (ctx.value()) return { kind: 'somo', message: '' }
+  });
+  // so... doing later myField = field('', [myValidatorCustom2]) // this should fail the type because the validator is only allowed in field
+  - [x] this could also improve the type of the union provided in ctx.node() and ctx.field() because we already provide some info to validator<>
+  - [x] if we do this we should be sure that we don't disturb the automatic inference for inline validators
+  - [x] what do you think, do you have any other api suggestion? is it a good idea/bad/complex/unnecesarily-complex
+  - [x] OR MAYBE JUST INTRODUCE GUARDS FOR STRICTLY TYPED validators? e.g. if validator<string | null> then it could only be used in a field<string> 
+  or validator<number[]> could be only used in a field<number[]> or in an array() that contains a value of number[]. WHAT DO YOU THINK?
+  - Existing validator typing already restricts use according to the node's value type, including nullability, while allowing compatible values across node kinds.
+  - Keep the current generic API and inline inference. A concrete owner type can already be supplied when a validator needs node-specific operations; no additional kind selectors or guards are needed.
 - [x] Evaluate simplifying `create-validator-context` by replacing `Object.defineProperties` with an object literal or `Object.assign`.
   - Keep the current implementation: it enriches the marked context once, preserves the shared context and readonly node-signal identities, and prevents replacing or deleting its navigation properties.
   - `Object.assign` saves descriptor syntax but removes the runtime property protection. A separate object literal needs coordinated initialization or caching and must preserve the non-enumerable context marker; this is not a net simplification for the current callers.
