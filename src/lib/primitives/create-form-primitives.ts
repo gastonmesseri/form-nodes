@@ -1,7 +1,7 @@
 import { field } from './field';
 import { array } from './array';
 import { createObjectNode } from './form';
-import { isNode } from '../utils/node-marker';
+import { isNode } from './utils/node-marker';
 import type { Node } from '../types/node.type';
 import type { FieldOptions } from './field.type';
 import { isPlainObject } from '../utils/is-plain-object';

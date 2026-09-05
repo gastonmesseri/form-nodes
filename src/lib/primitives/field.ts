@@ -1,7 +1,7 @@
 import { computed, signal, untracked, type Signal } from '@angular/core';
 
 import { isNotNil } from '../utils/is-nil';
-import { markAsNode } from '../utils/node-marker';
+import { markAsNode } from './utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { computedFunction } from '../utils/computed-function';
@@ -15,7 +15,7 @@ import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
-import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import { isValidatorSource, normalizeValidatorSource } from '../validation/utils/validator-source';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
@@ -23,7 +23,7 @@ import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } 
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
-import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
+import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from './utils/disabled-reasons';
 import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
 
 export type { Field, FieldApi, FieldOptions } from './field.type';

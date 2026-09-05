@@ -1,4 +1,4 @@
-import type { DisabledReason, DisabledStateSource, Node } from '../types/node.type';
+import type { DisabledReason, DisabledStateSource, Node } from '../../types/node.type';
 
 export type DisabledState = boolean | string;
 

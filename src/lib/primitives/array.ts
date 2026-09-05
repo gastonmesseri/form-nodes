@@ -6,7 +6,7 @@ import { isNil, isNotNil } from '../utils/is-nil';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { isPlainObject } from '../utils/is-plain-object';
-import { isNode, markAsNode } from '../utils/node-marker';
+import { isNode, markAsNode } from './utils/node-marker';
 import { assertValidObjectDefinition } from './form.utils';
 import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
@@ -18,10 +18,10 @@ import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { normalizeValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
-import { readStateSource, getInitialMutableState } from '../utils/read-state-source';
+import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
-import { createNodeDefinitionFactory } from '../utils/create-node-definition-factory';
 import type { InternalNode, Node, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
@@ -30,7 +30,7 @@ import type { ValidationStatus, ValidatorContext, ValidatorSource, Validators } 
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
-import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from '../utils/disabled-reasons';
+import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from './utils/disabled-reasons';
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
 

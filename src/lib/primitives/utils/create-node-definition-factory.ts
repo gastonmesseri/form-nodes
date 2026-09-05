@@ -1,8 +1,8 @@
+import { field } from '../field';
 import { isNode } from './node-marker';
-import { field } from '../primitives/field';
-import { isPlainObject } from './is-plain-object';
-import { mapObjectValues } from './map-object-values';
-import type { InternalNode, NodeDefinition, NodeDefinitions } from '../types/node.type';
+import { isPlainObject } from '../../utils/is-plain-object';
+import { mapObjectValues } from '../../utils/map-object-values';
+import type { InternalNode, NodeDefinition, NodeDefinitions } from '../../types/node.type';
 
 /**
  * Compiles a node definition into a reusable factory without retaining the live definition tree.

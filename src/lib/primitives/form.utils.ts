@@ -1,8 +1,8 @@
 import { field } from './field';
 import { group } from './group';
-import { isNode } from '../utils/node-marker';
-import { isPlainObject } from '../utils/is-plain-object';
+import { isNode } from './utils/node-marker';
 import type { Node } from '../types/node.type';
+import { isPlainObject } from '../utils/is-plain-object';
 import type { ObjectNodeDefinitions } from './form.type';
 
 type ObjectNodeKind = 'array' | 'form' | 'group';

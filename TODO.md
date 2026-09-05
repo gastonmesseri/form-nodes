@@ -356,6 +356,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Group primitive-specific helpers in `src/lib/primitives/utils`.
+  - Move node definition factories, node markers, disabled-reason handling, and state-source readers out of the general utilities directory, preserving behavior and public APIs.
+
 - [x] Rename `form-root.directive.spec.ts` to `form-node.directive.form.spec.ts` to describe its existing coverage of FormNode on native forms. Preserve the test contents.
 
 - [x] Rename `src/lib/control-state-hook` to `src/lib/control-state` to match the feature and its files.
