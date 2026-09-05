@@ -490,3 +490,9 @@ properties and methods. Add it directly to a `validators` source.
 See [Async validation](../guides/async-validation.md) for task-oriented examples and
 [Advanced behavior](../advanced/behavior-details.md#asynchronous-scheduling-and-dependencies) for
 additional scheduling and lifecycle semantics.
+
+
+Separately declared `asyncValidator<TValue>()` helpers preserve `TValue` on the node returned by
+`context.node()` and `context.field()`, including callable value reads and the node's value signal.
+This also applies to `when`, `params`, and `onError` contexts. See the
+[reusable validator example](./validator.md#value-type-and-inference).

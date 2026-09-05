@@ -14,7 +14,7 @@ const checkAncestry = (ctx: ValidatorContext<string | null>) => {
   type _Form = Expect<Equal<ReturnType<typeof api.form>, ValidatorForm | null>>;
   type _Parent = Expect<Equal<ReturnType<typeof ctx.parent>, Parent | null>>;
 
-  type _Field = Expect<Equal<typeof ctx.field, Signal<Root>>>;
+  type _Field = Expect<Equal<typeof ctx.field, Signal<ReturnType<ValidatorContext<string | null>['node']>>>>;
   type _Value = Expect<Equal<ReturnType<typeof ctx.value>, string | null>>;
   const node = ctx.field();
   node();
@@ -38,7 +38,7 @@ const checkAncestry = (ctx: ValidatorContext<string | null>) => {
   } else if ('children' in node) {
     node.get('email')?.dirty();
   } else {
-    type _FieldLeaf = Expect<Equal<typeof node, Field<any>>>;
+    type _FieldLeafValue = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
     node.set('updated');
   }
 
@@ -152,7 +152,7 @@ asyncValidator<string | null, typeof profile.nested.subForm.subGroup.email.api, 
   return null;
 });
 
-const roots: Root[] = [field(''), group({ email: field('') }), form({ email: field('') }), array(field(''))];
+const roots: ReturnType<ValidatorContext<any>['node']>[] = [field(''), group({ email: field('') }), form({ email: field('') }), array(field(''))];
 const parents: Parent[] = [group({ email: field('') }), form({ email: field('') }), array(field(''))];
 // @ts-expect-error Fields cannot be structural parents.
 parents.push(field(''));

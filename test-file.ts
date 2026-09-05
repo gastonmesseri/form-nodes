@@ -1,20 +1,20 @@
 import { signal } from '@angular/core';
 
 import { FormNode } from './dist/types/gem-ng-forms';
-import { array, asyncValidator, createFormPrimitives, field, form, FormValueContract, group, minLength, oneOf, required } from './src/public-api';
-import { boolean } from 'fast-check';
+import { array, asyncValidator, createFormPrimitives, field, form, FormValueContract, group, minLength, oneOf, required, validator } from './src/public-api';
 
 type Company = { companyId: number; companyName: string }
 const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
 class Something { };
 const somethingInstance = new Something();
+// const field<T> = {} as any;
 
 const myForm = form({
   api: field('something'),
   // $api: field('somethong'),
   name: field<string>('David'),
   age: field<number>(23),
-  myArray: field.notnull(''),
+  myArray: field.strict<string>(''),
   address: {
     city: field('Moscu'),
     country: field('Rusia'),
@@ -162,7 +162,7 @@ const myForm2 = form({
   name: field<string>('David'),
   age: field<number>(23),
   address: {
-    city: field('Moscu', { nullable: false }),
+    city: field.strict('Moscu'),
     country: field('Rusia'),
     subaddress: {
       city: field('Madrid'),
@@ -173,15 +173,76 @@ const myForm2 = form({
       }),
     },
   },
+
+  nested: {
+    a: field.strict<string>(''),
+    subForm: form({
+      subField: 2,
+      subGroup: {
+        username: field(''),
+
+        email: field('', [
+          (ctx) => {
+            if (myForm2.address.disabled()) return { kind: 'addressDisabled' };
+            ctx.field().value();
+            ctx.value();
+          },
+          validator((ctx) => {
+            ctx.field().value();
+            ctx.value();
+          }),
+          asyncValidator(async (ctx) => {
+            ctx.field().value();
+            ctx.value();
+            ctx.value()?.trimEnd();
+          }),
+        ]),
+
+      },
+    }, [
+      (ctx) => {
+        ctx.field().value();
+        ctx.value();
+        ctx.value()?.subField?.toExponential();
+      },
+      validator((ctx) => {
+        ctx.field().value();
+        ctx.field().subField();
+        ctx.node().subField();
+        ctx.value();
+      }),
+      asyncValidator(async (ctx) => {
+        ctx.field().value();
+        ctx.value();
+      }),
+    ]),
+  },
+
   somethingDisabled: field('', [], {
     disabled: () => myBooleanSignal(),
   }),
   somethingReadonly: field('', { readonly: myBooleanSignal }),
   disabled: field('toto'),
+
   sons: array(() => ({
     name: field<string>(null),
     age: field<number>(null),
-  }), 2),
+  }), 2, [
+    (ctx) => {
+      ctx.field().value()
+      ctx.value()
+      ctx.value()[0]?.age?.toExponential();
+    },
+    validator((ctx) => {
+      ctx.field().value();
+      ctx.value();
+    }),
+    asyncValidator(async (ctx) => {
+      ctx.field().value();
+      ctx.value();
+    }),
+  ]),
+
   daughters: array({
     name: field<string>(null),
     age: field<number>(null),
@@ -189,11 +250,17 @@ const myForm2 = form({
 });
 
 const _myForm2Value = myForm2();
+myForm2.nested.subForm.subGroup.username.root().address()
 
-export const { form: fForm, group: fGroup, field: fField, array: fArray } = createFormPrimitives({ nullable: false });
+export const { form: fForm, group: fGroup, field: fField, array: fArray } = createFormPrimitives({ nullable: false, });
 export const { form: xForm, group: xGroup, field: xField, array: xArray } = createFormPrimitives({ nullable: false });
 export const { form: aForm, group: aGroup, field: aField, array: aArray } = createFormPrimitives({ nullable: false });
 
+
+const myValidatorCustom1 = validator<string | null>((ctx) => {
+  // ctx.field().
+  if (ctx.value()) return { kind: 'somo', message: '' }
+});
 
 
 // const field = {} as any;
@@ -201,7 +268,7 @@ export const { form: aForm, group: aGroup, field: aField, array: aArray } = crea
 // const myFormNon = form({
 //   username: field(''),
 //   email: field.nonNullable(''),
-//   company: field.notNull(''),
+//   company: field.strict(''),
 //   url: field('', { nullable: false }),
 // });
 
@@ -254,7 +321,9 @@ const typedForm = form({
 
 const mySuperForm = form({
   name: field(''),
+  email: field.strict<number>(2),
 })
+const mySuperValue = mySuperForm();
 
 function toto() {}
 
@@ -266,24 +335,24 @@ const myField1 = field('something', [required, null]);
 const myForm3 = form({
   name: field<string>(undefined, [required]),
   city: field('Madrid', [() => Math.random() > 0.5 ? minLength(1) : null]),
-  age: field(23, {
+  age: field.strict(23, {
     validators: [
       ({ value, ...rest }) => {
-        // rest.api.form()?.api
-        // rest.field();
         if (value()! > 0) return { kind: 'greater-than-zero' };
       },
-      asyncValidator(({ api, value, ...rest }) => {
-        api.dirty()
-        api.value();
+      asyncValidator(({ value, node, ...rest }) => {
+        node().dirty()
+        node().value();
         rest.abortSignal;
-        api.dirty();
-        api.path()
+        node().dirty();
+        node().path()
         value();
         return new Promise<{ kind: string }>(() => {});
       }, {
         // debounce: 'blur'
       }),
+      required,
+      ctx => ctx.value()! < 18 ? { kind: 'notAdult' } : null,
       // {
       //   type: 'async',
       //   validate: ({ value }) => {
@@ -292,7 +361,18 @@ const myForm3 = form({
       // }
     ],
     hidden: true,
-    nullable: false,
+  }),
+});
+
+const myFormTestSomething = form({
+  name: field<string>(undefined, [required]),
+  city: field('Madrid', [() => Math.random() > 0.5 ? minLength(1) : null]),
+  age: field.strict(23, {
+    validators: [
+      required,
+      ctx => ctx.value()! < 18 ? { kind: 'notAdult' } : null,
+    ],
+    hidden: true,
   }),
 });
 

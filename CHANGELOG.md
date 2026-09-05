@@ -30,6 +30,9 @@ consumer migration guide.
 
 ### Changed
 
+- Separately declared validators now preserve their declared value type when reading through
+  `context.field()` or `context.node()`, including the node's value signal and API aliases.
+
 - Inline validators now infer their owning `Field`, `Form`, `Group`, or `ArrayNode`, including
   aggregate children and array items. This also works through inline `validator()` and
   `asyncValidator()` helpers, with configured primitives and nullability overrides. IntelliSense

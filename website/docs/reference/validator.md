@@ -2,6 +2,9 @@
 title: validator()
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import reusableValidatorNodeSource from '!!raw-loader!../../examples/reusable-validator-node.typecheck.ts';
+
 # validator()
 
 Attach a synchronous validator directly to a field, form, or array. The consuming node contextually
@@ -83,6 +86,15 @@ when the helper is inline. `ValidatorOwner` gives a standalone helper the common
 when no concrete owner is supplied. Omit helper type arguments to infer both types inline.
 
 ### Value type and inference
+
+Separately declared helpers preserve `TValue` on the generic node returned by `ctx.field()` and
+`ctx.node()`. Calling that node or reading its `value()` signal returns the same type as
+`ctx.value()`; the equivalent `api.value()` and `$api.value()` paths also preserve it.
+For `validator<string | null>()`, all these reads have type `string | null`. The primitive kind
+and child names remain unspecified until a concrete owner is supplied or inferred inline.
+
+<CodeBlock language="ts" title="reusable-validator-node.typecheck.ts">{reusableValidatorNodeSource}</CodeBlock>
+
 
 When `validator()` is declared separately, there is no consuming node from which TypeScript can
 infer `TValue`. If the generic is omitted, `value()` is therefore `unknown` and must be narrowed:

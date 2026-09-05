@@ -323,7 +323,7 @@ describe('asyncValidator', () => {
     asyncValidator<number | null>(async ({ field: fieldNode, value, path, abortSignal }) => {
       const api = fieldNode().api;
       expectTypeOf(fieldNode).toEqualTypeOf<AsyncValidatorContext<number | null>['field']>();
-      expectTypeOf(api.value()).toBeAny();
+      expectTypeOf(api.value()).toEqualTypeOf<number | null>();
       expectTypeOf(api.path()).toEqualTypeOf<readonly string[]>();
       expectTypeOf(api.set).toBeCallableWith(42);
       expectTypeOf(api.set).toBeCallableWith(null);

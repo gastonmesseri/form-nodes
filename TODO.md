@@ -1,5 +1,27 @@
 ## Up next
 
+- the file create-validator-context does weird things, probably unnecesarily complex Object.defineProperties when we could simply just create an object maybe?
+  - let's explore alternatives for simplification
+
+- Remove tests that the agent has created when we removed properties
+  - e.g. when we removed root() and form() from the ctx of validators, it created tests to ensure they don't exist (remove this type of tests in case they were created in the past with other feature removal)
+
+- Consider that validators could be strictly typed for some specific type of nodes. E.g. something like the following would be only allowed to be put in a Field (not in form() group() or array())
+  const myValidatorCustom1 = validator<string | null, 'field'>((ctx) => {
+    if (ctx.value()) return { kind: 'somo', message: '' }
+  });
+  // Maybe the following could only be used in form() or group()
+  const myValidatorCustom2 = validator<string | null, 'form' | 'group'>((ctx) => {
+    if (ctx.value()) return { kind: 'somo', message: '' }
+  });
+  // so... doing later myField = field('', [myValidatorCustom2]) // this should fail the type because the validator is only allowed in field
+  - this could also improve the type of the union provided in ctx.node() and ctx.field() because we already provide some info to validator<>
+  - if we do this we should be sure that we don't disturb the automatic inference for inline validators
+  - what do you think, do you have any other api suggestion? is it a good idea/bad/complex/unnecesarily-complex
+
+- Recomend WHERE to execute the function to define globalSettings for the library (the one that defines validator messages)
+  where to call it? app module? app init file? where, just separated file and import it somewhere? What would be the cleanest way of setting this global?
+
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -11,20 +33,10 @@
 
 - [ ] Consider changing the @example to something different, like a heading with asterisks **Like this** (for better readability)
 
-- Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
+- [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
 
 - controlState
-  - [ ] Reconsider additional interaction notifications only when a supported forms API has a
-    source-neutral operation with consistent semantics.
   - [ ] Consider naming if useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
-
-- SHORTHANDS for FIELDS
-  - ...
-  - quiza tambien soporte para moment() aunque sea a traves de un interfaz generico sin importar moment() (_isAMomentObject creo)
-  - [x] decidir que hacer con los arrays
-  - document limitations of object like values in the group() form() field shorthands (notify that there could be discrepances between runtime and typescript, and suggest to only use shorthand with primitives like string | number | etc)
-    MAYBE WE ALREADY SOLVED ALL THE POSSIBLE DISCREPANCES BETWEEN RUNTIME AND TYPESCRIPT, AS WE DECIDED TO MAKE ARRAYS AS field() OF ARRAY TYPE
-
 
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
@@ -32,16 +44,16 @@
   - i set myNode.enable()
   - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
 
-- [ ] Decide the exact semantics and naming of object-node ancestry lookups.
-  - [ ] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
+- [x] Decide the exact semantics and naming of object-node ancestry lookups.
+  - [x] Re-evaluate whether `node.form()` should return the nearest `form()` ancestor, which would make
     an explicit nested form the workflow owner observed by all of its descendants.
-  - [ ] Consider adding a separate `root()` or `rootForm()` signal for retrieving the actual root of the
+  - [x] Add a separate `root()` signal for retrieving the actual root of the
     complete node tree instead of overloading `form()` with both workflow ownership and root lookup.
-  - [ ] Define whether `root()` returns any root node (`Field`, `Group`, `Form`, or `ArrayNode`) while
-    `rootForm()` returns only a `Form | null`, and choose names that remain clear in IntelliSense.
-  - [ ] Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
+  - [x] Let `root()` return any root node (`Field`, `Group`, `Form`, or `ArrayNode`) and keep
+    `form()` as the nearest `Form | null` lookup instead of adding a redundant `rootForm()`.
+  - [x] Specify behavior for a root `group()`, a standalone field or array, nested explicit forms,
     groups inside arrays, detached array items, and nodes that are reparented at runtime.
-  - [ ] Review validator contexts, public root-type inference, async dependency tracking, submission
+  - [x] Review validator contexts, public root-type inference, async dependency tracking, submission
     inheritance, documentation, and migration impact before changing the current behavior.
 
 - [ ] Think about how to better structure project folders given current knowledge and existing files
@@ -49,13 +61,27 @@
 - [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
 
 - [ ] Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
-  e.g. validator functions, disabled, readonly, etc...
+  e.g. validator functions, disabled, readonly, etc... (maybe not)
   - [ ] because if there is a form self-reference then it could fail if called when form hasn't been yet initialized.
   - [ ] be careful that the tracking in those computed/reactive functions is not destroyed by the function failure/error
+  - e.g.  this type of code:
+    const myForm = form({
+      username: field(''),
+      email: field('', [
+        required,
+        min(2),
+        () => {
+          if (!this.myForm.username()) return { kind: 'needsUsername', message: 'The email field needs a username' } // Esta linea, que hago referencia a myForm, a eso me refiero
+        },
+      ]);
+    });
+
 - [ ] Validator framework roadmap (implement in this order)
   - [ ] Check TODO_VALIDATORS.md file to include more builtin validators
+
 - [ ] Public api
   - [ ] Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
+
 - [ ] Validators
   - [ ] Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
     - [ ] Also handle cases like in lab, like addErrors, and those
@@ -88,13 +114,11 @@
     - [ ] Add other Angular interoperability mechanisms if they become relevant
   - [ ] Decide whether host attributes or inputs such as `[disabled]` should also update the node; node-to-control state synchronization is already implemented.
   - [ ] Ensure whether we need to have angular forms as package dependency, or we can create an abstraction like we did with isObservableLike....
-  - [ ] Make the directive sync disabled/readonly/required attributes like in angular signal forms 22.
-    - [ ] maybe there are more attributes synced, check in angular implementation
+  - [x] Make the directive sync disabled/readonly/required attributes like in angular signal forms 22.
+    - [x] maybe there are more attributes synced, check in angular implementation
     - [ ] (from angular docs) The [formField] directive also syncs field state for attributes like required, disabled, and readonly when appropriate.
     - [ ] Have into account that a custom component can have an input called [disabled] and maybe this should be also used? (or maybe not and it should be implemented explicitly in the custom control component)
     - [ ] It seems my implementation already binds from formNode to the attributes, but probably is also reasonable to bind from the attributes (or other inputs like [disabled] in the component) to the node
-
-- [ ] Ensure that the library performs tree-shaking (e.g. not used validators ) [I THINK I ALREADY HANDLED THIS IN SOME COMMIT]
 
 - [ ] Investigate how other angular libraries perform versioning,
   - [ ] e.g. do they use the version name as the same as angular current version?
@@ -107,15 +131,11 @@
 - [ ] Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
   - [ ] maybe other ones that are not required, min(), max(), etc
 
-- [ ] Add precise instructions on how to use the library (e.g. angular imports, etc)
-
 - [ ] Expose restoreDefaultValidatorMessages() function in the public api
 
 - [ ] Add playground to the website, with simple example or something like that
 
 - [ ] Consider @gemgular/forms name for library
-
-- [ ] Add good docs about implementing a custom control (support for focus, etc, angular CVA, form value accessor, etc)
 
 - [ ] Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
   both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
@@ -140,23 +160,14 @@
   - [ ] controlValue and setControlValue feel more like an internal thing
   - [ ] also maybe hide disabledReasons
 
-- [ ] maybe add "novalidate" html property by default to the parent form of the fields? (maybe not)
-
 - [ ] code style: functions declared with `export const` or `const` that return an expression directly should use braces
 
 - [ ] Implement shorthand for required in the field options similar to disbled
-
-- [ ] initial value should be null or undefined? (for field())
-  - [ ] and for array?
 
 - [ ] Rename to something generic like @ng-tools/forms (maybe)
 
 - [ ] In the future allow something like dynamic forms from a JSON or object definition
   - [ ] Schema-driven form generation from JSON definitions.
-
-- [ ] Always expose `myForm.$api` in `form()` and `group()` in case the user wants to declare an `api` property (user-defined properties always take priority)
-
-- [ ] Runtime addition or removal of form nodes.
 
 - [ ] Consider allowing validator function returning false/true (for shorthands)
 
@@ -217,9 +228,6 @@
   - [ ] color, color by type
   - [ ] maybe consider also simply component to put below the html field, and then display things like warnings, errors, or disableReasons
 
-- [ ] In the same sense that required() was implmeented to potentially notify custom components that the required validator has been configured, also do
-  with min() max() to notify custom components that there is a min/max validator defined (e.g. maybe a number input would allow writing or clicking arrows for more than max, or something like that)
-
 - [ ] Check angular docs to check metadata implementation etc, and more stuff:
   - [ ] https://angular.dev/guide/forms/signals/form-logic?utm_source=chatgpt.com
 
@@ -242,10 +250,6 @@
       country: form.field('Spain'),
     }),
   });
-
-- [ ] Consider nullable api like this:
-  const name = field.nullable('Mark');
-  const age = field.nullable(23),
 
 - [ ] Consider the following (changing submission api):
   // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmit, and onInvalidSubmit to allow easier api
@@ -326,6 +330,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Later
 
+- Optionally extend `ControlState` with interaction-reporting methods beyond `markAsTouched()` only
+  when every supported binding source exposes a public operation with equivalent semantics. Keep
+  value changes and form-owned operations such as reset, disable, and enable outside this facade.
 - Reconsider whether `array()` should expose `patch()`; its positional semantics may be confusing and the same updates can be expressed explicitly through item nodes or other array operations.
 - Reconsider mirroring Gem asynchronous-validation `pending` into Angular field state only if
   Angular provides a supported external-state mechanism. Gem must remain the validator owner and
@@ -352,16 +359,18 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Discarded
 
-- [ ] Keep synchronous `validator()` callback-only instead of adding `{ params, validate }`; the
+- [d] Improve JSDoc/intellisense of ctx.node() and ctx.field() because right now it displays a huge union maybe we can improve that into something simpler in just a few lines (maybe abstracting the type? )
+  - if it adds too much complexity, not do that
+- [d] Keep synchronous `validator()` callback-only instead of adding `{ params, validate }`; the
   extra signature complicates partial generic inference and the ordinary reactive callback remains simpler.
 - discarded - implement debounce for synchronous validators
-- [x] Do not add `'blur'` to `asyncValidator()` debounce.
+- [d] Do not add `'blur'` to `asyncValidator()` debounce.
   - Angular 22.1.x accepts milliseconds or a custom asynchronous timer for async-operation
     debounce; `'blur'` belongs to control-value debounce instead.
   - Consumers can combine `field(..., { debounce: 'blur' })` with an async validator so validation
     begins after the control value commits on blur, then optionally apply a numeric async-validator
     debounce.
-- [x] Consider shortcut for simple array template (just an array with 1 object [forced through type] (maybe 2 objects?)) [detectable through Array.isArray()]
+- [d] Consider shortcut for simple array template (just an array with 1 object [forced through type] (maybe 2 objects?)) [detectable through Array.isArray()]
   // maybe not a good idea because it is ambiguous whether it should start with 1 item (the one in the template) or 0 items (probably not)
   form({
     houses: [{
@@ -372,9 +381,26 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Preserve the declared value type on standalone validator nodes (`ctx.field().value()` and `ctx.node().value()`), including nullable values and asynchronous contexts.
+- [x] fix signature in test-file myFormTestSomething (it should be valid to declare validators array there)
+- [x] Clean validators context 
+- [x] Define and document field shorthands, including arrays, Moment-like values, non-plain objects,
+  runtime normalization, and TypeScript limitations.
 - [x] Preserve an explicitly supplied `undefined` initial value in `field(undefined)` while keeping
   the omitted `field()` initial value as `null`, using the argument count to distinguish both calls.
-
+- [x] Consider nullable api like this:
+  const name = field.nullable('Mark');
+  const age = field.nullable(23),
+- [x] In the same sense that required() was implmeented to potentially notify custom components that the required validator has been configured, also do
+  with min() max() to notify custom components that there is a min/max validator defined (e.g. maybe a number input would allow writing or clicking arrows for more than max, or something like that)
+- [x] Always expose `myForm.$api` in `form()` and `group()` in case the user wants to declare an `api` property (user-defined properties always take priority)
+- [x] initial value should be null or undefined? (for field())
+  - [x] and for array?
+- [x] maybe add "novalidate" html property by default to the parent form of the fields? (maybe not)
+- [x] Add good docs about implementing a custom control (support for focus, etc, angular CVA, form value accessor, etc)
+- [x] Add precise instructions on how to use the library (e.g. angular imports, etc)
+- [x] Ensure that the library performs tree-shaking (e.g. not used validators ) [I THINK I ALREADY HANDLED THIS IN SOME COMMIT]
+- [x] Runtime addition or removal of form nodes.
 - [x] Add Angular 22-style `error` overrides to every built-in validator.
 - [x] Shortcuts for signature
   - [x] Consider shortcut for simple primitives [detectable through typeof === number/string/boolean/null/undefined]
@@ -543,13 +569,11 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Verify that the descriptions survive declaration generation for consumer IntelliSense.
   - [x] Document primitive action methods, array navigation and structural operations, callable
     node signatures, and every published `field()`, `form()`, `group()`, and `array()` overload.
-
 - [x] Infer `field(undefined)` as `Field<unknown>`, matching `field(null)`.
   - [x] Preserve explicit generic inference such as `field<string>(undefined)` as
     `Field<string | null>`.
   - [x] Keep the existing runtime normalization from an explicit `undefined` initial value to
     `null`, matching `field()` without an argument.
-
 - [x] Let `[formNode]` temporarily provide its host injector to a directly bound node.
   - [x] Investigation found that the directive already obtains the concrete host injector through
     public `inject(Injector)`; `getDebugNode()` is unnecessary for the directive itself.
@@ -566,7 +590,6 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     `[formField]`.
   - [x] Original idea: use the `[formNode]` directive or `getDebugNode()` as a fallback injector for
     asynchronous validators when `form()`, `field()`, or another primitive received no injector.
-
 - [x] Make injector lookup inherit through the node tree by default.
   - [x] Prefer each node's explicit or currently captured injector, then use the nearest ancestor
     injector when the node has none of its own.
@@ -578,7 +601,6 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Keep injector-free nodes safe through weak watcher ownership.
   - [x] Derive the root-resolution baseline from Angular `v22.1.4` at commit
     `898380974d49cf7976e9d89cc74a0801a26ce7b1`, while documenting Gem Forms' dynamic-node extension.
-
 - [x] Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Gem Forms
   remains the sole authority for form state and operations.
   - [x] Support only behavior required by controls that bind a node's terminal `$field`; do not
@@ -690,7 +712,6 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Allow built-in validators to accept a static message string directly when the signature is unambiguous.
   - [x] Preserve the options object for reactive messages and date parsing configuration.
   - [x] Preserve `uniqueItems('property')` as the property key-selector shorthand; use an options object for a no-key-selector message or pass the message after a key selector.
-
 - [x] Add `mapObjectValues(object, mapper)` for value transformations that preserve an object's keys.
   - [x] Use it for object-node normalization and recursive node-definition cloning.
   - [x] Keep `arrayToObject()` for transformations whose source is genuinely an array and whose mapper

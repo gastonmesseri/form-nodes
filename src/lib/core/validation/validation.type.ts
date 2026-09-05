@@ -6,6 +6,7 @@ import type { GroupApi } from '../primitives/group.type';
 import type { ArrayNode } from '../primitives/array.type';
 import type { ObservableLike } from '../types/observable-like.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
+import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, Node, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
@@ -236,8 +237,20 @@ type ValidatorForm = PublicNode<Node> & FormApi<any> & { api: FormApi<any>; $api
 /** Callable group API when the declaration's child keys are not known. */
 type ValidatorGroup = PublicNode<Node> & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> };
 
-/** Callable node API when the validated primitive is not known statically. */
-export type ValidatorNode = Field<any> | ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode>;
+type UntypedValidatorNode = Field<any> | ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode>;
+
+/** Preserves each primitive's members while specializing its committed-value access paths. */
+type ValidatorValueNode<TValue, TNode extends Node = UntypedValidatorNode> = TNode extends UntypedValidatorNode
+  ? Omit<TNode, 'value' | 'api' | '$api'> & HiddenFunctionMembers<keyof TNode> & {
+    (): TValue;
+    value: Signal<TValue>;
+    api: Omit<TNode['api'], 'value'> & { value: Signal<TValue> };
+    $api: Omit<TNode['$api'], 'value'> & { value: Signal<TValue> };
+  }
+  : never;
+
+/** Callable node API with a known value type but an unspecified primitive kind. */
+export type ValidatorNode<TValue = any> = ValidatorValueNode<TValue>;
 
 /** Common node API exposed to validators when no exact owner API is specified. */
 export type ValidatorApi<TValue> = AsyncValidatorState & {
@@ -324,7 +337,11 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
   readonly path: Signal<readonly string[]>;
 };
 
-/** Reactive context provided to synchronous validators. */
+/**
+ * Reactive context provided to synchronous validators.
+ * Generic public owners retain TValue on their node value reads. Concrete owners and partial
+ * structural owner contracts remain exact; only the common owner exposes every node kind.
+ */
 export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = ValidatorNode> = Pick<TApi, 'parent' | 'path'> & {
   /** Current committed value of the node being validated. */
   readonly value: ValidatorNode extends TField ? TApi['value'] : TField['$api']['value'];
@@ -332,12 +349,12 @@ export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> =
    * Readonly signal of the node being validated.
    * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.
    */
-  readonly field: Signal<TField>;
+  readonly field: Signal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
   /**
    * Readonly signal of the node being validated.
    * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.
    */
-  readonly node: Signal<TField>;
+  readonly node: Signal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
 };
 
 /** Reactive context shared by asynchronous validator conditions, params, and handlers. */
