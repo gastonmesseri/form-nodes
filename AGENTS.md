@@ -3,7 +3,6 @@
 - Use English throughout the entire project.
 - Write all source code, identifiers, comments, documentation, tests, commit-facing text, warnings, errors, and generated user-facing copy in English.
 - Keep new and updated files in English even when the conversation with the user is in another language.
-- Never delete completed, resolved, or deferred work items from `TODO.md`. Move resolved items to `Completed` and deferred decisions to an appropriate later section so the project retains its decision history.
 - Place JSDoc examples before all `@param` tags. Content after a `@param` may be rendered as part of that parameter description instead of as function-level documentation.
 - `form()` and `field()` must remain safe to declare and use outside an Angular injection context. Their synchronous behavior and explicitly triggered asynchronous validation must always work without dependency injection.
 - Reactive dependency tracking for asynchronous validators must work both inside and outside an Angular injection context.
