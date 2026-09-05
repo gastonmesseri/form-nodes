@@ -55,7 +55,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodeConfig, required } from 'form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodeConfig, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-primeng-profile-editor',
@@ -158,7 +158,7 @@ import { providePrimeNG } from 'primeng/config';
 import type { ApplicationConfig } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [

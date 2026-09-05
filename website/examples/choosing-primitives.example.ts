@@ -1,4 +1,4 @@
-import { array, field, form } from 'form-nodes';
+import { array, field, form } from '@ngblocks/form-nodes';
 
 type Coordinates = {
   latitude: number;

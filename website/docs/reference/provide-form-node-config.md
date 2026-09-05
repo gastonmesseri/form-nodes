@@ -49,7 +49,7 @@ both settings should apply. Options are static configuration, not reactive signa
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [

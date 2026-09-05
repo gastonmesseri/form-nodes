@@ -1,4 +1,4 @@
-import { between, dateBetween, email, equalTo, field, form, integer, max, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, required, uniqueItems, url } from 'form-nodes';
+import { between, dateBetween, email, equalTo, field, form, integer, max, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, required, uniqueItems, url } from '@ngblocks/form-nodes';
 
 const password = field('');
 

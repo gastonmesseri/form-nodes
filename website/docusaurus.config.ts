@@ -89,7 +89,7 @@ const config: Config = {
           title: 'Project',
           items: [
             { label: 'GitHub', href: 'https://github.com/gastonmesseri/form-nodes' },
-            { label: 'npm', href: 'https://www.npmjs.com/package/form-nodes' },
+            { label: 'npm', href: 'https://www.npmjs.com/package/@ngblocks/form-nodes' },
             { label: 'Changelog', to: '/project/changelog' },
           ],
         },

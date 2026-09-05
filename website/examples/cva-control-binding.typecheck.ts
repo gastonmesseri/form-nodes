@@ -1,7 +1,7 @@
 import { Component, forwardRef, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 
-import { field, form, FormNode } from 'form-nodes';
+import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-text-input',

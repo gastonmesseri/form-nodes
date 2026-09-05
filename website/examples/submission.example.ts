@@ -1,4 +1,4 @@
-import { field, form, required } from 'form-nodes';
+import { field, form, required } from '@ngblocks/form-nodes';
 
 const savedValues: unknown[] = [];
 let invalidAttempts = 0;

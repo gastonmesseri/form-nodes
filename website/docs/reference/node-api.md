@@ -133,7 +133,7 @@ A `FormNode<TNode>` obtained through `viewChild()` exposes:
 | `flush()` | Commits this binding's pending control value |
 | `reset()` | Resets this binding and its current node |
 
-Import public APIs only from `form-nodes`. `_FormNode` is exported solely for Angular AOT/linker infrastructure and is not an application API.
+Import public APIs only from `@ngblocks/form-nodes`. `_FormNode` is exported solely for Angular AOT/linker infrastructure and is not an application API.
 
 For compatibility with Angular `model()`, input/output pairs, `ControlValueAccessor`, `NgControl`,
 and native controls, see [Advanced custom controls](../guides/custom-controls-advanced.md#angular-api-compatibility).

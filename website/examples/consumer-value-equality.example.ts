@@ -1,6 +1,6 @@
 import { computed } from '@angular/core';
 
-import { field, form } from 'form-nodes';
+import { field, form } from '@ngblocks/form-nodes';
 
 const profile = form({
   name: field.strict<string>('Marco'),

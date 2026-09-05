@@ -10,7 +10,7 @@ is compiled and executed with assertions for pending, failure, rerun, and recove
 Wrap asynchronous validators explicitly with `asyncValidator()`. This lets the node own pending state, debounce, cancellation, and stale-result handling without executing arbitrary validators to classify them.
 
 ```ts
-import { asyncValidator, field, required } from 'form-nodes';
+import { asyncValidator, field, required } from '@ngblocks/form-nodes';
 
 const myForm = form({
   username: field('', [

@@ -1,4 +1,4 @@
-import { field, form } from 'form-nodes';
+import { field, form } from '@ngblocks/form-nodes';
 
 const checkout = form({
   payment: form({

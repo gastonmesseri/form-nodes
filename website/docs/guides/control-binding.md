@@ -14,7 +14,7 @@ Import `FormNode` and bind a node with `[formNode]`:
 
 ```ts
 import { Component } from '@angular/core';
-import { FormNode, field } from 'form-nodes';
+import { FormNode, field } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -81,7 +81,7 @@ Export the directive and query it with Angular's signal-based `viewChild()`:
 
 ```ts
 import { Component, viewChild } from '@angular/core';
-import { FormNode, field } from 'form-nodes';
+import { FormNode, field } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -115,7 +115,7 @@ Configure reactive classes once in the standalone application providers:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { provideFormNodeConfig } from 'form-nodes';
+import { provideFormNodeConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -141,7 +141,7 @@ classes. `[formNode]` does not require the preset:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [

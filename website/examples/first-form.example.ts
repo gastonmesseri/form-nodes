@@ -1,4 +1,4 @@
-import { email, field, form, minLength, required } from 'form-nodes';
+import { email, field, form, minLength, required } from '@ngblocks/form-nodes';
 
 const myForm = form({
   name: field('', [required, minLength(2)]),

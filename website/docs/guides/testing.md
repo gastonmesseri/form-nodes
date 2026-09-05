@@ -31,7 +31,7 @@ package paths.
 ```ts
 import { describe, expect, it } from 'vitest';
 
-import { field, form } from 'form-nodes';
+import { field, form } from '@ngblocks/form-nodes';
 
 describe('profile form', () => {
   it('updates its value without marking programmatic writes dirty', () => {
@@ -65,7 +65,7 @@ Assert both the failing state and recovery:
 ```ts
 import { describe, expect, it } from 'vitest';
 
-import { field, form, min, required } from 'form-nodes';
+import { field, form, min, required } from '@ngblocks/form-nodes';
 
 describe('account validation', () => {
   it('reports typed errors and becomes valid after correction', () => {
@@ -103,7 +103,7 @@ Control the promise yourself instead of relying on network access or arbitrary d
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
-import { asyncValidator, field, form } from 'form-nodes';
+import { asyncValidator, field, form } from '@ngblocks/form-nodes';
 
 describe('username validation', () => {
   it('exposes pending state and the completed result', async () => {
@@ -142,7 +142,7 @@ Control-originated values expose an immediate `controlValue()` and a delayed com
 ```ts
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { field, form } from 'form-nodes';
+import { field, form } from '@ngblocks/form-nodes';
 
 afterEach(() => vi.useRealTimers());
 
@@ -179,7 +179,7 @@ complete values arrive in a different order:
 ```ts
 import { describe, expect, it } from 'vitest';
 
-import { array, field } from 'form-nodes';
+import { array, field } from '@ngblocks/form-nodes';
 
 describe('people array', () => {
   it('preserves item identity while reconciling by id', () => {
@@ -222,7 +222,7 @@ Call `submit()` directly when testing validation policy and action state:
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
-import { field, form, required } from 'form-nodes';
+import { field, form, required } from '@ngblocks/form-nodes';
 
 describe('profile submission', () => {
   it('blocks invalid values and submits the corrected snapshot', async () => {
@@ -261,7 +261,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 
-import { field, FormNode, form } from 'form-nodes';
+import { field, FormNode, form } from '@ngblocks/form-nodes';
 
 describe('profile input', () => {
   it('moves user input into the node and marks it dirty', () => {

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { array, email, field, form, FormNode, required } from 'form-nodes';
+import { array, email, field, form, FormNode, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-contacts',

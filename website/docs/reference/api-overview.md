@@ -6,7 +6,7 @@ description: A task-oriented map of the Form Nodes public API and its detailed r
 # API overview
 
 Use this page to find the API that matches what you are trying to model or integrate. Import public
-symbols from `form-nodes`; do not import internal files or deep package paths.
+symbols from `@ngblocks/form-nodes`; do not import internal files or deep package paths.
 
 If you already have a concrete failure or unexpected state, use the symptom-oriented
 [Troubleshooting guide](../help/troubleshooting.md).
@@ -238,7 +238,7 @@ Configure binding classes once in the application providers for the common appli
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -279,8 +279,8 @@ collision-safe path is required.
 Use type-only imports when a symbol is used only by TypeScript:
 
 ```ts
-import { field, form, FormNode } from 'form-nodes';
-import type { Field, FormValue, ValidationError } from 'form-nodes';
+import { field, form, FormNode } from '@ngblocks/form-nodes';
+import type { Field, FormValue, ValidationError } from '@ngblocks/form-nodes';
 ```
 
 `_FormNode` is framework infrastructure exported for Angular's compiler and linker. Applications

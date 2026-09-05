@@ -7,7 +7,7 @@ import { bootstrapApplication, provideClientHydration } from '@angular/platform-
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 
 const workspace = process.cwd();
-const packageUrl = pathToFileURL(resolve(workspace, 'dist', 'fesm2022', 'form-nodes.mjs')).href;
+const packageUrl = pathToFileURL(resolve(workspace, 'dist', 'fesm2022', 'ngblocks-form-nodes.mjs')).href;
 const signalControlUrl = pathToFileURL(resolve(workspace, 'node_modules', '.cache', 'form-nodes', 'aot-signal-control', 'form-node-signal-control.fixture.mjs')).href;
 const { field, required, FormNode } = await import(packageUrl);
 const { AotSignalControlHost } = await import(signalControlUrl);

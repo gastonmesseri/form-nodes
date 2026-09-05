@@ -9,7 +9,7 @@ Define and bind the form in an Angular component:
 ```ts
 import { Component } from '@angular/core';
 
-import { email, FormNode, field, form, minLength, required } from 'form-nodes';
+import { email, FormNode, field, form, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-registration',
@@ -96,7 +96,7 @@ If your application uses NgModules, you can import and re-export `FormNode` from
 
 ```ts
 import { NgModule } from '@angular/core';
-import { FormNode } from 'form-nodes';
+import { FormNode } from '@ngblocks/form-nodes';
 
 @NgModule({
   imports: [FormNode],

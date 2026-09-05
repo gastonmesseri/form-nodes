@@ -21,7 +21,7 @@ For broader domain and UI design decisions after choosing a primitive, continue 
 [Form modeling patterns](./form-modeling-patterns.md).
 
 ```ts
-import { array, field, form, group, uniqueItems } from 'form-nodes';
+import { array, field, form, group, uniqueItems } from '@ngblocks/form-nodes';
 
 const myForm = form({
   name: field(''),
@@ -249,7 +249,7 @@ example: the select reads and writes one `string[]` value, so no item nodes are 
 ```ts
 import { Component } from '@angular/core';
 
-import { field, form, FormNode } from 'form-nodes';
+import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-role-picker',

@@ -1,4 +1,4 @@
-import { array, field, form, type Field, type Group } from 'form-nodes';
+import { array, field, form, type Field, type Group } from '@ngblocks/form-nodes';
 
 class Company {
   constructor(readonly name: string) {}

@@ -12,7 +12,7 @@ Large forms remain ordinary typed trees. This customer-onboarding example combin
 ```ts
 import { Component, signal } from '@angular/core';
 
-import { FormNode, array, between, dateBetween, email, field, form, maxLength, maxWords, minLength, oneOf, pattern, required, uniqueItems } from 'form-nodes';
+import { FormNode, array, between, dateBetween, email, field, form, maxLength, maxWords, minLength, oneOf, pattern, required, uniqueItems } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-customer-editor',

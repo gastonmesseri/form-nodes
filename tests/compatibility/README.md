@@ -29,8 +29,8 @@ use the intended implementation. To compare the exact same archive locally, pack
 ```bash
 mkdir -p /tmp/form-nodes-compatibility-artifacts
 npm pack ./dist --pack-destination /tmp/form-nodes-compatibility-artifacts --ignore-scripts
-npm run test:compatibility -- 22 /tmp/form-nodes-compatibility-artifacts/form-nodes-1.0.0.tgz
-npm run test:compatibility -- 21 /tmp/form-nodes-compatibility-artifacts/form-nodes-1.0.0.tgz
+npm run test:compatibility -- 22 /tmp/form-nodes-compatibility-artifacts/ngblocks-form-nodes-1.0.0.tgz
+npm run test:compatibility -- 21 /tmp/form-nodes-compatibility-artifacts/ngblocks-form-nodes-1.0.0.tgz
 ```
 
 Use the actual filename printed by `npm pack` if the package version changes. A consumer run:

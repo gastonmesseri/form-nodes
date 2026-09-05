@@ -1,4 +1,4 @@
-import { field, form, minLength, required, uniqueItems } from 'form-nodes';
+import { field, form, minLength, required, uniqueItems } from '@ngblocks/form-nodes';
 
 const registration = form({
   username: field('', [required, minLength(3)]),

@@ -113,7 +113,7 @@ import { Component } from '@angular/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
-import { field, FormNode, form } from 'form-nodes';
+import { field, FormNode, form } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNode, MatFormFieldModule, MatSelectModule],
@@ -149,7 +149,7 @@ that `[formNode]` recognizes:
 import { Component } from '@angular/core';
 import { SelectModule } from 'primeng/select';
 
-import { field, FormNode, form } from 'form-nodes';
+import { field, FormNode, form } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNode, SelectModule],

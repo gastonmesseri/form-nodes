@@ -7,13 +7,13 @@ title: Installation
 Install Form Nodes alongside Angular 21.0.7+ or 22.1.5+:
 
 ```bash
-npm install --save form-nodes
+npm install --save @ngblocks/form-nodes
 ```
 
 Import only the primitives and validators that your application uses:
 
 ```ts
-import { field, form, required } from 'form-nodes';
+import { field, form, required } from '@ngblocks/form-nodes';
 ```
 
 The package is distributed as side-effect-free ESM. Consumer bundlers can remove validators and

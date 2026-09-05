@@ -18,7 +18,7 @@ const FORM_NODE: InjectionToken<FormNodeBinding<Node>>;
 ```ts
 import { Directive, inject } from '@angular/core';
 
-import { FORM_NODE } from 'form-nodes';
+import { FORM_NODE } from '@ngblocks/form-nodes';
 
 @Directive({
   selector: '[focusInvalidNode]',

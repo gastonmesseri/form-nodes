@@ -1,4 +1,4 @@
-import { form } from 'form-nodes';
+import { form } from '@ngblocks/form-nodes';
 
 type Company = {
   companyId: number;

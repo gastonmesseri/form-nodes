@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 
-import { FormNode } from './dist/types/form-nodes';
+import { FormNode } from './dist/types/ngblocks-form-nodes';
 import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, group, min, minLength, oneOf, required, validator } from './src/public-api';
 
 type Company = { companyId: number; companyName: string }

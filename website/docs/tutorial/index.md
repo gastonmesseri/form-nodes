@@ -23,7 +23,7 @@ By the end, the form will include:
 Install the package in an Angular 22 application:
 
 ```bash
-npm install --save form-nodes
+npm install --save @ngblocks/form-nodes
 ```
 
 The tutorial uses standalone components and Angular's built-in control flow. The form model itself does not require dependency injection.

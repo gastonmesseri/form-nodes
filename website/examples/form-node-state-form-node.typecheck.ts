@@ -1,6 +1,6 @@
 import { Component, input, model } from '@angular/core';
 
-import { FormNode, field, form, useFormNodeState, required } from 'form-nodes';
+import { FormNode, field, form, useFormNodeState, required } from '@ngblocks/form-nodes';
 
 // Custom control component
 

@@ -9,7 +9,7 @@ Use the same signal to drive node state and template rendering:
 ```ts
 import { Component, signal } from '@angular/core';
 
-import { FormNode, field, form, required } from 'form-nodes';
+import { FormNode, field, form, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-checkout',

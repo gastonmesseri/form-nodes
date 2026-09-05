@@ -11,7 +11,7 @@ Use [`validator()`](./validator.md) to type a reusable synchronous rule and
 [`asyncValidator()`](./async-validator.md) for Promise- or Observable-based work.
 
 ```ts
-import { asyncValidator, field, form, minLength, required, validator } from 'form-nodes';
+import { asyncValidator, field, form, minLength, required, validator } from '@ngblocks/form-nodes';
 
 const usernameAllowed = validator(({ value }) => {
   return value() === 'admin'

@@ -9,7 +9,7 @@ Register application defaults through Angular dependency injection instead of re
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
 
-import { provideValidatorMessages } from 'form-nodes';
+import { provideValidatorMessages } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [

@@ -11,7 +11,7 @@ Attach a synchronous validator directly to a field, form, or array. The consumin
 infers its value type:
 
 ```ts
-import { field, form, required, validator } from 'form-nodes';
+import { field, form, required, validator } from '@ngblocks/form-nodes';
 
 const adult = validator<number | null>(({ value }) => {
   const age = value();
@@ -50,7 +50,7 @@ from which TypeScript can infer its value.
 Use `validator<TValue>()` when declaring a reusable validator separately from its consuming node:
 
 ```ts
-import { field, form, required, validator } from 'form-nodes';
+import { field, form, required, validator } from '@ngblocks/form-nodes';
 
 export const adult = validator<number | null>(({ value }) => {
   const age = value();
@@ -380,7 +380,7 @@ augment `ValidationErrorMap` so custom kinds expose strongly typed data. See
 Custom properties are `unknown` by default. Applications and packages can augment the registry:
 
 ```ts
-declare module 'form-nodes' {
+declare module '@ngblocks/form-nodes' {
   interface ValidationErrorMap {
     minimumAge: ValidationError & {
       readonly kind: 'minimumAge';

@@ -8,7 +8,7 @@ title: asyncValidator()
 reactive dependencies, debounce, cancellation, pending state, errors, and stale results.
 
 ```ts
-import { asyncValidator, field, form } from 'form-nodes';
+import { asyncValidator, field, form } from '@ngblocks/form-nodes';
 
 const usernameAvailable = asyncValidator(({ value, abortSignal }) => {
   return checkUsername(value(), abortSignal).then(available =>

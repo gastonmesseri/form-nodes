@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { field, FormNode } from 'form-nodes';
+import { field, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNode],

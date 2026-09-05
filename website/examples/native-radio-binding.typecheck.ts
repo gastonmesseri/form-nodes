@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { field, form, FormNode } from 'form-nodes';
+import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-delivery-options',

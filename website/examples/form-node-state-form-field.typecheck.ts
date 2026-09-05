@@ -1,7 +1,7 @@
 import { Component, model, signal } from '@angular/core';
 import { FormField, form, required, type FormValueControl } from '@angular/forms/signals';
 
-import { useFormNodeState, type ControlStateError } from 'form-nodes';
+import { useFormNodeState, type ControlStateError } from '@ngblocks/form-nodes';
 
 // Custom control component
 

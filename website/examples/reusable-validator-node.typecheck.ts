@@ -1,4 +1,4 @@
-import { field, form, validator } from 'form-nodes';
+import { field, form, validator } from '@ngblocks/form-nodes';
 
 const notBlank = validator<string | null>((ctx) => {
   const node = ctx.field();

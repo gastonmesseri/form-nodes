@@ -1,5 +1,5 @@
 import type { ApplicationConfig } from '@angular/core';
-import { provideValidatorMessages } from 'form-nodes';
+import { provideValidatorMessages } from '@ngblocks/form-nodes';
 
 import { validatorMessages } from './validator-message-catalog';
 

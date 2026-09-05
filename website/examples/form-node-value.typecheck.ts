@@ -1,4 +1,4 @@
-import { array, field, form, type FormNodeValue } from 'form-nodes';
+import { array, field, form, type FormNodeValue } from '@ngblocks/form-nodes';
 
 const profile = form({
   name: field('Marco'),

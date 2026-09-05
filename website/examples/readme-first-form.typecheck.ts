@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 
-import { email, field, form, FormNode, minLength, required } from 'form-nodes';
+import { email, field, form, FormNode, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-registration',

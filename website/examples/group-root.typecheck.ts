@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { field, FormNode, group } from 'form-nodes';
+import { field, FormNode, group } from '@ngblocks/form-nodes';
 
 declare function loadProducts(filters: { query: string | null; category: string | null }): void;
 

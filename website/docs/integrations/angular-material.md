@@ -34,7 +34,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 
-import { FormNode, email, field, form, maxDate, required } from 'form-nodes';
+import { FormNode, email, field, form, maxDate, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-material-profile-editor',

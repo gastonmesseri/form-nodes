@@ -1,6 +1,6 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, createFormPrimitives, field, form, group, required, provideFormNodeConfig, type FormNodeValue } from 'form-nodes';
+import { FormNode, array, createFormPrimitives, field, form, group, required, provideFormNodeConfig, type FormNodeValue } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 

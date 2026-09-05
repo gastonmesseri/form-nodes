@@ -1,5 +1,5 @@
 {
-  "name": "form-nodes",
+  "name": "@ngblocks/form-nodes",
   "version": "1.0.0",
   "description": "Typed, signal-based forms for Angular with reactive validation, dynamic arrays, and native and custom control integration.",
   "license": "MIT",

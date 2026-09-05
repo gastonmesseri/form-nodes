@@ -16,7 +16,7 @@
 ```ts
 import { Component } from '@angular/core';
 
-import { field, FormNode, form, required } from 'form-nodes';
+import { field, FormNode, form, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
@@ -71,13 +71,13 @@ The same tree describes your data, your controls, and how they behave.
 In an Angular 21.0.7+ or 22.1.5+ application:
 
 ```sh
-npm install --save form-nodes
+npm install --save @ngblocks/form-nodes
 ```
 
 Import from the package entry point:
 
 ```ts
-import { form, field, array } from 'form-nodes';
+import { form, field, array } from '@ngblocks/form-nodes';
 ```
 
 The current `1.0.x` line supports Angular `^21.0.7 || ^22.1.5`. Both `@angular/core` and `@angular/forms` must use
@@ -94,7 +94,7 @@ service call.
 ```ts
 import { Component, signal } from '@angular/core';
 
-import { email, field, form, FormNode, minLength, required } from 'form-nodes';
+import { email, field, form, FormNode, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-registration',
@@ -285,7 +285,7 @@ Validators such as `required` affect validity, not the TypeScript nullability of
 To derive an API payload type from an existing model:
 
 ```ts
-import type { FormNodeValue } from 'form-nodes';
+import type { FormNodeValue } from '@ngblocks/form-nodes';
 
 type ProfileValue = FormNodeValue<typeof profile>;
 // { name: string | null; email: string | null;
@@ -401,7 +401,7 @@ and the [Built-in validator reference](https://gastonmesseri.github.io/form-node
 ## Reactive rules and state
 
 Start with `requiredIf()`: require a company name only for business accounts. Import `requiredIf`
-from `form-nodes` and `signal` from `@angular/core`:
+from `@ngblocks/form-nodes` and `signal` from `@angular/core`:
 
 <!-- example: readme-basics.example.ts#required-if -->
 ```ts
@@ -477,7 +477,7 @@ item node so its controls remain associated with the same item when the collecti
 ```ts
 import { Component } from '@angular/core';
 
-import { array, email, field, form, FormNode, required } from 'form-nodes';
+import { array, email, field, form, FormNode, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-contacts',

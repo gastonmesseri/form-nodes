@@ -76,7 +76,7 @@ uses weak ownership so an unreachable group tree can be garbage-collected.
 :::
 
 ```ts
-import { field, form, group, required } from 'form-nodes';
+import { field, form, group, required } from '@ngblocks/form-nodes';
 
 const myForm = form({
   displayName: field(''),

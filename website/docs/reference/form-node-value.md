@@ -13,7 +13,7 @@ import formNodeValueSource from '!!raw-loader!../../examples/form-node-value.typ
 that should follow a node's inferred model.
 
 ```ts
-import type { FormNodeValue } from 'form-nodes';
+import type { FormNodeValue } from '@ngblocks/form-nodes';
 
 type MyFormValue = FormNodeValue<typeof myForm>;
 ```

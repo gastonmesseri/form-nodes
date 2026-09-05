@@ -2,7 +2,7 @@ import '@angular/compiler';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { array, field, form, required } from 'form-nodes';
+import { array, field, form, required } from '@ngblocks/form-nodes';
 
 test('packed fields validate and reset interaction outside injection', () => {
   const name = field('', [required]);

@@ -1,4 +1,4 @@
-import type { ValidatorMessages } from 'form-nodes';
+import type { ValidatorMessages } from '@ngblocks/form-nodes';
 
 export const validatorMessages: ValidatorMessages = {
   required: 'This value is required.',

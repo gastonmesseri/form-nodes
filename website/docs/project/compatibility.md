@@ -31,7 +31,7 @@ Angular 21 releases such as 21.2.18.
 In an application already using a supported Angular version:
 
 ```bash
-npm install form-nodes
+npm install @ngblocks/form-nodes
 ```
 
 Resolve peer conflicts by aligning Angular packages rather than bypassing npm's checks.

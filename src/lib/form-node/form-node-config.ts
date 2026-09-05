@@ -59,7 +59,7 @@ export const FORM_NODE_CONFIG = new InjectionToken<FormNodeConfig>('FORM_NODE_CO
  * ```ts
  * import type { ApplicationConfig } from '@angular/core';
  *
- * import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
+ * import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
  *
  * export const appConfig: ApplicationConfig = {
  *   providers: [

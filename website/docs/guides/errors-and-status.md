@@ -75,7 +75,7 @@ error?.targetNode;
 Unknown custom kinds retain a permissive error shape. Reusable packages can augment `ValidationErrorMap` for precise custom lookup:
 
 ```ts
-declare module 'form-nodes' {
+declare module '@ngblocks/form-nodes' {
   interface ValidationErrorMap {
     readonly unavailableUsername: ValidationError & {
       readonly kind: 'unavailableUsername';

@@ -27,7 +27,7 @@ ownership so an unreachable field and its validation watcher can be garbage-coll
 :::
 
 ```ts
-import { field, form, required } from 'form-nodes';
+import { field, form, required } from '@ngblocks/form-nodes';
 
 const myForm = form({
   name: field('', [required]),
@@ -1248,7 +1248,7 @@ username.visible(); // true
 ```ts
 import { Component } from '@angular/core';
 
-import { field, form, FormNode } from 'form-nodes';
+import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',

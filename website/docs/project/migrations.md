@@ -4,6 +4,22 @@ title: Migration guides
 
 # Migration guides
 
+## Scoped package name
+
+The package is published as `@ngblocks/form-nodes`. Update dependency declarations, imports,
+and module augmentations to use that name:
+
+```sh
+npm install @ngblocks/form-nodes
+```
+
+```ts
+import { form, field } from '@ngblocks/form-nodes';
+```
+
+Remove the old unscoped dependency if it is present. Exported symbols and form behavior are
+unchanged. The GitHub repository and documentation site keep their existing URLs.
+
 ## Flattening form submission options
 
 Move submission properties directly into the second `form()` argument:
@@ -24,7 +40,7 @@ or missing actions. Pending validation is not awaited. See [Form submission](../
 ## Renaming the custom-control state hook
 
 In the upcoming first public release, `1.0.0`, `useControlState()` is renamed to
-`useFormNodeState()`. Update imports from `form-nodes` and every call to the hook. The old
+`useFormNodeState()`. Update imports from `@ngblocks/form-nodes` and every call to the hook. The old
 name is no longer exported.
 
 The return type remains `ControlState<TValue>`, and all `ControlState*` types retain their
@@ -46,7 +62,7 @@ To:
 <input [formNode]="profile.name" />
 ```
 
-Import `FormNode` from `form-nodes` in the component's `imports`. Remove Angular's `FormField`
+Import `FormNode` from `@ngblocks/form-nodes` in the component's `imports`. Remove Angular's `FormField`
 import when no independently created Angular form uses it. Bind native form roots with
 `[formNode]="profile"` to retain Form Nodes submission and reset handling.
 
@@ -75,7 +91,7 @@ Use this process for every major release:
 6. Run tests that cover validation, submission, arrays, and `[formNode]` control bindings.
 
 ```bash
-npm install --save form-nodes@^1
+npm install --save @ngblocks/form-nodes@^1
 npx tsc --noEmit
 ng build
 ng test
@@ -101,16 +117,16 @@ build [Your first form](../getting-started/first-form.md).
 
 ### Package name
 
-The library is now named `form-nodes`. Replace the previous package dependency with `form-nodes`
+The library is now named `@ngblocks/form-nodes`. Replace the previous package dependency with `@ngblocks/form-nodes`
 and update imports, re-exports, module augmentations, and any TypeScript path mappings or bundler
 aliases that reference the previous name.
 
 ```bash
-npm install --save form-nodes
+npm install --save @ngblocks/form-nodes
 ```
 
 ```ts
-import { form, field, array } from 'form-nodes';
+import { form, field, array } from '@ngblocks/form-nodes';
 ```
 
 Exported symbols and form behavior are unchanged by the rename. Remove the previous dependency

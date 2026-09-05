@@ -25,17 +25,20 @@ try {
   const packed = packResult[0];
   if (!packed?.filename || !Array.isArray(packed.files)) throw new Error('npm pack returned an unexpected result.');
   const packedPaths = new Set(packed.files.map(({ path }) => path));
-  if (!packedPaths.has('fesm2022/form-nodes.mjs') || !packedPaths.has('types/form-nodes.d.ts')) {
+  if (!packedPaths.has('fesm2022/ngblocks-form-nodes.mjs') || !packedPaths.has('types/ngblocks-form-nodes.d.ts')) {
     throw new Error('The published package does not contain its JavaScript bundle and public typings.');
   }
   if ([...packedPaths].some((path) => path.startsWith('src/'))) {
     throw new Error('The published package unexpectedly contains library source files.');
   }
 
-  const packageDirectory = join(temporaryDirectory, 'node_modules', 'form-nodes');
+  const packageDirectory = join(temporaryDirectory, 'node_modules', '@ngblocks', 'form-nodes');
   mkdirSync(packageDirectory, { recursive: true });
   run('tar', ['-xzf', join(temporaryDirectory, packed.filename), '--strip-components=1', '-C', packageDirectory]);
   const packageManifest = JSON.parse(readFileSync(join(packageDirectory, 'package.json'), 'utf8'));
+  if (packageManifest.name !== '@ngblocks/form-nodes') {
+    throw new Error('The published package must use the @ngblocks/form-nodes name.');
+  }
   if (packageManifest.scripts?.prepublishOnly) {
     throw new Error('The published package was compiled in Angular full compilation mode.');
   }
@@ -77,7 +80,7 @@ try {
 
   writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
     import '@angular/compiler';
-    import { array, createFormPrimitives, field, form, group, required } from 'form-nodes';
+    import { array, createFormPrimitives, field, form, group, required } from '@ngblocks/form-nodes';
     class Company {
       constructor(name) { this.name = name; }
     }
@@ -110,7 +113,7 @@ try {
   run(process.execPath, [join(temporaryDirectory, 'runtime.mjs')]);
 
   writeFileSync(join(temporaryDirectory, 'tree-shaking.mjs'), `
-    import { required } from 'form-nodes';
+    import { required } from '@ngblocks/form-nodes';
     console.log(required);
   `);
   const treeShakenBundle = join(temporaryDirectory, 'tree-shaking-bundle.mjs');

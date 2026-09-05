@@ -27,7 +27,7 @@ garbage-collected.
 :::
 
 ```ts
-import { array, field, form, group } from 'form-nodes';
+import { array, field, form, group } from '@ngblocks/form-nodes';
 
 const myForm = form({
   name: field(''),
@@ -75,7 +75,7 @@ nested objects, arrays, and field nullability:
 type MyFormValue = FormNodeValue<typeof myForm>;
 ```
 
-Import the type from `form-nodes`. See the dedicated
+Import the type from `@ngblocks/form-nodes`. See the dedicated
 [`FormNodeValue` reference](./form-node-value.md) for a complete example and the distinction from
 the child-map helper `FormValue<TNodes>`.
 

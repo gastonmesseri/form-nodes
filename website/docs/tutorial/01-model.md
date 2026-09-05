@@ -9,7 +9,7 @@ Start with a component-owned form tree. `field()` creates leaf values and `form(
 ```ts
 import { Component } from '@angular/core';
 
-import { field, FormNode, form } from 'form-nodes';
+import { field, FormNode, form } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',

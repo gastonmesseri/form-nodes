@@ -34,7 +34,7 @@ operations. When one control owns the complete array value, use `field([])` inst
 :::
 
 ```ts
-import { array, field, form } from 'form-nodes';
+import { array, field, form } from '@ngblocks/form-nodes';
 
 const myForm = form({
   people: array({

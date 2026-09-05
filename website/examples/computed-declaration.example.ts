@@ -1,6 +1,6 @@
 import { computed, signal } from '@angular/core';
 
-import { array, field, form, required } from 'form-nodes';
+import { array, field, form, required } from '@ngblocks/form-nodes';
 
 const initialName = signal('Marco');
 const profile = computed(() => {

@@ -2,7 +2,7 @@
 
 This document records the behavior currently implemented by the library. It is an evolving specification and the source material for future user-facing documentation.
 
-The package name and public import path are `form-nodes`. The package rename does not change
+The package name and public import path are `@ngblocks/form-nodes`. The package rename does not change
 exported symbols, node behavior, or Angular integration contracts.
 
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.5` at commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
@@ -1598,7 +1598,7 @@ error?.targetNode; // typeof age | undefined
 Unknown kinds retain the generic `{ kind, message?, targetNode }` contract and allow additional properties as `unknown`. Application code can therefore read arbitrary custom payload properties and narrow them locally without registering the error first. Reusable custom validation packages can add equally precise kinds by augmenting `ValidationErrorMap`:
 
 ```ts
-declare module 'form-nodes' {
+declare module '@ngblocks/form-nodes' {
   interface ValidationErrorMap {
     readonly unavailableUsername: ValidationError & {
       readonly kind: 'unavailableUsername';
@@ -2553,7 +2553,7 @@ Import the capitalized `FormNode` symbol from the package entry point and add it
 ```ts
 import { Component } from '@angular/core';
 
-import { field, FormNode } from 'form-nodes';
+import { field, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNode],
@@ -2573,7 +2573,7 @@ Assign the directive's `formNode` export to a template reference, then query tha
 ```ts
 import { Component, viewChild } from '@angular/core';
 
-import { field, FormNode } from 'form-nodes';
+import { field, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNode],

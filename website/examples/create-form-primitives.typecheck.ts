@@ -1,4 +1,4 @@
-import { createFormPrimitives, type Field } from 'form-nodes';
+import { createFormPrimitives, type Field } from '@ngblocks/form-nodes';
 
 const { form, field, array } = createFormPrimitives({
   nullable: false,

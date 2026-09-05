@@ -1,4 +1,4 @@
-import { array, asyncValidator, field, form, group, validator } from 'form-nodes';
+import { array, asyncValidator, field, form, group, validator } from '@ngblocks/form-nodes';
 
 const profile = form({
   email: field('', {

@@ -1,7 +1,7 @@
 import { Component, forwardRef } from '@angular/core';
 import { FormsModule, NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 
-import { useFormNodeState } from 'form-nodes';
+import { useFormNodeState } from '@ngblocks/form-nodes';
 
 // Custom control component
 

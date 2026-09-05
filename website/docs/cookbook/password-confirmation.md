@@ -10,7 +10,7 @@ bindings in one component makes the complete interaction visible:
 ```ts
 import { Component } from '@angular/core';
 
-import { equalTo, field, form, FormNode } from 'form-nodes';
+import { equalTo, field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-password-editor',

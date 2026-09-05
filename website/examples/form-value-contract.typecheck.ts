@@ -1,4 +1,4 @@
-import { field, form, type FormValueContract } from 'form-nodes';
+import { field, form, type FormValueContract } from '@ngblocks/form-nodes';
 
 type Profile = {
   username: string | null;

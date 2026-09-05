@@ -252,7 +252,7 @@ Register provider configuration in `app.config.ts` and pass that `ApplicationCon
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
-import { provideFormNodeConfig, provideValidatorMessages } from 'form-nodes';
+import { provideFormNodeConfig, provideValidatorMessages } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -341,7 +341,7 @@ Use `ANGULAR_FORMS_STATUS_CLASSES` to opt into the familiar `ng-valid`, `ng-inva
 `ng-touched`, `ng-untouched`, `ng-dirty`, and `ng-pristine` classes:
 
 ```ts
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
 
 provideFormNodeConfig({
   classes: ANGULAR_FORMS_STATUS_CLASSES,

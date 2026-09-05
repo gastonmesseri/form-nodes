@@ -1,4 +1,4 @@
-import { asyncValidator, field, form } from 'form-nodes';
+import { asyncValidator, field, form } from '@ngblocks/form-nodes';
 
 const accountForm = form({
   username: field('ada', [

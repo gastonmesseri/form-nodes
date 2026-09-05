@@ -1,4 +1,4 @@
-import { array } from 'form-nodes';
+import { array } from '@ngblocks/form-nodes';
 
 const people = array({
   name: '',
