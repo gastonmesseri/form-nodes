@@ -12,6 +12,8 @@ canonical release record.
 
 ### Fixed
 
+- `[formNode]` now recognizes CVAs assigned directly through an injected `NgControl.valueAccessor`. Method-wrapping state hooks also observe values, errors, status, and interaction changes across node edits, async validation, reset, and rebinding without rerunning validators.
+
 - Library console warnings now appear only in Angular development mode, including ignored keys/indexes,
   unsupported reset options, and custom-control input synchronization diagnostics.
 

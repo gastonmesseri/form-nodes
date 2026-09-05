@@ -43,6 +43,31 @@ describe('FormNode production AOT discovery in Chromium', () => {
     }
   });
 
+  it('connects a directly assigned accessor and renders the supplied hook state in production AOT', async () => {
+    const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+    const fixture = TestBed.createComponent(module.AotDirectHookHost);
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.textContent).toContain('false / true');
+    button.click();
+    button.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.profile.name()).toBe('clicked');
+    expect(button.textContent).toContain('clicked / clicked / true / false');
+    fixture.componentInstance.profile.name.set('server');
+    fixture.detectChanges();
+    expect(button.textContent).toContain('server / server');
+    fixture.componentInstance.profile.disable();
+    fixture.detectChanges();
+    expect(button.disabled).toBe(true);
+    fixture.componentInstance.profile.enable();
+    fixture.componentInstance.profile.reset({ name: '' });
+    fixture.detectChanges();
+    expect(button.disabled).toBe(false);
+    expect(button.textContent).toContain('false / true');
+    fixture.destroy();
+  });
+
   it('discovers an AOT component instance through getDebugNode without an adapter provider', async () => {
     const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
     const fixture = TestBed.createComponent(module.AotSignalControlHost);

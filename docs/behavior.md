@@ -2773,3 +2773,27 @@ This is an intentional opt-out from Angular 22 `v22.1.5`
 `packages/forms/signals/src/directive/control_custom.ts` synchronizes recognized state inputs
 and whose `test/web/form_field.spec.ts` covers that propagation. The default remains comparable.
 This provider does not configure Angular's own directives.
+
+
+## Direct NgControl registration and legacy state hooks
+
+A `NgControl.valueAccessor` assigned during component construction takes precedence over
+`NG_VALUE_ACCESSOR` discovery at `[formNode]` initialization. The existing CVA connection owns
+value transport, touched/debounce behavior, disabled callbacks, rebinding, and destruction.
+The direct assignment must happen before initialization; later replacements are not connected.
+Control-originated edits do not echo through `writeValue()`.
+
+For method-wrapping observers with untracked data reads, the adapter invokes its otherwise
+non-validating `updateValueAndValidity()` boundary during reactive node-state synchronization.
+This lets wrappers invalidate data caches without adding control events, restarting validators,
+or changing synchronous node behavior. Reactive `_status`, `_touched`, and `_pristine` computeds
+support the supplied legacy state-observation pattern; they are not public node APIs.
+The adapter remains partial: hook options that require dynamic Angular `addValidators()` or
+`addAsyncValidators()` are not supported. Validators remain node-owned. A helper that skips the
+touched callback once touched must remove that guard for repeated blur-debounced edits.
+
+Reference: Angular `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`), refreshed for this
+change. Inspected `packages/forms/src/model/abstract_model.ts` for internal status/interaction
+signals, `packages/forms/src/directives/ng_control.ts` and `directives/shared.ts` for accessor
+ownership, and `packages/forms/signals/test/web/reactive_fvc.spec.ts` for disabled propagation.
+Unlike Angular's real `FormControl`, the adapter's notification boundary performs no validation.
