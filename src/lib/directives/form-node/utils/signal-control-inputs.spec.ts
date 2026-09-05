@@ -4,8 +4,8 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import type { ValidationError } from '@angular/forms/signals';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Component, Injector, Input, booleanAttribute, input, model, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { Component, Injector, Input, booleanAttribute, input, model, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 
 import { form } from '../../../primitives/form';
 import { field } from '../../../primitives/field';
@@ -16,8 +16,8 @@ import { required } from '../../../validation/validators/required';
 import { connectSignalControlInputs } from './signal-control-inputs';
 import { maxLength } from '../../../validation/validators/max-length';
 import { minLength } from '../../../validation/validators/min-length';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());

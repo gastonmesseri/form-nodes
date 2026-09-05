@@ -12,11 +12,15 @@
 - [ ] Consider changing the @example to something different, like a heading with asterisks **Like this** (for better readability)
 
 - [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
+  - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
+  - this should also allow support for [formControl] [formControlNAme] [formField] bindings somehow
 
-- [ ] Add tests for every function in lib/core/utils
+- [ ] Add tests for every function in lib/utils
 
 - controlState
   - [ ] Consider naming if useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
+
+- Consider removing support for myForm.name.$field (maybe right now with useControlState() we don't need to support that)
 
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
@@ -351,6 +355,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Remove the redundant `src/lib/core` directory level.
+  - Keep the existing implementation areas directly under `src/lib`. Update public entry-point exports, test-helper imports, browser fixture type imports, and playground imports; preserve the existing API and behavior.
 
 - [x] Keep `validation/validators` focused on concrete validators and their tests.
   - Moved message resolution, default messages, date constraints, and shared validator options into `validation/utils`; moved the independent string helper `count-words` into `core/utils`. Updated imports and the `ValidatorOptions` re-export without changing the public API or behavior.

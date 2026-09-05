@@ -2,25 +2,25 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Component, forwardRef, model } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
-import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators, type ControlValueAccessor } from '@angular/forms';
+import { Component, forwardRef, model } from '@angular/core';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators, type ControlValueAccessor } from '@angular/forms';
 
 import { field } from '../primitives/field';
-import { asyncValidator } from '../validation/async-validator';
+import { useControlState } from './control-state';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
-import { required } from '../validation/validators/required';
 import { pattern } from '../validation/validators/pattern';
-import { FormNode } from '../directives/form-node/form-node.directive';
+import { required } from '../validation/validators/required';
+import { asyncValidator } from '../validation/async-validator';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
-import { useControlState } from './control-state';
+import { FormNode } from '../directives/form-node/form-node.directive';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { hasControlStateConsumer, registerControlStateBinding } from './adapters/form-node';
-import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 // Plain Vitest transpilation does not emit signal-input metadata for the directive.
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');

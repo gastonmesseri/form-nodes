@@ -11,7 +11,7 @@ import { field } from '../../primitives/field';
 import { group } from '../../primitives/group';
 import { FormNode } from './form-node.directive';
 import { required } from '../../validation/validators/required';
-import { registerSignalInputForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalInputForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 

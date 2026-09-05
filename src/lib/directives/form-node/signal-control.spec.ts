@@ -2,14 +2,14 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, EventEmitter, Injector, Input, Output, input, model, output, runInInjectionContext, signal } from '@angular/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import { Component, EventEmitter, Injector, Input, Output, input, model, output, runInInjectionContext, signal } from '@angular/core';
 
 import { connectSignalControl } from './signal-control';
 import { field, type Field } from '../../primitives/field';
 import { required } from '../../validation/validators/required';
-import { registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
