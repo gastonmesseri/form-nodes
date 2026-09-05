@@ -4,7 +4,6 @@ import type { Field } from '../primitives/field.type';
 import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
 import type { ArrayNode } from '../primitives/array.type';
-import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 
 export type MarkAsTouchedOptions = {
@@ -299,8 +298,6 @@ export type DynamicNode =
   & {
     /** Complete common node API. */
     api: NodeApi;
-    /** Opaque terminal adapter for Angular's `[formField]` directive. */
-    readonly $field: OpaqueAngularField;
   };
 type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown];
 

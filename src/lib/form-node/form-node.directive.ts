@@ -39,9 +39,9 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
   exportAs: 'formNode',
 })
 export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNode>, OnInit {
-  readonly _formNodeInput = input.required<TNode>({ alias: 'formNode' });
+  _formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
-  readonly injector = inject(Injector);
+  injector = inject(Injector);
 
   private renderer = inject(Renderer2);
 
@@ -51,7 +51,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private appId = inject(APP_ID);
 
-  readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
   private interopNgControl: FormNodeNgControl | undefined;
 
@@ -84,10 +84,10 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /** Current bound field, exposed as a signal for custom integrations. */
-  readonly node = computed<TNode>(() => this._field);
+  node = computed<TNode>(() => this._field);
 
   /** Errors visible to this binding, excluding errors owned by another binding. */
-  readonly errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]> = computed(() => {
+  errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]> = computed(() => {
     const errors = this.node().$api.errors() as readonly ValidationError.WithTargetNode<TNode>[];
     return errors.filter(error => !error.formNode || error.formNode === this);
   }, { equal: shallowEqual });

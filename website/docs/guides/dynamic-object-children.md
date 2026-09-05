@@ -48,7 +48,7 @@ added.address.city(); // 'Zurich'
 ```
 
 The operation validates every destination key and definition before normalizing or attaching
-anything. Existing keys, `$api`, and `$field` are rejected. Array values become fields; use an
+anything. Existing keys, and `$api` are rejected. Array values become fields; use an
 explicit `array(...)` for a dynamic collection with item nodes. Use `field(objectValue)` whenever
 a plain object should remain one atomic value instead of becoming a group.
 

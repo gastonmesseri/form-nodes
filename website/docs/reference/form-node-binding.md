@@ -233,8 +233,7 @@ injector ownership. A node can then remain in use or bind somewhere else.
 ## Automatic CSS classes
 
 For the common application-wide setup, register `provideFormNodeConfig()` in the standalone
-application configuration. The same predicates apply to `[formNode]` and to `[formField]` controls
-whose field comes from a Form Nodes node's `$field`:
+application configuration. Its predicates apply to `[formNode]` controls:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
@@ -304,17 +303,8 @@ provideFormNodeConfig({
 These classes reflect state only. Adding or removing them does not change validation, interaction
 state, or submission behavior.
 
-`provideFormNodeConfig()` uses Angular's Signal Forms configuration internally for adapted
-`[formField]` controls. Do not combine it with `provideSignalFormsConfig({ classes })` in the same
-injector because Angular's config token is not multi and the last provider would replace the first.
-Angular `[formField]` controls backed by ordinary Angular field trees do not receive Form Nodes class
-predicates.
-
-Conversely, an existing `provideSignalFormsConfig({ classes })` works normally with
-`[formField]="node.$field"` without any Form Nodes configuration. Its callbacks receive Angular's
-`FormFieldBinding` and can read `binding.state()`. Choose this when the application wants one Angular
-class map for both adapted and native Angular field trees; choose `provideFormNodeConfig()` when the
-same `FormNodeBinding` callbacks should work with both `[formNode]` and adapted `[formField]`.
+`provideFormNodeConfig()` configures `[formNode]` only. Angular's `provideSignalFormsConfig()`
+configures Angular `[formField]` independently, so both providers can share an injector.
 
 ## Custom-control components
 
@@ -379,6 +369,10 @@ The related public types are:
 | `FormNodeCheckboxControl` | Boolean signal control whose primary model is `checked`. |
 | `FormNodeControl<T>` | Union of recognized value and checkbox control contracts. |
 | `FormNodeUiControl<T>` | Common optional UI state and node-integration surface. |
+
+These contracts are declared by Form Nodes using Angular core signal types. They keep the same
+value/checked models, typed constraints, `touch` output, and `focus()`/`reset()` hooks on Angular
+21 and 22; implementing Angular's version-specific `FormUiControl` is not required.
 
 ## Pass-through wrappers
 

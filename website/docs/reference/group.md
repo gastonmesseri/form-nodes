@@ -415,7 +415,6 @@ their value; `children` is a stable readonly map rather than a signal.
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
 | [`api`](#api) | Complete group API unless a declared child named `api` takes precedence. |
 | [`$api`](#api-1) | Guaranteed collision-safe group API. |
-| [`$field`](#field-adapter) | Opaque terminal adapter for Angular's `[formField]` directive. |
 | **Dynamic children** | |
 | [`add(key, definition)`](#add) | Attaches and returns one runtime child with its exact inferred node type. |
 | [`add(definitions)`](#add) | Atomically attaches and returns several runtime children. |
@@ -467,7 +466,7 @@ their value; `children` is a stable readonly map rather than a signal.
 | [`submitting()`](#submitting) | Whether an ancestor form is running its submission action. |
 
 Every declared child name takes precedence over ordinary API and native callable member names.
-`$api` and `$field` are reserved, so those access paths remain stable.
+`$api` is reserved, so that access path remains stable.
 
 ```ts
 const details = group({
@@ -760,19 +759,6 @@ details.api(); // 'public-api'
 details.reset(); // 'reset label'
 details.$api.reset();
 ```
-
-#### $field adapter {#field-adapter}
-
-**Signature:** `readonly $field: any`
-
-Returns the opaque terminal adapter used by Angular's `[formField]` directive.
-
-```html
-<input [formField]="profile.address.city.$field" />
-```
-
-Select the intended Form Nodes node first and use `$field` only as the binding value. Programmatic group
-operations belong to the Form Nodes node API.
 
 ### Validation properties
 
@@ -1154,7 +1140,7 @@ filters.get('range') === added.range; // true
 filters.children['range'] === added.range; // true
 ```
 
-Keys must be new, definitions must be detached, and `$api` and `$field` are reserved. The object
+Keys must be new, definitions must be detached, and `$api` is reserved. The object
 form validates every supplied definition before attaching any child. Keep the returned node for
 its exact type, or retrieve it later with `get()` or `children[key]`. Array values become fields;
 declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application object

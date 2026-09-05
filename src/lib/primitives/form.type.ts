@@ -3,7 +3,6 @@ import type { Injector, Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { Group } from './group.type';
 import type { ArrayNode } from './array.type';
-import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, Node, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
@@ -30,7 +29,7 @@ export type ObjectNodeDefinitionInput<TDefinition> =
 /** Validates an inferred map of object-node child definitions. */
 export type ObjectNodeDefinitionInputs<TDefinitions extends ObjectNodeDefinitions> = {
   [TKey in keyof TDefinitions]: TKey extends symbol ? never
-    : TKey extends '$api' | '$field' ? never
+    : TKey extends '$api' ? never
       : unknown extends TDefinitions[TKey] ? TDefinitions[TKey]
         : ObjectNodeDefinitionInput<TDefinitions[TKey]>;
 };
@@ -370,7 +369,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * profile.children['age'] === age; // true
    * ```
    */
-  add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' | '$field' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Form<TNodes, TParent>>;
+  add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Form<TNodes, TParent>>;
   /**
    * Adds several child definitions atomically and returns an exact keyed map of their attached
    * live nodes.
@@ -390,7 +389,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * profile.children['address'] === added.address; // true
    * ```
    */
-  add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api' | '$field', never>>): {
+  add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {
     readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Form<TNodes, TParent>>;
   };
   /**
@@ -692,19 +691,6 @@ type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
    * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
   $api: FormApi<TNodes, TParent>;
-  /**
-   * Opaque Angular Signal Forms adapter for binding with `[formField]`.
-   *
-   * This property is supported and is not planned for removal. Use it only as the terminal value
-   * passed to Angular's `[formField]` binding.
-   *
-   * @example
-   * ```html
-   * <input [formField]="form.user.$field" />
-   * ```
-   *
-   */
-  readonly $field: OpaqueAngularField;
 };
 
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =

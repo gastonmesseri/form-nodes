@@ -43,9 +43,7 @@ generic infrastructure needs the complete named-child collection.
 
 Every key supplied by the user in the initial `form()` definition takes precedence in the public
 type over ordinary node API and native callable members. This includes `value`, `reset`, `api`,
-`children`, `name`, and `apply`. The only reserved exceptions are `$api` and `$field`; neither can
-be declared as a child. `$api` always provides collision-safe API access, and `$field` remains the
-opaque Angular binding adapter.
+`children`, `name`, and `apply`. The reserved name `$api` always provides collision-safe API access.
 
 For example, a declared child takes precedence over `children` itself:
 

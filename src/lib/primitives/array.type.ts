@@ -3,7 +3,6 @@ import type { Signal } from '@angular/core';
 import type { Field } from './field.type';
 import type { Group } from './group.type';
 import type { Form, FormOptions } from './form.type';
-import type { OpaqueAngularField } from '../interop/angular-field.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NearestForm, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
@@ -626,19 +625,6 @@ export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
      * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
      */
     $api: ArrayApi<TItem, TParent>;
-    /**
-     * Opaque Angular Signal Forms adapter for binding with `[formField]`.
-     *
-     * This property is supported and is not planned for removal. Use it only as the terminal value
-     * passed to Angular's `[formField]` binding.
-     *
-     * @example
-     * ```html
-     * <input [formField]="form.user.$field" />
-     * ```
-     *
-     */
-    readonly $field: OpaqueAngularField;
   }
   & ArrayIndexes<TItem, TParent>
   & ArrayApi<TItem, TParent>

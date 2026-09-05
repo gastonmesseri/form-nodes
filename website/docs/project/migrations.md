@@ -4,9 +4,37 @@ title: Migration guides
 
 # Migration guides
 
-There are no completed version-to-version migrations yet because `0.1.0` is the initial development
-version. This page is nevertheless the permanent home for actionable upgrade instructions; future
-breaking changes will be added here instead of being left only in release notes.
+## Removing the field adapter
+
+In the current unreleased development version, Form Nodes no longer exposes `$field`.
+Change each Form Nodes binding from:
+
+```html
+<input [formField]="profile.name.$field" />
+```
+
+To:
+
+```html
+<input [formNode]="profile.name" />
+```
+
+Import `FormNode` from `form-nodes` in the component's `imports`. Remove Angular's `FormField`
+import when no independently created Angular form uses it. Bind native form roots with
+`[formNode]="profile"` to retain Form Nodes submission and reset handling.
+
+`provideFormNodeConfig()` now configures `[formNode]` only. Angular's `provideSignalFormsConfig()`
+configures its own `[formField]` controls independently; both providers can coexist. If classes
+previously came from Angular's provider on an adapted control, move them to `provideFormNodeConfig()`
+and read state with `binding.node()` instead of `binding.state()`.
+
+`useControlState()` remains available for all supported forms APIs. Use Angular's `form()` and
+`signal()` for controls bound through Angular `[formField]`; see the
+[control-state example](../reference/control-state.md#bind-with-formfield).
+
+Custom components may implement the Form Nodes control types without depending on Angular's
+version-specific `FormUiControl` type. The supported Angular ranges are now `^21.2.22 || ^22.1.5`;
+update older Angular installations to a verified patch before upgrading this development version.
 
 ## Upgrade checklist
 

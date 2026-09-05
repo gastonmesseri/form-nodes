@@ -65,6 +65,13 @@ consumer migration guide.
 
 ### Changed
 
+- Support Angular `^21.2.22 || ^22.1.5`, building the library with Angular 21 and TypeScript 5.9.
+  Custom-control types now expose the Form Nodes contract consistently across both majors.
+- **Breaking:** Remove the `$field` adapter. Bind Form Nodes with `[formNode]="node"` instead of
+  `[formField]="node.$field"`. `provideFormNodeConfig()` now configures `[formNode]` only and can
+  coexist with Angular's class configuration. `useControlState()` still observes independently
+  created Angular Signal Forms, Reactive Forms, and template-driven controls.
+
 - **Breaking:** The package is now named `form-nodes`. Update dependencies, imports, and module
   augmentations to use `form-nodes`; exported APIs and runtime behavior are unchanged by the rename.
 
