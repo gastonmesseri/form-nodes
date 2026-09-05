@@ -6,6 +6,10 @@
 
 <p align="center">A typed forms library for <strong>Angular 21 and 22</strong>.</p>
 
+[**Documentation**](https://gastonmesseri.github.io/form-nodes/) ·
+[Step-by-step tutorial](https://gastonmesseri.github.io/form-nodes/tutorial) ·
+[API reference](https://gastonmesseri.github.io/form-nodes/reference/api-overview)
+
 <!-- example: quick-start.typecheck.ts -->
 ```ts
 import { Component } from '@angular/core';
@@ -35,11 +39,6 @@ export class ProfileEditor {
 Build a form from `form()`, `field()`, `array()`, and nested objects. Read its values by calling the
 nodes, bind them to controls with `[formNode]`, and use Angular signals for validation and state.
 The same tree describes your data, your controls, and how they behave.
-
-[Documentation](https://gastonmesseri.github.io/form-nodes/) ·
-[Step-by-step tutorial](https://gastonmesseri.github.io/form-nodes/tutorial) ·
-[Interactive playground](https://gastonmesseri.github.io/form-nodes/playground) ·
-[API reference](https://gastonmesseri.github.io/form-nodes/reference/api-overview)
 
 ## At a glance
 
@@ -574,7 +573,6 @@ See [Value flow and debounce](https://gastonmesseri.github.io/form-nodes/guides/
 | I want to… | Start here |
 | --- | --- |
 | Learn by building one form step by step | [Tutorial](https://gastonmesseri.github.io/form-nodes/tutorial) |
-| Experiment with values, validation, and debounce | [Playground](https://gastonmesseri.github.io/form-nodes/playground) |
 | See a larger model with real Angular bindings | [Complete form example](https://gastonmesseri.github.io/form-nodes/examples/complex-form) |
 | Find an API or all its options | [API overview](https://gastonmesseri.github.io/form-nodes/reference/api-overview) |
 | Solve a focused application problem | [Cookbook](https://gastonmesseri.github.io/form-nodes/cookbook) |

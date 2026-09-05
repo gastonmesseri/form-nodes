@@ -69,7 +69,6 @@ const config: Config = {
         { to: '/tutorial', position: 'left', label: 'Tutorial' },
         { to: '/guides/choosing-a-primitive', position: 'left', label: 'Guides' },
         { to: '/reference/api-overview', position: 'left', label: 'API' },
-        { to: '/playground', position: 'left', label: 'Playground' },
         { href: 'https://github.com/gastonmesseri/form-nodes', position: 'right', label: 'GitHub' },
       ],
     },
