@@ -1311,7 +1311,7 @@ omitted or when every configured layer returns `undefined`.
 
 #### Validator message configuration
 
-See [Validator messages and internationalization](./validator-messages.md) for the complete
+See [Validator messages and internationalization](../website/docs/guides/validator-messages.md) for the complete
 consumer-oriented guide, including setup recommendations, SSR considerations, callback parameters,
 and examples for every configuration scope.
 

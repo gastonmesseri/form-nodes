@@ -133,19 +133,29 @@ const myForm = form({
 
 Local message functions close over their dependencies and take no parameters. Catalog callbacks receive strongly typed constraint data; IntelliSense exposes the available keys and parameters.
 
-| Catalog key | Callback parameters |
+| Key | Callback parameters |
 | --- | --- |
-| `required`, `email`, `url`, `equalTo` | None |
-| `min` / `max` | Constraint and actual number |
-| `between` | Minimum, maximum, and actual number |
-| `integer` | Actual number |
-| `minLength` / `maxLength` | Constraint and actual length |
-| `minWords` / `maxWords` | Constraint and actual word count |
-| `pattern` | Pattern and actual string |
-| `minDate` / `maxDate` | Constraint and actual `Date` |
-| `dateBetween` | Minimum, maximum, and actual `Date` |
-| `oneOf` | Allowed options and actual value |
-| `uniqueItems` | Duplicate indexes |
+| `required` | none |
+| `email` | none |
+| `url` | none |
+| `equalTo` | none; compared values are intentionally private |
+| `uniqueItems` | `{ duplicateIndexes: readonly number[] }` |
+| `between` | `{ min: number; max: number; actual: number }` |
+| `min` | `{ min: number, actual: number }` |
+| `max` | `{ max: number, actual: number }` |
+| `integer` | `{ actual: number }` |
+| `minLength` | `{ minLength: number, actual: number }` |
+| `maxLength` | `{ maxLength: number, actual: number }` |
+| `pattern` | `{ pattern: RegExp, actual: string }` |
+| `minDate` | `{ minDate: Date, actual: Date }` |
+| `maxDate` | `{ maxDate: Date, actual: Date }` |
+| `dateBetween` | `{ minDate: Date, maxDate: Date, actual: Date }` |
+| `oneOf` | `{ options: readonly unknown[], actual: unknown }` |
+| `minWords` | `{ minWords: number, actual: number }` |
+| `maxWords` | `{ maxWords: number, actual: number }` |
+
+The callback receives the resolved constraint, not its original signal or source function. For
+example, a reactive `min(() => minimumAge())` supplies the current numeric `min` value.
 
 ## Reactive locale changes
 
@@ -162,3 +172,5 @@ configureGlobalValidatorMessages(() => ({
 ```
 
 Changing `locale` updates existing failing errors without recreating the form. This works inside and outside Angular dependency injection.
+
+These catalogs apply only to built-in validators. Custom validators supply their own errors and messages.

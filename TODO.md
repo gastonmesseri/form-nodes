@@ -356,6 +356,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Consolidate validator-message consumer documentation in the website guide, preserving callback parameter details and removing the superseded internal copy. Update README and behavior-reference links while retaining the completed work history.
+
 - [x] Place `public-api.spec.ts` beside `src/public-api.ts` and import its tested contracts through the public entry point.
 
 - [x] Document directory responsibilities and placement conventions for helpers, tests, and documentation in `docs/architecture.md`, linked from the README.
@@ -900,5 +902,5 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] required should notify that it doesn't validate empty arrays (i think this is angular 22 signal forms behavior. in case is not, then it is not a good example)
 - [x] directive
   - [x] Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
-- [x] Add reactive internationalization support for built-in validator messages. See `docs/validator-messages.md`.
+- [x] Add reactive internationalization support for built-in validator messages. The original guide is now consolidated in `website/docs/guides/validator-messages.md`.
 - [x] Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown
