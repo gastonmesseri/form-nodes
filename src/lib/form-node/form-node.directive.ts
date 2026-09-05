@@ -16,8 +16,8 @@ import { connectSignalControlInputs } from './utils/signal-control-inputs';
 import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../types/node.type';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';
+import { hasControlStateConsumer, registerControlStateBinding } from '../control-state/adapters/form-node';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './utils/native-input-validity';
-import { hasControlStateConsumer, registerControlStateBinding } from '../control-state-hook/adapters/form-node';
 import { isNativeFormNodeControl, isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './utils/native-control';
 import { elementAcceptsMinMax, formatNativeLimit, formatNativePattern, isTextualFormElement, isValidatorObject, selectValueAccessor, toControlErrors } from './form-node.utils';
 

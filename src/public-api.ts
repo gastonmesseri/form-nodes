@@ -49,7 +49,7 @@ export {
   type ControlStateError,
   type ControlStateSource,
   type ControlStateDisabledReason,
-} from './lib/control-state-hook/control-state';
+} from './lib/control-state/control-state';
 export {
   type ValidatorMessages,
   provideValidatorMessages,

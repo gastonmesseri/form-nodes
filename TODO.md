@@ -356,6 +356,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Rename `src/lib/control-state-hook` to `src/lib/control-state` to match the feature and its files.
+  - Preserve the adapter structure and tests; update the public entry point, FormNode integration, and shared test-helper imports without changing behavior or the public API.
+
 - [x] Move `src/lib/directives/form-node` to `src/lib/form-node` and remove the empty `directives` directory.
   - Keep the feature's existing files, tests, utilities, and Angular internals together. Update imports and public entry-point paths without changing the public API or behavior.
 
