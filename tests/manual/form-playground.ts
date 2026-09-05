@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 
-import { FormNode } from './dist/types/ngblocks-form-nodes';
-import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, group, min, minLength, oneOf, required, validator } from './src/public-api';
+import { FormNode } from '../../dist/types/ngblocks-form-nodes';
+import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string }
 const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
@@ -100,7 +100,7 @@ myForm.validators()[0]
 
 
 myForm.someGroup.username()
-// claro creo que tampoco necesitariamos un arbol completo de FieldTree, es decir, solo con un nodo de FieldTree que se bindee a un [formField] yo creo que podriamos reflejar y recibir entre ese nodo y nuestro nodo de nuestra libreria
+// A complete FieldTree may not be necessary: a single FieldTree node bound through [formField] could synchronize with a node from this library.
 
 myForm.whatIsThis.set(23);
 myForm.whatIsThis();
