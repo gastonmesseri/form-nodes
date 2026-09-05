@@ -15,6 +15,7 @@ import { required } from '../../validation/validators/required';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
 import { connectSignalControlInputs } from './signal-control-inputs';
+import { provideFormNodeConfig } from '../form-node-config';
 import type { ValidationError } from '../../validation/validation.type';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
@@ -25,6 +26,33 @@ afterAll(() => TestBed.resetTestEnvironment());
 describe('connectSignalControlInputs', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
+
+  it('keeps declared input names without writing state when synchronization is disabled', () => {
+    TestBed.configureTestingModule({ providers: [provideFormNodeConfig({ syncControlInputs: false })] });
+    @Component({ selector: 'consumer-state-control', template: '' })
+    class Control {
+      disabled = input(true);
+
+      readonly = input(true);
+
+      errors = input<readonly unknown[]>(['consumer']);
+    }
+    for (const name of ['disabled', 'readonly', 'errors']) registerSignalInputForJit(Control, name, name);
+    const fixture = TestBed.createComponent(Control);
+    const profile = form({ name: field('', [required]) });
+    const connection = connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector);
+    TestBed.flushEffects();
+    expect([...connection.inputNames]).toEqual(['disabled', 'readonly', 'errors']);
+    expect(fixture.componentInstance.disabled()).toBe(true);
+    expect(fixture.componentInstance.readonly()).toBe(true);
+    expect(fixture.componentInstance.errors()).toEqual(['consumer']);
+    profile.name.set('Mark');
+    profile.disable();
+    profile.enable();
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.disabled()).toBe(true);
+    expect(fixture.componentInstance.errors()).toEqual(['consumer']);
+  });
 
   it('synchronizes every equivalent field state and applies input transforms', () => {
     @Component({

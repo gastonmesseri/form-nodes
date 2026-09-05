@@ -426,3 +426,13 @@ Do not combine `[formNode]` with Angular's separate form-root directive on the s
 
 See [Control binding](../guides/control-binding.md), [Custom controls](../guides/custom-controls.md),
 and [Form submission](../guides/submission.md).
+
+
+## Custom-control input synchronization
+
+Automatic synchronization of custom-control state inputs is enabled by default.
+Use `provideFormNodeConfig({ syncControlInputs: false })` when your component or template
+should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
+Native controls and CVA `setDisabledState()` remain connected.
+See [the simple example](../guides/custom-controls.md#keep-control-of-your-components-inputs)
+and [all configuration details](./provide-form-node-config.md#custom-control-inputs).

@@ -2754,3 +2754,22 @@ default and production through `enableProdMode()` or the optimized Angular CLI b
 Signal Forms interop ownership and node state behavior remain unchanged. Tests cover development
 warnings without DI, production-mode helper suppression, and actual form/group/array/reset/input
 warning paths in the separate production Chromium process.
+
+
+## Optional custom-control state inputs
+
+`provideFormNodeConfig({ syncControlInputs: false })` disables matching state and constraint
+input writes by `[formNode]` for custom signal controls, input-output pairs, and CVA components.
+The default is true. The nearest whole configuration wins; omitted properties use defaults.
+Configuration is resolved at connection time, and the choice persists through node rebinding.
+Input discovery still records public names and aliases so native fallback does not overwrite
+a custom control's own input channels. No synchronization effect is installed for these inputs
+when disabled. Model value/checked, optional node access, touch, focus, reset, native state,
+and CVA `setDisabledState()` retain their existing behavior. Node state and validation do not
+change merely because the corresponding UI inputs are owned by the consumer.
+
+This is an intentional opt-out from Angular 22 `v22.1.5`
+(`468b65b74566537456c192ac4281795c5a1e1a5e`), whose
+`packages/forms/signals/src/directive/control_custom.ts` synchronizes recognized state inputs
+and whose `test/web/form_field.spec.ts` covers that propagation. The default remains comparable.
+This provider does not configure Angular's own directives.
