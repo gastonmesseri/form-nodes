@@ -1,9 +1,5 @@
 ## Up next
 
-- [ ] Think about how to better structure project folders given current knowledge and existing files
-  - should i move public-api.spec.ts next to public-api.ts ?
-  - what is the best way of organizing the folders? lib/core is needed? maybe just lib? maybe just core?
-
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -356,46 +352,34 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Think about how to better structure project folders given current knowledge and existing files
+  - [x] should i move public-api.spec.ts next to public-api.ts ?
+  - [x] what is the best way of organizing the folders? lib/core is needed? maybe just lib? maybe just core?
 - [x] Allow an untyped no-argument field declaration from a non-nullable configured factory to typecheck as `Field<unknown>`, matching its existing `null` initial value.
   - Preserve the initial-value requirement for explicit generic calls and document `field.nullable<T>()` for typed empty declarations. Cover configured inference and executable documentation examples.
-
 - [x] Consolidate validator-message consumer documentation in the website guide, preserving callback parameter details and removing the superseded internal copy. Update README and behavior-reference links while retaining the completed work history.
-
 - [x] Place `public-api.spec.ts` beside `src/public-api.ts` and import its tested contracts through the public entry point.
-
 - [x] Document directory responsibilities and placement conventions for helpers, tests, and documentation in `docs/architecture.md`, linked from the README.
-
 - [x] Move `create-control-value-buffer.ts` and its tests to `src/lib/primitives/utils`, alongside its primitive consumers' other helpers.
   - Keep `form.utils.ts` and `form-node.utils.ts` beside their corresponding implementation files.
-
 - [x] Group primitive-specific helpers in `src/lib/primitives/utils`.
   - Move node definition factories, node markers, disabled-reason handling, and state-source readers out of the general utilities directory, preserving behavior and public APIs.
-
 - [x] Rename `form-root.directive.spec.ts` to `form-node.directive.form.spec.ts` to describe its existing coverage of FormNode on native forms. Preserve the test contents.
-
 - [x] Rename `src/lib/control-state-hook` to `src/lib/control-state` to match the feature and its files.
   - Preserve the adapter structure and tests; update the public entry point, FormNode integration, and shared test-helper imports without changing behavior or the public API.
-
 - [x] Move `src/lib/directives/form-node` to `src/lib/form-node` and remove the empty `directives` directory.
   - Keep the feature's existing files, tests, utilities, and Angular internals together. Update imports and public entry-point paths without changing the public API or behavior.
-
 - [x] Remove the redundant `src/lib/core` directory level.
   - Keep the existing implementation areas directly under `src/lib`. Update public entry-point exports, test-helper imports, browser fixture type imports, and playground imports; preserve the existing API and behavior.
-
 - [x] Keep `validation/validators` focused on concrete validators and their tests.
   - Moved message resolution, default messages, date constraints, and shared validator options into `validation/utils`; moved the independent string helper `count-words` into `core/utils`. Updated imports and the `ValidatorOptions` re-export without changing the public API or behavior.
-
 - [x] Move shared built-in validator tests into `core/validation/tests`.
   - Group `builtin-validator-error`, `builtin-validator-when`, and `reactive-validator-messages` with the IntelliSense suite. Keep each individual validator's tests beside its implementation.
-
 - [x] Move the cross-primitive validator IntelliSense test into `core/validation/tests`, preserving its language-service fixture and assertions.
-
 - [x] Group the remaining validation helpers in `core/validation/utils`.
   - Moved `validator-source`, `resolve-async-validation-result`, and `create-validator-context`, together with the existing async-result resolver tests. Updated relative imports without changing behavior or the public API.
-
 - [x] Move validation-specific helpers from `core/utils` into `core/validation/utils`, keeping their existing tests alongside them.
   - Relocated `async-validator-marker`, `field-context-marker`, `add-default-target-node`, and `normalize-validation-result`; updated their imports and re-exports without changing behavior or the public API.
-
 - [x] Document where to configure validator messages in Angular applications.
   - Show a separate message catalog, an explicit `configureGlobalValidatorMessages()` call in `main.ts` before bootstrap, and the application-scoped alternative in `app.config.ts` or `AppModule.providers`.
   - Explain startup lifetime, when restoration is appropriate, and why static catalogs need no initializer or side-effect-only import. Include compiler-checked Angular examples and links from the guide and configuration reference.
