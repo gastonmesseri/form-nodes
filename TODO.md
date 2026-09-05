@@ -356,6 +356,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Place `public-api.spec.ts` beside `src/public-api.ts` and import its tested contracts through the public entry point.
+
 - [x] Document directory responsibilities and placement conventions for helpers, tests, and documentation in `docs/architecture.md`, linked from the README.
 
 - [x] Move `create-control-value-buffer.ts` and its tests to `src/lib/primitives/utils`, alongside its primitive consumers' other helpers.

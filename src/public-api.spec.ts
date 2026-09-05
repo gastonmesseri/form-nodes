@@ -1,17 +1,7 @@
 import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { group } from './primitives/group';
-import { array } from './primitives/array';
-import { min } from './validation/validators/min';
-import { field, type Field } from './primitives/field';
-import type { DynamicNode, Node } from './types/node.type';
-import { required } from './validation/validators/required';
-import { asyncValidator } from './validation/async-validator';
-import { form, type FormValueContract } from './primitives/form';
-import { requiredIf } from './validation/validators/required-if';
-import { createFormPrimitives } from './primitives/create-form-primitives';
-import type { ComposableValidator, FieldContext, ValidationError, ValidatorApi, ValidatorContext } from './validation/validation.type';
+import { min, form, field, group, array, required, requiredIf, asyncValidator, createFormPrimitives, type Node, type Field, type DynamicNode, type FieldContext, type ValidatorApi, type ValidationError, type ValidatorContext, type FormValueContract, type ComposableValidator } from './public-api';
 
 describe('types', () => {
   it('exposes configured form primitive factories', () => {
