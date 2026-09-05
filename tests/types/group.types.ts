@@ -26,13 +26,13 @@ address.patch({ location: { latitude: 47 } });
 // @ts-expect-error groups do not expose submission behavior
 address.submit();
 // @ts-expect-error group options do not accept submission configuration
-group({ city: field('') }, { submission: { action: () => undefined } });
+group({ city: field('') }, { onSubmit: () => undefined });
 
 const profile = form({
   address: {
     city: field('Zurich'),
   },
-  independentWorkflow: form({ step: field(1) }, { submission: { action: () => undefined } }),
+  independentWorkflow: form({ step: field(1) }, { onSubmit: () => undefined }),
 });
 
 // @ts-expect-error shorthand object branches normalize to groups, not forms
@@ -66,3 +66,8 @@ address.children['zip'];
 address.zip;
 // @ts-expect-error undeclared child names must not compile
 address.mistypedPropertyName;
+
+// @ts-expect-error only forms own blocked submission callbacks
+group({ name: field('') }, { onSubmitBlocked: () => undefined });
+// @ts-expect-error only forms configure submission validation gates
+group({ name: field('') }, { submitWhen: 'valid' });

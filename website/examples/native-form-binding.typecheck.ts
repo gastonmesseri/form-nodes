@@ -25,10 +25,8 @@ export class AccountEditor {
   accountForm = form({
     email: field('', [required, email]),
   }, {
-    submission: {
-      action: async (_form, value) => {
-        await Promise.resolve(value);
-      },
+    onSubmit: async value => {
+      await Promise.resolve(value);
     },
   });
 }

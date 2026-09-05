@@ -479,7 +479,7 @@ profile.$api.value(); // { api: 'domain value' }
 ## Groups and nested forms
 
 `group()` is the ordinary object-shaped aggregate. It has children, aggregate value and state,
-validators, configuration, and all common node operations, but it has no `submission` option or
+validators, configuration, and all common node operations, but it has no `onSubmit` option or
 `submit()` method:
 
 ```ts
@@ -2219,26 +2219,24 @@ This API differs intentionally from Angular 22 Signal Forms. Angular derives arr
 
 ## Form submission
 
-`form()` accepts an optional `submission` configuration and exposes `submit()` plus the reactive
+`form()` accepts `onSubmit(value, form)`, `onSubmitBlocked(form)`, and `submitWhen` options and exposes `submit()` plus the reactive
 `submitting()` state:
 
 ```ts
 const profile = form({
   name: field('', [required]),
 }, {
-  submission: {
-    action: async (_form, value) => saveProfile(value),
-    onInvalid: () => showValidationMessage(),
-  },
+  onSubmit: async value => saveProfile(value),
+  onSubmitBlocked: () => showValidationMessage(),
 });
 
 const submitted = await profile.submit();
 ```
 
 Submission marks the form and its descendants touched before checking validation. Invalid forms do
-not run the action and resolve to `false`; `onInvalid`, when configured, runs instead. Pending
+not run the action and resolve to `false`; `onSubmitBlocked`, when configured, runs instead. Pending
 validation does not block submission by default, matching Angular Signal Forms. Set
-`ignoreValidators: 'none'` to require `valid()`, or `'all'` to run the action despite invalid or
+`submitWhen: 'valid'` to require `valid()`, or `submitWhen: 'always'` to run the action despite invalid or
 pending validation. Only one action may run at a time. Concurrent calls resolve to `false`, while
 `submitting()` is `true` on the submitted form and inherited by every descendant. The state is
 cleared in a `finally` block if the action succeeds or rejects.
@@ -2265,13 +2263,22 @@ complete reactive tree and bindings reset consistently. A field or array remains
 root binding of a native `<form>`. `reset()` retains the library's existing semantics: without an
 explicit value it clears interaction state and pending control state while retaining current values.
 
-This behavior follows Angular Signal Forms 22.1.4 submission state and `FormRoot` behavior
-(`898380974d49cf7976e9d89cc74a0801a26ce7b1`). It was rechecked against the installed Angular
-22.1.3 `FormField` and `FormRoot` declarations and implementation in
-`@angular/forms/types/signals.d.ts` and `@angular/forms/fesm2022/signals.mjs`. The public API differs
-intentionally: Angular exposes two standalone directives, while this library requires only
-`FormNode`; its submission action also receives the exact form node and a typed value snapshot and
-currently does not interpret returned server-validation errors.
+Submission gating, inherited state, and concurrency were inspected against Angular `v22.1.5`
+(`468b65b74566537456c192ac4281795c5a1e1a5e`): `packages/forms/signals/src/api/structure.ts`
+(`submit` and `shouldRunAction`), `src/field/submit.ts`, and `test/node/submit.spec.ts` under
+`packages/forms/signals/`. The public API intentionally uses flat form options, a value-first
+callback, and explicit gate names: `'valid'`, `'not-invalid'` (default), and `'always'`.
+Unlike Angular, a missing action returns `false` after touching/flushing rather than throwing;
+returned server-validation errors are not interpreted. Form Nodes uses one `FormNode` directive.
+
+`onSubmitBlocked` runs synchronously and untracked only when the validation gate rejects the
+attempt, including pending validation with `'valid'`. Pending validation is not awaited and does
+not schedule a retry. Concurrent attempts and missing actions do not invoke this callback.
+Its exceptions reject `submit()` without starting the action. `onSubmit` also runs untracked,
+receives the exposed value snapshot followed by the exact form, and may return `void` or
+`PromiseLike<void>`. Its rejection propagates while `submitting()` clears in `finally`.
+`'always'` changes only the gate: validators and errors remain active. Submission options are
+local to each form; nested forms inherit submission state, not another form's callbacks or policy.
 The tolerant `group()` native-form binding is a deliberate library extension: Angular's `FormRoot`
 does not expose an equivalent public distinction between this library's structural group and
 submission-owning form.

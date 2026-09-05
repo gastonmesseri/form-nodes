@@ -214,7 +214,9 @@ const myForm = form({
 | [`injector`](#form-injector-option) | Angular `Injector` | Explicitly owns injector-dependent work such as asynchronous validation watchers. |
 | [`inheritInjector`](#form-inheritinjector-option) | Boolean; defaults to `true` | Allows an injector-less nested form to use the nearest ancestor injector. |
 | [`adoptBindingInjector`](#form-adoptbindinginjector-option) | Boolean; defaults to `true` | Allows direct `[formNode]` binding to provide a temporary host injector. |
-| [`submission`](#form-submission-option) | `{ action, onInvalid?, ignoreValidators? }` | Configures the workflow initiated by `submit()`. |
+| [`onSubmit`](#form-submission-option) | `(value, form) => void \| PromiseLike<void>` | Runs the action initiated by `submit()`. |
+| [`onSubmitBlocked`](#form-submission-option) | `(form) => void` | Handles attempts blocked by validation. |
+| [`submitWhen`](#form-submission-option) | `'valid' \| 'not-invalid' \| 'always'` | Controls the validation gate; defaults to `'not-invalid'`. |
 
 Forms always have a non-null object value. To represent an optional object as a whole, use an
 object-valued `field()` instead.
@@ -390,32 +392,38 @@ const profile = form({
 
 ### Submission
 
-#### submission {#form-submission-option}
+#### onSubmit, onSubmitBlocked, and submitWhen {#form-submission-option}
 
-**Signature:** `submission?: { action, onInvalid?, ignoreValidators? }`
+**Signatures:**
 
-Configures `submit()`. `action(form, value)` runs when the current validation policy allows
-submission. `onInvalid(form)` runs when validation blocks it.
+```ts
+onSubmit?(value: TValue, form: TForm): void | PromiseLike<void>;
+onSubmitBlocked?(form: TForm): void;
+submitWhen?: 'valid' | 'not-invalid' | 'always';
+```
+
+Configures `submit()`. `onSubmit(value, form)` runs when the current validation policy allows
+submission. `onSubmitBlocked(form)` runs when validation blocks it, including pending validation
+with `submitWhen: 'valid'`. Pending validation is not awaited. Concurrent attempts and missing
+actions return `false` without invoking `onSubmitBlocked`.
 
 ```ts
 const profile = form({
   username: field('', [required]),
 }, {
-  submission: {
-    action: async (_form, value) => saveProfile(value),
-    onInvalid: invalidForm => invalidForm.focus(),
-    ignoreValidators: 'pending',
-  },
+  onSubmit: async value => saveProfile(value),
+  onSubmitBlocked: invalidForm => invalidForm.focus(),
+  submitWhen: 'not-invalid',
 });
 ```
 
-`ignoreValidators` accepts:
+`submitWhen` accepts:
 
 | Value | Submission policy |
 | --- | --- |
-| `'pending'` | Default. Blocks known errors but permits submission while validity is only unknown. |
-| `'none'` | Requires `valid()`; both errors and pending validation block submission. |
-| `'all'` | Runs the action regardless of validation status. |
+| `'not-invalid'` | Default. Blocks known errors but permits submission while validity is only unknown. |
+| `'valid'` | Requires `valid()`; both errors and pending validation block submission. |
+| `'always'` | Runs the action regardless of validation status. |
 
 </div>
 
@@ -1065,9 +1073,7 @@ Returns whether this form or an ancestor form is currently running its submissio
 const profile = form({
   username: field('ada'),
 }, {
-  submission: {
-    action: async () => saveProfile(),
-  },
+  onSubmit: async () => saveProfile(),
 });
 
 profile.submitting(); // true while saveProfile() is running
@@ -1498,16 +1504,14 @@ the form takes precedence over descendant bindings. Standard `FocusOptions` are 
 **Signature:** `submit(): Promise<boolean>`
 
 Marks and flushes the subtree, checks the configured validation policy, and runs
-`submission.action` when allowed.
+`onSubmit` when allowed.
 
 ```ts
 const profile = form({
   username: field('', [required]),
 }, {
-  submission: {
-    action: async (_form, value) => saveProfile(value),
-    onInvalid: invalidForm => invalidForm.focus(),
-  },
+  onSubmit: async value => saveProfile(value),
+  onSubmitBlocked: invalidForm => invalidForm.focus(),
 });
 
 const submitted = await profile.submit();

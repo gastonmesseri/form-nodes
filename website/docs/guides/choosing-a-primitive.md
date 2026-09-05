@@ -65,7 +65,7 @@ const searchForm = form({
   query: field(''),
   category: field(''),
 }, {
-  submission: { action: runSearch },
+  onSubmit: runSearch,
 });
 ```
 
@@ -185,7 +185,7 @@ domain genuinely treat the object atomically.
 
 ## Use form() for a workflow boundary
 
-`form()` has the same object-node behavior as a group and additionally exposes `submission` and
+`form()` has the same object-node behavior as a group and additionally exposes `onSubmit` and
 `submit()`. Use it at the root of an application workflow. An explicit nested `form()` is useful
 only when that branch is independently submittable; ordinary nested structure should remain a
 group or shorthand object. Binding a group to a native `<form [formNode]>` is tolerated and retains

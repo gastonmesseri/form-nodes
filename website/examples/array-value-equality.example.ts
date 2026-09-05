@@ -12,7 +12,7 @@ const profile = form({
     },
   }),
 }, {
-  submission: { action: (_node, value) => { submitted = value; } },
+  onSubmit: value => { submitted = value; },
 });
 
 const initial = profile();

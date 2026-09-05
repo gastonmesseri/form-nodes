@@ -3,7 +3,7 @@ import type { ValidatorSource } from '../validation/validation.type';
 import { isValidatorSource } from '../validation/utils/validator-source';
 import type { Form, FormOptions, FormValue, NormalizedNodes, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
-export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormSubmissionOptions, FormValue, FormValueContract, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
+export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormValue, FormValueContract, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
 type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 

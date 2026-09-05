@@ -404,9 +404,7 @@ const checkoutForm = form({
     quantity: field(1),
   }),
 }, {
-  submission: {
-    action: (_form, value) => placeOrder(value),
-  },
+  onSubmit: value => placeOrder(value),
 });
 ```
 

@@ -961,9 +961,7 @@ initiate submission itself.
 const profile = form({
   username: field('ada'),
 }, {
-  submission: {
-    action: async () => saveProfile(),
-  },
+  onSubmit: async () => saveProfile(),
 });
 
 profile.username.submitting(); // true while saveProfile() is running

@@ -83,7 +83,6 @@ export type {
   FormOptions,
   FormValueContract,
   DynamicFormChildren,
-  FormSubmissionOptions,
 } from './lib/primitives/form';
 export type {
   Validator,

@@ -123,19 +123,17 @@ export class CustomerEditor {
       required: 'Complete this value.',
       minLength: ({ minLength }) => `Add at least ${minLength} item(s).`,
     },
-    submission: {
-      action: async (_form, value) => {
-        const response = await fetch('/api/customers', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(value),
-        });
+    onSubmit: async value => {
+      const response = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(value),
+      });
 
-        if (!response.ok) throw new Error('Could not save the customer.');
-      },
-      onInvalid: formNode => {
-        formNode.focus();
-      },
+      if (!response.ok) throw new Error('Could not save the customer.');
+    },
+    onSubmitBlocked: formNode => {
+      formNode.focus();
     },
   });
 }

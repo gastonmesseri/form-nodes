@@ -24,7 +24,7 @@ type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDe
  * Concise values, including arrays, are normalized to fields, and plain nested object definitions
  * become groups. Only an explicit `array(...)` creates a dynamic array node. Use an explicit group when the
  * object aggregate needs validators, state configuration, debounce, or validator messages. Use
- * `form()` instead when this exact node must own `submission` and `submit()`.
+ * `form()` instead when this exact node must own `onSubmit` and `submit()`.
  * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
  * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
  * created, with the complete declaration path included in the error.

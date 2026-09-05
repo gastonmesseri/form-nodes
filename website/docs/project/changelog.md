@@ -12,6 +12,8 @@ canonical release record.
 
 ### Changed
 
+- **Breaking:** Form submission options are now flat: use `onSubmit(value, form)`, `onSubmitBlocked(form)`, and `submitWhen` instead of `submission`. The default still allows pending validation; use `'valid'` to require valid state or `'always'` to bypass the validation gate. The standalone `FormSubmissionOptions` type is removed; use `FormOptions`.
+
 - Package and documentation links now target `gastonmesseri/form-nodes`, and the documentation site uses the `/form-nodes/` base path.
 
 ### Fixed

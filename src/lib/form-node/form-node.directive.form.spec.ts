@@ -78,7 +78,7 @@ describe('FormNode on a native form', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly profile = form({ name: field('Marco') }, { submission: { action } });
+      readonly profile = form({ name: field('Marco') }, { onSubmit: action });
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -91,7 +91,7 @@ describe('FormNode on a native form', () => {
 
     expect(element.noValidate).toBe(true);
     expect(event.defaultPrevented).toBe(true);
-    expect(action).toHaveBeenCalledWith(fixture.componentInstance.profile, { name: 'Marco' });
+    expect(action).toHaveBeenCalledWith({ name: 'Marco' }, fixture.componentInstance.profile);
   });
 
   it('prevents an invalid action and resets model and interaction state from a native reset', () => {
@@ -103,7 +103,7 @@ describe('FormNode on a native form', () => {
       imports: [FormNode],
     })
     class Host {
-      readonly profile = form({ name: field('', [required]) }, { submission: { action } });
+      readonly profile = form({ name: field('', [required]) }, { onSubmit: action });
     }
 
     const fixture = TestBed.createComponent(Host);

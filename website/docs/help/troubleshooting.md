@@ -181,7 +181,7 @@ model applies to readonly and hidden state. See
 Check these conditions:
 
 1. The native form has `[formNode]="myForm"` and the component imports `FormNode`.
-2. The node was created with `form()`, not `group()`, and has a `submission.action`. A group binding
+2. The node was created with `form()`, not `group()`, and has a `onSubmit`. A group binding
    remains functional but intentionally has no action to run.
 3. The submit button has `type="submit"`.
 4. Validation is not blocking submission. Submission marks the tree touched and resolves to
@@ -192,9 +192,7 @@ Check these conditions:
 myForm = form({
   email: field('', [required, email]),
 }, {
-  submission: {
-    action: (_form, value) => saveAccount(value),
-  },
+  onSubmit: value => saveAccount(value),
 });
 ```
 

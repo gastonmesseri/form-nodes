@@ -136,12 +136,10 @@ export class RegistrationComponent {
     name: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   }, {
-    submission: {
-      action: (_form, value) => {
-        this.registeredEmail.set(value.email);
-      },
-      onInvalid: invalidForm => invalidForm.focus(),
+    onSubmit: value => {
+      this.registeredEmail.set(value.email);
     },
+    onSubmitBlocked: invalidForm => invalidForm.focus(),
   });
 }
 ```
@@ -155,7 +153,7 @@ A few things to notice:
 3. State is reactive: Angular tracks calls such as `touched()` and `submitting()` in the template.
 4. Blur marks a control touched. Submit marks the form subtree touched, so an invalid attempt also
    reveals the relevant validation messages.
-5. A successful submission passes the typed form value to `action`. `onInvalid` can focus an invalid
+5. A successful submission passes the typed form value to `onSubmit`. `onSubmitBlocked` can focus an invalid
    rendered control instead.
 
 Inside the component, `this.myForm.name()` reads the name and `this.myForm()` reads the complete
@@ -524,17 +522,15 @@ factories, keyed reconciliation, and the complete operations API.
 
 ## Submission
 
-The first component configures `submission` on `form()`. An action may return a promise, so a real
+The first component configures `onSubmit` on `form()`. An action may return a promise, so a real
 application can replace the local action with a service call:
 
 ```ts
-submission: {
-  action: async (_form, value) => {
-    await this.accounts.register(value);
-  },
-  onInvalid: invalidForm => invalidForm.focus(),
-  ignoreValidators: 'none',
-}
+onSubmit: async value => {
+  await this.accounts.register(value);
+},
+onSubmitBlocked: invalidForm => invalidForm.focus(),
+submitWhen: 'valid',
 ```
 
 This is an options fragment: `accounts` represents your application's service. Binding
@@ -542,7 +538,7 @@ This is an options fragment: `accounts` represents your application's service. B
 `await myForm.submit()` programmatically.
 
 - Submission marks the subtree touched and commits pending control values before checking validity.
-- Invalid forms are blocked. `ignoreValidators: 'none'` also blocks pending validation; the default,
+- Invalid forms are blocked. `submitWhen: 'valid'` also blocks pending validation; the default,
   `'pending'`, allows pending-only validation when no error already makes the form invalid.
 - `submitting()` stays true while the action's promise is running. Repeated submits do not start
   overlapping actions.

@@ -411,9 +411,7 @@ export class EmailEditor {
   myForm = form({
     email: field(''),
   }, {
-    submission: {
-      action: (_form, value) => save(value),
-    },
+    onSubmit: value => save(value),
   });
 }
 ```

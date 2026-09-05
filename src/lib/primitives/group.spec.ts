@@ -246,10 +246,10 @@ describe('group', () => {
 
   it('retains an explicit nested form as an independent submission boundary', async () => {
     const action = vi.fn();
-    const profile = form({ payment: form({ card: field('4242') }, { submission: { action } }) });
+    const profile = form({ payment: form({ card: field('4242') }, { onSubmit: action }) });
 
     expect(await profile.payment.submit()).toBe(true);
-    expect(action).toHaveBeenCalledWith(profile.payment, { card: '4242' });
+    expect(action).toHaveBeenCalledWith({ card: '4242' }, profile.payment);
     expect(profile.payment.form()).toBe(profile.payment);
     expect(profile.payment.card.form()).toBe(profile.payment);
     expect(profile.payment.root()).toBe(profile);
@@ -292,7 +292,7 @@ describe('group', () => {
     let resolve!: () => void;
     const pending = new Promise<void>((done) => { resolve = done; });
     const profile = form({ address: group({ city: field('Zurich') }) }, {
-      submission: { action: () => pending },
+      onSubmit: () => pending,
     });
 
     const submission = profile.submit();

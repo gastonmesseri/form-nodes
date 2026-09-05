@@ -67,7 +67,7 @@ describe('form', () => {
           return externalError() ? { kind: 'external' } : null;
         },
       }),
-    }, [validateParent]) }, { validators: [validateParent], submission: { action } });
+    }, [validateParent]) }, { validators: [validateParent], onSubmit: action });
     const people = profile.details.people;
     const initial = profile();
     expect(profile.valid()).toBe(true);
@@ -79,7 +79,7 @@ describe('form', () => {
     expect(contexts).toEqual([[initial.details.people, initial.details.people, initial.details.people]]);
     expect(validateParent).toHaveBeenCalledTimes(2);
     expect(await profile.submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith(profile, initial);
+    expect(action).toHaveBeenCalledExactlyOnceWith(initial, profile);
     externalError.set(true);
     expect(profile.invalid()).toBe(true);
     expect(people.getError('external')).toBeDefined();
@@ -154,7 +154,7 @@ describe('form', () => {
           return externalError() ? { kind: 'external' } : null;
         },
       }) }, [validateParent]),
-    }, { validators: [validateParent], submission: { action } });
+    }, { validators: [validateParent], onSubmit: action });
     const name = profile.details.name;
     const initial = profile();
     expect(profile.valid()).toBe(true);
@@ -165,7 +165,7 @@ describe('form', () => {
     expect(contexts).toEqual([['Marco', 'Marco', 'Marco']]);
     expect(validateParent).toHaveBeenCalledTimes(2);
     expect(await profile.submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith(profile, initial);
+    expect(action).toHaveBeenCalledExactlyOnceWith(initial, profile);
     externalError.set(true);
     expect(profile.invalid()).toBe(true);
     expect(name.getError('external')).toBeDefined();
@@ -258,7 +258,7 @@ describe('form', () => {
     const target = form({ name: field.strict<string>('Marco') }, {
       equal: (a, b) => a.name.toLowerCase() === b.name.toLowerCase(),
       validators: (ctx) => { contexts.push([ctx.value(), ctx.node()(), ctx.field().value()]); return null; },
-      submission: { action },
+      onSubmit: action,
     });
     const initial = target();
     expect(target.valid()).toBe(true);
@@ -266,7 +266,7 @@ describe('form', () => {
     expect(target.valid()).toBe(true);
     expect(contexts).toEqual([[initial, initial, initial]]);
     expect(await target.submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith(target, initial);
+    expect(action).toHaveBeenCalledExactlyOnceWith(initial, target);
     const updater = vi.fn(value => ({ name: `${value.name}!` }));
     target.update(updater);
     expect(updater).toHaveBeenCalledExactlyOnceWith(initial);
@@ -692,7 +692,7 @@ describe('form', () => {
 
   it('keeps extracted actions bound through child-name collisions and submission', async () => {
     const action = vi.fn();
-    const profile = form({ set: field('initial'), details: { city: field('Zurich') } }, { submission: { action } });
+    const profile = form({ set: field('initial'), details: { city: field('Zurich') } }, { onSubmit: action });
     const { set, update, patch, reset, add, remove, submit } = profile.$api;
 
     set({ set: 'next', details: { city: 'Bern' } });
@@ -716,7 +716,7 @@ describe('form', () => {
     expect(profile.untouched()).toBe(true);
     reset({ set: 'ready', details: { city: 'Geneva' } });
     expect(await submit()).toBe(true);
-    expect(action).toHaveBeenCalledExactlyOnceWith(profile, { set: 'ready', details: { city: 'Geneva' } });
+    expect(action).toHaveBeenCalledExactlyOnceWith({ set: 'ready', details: { city: 'Geneva' } }, profile);
     expect(profile.submitting()).toBe(false);
   });
 
@@ -1417,7 +1417,7 @@ describe('form', () => {
     let resolve!: () => void;
     const pendingAction = new Promise<void>((done) => { resolve = done; });
     const action = vi.fn(() => pendingAction);
-    const profile = form({ name: field('Marco'), details: form({ age: field(42) }) }, { submission: { action } });
+    const profile = form({ name: field('Marco'), details: form({ age: field(42) }) }, { onSubmit: action });
 
     const first = profile.submit();
 
@@ -1426,7 +1426,7 @@ describe('form', () => {
     expect(profile.details.submitting()).toBe(true);
     expect(profile.touched()).toBe(true);
     expect(profile.name.touched()).toBe(true);
-    expect(action).toHaveBeenCalledWith(profile, { name: 'Marco', details: { age: 42 } });
+    expect(action).toHaveBeenCalledWith({ name: 'Marco', details: { age: 42 } }, profile);
     expect(await profile.submit()).toBe(false);
     expect(action).toHaveBeenCalledTimes(1);
 
@@ -1439,19 +1439,21 @@ describe('form', () => {
 
   it('blocks invalid submissions by default and supports validation override options', async () => {
     const action = vi.fn();
-    const onInvalid = vi.fn();
-    const blocked = form({ name: field('', [required]) }, { submission: { action, onInvalid } });
+    const onSubmitBlocked = vi.fn();
+    const blocked = form({ name: field('', [required]) }, { onSubmit: action, onSubmitBlocked });
 
     expect(await blocked.submit()).toBe(false);
     expect(action).not.toHaveBeenCalled();
-    expect(onInvalid).toHaveBeenCalledWith(blocked);
+    expect(onSubmitBlocked).toHaveBeenCalledWith(blocked);
     expect(blocked.name.touched()).toBe(true);
 
     const forced = form({ name: field('', [required]) }, {
-      submission: { action, ignoreValidators: 'all' },
+      onSubmit: action, submitWhen: 'always',
     });
     expect(await forced.submit()).toBe(true);
-    expect(action).toHaveBeenCalledWith(forced, { name: '' });
+    expect(action).toHaveBeenCalledWith({ name: '' }, forced);
+    expect(forced.invalid()).toBe(true);
+    expect(forced.name.getError('required')).toBeDefined();
   });
 
   it('allows pending validation by default and can require fully valid state', async () => {
@@ -1459,10 +1461,10 @@ describe('form', () => {
     const unresolved = new Promise<null>(() => { });
     const allowingPending = form({
       name: field('Marco', [asyncValidator(() => unresolved)]),
-    }, { submission: { action } });
+    }, { onSubmit: action });
     const requiringValid = form({
       name: field('Marco', [asyncValidator(() => unresolved)]),
-    }, { submission: { action, ignoreValidators: 'none' } });
+    }, { onSubmit: action, submitWhen: 'valid' });
 
     expect(allowingPending.pending()).toBe(true);
     expect(await allowingPending.submit()).toBe(true);
@@ -1470,15 +1472,77 @@ describe('form', () => {
     expect(action).toHaveBeenCalledTimes(1);
   });
 
+  it('blocks pending nested validation immediately and submits only on a later explicit attempt', async () => {
+    let resolveValidation!: (result: null) => void;
+    const validation = new Promise<null>((resolve) => { resolveValidation = resolve; });
+    const validate = vi.fn(() => validation);
+    const onSubmit = vi.fn();
+    const onSubmitBlocked = vi.fn();
+    const nestedSubmit = vi.fn();
+    const profile = form({
+      details: form({ name: field('Marco', [asyncValidator(validate)]) }, { onSubmit: nestedSubmit }),
+    }, { onSubmit, onSubmitBlocked, submitWhen: 'valid' });
+
+    expect(profile.pending()).toBe(true);
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
+    expect(profile.invalid()).toBe(false);
+    expect(await profile.submit()).toBe(false);
+    expect(onSubmitBlocked).toHaveBeenCalledExactlyOnceWith(profile);
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(profile.submitting()).toBe(false);
+    expect(profile.details.name.touched()).toBe(true);
+
+    resolveValidation(null);
+    await vi.waitFor(() => expect(profile.valid()).toBe(true));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(await profile.submit()).toBe(true);
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ details: { name: 'Marco' } }, profile);
+    expect(nestedSubmit).not.toHaveBeenCalled();
+    expect(onSubmitBlocked).toHaveBeenCalledTimes(1);
+    expect(profile.submitting()).toBe(false);
+    expect(profile.details.submitting()).toBe(false);
+
+    expect(await profile.details.submit()).toBe(true);
+    expect(nestedSubmit).toHaveBeenCalledExactlyOnceWith({ name: 'Marco' }, profile.details);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows explicit not-invalid submission while pending and does not report concurrent attempts as blocked', async () => {
+    let finish!: () => void;
+    const saving = new Promise<void>((resolve) => { finish = resolve; });
+    const onSubmit = vi.fn(() => saving);
+    const onSubmitBlocked = vi.fn();
+    const profile = form({
+      name: field('Marco', [asyncValidator(() => new Promise<null>(() => {}))]),
+    }, { onSubmit, onSubmitBlocked, submitWhen: 'not-invalid' });
+
+    const result = profile.submit();
+    expect(profile.pending()).toBe(true);
+    expect(profile.submitting()).toBe(true);
+    expect(profile.name.submitting()).toBe(true);
+    expect(await profile.submit()).toBe(false);
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ name: 'Marco' }, profile);
+    expect(onSubmitBlocked).not.toHaveBeenCalled();
+
+    finish();
+    expect(await result).toBe(true);
+    expect(profile.submitting()).toBe(false);
+    expect(profile.name.submitting()).toBe(false);
+    expect(profile.pending()).toBe(true);
+  });
+
   it('tolerates submission without an action and always clears submitting after rejection', async () => {
-    const withoutSubmission = form({ name: field('Marco') });
+    const onSubmitBlocked = vi.fn();
+    const withoutSubmission = form({ name: field('Marco') }, { onSubmitBlocked, submitWhen: 'valid' });
     expect(await withoutSubmission.submit()).toBe(false);
+    expect(onSubmitBlocked).not.toHaveBeenCalled();
     expect(withoutSubmission.touched()).toBe(true);
     expect(withoutSubmission.name.touched()).toBe(true);
 
     const failure = new Error('submit failed');
     const profile = form({ name: field('Marco') }, {
-      submission: { action: () => Promise.reject(failure) },
+      onSubmit: () => Promise.reject(failure),
     });
     await expect(profile.submit()).rejects.toBe(failure);
     expect(profile.submitting()).toBe(false);
@@ -1486,10 +1550,10 @@ describe('form', () => {
 
   it('starts synchronous submission actions immediately and clears state on promise completion', async () => {
     const action = vi.fn();
-    const profile = form({ details: { name: field('Marco') } }, { submission: { action } });
+    const profile = form({ details: { name: field('Marco') } }, { onSubmit: action });
 
     const completion = profile.submit();
-    expect(action).toHaveBeenCalledExactlyOnceWith(profile, { details: { name: 'Marco' } });
+    expect(action).toHaveBeenCalledExactlyOnceWith({ details: { name: 'Marco' } }, profile);
     expect(profile.submitting()).toBe(true);
     expect(profile.details.submitting()).toBe(true);
     expect(profile.details.name.touched()).toBe(true);
@@ -1506,7 +1570,7 @@ describe('form', () => {
   it('rejects synchronous action failures and clears submitting before returning', async () => {
     const failure = new Error('Synchronous action failure');
     const action = vi.fn(() => { throw failure; });
-    const profile = form({ name: field('Marco') }, { submission: { action } });
+    const profile = form({ name: field('Marco') }, { onSubmit: action });
 
     const completion = profile.submit();
     expect(action).toHaveBeenCalledOnce();
@@ -1519,11 +1583,11 @@ describe('form', () => {
   it('rejects synchronous invalid-submission callback failures without starting the action', async () => {
     const failure = new Error('Invalid submission callback failure');
     const action = vi.fn();
-    const onInvalid = vi.fn(() => { throw failure; });
-    const profile = form({ name: field('', [required]) }, { submission: { action, onInvalid } });
+    const onSubmitBlocked = vi.fn(() => { throw failure; });
+    const profile = form({ name: field('', [required]) }, { onSubmit: action, onSubmitBlocked });
 
     const completion = profile.submit();
-    expect(onInvalid).toHaveBeenCalledExactlyOnceWith(profile);
+    expect(onSubmitBlocked).toHaveBeenCalledExactlyOnceWith(profile);
     expect(action).not.toHaveBeenCalled();
     expect(profile.submitting()).toBe(false);
     expect(profile.name.touched()).toBe(true);
@@ -1541,7 +1605,7 @@ describe('form', () => {
       },
     };
     const action = vi.fn(() => promiseLike);
-    const profile = form({ details: form({ name: field('Marco') }) }, { submission: { action } });
+    const profile = form({ details: form({ name: field('Marco') }) }, { onSubmit: action });
 
     const completion = profile.submit();
     expect(action).toHaveBeenCalledOnce();

@@ -413,18 +413,18 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   async submit(): Promise<boolean> {
     if (untracked(this.submitting)) return false;
-    const submission = this.options?.submission;
+    const onSubmit = this.options?.onSubmit;
     this.node.$api.markAsTouched();
-    if (!submission) return false;
-    const shouldRun = submission.ignoreValidators === 'all'
-      || (submission.ignoreValidators === 'none' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
+    if (!onSubmit) return false;
+    const shouldRun = this.options?.submitWhen === 'always'
+      || (this.options?.submitWhen === 'valid' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
     if (!shouldRun) {
-      untracked(() => submission.onInvalid?.(this.node));
+      untracked(() => this.options?.onSubmitBlocked?.(this.node));
       return false;
     }
     this.selfSubmitting.set(true);
     try {
-      await untracked(() => submission.action(this.node, this.exposedValue()));
+      await untracked(() => onSubmit(this.exposedValue(), this.node));
       return true;
     } finally {
       this.selfSubmitting.set(false);

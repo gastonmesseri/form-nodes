@@ -42,11 +42,9 @@ export class RegistrationComponent {
     name: field('', [required, minLength(2)]),
     email: field('', [required, email]),
   }, {
-    submission: {
-      action: (_form, value) => {
-        this.registeredEmail.set(value.email);
-      },
-      onInvalid: invalidForm => invalidForm.focus(),
+    onSubmit: value => {
+      this.registeredEmail.set(value.email);
     },
+    onSubmitBlocked: invalidForm => invalidForm.focus(),
   });
 }

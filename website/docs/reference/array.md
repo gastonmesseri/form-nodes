@@ -136,7 +136,7 @@ nested group structure.
 ## Options
 
 Arrays accept most of the options available to [`form()`](./form.md), together with array-specific
-initialization and reconciliation options. They do not accept `submission`: an array can report
+initialization and reconciliation options. They do not accept `onSubmit`: an array can report
 the submission state inherited from an ancestor form, but cannot initiate submission itself.
 
 Items created later from either a template or factory inherit the array's nearest injector by
@@ -1240,9 +1240,7 @@ const profile = form({
     initialValue: ['ada'],
   }),
 }, {
-  submission: {
-    action: async () => saveProfile(),
-  },
+  onSubmit: async () => saveProfile(),
 });
 
 profile.usernames.submitting(); // true while saveProfile() is running

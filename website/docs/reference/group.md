@@ -12,7 +12,7 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 
 `group()` creates a typed object aggregate. It provides named children, value aggregation,
 validation, state propagation, configuration, and the common node operations. It deliberately has
-no `submission` option and no `submit()` method.
+no `onSubmit` option and no `submit()` method.
 
 Use [`FormNodeValue<typeof myGroup>`](./form-node-value.md) to extract a group's value type.
 
@@ -60,7 +60,7 @@ binding work normally; the component can invoke its own action explicitly.
 
 <CodeBlock language="ts">{groupRootSource}</CodeBlock>
 
-The native reset delegates to `filters.reset()`. Because a group has no `submission` option or
+The native reset delegates to `filters.reset()`. Because a group has no `onSubmit` option or
 `submit()` method, use `form()` instead when the root should own an action, invalid-submission
 handling, concurrent-submission protection, or `submitting()` state of its own.
 
@@ -492,10 +492,10 @@ const checkout = form({
   payment: form({
     cardNumber: field(''),
   }, {
-    submission: { action: savePayment },
+    onSubmit: savePayment,
   }),
 }, {
-  submission: { action: placeOrder },
+  onSubmit: placeOrder,
 });
 ```
 
@@ -1093,9 +1093,7 @@ const profile = form({
     city: field('Zurich'),
   }),
 }, {
-  submission: {
-    action: async () => saveProfile(),
-  },
+  onSubmit: async () => saveProfile(),
 });
 
 profile.address.submitting(); // true while saveProfile() is running

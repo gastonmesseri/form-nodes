@@ -9,7 +9,7 @@ const profile = form({
     validators: ({ value }) => value().name.length > 0 ? null : { kind: 'nameRequired' },
   }),
 }, {
-  submission: { action: (_node, value) => { submitted = value; } },
+  onSubmit: value => { submitted = value; },
 });
 
 const initial = profile();

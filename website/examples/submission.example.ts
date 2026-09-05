@@ -6,14 +6,12 @@ let invalidAttempts = 0;
 const profile = form({
   name: field('', [required]),
 }, {
-  submission: {
-    action: async (_form, value) => {
-      await Promise.resolve();
-      savedValues.push(value);
-    },
-    onInvalid: () => {
-      invalidAttempts += 1;
-    },
+  onSubmit: async value => {
+    await Promise.resolve();
+    savedValues.push(value);
+  },
+  onSubmitBlocked: () => {
+    invalidAttempts += 1;
   },
 });
 

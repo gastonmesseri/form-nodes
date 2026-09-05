@@ -7,7 +7,7 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { DisabledReason, NearestForm, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
 
-export type ArrayOptions<TValue = any, TArray extends Node = ArrayNode<Node>> = Omit<FormOptions<TValue>, 'submission' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type ArrayOptions<TValue = any, TArray extends Node = ArrayNode<Node>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * One validator or an array of validators for the complete array value, not each item.
    *

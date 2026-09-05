@@ -4,6 +4,23 @@ title: Migration guides
 
 # Migration guides
 
+## Flattening form submission options
+
+Move submission properties directly into the second `form()` argument:
+
+| Previous option | Replacement |
+| --- | --- |
+| `submission.action(form, value)` | `onSubmit(value, form)`; reverse the callback arguments. |
+| `submission.onInvalid(form)` | `onSubmitBlocked(form)` |
+| `submission.ignoreValidators: 'pending'` | `submitWhen: 'not-invalid'` (still the default) |
+| `submission.ignoreValidators: 'none'` | `submitWhen: 'valid'` |
+| `submission.ignoreValidators: 'all'` | `submitWhen: 'always'` |
+
+Replace `FormSubmissionOptions` annotations with `FormOptions` and update their properties.
+Groups and arrays do not accept any of these submission options. The blocked callback includes
+pending validation when `submitWhen` is `'valid'`; it does not run for concurrent submissions
+or missing actions. Pending validation is not awaited. See [Form submission](../guides/submission.md).
+
 ## Renaming the custom-control state hook
 
 In the upcoming first public release, `1.0.0`, `useControlState()` is renamed to

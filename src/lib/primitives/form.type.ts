@@ -245,17 +245,12 @@ export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
    * ```
    */
   readonly?: boolean | (() => boolean);
-  /** Submission behavior used by `submit()` and by a bound native `<form>`. */
-  submission?: FormSubmissionOptions<TValue, TForm>;
-};
-
-export type FormSubmissionOptions<TValue, TForm extends Node = Form<any>> = {
-  /** Runs when submission is allowed by the current validation state. */
-  action: (form: TForm, value: TValue) => void | PromiseLike<void>;
-  /** Runs instead of `action` when validation blocks submission. */
-  onInvalid?: (form: TForm) => void;
-  /** Which validation states may be ignored when deciding whether to run `action`. */
-  ignoreValidators?: 'pending' | 'none' | 'all';
+  /** Runs when submitWhen permits submission. Receives the exposed value snapshot first and this form second. */
+  onSubmit?(value: TValue, form: TForm): void | PromiseLike<void>;
+  /** Runs when validation blocks submission, including pending validation with submitWhen: 'valid'. Does not run for concurrent submissions or a missing onSubmit. */
+  onSubmitBlocked?(form: TForm): void;
+  /** When validation permits submission: 'not-invalid' (default) allows pending validation, 'valid' requires valid(), and 'always' bypasses the validation gate without disabling validators. Pending validation blocks immediately; it is not awaited. */
+  submitWhen?: 'valid' | 'not-invalid' | 'always';
 };
 
 /** Object value produced by a form, with each child node mapped to its readable value. */

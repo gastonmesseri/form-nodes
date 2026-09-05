@@ -65,7 +65,7 @@ shorthands are non-nullable by default. Explicit field options always take prece
 ### form()
 
 Creates the typed object tree that owns a submission workflow. It has the same structural behavior
-as a group plus `submission` configuration and `submit()`. Root application workflows normally
+as a group plus `onSubmit` configuration and `submit()`. Root application workflows normally
 start with `form()`; explicit nested forms are reserved for independent subflows.
 
 Values such as `name: ''`, `age: 23`, `birthday: new Date()`, `value: null`, `value: undefined`,
@@ -74,7 +74,7 @@ An array value always becomes a field; only an explicit `array(...)` creates a d
 of item nodes. Ordinary functions and non-plain object instances become concise fields too.
 
 Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormNodeValue`, `FormValueContract`, `FormSet`,
-`FormPatch`, and `FormSubmissionOptions`.
+`FormPatch`.
 
 ### array()
 

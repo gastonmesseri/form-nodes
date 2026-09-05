@@ -227,18 +227,16 @@ import { field, form, required } from 'form-nodes';
 describe('profile submission', () => {
   it('blocks invalid values and submits the corrected snapshot', async () => {
     const saveProfile = vi.fn();
-    const onInvalid = vi.fn();
+    const onSubmitBlocked = vi.fn();
     const profileForm = form({
       displayName: field('', [required]),
     }, {
-      submission: {
-        action: (_form, value) => saveProfile(value),
-        onInvalid,
-      },
+      onSubmit: value => saveProfile(value),
+      onSubmitBlocked,
     });
 
     await expect(profileForm.submit()).resolves.toBe(false);
-    expect(onInvalid).toHaveBeenCalledWith(profileForm);
+    expect(onSubmitBlocked).toHaveBeenCalledWith(profileForm);
     expect(profileForm.displayName.touched()).toBe(true);
     expect(saveProfile).not.toHaveBeenCalled();
 

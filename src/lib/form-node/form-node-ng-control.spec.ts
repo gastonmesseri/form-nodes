@@ -931,7 +931,7 @@ describe('FormNode NgControl subscriptions', () => {
 
   it('blocks submission until the control clears its parsing errors', async () => {
     const action = vi.fn();
-    const profile = form({ nested: form({ date: field.strict('2026-09-07') }) }, { submission: { action } });
+    const profile = form({ nested: form({ date: field.strict('2026-09-07') }) }, { onSubmit: action });
     const { fixture, control } = bind(profile.nested.date);
     control.setErrors({ invalidDateFormat: true });
     expect(await profile.submit()).toBe(false);

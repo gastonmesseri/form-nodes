@@ -14,19 +14,17 @@ myForm = form({
   validatorMessages: {
     required: 'Complete this value.',
   },
-  submission: {
-    action: async (_form, value) => {
-      const response = await fetch('/api/profiles', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(value),
-      });
+  onSubmit: async value => {
+    const response = await fetch('/api/profiles', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(value),
+    });
 
-      if (!response.ok) throw new Error('Could not save the profile.');
-    },
-    onInvalid: formNode => {
-      formNode.focus();
-    },
+    if (!response.ok) throw new Error('Could not save the profile.');
+  },
+  onSubmitBlocked: formNode => {
+    formNode.focus();
   },
 });
 ```
@@ -63,7 +61,7 @@ Submission:
 
 1. Marks the form subtree touched.
 2. Commits pending control values.
-3. Runs `onInvalid` instead of the action when errors block submission.
+3. Runs `onSubmitBlocked` instead of the action when errors block submission.
 4. Sets `submitting()` while the asynchronous action runs.
 5. Prevents overlapping actions.
 

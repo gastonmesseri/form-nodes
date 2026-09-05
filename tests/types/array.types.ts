@@ -71,7 +71,7 @@ array(field(''), { initialValue: null });
 array(field(''), null);
 
 // @ts-expect-error arrays inherit submission state but cannot own submission behavior
-array(field(''), { submission: { action: () => undefined } });
+array(field(''), { onSubmit: () => undefined });
 // @ts-expect-error trackBy property names must exist on the item value
 array({ id: field.strict('') }, { trackBy: 'missing' });
 // @ts-expect-error primitive item values require a trackBy callback
@@ -96,3 +96,8 @@ array({ name: field(''), age: field(0) }, { initialValue: [{ name: 'David' }] })
 people.push({ id: 'two', name: 'Daniel', age: '35' });
 // @ts-expect-error numeric node access is readonly
 people[0] = people[1];
+
+// @ts-expect-error only forms own blocked submission callbacks
+array(field(''), { onSubmitBlocked: () => undefined });
+// @ts-expect-error only forms configure submission validation gates
+array(field(''), { submitWhen: 'valid' });

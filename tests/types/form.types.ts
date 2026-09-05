@@ -129,14 +129,20 @@ const submittedProfile = form({
   name: field.strict('Marco'),
   age: field.strict(42),
 }, {
-  submission: {
-    action: (formNode, value) => {
-      type _SubmittedForm = Expect<Equal<ReturnType<typeof formNode>, { name: string; age: number }>>;
-      type _SubmittedValue = Expect<Equal<typeof value, { name: string; age: number }>>;
-      return Promise.resolve();
-    },
+  onSubmit: (value, formNode) => {
+    type _SubmittedForm = Expect<Equal<ReturnType<typeof formNode>, { name: string; age: number }>>;
+    type _SubmittedValue = Expect<Equal<typeof value, { name: string; age: number }>>;
+    return Promise.resolve();
   },
+  onSubmitBlocked(formNode) {
+    type _BlockedForm = Expect<Equal<ReturnType<typeof formNode>, { name: string; age: number }>>;
+    formNode.name.set('Retry');
+  },
+  submitWhen: 'valid',
 });
+
+// @ts-expect-error submission policies must be a supported validation gate
+form({ name: field('Marco') }, { submitWhen: 'sometimes' });
 
 type _SubmittingSignal = Expect<Equal<ReturnType<typeof submittedProfile.submitting>, boolean>>;
 type _SubmitResult = Expect<Equal<ReturnType<typeof submittedProfile.submit>, Promise<boolean>>>;

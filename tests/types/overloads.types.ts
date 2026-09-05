@@ -1,4 +1,4 @@
-import { array, field, form, required, type ArrayOptions, type FieldOptions, type FormOptions, type FormSubmissionOptions, type FormValueContract, type GroupOptions, type MarkAsTouchedOptions } from '../../src/public-api';
+import { array, field, form, required, type ArrayOptions, type FieldOptions, type FormOptions, type FormValueContract, type GroupOptions, type MarkAsTouchedOptions } from '../../src/public-api';
 
 import type { Equal, Expect } from './assert.types';
 
@@ -63,10 +63,10 @@ const arrayOptions: ArrayOptions<readonly { id: number }[]> = {};
 arrayOptions.initialValue = [{ id: 1 }];
 arrayOptions.trackBy = 'id';
 
-const submissionOptions: FormSubmissionOptions<{ name: string | null }> = {
-  action: () => undefined,
+const submissionOptions: FormOptions<{ name: string | null }> = {
+  onSubmit: () => undefined,
 };
-submissionOptions.ignoreValidators = 'pending';
+submissionOptions.submitWhen = 'not-invalid';
 
 const touchedOptions: MarkAsTouchedOptions = {};
 touchedOptions.skipDescendants = true;

@@ -67,7 +67,7 @@ the selected values when the node is created.
 | `disabled` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
 | `readonly` | Yes | Yes | Yes | Yes | Effective state propagates through descendants |
 
-`form()`, `array()`, and `group()` additionally accept `validatorMessages`. Only a form accepts `submission`.
+`form()`, `array()`, and `group()` additionally accept `validatorMessages`. Only a form accepts `onSubmit`.
 An array additionally accepts `initialValue` and `trackBy`. Only `field()` accepts `nullable`.
 
 ### Static and reactive state
@@ -196,22 +196,20 @@ items remain as nullable as their template permits. See [Choosing a primitive](.
 
 ### Form submission
 
-`submission` belongs to the form on which it is declared and is not inherited as another form's
+`onSubmit` belongs to the form on which it is declared and is not inherited as another form's
 action:
 
 ```ts
 const profileForm = form({
   displayName: field(''),
 }, {
-  submission: {
-    action: (_form, value) => saveProfile(value),
-    onInvalid: formNode => formNode.focus(),
-    ignoreValidators: 'pending',
-  },
+  onSubmit: value => saveProfile(value),
+  onSubmitBlocked: formNode => formNode.focus(),
+  submitWhen: 'not-invalid',
 });
 ```
 
-`ignoreValidators` accepts `'pending'`, `'none'`, or `'all'`. See
+`submitWhen` accepts `'not-invalid'` (default), `'valid'`, or `'always'`. See
 [Form submission](../guides/submission.md) for their behavior.
 
 ### Array creation and identity

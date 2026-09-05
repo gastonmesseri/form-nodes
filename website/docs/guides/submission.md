@@ -14,13 +14,11 @@ const registration = form({
   name: field('', [required]),
   email: field('', [required, email]),
 }, {
-  submission: {
-    action: async (form, value) => {
-      await api.register(value);
-      form.reset();
-    },
-    onInvalid: form => form.focus(),
+  onSubmit: async (value, form) => {
+    await api.register(value);
+    form.reset();
   },
+  onSubmitBlocked: form => form.focus(),
 });
 ```
 
@@ -62,17 +60,26 @@ while keeping submission configuration exclusive to `form()`.
 
 `submitting()` is true while an asynchronous action is running and is inherited by descendants. Repeated submissions do not start overlapping actions.
 
-By default, invalid validation blocks submission while pending validation alone does not. Configure `ignoreValidators` when a workflow needs different behavior:
+By default, invalid validation blocks submission while pending validation alone does not. Configure `submitWhen` when a workflow needs different behavior:
 
 ```ts
-submission: {
-  action: saveDraft,
-  ignoreValidators: 'pending', // 'none' | 'pending' | 'all'
-}
+onSubmit: saveDraft,
+submitWhen: 'not-invalid', // 'valid' | 'not-invalid' | 'always'
 ```
 
-- `'none'` respects invalid and pending validation.
-- `'pending'` is the default behavior: it permits submission while validation is pending unless an error already makes the form invalid.
-- `'all'` runs the action regardless of validation state.
+These properties belong directly in the second `form()` argument.
 
-Use `onInvalid` for UI behavior such as focusing the first invalid rendered control.
+- `'valid'` requires `valid()` to be true; errors and pending validation block the attempt immediately.
+- `'not-invalid'` is the default: pending validation permits submission unless errors make the form invalid.
+- `'always'` runs the action regardless of validation state, without disabling validators or clearing errors.
+
+`onSubmit(value, form)` receives the exposed value snapshot first and the submitted form second.
+It may return `void` or a promise-like value; submission waits for it and propagates failures.
+
+Use `onSubmitBlocked(form)` for synchronous UI feedback when validation blocks an attempt. It also
+runs for pending validation with `'valid'`; submission does not wait for validation or retry automatically.
+It does not run for concurrent attempts or when `onSubmit` is absent. Without `onSubmit`, `submit()`
+still marks and flushes the subtree and returns `false`.
+
+Submission callbacks run without reactive dependency tracking. Options belong to the form where
+specified; nested forms retain their own callbacks and policy while inheriting `submitting()` state.
