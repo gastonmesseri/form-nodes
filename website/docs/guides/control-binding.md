@@ -2,6 +2,9 @@
 title: Control binding
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.typecheck.ts';
+
 # Control binding
 
 The [type-checked Angular example](../examples/executable-examples.mdx#angular-binding-and-viewchild)
@@ -47,6 +50,18 @@ Native support includes text and numeric inputs, range, checkbox, radio, date-li
 Bindings receive a stable generated `name` based on the application, structural root, and reactive path. Controls bound to the same field share a name, preserving radio groups; moving an array item updates that path-derived name. An explicitly authored native name is replaced.
 
 Select values are reapplied when options change, including asynchronously rendered options. Radio bindings reevaluate their authored option value after Angular renders.
+
+### Radio buttons
+
+Bind every radio in a group to the same field and give each option a distinct string `value`.
+The field's initial value selects the matching option. `[formNode]` generates the shared `name`,
+so you do not need to set `name` or `checked` yourself.
+
+<CodeBlock language="ts">{nativeRadioSource}</CodeBlock>
+
+Standard delivery starts selected. Selecting Express delivery updates `checkout.delivery()`
+to `'express'` and updates the displayed selection. The labels make each option clickable,
+and the `fieldset` and `legend` identify the group.
 
 ## Native constraints
 

@@ -17,7 +17,7 @@ documentation requires, then bind your node with the same `[formNode]` syntax.
 ## Bind native controls
 
 Expand the initial name binding to every field with `[formNode]`. The same directive also binds
-selects, checkboxes, and textareas:
+radio buttons, selects, checkboxes, and textareas:
 
 <CodeBlock language="ts" title="Native controls and their model">{nativeControlsSource}</CodeBlock>
 
@@ -28,9 +28,16 @@ The directive handles both directions:
 - User input marks the field dirty.
 - Blur marks it touched.
 - Numeric inputs produce numbers rather than raw strings.
+- Radio buttons bound to the same field share a generated `name`. Each option has its own
+  string `value`; selecting Phone writes `'phone'` to `myForm.contactMethod()`.
 - A `<select>` with string-valued options writes the selected option value, such as `'CH'`.
 - A checkbox writes `true` or `false`; `field.strict(false)` keeps this field non-nullable.
 - A `<textarea>` reads and writes text just like a text input.
+
+In the radio group, `field('email')` initially selects Email. Bind both options to
+`myForm.contactMethod` and let `[formNode]` manage `name` and `checked`. The `fieldset`, `legend`,
+and labels give the group and its options accessible names. See
+[Radio buttons](../guides/control-binding.md#radio-buttons) for a focused example.
 
 The model remains the source of truth; no `FormControl`, `formControlName`, or string path is required.
 
