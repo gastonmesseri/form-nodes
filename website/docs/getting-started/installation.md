@@ -20,7 +20,7 @@ The package is distributed as side-effect-free ESM. Consumer bundlers can remove
 other exports that are not imported.
 
 The published package includes TypeScript declarations, source maps, the MIT license, and a changelog.
-Use the [GitHub issue tracker](https://github.com/gastonmesseri/ng-forms/issues) to report bugs.
+Use the [GitHub issue tracker](https://github.com/gastonmesseri/form-nodes/issues) to report bugs.
 
 ## Requirements
 

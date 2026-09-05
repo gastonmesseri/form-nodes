@@ -36,10 +36,10 @@ Build a form from `form()`, `field()`, `array()`, and nested objects. Read its v
 nodes, bind them to controls with `[formNode]`, and use Angular signals for validation and state.
 The same tree describes your data, your controls, and how they behave.
 
-[Documentation](https://gastonmesseri.github.io/ng-forms/) ·
-[Step-by-step tutorial](https://gastonmesseri.github.io/ng-forms/tutorial) ·
-[Interactive playground](https://gastonmesseri.github.io/ng-forms/playground) ·
-[API reference](https://gastonmesseri.github.io/ng-forms/reference/api-overview)
+[Documentation](https://gastonmesseri.github.io/form-nodes/) ·
+[Step-by-step tutorial](https://gastonmesseri.github.io/form-nodes/tutorial) ·
+[Interactive playground](https://gastonmesseri.github.io/form-nodes/playground) ·
+[API reference](https://gastonmesseri.github.io/form-nodes/reference/api-overview)
 
 ## At a glance
 
@@ -80,7 +80,7 @@ import { form, field, array } from 'form-nodes';
 ```
 
 The current `1.0.x` line supports Angular `^21.0.7 || ^22.1.5`. Both `@angular/core` and `@angular/forms` must use
-compatible Angular versions. See [Compatibility](https://gastonmesseri.github.io/ng-forms/project/compatibility)
+compatible Angular versions. See [Compatibility](https://gastonmesseri.github.io/form-nodes/project/compatibility)
 for the Node.js and TypeScript requirements.
 
 ## Your first form
@@ -160,7 +160,7 @@ A few things to notice:
 Inside the component, `this.myForm.name()` reads the name and `this.myForm()` reads the complete
 object. You do not need subscriptions to keep those values current.
 
-For an even smaller introduction, see [Your first form](https://gastonmesseri.github.io/ng-forms/getting-started/first-form).
+For an even smaller introduction, see [Your first form](https://gastonmesseri.github.io/form-nodes/getting-started/first-form).
 For NgModule applications, import and optionally re-export `FormNode` from a shared module.
 
 ## The four building blocks
@@ -185,7 +185,7 @@ A form model can be declared and used outside an Angular injection context. Angu
 injection is available for integrations that need it; it is not a prerequisite for creating the
 model or reading and updating its values.
 
-[Choosing a primitive](https://gastonmesseri.github.io/ng-forms/guides/choosing-a-primitive)
+[Choosing a primitive](https://gastonmesseri.github.io/form-nodes/guides/choosing-a-primitive)
 explains the differences with more examples.
 
 ## Read and update values
@@ -265,7 +265,7 @@ profile.name(); // 'Ada'
 Resetting a nested node affects only its subtree. Validators stay configured and evaluate the
 resulting value.
 
-See [Values and state](https://gastonmesseri.github.io/ng-forms/concepts/values-and-state)
+See [Values and state](https://gastonmesseri.github.io/form-nodes/concepts/values-and-state)
 for the complete value flow and reset rules.
 
 ## Types and nullability
@@ -294,7 +294,7 @@ type ProfileValue = FormNodeValue<typeof profile>;
 ```
 
 `FormNodeValue` works with fields, groups, arrays, and forms. Applications that prefer a different
-nullability default can use [`createFormPrimitives()`](https://gastonmesseri.github.io/ng-forms/reference/create-form-primitives)
+nullability default can use [`createFormPrimitives()`](https://gastonmesseri.github.io/form-nodes/reference/create-form-primitives)
 to create a configured set of factories.
 
 ## Validation
@@ -376,7 +376,7 @@ reusable validator with an explicit value type.
 Asynchronous rules use `asyncValidator()`. They support reactive dependencies, pending state,
 validation debounce, cancellation through an `AbortSignal`, and error mapping. Read values and
 other signal dependencies before the first `await`, or declare them with `params`.
-See [Asynchronous validation](https://gastonmesseri.github.io/ng-forms/guides/async-validation)
+See [Asynchronous validation](https://gastonmesseri.github.io/form-nodes/guides/async-validation)
 for a complete server-check example.
 
 ### Messages and application defaults
@@ -396,8 +396,8 @@ Use `configureGlobalValidatorMessages()` for a process-wide fallback, including 
 outside DI. In an Angular application, call it once in `main.ts` before bootstrapping. Keep a larger
 catalog in a separate file and import it at the configuration point.
 
-See [Validator messages and i18n](https://gastonmesseri.github.io/ng-forms/guides/validator-messages)
-and the [Built-in validator reference](https://gastonmesseri.github.io/ng-forms/reference/built-in-validators).
+See [Validator messages and i18n](https://gastonmesseri.github.io/form-nodes/guides/validator-messages)
+and the [Built-in validator reference](https://gastonmesseri.github.io/form-nodes/reference/built-in-validators).
 
 ## Reactive rules and state
 
@@ -466,7 +466,7 @@ non-interactive subtree. They do not remove values from the model or prevent pro
 Hidden state does not remove DOM elements automatically: use `@if (node.visible())` when that is
 what the UI needs.
 
-[Interaction and availability](https://gastonmesseri.github.io/ng-forms/guides/interaction-and-availability)
+[Interaction and availability](https://gastonmesseri.github.io/form-nodes/guides/interaction-and-availability)
 covers the propagation rules and how configured state interacts with imperative operations.
 
 ## Dynamic arrays
@@ -518,7 +518,7 @@ When replacing an array with data from a server, use a stable `trackBy` property
 items should retain their nodes across reordering. Array `set()` reconciles a complete collection;
 array `patch()` updates existing positions without resizing it.
 
-See [Dynamic arrays](https://gastonmesseri.github.io/ng-forms/guides/dynamic-arrays) for templates,
+See [Dynamic arrays](https://gastonmesseri.github.io/form-nodes/guides/dynamic-arrays) for templates,
 factories, keyed reconciliation, and the complete operations API.
 
 ## Submission
@@ -548,7 +548,7 @@ This is an options fragment: `accounts` represents your application's service. B
 - `submit()` resolves to `true` after a successful action and `false` when blocked or already running.
   A rejected action rejects the promise and still clears submission state.
 
-See [Form submission](https://gastonmesseri.github.io/ng-forms/guides/submission) for validation
+See [Form submission](https://gastonmesseri.github.io/form-nodes/guides/submission) for validation
 policies and composing native forms with Angular controls.
 
 ## Control-value debounce
@@ -567,21 +567,21 @@ Use `debounce: 'blur'` to commit on touch/blur instead. Programmatic `set()`, `u
 and `reset(value)` are never delayed by control-value debounce.
 
 This is separate from an asynchronous validator's `debounce` option, which delays validation work.
-See [Value flow and debounce](https://gastonmesseri.github.io/ng-forms/guides/value-flow-and-debounce).
+See [Value flow and debounce](https://gastonmesseri.github.io/form-nodes/guides/value-flow-and-debounce).
 
 ## Where to go next
 
 | I want to… | Start here |
 | --- | --- |
-| Learn by building one form step by step | [Tutorial](https://gastonmesseri.github.io/ng-forms/tutorial) |
-| Experiment with values, validation, and debounce | [Playground](https://gastonmesseri.github.io/ng-forms/playground) |
-| See a larger model with real Angular bindings | [Complete form example](https://gastonmesseri.github.io/ng-forms/examples/complex-form) |
-| Find an API or all its options | [API overview](https://gastonmesseri.github.io/ng-forms/reference/api-overview) |
-| Solve a focused application problem | [Cookbook](https://gastonmesseri.github.io/ng-forms/cookbook) |
-| Navigate parents, paths, and child-name collisions | [Tree navigation and API access](https://gastonmesseri.github.io/ng-forms/concepts/tree-and-api) |
-| Compare values with shallow, deep, or custom equality | [Values and state](https://gastonmesseri.github.io/ng-forms/concepts/values-and-state) |
-| Extract a value type from any node | [FormNodeValue](https://gastonmesseri.github.io/ng-forms/reference/form-node-value) |
-| Check an upgrade | [Changelog](https://gastonmesseri.github.io/ng-forms/project/changelog) and [Migration guides](https://gastonmesseri.github.io/ng-forms/project/migrations) |
+| Learn by building one form step by step | [Tutorial](https://gastonmesseri.github.io/form-nodes/tutorial) |
+| Experiment with values, validation, and debounce | [Playground](https://gastonmesseri.github.io/form-nodes/playground) |
+| See a larger model with real Angular bindings | [Complete form example](https://gastonmesseri.github.io/form-nodes/examples/complex-form) |
+| Find an API or all its options | [API overview](https://gastonmesseri.github.io/form-nodes/reference/api-overview) |
+| Solve a focused application problem | [Cookbook](https://gastonmesseri.github.io/form-nodes/cookbook) |
+| Navigate parents, paths, and child-name collisions | [Tree navigation and API access](https://gastonmesseri.github.io/form-nodes/concepts/tree-and-api) |
+| Compare values with shallow, deep, or custom equality | [Values and state](https://gastonmesseri.github.io/form-nodes/concepts/values-and-state) |
+| Extract a value type from any node | [FormNodeValue](https://gastonmesseri.github.io/form-nodes/reference/form-node-value) |
+| Check an upgrade | [Changelog](https://gastonmesseri.github.io/form-nodes/project/changelog) and [Migration guides](https://gastonmesseri.github.io/form-nodes/project/migrations) |
 
 ## Development
 

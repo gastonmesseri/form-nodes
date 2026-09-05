@@ -9,6 +9,10 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+### Changed
+
+- Package and documentation links now target `gastonmesseri/form-nodes`, and the documentation site uses the `/form-nodes/` base path.
+
 ### Fixed
 
 - Angular 21 consumers can now install Form Nodes on Node.js 20.19.0+, 22.12.0+, and 24.0.0+ within those majors without an engine mismatch. Angular 22 retains its higher Node.js requirements.
@@ -142,5 +146,5 @@ First public release, establishing the stable public API. Supports Angular `^21.
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/ng-forms/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/gastonmesseri/ng-forms/releases/tag/v1.0.0
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0

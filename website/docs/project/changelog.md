@@ -5,10 +5,14 @@ title: Changelog
 # Changelog
 
 This page summarizes consumer-visible changes. The repository's
-[complete changelog](https://github.com/gastonmesseri/ng-forms/blob/master/CHANGELOG.md) is the
+[complete changelog](https://github.com/gastonmesseri/form-nodes/blob/master/CHANGELOG.md) is the
 canonical release record.
 
 ## Unreleased
+
+### Changed
+
+- Package and documentation links now target `gastonmesseri/form-nodes`, and the documentation site uses the `/form-nodes/` base path.
 
 ### Fixed
 

@@ -8,9 +8,9 @@ const config: Config = {
   tagline: 'Typed, signal-based forms for Angular',
   favicon: 'img/form-nodes-favicon.png',
   url: process.env.DOCS_URL ?? 'https://gastonmesseri.github.io',
-  baseUrl: process.env.DOCS_BASE_URL ?? '/ng-forms/',
+  baseUrl: process.env.DOCS_BASE_URL ?? '/form-nodes/',
   organizationName: 'gastonmesseri',
-  projectName: 'ng-forms',
+  projectName: 'form-nodes',
   clientModules: ['./src/clientModules/fast-anchor-scroll.ts'],
   onBrokenLinks: 'throw',
   markdown: {
@@ -70,7 +70,7 @@ const config: Config = {
         { to: '/guides/choosing-a-primitive', position: 'left', label: 'Guides' },
         { to: '/reference/api-overview', position: 'left', label: 'API' },
         { to: '/playground', position: 'left', label: 'Playground' },
-        { href: 'https://github.com/gastonmesseri/ng-forms', position: 'right', label: 'GitHub' },
+        { href: 'https://github.com/gastonmesseri/form-nodes', position: 'right', label: 'GitHub' },
       ],
     },
     footer: {
@@ -89,7 +89,7 @@ const config: Config = {
         {
           title: 'Project',
           items: [
-            { label: 'GitHub', href: 'https://github.com/gastonmesseri/ng-forms' },
+            { label: 'GitHub', href: 'https://github.com/gastonmesseri/form-nodes' },
             { label: 'npm', href: 'https://www.npmjs.com/package/form-nodes' },
             { label: 'Changelog', to: '/project/changelog' },
           ],
