@@ -12,9 +12,12 @@
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 
 - [ ] refactor classes
-  - in FormGroupNode.submit clean function, probably try to do into catch/finally the long one, try to simplify that without doing async function, audit it
-  - maybe the createFieldNode createFormGroupNode createArrayNode functions, shouldn't handle the arguments thing, that should be the task for field() form() group() array()
+  - [x] maybe the createFieldNode createFormGroupNode createArrayNode functions, shouldn't handle the arguments thing, that should be the task for field() form() group() array()
     but, it should handle the new FieldNode(...).getNode(); // this it should handle
+
+- [ ] Maybe: Consider that in the validators ctx.node() and ctx.field() to hide some members that we are sure that they are going to create circular infinite loop
+
+- [ ] The errors array, maybe should be a computed with a shallow check? (can we improve some other signals with a shallow check? perform an audit)
 
 - [ ] Request to suggest tests folders organization (including also tests in src/**/*)
 
@@ -368,6 +371,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Simplify `FormGroupNode.submit()` with `async`/`await` and a single action-level `try/finally`, preserving the public promise contract and submission timing. This supersedes the explicit-promise implementation and separate `runSubmissionAction()` decision below.
+
+- [x] Audit and simplify `FormGroupNode.submit()` without `async`: extract action execution and submitting cleanup into `runSubmissionAction(submission)`. Retain paired promise completion handlers because a `finally()` chain changes cleanup or returned-promise settlement timing.
 
 - [x] Return argument interpretation to `field()`, `array()`, `form()`, `group()`, and configured primitives. Keep `createFieldNode()`, `createArrayNode()`, and `createFormGroupNode()` limited to constructing the instance and returning `getNode()`, preserving option precedence and public signatures. This supersedes the earlier construction-entry argument-resolution decision.
 

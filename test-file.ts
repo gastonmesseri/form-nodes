@@ -78,6 +78,11 @@ const myForm = form({
   company: appleCompany,
   myMap: new Map(),
   somethingInstance: somethingInstance,
+  someGroupy: group({
+    a: field(''),
+    b: field(2),
+    c: field(true),
+  }, [ctx => ctx.value() ? { kind: '' } : null]),
 });
 
 
