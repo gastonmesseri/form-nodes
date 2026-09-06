@@ -84,6 +84,41 @@ if (!account.valid() || account.allErrors().length !== 0) {
   throw new Error('Completing both required fields should make the README account valid.');
 }
 
+// #region sibling-field
+const myForm = form({
+  password: field('', [required]),
+  confirmation: field('', [required, ctx => {
+    const confirmation = ctx.value();
+    if (!confirmation) return null;
+
+    if (confirmation !== myForm.password()) {
+      return { kind: 'passwordMismatch', message: 'Passwords must match.' };
+    }
+
+    return null;
+  }]),
+});
+// #endregion sibling-field
+
+if (!myForm.confirmation.getError('required') || myForm.confirmation.getError('passwordMismatch')) {
+  throw new Error('An empty confirmation should be handled by required rather than the sibling rule.');
+}
+myForm.patch({ password: 'secret', confirmation: 'secret' });
+if (!myForm.valid()) throw new Error('Matching passwords should make the sibling-rule example valid.');
+
+myForm.password.set('changed-secret');
+const siblingError = myForm.confirmation.getError('passwordMismatch');
+if (!siblingError || siblingError.targetNode !== myForm.confirmation || myForm.valid()) {
+  throw new Error('Changing only the password should put the mismatch error on the confirmation field.');
+}
+if (myForm.confirmation() !== 'secret') {
+  throw new Error('Revalidating a sibling dependency should not change the confirmation value.');
+}
+myForm.password.set('secret');
+if (!myForm.valid() || myForm.confirmation.getError('passwordMismatch')) {
+  throw new Error('Restoring the password should clear the sibling error without editing confirmation.');
+}
+
 // #region cross-field
 const passwords = form({
   password: field('', [required]),
