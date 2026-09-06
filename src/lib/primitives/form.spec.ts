@@ -25,6 +25,60 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('visits only direct child nodes, including dynamic children, in a stable snapshot', () => {
+    const branch = form({ name: field('Marco'), address: { city: field('Zurich') }, tags: array(field('')) });
+    const removed = branch.add('removed', field(1));
+    const visited: unknown[] = [];
+    const result = branch.forEachChild((child, key) => {
+      visited.push([key, child]);
+      if (key === 'name') {
+        branch.remove('removed');
+        branch.add('later', field(2));
+      }
+    });
+    expect(result).toBeUndefined();
+    expect(visited).toEqual([
+      ['name', branch.name], ['address', branch.address], ['tags', branch.tags], ['removed', removed],
+    ]);
+    const keys: string[] = [];
+    branch.forEachChild((_child, key) => keys.push(key));
+    expect(keys).toEqual(['name', 'address', 'tags', 'later']);
+  });
+
+  it('tracks structural changes and callback value reads without reading other child values', () => {
+    const branch = form({ name: field('Marco'), age: field(30) });
+    const visits = vi.fn(() => {
+      const values: unknown[] = [];
+      branch.forEachChild((child, key) => values.push(key === 'name' ? child() : key));
+      return values;
+    });
+    const observed = computed(visits);
+    expect(observed()).toEqual(['Marco', 'age']);
+    branch.age.set(31);
+    expect(observed()).toEqual(['Marco', 'age']);
+    expect(visits).toHaveBeenCalledTimes(1);
+    branch.name.set('Lia');
+    expect(observed()).toEqual(['Lia', 'age']);
+    branch.add('extra', field(true));
+    expect(observed()).toEqual(['Lia', 'age', 'extra']);
+    branch.remove('extra');
+    expect(observed()).toEqual(['Lia', 'age']);
+    expect(visits).toHaveBeenCalledTimes(4);
+  });
+
+  it('handles empty nodes, child-name collisions, and callback errors', () => {
+    const visit = vi.fn();
+    form({}).forEachChild(visit);
+    expect(visit).not.toHaveBeenCalled();
+    const branch = form({ forEachChild: field('child'), next: field('next') });
+    expect(branch.forEachChild()).toBe('child');
+    branch.$api.forEachChild(visit);
+    expect(visit.mock.calls).toEqual([[branch.forEachChild, 'forEachChild'], [branch.next, 'next']]);
+    const fail = vi.fn(() => { throw new Error('Iteration failed'); });
+    expect(() => branch.$api.forEachChild(fail)).toThrow('Iteration failed');
+    expect(fail).toHaveBeenCalledTimes(1);
+  });
+
   it('exposes aggregate signals through nested forms, groups, and array proxies', () => {
     const profile = form({
       name: field('Marco'),

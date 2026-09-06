@@ -3,6 +3,7 @@ title: form()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
 import formFocusSource from '!!raw-loader!../../examples/form-focus.typecheck.ts';
 import formValueContractSource from '!!raw-loader!../../examples/form-value-contract.typecheck.ts';
 import formFieldShorthandSource from '!!raw-loader!../../examples/form-field-shorthand.typecheck.ts';
@@ -1525,3 +1526,24 @@ the action throws or rejects, `submit()` rejects with that error and still clear
 
 See [Submission](../guides/submission.md), [Dynamic object children](../guides/dynamic-object-children.md),
 and the [shared Node API](./node-api.md).
+
+## Iterate over immediate children
+
+`forEachChild(callback)` calls `callback(child, key)` once per immediate child and returns `void`.
+The callback receives the actual node and its string key. A child can be a field, group, form,
+or array; iteration does not recurse. Its type is `DynamicNode`, because dynamically added
+children are included too.
+
+<CodeBlock language="ts">{forEachChildSource}</CodeBlock>
+
+Iteration uses a snapshot in `Object.entries()` order: integer-like keys come first in numeric
+order, followed by other string keys in insertion order. Children added during a callback are
+visited on the next call. Children removed during a callback remain in the current snapshot.
+An exception from a callback propagates immediately and stops the remaining callbacks.
+
+Inside `computed()` or `effect()`, iteration tracks additions and removals, plus any signals
+read by the callback. It does not read child values automatically. The iterator itself does
+not change values, validation, or interaction state; operations called by the callback retain
+their usual behavior, including descendant propagation.
+
+If a child is named `forEachChild`, use `$api.forEachChild()` to access the operation.

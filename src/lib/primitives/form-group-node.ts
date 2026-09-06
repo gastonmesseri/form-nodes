@@ -295,6 +295,11 @@ export class FormGroupNode<TNodes extends Nodes> {
     return Object.keys(this.children) as (keyof TNodes)[];
   }
 
+  forEachChild(callback: (child: DynamicNode, key: string) => void) {
+    const snapshot = this.getChildKeys().map(key => [String(key), this.children[key]!] as const);
+    snapshot.forEach(([key, child]) => callback(child as unknown as DynamicNode, key));
+  }
+
   add(...args: [string | ObjectNodeDefinitions, unknown?]) {
     const [keyOrDefinitions, definition] = args;
     if (typeof keyOrDefinitions === 'string') {
@@ -489,6 +494,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     const publicApi = {
       nodeType: () => this.nodeType,
       children: this.children as FormChildren<TNodes, Node>,
+      forEachChild: (callback: (child: DynamicNode, key: string) => void) => this.forEachChild(callback),
       get: (key: string) => this.childrenRecord[key] as DynamicNode | undefined,
       add: ((...args: [string | ObjectNodeDefinitions, unknown?]) => this.add(...args)) as FormApi<TNodes>['add'],
       remove: (key: string) => this.remove(key),

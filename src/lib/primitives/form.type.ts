@@ -328,6 +328,21 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /** Stable readonly map of this form's immediate child nodes. */
   readonly children: FormChildren<TNodes, TParent> & DynamicFormChildren;
   /**
+   * Visits a snapshot of immediate children in object-entry order, including dynamically added nodes.
+   * Does not recurse. Additions during iteration are deferred to the next call; removed nodes in the
+   * snapshot are still visited. Callback errors propagate and stop iteration.
+   *
+   * @example Visit each immediate child.
+   * ```ts
+   * const profile = form({ name: field('Marco'), age: field(30) });
+   * profile.forEachChild((child, key) => console.log(key, child()));
+   * ```
+   *
+   * @reactive Tracks child additions and removals, plus signals read by the callback.
+   * @param callback Receives the child node and its string key.
+   */
+  forEachChild(callback: (child: DynamicNode, key: string) => void): void;
+  /**
    * Returns a child by runtime key, or `undefined` when no current child has that key.
    *
    * @example Look up children attached through either `add()` signature.

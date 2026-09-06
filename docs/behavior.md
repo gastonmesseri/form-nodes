@@ -2820,3 +2820,22 @@ define the signal identity contract. Signal Forms' `packages/forms/signals/src/f
 `packages/forms/signals/test/node/field_node.spec.ts` distinguish tree access from value tracking.
 Unlike Angular's field tree, calling a Form Nodes node reads its value directly; signal compatibility
 is a deliberate public API difference, not a change to validation or state propagation.
+
+## Immediate-child iteration
+
+`form()` and `group()` expose `forEachChild((child, key) => ...)`, returning `void`. It snapshots
+immediate child instances in object-entry order, including dynamic children, without descending
+into groups, nested forms, or arrays. Callbacks receive a `DynamicNode` and string key. Additions
+during iteration are deferred to the next call; removals do not remove nodes from the current
+snapshot. Callback exceptions propagate and stop iteration. A child named `forEachChild` takes
+precedence on the direct surface; `$api.forEachChild()` remains available.
+
+Iteration tracks the structure version and the callback's own signal reads, but does not read
+child values or alter validation, state, or ownership by itself. Callback operations retain their
+normal propagation rules. Empty objects perform no callbacks.
+
+Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`,
+`packages/forms/signals/src/field/structure.ts` (`children()`) returns an immediate-child list;
+`packages/forms/signals/test/node/field_node.spec.ts` covers reactive child access and removal
+from aggregates. The public callback API and its snapshot mutation semantics are Form Nodes
+API decisions; they do not reproduce an Angular public method.

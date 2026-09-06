@@ -10,6 +10,10 @@ canonical release record.
 
 ## Unreleased
 
+### Added
+
+- Forms and groups now provide `forEachChild((child, key) => ...)` to visit a snapshot of immediate children, including dynamically added nodes, with reactive tracking of structural changes.
+
 ## 1.0.1 — 2026-09-07
 
 ### Fixed
