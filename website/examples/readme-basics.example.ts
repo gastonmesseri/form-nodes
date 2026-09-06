@@ -1,6 +1,6 @@
 import { computed, signal } from '@angular/core';
 
-import { email, field, form, min, minLength, required, type FormNodeValue } from 'form-nodes';
+import { email, field, form, min, minLength, required, requiredIf, type FormNodeValue } from 'form-nodes';
 
 // #region values
 const profile = form({
@@ -135,6 +135,34 @@ if (passwords.valid() || passwords.errors()[0]?.kind !== 'passwordMismatch') {
 }
 passwords.confirmation.set('secret');
 if (!passwords.valid()) throw new Error('Matching passwords should clear the form-level error.');
+
+// #region required-if
+const businessAccount = signal(false);
+
+const companyForm = form({
+  companyName: field('', [requiredIf(() => businessAccount())]),
+});
+
+companyForm.companyName.required(); // false
+companyForm.valid(); // true
+
+businessAccount.set(true);
+companyForm.companyName.required(); // true
+companyForm.valid(); // false — the company name is now required
+// #endregion required-if
+
+if (!companyForm.companyName.required() || !companyForm.companyName.getError('required') || companyForm.valid()) {
+  throw new Error('A business account should require the empty company name and invalidate its form.');
+}
+companyForm.companyName.set('Acme');
+if (!companyForm.valid() || !companyForm.companyName.required()) {
+  throw new Error('Providing the company name should satisfy the active required rule.');
+}
+companyForm.companyName.set('');
+businessAccount.set(false);
+if (!companyForm.valid() || companyForm.companyName.required() || companyForm.allErrors().length !== 0) {
+  throw new Error('Disabling the condition should clear required metadata and errors for the empty company name.');
+}
 
 // #region reactive
 const minimumAge = signal(18);
