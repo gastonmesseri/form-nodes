@@ -77,6 +77,11 @@ field('', {
 
 Every new control value restarts the strategy and aborts prior custom work. Rejected custom debounce work leaves the committed value unchanged. `flush()` commits the latest value immediately and aborts outstanding work.
 
+Pending timers and custom debounce promises do not, by themselves, keep unused nodes or their
+parent trees alive. This also applies to cancelled custom work whose promise has not settled yet.
+Nodes you still retain complete their debounce normally. References held by your own controls,
+callbacks, values, or injectors keep their normal ownership.
+
 ## Touch and reset interaction
 
 Marking an interactive node touched commits its pending control value for every debounce strategy. Touching a form or array recursively does the same for descendants unless `{ skipDescendants: true }` is used.

@@ -331,9 +331,11 @@ export class FieldNode<TValue> {
       this.commitControlValue();
       return;
     }
+    // Obsolete promises must not retain a cancelled controller or its abort reason.
+    const controllerRef = new WeakRef(controller);
     Promise.resolve(completion).then(
-      () => stateRef.deref()?.resolveControlDebounce(controller),
-      () => stateRef.deref()?.rejectControlDebounce(controller),
+      () => stateRef.deref()?.resolveControlDebounce(controllerRef),
+      () => stateRef.deref()?.rejectControlDebounce(controllerRef),
     );
   }
 
@@ -342,11 +344,13 @@ export class FieldNode<TValue> {
     this.value.set(this.controlValue());
   }
 
-  resolveControlDebounce(controller: AbortController) {
+  resolveControlDebounce(controllerRef: WeakRef<AbortController>) {
+    const controller = controllerRef.deref();
     if (this.debounceController === controller && !controller.signal.aborted) this.commitControlValue();
   }
 
-  rejectControlDebounce(controller: AbortController) {
+  rejectControlDebounce(controllerRef: WeakRef<AbortController>) {
+    const controller = controllerRef.deref();
     if (this.debounceController === controller) this.cancelControlDebounce();
   }
 

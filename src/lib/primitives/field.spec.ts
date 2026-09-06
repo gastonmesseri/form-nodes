@@ -838,10 +838,20 @@ describe('field', () => {
     expect(fieldNode()).toBe('second');
     expect(fieldNode.controlValue()).toBe('second');
 
+    runs[3]!.resolve();
+    await Promise.resolve();
+    expect(fieldNode()).toBe('second');
+    expect(fieldNode.debouncing()).toBe(false);
+
     fieldNode.setControlValue('flushed');
     fieldNode.flush();
     expect(runs[4]!.signal.aborted).toBe(true);
     expect(fieldNode()).toBe('flushed');
+
+    runs[4]!.reject();
+    await Promise.resolve();
+    expect(fieldNode()).toBe('flushed');
+    expect(fieldNode.debouncing()).toBe(false);
   });
 
   it('handles synchronous custom control debouncers', () => {

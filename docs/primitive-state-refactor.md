@@ -268,8 +268,11 @@ Gem's existing explicit `trackBy` and template-cloning contracts remain unchange
 
 An additional forced-GC audit found existing retention while numeric/custom debounce work is pending
 in the shared control-value buffer. The pre-migration array and the class behave identically in both
-emit modes; an immediate-debounce control is collected. This separate ownership issue is recorded in
-`TODO.md`. Template-source collection and future item creation continue to pass their regression tests.
+emit modes; an immediate-debounce control is collected. This issue was subsequently corrected separately
+from the migration: shared-buffer callbacks now use isolated scopes, and custom debounce callbacks
+in both the buffer and field class weakly reference their controllers. Forced-GC tests cover pending
+and cancelled work in both class-field emit modes. The original finding and its resolution remain
+in `TODO.md`; template-source collection and future item creation retain their own regression tests.
 
 `form()` and `group()` are the remaining candidates. Review their shared `createObjectNode()`
 boundary together before choosing the next class structure.
