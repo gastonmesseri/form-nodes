@@ -1,4 +1,4 @@
-import { email, field, form, minLength, required } from '@gem/ng-forms';
+import { email, field, form, minLength, required } from 'form-nodes';
 
 const myForm = form({
   name: field('', [required, minLength(2)]),
@@ -6,9 +6,10 @@ const myForm = form({
 });
 
 if (myForm.valid()) {
-  throw new Error('The empty required email should make the form invalid.');
+  throw new Error('The empty required fields should make the form invalid.');
 }
 
+myForm.name.set('Ada');
 myForm.email.set('ada@example.com');
 
 if (!myForm.valid()) {
@@ -16,6 +17,6 @@ if (!myForm.valid()) {
 }
 
 const value = myForm();
-if (value.name !== 'Unknown' || value.email !== 'ada@example.com') {
+if (value.name !== 'Ada' || value.email !== 'ada@example.com') {
   throw new Error('The form value did not reflect its child values.');
 }

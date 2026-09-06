@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { FormNode, email, field, form, required } from '@gem/ng-forms';
+import { FormNode, email, field, form, required } from 'form-nodes';
 
 @Component({
   selector: 'app-account-editor',

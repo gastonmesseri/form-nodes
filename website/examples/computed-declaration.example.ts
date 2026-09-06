@@ -1,6 +1,6 @@
 import { computed, signal } from '@angular/core';
 
-import { array, field, form, required } from '@gem/ng-forms';
+import { array, field, form, required } from 'form-nodes';
 
 const initialName = signal('Marco');
 const profile = computed(() => {

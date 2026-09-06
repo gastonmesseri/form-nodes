@@ -25,7 +25,7 @@ export default defineConfig(
       'project': { rules: { 'multiline-arrow-body': multilineArrowBody } },
     },
     rules: {
-      '@angular-eslint/component-selector': ['error', { type: 'element', prefix: 'gem', style: 'kebab-case' }],
+      '@angular-eslint/component-selector': ['error', { type: 'element', prefix: 'form-nodes', style: 'kebab-case' }],
       '@angular-eslint/consistent-component-styles': ['error', 'string'],
       '@angular-eslint/directive-selector': ['error', { type: 'attribute', prefix: 'form', style: 'camelCase' }],
       '@angular-eslint/no-input-rename': 'off',

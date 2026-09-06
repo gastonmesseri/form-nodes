@@ -1,7 +1,7 @@
 import { Component, forwardRef } from '@angular/core';
 import { FormControl, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
 
-import { useControlState } from '@gem/ng-forms';
+import { useControlState } from 'form-nodes';
 
 // Custom control component
 

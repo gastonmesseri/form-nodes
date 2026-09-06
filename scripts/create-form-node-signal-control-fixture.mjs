@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const workspace = process.cwd();
-const outputDirectory = resolve(workspace, 'node_modules', '.cache', 'ng-forms', 'aot-signal-control');
+const outputDirectory = resolve(workspace, 'node_modules', '.cache', 'form-nodes', 'aot-signal-control');
 const config = resolve(outputDirectory, 'tsconfig.json');
 const ngc = resolve(workspace, 'node_modules', '@angular', 'compiler-cli', 'bundles', 'src', 'bin', 'ngc.js');
 const esbuild = resolve(workspace, 'node_modules', '.bin', 'esbuild');

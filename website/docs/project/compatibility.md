@@ -4,10 +4,10 @@ title: Compatibility
 
 # Compatibility
 
-Use this table to choose a compatible Gem Forms release. A combination is listed only after it has
+Use this table to choose a compatible Form Nodes release. A combination is listed only after it has
 been intentionally supported and verified.
 
-| Gem Forms | Angular | Node.js | Status |
+| Form Nodes | Angular | Node.js | Status |
 | --- | --- | --- | --- |
 | `0.1.x` | `^22.0.0` | `^22.22.3`, `^24.15.0`, or `>=26.0.0` | Current development line |
 
@@ -36,13 +36,13 @@ support policy.
 ## Installing a compatible line
 
 ```bash
-npm install --save @gem/ng-forms@^0.1 @angular/core@^22 @angular/forms@^22
+npm install --save form-nodes@^0.1 @angular/core@^22 @angular/forms@^22
 ```
 
 :::warning Do not bypass peer-dependency conflicts
 
 `--force` can install an Angular combination the library has not verified. Align `@angular/core`
-and `@angular/forms` first, then select the matching Gem Forms release line.
+and `@angular/forms` first, then select the matching Form Nodes release line.
 
 :::
 

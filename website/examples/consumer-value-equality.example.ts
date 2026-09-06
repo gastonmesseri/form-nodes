@@ -1,6 +1,6 @@
 import { computed } from '@angular/core';
 
-import { field, form } from '@gem/ng-forms';
+import { field, form } from 'form-nodes';
 
 const profile = form({
   name: field.strict<string>('Marco'),

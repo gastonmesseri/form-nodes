@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 
 describe('pending control debounce ownership', () => {
   it.each([false, true])('releases unreachable trees and completes live work with useDefineForClassFields=%s', async (useDefineForClassFields) => {
-    const directory = await mkdtemp(join(tmpdir(), 'gem-debounce-ownership-'));
+    const directory = await mkdtemp(join(tmpdir(), 'form-nodes-debounce-ownership-'));
     const output = join(directory, 'fixture.mjs');
     try {
       await build({

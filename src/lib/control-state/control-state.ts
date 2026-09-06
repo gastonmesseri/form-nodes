@@ -32,7 +32,7 @@ export type ControlState<TValue = unknown> = {
   readonly connected: Signal<boolean>;
   /** API currently supplying the state, or `null` when the component is not bound. */
   readonly source: Signal<ControlStateSource | null>;
-  /** Current committed bound value, independent of Gem node equality and pending input, or `undefined` when disconnected. */
+  /** Current committed bound value, independent of Form Nodes node equality and pending input, or `undefined` when disconnected. */
   readonly value: Signal<TValue | undefined>;
   /** Whether the bound control is disabled. */
   readonly disabled: Signal<boolean>;

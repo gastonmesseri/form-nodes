@@ -1,4 +1,4 @@
-import { field, form, type FormValueContract } from '@gem/ng-forms';
+import { field, form, type FormValueContract } from 'form-nodes';
 
 type Profile = {
   username: string | null;

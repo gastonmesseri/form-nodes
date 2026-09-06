@@ -21,7 +21,7 @@ groups. Prefer shorthand until a branch needs its own options or validators.
 
 :::tip Prefer object shorthand when the group needs no configuration
 
-Use a plain object for an ordinary structural branch. Gem Forms normalizes it to the same group
+Use a plain object for an ordinary structural branch. Form Nodes normalizes it to the same group
 node that an explicit `group()` call would create:
 
 ```ts
@@ -54,7 +54,7 @@ structure and state but does not own a submission workflow.
 
 :::info A group can be the root model of a component
 
-Use `group()` as the root when a component needs a complete form tree but does not need Gem Forms'
+Use `group()` as the root when a component needs a complete form tree but does not need Form Nodes'
 submission workflow. Values, validation, interaction state, availability, reset, and control
 binding work normally; the component can invoke its own action explicitly.
 
@@ -70,13 +70,13 @@ handling, concurrent-submission protection, or `submitting()` state of its own.
 
 `group()` can be safely created and used outside an Angular injection context. Value and tree
 operations, state, synchronous validation, and asynchronous validation all continue to work. When
-an injector is available, its `DestroyRef` provides deterministic cleanup; without one, Gem Forms
+an injector is available, its `DestroyRef` provides deterministic cleanup; without one, Form Nodes
 uses weak ownership so an unreachable group tree can be garbage-collected.
 
 :::
 
 ```ts
-import { field, form, group, required } from '@gem/ng-forms';
+import { field, form, group, required } from 'form-nodes';
 
 const myForm = form({
   displayName: field(''),
@@ -771,8 +771,8 @@ Returns the opaque terminal adapter used by Angular's `[formField]` directive.
 <input [formField]="profile.address.city.$field" />
 ```
 
-Select the intended Gem node first and use `$field` only as the binding value. Programmatic group
-operations belong to the Gem node API.
+Select the intended Form Nodes node first and use `$field` only as the binding value. Programmatic group
+operations belong to the Form Nodes node API.
 
 ### Validation properties
 

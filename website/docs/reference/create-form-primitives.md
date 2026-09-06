@@ -140,7 +140,7 @@ The configured `form()` attaches that existing node without changing its value t
 Applications can expose one configured entry point so declarations share the same policy:
 
 ```ts title="src/app/forms.ts"
-import { createFormPrimitives } from '@gem/ng-forms';
+import { createFormPrimitives } from 'form-nodes';
 
 export const {
   form,

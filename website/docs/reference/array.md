@@ -20,7 +20,7 @@ Use [`FormNodeValue<typeof myArray>`](./form-node-value.md) to extract an array 
 
 `array()` can be safely created and used outside an Angular injection context. Value and structural
 operations, state, synchronous validation, and asynchronous validation all continue to work. When
-an injector is available, its `DestroyRef` provides deterministic cleanup; without one, Gem Forms
+an injector is available, its `DestroyRef` provides deterministic cleanup; without one, Form Nodes
 uses weak ownership so an unreachable array tree can be garbage-collected.
 
 :::
@@ -34,7 +34,7 @@ operations. When one control owns the complete array value, use `field([])` inst
 :::
 
 ```ts
-import { array, field, form } from '@gem/ng-forms';
+import { array, field, form } from 'form-nodes';
 
 const myForm = form({
   people: array({

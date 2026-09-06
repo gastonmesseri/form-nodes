@@ -1,6 +1,6 @@
 ---
 title: Complete form example
-description: A large, nested Gem Forms example with Angular bindings, arrays, validation, state, and submission.
+description: A large, nested Form Nodes example with Angular bindings, arrays, validation, state, and submission.
 ---
 
 # Complete form example
@@ -12,7 +12,7 @@ Large forms remain ordinary typed trees. This customer-onboarding example combin
 ```ts
 import { Component, signal } from '@angular/core';
 
-import { FormNode, array, between, dateBetween, email, field, form, maxLength, maxWords, minLength, oneOf, pattern, required, uniqueItems } from '@gem/ng-forms';
+import { FormNode, array, between, dateBetween, email, field, form, maxLength, maxWords, minLength, oneOf, pattern, required, uniqueItems } from 'form-nodes';
 
 @Component({
   selector: 'app-customer-editor',

@@ -31,14 +31,6 @@
       }
     })
 
-- [NEXT] [ ] NAME LIBRARY (form-nodes) ?
-  - Consider @gemgular/forms name for library
-  - maybe @gem/ng-form-nodes and keep all my libraries under @gem?
-  - maybe @gem/ng-forms
-  - let's try to brainstorm names (200) names, and later select
-  - i'd like it to sound official
-  - [ ] Rename to something generic like @ng-tools/forms (maybe)
-
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
   - DO AS MUCH AS POSSIBLE TO INDEX IN NPM GITHUB AND GOOGLE
@@ -112,7 +104,7 @@
 
 - [ ] Maybe: Consider changing the @example to something different, like a heading with asterisks **Like this** (for better readability)
 
-- [ ] Maybe: Public api: Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
+- [ ] Maybe: Public API: Consider exporting types with a prefix such as FormNodesValidator.
 
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
@@ -308,10 +300,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   when every supported binding source exposes a public operation with equivalent semantics. Keep
   value changes and form-owned operations such as reset, disable, and enable outside this facade.
 - Reconsider whether `array()` should expose `patch()`; its positional semantics may be confusing and the same updates can be expressed explicitly through item nodes or other array operations.
-- Reconsider mirroring Gem asynchronous-validation `pending` into Angular field state only if
-  Angular provides a supported external-state mechanism. Gem must remain the validator owner and
+- Reconsider mirroring Form Nodes asynchronous-validation `pending` into Angular field state only if
+  Angular provides a supported external-state mechanism. Form Nodes must remain the validator owner and
   validators must never execute twice merely to reproduce Angular's lifecycle.
-- Reconsider exposing Gem submission state to Angular controls only if a concrete control use case
+- Reconsider exposing Form Nodes submission state to Angular controls only if a concrete control use case
   appears. Submission remains owned by `[formNode]`; the `$field` adapter must not reproduce or
   combine with Angular `FormRoot` by default.
 - Revisit `$field` pattern-slot growth if a field can activate more simultaneous pattern
@@ -361,6 +353,11 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 
 ## Completed
+
+- [x] Choose `form-nodes` as the library name and unscoped npm package.
+  - Considered a shared library-family scope, Angular-themed scoped names, and a generic tools scope; selected the unscoped name instead.
+  - The proposed broad naming brainstorm is superseded by this decision.
+  - Update package metadata, imports, module augmentations, documentation, examples, tooling, and package-consumer checks consistently.
 
 - [x] Audit internal node-value reads across all library runtime folders after introducing exposed equality.
   - [x] Inspect text references and typed callable reads; verify internal aggregation, trackBy, control buffers, Angular synchronization/reset, and clone recipes use their intended value sources.
@@ -763,8 +760,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Transfer lifecycle ownership when nodes are adopted and release it when they are detached.
   - [x] Keep injector-free nodes safe through weak watcher ownership.
   - [x] Derive the root-resolution baseline from Angular `v22.1.4` at commit
-    `898380974d49cf7976e9d89cc74a0801a26ce7b1`, while documenting Gem Forms' dynamic-node extension.
-- [x] Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Gem Forms
+    `898380974d49cf7976e9d89cc74a0801a26ce7b1`, while documenting Form Nodes' dynamic-node extension.
+- [x] Harden `$field` as an opaque Angular `[formField]` control-binding adapter while Form Nodes
   remains the sole authority for form state and operations.
   - [x] Support only behavior required by controls that bind a node's terminal `$field`; do not
     eagerly mirror unused nodes or reproduce Angular's form engine.
@@ -783,7 +780,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
     inspect its writable `value`, which makes `never`, `Field<never>`, and `() => never` invalid.
   - [x] Compile native, custom field, form, group, and array `[formField]` bindings with `ngc` and
     `strictTemplates: true`.
-  - [x] Keep Gem nodes as the documented and supported surface for every programmatic operation.
+  - [x] Keep Form Nodes nodes as the documented and supported surface for every programmatic operation.
 - [x] Verify `$field` adapter cleanup across its supported lifecycle.
   - [x] Disconnect removed array items and unregister their destroyed `[formField]` bindings.
   - [x] Remove focus and parsing-error registrations when a bound Angular view is destroyed.
@@ -822,28 +819,28 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Register every Angular `FormFieldBinding` with its original library node so node-level and
     aggregate `focus()` work, multiple bindings use DOM order, destroyed and rebound controls
     unregister, and Angular custom-control focus implementations are preserved.
-  - [x] Propagate Gem subtree and explicit-value resets into Angular parsing/control-value cleanup
-    and native, custom-control, or CVA reset hooks; cancel pending Gem debounce and handle native
+  - [x] Propagate Form Nodes subtree and explicit-value resets into Angular parsing/control-value cleanup
+    and native, custom-control, or CVA reset hooks; cancel pending Form Nodes debounce and handle native
     form reset through `[formNode]`. Angular's internal field reset is deliberately not a public
-    operation because `$field` is opaque and Gem Forms is the sole state authority.
+    operation because `$field` is opaque and Form Nodes is the sole state authority.
   - [x] Propagate native and custom-control parsing errors from each Angular `FormField` binding
-    into Gem validation. Preserve binding ownership, merge them with Gem validator errors, remove
+    into Form Nodes validation. Preserve binding ownership, merge them with Form Nodes validator errors, remove
     them on recovery, reset, destruction, or rebinding, and expose them through `errors()`,
     `allErrors()`, ancestor validity, and submission checks.
-  - [x] Mirror Gem `min`, `max`, `minLength`, `maxLength`, and pattern constraints into Angular
+  - [x] Mirror Form Nodes `min`, `max`, `minLength`, `maxLength`, and pattern constraints into Angular
     field metadata for native and custom `[formField]` controls. Keep the sources reactive, support
-    number and date limits, use metadata-only rules so Gem remains the sole validator owner, and
+    number and date limits, use metadata-only rules so Form Nodes remains the sole validator owner, and
     avoid duplicate validation errors.
-  - [x] Preserve complete Gem validation-error payloads in Angular field state, including messages,
+  - [x] Preserve complete Form Nodes validation-error payloads in Angular field state, including messages,
     constraint data, and custom properties, while preventing Angular-originated parse errors from
     being fed back into Angular a second time.
   - [x] Preserve explicit `targetNode` semantics for aggregate and cross-field validators by
     attaching each adapted error to the corresponding Angular field path. Permit validator results
-    to target a Gem node while reserving `formNode` for concrete rendered bindings.
+    to target a Form Nodes node while reserving `formNode` for concrete rendered bindings.
   - [x] Resolve dynamic array item `$field` bindings lazily instead of eagerly mirroring every
     descendant. Remap only requested nodes after moves or `trackBy` reconciliation, preserve their
     interaction state, and clean up removed connections before Angular observes an orphan field.
-  - [x] Keep availability intentionally directional: Gem owns `disabled`, `readonly`, `hidden`, and
+  - [x] Keep availability intentionally directional: Form Nodes owns `disabled`, `readonly`, `hidden`, and
     `required`; Angular derives them for `[formField]`. Do not emulate reverse setters that Angular
     does not expose.
   - [x] Reject an exhaustive adapter matrix as a standing implementation goal. Add focused unit,
@@ -852,7 +849,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Keep adapter documentation updates as a standing project rule in `AGENTS.md`, not a
     perpetual unfinished `$field` task. Record the inspected Angular version and governing source
     paths whenever adapter behavior changes.
-  - [x] Document and verify the recommended native `<form>` composition: use Gem's `[formNode]` as
+  - [x] Document and verify the recommended native `<form>` composition: use Form Nodes' `[formNode]` as
     the sole root for submit, reset, and `novalidate`, while individual controls may use
     `[formField]="node.$field"`. Invalid adapted controls block submission and can be focused from
     `onInvalid`; do not combine competing form-root directives.

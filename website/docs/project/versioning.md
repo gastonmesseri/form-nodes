@@ -4,13 +4,13 @@ title: Versioning and releases
 
 # Versioning and releases
 
-Gem Forms versions describe the library itself; they do **not** mirror Angular's version number.
-For example, Gem Forms `0.1.x` supports Angular 22, but that does not imply that Angular 22 requires
-Gem Forms 22.
+Form Nodes versions describe the library itself; they do **not** mirror Angular's version number.
+For example, Form Nodes `0.1.x` supports Angular 22, but that does not imply that Angular 22 requires
+Form Nodes 22.
 
 ## Version policy
 
-Gem Forms follows [Semantic Versioning](https://semver.org/):
+Form Nodes follows [Semantic Versioning](https://semver.org/):
 
 | Release | After 1.0 | During the current 0.x phase |
 | --- | --- | --- |

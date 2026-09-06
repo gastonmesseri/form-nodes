@@ -4,16 +4,16 @@ title: Installation
 
 # Installation
 
-Install Gem Forms alongside Angular 22:
+Install Form Nodes alongside Angular 22:
 
 ```bash
-npm install --save @gem/ng-forms
+npm install --save form-nodes
 ```
 
 Import only the primitives and validators that your application uses:
 
 ```ts
-import { field, form, required } from '@gem/ng-forms';
+import { field, form, required } from 'form-nodes';
 ```
 
 The package is distributed as side-effect-free ESM. Consumer bundlers can remove validators and
@@ -25,8 +25,7 @@ other exports that are not imported.
 - A TypeScript configuration compatible with Angular 22
 - Signals, which are provided by `@angular/core`
 
-See the [complete compatibility table](../project/compatibility.md) before upgrading Angular or Gem
-Forms. The Gem Forms version does not mirror the Angular version.
+See the [complete compatibility table](../project/compatibility.md) before upgrading Angular or Form Nodes. The Form Nodes version does not mirror the Angular version.
 
 :::tip Forms work outside Angular DI
 

@@ -295,7 +295,7 @@ body {
 
 @media (max-width: 996px) {
   .docs-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .docs-hero h1 {

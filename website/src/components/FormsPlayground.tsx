@@ -178,7 +178,7 @@ export default function FormsPlayground() {
       <section className="forms-playground__model" aria-label="Form model declaration">
         <div className="forms-playground__model-copy">
           <span className="forms-playground__eyebrow">The model running below</span>
-          <h2>A real Gem Forms declaration</h2>
+          <h2>A real Form Nodes declaration</h2>
           <p>
             The editor, state inspector, and JSON value all use this exact node tree. Change a
             control below and compare its immediate control value with the committed form value.

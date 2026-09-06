@@ -1,6 +1,6 @@
 ---
 title: Built-in validators
-description: Signatures, examples, empty-value behavior, errors, and metadata for every built-in Gem Forms validator.
+description: Signatures, examples, empty-value behavior, errors, and metadata for every built-in Form Nodes validator.
 ---
 
 import CodeBlock from '@theme/CodeBlock';

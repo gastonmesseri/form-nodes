@@ -4,7 +4,7 @@ title: Errors and validation status
 
 # Errors and validation status
 
-Gem Forms separates errors owned by one node from errors aggregated across a subtree, and every exposed error identifies its target node.
+Form Nodes separates errors owned by one node from errors aggregated across a subtree, and every exposed error identifies its target node.
 
 ## Error shape and ownership
 
@@ -75,7 +75,7 @@ error?.targetNode;
 Unknown custom kinds retain a permissive error shape. Reusable packages can augment `ValidationErrorMap` for precise custom lookup:
 
 ```ts
-declare module '@gem/ng-forms' {
+declare module 'form-nodes' {
   interface ValidationErrorMap {
     readonly unavailableUsername: ValidationError & {
       readonly kind: 'unavailableUsername';

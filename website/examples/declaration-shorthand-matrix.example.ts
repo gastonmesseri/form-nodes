@@ -1,4 +1,4 @@
-import { array, field, form, type Field, type Group } from '@gem/ng-forms';
+import { array, field, form, type Field, type Group } from 'form-nodes';
 
 class Company {
   constructor(readonly name: string) {}
@@ -9,7 +9,7 @@ const profile = form({
   age: 0,
   roles: ['reader'],
   address: { city: 'Zurich' },
-  company: new Company('Gem'),
+  company: new Company('Form Nodes'),
   atomicAddress: field({ city: 'Bern' }),
   contacts: array({ email: '' }, {
     initialValue: [{ email: 'team@example.com' }],

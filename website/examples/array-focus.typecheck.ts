@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { array, field, FormNode } from '@gem/ng-forms';
+import { array, field, FormNode } from 'form-nodes';
 
 @Component({
   imports: [FormNode],

@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const workspace = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const temporaryDirectory = mkdtempSync(join(tmpdir(), 'ng-forms-package-consumer-'));
+const temporaryDirectory = mkdtempSync(join(tmpdir(), 'form-nodes-package-consumer-'));
 
 const run = (command, args, options = {}) => {
   const result = spawnSync(command, args, {
@@ -25,14 +25,14 @@ try {
   const packed = packResult[0];
   if (!packed?.filename || !Array.isArray(packed.files)) throw new Error('npm pack returned an unexpected result.');
   const packedPaths = new Set(packed.files.map(({ path }) => path));
-  if (!packedPaths.has('fesm2022/gem-ng-forms.mjs') || !packedPaths.has('types/gem-ng-forms.d.ts')) {
+  if (!packedPaths.has('fesm2022/form-nodes.mjs') || !packedPaths.has('types/form-nodes.d.ts')) {
     throw new Error('The published package does not contain its JavaScript bundle and public typings.');
   }
   if ([...packedPaths].some((path) => path.startsWith('src/'))) {
     throw new Error('The published package unexpectedly contains library source files.');
   }
 
-  const packageDirectory = join(temporaryDirectory, 'node_modules', '@gem', 'ng-forms');
+  const packageDirectory = join(temporaryDirectory, 'node_modules', 'form-nodes');
   mkdirSync(packageDirectory, { recursive: true });
   run('tar', ['-xzf', join(temporaryDirectory, packed.filename), '--strip-components=1', '-C', packageDirectory]);
   const packageManifest = JSON.parse(readFileSync(join(packageDirectory, 'package.json'), 'utf8'));
@@ -77,7 +77,7 @@ try {
 
   writeFileSync(join(temporaryDirectory, 'runtime.mjs'), `
     import '@angular/compiler';
-    import { array, createFormPrimitives, field, form, group, required } from '@gem/ng-forms';
+    import { array, createFormPrimitives, field, form, group, required } from 'form-nodes';
     class Company {
       constructor(name) { this.name = name; }
     }
@@ -90,7 +90,7 @@ try {
       addresses: array({ city: field('') }, [{ city: 'Zurich' }]),
       roles: ['admin'],
       birthday: new Date('1990-06-15T00:00:00.000Z'),
-      company: new Company('Gem'),
+      company: new Company('Form Nodes'),
       atomicAddress: field({ city: 'Bern' }),
     });
     if (profile.name.valid()) throw new Error('Required validation was not preserved in the package.');
@@ -110,7 +110,7 @@ try {
   run(process.execPath, [join(temporaryDirectory, 'runtime.mjs')]);
 
   writeFileSync(join(temporaryDirectory, 'tree-shaking.mjs'), `
-    import { required } from '@gem/ng-forms';
+    import { required } from 'form-nodes';
     console.log(required);
   `);
   const treeShakenBundle = join(temporaryDirectory, 'tree-shaking-bundle.mjs');

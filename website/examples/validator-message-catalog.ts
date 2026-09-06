@@ -1,4 +1,4 @@
-import type { ValidatorMessages } from '@gem/ng-forms';
+import type { ValidatorMessages } from 'form-nodes';
 
 export const validatorMessages: ValidatorMessages = {
   required: 'This value is required.',

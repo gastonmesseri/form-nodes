@@ -1,4 +1,4 @@
-import { createFormPrimitives, type Field } from '@gem/ng-forms';
+import { createFormPrimitives, type Field } from 'form-nodes';
 
 const { form, field, array } = createFormPrimitives({
   nullable: false,

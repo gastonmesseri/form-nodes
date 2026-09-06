@@ -10,7 +10,7 @@ field and form error ownership through both failing and valid states.
 Pass validators in a node's options or as the positional validator argument:
 
 ```ts
-import { field, minLength, required } from '@gem/ng-forms';
+import { field, minLength, required } from 'form-nodes';
 
 const myForm = form({
   name: field('', {
@@ -63,7 +63,7 @@ contribute no error. See [Built-in validator custom errors](../reference/built-i
 A synchronous validator receives a stable context with its value signal and access to the validated node:
 
 ```ts
-import { field, validator } from '@gem/ng-forms';
+import { field, validator } from 'form-nodes';
 
 const adult = validator<number | null>(({ value }) => {
   const age = value();

@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 
 describe('compiled template ownership', () => {
   it.each([false, true])('releases source nodes with useDefineForClassFields=%s', async (useDefineForClassFields) => {
-    const directory = await mkdtemp(join(tmpdir(), 'gem-template-ownership-'));
+    const directory = await mkdtemp(join(tmpdir(), 'form-nodes-template-ownership-'));
     const output = join(directory, 'fixture.mjs');
     try {
       await build({

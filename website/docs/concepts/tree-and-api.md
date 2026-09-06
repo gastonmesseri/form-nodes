@@ -11,7 +11,7 @@ import inlineValidatorNodesSource from '!!raw-loader!../../examples/inline-valid
 
 # Tree navigation and API access
 
-A form is both a callable value signal and a typed tree of child nodes. Gem Forms keeps those two views connected without requiring string paths.
+A form is both a callable value signal and a typed tree of child nodes. Form Nodes keeps those two views connected without requiring string paths.
 
 ## Direct child access
 

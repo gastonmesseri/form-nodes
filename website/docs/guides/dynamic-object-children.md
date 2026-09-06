@@ -169,7 +169,7 @@ children retain their current value. `reset()` still clears their interaction st
 ## Angular comparison
 
 Angular Signal Forms 22.1.5 derives object and array children from the shape of its writable model;
-it does not expose an `addControl()` operation on a field tree. Gem Forms owns explicit nodes, so
+it does not expose an `addControl()` operation on a field tree. Form Nodes owns explicit nodes, so
 `add()` and `remove()` are deliberate library-specific structural operations.
 
 ## Related guides and reference

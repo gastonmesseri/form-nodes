@@ -4,7 +4,7 @@ title: Form nodes
 
 # Form nodes
 
-Gem Forms represents every part of a form as a node:
+Form Nodes represents every part of a form as a node:
 
 - `field()` creates a leaf value.
 - `form()` combines named child nodes into an object value.

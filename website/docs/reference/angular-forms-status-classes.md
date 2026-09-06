@@ -19,7 +19,7 @@ const ANGULAR_FORMS_STATUS_CLASSES:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [

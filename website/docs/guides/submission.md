@@ -59,13 +59,13 @@ flushes the tree but runs no action. This makes an accidental group/form choice 
 while keeping submission configuration exclusive to `form()`.
 
 Controls may instead use Angular Signal Forms' `FormField`. Keep `[formNode]` on the native form so
-Gem remains the only form root:
+Form Nodes remains the only form root:
 
 ```ts
 import { Component } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
-import { FormNode, field, form, required } from '@gem/ng-forms';
+import { FormNode, field, form, required } from 'form-nodes';
 
 @Component({
   imports: [FormNode, FormField],
@@ -89,7 +89,7 @@ export class EmailEditor {
 }
 ```
 
-The adapted control contributes its value, interaction state, and parse errors to the Gem tree, so
+The adapted control contributes its value, interaction state, and parse errors to the Form Nodes tree, so
 the normal invalid-submission path still applies. Do not place Angular's separate form-root
 directive on the same `<form>`. See [Control binding](./control-binding.md#native-form-root-with-formfield-controls)
 for the complete composition rule and reset semantics.

@@ -63,7 +63,7 @@ Configure translated defaults once in an application, route, or environment inje
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
-import { provideValidatorMessages } from '@gem/ng-forms';
+import { provideValidatorMessages } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [

@@ -328,7 +328,7 @@ describe('Angular Signal Forms field adapter', () => {
     expect(angularTags().value()).toEqual([]);
   });
 
-  it('remaps primitive array interaction state by Gem item identity', () => {
+  it('remaps primitive array interaction state by Form Nodes item identity', () => {
     const injector = TestBed.inject(Injector);
     const tags = runInInjectionContext(injector, () => array(field(''), ['first', 'second']));
     const angularTags = getAngularField<(string | null)[]>(tags);
@@ -420,7 +420,7 @@ describe('Angular Signal Forms field adapter', () => {
     expect(angularProfile.amount().errors().map(error => error.kind)).toEqual(['min']);
   });
 
-  it('provides Gem constraints to formField custom-control inputs', () => {
+  it('provides Form Nodes constraints to formField custom-control inputs', () => {
     @Component({
       selector: 'constraint-control',
       template: '',

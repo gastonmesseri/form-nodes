@@ -1,7 +1,7 @@
 ---
 title: Build a complete form
 slug: /tutorial
-description: A progressive Gem Forms tutorial from the first model to validation, arrays, and submission.
+description: A progressive Form Nodes tutorial from the first model to validation, arrays, and submission.
 ---
 
 # Build a complete form
@@ -23,7 +23,7 @@ By the end, the form will include:
 Install the package in an Angular 22 application:
 
 ```bash
-npm install --save @gem/ng-forms
+npm install --save form-nodes
 ```
 
 The tutorial uses standalone components and Angular's built-in control flow. The form model itself does not require dependency injection.

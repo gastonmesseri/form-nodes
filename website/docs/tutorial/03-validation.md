@@ -17,7 +17,7 @@ myForm = form({
 Import the rules with the form primitives:
 
 ```ts
-import { FormNode, between, email, field, form, integer, minLength, required } from '@gem/ng-forms';
+import { FormNode, between, email, field, form, integer, minLength, required } from 'form-nodes';
 ```
 
 Optional format and constraint validators accept empty values so they compose with `required`. For example, `email` checks format while `required` checks presence.

@@ -1,6 +1,6 @@
 import { Component, model } from '@angular/core';
 
-import { useControlState } from '@gem/ng-forms';
+import { useControlState } from 'form-nodes';
 
 @Component({
   selector: 'my-control-component',

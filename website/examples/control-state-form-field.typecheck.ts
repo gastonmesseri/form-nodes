@@ -1,7 +1,7 @@
 import { Component, model } from '@angular/core';
 import { FormField, type FormValueControl } from '@angular/forms/signals';
 
-import { field, form, useControlState, required, type ControlStateError } from '@gem/ng-forms';
+import { field, form, useControlState, required, type ControlStateError } from 'form-nodes';
 
 // Custom control component
 

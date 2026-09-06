@@ -13,15 +13,15 @@ import controlStateSource from '!!raw-loader!../../examples/control-state-form-n
 
 ### Use Angular's own [formField] directive
 
-Every Gem Forms node exposes `$field`, a lazy view backed by an official Angular Signal Forms
+Every Form Nodes node exposes `$field`, a lazy view backed by an official Angular Signal Forms
 `FieldTree`. This lets an application opt into Angular's directive for a particular control while
-keeping Gem Forms as its model:
+keeping Form Nodes as its model:
 
 ```ts
 import { Component } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
-import { field, form } from '@gem/ng-forms';
+import { field, form } from 'form-nodes';
 
 @Component({
   imports: [FormField],
@@ -67,9 +67,9 @@ that bind Angular's `[formField]`.
 The adapter is intentionally type-erased to `any`. Angular's AOT strict-template checker calls and
 inspects the bound field state, so narrower opaque types such as `never` reject valid templates.
 The erased type deliberately avoids advertising Angular's field-state members in IntelliSense; it
-is not an application-code API or a type-safe bridge. Select the intended Gem Forms node before
+is not an application-code API or a type-safe bridge. Select the intended Form Nodes node before
 `$field`, as in `profileForm.displayName.$field`, and perform programmatic operations through that
-Gem node.
+Form Nodes node.
 
 Most bindings target a `field()`. An aggregate `form()`, `group()`, or `array()` can also expose
 `$field` for an uncommon custom control whose single value is the corresponding object or array;
@@ -88,11 +88,11 @@ If application code writes the node in the same reactive turn as a real control-
 control edit takes precedence. This deterministic rule protects user input from effect-ordering
 races; when no control edit occurred, the programmatic node value remains authoritative.
 
-For a bound leaf field, control interaction flows back naturally: input marks the Gem Forms field
+For a bound leaf field, control interaction flows back naturally: input marks the Form Nodes field
 dirty and blur marks it touched. Calls such as `markAsUntouched()` and `markAsPristine()` also update the Angular field independently, so
 clearing one does not clear the other.
 
-Parsing errors also flow back into Gem Forms. This includes Angular's native parsing and custom
+Parsing errors also flow back into Form Nodes. This includes Angular's native parsing and custom
 controls built with `transformedValue()`. A failed parse keeps the last committed node value while
 making the node and its ancestors invalid:
 
@@ -103,12 +103,12 @@ profileForm.age.invalid();          // true
 profileForm.invalid();              // true
 ```
 
-Correcting the control removes its parsing error. Resetting the Gem node also clears parsing state
+Correcting the control removes its parsing error. Resetting the Form Nodes node also clears parsing state
 and restores the control to the committed value. With multiple controls bound to one node, each
 control owns its parsing error independently; destroying or rebinding a control removes only its
-contribution. Gem validator errors remain present alongside binding parsing errors.
+contribution. Form Nodes validator errors remain present alongside binding parsing errors.
 
-Validator constraints flow in the other direction. Gem validators remain responsible for
+Validator constraints flow in the other direction. Form Nodes validators remain responsible for
 validation, while `[formField]` receives their active metadata for rendering and custom-control
 inputs:
 
@@ -122,7 +122,7 @@ profileForm = form({
 A custom Angular control that declares `min`, `max`, `minLength`, `maxLength`, or `pattern` inputs
 receives the corresponding reactive values naturally. Native controls receive the properties that
 Angular supports for their element and input type. Angular 22 currently exposes patterns to custom
-controls but does not write them to a native input's `pattern` property. Gem still validates every
+controls but does not write them to a native input's `pattern` property. Form Nodes still validates every
 configured pattern, and metadata propagation does not run a second Angular validator or duplicate
 errors.
 
@@ -138,11 +138,11 @@ implementation, including `FocusOptions`, and destroyed or rebound controls are 
 old node automatically. Calling `focus()` on a form, group, or array can discover the first adapted
 control among its descendants.
 
-Reset through the Gem node API. Calling `node.reset()` resets Angular's control state, invokes
-native, custom-control, or CVA reset handling, and cancels pending Gem debounce. Explicit reset
-values update the control as well. A reset without a value keeps the last committed Gem Forms value
+Reset through the Form Nodes node API. Calling `node.reset()` resets Angular's control state, invokes
+native, custom-control, or CVA reset handling, and cancels pending Form Nodes debounce. Explicit reset
+values update the control as well. A reset without a value keeps the last committed Form Nodes value
 rather than committing text that was still waiting for debounce. Angular's internal field-state
-reset is deliberately not another application API: `$field` is opaque and Gem Forms remains the
+reset is deliberately not another application API: `$field` is opaque and Form Nodes remains the
 sole authority.
 
 For native form reset events, bind the form root with `[formNode]` while its controls may continue
@@ -155,13 +155,13 @@ using `[formField]`:
 ```
 
 Angular 22's `FormRoot` handles submission but does not handle the native `reset` event. The
-`[formNode]` root receives that event, resets Gem Forms, and the adapter resets every Angular-bound
+`[formNode]` root receives that event, resets Form Nodes, and the adapter resets every Angular-bound
 control in the subtree.
 
 Availability is intentionally node-owned. Calling `disable()`, `markAsReadonly()`, or `hide()` on
-the Gem Forms node updates Angular's field state and the bound control. Angular models disabled,
+the Form Nodes node updates Angular's field state and the bound control. Angular models disabled,
 readonly, hidden, and required as derived schema state and does not expose reverse setters, so a
-control does not mutate those states back into the Gem Forms node.
+control does not mutate those states back into the Form Nodes node.
 
 Classes configured through `provideFormNodeConfig({ classes })` also apply to controls using this
 `$field` binding. The predicate receives the same `FormNodeBinding` shape as it does for
@@ -169,8 +169,7 @@ Classes configured through `provideFormNodeConfig({ classes })` also apply to co
 
 If an application already uses Angular's `provideSignalFormsConfig({ classes })`, those classes also
 apply automatically: `$field` is a real Angular `FieldTree`, so its `[formField]` binding consumes
-the normal Angular configuration. Those predicates receive Angular's `FormFieldBinding`, not Gem
-Forms' `FormNodeBinding`.
+the normal Angular configuration. Those predicates receive Angular's `FormFieldBinding`, not Form Nodes' `FormNodeBinding`.
 
 Choose one provider in each injector scope. Do not add both class-config providers in the same
 injector because Angular exposes a single, non-multi Signal Forms config and the last provider would
@@ -192,7 +191,7 @@ For the library-native binding and its broader control discovery options, contin
 [`[formNode]`](../reference/form-node-binding.md).
 
 Choose the Angular contract that already fits your control. Conventional components require no
-Gem Forms interface, base class, or registration provider.
+Form Nodes interface, base class, or registration provider.
 
 | Angular control API | Recognized shape | Binding support |
 | --- | --- | --- |
@@ -328,7 +327,7 @@ Signal Forms state, including constraints, required, readonly, hidden, and disab
 All errors are exposed as `readonly { kind: string; ... }[]`, regardless of the source-specific
 error representation. The remaining signals include `value`, `disabled`, `disabledReasons`,
 `dirty`, `hidden`, `invalid`, constraints, `name`, `pattern`, `pending`, `readonly`, `required`, and
-`touched`. Disabled reasons are normalized to `{ message?: string }`, without exposing a Gem node or
+`touched`. Disabled reasons are normalized to `{ message?: string }`, without exposing a Form Nodes node or
 Angular field tree. An unnamed active reason remains `{}` rather than being removed, so an empty
 array always means that no known reason is active. An unbound component receives neutral values
 such as `false`, `[]`, `undefined`, and `null` rather than an injection error.

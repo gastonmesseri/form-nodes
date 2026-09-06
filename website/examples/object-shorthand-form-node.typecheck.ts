@@ -1,6 +1,6 @@
 import { Component, model } from '@angular/core';
 
-import { FormNode, form } from '@gem/ng-forms';
+import { FormNode, form } from 'form-nodes';
 
 type CompanyValue = {
   companyId: number | null;

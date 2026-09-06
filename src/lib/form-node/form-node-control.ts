@@ -9,7 +9,7 @@ import type { Field } from '../primitives/field';
  *
  * It includes Angular's optional error, interaction-state, validation-state, constraint, name,
  * visibility, touch, focus, and reset channels. Implement only the channels the component
- * supports. Add `node` when the component needs the exact Gem node in addition to those standard
+ * supports. Add `node` when the component needs the exact Form Nodes node in addition to those standard
  * channels.
  */
 export type FormNodeUiControl<TValue, TNode extends Node = Field<TValue>> = FormUiControl<TValue> & {

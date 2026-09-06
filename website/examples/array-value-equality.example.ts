@@ -1,4 +1,4 @@
-import { array, field, form } from '@gem/ng-forms';
+import { array, field, form } from 'form-nodes';
 
 let submitted: unknown;
 const profile = form({

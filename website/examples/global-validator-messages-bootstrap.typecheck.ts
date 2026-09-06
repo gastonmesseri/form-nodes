@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { configureGlobalValidatorMessages } from '@gem/ng-forms';
+import { configureGlobalValidatorMessages } from 'form-nodes';
 
 import { validatorMessages } from './validator-message-catalog';
 

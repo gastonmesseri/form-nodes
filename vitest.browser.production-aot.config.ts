@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 import type {} from '@vitest/browser/providers/playwright';
 
 const useSystemChrome = process.env['PLAYWRIGHT_USE_SYSTEM_CHROME'] === 'true';
-const signalControlFixture = `/@fs/${resolve('node_modules/.cache/ng-forms/aot-signal-control/form-node-signal-control.fixture.mjs')}`;
+const signalControlFixture = `/@fs/${resolve('node_modules/.cache/form-nodes/aot-signal-control/form-node-signal-control.fixture.mjs')}`;
 
 export default defineConfig({
   define: {

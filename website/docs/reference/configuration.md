@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Configuration scopes, reactivity, precedence, inheritance, and Angular providers in Gem Forms.
+description: Configuration scopes, reactivity, precedence, inheritance, and Angular providers in Form Nodes.
 ---
 
 # Configuration
@@ -8,7 +8,7 @@ description: Configuration scopes, reactivity, precedence, inheritance, and Angu
 The [reactive configuration example](../examples/executable-examples.mdx#reactive-configuration-and-precedence)
 is compiled and executed to verify message precedence and inherited state.
 
-Gem Forms keeps configuration close to the feature it affects. Node options configure one node or
+Form Nodes keeps configuration close to the feature it affects. Node options configure one node or
 tree, Angular providers configure an injector scope, and the process-wide API supplies only a
 fallback validator-message catalog.
 
@@ -253,7 +253,7 @@ Register provider configuration in `app.config.ts` and pass that `ApplicationCon
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
-import { provideFormNodeConfig, provideValidatorMessages } from '@gem/ng-forms';
+import { provideFormNodeConfig, provideValidatorMessages } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -344,7 +344,7 @@ Use `ANGULAR_FORMS_STATUS_CLASSES` to opt into the familiar `ng-valid`, `ng-inva
 `ng-touched`, `ng-untouched`, `ng-dirty`, and `ng-pristine` classes:
 
 ```ts
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
 
 provideFormNodeConfig({
   classes: ANGULAR_FORMS_STATUS_CLASSES,
@@ -371,8 +371,7 @@ automatically.
 The provider installs Angular's Signal Forms class configuration internally when `classes` is
 present. Do not also call `provideSignalFormsConfig({ classes })` in the same injector: Angular's
 configuration token is not multi, so whichever provider appears last would replace the other.
-Choose one provider for that scope. Use `provideFormNodeConfig()` when the classes should follow Gem
-Forms nodes through either binding directive. If an application already uses
+Choose one provider for that scope. Use `provideFormNodeConfig()` when the classes should follow Form Nodes nodes through either binding directive. If an application already uses
 `provideSignalFormsConfig({ classes })`, its Angular `FormFieldBinding` predicates automatically
 apply to `$field`-backed `[formField]` controls because `$field` is a real Angular `FieldTree`; use
 that provider when the configuration is intentionally expressed through Angular's binding API or

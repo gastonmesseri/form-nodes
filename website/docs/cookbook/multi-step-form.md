@@ -64,7 +64,7 @@ next() {
 :::info Rendering and participation are independent
 
 An inactive step may remain part of form validity even when `@switch` does not render it. Apply
-Gem's hidden state only when the business rule says that step should stop contributing; do not use
+Form Nodes' hidden state only when the business rule says that step should stop contributing; do not use
 it merely to mirror whether the step is currently rendered.
 
 :::

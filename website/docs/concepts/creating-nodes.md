@@ -9,7 +9,7 @@ import computedDeclarationSource from '!!raw-loader!../../examples/computed-decl
 
 # Creating nodes
 
-Gem Forms models a workflow as a tree of `field()`, `form()`, `array()`, and `group()` nodes.
+Form Nodes models a workflow as a tree of `field()`, `form()`, `array()`, and `group()` nodes.
 TypeScript infers the complete value shape from that tree.
 
 When a named domain model should check that inferred value without replacing concrete child types,
@@ -23,7 +23,7 @@ For structured values, the optional [`equal` setting](../reference/field.md#fiel
 can retain equivalent committed values and avoid value-triggered revalidation.
 
 ```ts
-import { field, required } from '@gem/ng-forms';
+import { field, required } from 'form-nodes';
 
 const myForm = form({
   name: field('Marco', {
@@ -157,7 +157,7 @@ reusable editors, filter models, and other structured UI that has no independent
 Use `form()` to combine named nodes into an object:
 
 ```ts
-import { field, form, group } from '@gem/ng-forms';
+import { field, form, group } from 'form-nodes';
 
 const profile = form({
   name: field(''),
@@ -212,7 +212,7 @@ value `{}`, unless a form-level validator or state option changes that result.
 Use `array()` for a dynamic collection. Its first argument is a node template cloned for every item:
 
 ```ts
-import { array, field, form } from '@gem/ng-forms';
+import { array, field, form } from 'form-nodes';
 
 const myForm = form({
   people: array({
@@ -304,7 +304,7 @@ In an Angular application, the form is commonly a component property:
 ```ts
 import { Component } from '@angular/core';
 
-import { field, FormNode, form } from '@gem/ng-forms';
+import { field, FormNode, form } from 'form-nodes';
 
 @Component({
   selector: 'app-profile-editor',

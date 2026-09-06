@@ -50,6 +50,9 @@ canonical release record.
 
 ### Changed
 
+- **Breaking:** The package is now named `form-nodes`. Update dependencies, imports, and module
+  augmentations to use `form-nodes`; exported APIs and runtime behavior are unchanged by the rename.
+
 - Callable field objects now include a runtime `patch()` method equivalent to `set()`. The public
   types continue to expose field patching only through `api` and `$api`.
 

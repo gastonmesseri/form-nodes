@@ -1,4 +1,4 @@
-import { field, form } from '@gem/ng-forms';
+import { field, form } from 'form-nodes';
 
 const original = { name: 'Marco', preferences: { language: 'en' } };
 const profile = form({

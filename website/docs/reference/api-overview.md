@@ -1,12 +1,12 @@
 ---
 title: API overview
-description: A task-oriented map of the Gem Forms public API and its detailed reference pages.
+description: A task-oriented map of the Form Nodes public API and its detailed reference pages.
 ---
 
 # API overview
 
 Use this page to find the API that matches what you are trying to model or integrate. Import public
-symbols from `@gem/ng-forms`; do not import internal files or deep package paths.
+symbols from `form-nodes`; do not import internal files or deep package paths.
 
 If you already have a concrete failure or unexpected state, use the symptom-oriented
 [Troubleshooting guide](../help/troubleshooting.md).
@@ -221,7 +221,7 @@ To use Angular Signal Forms' own directive instead, bind the node's lazy `$field
 import { Component } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
-import { field, form } from '@gem/ng-forms';
+import { field, form } from 'form-nodes';
 
 @Component({
   imports: [FormField],
@@ -260,7 +260,7 @@ Configure binding classes once in the application providers for the common appli
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@gem/ng-forms';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from 'form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -301,8 +301,8 @@ collision-safe path is required.
 Use type-only imports when a symbol is used only by TypeScript:
 
 ```ts
-import { field, form, FormNode } from '@gem/ng-forms';
-import type { Field, FormValue, ValidationError } from '@gem/ng-forms';
+import { field, form, FormNode } from 'form-nodes';
+import type { Field, FormValue, ValidationError } from 'form-nodes';
 ```
 
 `_FormNode` is framework infrastructure exported for Angular's compiler and linker. Applications
