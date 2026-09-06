@@ -1,7 +1,6 @@
 import { computed, signal, untracked } from '@angular/core';
 
 import { isNotNil } from '../utils/is-nil';
-import { deepEqual } from '../utils/deep-equal';
 import { markAsNode } from './utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
@@ -9,6 +8,7 @@ import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
 import type { Field, FieldApi, FieldOptions } from './field.type';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
@@ -224,7 +224,7 @@ export class FieldNode<TValue> {
     });
 
     // Install user equality only after seeding: temporary undefined is not a field value.
-    this.equal = equal === 'deep' ? deepEqual : equal === 'shallow' ? shallowEqual : equal ?? Object.is;
+    this.equal = resolveValueEquality(equal);
 
     this.context = markAsFieldContext({ value: this.value.asReadonly() });
 
