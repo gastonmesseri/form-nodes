@@ -104,11 +104,11 @@ myForm.someGroup.username()
 
 myForm.whatIsThis.set(23);
 myForm.whatIsThis();
-myForm.name.$field;
+// myForm.name.$field;
 myForm.address.city();
-myForm.$field();
-myForm.$field().errorSummary;
-myForm.$field.toString;
+// myForm.$field();
+// myForm.$field().errorSummary;
+// myForm.$field.toString;
 myForm.name.debouncing;
 myForm.items[0]?.age.set(23);
 myForm.items[0]?.name.set('');
