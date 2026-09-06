@@ -113,8 +113,8 @@ explicit owner of every created node instead of preserving hierarchical ownershi
 Every runtime node exposes `nodeType()`, which returns the precise public discriminant `'field'`,
 `'group'`, `'form'`, or `'array'`. The literal is stable for the node's lifetime and is preserved by
 template cloning. Generic infrastructure can read the same method through `$api.nodeType()` when a
-named child shadows the direct member. The internal readonly `$api._nodeType` discriminant remains
-the implementation source of truth for capability selection. The separate private symbol used by
+named child shadows the direct member. Internal capability selection also uses `$api.nodeType()`,
+so the public and internal paths share the same discriminant. The separate private symbol used by
 `isNode()` remains responsible only for answering whether an arbitrary value is a library node.
 
 ## Public API documentation conventions

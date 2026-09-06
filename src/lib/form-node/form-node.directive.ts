@@ -134,7 +134,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
     if (!this.nativeForm) return;
     event.preventDefault();
     const api = this.requireObjectNode();
-    if (api._nodeType === 'form') {
+    if (api.nodeType() === 'form') {
       void (api as typeof api & { submit(): Promise<boolean> }).submit();
       return;
     }
@@ -151,7 +151,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private requireObjectNode(): InternalNodeApi {
     const api = (this._field as unknown as InternalNode).$api;
-    if (api._nodeType !== 'form' && api._nodeType !== 'group') {
+    if (api.nodeType() !== 'form' && api.nodeType() !== 'group') {
       throw new Error('formNode: a native form requires a form() or group() node');
     }
     return api;

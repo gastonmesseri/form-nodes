@@ -436,7 +436,6 @@ export function createObjectNode<TDefinitions extends ObjectNodeDefinitions>(
   };
   const internalApi = {
     ...api,
-    _nodeType: nodeType,
     _controlDebounce: formControlDebounce,
     _controlValue: api.controlValue,
     _setControlValue: formControlValueBuffer.set,

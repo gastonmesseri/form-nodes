@@ -20,7 +20,6 @@
     - start with selfDisabled/selfReadonly... and check consecuences step by step
   - [ ] [Important] in the createObjectClone and createFieldClone,probably move to different file, or at least at the top of the file. and explain very carefully why that declaration should
         not be done inside the class (i think i understood that it explicitly cannot be done inside the class right?)
-  - [ ] internalApi._nodeType i think it is repeated, wouldn't be enough with ust nodeType()
 
 
 - [ ] Maybe: Consider naming useControlState to useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
@@ -363,6 +362,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Replace the duplicated internal `_nodeType` discriminant with `$api.nodeType()` in the directive and Angular adapter. Remove it from all primitive implementations and `InternalNodeApi`, retaining collision-safe access through `$api`.
 
 - [x] Prototype an internal `FieldState` class behind the existing callable `field()` API.
   - Keep public overloads and nullability helpers in `field.ts`, separate class members with blank lines, and preserve callback-safe actions and weak debounce ownership. Verify the emitted public declarations against the pre-refactor baseline.

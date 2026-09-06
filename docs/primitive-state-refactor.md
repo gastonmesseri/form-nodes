@@ -81,9 +81,9 @@ existing form/group, array, and shorthand-object recipes; those primitives remai
 - [x] Rename the remaining `nodeMembers` object to `publicApi`: it now contains the complete shared
   API, and `internalApi` extends it directly. The intermediate object remains unnecessary.
 
-The internal `_nodeType` discriminant duplicates the public `nodeType()` result. Replacing its
-uses with `$api.nodeType()` is a separate cross-node cleanup involving the directive, Angular
-adapter, internal type, and every primitive; it is not part of this field assembly refactor.
+- [x] Complete the cross-node discriminant cleanup: the directive and Angular adapter use
+  `$api.nodeType()` for capability selection. Remove the duplicate `_nodeType` property from
+  field, form/group, array, and the internal type. Named children cannot shadow the `$api` path.
 
 Clone-ownership evidence:
 
