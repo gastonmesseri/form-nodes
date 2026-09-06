@@ -45,7 +45,8 @@
     "test:types": "tsc -p tsconfig.type-tests.json --noEmit && node scripts/test-shorthand-type-performance.mjs",
     "test:watch": "vitest",
     "typecheck": "npm run lint && tsc -p tsconfig.spec.json --noEmit && npm run test:types && npm run test:templates",
-    "test:compatibility": "node scripts/test-angular-compatibility.mjs"
+    "test:compatibility": "node scripts/test-angular-compatibility.mjs",
+    "test:size": "npm run build && node scripts/test-build-size.mjs"
   },
   "peerDependencies": {
     "@angular/core": "^21.0.7 || ^22.1.5",
