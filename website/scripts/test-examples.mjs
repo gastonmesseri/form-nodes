@@ -4,6 +4,8 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { readdirSync, rmSync, mkdtempSync } from 'node:fs';
 
+import './sync-readme-examples.mjs';
+
 const websiteDirectory = resolve(import.meta.dirname, '..');
 const repositoryDirectory = resolve(websiteDirectory, '..');
 const examplesDirectory = resolve(websiteDirectory, 'examples');
