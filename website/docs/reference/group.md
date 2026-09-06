@@ -4,6 +4,7 @@ description: Reference for object groups without an independent submission workf
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
 import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
 import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
@@ -1524,10 +1525,17 @@ See [Dynamic object children](../guides/dynamic-object-children.md),
 
 `forEachChild(callback)` calls `callback(child, key)` once per immediate child and returns `void`.
 The callback receives the actual node and its string key. A child can be a field, group, form,
-or array; iteration does not recurse. Its type is `DynamicNode`, because dynamically added
-children are included too.
+or array; iteration does not recurse. Its type is the union of the initially declared child types,
+with each child retaining its concrete node and parent types. The key is a `string`. Runtime
+iteration includes dynamically added children too, even if their types fall outside this union.
 
 <CodeBlock language="ts">{forEachChildSource}</CodeBlock>
+
+<CodeBlock language="ts">{childInferenceSource}</CodeBlock>
+
+A mixed union allows reads of all its value types; a write must be accepted by every possible
+child. A string cannot be assigned to a union that includes a numeric field.
+
 
 Iteration uses a snapshot in `Object.entries()` order: integer-like keys come first in numeric
 order, followed by other string keys in insertion order. Children added during a callback are
@@ -1552,8 +1560,8 @@ The map's TypeScript keys describe the initial declaration only. For an unknown 
 added key, use `get(key)` or retain the exact node returned by `add()`.
 
 **Static approximation:** `add()` still inserts children into the runtime map, and `Object.values()`
-still includes them. Their types are not reflected in the declared union. Use `forEachChild()`
-when iterating a dynamically extensible tree so the callback accepts arbitrary `DynamicNode` values.
+still includes them. Their types are not reflected in the declared union. `forEachChild()` uses that same union.
+For arbitrary dynamic types, use `get(key)` inside its callback or retain the result of `add()`.
 
 ## Query errors and registered validators
 

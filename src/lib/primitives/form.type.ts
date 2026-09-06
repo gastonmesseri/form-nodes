@@ -330,7 +330,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /**
    * Visits a snapshot of immediate children in object-entry order, including dynamically added nodes.
    * Does not recurse. Additions during iteration are deferred to the next call; removed nodes in the
-   * snapshot are still visited. Callback errors propagate and stop iteration.
+   * snapshot are still visited. Callback errors propagate and stop iteration. The callback type is
+   * the declared-child union; dynamically added node types are not represented in that union.
    *
    * @example Visit each immediate child.
    * ```ts
@@ -341,7 +342,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * @reactive Tracks child additions and removals, plus signals read by the callback.
    * @param callback Receives the child node and its string key.
    */
-  forEachChild(callback: (child: DynamicNode, key: string) => void): void;
+  forEachChild(callback: (child: FormChildren<TNodes, TParent>[keyof TNodes], key: string) => void): void;
   /**
    * Returns a child by runtime key, or `undefined` when no current child has that key.
    *

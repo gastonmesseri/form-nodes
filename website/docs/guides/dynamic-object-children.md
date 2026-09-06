@@ -182,5 +182,5 @@ it does not expose an `addControl()` operation on a field tree. Form Nodes owns 
 
 `Object.values(node.children)` uses the union of initially declared child types in TypeScript.
 Runtime enumeration still includes nodes attached with `add()`, even if their types fall outside
-that union. This is a deliberate approximation for declaration-based code. Use `forEachChild()`
-for enumeration that accounts for arbitrary dynamic node types, and `get(key)` for dynamic lookup.
+that union. This is a deliberate approximation for declaration-based code. `forEachChild()` also infers this declared-child union. Use `get(key)` inside its callback
+when handling arbitrary dynamic node types.

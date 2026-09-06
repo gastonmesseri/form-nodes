@@ -23,9 +23,9 @@ if (Object.values(profile.contact.children).length !== 3 || profile.contact.get(
   throw new Error('Dynamic children must remain present in the runtime map.');
 }
 
-// Use forEachChild when dynamically added node types must be accounted for.
+// Resolve by key when dynamically added node types must be accounted for.
 const currentValues: unknown[] = [];
-profile.contact.forEachChild(child => currentValues.push(child()));
+profile.contact.forEachChild((_child, key) => currentValues.push(profile.contact.get(key)?.()));
 if (currentValues[2] !== true) {
   throw new Error('Dynamic iteration must include added children.');
 }

@@ -11,8 +11,8 @@ title: Migration guides
 or retain the precisely typed node returned by `add()`.
 
 `Object.values(node.children)` now infers the union of declared child types. Runtime enumeration
-still includes dynamically added nodes, whose types may fall outside that union. Use
-`node.forEachChild()` when the iteration must account for arbitrary dynamic child types.
+still includes dynamically added nodes, whose types may fall outside that union. `forEachChild()` now infers the same declared-child union. For arbitrary dynamic child types,
+use `get(key)` inside the callback or retain the node returned by `add()`.
 
 This is a breaking typing change; runtime map contents and node behavior are unchanged.
 

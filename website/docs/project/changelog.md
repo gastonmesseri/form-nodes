@@ -12,13 +12,13 @@ canonical release record.
 
 ### Changed
 
-- **Breaking type change:** form and group `children` maps now expose only declared keys in TypeScript, so `Object.values(children)` infers the union of declared child types without `undefined`. Use `get(key)` or the result of `add()` for dynamic access. Runtime maps still contain dynamically added nodes, which are not represented in this static union; use `forEachChild()` for enumeration that accounts for arbitrary dynamic node types.
+- **Breaking type change:** form and group `children` maps now expose only declared keys in TypeScript, so `Object.values(children)` infers the union of declared child types without `undefined`. Use `get(key)` or the result of `add()` for dynamic access. Runtime maps still contain dynamically added nodes, which are not represented in this static union. `forEachChild()` uses the same declared-child union; use `get(key)` inside the callback when handling arbitrary dynamic node types.
 
 ### Added
 
 - All primitive nodes now expose reactive `hasError(kind)` queries for their own errors and `hasValidator(validator)` queries for directly registered validator functions, including async validators.
 
-- Forms and groups now provide `forEachChild((child, key) => ...)` to visit a snapshot of immediate children, including dynamically added nodes, with reactive tracking of structural changes.
+- Forms and groups now provide `forEachChild((child, key) => ...)` to visit a snapshot of immediate children with the union of declared child types and reactive tracking of structural changes. Runtime iteration also includes dynamically added nodes, whose types are outside that static union.
 
 ## 1.0.1 — 2026-09-07
 

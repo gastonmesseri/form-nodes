@@ -155,7 +155,7 @@ export type GroupChildren<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
-  & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
+  & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
   & {
     /** Returns the concrete primitive represented by this node. */
     nodeType(): 'group';
@@ -163,6 +163,14 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
     setValidators(validators: ValidatorSource<GroupValue<TNodes>, Group<TNodes, TParent>>): void;
     /** Readonly map typed from the declared children. Runtime entries also include dynamically added nodes. */
     readonly children: GroupChildren<TNodes, TParent>;
+    /**
+     * Visits a snapshot of immediate children in object-entry order without recursion.
+     * The callback type is the declared-child union; runtime iteration still includes dynamic children.
+     * Additions during iteration are deferred; removed snapshot entries are still visited.
+     * Callback errors propagate and stop iteration.
+     * @reactive Tracks child additions and removals, plus signals read by the callback.
+     */
+    forEachChild(callback: (child: GroupChildren<TNodes, TParent>[keyof TNodes], key: string) => void): void;
     /**
      * Adds one child at runtime and returns the attached node with its exact inferred type.
      *

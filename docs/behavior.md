@@ -2823,7 +2823,7 @@ is a deliberate public API difference, not a change to validation or state propa
 
 `form()` and `group()` expose `forEachChild((child, key) => ...)`, returning `void`. It snapshots
 immediate child instances in object-entry order, including dynamic children, without descending
-into groups, nested forms, or arrays. Callbacks receive a `DynamicNode` and string key. Additions
+into groups, nested forms, or arrays. Callbacks receive the union of declared child node types and a string key. Additions
 during iteration are deferred to the next call; removals do not remove nodes from the current
 snapshot. Callback exceptions propagate and stop iteration. A child named `forEachChild` takes
 precedence on the direct surface; `$api.forEachChild()` remains available.
@@ -2848,7 +2848,8 @@ node returned by `add()`. `DynamicFormChildren` remains available as an explicit
 
 This is a deliberate static approximation: runtime maps and enumeration still include added
 children, even when their types are absent from the declared union. The union is not a guarantee
-about every runtime entry after `add()`. Use `forEachChild()` for dynamically extensible trees.
+about every runtime entry after `add()`. `forEachChild()` uses the same static union; retrieve `get(key)` inside its callback
+when handling arbitrary dynamic types.
 No runtime enumeration, attachment, removal, validation, or state propagation behavior changes.
 
 ## Error and validator presence queries
@@ -2874,3 +2875,9 @@ compatibility special case, not general validator registration queries. Form Nod
 provides general identity-based lookup, comparable to the factory-reference tests in
 `packages/forms/test/form_control_spec.ts`. It searches its unified sync/async registry rather
 than Angular Reactive Forms' separate lists.
+
+`forEachChild()` preserves the concrete parent types of declared children for both forms and groups.
+The union is inferred without `undefined`. Mixed string and number fields expose a union of values
+on reads, but writes must be accepted by every possible member: `set('')` is rejected when a numeric
+field may be visited. Homogeneous string fields can all accept `set('')`. This typing change does
+not alter the runtime snapshot, order, reactive tracking, or dynamic-child inclusion semantics.
