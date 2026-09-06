@@ -1,6 +1,7 @@
 import { computed, signal, untracked } from '@angular/core';
 
 import { isNotNil } from '../utils/is-nil';
+import { deepEqual } from '../utils/deep-equal';
 import { markAsNode } from './utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
@@ -40,6 +41,8 @@ export class FieldNode<TValue> {
 
   cloneOptions: FieldOptions<TValue> | undefined;
 
+  equal: (previous: TValue, next: TValue) => boolean = Object.is;
+
   stateRef = new WeakRef(this);
 
   controlBindings = new Set<NodeControlBinding>();
@@ -66,7 +69,7 @@ export class FieldNode<TValue> {
 
   keyInParent = signal<string | number | null>(null);
 
-  value = signal(undefined as TValue);
+  value = signal(undefined as TValue, { equal: (previous, next) => this.valuesEqual(previous, next) });
 
   controlValue = signal(undefined as TValue);
 
@@ -208,6 +211,7 @@ export class FieldNode<TValue> {
     this.cloneOptions = this.options === undefined ? undefined : { ...this.options };
     const { disabled, readonly, hidden } = this.options ?? {};
     const validators = normalizeValidatorSource(this.initialValidatorSource);
+    const equal = this.options?.equal;
 
     // Seed all local state before creating the context, validation, or public node.
     untracked(() => {
@@ -218,6 +222,9 @@ export class FieldNode<TValue> {
       this.selfReadonly.set(getInitialMutableState(readonly));
       this.selfHidden.set(getInitialMutableState(hidden));
     });
+
+    // Install user equality only after seeding: temporary undefined is not a field value.
+    this.equal = equal === 'deep' ? deepEqual : equal === 'shallow' ? shallowEqual : equal ?? Object.is;
 
     this.context = markAsFieldContext({ value: this.value.asReadonly() });
 
@@ -249,9 +256,13 @@ export class FieldNode<TValue> {
   }
 
   set(next: TValue) {
+    this.value.set(next);
     this.cancelControlDebounce();
     this.controlValue.set(next);
-    this.value.set(next);
+  }
+
+  valuesEqual(previous: TValue, next: TValue): boolean {
+    return untracked(() => this.equal(previous, next));
   }
 
   setControlValue(next: TValue) {
@@ -260,10 +271,11 @@ export class FieldNode<TValue> {
     this.selfDirty.set(true);
     const debounce = this.controlDebounce() ?? 0;
     const isImmediate = typeof debounce === 'number' && (!Number.isFinite(debounce) || debounce <= 0);
-    if (Object.is(next, this.value()) || isImmediate) {
+    if (isImmediate) {
       this.value.set(next);
       return;
     }
+    if (this.valuesEqual(this.value(), next)) return;
     this.debouncing.set(true);
     this.debounceStrategy = debounce;
     if (debounce === 'blur') return;

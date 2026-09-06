@@ -25,6 +25,84 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('preserves aggregate values and validation when a field receives an equal value', () => {
+    const validateField = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
+    const validateForm = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
+    const profile = form({
+      details: form({ person: field({ name: 'Marco' }, [validateField], { equal: 'deep' }) }, [validateForm]),
+    }, [validateForm]);
+    const initial = profile();
+    expect(profile.valid()).toBe(true);
+    expect(validateField).toHaveBeenCalledOnce();
+    expect(validateForm).toHaveBeenCalledTimes(2);
+    profile.patch({ details: { person: { name: 'Marco' } } });
+    expect(profile()).toBe(initial);
+    expect(profile.valid()).toBe(true);
+    expect(validateForm).toHaveBeenCalledTimes(2);
+    profile.details.person.setControlValue({ name: 'Marco' });
+    expect(profile.dirty()).toBe(true);
+    expect(profile()).toBe(initial);
+    profile.markAsTouched();
+    profile.reset({ details: { person: { name: 'Marco' } } });
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(profile()).toBe(initial);
+    profile.details.person.set({ name: 'Lia' });
+    expect(profile.valid()).toBe(true);
+    expect(profile()).not.toBe(initial);
+    expect(validateField).toHaveBeenCalledTimes(2);
+    expect(validateForm).toHaveBeenCalledTimes(4);
+  });
+
+  it.each(['field', 'form'] as const)('keeps pending %s validation for equal values and cancels it for different values', async (target) => {
+    const abortSignals: AbortSignal[] = [];
+    const finish: Array<(result: null) => void> = [];
+    const validate = vi.fn((ctx: Context<unknown> & { abortSignal: AbortSignal }) => {
+      ctx.value();
+      abortSignals.push(ctx.abortSignal);
+      return new Promise<null>((resolve) => { finish.push(resolve); });
+    });
+    const profile = form({
+      details: { person: field({ name: 'Marco' }, target === 'field' ? [asyncValidator(validate)] : [], { equal: 'deep' }) },
+    }, target === 'form' ? [asyncValidator(validate)] : []);
+    expect(profile.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+    profile.details.person.set({ name: 'Marco' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledOnce();
+    expect(abortSignals[0]!.aborted).toBe(false);
+    profile.details.person.set({ name: 'Lia' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(abortSignals[0]!.aborted).toBe(true);
+    finish[0]!(null);
+    expect(profile.pending()).toBe(true);
+    finish[1]!(null);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(profile.pending()).toBe(false);
+    expect(profile.valid()).toBe(true);
+  });
+
+  it('preserves field equality in configured factories and cloned array templates', () => {
+    const configured = createFormPrimitives({ nullable: false });
+    const profile = configured.form({
+      people: configured.array(configured.field({ name: 'Marco' }, { equal: 'deep' }), { initialValue: 1 }),
+    });
+    const first = profile.people[0]!;
+    const initial = first();
+    first.set({ name: 'Marco' });
+    expect(first()).toBe(initial);
+    const second = profile.people.push();
+    const secondInitial = second();
+    second.set({ name: 'Marco' });
+    expect(second()).toBe(secondInitial);
+  });
+
   it.each(['form', 'group'] as const)('constructs nested %s nodes in computed without tracking their mutable state', (kind) => {
     const initialName = signal('Marco');
     const locked = signal(false);

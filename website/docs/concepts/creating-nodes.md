@@ -19,6 +19,9 @@ use [`satisfies FormValueContract<Model>`](../reference/form-value-contract.md).
 
 Use `field()` for a leaf value. Fields normally appear inside a form definition:
 
+For structured values, the optional [`equal` setting](../reference/field.md#field-equal-option)
+can retain equivalent committed values and avoid value-triggered revalidation.
+
 ```ts
 import { field, required } from '@gem/ng-forms';
 

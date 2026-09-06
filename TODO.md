@@ -22,13 +22,21 @@
 - [ ] create-form-primitives doesn't have a test file? should it?
 
 - [NEXT] [ ] Improve submit options api (right now is nested i think)
+  - [ ] Consider the following (changing submission api):
+    // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmit, and onInvalidSubmit to allow easier api
+    // Same in case it has more options inside submission
+    const profile = form({
+      name: field('', [required]),
+    }, {
+      submission: {
+        action: async (_form, value) => saveProfile(value),
+        onInvalid: () => showValidationMessage(),
+      },
+    });
 
-- [NEXT] [ ] Implement equal option in primitives (with 'shallow' and 'deep' checks + function based (a,b) comparison)
-  - e.g.
-    field('', { equal: 'deep' })
-    field('', { equal: 'shallow' })
-    field('', { equal: (a,b) => ... })
-  - this should handle the equality check of the value() or the callable, so maybe wrap value inside a compute with some equality check? (let's explore this)
+    const submitted = await profile.submit();
+
+- [ ] Consider extending `equal` to `form()`, `group()`, and `array()` after reviewing retained aggregate values versus independently updated child values. Field equality is implemented; aggregate equality remains a separate decision.
 
 - [NEXT] [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
   - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
@@ -45,9 +53,43 @@
   - Consider @gemgular/forms name for library
   - [ ] Rename to something generic like @ng-tools/forms (maybe)
 
+- [NEXT] [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
+
 - [NEXT] [ ] Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
   - [ ] controlValue and setControlValue feel more like an internal thing
   - [ ] also maybe hide disabledReasons
+
+- [NEXT] [ ] Expose a helper and document it in its own reference page to obtain the value type of `form()`, e.g. `type MyFormValue = FormValue<typeof myFormInstance>` (or `FormNodeValue<typeof myFormInstance>`)
+
+- [NEXT] [ ] Add remaining validators in TODO_VALIDATORS
+
+- [NEXT] [ ] TRY TO MAKE ASYNC VALIDATORS ALSO BEING THE RESULT OF A COMPOSABLE VALIDATION FUNCTION.
+  - [ ] at the moment this is not possible.
+
+- [NEXT] [ ] Check what is the minimum Typescript version needed for the package (it uses NoInfer for example), and therefore check what minimum angular version is supported
+  - same for angular version
+
+- [NEXT] [ ] Pick ideas from other form libraries (e.g. veevalidate, or other react, angular libraries)
+  - [ ] Check OTHER LIBRARIES, to see how can i improve the api, adding more useful features, etc
+
+- [NEXT] [ ] To make it safe to use (similar to what we did with self-referencing root in validators), ensure
+  that disabled, readonly, etc, also allow referencing safely something that hasn't been created yet
+  (e.g. referencing a signal that is at the bottom of the file [through a function]).
+  - [ ] Maybe: Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
+    e.g. validator functions, disabled, readonly, etc... (maybe not)
+    - [ ] because if there is a form self-reference then it could fail if called when form hasn't been yet initialized.
+    - [ ] be careful that the tracking in those computed/reactive functions is not destroyed by the function failure/error
+    - e.g.  this type of code:
+      const myForm = form({
+        username: field(''),
+        email: field('', [
+          required,
+          min(2),
+          () => {
+            if (!this.myForm.username()) return { kind: 'needsUsername', message: 'The email field needs a username' } // Esta linea, que hago referencia a myForm, a eso me refiero
+          },
+        ]);
+      });
 
 - [ ] Audit: Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
 
@@ -58,22 +100,6 @@
 - [ ] Maybe: In the folder tests/types maybe structure each file with JS Comments like if we do something like it('should do....')
 
 - [ ] Maybe: Consider changing the @example to something different, like a heading with asterisks **Like this** (for better readability)
-
-- [ ] Maybe: Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
-  e.g. validator functions, disabled, readonly, etc... (maybe not)
-  - [ ] because if there is a form self-reference then it could fail if called when form hasn't been yet initialized.
-  - [ ] be careful that the tracking in those computed/reactive functions is not destroyed by the function failure/error
-  - e.g.  this type of code:
-    const myForm = form({
-      username: field(''),
-      email: field('', [
-        required,
-        min(2),
-        () => {
-          if (!this.myForm.username()) return { kind: 'needsUsername', message: 'The email field needs a username' } // Esta linea, que hago referencia a myForm, a eso me refiero
-        },
-      ]);
-    });
 
 - [ ] Maybe: Public api: Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
 
@@ -103,6 +129,18 @@
         }
       ],
     })
+
+- [ ] Consider imports interface like the following:
+  import { form } from 'wherever';
+
+  const myForm = form({
+    name: form.field('Mark');
+    age: form.field(23),
+    houses: form.array({
+      city: form.field('Madrid'),
+      country: form.field('Spain'),
+    }),
+  });
 
 - [ ] directive
   - [ ] allow alternative predefined names for directive
@@ -160,26 +198,9 @@
 - [ ] Consider allowing optionally a schemaFunction (like in angular 22 signal forms)
   - [ ] maybe better a init: () => void, in the form() options
 
-
-
-
-
-
-
-
-
-
-
-- [ ] Allow defining global options
-  - [ ] example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
-
-- [ ] Add support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
+- [ ] Maybe: Consider adding support for validators defined by string (e.g. 'required|minLength:2') [like in vue]
   - [ ] this would break treeshaking
   - [ ] If possible, typed strings
-
-- [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project
-
-- [ ] Expose a helper to obtain the value type of `form()`, e.g. `type MyFormValue = FormValue<typeof myFormInstance>` (or `FormNodeValue<typeof myFormInstance>`)
 
 - [ ] Due to typescript limitations, try providing something similar to signal forms schemaPath api,
   so that in another callback, we can set validators properly typed or something like that.
@@ -195,19 +216,11 @@
       return null;
     }),
   ]);
+  // maybe something like onInit callback in the options?
 
-- [ ] Consider an alternative name for ".api"
+- [x] Consider an alternative name for ".api"
 
-- [ ] Pick ideas from other form libraries (e.g. veevalidate, or other react, angular libraries)
-
-- [ ] Add debounce to synchronous validators, probably also with a factory function validator(() => ...)
-
-- [ ] TRY TO MAKE ASYNC VALIDATORS ALSO BEING THE RESULT OF A COMPOSABLE VALIDATION FUNCTION.
-  - [ ] at the moment this is not possible.
-
-- [ ] Consider cleaning the form() array() field() files, (maybe a class?)
-
-- [ ] Also consider exporting the main functions with the following names: ngForm, ngField, ngArray
+- [x] Consider cleaning the form() array() field() files, (maybe a class?)
 
 - [ ] In the framework, provide also a component (create and export an angular component) to display the validation errors
   - [ ] max validation errors
@@ -217,53 +230,17 @@
 - [ ] Check angular docs to check metadata implementation etc, and more stuff:
   - [ ] https://angular.dev/guide/forms/signals/form-logic?utm_source=chatgpt.com
 
-- [ ] Check what is the minimum Typescript version needed for the package (it uses NoInfer for example), and therefore check what minimum angular version is supported
-
-- [ ] Check OTHER LIBRARIES, to see how can i improve the api, adding more useful features, etc
-
-- [ ] To make it safe to use (similar to what we did with self-referencing root in validators), ensure
-  that disabled, readonly, etc, also allow referencing safely something that hasn't been created yet
-  (e.g. referencing a signal that is at the bottom of the file [through a function]).
-
-- [ ] Consider imports interface like the following:
-  import { form } from 'wherever';
-
-  const myForm = form({
-    name: form.field('Mark');
-    age: form.field(23),
-    houses: form.array({
-      city: form.field('Madrid'),
-      country: form.field('Spain'),
-    }),
-  });
-
-- [ ] Consider the following (changing submission api):
-  // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmit, and onInvalidSubmit to allow easier api
-  // Same in case it has more options inside submission
-  const profile = form({
-    name: field('', [required]),
-  }, {
-    submission: {
-      action: async (_form, value) => saveProfile(value),
-      onInvalid: () => showValidationMessage(),
-    },
-  });
-
-  const submitted = await profile.submit();
-
-More general debounce
-We support milliseconds in `field()`. Angular supports cancellable asynchronous debouncers, inheritance from ancestors, and strategies such as blur. Our implementation already cancels timers correctly, but it is less expressive.
-
-Public shape of controlValue
-Angular exposes a `WritableSignal`; we expose a readonly `Signal` plus `setControlValue()`. This is a deliberate API difference, and our version is preferred because it clearly distinguishes the origin of the change:
-field.set(value);             // application
-field.setControlValue(value); // control
-
-Removed nodes
-We turn a removed node into an independent, usable root node. Angular considers it an orphan. Decide which behavior is more useful.
-
-Structural tracking from the model
-Angular automatically creates and removes nodes based on the array stored in the signal. We use a template/factory and structural methods. This is a deliberate architectural difference that should not be removed.
+- [ ] Check following suggestions
+  - [ ] More general debounce
+  We support milliseconds in `field()`. Angular supports cancellable asynchronous debouncers, inheritance from ancestors, and strategies such as blur. Our implementation already cancels timers correctly, but it is less expressive.
+  - [ ] Public shape of controlValue
+  Angular exposes a `WritableSignal`; we expose a readonly `Signal` plus `setControlValue()`. This is a deliberate API difference, and our version is preferred because it clearly distinguishes the origin of the change:
+  field.set(value);             // application
+  field.setControlValue(value); // control
+  - [ ] Removed nodes
+  We turn a removed node into an independent, usable root node. Angular considers it an orphan. Decide which behavior is more useful.
+  - [ ] Structural tracking from the model
+  Angular automatically creates and removes nodes based on the array stored in the signal. We use a template/factory and structural methods. This is a deliberate architectural difference that should not be removed.
 
 ## Angular upgrade checklist
 
@@ -331,17 +308,21 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   a fixed number of metadata rules; the adapter currently mirrors every initially materialized
   pattern and reserves one slot for the common initially inactive reactive-pattern case.
 
+
 ## Ideas
 
 -
+
 
 ## Pending decisions
 
 -
 
+
 ## Bugs
 
 - [ ]
+
 
 ## Discarded
 
@@ -364,8 +345,14 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
       country: field(''),
     }],
   })
+- [d] Add debounce to synchronous validators, probably also with a factory function validator(() => ...)
+  -discarded-reason- it is already handled by a debounce in the normal field declaration
+- [d] Also consider exporting the main functions with the following names: ngForm, ngField, ngArray
+
 
 ## Completed
+
+- [x] Implement `field(..., { equal: 'shallow' | 'deep' | comparator })`, including strict/nullable/configured fields and template clones. Preserve equivalent committed values across callable/value/validator/parent reads, keep control input and interaction independent, and handle debounce cancellation. Deep comparison follows lodash-style value semantics without importing lodash. This completes the field portion of the original primitive equality proposal; aggregate support remains pending.
 
 - [x] Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
 - [x] Audit and fix aggregate construction inside `computed()`, separately from the class migration. The pre-existing parent-link write failure affected forms, groups, and populated arrays under both class-field emit modes. Initialize links, array values, buffer snapshots, and watcher ownership without tracking mutable node state; preserve definition normalization, factory, option-getter, and injector dependencies.
@@ -977,3 +964,5 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown
 - [x] Restructure project folder structure, once project is solid and stable. think how to organize folders
 - [x] Create repo to pass custom lintern rules in dlab
+- [x] Allow defining global options
+  - [x] example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }

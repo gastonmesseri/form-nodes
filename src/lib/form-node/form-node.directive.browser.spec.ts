@@ -32,6 +32,35 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNode in Chromium', () => {
+  it.each(['formNode', 'formField'] as const)('preserves equivalent typed input through %s while retaining the committed value', (binding) => {
+    @Component({
+      template: binding === 'formNode' ? `<input [formNode]="profile.name">` : `<input [formField]="profile.name.$field">`,
+      imports: binding === 'formNode' ? [FormNode] : [FormField],
+    })
+    class Host {
+      profile = form({ name: field.strict('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase() }) });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    input.value = 'MARCO';
+    dispatch(input, 'input');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('MARCO');
+    expect(fixture.componentInstance.profile.name()).toBe('Marco');
+    expect(fixture.componentInstance.profile.name.controlValue()).toBe('MARCO');
+    expect(fixture.componentInstance.profile.dirty()).toBe(true);
+    dispatch(input, 'blur');
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.profile.touched()).toBe(true);
+    fixture.componentInstance.profile.reset();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    expect(input.value).toBe('Marco');
+    expect(fixture.componentInstance.profile.pristine()).toBe(true);
+  });
+
   it('binds an implicit field exactly like an explicit field', () => {
     @Component({
       template: `

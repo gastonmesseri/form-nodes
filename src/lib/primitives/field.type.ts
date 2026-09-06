@@ -7,6 +7,17 @@ import type { CustomValidationError, ValidationError, ValidationErrorMap, Valida
 
 export type FieldOptions<TValue = any> = {
   /**
+   * Equality for committed values. Defaults to `Object.is`. Equal writes retain the previous
+   * committed value and do not invalidate its reactive consumers. Control input and interaction
+   * state remain independent. The comparator is captured at construction and runs untracked.
+   *
+   * @example Compare structured values by content.
+   * ```ts
+   * field({ name: 'Marco' }, { equal: 'deep' });
+   * ```
+   */
+  equal?: 'deep' | 'shallow' | ((previous: TValue, next: TValue) => boolean);
+  /**
    * One validator or an array of validators for this field's value.
    *
    * @example Start with one built-in validator.
@@ -170,7 +181,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
   /**
-   * Current committed field value.
+   * Current committed field value. Equal writes retain the previous value according to `equal`.
    *
    * Prefer calling the field directly instead of using `name.value()` for ordinary value reads:
    *
@@ -184,6 +195,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   value: Signal<TValue>;
   /**
    * Immediate value buffered from the bound UI control before any configured debounce completes.
+   * Keeps the latest control input even when `equal` retains a different committed representative.
    * Most consumers should read value() instead; controlValue() is primarily intended for control bindings.
    */
   controlValue: Signal<TValue>;
