@@ -652,7 +652,7 @@ export class ArrayNode<TItem extends Node> {
 
     // defineProperties replaces the callable's built-in length with the public signal.
     const callableNode = Object.defineProperties(
-      () => this.exposedValue(),
+      this.exposedValue,
       Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, $api: internalApi }),
     );
 

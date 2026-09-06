@@ -27,6 +27,28 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('exposes a real signal with committed-value tracking and configured equality', () => {
+    const name = field.strict('Marco', { debounce: 'blur', equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    const observe = <T>(source: Signal<T>) => computed(() => source());
+    const observed = observe(name);
+    const read = vi.fn(() => observed());
+    const value = computed(read);
+    expect(isSignal(name)).toBe(true);
+    expect(value()).toBe('Marco');
+    name.setControlValue('Lia');
+    expect(value()).toBe('Marco');
+    expect(read).toHaveBeenCalledTimes(1);
+    name.flush();
+    expect(value()).toBe('Lia');
+    expect(read).toHaveBeenCalledTimes(2);
+    name.set('LIA');
+    expect(value()).toBe('Lia');
+    expect(read).toHaveBeenCalledTimes(2);
+    name.reset('Marco');
+    expect(value()).toBe('Marco');
+    expect(read).toHaveBeenCalledTimes(3);
+  });
+
   it.each([false, true])('preserves async work when a computed dependency compares equal (injector: %s)', async (withInjector) => {
     const injector = withInjector ? Injector.create({ providers: [] }) : undefined;
     const source = signal('Marco');

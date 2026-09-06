@@ -267,7 +267,7 @@ export type NodeApi = {
   show(): void;
 };
 
-export type Node = {
+export type Node = Signal<any> & {
   /** Returns this node's current committed value and participates in signal dependency tracking. */
   (): any;
 } & {
@@ -333,7 +333,7 @@ export type InternalNodeApi = NodeApi & {
   _registerControlBinding(binding: NodeControlBinding): () => void;
   _getControlBindingForFocus(): NodeControlBinding | undefined;
 };
-export type InternalNode = (() => any) & { $api: InternalNodeApi };
+export type InternalNode = Signal<any> & { $api: InternalNodeApi };
 export type Nodes = Record<string, Node>;
 export type NodeDefinition = Node | NodeDefinitions;
 export interface NodeDefinitions {

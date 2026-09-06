@@ -689,6 +689,7 @@ type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
 };
 
 export type Form<TNodes extends Nodes, TParent extends Node = Node> =
+  & Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
     /** Returns the form's current aggregate committed value and participates in signal dependency tracking. */
     (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };

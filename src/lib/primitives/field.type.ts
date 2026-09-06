@@ -433,6 +433,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
 };
 
 export type Field<TValue, TParent extends Node = Node> =
+  & Signal<TValue>
   & {
     /** Returns the field's current committed value and participates in signal dependency tracking. */
     (): TValue;

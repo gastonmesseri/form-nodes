@@ -25,6 +25,35 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('exposes aggregate signals through nested forms, groups, and array proxies', () => {
+    const profile = form({
+      name: field('Marco'),
+      address: group({ city: field('Zurich') }),
+      preferences: form({ dark: field(false) }),
+      tags: array(field('')),
+    });
+    const observe = <T>(source: Signal<T>) => computed(() => source());
+    const snapshot = observe(profile);
+    const city = observe(profile.address);
+    const preferences = observe(profile.preferences);
+    const tags = observe(profile.tags);
+    for (const node of [profile, profile.address, profile.preferences, profile.tags]) expect(isSignal(node)).toBe(true);
+    expect(snapshot()).toEqual({ name: 'Marco', address: { city: 'Zurich' }, preferences: { dark: false }, tags: [] });
+    profile.address.city.set('Bern');
+    profile.preferences.dark.set(true);
+    profile.tags.push('admin');
+    expect(city()).toEqual({ city: 'Bern' });
+    expect(preferences()).toEqual({ dark: true });
+    expect(tags()).toEqual(['admin']);
+    expect(snapshot()).toEqual({ name: 'Marco', address: { city: 'Bern' }, preferences: { dark: true }, tags: ['admin'] });
+    profile.tags[0]!.set('editor');
+    expect(tags()).toEqual(['editor']);
+    profile.tags.clear();
+    expect(tags()).toEqual([]);
+    profile.reset({ name: 'Marco', address: { city: 'Zurich' }, preferences: { dark: false }, tags: [] });
+    expect(snapshot()).toEqual({ name: 'Marco', address: { city: 'Zurich' }, preferences: { dark: false }, tags: [] });
+  });
+
   it('reconciles keyed array order and invalidates a parent buffer when public equality ignores order', () => {
     const profile = form({ people: array({ id: field.strict<number>(0), name: field.strict<string>('') }, {
       initialValue: [{ id: 1, name: 'Marco' }, { id: 2, name: 'Lia' }],

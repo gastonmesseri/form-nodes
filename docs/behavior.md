@@ -2804,3 +2804,19 @@ change. Inspected `packages/forms/src/model/abstract_model.ts` for internal stat
 signals, `packages/forms/src/directives/ng_control.ts` and `directives/shared.ts` for accessor
 ownership, and `packages/forms/signals/test/web/reactive_fvc.spec.ts` for disabled propagation.
 Unlike Angular's real `FormControl`, the adapter's notification boundary performs no validation.
+
+## Angular signal interoperability
+
+Fields, forms, groups, and arrays implement `Signal<T>` for their exposed committed value and
+are recognized by Angular `isSignal()`. Their callable surface uses the existing exposed computed
+signal (with the array proxy preserving symbol access), so dependency tracking, configured equality,
+commit timing, reset, and parent aggregation retain their existing semantics. No additional injection
+context is required. Effect-based consumers retain Angular's own injection requirements. This does
+not promise the complete `WritableSignal<T>` interface.
+
+Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`,
+`packages/core/src/render3/reactivity/api.ts` and `packages/core/test/signals/is_signal_spec.ts`
+define the signal identity contract. Signal Forms' `packages/forms/signals/src/field/proxy.ts` and
+`packages/forms/signals/test/node/field_node.spec.ts` distinguish tree access from value tracking.
+Unlike Angular's field tree, calling a Form Nodes node reads its value directly; signal compatibility
+is a deliberate public API difference, not a change to validation or state propagation.

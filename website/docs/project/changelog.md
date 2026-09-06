@@ -10,6 +10,10 @@ canonical release record.
 
 ## Unreleased
 
+### Fixed
+
+- Fields, forms, groups, and arrays now satisfy Angular `Signal<T>` and are recognized by `isSignal()`, so they can be passed directly to signal-based utilities while preserving value inference and reactive updates.
+
 ## 1.0.0 — 2026-09-07
 
 First public release of `@ngblocks/form-nodes`, establishing the stable public API. Supports Angular `^21.0.7 || ^22.1.5`.

@@ -607,6 +607,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
 };
 
 export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
+  & Signal<ArrayValue<TItem>>
   & {
     /** Returns the exposed array value, applying configured equality, and participates in signal dependency tracking. */
     (): ArrayValue<TItem>;

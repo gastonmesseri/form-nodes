@@ -557,7 +557,7 @@ export class FormGroupNode<TNodes extends Nodes> {
 
     // Child names can replace callable properties and API aliases; $api stays collision-safe.
     return Object.defineProperties(
-      () => this.exposedValue(),
+      this.exposedValue,
       Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, ...this.children, $api: internalApi }),
     ) as Form<TNodes>;
   }

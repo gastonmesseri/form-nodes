@@ -4,11 +4,31 @@ title: Form nodes
 
 # Form nodes
 
+import CodeBlock from '@theme/CodeBlock';
+import SignalInteropExample from '!!raw-loader!../../examples/signal-interop.example.ts';
+
 Form Nodes represents every part of a form as a node:
 
 - `field()` creates a leaf value.
 - `form()` combines named child nodes into an object value.
 - `array()` manages an ordered collection of repeated node definitions.
+
+## Use nodes with Angular signal utilities
+
+Every field, form, group, and array is an Angular `Signal<T>` of its exposed committed value.
+Pass a node directly to a utility that accepts `Signal<T>`; `isSignal(node)` also returns `true`.
+Nullable fields retain their nullable value type, so `field('Marco')` is a `Signal<string | null>`.
+
+<CodeBlock language="ts">{SignalInteropExample}</CodeBlock>
+
+This also works with an effect-based utility such as `delaySignal(source: Signal<T>, wait?: number)`.
+The utility still needs the injection context or injector required by Angular `effect()`.
+Creating and reading the node itself does not require an injection context.
+
+Consumers observe committed values and configured equality. Pending control input becomes visible
+when committed, for example by `flush()`. Use `node.controlValue` when a utility should observe
+pending input instead. Nodes satisfy `Signal<T>`; their form operations do not implement Angular's
+complete `WritableSignal<T>` interface.
 
 ## Think of a field as a signal with form features
 
