@@ -37,6 +37,10 @@ The implementation classes are named `FieldNode` and `ArrayNode`; neither is a p
 The existing public `ArrayNode` type still describes the callable node. Modules that also use the
 implementation class import that public type locally as `ArrayNodeType` to distinguish the two.
 
+Assemble callable nodes with `Object.defineProperties()` and the descriptors of the composed API
+object. This shared pattern also handles function properties such as the array's `length` signal
+and form children named `name` or `length`, which `Object.assign()` cannot overwrite directly.
+
 ## Helpers
 
 - Keep a companion utility file beside its implementation: `form.utils.ts` beside `form.ts`, and `form-node.utils.ts` beside `form-node.directive.ts`.

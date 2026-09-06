@@ -435,10 +435,9 @@ export class FieldNode<TValue> {
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),
     };
 
-    return Object.assign(
+    return Object.defineProperties(
       () => this.value(),
-      publicApi,
-      { api: internalApi, $api: internalApi },
-    ) as unknown as Field<TValue>;
+      Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, $api: internalApi }),
+    ) as Field<TValue>;
   }
 }

@@ -18,10 +18,9 @@
   - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
   - [x] ahora que veo lo del proxy de array-node-factory lo de deleteProperty deberia ser immutable no? deberiamos yo creo hacerlo immutable (quiza ya lo sea, no se)
   - [x] arreglar signatures de computed() en array-node-factory
+  - [x] see if i can unify somehow the Object.defineProperties in ArrayNode.createNode with the Object.assign in FieldNode.createNode (it seems they are not aligned in the style)
+  - [IMPORTANT] [ ] Audit pending debounce ownership in the shared `createControlValueBuffer()` helper. A forced-GC experiment retained an otherwise unreachable array, its item, and its parent form while a numeric timer or custom debounce promise was pending; the immediate-debounce control was collected. This reproduced with both the pre-migration function and `ArrayNodeFactory`, under both class-field emit modes. Keep the correction separate from the completed array migration and verify live-node completion as well as collection.
   - audit ArrayNode class to improve readability
-  - see if i can unify somehow the Object.defineProperties in ArrayNode.createNode with the Object.assign in FieldNode.createNode (it seems they are not aligned in the style)
-
-- [IMPORTANT] [ ] Audit pending debounce ownership in the shared `createControlValueBuffer()` helper. A forced-GC experiment retained an otherwise unreachable array, its item, and its parent form while a numeric timer or custom debounce promise was pending; the immediate-debounce control was collected. This reproduced with both the pre-migration function and `ArrayNodeFactory`, under both class-field emit modes. Keep the correction separate from the completed array migration and verify live-node completion as well as collection.
 
 - [ ] create-form-primitives doesn't have a test file? should it?
 
@@ -367,6 +366,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Align `FieldNode.createNode()` with array and form/group callable assembly using `Object.defineProperties()` and `Object.getOwnPropertyDescriptors()`, preserving the public API, property descriptors, and action aliases.
 
 - [x] Rename the internal `ArrayNodeFactory` and `FieldNodeFactory` classes and files to `ArrayNode` / `array-node.ts` and `FieldNode` / `field-node.ts`. Preserve the public `ArrayNode` type and package exports; use `ArrayNodeType` as its local import alias where it shares a module with the implementation class.
 
