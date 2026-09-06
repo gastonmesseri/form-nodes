@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 
 // Full inline node contexts retain concrete aggregate children and array item APIs.
-// This source-based fixture also counts the internal FieldState implementation.
+// This source-based fixture also counts the internal FieldNodeFactory implementation.
 const maximumTypes = 88_200;
 const maximumInstantiations = 1_100_000;
 const result = spawnSync(

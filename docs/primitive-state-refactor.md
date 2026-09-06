@@ -8,7 +8,7 @@ class for every primitive is not a requirement.
 ## Field prototype roadmap
 
 - [x] Keep public overloads, argument normalization, and nullability helpers in `field.ts`.
-- [x] Move state, operations, and node assembly into `FieldState`; callers retrieve the existing node through `getFieldNode()`.
+- [x] Move state, operations, and node assembly into `FieldNodeFactory`; callers retrieve the existing node through `getNode()`.
 - [x] Preserve callable nodes, action aliases, callback-safe actions, and weak debounce ownership.
 - [x] Use plain internal member names and a blank line between class members.
 - [x] Group properties by responsibility, with computed signals in a separate block immediately before the constructor.
@@ -44,18 +44,18 @@ Review findings and boundaries:
 - Keep both asynchronous watcher references. The target is deliberately retained by the field
   because `createReactiveWatch()` keeps a weak reference to it; the watcher reference controls
   injector ownership. Combining or deleting them is not a cosmetic simplification.
-- Use `getFieldNode()` as the existing-instance access point after review. It returns the node already
+- Use `getNode()` as the existing-instance access point after review. It returns the node already
   assembled during construction; `createNode()` remains responsible for that assembly.
-- `FieldState` still describes a long-lived implementation that owns state and operations.
-  `FieldFactory` would emphasize construction while hiding the continuing ownership. Leave a
-  class rename as an open preference rather than a prerequisite for readability improvements.
+- Use `FieldNodeFactory` for the internal class. The name emphasizes its role at the `field()`
+  entry point: receive configuration and provide a callable field node. The instance also owns
+  the node's signals and operations throughout its lifetime.
 - Keep responsibility-based property groups instead of collecting all uninitialized properties
   at the top. Initialization order remains explicit in the constructor.
 - `group()` already delegates to `createObjectNode()` in `form.ts`; inspect that shared boundary
   before proposing separate form and group implementation classes.
 
-Remaining naming alternatives are recorded in [TODO.md](../TODO.md). The instance-access preference
-is resolved by `getFieldNode()`; the class name remains open.
+The naming and instance-access decisions are resolved as `FieldNodeFactory` and `getNode()`.
+Their decision history remains recorded in [TODO.md](../TODO.md).
 
 ## Third readability audit
 
@@ -112,19 +112,19 @@ No additional subcomponents, base classes, or generic API assembly are recommend
 
 ## Clone callback scope and placement
 
-Keep field clone creation in `FieldState.createClone()`, alongside the other field operations.
+Keep field clone creation in `FieldNodeFactory.createClone()`, alongside the other field operations.
 `createNode()` calls this method once and stores the returned function as `_clone`.
 `createObjectClone()` remains near the top of `form.ts`, whose implementation is still function-based.
 Neither recipe needs a separate utility file.
 
 Array templates retain `_clone` callbacks so they can create items later. A callback that reads
-`this.initialValue` retains the original `FieldState` through `this`; that state retains its node,
+`this.initialValue` retains the original `FieldNodeFactory` through `this`; that state retains its node,
 parent signal, and other live resources. Retaining the callback can therefore retain the source
 node and parent tree even when the application no longer keeps them directly.
 
 `createClone()` reads `this` only while extracting `initialValue`, `initialValidatorSource`, and
 `cloneOptions` into local bindings. Its returned callback uses those bindings and the module-level
-`FieldState` constructor, without referencing `this`. `createObjectClone()` similarly captures the
+`FieldNodeFactory` constructor, without referencing `this`. `createObjectClone()` similarly captures the
 compiled child recipe, validators, options, node kind, and normalizer. Every invocation constructs
 fresh node state from that configuration.
 

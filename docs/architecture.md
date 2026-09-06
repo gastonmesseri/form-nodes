@@ -16,10 +16,10 @@ Organize implementation code by responsibility directly under `src/lib/`:
 `src/public-api.ts` defines the package exports. Internal modules use direct relative imports.
 
 `primitives/field.ts` owns the public field overloads, argument normalization, and nullability
-shortcuts. Its internal `FieldState` class in `field-state.ts` owns the signals and operations and
+shortcuts. Its internal `FieldNodeFactory` class in `field-node-factory.ts` owns the signals and operations and
 assembles the callable node. The class is not exported from the package; node actions remain safe
 to pass as callbacks, and scheduled debounce work uses weak ownership.
-Callers use `FieldState.getFieldNode()` to retrieve the already assembled node. Its implementation members use plain names without `private`
+Callers use `FieldNodeFactory.getNode()` to retrieve the already assembled node. Its implementation members use plain names without `private`
 or `readonly` modifiers; `_` prefixes remain on the existing node API's internal hooks.
 Mutable local state uses names such as `selfTouched` and `selfDirty`; the corresponding computed
 properties use the node's public names, `touched` and `dirty`.

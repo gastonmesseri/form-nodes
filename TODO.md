@@ -13,7 +13,6 @@
 
 - [ ] Maybe: Transform field() form() array() and group() files in an organized class
   - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
-  - CONSIDER different name for field-state class, i don't like it
   - Insist in initializing the signals() in the class members and not in the constructor (for consistency)
     - start with selfDisabled/selfReadonly... and check consecuences step by step
 
@@ -360,10 +359,14 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
-- [x] Use `FieldState.getFieldNode()` in `field()` and clone creation instead of accessing `.node` directly. The method returns the existing node; construction and the public field API remain unchanged.
+- [x] Shorten `FieldNodeFactory.getFieldNode()` to `getNode()` now that the class name supplies the field context. Update its callers and the internal conventions; the method still returns the existing node.
+
+- [x] Rename the internal `FieldState` class to `FieldNodeFactory` and its file to `field-node-factory.ts`. Keep `getFieldNode()` as the caller-facing accessor and update the refactor guide and project conventions.
+
+- [x] Use `FieldNodeFactory.getFieldNode()` in `field()` and clone creation instead of accessing `.node` directly. The method returns the existing node; construction and the public field API remain unchanged.
 
 - [x] Move `createFieldClone()` and `createObjectClone()` to the top of their owning files and document why retained recipes need isolated declarative inputs. Verify that a class method extracting those inputs can also release the source tree; module scope is an explicit ownership convention, not a language restriction.
-  - After review, replace the external field helper with `FieldState.createClone()`. Extract configuration before returning the callback so clone creation stays in the class without retaining the source instance. Keep `createObjectClone()` beside the function-based form implementation.
+  - After review, replace the external field helper with `FieldNodeFactory.createClone()`. Extract configuration before returning the callback so clone creation stays in the class without retaining the source instance. Keep `createObjectClone()` beside the function-based form implementation.
 
 - [x] Replace the duplicated internal `_nodeType` discriminant with `$api.nodeType()` in the directive and Angular adapter. Remove it from all primitive implementations and `InternalNodeApi`, retaining collision-safe access through `$api`.
 - [x] Prototype an internal `FieldState` class behind the existing callable `field()` API.

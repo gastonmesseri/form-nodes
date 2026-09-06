@@ -43,7 +43,7 @@
 - In classes, group properties created with `computed()` immediately before the constructor.
 - Within the computed block and the other property declarations, group related members by responsibility. Keep complementary states and constraint pairs adjacent, respect initialization dependencies, and do not interleave computed signals with other properties.
 - Separate class members with a blank line.
-- In internal implementation classes such as `FieldState`, prefer plain member names without `private`, `readonly`, or `_` prefixes. Keep the caller's intended access contract explicit; callers of `FieldState` use `getFieldNode()` to retrieve the existing node. Constructor parameter properties may use `public` to store their arguments concisely.
+- In internal implementation classes such as `FieldNodeFactory`, prefer plain member names without `private`, `readonly`, or `_` prefixes. Keep the caller's intended access contract explicit; callers of `FieldNodeFactory` use `getNode()` to retrieve the existing node. Constructor parameter properties may use `public` to store their arguments concisely.
 - End every completed change handoff with a suggested English Conventional Commit message that summarizes the delivered change.
 
 ## Import style
