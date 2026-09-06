@@ -3,11 +3,15 @@
 All notable changes to Form Nodes are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
-uses [Semantic Versioning](https://semver.org/spec/v1.1.0.html). Starting with 1.0.0, breaking changes require a major release and must be called out here and in
+uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Starting with 1.0.0, breaking changes require a major release and must be called out here and in
 the consumer migration guide. Minor releases add backward-compatible features; patch releases
 provide backward-compatible fixes.
 
 ## [Unreleased]
+
+### Fixed
+
+- Empty `form({})` and `group({})` declarations now infer `DynamicNode` for `forEachChild()` callbacks and `DynamicNode[]` for `Object.values(children)`, supporting records populated with `add()`. Nonempty declarations retain their concrete child unions; `get(key)` still accounts for missing children.
 
 ## [1.1.0] - 2026-09-07
 

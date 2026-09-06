@@ -10,6 +10,10 @@ canonical release record.
 
 ## Unreleased
 
+### Fixed
+
+- Empty `form({})` and `group({})` declarations now infer `DynamicNode` for `forEachChild()` callbacks and `DynamicNode[]` for `Object.values(children)`, supporting records populated with `add()`. Nonempty declarations retain their concrete child unions; `get(key)` still accounts for missing children.
+
 ## 1.1.0 — 2026-09-07
 
 ### Changed

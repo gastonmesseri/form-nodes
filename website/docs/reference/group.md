@@ -4,6 +4,7 @@ description: Reference for object groups without an independent submission workf
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import emptyChildRecordSource from '!!raw-loader!../../examples/empty-child-record.example.ts';
 import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
 import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
@@ -1580,3 +1581,17 @@ Both queries participate in reactive tracking when read inside `computed()` or `
 memoize their boolean result by argument. `hasError()` follows error changes; `hasValidator()`
 follows `setValidators()` without executing the validator. Neither query changes node state.
 For a child named `hasError` or `hasValidator`, use the parent's `$api` to call that operation.
+
+## Empty declarations as dynamic records
+
+With `form({})` or `group({})`, the empty declaration acts as a dynamic record for child access:
+`Object.values(node.children)` is `DynamicNode[]`, and `forEachChild()` receives `DynamicNode`
+without `undefined`. This also applies to nested empty groups and forms. Nonempty declarations
+continue to infer their concrete child union.
+
+<CodeBlock language="ts">{emptyChildRecordSource}</CodeBlock>
+
+`get(key)` remains `DynamicNode | undefined` because a requested key may be missing. Keep the
+result of `add()` when you need the exact added node type. Enumeration types do not change the
+form's statically inferred value shape or expand its direct child properties. This behavior is
+chosen from the declaration's type, not from the current number of runtime children.

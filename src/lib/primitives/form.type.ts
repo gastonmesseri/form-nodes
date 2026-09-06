@@ -325,13 +325,14 @@ export type FormRoot<TNodes extends Nodes, TParent extends Node> = Node extends 
 export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /** Returns the concrete primitive represented by this node. */
   nodeType(): 'form';
-  /** Readonly map typed from the declared children. Runtime entries also include dynamically added nodes. */
-  readonly children: FormChildren<TNodes, TParent>;
+  /** Readonly map of declared children, or a DynamicNode record for an empty declaration. Runtime entries include added nodes. */
+  readonly children: keyof TNodes extends never ? Readonly<Record<string, DynamicNode>> : FormChildren<TNodes, TParent>;
   /**
    * Visits a snapshot of immediate children in object-entry order, including dynamically added nodes.
    * Does not recurse. Additions during iteration are deferred to the next call; removed nodes in the
    * snapshot are still visited. Callback errors propagate and stop iteration. The callback type is
-   * the declared-child union; dynamically added node types are not represented in that union.
+   * the declared-child union, or DynamicNode for an empty declaration. Added node types are not
+   * represented in a nonempty declared-child union.
    *
    * @example Visit each immediate child.
    * ```ts
@@ -342,7 +343,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * @reactive Tracks child additions and removals, plus signals read by the callback.
    * @param callback Receives the child node and its string key.
    */
-  forEachChild(callback: (child: FormChildren<TNodes, TParent>[keyof TNodes], key: string) => void): void;
+  forEachChild(callback: (child: keyof TNodes extends never ? DynamicNode : FormChildren<TNodes, TParent>[keyof TNodes], key: string) => void): void;
   /**
    * Returns a child by runtime key, or `undefined` when no current child has that key.
    *

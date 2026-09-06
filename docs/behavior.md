@@ -2881,3 +2881,13 @@ The union is inferred without `undefined`. Mixed string and number fields expose
 on reads, but writes must be accepted by every possible member: `set('')` is rejected when a numeric
 field may be visited. Homogeneous string fields can all accept `set('')`. This typing change does
 not alter the runtime snapshot, order, reactive tracking, or dynamic-child inclusion semantics.
+
+## Empty-declaration enumeration types
+
+When the declared child key set is empty, forms and groups expose `children` as a readonly
+string-keyed `DynamicNode` map and `forEachChild()` accepts a `DynamicNode` callback. This yields
+`DynamicNode[]` for `Object.values(children)`, without `undefined`. Nonempty declarations preserve
+their concrete child union. This is determined statically and applies to nested nodes and configured
+factories; adding or removing runtime children does not change the chosen type. `get(key)` remains
+optional, direct dynamic properties remain unsupported, and `add()` retains its exact return type.
+The value shape, iteration order, snapshots, tracking, and all runtime behavior remain unchanged.

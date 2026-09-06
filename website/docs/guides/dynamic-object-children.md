@@ -184,3 +184,11 @@ it does not expose an `addControl()` operation on a field tree. Form Nodes owns 
 Runtime enumeration still includes nodes attached with `add()`, even if their types fall outside
 that union. This is a deliberate approximation for declaration-based code. `forEachChild()` also infers this declared-child union. Use `get(key)` inside its callback
 when handling arbitrary dynamic node types.
+
+## Start with an empty record
+
+Use `form({})` or `group({})` for a container whose children will be attached with `add()`.
+Its `forEachChild()` callback receives `DynamicNode`, and `Object.values(children)` returns
+`DynamicNode[]`. For a requested runtime key, `get(key)` still returns `DynamicNode | undefined`. Definitions with declared children
+retain the declared-child union described above. See the [form reference](../reference/form.md#empty-declarations-as-dynamic-records)
+for a complete example.

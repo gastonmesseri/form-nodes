@@ -26,6 +26,29 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('enumerates an initially empty record through add, updates, and removal', () => {
+    const parent = form({ record: form({}) });
+    const record = parent.record;
+    const visit = vi.fn();
+    expect(Object.values(record.children)).toEqual([]);
+    record.forEachChild(visit);
+    expect(visit).not.toHaveBeenCalled();
+    const name = record.add('name', field('Marco'));
+    const age = record.add('age', field(18));
+    expect(Object.values(record.children)).toEqual([name, age]);
+    record.forEachChild(visit);
+    expect(visit.mock.calls).toEqual([[name, 'name'], [age, 'age']]);
+    record.forEachChild(child => child.markAsTouched());
+    expect(name.touched()).toBe(true);
+    expect(age.touched()).toBe(true);
+    name.set('Lia');
+    expect(parent()).toEqual({ record: { name: 'Lia', age: 18 } });
+    record.remove('age');
+    expect(Object.values(record.children)).toEqual([name]);
+    expect(record.get('age')).toBeUndefined();
+    expect(parent()).toEqual({ record: { name: 'Lia' } });
+  });
+
   it('keeps hasError and hasValidator scoped to each node across groups, arrays, and nested forms', () => {
     const profile = form({
       nested: form({ name: field('', [required]) }),
