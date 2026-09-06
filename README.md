@@ -269,7 +269,7 @@ greeting(); // 'Hello, Ada!'
 Calling a field returns its value. Calling a group, form, or array returns the values of its
 children in the same object or array shape. These reads participate in Angular signal tracking.
 
-### Set, update, and patch
+### 🔸 Set, update, and patch
 
 <!-- example: readme-basics.example.ts#writes -->
 ```ts
@@ -291,7 +291,7 @@ greeting(); // 'Hello, GRACE!'
 Programmatic writes preserve dirty and touched state. Use `markAsDirty()` or `markAsTouched()`
 when an application action should explicitly count as interaction.
 
-### Reset
+### 🔸 Reset
 
 **`reset()` clears interaction state and preserves current values.** It does not restore the
 original declaration automatically. Pass a complete value when you also want to replace the data.
@@ -377,7 +377,7 @@ built-in errors include a message and any relevant constraint data.
 Use `valid()`, `invalid()`, and `pending()` to inspect validation state. In a template, a common
 pattern is to show a field's errors after `touched()` becomes true, as in the first component.
 
-### Custom and cross-field rules
+### 🔸 Custom and cross-field rules
 
 A field validator can read another field directly. For example, keep a password confirmation in
 sync with the password entered elsewhere in the same form:
@@ -429,7 +429,7 @@ other signal dependencies before the first `await`, or declare them with `params
 See [Asynchronous validation](https://gastonmesseri.github.io/form-nodes/guides/async-validation)
 for a complete server-check example.
 
-### Messages and application defaults
+### 🔸 Messages and application defaults
 
 A single validator can override its message:
 
