@@ -259,6 +259,31 @@ export class ArrayNode<TItem extends Node> {
     return this.node;
   }
 
+  getItemSnapshot() {
+    return [...this.items()] as ArrayItemNode<TItem>[];
+  }
+
+  forEach(callback: (item: ArrayItemNode<TItem>, index: number, array: ArrayNodeType<TItem>) => void) {
+    const snapshot = this.items();
+    snapshot.forEach((item, index) => callback(item as ArrayItemNode<TItem>, index, this.node));
+  }
+
+  filter(predicate: (
+    item: ArrayItemNode<TItem>,
+    index: number,
+    array: ArrayNodeType<TItem>,
+  ) => unknown) {
+    return this.getItemSnapshot().filter((item, index) => predicate(item, index, this.node));
+  }
+
+  find(predicate: (
+    item: ArrayItemNode<TItem>,
+    index: number,
+    array: ArrayNodeType<TItem>,
+  ) => unknown) {
+    return this.getItemSnapshot().find((item, index) => predicate(item, index, this.node));
+  }
+
   insert(index: number, ...args: [] | [value: NodeSet<TItem>]) {
     this.assertIndex(index, true);
     const item = this.createItem();
@@ -317,9 +342,16 @@ export class ArrayNode<TItem extends Node> {
     this.items.set([]);
   }
 
+  assertIndex(index: number, allowEnd = false) {
+    const maximum = this.items().length - (allowEnd ? 0 : 1);
+    if (!Number.isSafeInteger(index) || index < 0 || index > maximum) {
+      throw new RangeError(`array: index ${index} is out of bounds`);
+    }
+  }
+
   set(value: ArraySet<TItem> | null | undefined) {
     this.controlValueBuffer?.cancel();
-    this.reconcile(this.normalizeArrayValue(value), false);
+    this.reconcile(this.normalizeArrayValue(value), 'set');
   }
 
   patch(value: ArrayPatch<TItem>) {
@@ -334,7 +366,7 @@ export class ArrayNode<TItem extends Node> {
   reset(...args: [] | [value: ArraySet<TItem> | null | undefined]) {
     this.controlValueBuffer?.cancel();
     if (args.length === 0) this.items().forEach(item => item.$api.reset());
-    else this.reconcile(this.normalizeArrayValue(args[0]), true);
+    else this.reconcile(this.normalizeArrayValue(args[0]), 'reset');
     this.selfTouched.set(false);
     this.selfDirty.set(false);
     notifyExternalValidationReset(this.node);
@@ -411,6 +443,12 @@ export class ArrayNode<TItem extends Node> {
     });
   }
 
+  getSchemaSample(): TItem {
+    // Reserve the schema sample for the next createItem() call so it becomes a real array item.
+    this.preparedSchemaItem ??= this.instantiateItem();
+    return this.preparedSchemaItem;
+  }
+
   createItem(): TItem {
     const item = this.preparedSchemaItem ?? this.instantiateItem();
     this.preparedSchemaItem = undefined;
@@ -439,28 +477,16 @@ export class ArrayNode<TItem extends Node> {
     }
   }
 
-  getSchemaSample(): TItem {
-    this.preparedSchemaItem ??= this.instantiateItem();
-    return this.preparedSchemaItem;
+  reconcile(values: ArraySet<TItem>, mode: 'set' | 'reset') {
+    if (this.usesTrackBy) this.reconcileByKey(values, mode);
+    else this.reconcileByIndex(values, mode);
   }
 
-  assertIndex(index: number, allowEnd = false) {
-    const maximum = this.items().length - (allowEnd ? 0 : 1);
-    if (!Number.isSafeInteger(index) || index < 0 || index > maximum) {
-      throw new RangeError(`array: index ${index} is out of bounds`);
-    }
-  }
-
-  reconcile(values: ArraySet<TItem>, reset: boolean) {
-    if (this.usesTrackBy) this.reconcileByKey(values, reset);
-    else this.reconcileByIndex(values, reset);
-  }
-
-  reconcileByIndex(values: ArraySet<TItem>, reset: boolean) {
+  reconcileByIndex(values: ArraySet<TItem>, mode: 'set' | 'reset') {
     const current = [...this.items()];
     const commonLength = Math.min(current.length, values.length);
     for (let index = 0; index < commonLength; index++) {
-      if (reset) current[index]!.$api.reset(values[index]!);
+      if (mode === 'reset') current[index]!.$api.reset(values[index]!);
       else current[index]!.$api.set(values[index]!);
     }
     while (current.length > values.length) this.detachItem(current.pop()!);
@@ -473,23 +499,24 @@ export class ArrayNode<TItem extends Node> {
     this.reparentItems();
   }
 
-  reconcileByKey(values: ArraySet<TItem>, reset: boolean) {
+  reconcileByKey(values: ArraySet<TItem>, mode: 'set' | 'reset') {
     const trackBy = this.options!.trackBy!;
     const getTrackingKey = (value: NodeValue<TItem>, index: number): unknown => {
       if (typeof trackBy === 'function') return trackBy(value, index);
       return (value as Record<string, unknown>)[trackBy as string];
     };
-    const currentByKey = this.indexItemsByKey(getTrackingKey);
-    const keys = this.getIncomingKeys(values, getTrackingKey);
+    const remainingItemsByKey = this.indexItemsByKey(getTrackingKey);
+    const incomingKeys = this.getIncomingKeys(values, getTrackingKey);
     const next = values.map((value, index) => {
-      const existing = currentByKey.get(keys[index]!);
+      const key = incomingKeys[index]!;
+      const existing = remainingItemsByKey.get(key);
       const item = existing ?? this.createItem();
-      if (existing) currentByKey.delete(keys[index]!);
-      if (reset || !existing) item.$api.reset(value);
+      if (existing) remainingItemsByKey.delete(key);
+      if (mode === 'reset' || !existing) item.$api.reset(value);
       else item.$api.set(value);
       return item;
     });
-    currentByKey.forEach(item => this.detachItem(item));
+    remainingItemsByKey.forEach(item => this.detachItem(item));
     this.items.set(next);
     this.reparentItems();
   }
@@ -517,31 +544,6 @@ export class ArrayNode<TItem extends Node> {
 
   normalizeArrayValue(value: ArraySet<TItem> | null | undefined): ArraySet<TItem> {
     return value ?? [];
-  }
-
-  getItemSnapshot() {
-    return [...this.items()] as ArrayItemNode<TItem>[];
-  }
-
-  forEach(callback: (item: ArrayItemNode<TItem>, index: number, array: ArrayNodeType<TItem>) => void) {
-    const snapshot = this.items();
-    snapshot.forEach((item, index) => callback(item as ArrayItemNode<TItem>, index, this.node));
-  }
-
-  filter(predicate: (
-    item: ArrayItemNode<TItem>,
-    index: number,
-    array: ArrayNodeType<TItem>,
-  ) => unknown) {
-    return this.getItemSnapshot().filter((item, index) => predicate(item, index, this.node));
-  }
-
-  find(predicate: (
-    item: ArrayItemNode<TItem>,
-    index: number,
-    array: ArrayNodeType<TItem>,
-  ) => unknown) {
-    return this.getItemSnapshot().find((item, index) => predicate(item, index, this.node));
   }
 
   readIndex(property: PropertyKey): number | null {

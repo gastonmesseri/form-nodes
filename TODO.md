@@ -20,11 +20,11 @@
   - [x] arreglar signatures de computed() en array-node-factory
   - [x] see if i can unify somehow the Object.defineProperties in ArrayNode.createNode with the Object.assign in FieldNode.createNode (it seems they are not aligned in the style)
 
-- the folder metadata can probably just be a metadata.ts with metadata.spect.ts inside primitives/utils (put create-node-metadata.ts code inside metadta.ts)
+- the folder metadata can probably just be a metadata.ts with metadata.spec.ts inside primitives/utils (put create-node-metadata.ts code inside metadta.ts)
 
 - [ ] create-form-primitives doesn't have a test file? should it?
 
-- [ ] Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
+- [ ] Audit: Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
 
 - [ ] Maybe: Consider naming useControlState to useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
 
@@ -366,6 +366,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Complete the second `ArrayNode` readability audit: use explicit reconciliation modes, clarify remaining-item and incoming-key variables, explain schema-sample reuse, and group related methods. Keep the indexed proxy inside `createNode()` as decided during review.
 
 - [x] Audit and improve `ArrayNode` readability: extract `publicApi.forEach` into a class method, separate keyed reconciliation validation from item reconciliation, clarify item-factory and schema-sample names, and introduce a local alias for parent-aware item types. Preserve optional buffer cancellation with `controlValueBuffer?.cancel()`.
 
