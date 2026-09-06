@@ -110,6 +110,38 @@ Keep `context` as the stable shared context: `createValidatorContext()` enriches
 in place. Renaming it to suggest it permanently contains only a value would be misleading.
 No additional subcomponents, base classes, or generic API assembly are recommended by this audit.
 
+## Clone callback scope and placement
+
+Keep field clone creation in `FieldState.createClone()`, alongside the other field operations.
+`createNode()` calls this method once and stores the returned function as `_clone`.
+`createObjectClone()` remains near the top of `form.ts`, whose implementation is still function-based.
+Neither recipe needs a separate utility file.
+
+Array templates retain `_clone` callbacks so they can create items later. A callback that reads
+`this.initialValue` retains the original `FieldState` through `this`; that state retains its node,
+parent signal, and other live resources. Retaining the callback can therefore retain the source
+node and parent tree even when the application no longer keeps them directly.
+
+`createClone()` reads `this` only while extracting `initialValue`, `initialValidatorSource`, and
+`cloneOptions` into local bindings. Its returned callback uses those bindings and the module-level
+`FieldState` constructor, without referencing `this`. `createObjectClone()` similarly captures the
+compiled child recipe, validators, options, node kind, and normalizer. Every invocation constructs
+fresh node state from that configuration.
+
+The important boundary is the callback's closure scope, not whether its factory is a class method.
+Creating the recipe directly inside the main node-construction scope can share an environment with
+other closures that retain live nodes; the earlier ownership regression reproduced this retention.
+A dedicated method extracting only the required inputs provides that separation within the class.
+The original module-level field helper was a structural choice, not a language requirement, and
+has been replaced by the instance method after review.
+
+The collection regression checks this implementation with `useDefineForClassFields: false` and
+`true`, verifying source-tree collection and future item creation. Keep these checks when changing
+recipe creation; checking the callback's syntax alone is insufficient.
+
+This isolation is not a deep copy. Application values, validator callbacks, state sources, and
+explicit injectors keep their original identity and may themselves retain application objects.
+
 ## Checklist for each subsequent primitive
 
 1. **Map the existing contract.** Identify overloads, inference, callable behavior, public members,

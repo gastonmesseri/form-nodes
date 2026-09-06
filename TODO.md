@@ -14,13 +14,11 @@
 - [ ] Maybe: Transform field() form() array() and group() files in an organized class
   - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
   - CONSIDER different name for field-state class, i don't like it
-  - maybe just create in FieldState class a method called getFieldInstance or getNode, or get... or something like that to make it more clear
-  - Sort non initialized variables first, then the rest
+  - maybe just create in FieldState class a method called getFieldInstance or getNode, or get... or something like that to make it more clear, accessing .node from the field() function, i don't like that
   - Insist in initializing the signals() in the class members and not in the constructor (for consistency)
     - start with selfDisabled/selfReadonly... and check consecuences step by step
-  - [ ] [Important] in the createObjectClone and createFieldClone,probably move to different file, or at least at the top of the file. and explain very carefully why that declaration should
-        not be done inside the class (i think i understood that it explicitly cannot be done inside the class right?)
 
+- [ ] Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
 
 - [ ] Maybe: Consider naming useControlState to useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
 
@@ -363,9 +361,12 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
-- [x] Replace the duplicated internal `_nodeType` discriminant with `$api.nodeType()` in the directive and Angular adapter. Remove it from all primitive implementations and `InternalNodeApi`, retaining collision-safe access through `$api`.
+- [x] Move `createFieldClone()` and `createObjectClone()` to the top of their owning files and document why retained recipes need isolated declarative inputs. Verify that a class method extracting those inputs can also release the source tree; module scope is an explicit ownership convention, not a language restriction.
+  - After review, replace the external field helper with `FieldState.createClone()`. Extract configuration before returning the callback so clone creation stays in the class without retaining the source instance. Keep `createObjectClone()` beside the function-based form implementation.
 
+- [x] Replace the duplicated internal `_nodeType` discriminant with `$api.nodeType()` in the directive and Angular adapter. Remove it from all primitive implementations and `InternalNodeApi`, retaining collision-safe access through `$api`.
 - [x] Prototype an internal `FieldState` class behind the existing callable `field()` API.
+  - [x] Sort non initialized variables first, then the rest
   - Keep public overloads and nullability helpers in `field.ts`, separate class members with blank lines, and preserve callback-safe actions and weak debounce ownership. Verify the emitted public declarations against the pre-refactor baseline.
   - Use plain implementation member names without `private`, `readonly`, or `_` prefixes; callers access the class through `node`.
   - Group computed and other properties separately by responsibility, keeping complementary states and constraint pairs adjacent.
@@ -385,10 +386,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - After further review, include `patch` directly in field `nodeMembers` at runtime while retaining its omission from the callable public type. Remove the redundant `publicApi` assembly object; typed patch access remains on `api` and `$api`.
   - Rename the remaining `nodeMembers` object to `publicApi` now that it contains the complete shared field API; keep `internalApi` as its extension with internal hooks.
   - Colocate the template-ownership subprocess fixture with its primitive test as `template-ownership.fixture.ts`. Remove the file-specific TypeScript include and document the general fixture placement, build exclusion, and coverage exclusion conventions.
-
 - [x] Add tests for every function in `src/lib/utils`.
   - Add direct coverage for object classification, word counting, subscription detection, empty values, collection lengths, and DOM binding order. Extend injector tests for captured ownership, subscriber notifications, and binding-lease cleanup.
-
 - [x] Think about how to better structure project folders given current knowledge and existing files
   - [x] should i move public-api.spec.ts next to public-api.ts ?
   - [x] what is the best way of organizing the folders? lib/core is needed? maybe just lib? maybe just core?
