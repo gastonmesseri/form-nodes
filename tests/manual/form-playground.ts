@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 
 import { FormNode } from '../../dist/types/ngblocks-form-nodes';
 import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
@@ -87,11 +87,16 @@ const myForm = form({
   // equal: 'deep',
 });
 
+
 /** @todo this is still not working, the type of the child should be an union */
 myForm.someNesting.forEachChild(child => {
   child
   // child.set();
 })
+
+const myComputed = computed(() => myForm());
+myForm.age;
+myComputed;
 
 
 myForm.company;
@@ -100,6 +105,29 @@ myForm.somethingInstance
 myForm.someNesting.test()
 
 myForm.validators()[0]
+
+const myFormTyped = form({
+  username: field(''),
+  // age: field(''),
+  age: field(2),
+  // listA: field<string[]>([]),
+  // listB: field<number[]>([]),
+});
+
+myFormTyped.forEachChild(child => child.set(null));
+
+Object.values(myFormTyped.children).forEach(child => child.set(2))
+
+const myDynamicGroup = group({});
+const myNonDynamicGroup = group({
+  // name: '',
+  age: 0,
+});
+myDynamicGroup.forEachChild(child => child.set(''));
+myNonDynamicGroup.forEachChild(child => child.set(23));
+// myDynamicGroup.children.sdf.set()
+Object.values(myDynamicGroup.children).forEach(child => child.set(''));
+Object.values(myNonDynamicGroup.children).forEach(child => child.set(23))
 
 // const a = myForm.company()
 // myForm.company.
