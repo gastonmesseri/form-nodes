@@ -9,6 +9,8 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-07
+
 ### Fixed
 
 - Fields, forms, groups, and arrays now satisfy Angular `Signal<T>` and are recognized by `isSignal()`, so they can be passed directly to signal-based utilities while preserving value inference and reactive updates.
@@ -146,5 +148,6 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
+[1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1

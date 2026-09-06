@@ -10,6 +10,8 @@ canonical release record.
 
 ## Unreleased
 
+## 1.0.1 — 2026-09-07
+
 ### Fixed
 
 - Fields, forms, groups, and arrays now satisfy Angular `Signal<T>` and are recognized by `isSignal()`, so they can be passed directly to signal-based utilities while preserving value inference and reactive updates.
