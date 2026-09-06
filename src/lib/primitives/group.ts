@@ -1,4 +1,4 @@
-import { createObjectNode } from './form';
+import { createFormGroupNode } from './form-group-node';
 import type { ValidatorSource } from '../validation/validation.type';
 import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
 import type { Form, FormOptions, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
@@ -61,7 +61,7 @@ export function group<TDefinitions extends ObjectNodeDefinitions>(
 ): Group<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = GroupValue<TNodes>;
-  return createObjectNode<TDefinitions>(
+  return createFormGroupNode<TDefinitions>(
     definitions,
     validatorsOrOptions as unknown as ValidatorSource<TValue> | FormOptions<TValue, Form<TNodes>> | undefined,
     separateOptions as unknown as FormOptions<TValue, Form<TNodes>> | undefined,

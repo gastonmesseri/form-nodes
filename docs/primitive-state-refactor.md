@@ -1,13 +1,15 @@
 # Primitive state refactor guide
 
-The `field()` and `array()` migrations move implementation state and operations into internal classes
-while preserving the existing callable public API. The goal is easier reading and maintenance. Use
-the checklist below when evaluating the same approach for `form()` and `group()`; a separate class
-for every primitive is not a requirement.
+The primitive migrations move implementation state and operations into internal classes while
+preserving the existing callable public API. `FieldNode` owns fields, `ArrayNode` owns arrays, and
+`FormGroupNode` shares form/group logic. The goal is easier reading and maintenance. Use the checklist
+below for future refactors; a separate class for every primitive is not a requirement.
 
 ## Field prototype roadmap
 
-- [x] Keep public overloads, argument normalization, and nullability helpers in `field.ts`.
+- [x] Keep public overloads, argument normalization, and nullability helpers in `field.ts` during
+  the initial migration. The subsequent construction-entry extraction below moves validator/option
+  resolution beside the class.
 - [x] Move state, operations, and node assembly into `FieldNode`; callers retrieve the existing node through `getNode()`.
 - [x] Preserve callable nodes, action aliases, callback-safe actions, and weak debounce ownership.
 - [x] Use plain internal member names and a blank line between class members.
@@ -56,8 +58,8 @@ Review findings and boundaries:
   the node's signals and operations throughout its lifetime.
 - Keep responsibility-based property groups instead of collecting all uninitialized properties
   at the top. Initialization order remains explicit in the constructor.
-- `group()` already delegates to `createObjectNode()` in `form.ts`; inspect that shared boundary
-  before proposing separate form and group implementation classes.
+- At this stage, `group()` delegated to `createObjectNode()` in `form.ts`; the subsequent migration
+  reviewed that shared boundary and moved it to `FormGroupNode` rather than separate form/group classes.
 
 The naming and instance-access decisions are resolved as `FieldNode` and `getNode()`.
 Their decision history remains recorded in [TODO.md](../TODO.md).
@@ -206,10 +208,10 @@ lifecycle are preserved by this refactor.
 
 ## Clone callback scope and placement
 
-Keep field clone creation in `FieldNode.createClone()`, alongside the other field operations.
-`createNode()` calls this method once and stores the returned function as `_clone`.
-`createObjectClone()` remains near the top of `form.ts`, whose implementation is still function-based.
-Neither recipe needs a separate utility file.
+Keep clone creation in the implementation class's `createClone()` method, alongside its other
+operations. `createNode()` calls this method once and stores the returned function as `_clone`.
+The former `createObjectClone()` helper lived near the top of `form.ts`; the form/group migration
+moved it into `FormGroupNode.createClone()`. These recipes do not need separate utility files.
 
 Array templates retain `_clone` callbacks so they can create items later. A callback that reads
 `this.initialValue` retains the original `FieldNode` through `this`; that state retains its node,
@@ -218,7 +220,7 @@ node and parent tree even when the application no longer keeps them directly.
 
 `createClone()` reads `this` only while extracting `initialValue`, `initialValidatorSource`, and
 `cloneOptions` into local bindings. Its returned callback uses those bindings and the module-level
-`FieldNode` constructor, without referencing `this`. `createObjectClone()` similarly captures the
+`FieldNode` constructor, without referencing `this`. `FormGroupNode.createClone()` similarly captures the
 compiled child recipe, validators, options, node kind, and normalizer. Every invocation constructs
 fresh node state from that configuration.
 
@@ -238,8 +240,9 @@ explicit injectors keep their original identity and may themselves retain applic
 
 ## Array migration roadmap
 
-- [x] Keep every public overload and argument-selection rule in `array.ts`; hand normalized inputs
-  to `new ArrayNode<TItem>(...).getNode()`.
+- [x] Keep every public overload and argument-selection rule in `array.ts` during the initial
+  migration; hand normalized inputs to `new ArrayNode<TItem>(...).getNode()`. The subsequent
+  construction-entry extraction below moves argument selection beside the class.
 - [x] Group plain members, writable signals, and computed signals as in the completed field factory.
   Seed items and local availability/validator state before eager helpers read them. Keep the
   aggregate `value` computed from its children rather than introducing a second writable value.
@@ -274,8 +277,8 @@ in both the buffer and field class weakly reference their controllers. Forced-GC
 and cancelled work in both class-field emit modes. The original finding and its resolution remain
 in `TODO.md`; template-source collection and future item creation retain their own regression tests.
 
-`form()` and `group()` are the remaining candidates. Review their shared `createObjectNode()`
-boundary together before choosing the next class structure.
+The subsequent form/group migration reviewed their shared `createObjectNode()` boundary together
+and selected the common `FormGroupNode` implementation described below.
 
 ## Array readability audit
 
@@ -305,6 +308,72 @@ Removing this optional chaining was considered and declined.
 
 Keep the indexed proxy inside `createNode()`. Extracting it into a separate method was considered
 and declined; retain the existing constructor, computed grouping, and optional buffer cancellation.
+
+## Form and group migration roadmap
+
+The shared class was initially named `ObjectNode`. A subsequent naming review selected
+`FormGroupNode`, with `createFormGroupNode()` and the `form-group-node.*` companion files, to make
+its two supported primitives explicit. Public object-definition type names remain unchanged.
+
+- [x] Preserve public overloads and documentation in `form.ts` and `group.ts`. Move their shared
+  argument resolution to `createFormGroupNode()` in `form-group-node.ts` and construct `FormGroupNode<TNodes>`
+  using the normalized child-node type rather than repeating definition normalization in the class.
+- [x] Use one implementation for both object node kinds. Preserve form ownership and form-only
+  submission, group inheritance, nested submission boundaries, and the public `nodeType()` value.
+  `FormGroupNode` also avoids confusion with the separate `[formNode]` directive.
+- [x] Group plain members, writable signals, and computed signals using the field/array conventions.
+  Seed local signals inside `untracked()` after reading options and normalizing validators, before
+  context creation and validation/control setup. Keep aggregate values computed from children.
+- [x] Organize child queries and dynamic edits, value/reset operations, interaction/submission,
+  validation, hierarchy/control bindings, cloning, and callable assembly into class methods.
+  Preserve dynamic-key validation before mutation and the structure-version dependency.
+- [x] Forward actions through callbacks bound to the implementation instance. Preserve rest-argument
+  distinctions, child-name collisions, property descriptors, and internal API aliases.
+- [x] Keep the injected definition normalizer receiver-independent for initial children and later
+  dynamic additions. Carry it into clone recipes so configured shorthand defaults remain intact.
+- [x] Keep `createClone()` inside the class and capture only compiled child recipes, the initial
+  validator source, copied options, node kind, and normalizer. Verify source-tree collection and
+  future item creation, as well as pending-debounce collection and live completion, in both
+  class-field emit modes.
+- [x] Compare generated public declarations and runtime shapes against the function-based baseline.
+  Cover extracted form/group actions through public tests, including validation, dynamic edits,
+  parent propagation, reset, submission, and child-name collisions.
+
+The generated public declarations remain byte-for-byte identical. The source-based type-performance
+fixture decreased from 71,562 types / 786,836 instantiations to 65,798 types / 741,775 instantiations
+without changing its budgets.
+
+Angular `v22.1.5` (commit `468b65b74566537456c192ac4281795c5a1e1a5e`) was confirmed as the latest
+stable Angular 22 tag during this migration. The inspected reference paths were
+`packages/forms/signals/src/field/{state,structure,validation,submit}.ts` and
+`packages/forms/signals/test/node/{field_node,submit}.spec.ts`. Existing Gem submission, dynamic
+children, and group contracts remain unchanged; this migration does not redesign their behavior.
+
+A constructor audit also reproduced a pre-existing limitation in both implementations and both
+class-field emit modes: constructing a form/group with children inside `computed()` attempts a
+parent-link signal write in the child. Empty object nodes can be constructed there and retain
+option-getter dependencies; public tests cover their initial availability and first validation.
+The child-parenting issue is recorded separately in `TODO.md` rather than folded into this refactor.
+
+After review, `FormGroupNode.submit()` returns `Promise<boolean>` explicitly without `async`.
+Keep its action and preflight synchronous, convert synchronous failures into promise rejections,
+and clear submitting immediately when an action throws. Successful synchronous actions, promises,
+and promise-like completions clear submitting when their completion is processed. The outer catch
+preserves promise rejection for preflight errors; the inner catch handles immediate action cleanup.
+Public tests cover these timing distinctions, invalid-submission callback failures, and inherited
+submitting state.
+
+## Construction entry functions
+
+- [x] Add `createFieldNode()` in `field-node.ts` to resolve validators and options before constructing
+  `FieldNode`. Keep the `field()` versus `field(undefined)` distinction in the public facade.
+- [x] Add `createArrayNode()` in `array-node.ts` to select initial contents, validators, and options,
+  validate initial counts/templates, and prepare the item factory before constructing `ArrayNode`.
+  Keep public overloads and their inference-only aliases in `array.ts`.
+- [x] Align both entries with `createFormGroupNode()` while retaining each primitive's argument rules.
+  Classes continue to own live state; clone recipes use constructors directly with resolved inputs.
+- [x] Move property-based array invariants to `primitives/tests/array.property.spec.ts`, alongside
+  the other primitive invariant suites. Keep their existing generated cases and model assertions.
 
 ## Checklist for each subsequent primitive
 

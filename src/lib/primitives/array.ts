@@ -1,12 +1,8 @@
-import { isNil } from '../utils/is-nil';
-import { ArrayNode } from './array-node';
-import { isNode } from './utils/node-marker';
 import type { NormalizedNode } from './form';
+import { createArrayNode } from './array-node';
 import type { Node } from '../types/node.type';
-import { assertArrayObjectTemplate } from './array.utils';
 import type { ValidatorSource } from '../validation/validation.type';
 import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
-import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import type { ArrayNode as ArrayNodeType, ArrayOptions, ArraySet, ArrayValue } from './array.type';
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
@@ -18,13 +14,6 @@ type ArrayFactory<TDefinition extends ArrayTemplate> = () => TDefinition & Array
 type ArraySource<TDefinition extends ArrayTemplate> = (TDefinition & ArrayTemplateInput<TDefinition>) | ArrayFactory<TDefinition>;
 type ArrayInitial<TDefinition extends ArrayTemplate> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
 type PositionalArrayOptions<TValue, TArray extends Node = ArrayNodeType<Node>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
-
-const looksLikeValidatorSource = (value: unknown): boolean => {
-  return typeof value === 'function'
-    || (Array.isArray(value)
-    && value.some(entry => typeof entry === 'function')
-    && value.every(entry => isNil(entry) || typeof entry === 'function'));
-};
 
 /**
  * Creates a dynamic array by cloning a declarative node template for every item.
@@ -197,37 +186,10 @@ export function array<TDefinition extends ArrayTemplate>(
   validatorsOrOptions?: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
   separateOptions?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
 ): ArrayNodeType<NormalizedNode<TDefinition>> {
-  type TItem = NormalizedNode<TDefinition>;
-  type TValue = ArrayValue<TItem>;
-  type TSet = ArraySet<TItem>;
-  const secondIsValidators = looksLikeValidatorSource(initialOrValidatorsOrOptions);
-  const thirdIsValidators = looksLikeValidatorSource(validatorsOrOptions);
-  const hasInitial = initialOrValidatorsOrOptions === null
-    || typeof initialOrValidatorsOrOptions === 'number'
-    || (Array.isArray(initialOrValidatorsOrOptions) && (
-      !secondIsValidators || thirdIsValidators || separateOptions !== undefined
-    ));
-  const resolvedOptions = hasInitial
-    ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue, any> | undefined
-    : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue, any> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue, any> | undefined;
-  const configuredInitial = resolvedOptions?.initialValue;
-  const initial = hasInitial
-    ? initialOrValidatorsOrOptions as number | TSet | null
-    : configuredInitial as number | TSet | null | undefined;
-  const validatorSource = hasInitial
-    ? thirdIsValidators ? validatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? []
-    : secondIsValidators ? initialOrValidatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? [];
-  if (typeof initial === 'number' && (!Number.isSafeInteger(initial) || initial < 0)) {
-    throw new RangeError('array: initial count must be a non-negative safe integer');
-  }
-  const normalizedInitial = initial ?? [];
-
-  const sourceIsFactory = typeof source === 'function' && !isNode(source);
-  if (!sourceIsFactory && !isNode(source)) {
-    assertArrayObjectTemplate(source, 'template');
-  }
-  const factory = sourceIsFactory
-    ? source as ArrayFactory<TDefinition>
-    : createNodeDefinitionFactory(source);
-  return new ArrayNode<TItem>(factory, normalizedInitial, validatorSource, resolvedOptions).getNode();
+  return createArrayNode<NormalizedNode<TDefinition>>(
+    source,
+    initialOrValidatorsOrOptions,
+    validatorsOrOptions,
+    separateOptions,
+  );
 }

@@ -1,4 +1,4 @@
-import { FieldNode } from './field-node';
+import { createFieldNode } from './field-node';
 import type { Field, FieldOptions } from './field.type';
 import type { ValidatorSource } from '../validation/validation.type';
 import { isValidatorSource } from '../validation/utils/validator-source';
@@ -128,13 +128,7 @@ export function field<TValue>(
   separateOptions?: FieldOptions<NoInfer<TValue>>,
 ): Field<TValue> {
   const initialValue = (arguments.length === 0 ? null : value) as TValue;
-  const resolvedOptions = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions) || validatorsOrOptions === undefined
-    ? separateOptions
-    : validatorsOrOptions;
-  const validatorSource = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions)
-    ? validatorsOrOptions
-    : resolvedOptions?.validators ?? [];
-  return new FieldNode<TValue>(initialValue, validatorSource, resolvedOptions).getNode();
+  return createFieldNode<TValue>(initialValue, validatorsOrOptions, separateOptions);
 }
 
 export namespace field {

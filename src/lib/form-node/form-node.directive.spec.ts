@@ -764,7 +764,7 @@ describe('FormNode', () => {
     binding.flush();
   });
 
-  it('focuses the first descendant binding in DOM order from forms and arrays', () => {
+  it('focuses descendant bindings in DOM order through forms, groups, and arrays', () => {
     @Component({
       selector: 'aggregate-focus-form-node-host',
       template: `
@@ -772,6 +772,8 @@ describe('FormNode', () => {
         <input data-first [formNode]="profile.first">
         <input data-item-one [formNode]="profile.items[1]!">
         <input data-item-zero [formNode]="profile.items[0]!">
+        <input data-city [formNode]="profile.details.city">
+        <input data-email [formNode]="profile.account.email">
       `,
       standalone: true,
       imports: [FormNode],
@@ -781,6 +783,8 @@ describe('FormNode', () => {
         first: field.strict('first'),
         second: field.strict('second'),
         items: array(field.strict(''), 2),
+        details: { city: field.strict('Zurich') },
+        account: form({ email: field.strict('name@example.com') }),
       });
     }
 
@@ -790,12 +794,20 @@ describe('FormNode', () => {
     const itemOne = fixture.nativeElement.querySelector('[data-item-one]') as HTMLInputElement;
     const focusSecond = vi.spyOn(second, 'focus');
     const focusItemOne = vi.spyOn(itemOne, 'focus');
+    const city = fixture.nativeElement.querySelector('[data-city]') as HTMLInputElement;
+    const email = fixture.nativeElement.querySelector('[data-email]') as HTMLInputElement;
+    const focusCity = vi.spyOn(city, 'focus');
+    const focusEmail = vi.spyOn(email, 'focus');
 
     fixture.componentInstance.profile.focus({ preventScroll: true });
     expect(focusSecond).toHaveBeenCalledWith({ preventScroll: true });
 
     fixture.componentInstance.profile.items.focus();
     expect(focusItemOne).toHaveBeenCalledOnce();
+    fixture.componentInstance.profile.details.focus({ preventScroll: true });
+    expect(focusCity).toHaveBeenCalledExactlyOnceWith({ preventScroll: true });
+    fixture.componentInstance.profile.account.focus();
+    expect(focusEmail).toHaveBeenCalledOnce();
   });
 
   it('selects the first DOM binding for a field and unregisters destroyed bindings', () => {

@@ -1,5 +1,7 @@
 ## Up next
 
+- [ ] Audit aggregate construction inside `computed()`: a form/group with children writes their parent-link signals during construction and fails in a read-only reactive context. Reproduced before and after the `FormGroupNode` migration with both class-field emit modes; empty aggregates preserve option-getter tracking. Keep any correction separate from the internal class migration and preserve child normalization and ownership dependencies.
+
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -9,16 +11,14 @@
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 
+- [ ] refactor classes
+  - in FormGroupNode.submit clean function, probably try to do into catch/finally the long one, try to simplify that without doing async function, audit it
+  - maybe the createFieldNode createFormGroupNode createArrayNode functions, shouldn't handle the arguments thing, that should be the task for field() form() group() array()
+    but, it should handle the new FieldNode(...).getNode(); // this it should handle
+
 - [ ] Request to suggest tests folders organization (including also tests in src/**/*)
 
-- [ ] Maybe: Transform field() form() array() and group() files in an organized class
-  - [x] Complete `FieldNodeFactory`.
-  - [x] Complete `ArrayNodeFactory` with the same organization and unchanged public API.
-  - [ ] Review the shared `form()` / `group()` implementation next.
-  - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
-  - [x] ahora que veo lo del proxy de array-node-factory lo de deleteProperty deberia ser immutable no? deberiamos yo creo hacerlo immutable (quiza ya lo sea, no se)
-  - [x] arreglar signatures de computed() en array-node-factory
-  - [x] see if i can unify somehow the Object.defineProperties in ArrayNode.createNode with the Object.assign in FieldNode.createNode (it seems they are not aligned in the style)
+- [ ] Improve submit options api (right now is nested i think)
 
 - the folder metadata can probably just be a metadata.ts with metadata.spec.ts inside primitives/utils (put create-node-metadata.ts code inside metadta.ts)
 
@@ -367,6 +367,24 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Extract `createFieldNode()` and `createArrayNode()` beside their implementation classes, matching the construction boundary used by `createFormGroupNode()`. Preserve public overloads, argument precedence, omitted/undefined field values, and direct constructor use in clone recipes.
+
+- [x] Move `array.property.spec.ts` to `primitives/tests` alongside other primitive invariant suites, preserving its generated mutation and reconciliation coverage.
+
+- [x] Rename the shared implementation from `ObjectNode` to `FormGroupNode`, its entry helper to `createFormGroupNode()`, and its files to `form-group-node.ts`, `form-group-node.utils.ts`, and `form-group-node.utils.spec.ts`. Earlier completed entries retain their original names as decision history; public object-definition types remain unchanged.
+
+- [x] Rename `form.utils.ts` and its companion tests to `object-node.utils.ts` / `object-node.utils.spec.ts` so they match the shared form/group implementation. Preserve the local companion-file organization.
+
+- [x] Make `ObjectNode.submit()` return a promise explicitly without `async`, preserving synchronous action execution, early results, promise rejection for synchronous failures, and submitting cleanup timing for synchronous and asynchronous actions.
+
+- [x] Move field, form, array, and group implementation logic into organized internal classes.
+  - Completed `FieldNodeFactory` and `ArrayNodeFactory`, subsequently renamed to `FieldNode` and `ArrayNode`.
+  - Completed the shared form/group `ObjectNode`, preserving the public APIs, configured normalizers, dynamic children, submission boundaries, and weak clone/debounce ownership.
+  - Reviewed immutable array proxy deletion, array computed signatures, and callable assembly alignment with `Object.defineProperties()`.
+  - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
+
+- [x] Distinguish the form/group implementation from the `[formNode]` directive. Choose `ObjectNode` for the shared object aggregate; `FormNodeController` and `FormNodeState` were considered as alternative names.
+
 - [x] Complete the second `ArrayNode` readability audit: use explicit reconciliation modes, clarify remaining-item and incoming-key variables, explain schema-sample reuse, and group related methods. Keep the indexed proxy inside `createNode()` as decided during review.
 
 - [x] Audit and improve `ArrayNode` readability: extract `publicApi.forEach` into a class method, separate keyed reconciliation validation from item reconciliation, clarify item-factory and schema-sample names, and introduce a local alias for parent-aware item types. Preserve optional buffer cancellation with `controlValueBuffer?.cancel()`.
@@ -434,7 +452,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Place `public-api.spec.ts` beside `src/public-api.ts` and import its tested contracts through the public entry point.
 - [x] Document directory responsibilities and placement conventions for helpers, tests, and documentation in `docs/architecture.md`, linked from the README.
 - [x] Move `create-control-value-buffer.ts` and its tests to `src/lib/primitives/utils`, alongside its primitive consumers' other helpers.
-  - Keep `form.utils.ts` and `form-node.utils.ts` beside their corresponding implementation files.
+  - Keep `form.utils.ts` (subsequently renamed to `object-node.utils.ts`) and `form-node.utils.ts` beside their corresponding implementation files.
 - [x] Group primitive-specific helpers in `src/lib/primitives/utils`.
   - Move node definition factories, node markers, disabled-reason handling, and state-source readers out of the general utilities directory, preserving behavior and public APIs.
 - [x] Rename `form-root.directive.spec.ts` to `form-node.directive.form.spec.ts` to describe its existing coverage of FormNode on native forms. Preserve the test contents.

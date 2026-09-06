@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeObjectDefinition } from './form.utils';
+import { normalizeObjectDefinition } from './form-group-node.utils';
 
-describe('form definition normalization', () => {
+describe('object node definition normalization', () => {
   it('normalizes an array value to a field', () => {
     const value = ['admin'];
     const node = normalizeObjectDefinition(value);
