@@ -4,7 +4,7 @@ title: Migration guides
 
 # Migration guides
 
-## Unreleased: declared-child map types
+## 2.0.0: declared-child map types
 
 `children` now exposes only initially declared keys in TypeScript. Replace dynamic
 `node.children[key]` access with `node.get(key)`, which returns `DynamicNode | undefined`,

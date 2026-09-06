@@ -10,6 +10,8 @@ canonical release record.
 
 ## Unreleased
 
+## 2.0.0 — 2026-09-07
+
 ### Changed
 
 - **Breaking type change:** form and group `children` maps now expose only declared keys in TypeScript, so `Object.values(children)` infers the union of declared child types without `undefined`. Use `get(key)` or the result of `add()` for dynamic access. Runtime maps still contain dynamically added nodes, which are not represented in this static union. `forEachChild()` uses the same declared-child union; use `get(key)` inside the callback when handling arbitrary dynamic node types.

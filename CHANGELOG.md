@@ -9,6 +9,8 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-07
+
 ### Changed
 
 - **Breaking type change:** form and group `children` maps now expose only declared keys in TypeScript, so `Object.values(children)` infers the union of declared child types without `undefined`. Use `get(key)` or the result of `add()` for dynamic access. Runtime maps still contain dynamically added nodes, which are not represented in this static union. `forEachChild()` uses the same declared-child union; use `get(key)` inside the callback when handling arbitrary dynamic node types.
@@ -158,6 +160,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v2.0.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
+[2.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v2.0.0
