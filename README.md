@@ -13,6 +13,9 @@
   <a href="https://github.com/gastonmesseri/form-nodes/actions/workflows/docs-pages.yml">
     <img src="https://github.com/gastonmesseri/form-nodes/actions/workflows/docs-pages.yml/badge.svg?branch=master&amp;event=push" alt="Documentation deployment status" />
   </a>
+  <a href="https://coveralls.io/github/gastonmesseri/form-nodes?branch=master">
+    <img src="https://coveralls.io/repos/github/gastonmesseri/form-nodes/badge.svg?branch=master" alt="Test coverage" />
+  </a>
   <a href="https://www.npmjs.com/package/@ngblocks/form-nodes">
     <img src="https://img.shields.io/npm/v/@ngblocks/form-nodes?label=version" alt="npm version" />
   </a>

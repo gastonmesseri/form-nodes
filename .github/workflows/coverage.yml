@@ -1,0 +1,39 @@
+name: Test coverage
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci
+      - name: Run tests and generate LCOV
+        run: npm run test:coverage -- --coverage.reporter=text --coverage.reporter=lcov
+      - name: Check coverage report
+        run: test -s coverage/lcov.info
+      - name: Preserve coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: error
+      - name: Upload coverage to Coveralls
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: coverage/lcov.info
+          format: lcov
+          fail-on-error: true
