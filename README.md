@@ -69,6 +69,30 @@ Build a form from `form()`, `field()`, `array()`, and nested objects. Read its v
 nodes, bind them to controls with `[formNode]`, and use Angular signals for validation and state.
 The same tree describes your data, your controls, and how they behave.
 
+Form nodes use the same read-and-write pattern as Angular signals: call a node to read its value,
+use `set()` to replace it, or `update()` to derive it from the current value. Every node is a
+`Signal<T>`, so reads are tracked in Angular templates, `computed()`, and `effect()`.
+
+<!-- example: readme-signal-like.example.ts#introduction -->
+```ts
+import { field, form } from '@ngblocks/form-nodes';
+
+const profile = form({
+  name: field('Marco'),
+  age: field(18),
+});
+
+profile.name(); // 'Marco'
+profile.name.set('Lia');
+profile.name(); // 'Lia'
+profile.name.update(name => name?.toUpperCase() ?? '');
+profile(); // { name: 'LIA', age: 18 }
+```
+<!-- /example -->
+
+Fields add validation and interaction state to that familiar API. Calling a form reads the
+combined values of its children.
+
 ## At a glance
 
 - **Inferred types:** values, nested children, patches, and validator contexts follow your model.
