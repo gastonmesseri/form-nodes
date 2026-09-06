@@ -183,6 +183,7 @@ The package exports:
 - `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
 - `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormValueContract`, `FormSet`, and
   `FormPatch` types.
+- `FormNodeValue<TNode>` for extracting the committed value type of any form, group, array, or field.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
 - `asyncValidator()` and its `AsyncValidator`, `AsyncValidatorBaseContext`, `AsyncValidatorContext`, `AsyncValidatorOptions`, `AsyncValidatorState`, `ParameterizedAsyncValidatorConfig`, `ParameterizedAsyncValidatorContext`, and `ParameterizedAsyncValidatorOptions` types.
 - Built-in `required`, `requiredIf`, `min`, `max`, `between`, `integer`, `equalTo`, `uniqueItems`, `minLength`, `maxLength`, `pattern`, `email`, `url`, `minDate`, `maxDate`, and `dateBetween` validators.
@@ -344,6 +345,13 @@ profile.api.value(); // { city: 'Moscow', billingCity: 'Zurich' }
 ```
 
 The callable and `value()` expose the fully materialized object shape in TypeScript tooling instead of an internal `FormValue<...>` alias. Nested forms and arrays are expanded recursively in IntelliSense.
+
+`FormNodeValue<typeof node>` extracts any node instance's committed value type, equivalently to
+`ReturnType<typeof node>`. It accepts forms, groups, arrays, and fields, whether standalone or
+nested, including array items. It preserves nested values, field nullability, configured defaults,
+and child names that collide with direct API members. `FormValue<TNodes>` continues to accept a
+child-node map. This type-only helper does not change runtime behavior or widen the declaration's
+static value type when dynamic children are added.
 
 `FormValueContract<TValue>` is a structural compile-time contract for `satisfies`. It checks that a
 form or group is callable as `TValue` and exposes `value: Signal<TValue>` without replacing the

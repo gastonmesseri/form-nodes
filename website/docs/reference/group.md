@@ -14,6 +14,8 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 validation, state propagation, configuration, and the common node operations. It deliberately has
 no `submission` option and no `submit()` method.
 
+Use [`FormNodeValue<typeof myGroup>`](./form-node-value.md) to extract a group's value type.
+
 Plain nested objects in `form()`, `group()`, and object templates in `array()` are shorthand for
 groups. Prefer shorthand until a branch needs its own options or validators.
 

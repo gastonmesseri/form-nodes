@@ -21,6 +21,26 @@
 
 - [ ] create-form-primitives doesn't have a test file? should it?
 
+- [ ] Consider adding transform or parse options with some default like for dates in the field (maybe others as well?)
+  - from date to string and the opposite, with moment() or with temporal
+  - it accepts string ('date', maybe other name for the defaults) or function, or maybe  an object with two properties:
+    .e.g field('', {
+      parser: {
+        parse: v => ...,
+        emit: v => ...,
+      }
+    })
+
+- [NEXT] [ ] Consider extending `equal` to `form()`, `group()`, and `array()` after reviewing retained aggregate values versus independently updated child values. Field equality is implemented; aggregate equality remains a separate decision.
+
+- [NEXT] [ ] NAME LIBRARY (form-nodes) ?
+  - Consider @gemgular/forms name for library
+  - maybe @gem/ng-form-nodes and keep all my libraries under @gem?
+  - [ ] Rename to something generic like @ng-tools/forms (maybe)
+
+- [NEXT] [ ] Create package for npm
+  - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
+
 - [NEXT] [ ] Improve submit options api (right now is nested i think)
   - [ ] Consider the following (changing submission api):
     // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmitAction, and onInvalidSubmit to allow easier api (give me options and explore the meaning of the callback)
@@ -35,8 +55,6 @@
     });
     const submitted = await profile.submit();
 
-- [ ] Consider extending `equal` to `form()`, `group()`, and `array()` after reviewing retained aggregate values versus independently updated child values. Field equality is implemented; aggregate equality remains a separate decision.
-
 - [NEXT] [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
   - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
   - this should also allow support for [formControl] [formControlNAme] [formField] bindings somehow
@@ -48,17 +66,9 @@
 - [NEXT] [ ] Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
   - [ ] maybe other ones that are not required, min(), max(), etc
 
-- [NEXT] [ ] NAME LIBRARY (form-nodes) ?
-  - Consider @gemgular/forms name for library
-  - [ ] Rename to something generic like @ng-tools/forms (maybe)
-
-- [NEXT] [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
-
 - [NEXT] [ ] Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
   - [ ] controlValue and setControlValue feel more like an internal thing
   - [ ] also maybe hide disabledReasons
-
-- [NEXT] [ ] Expose a helper and document it in its own reference page to obtain the value type of `form()`, e.g. `type MyFormValue = FormValue<typeof myFormInstance>` (or `FormNodeValue<typeof myFormInstance>`)
 
 - [NEXT] [ ] Add remaining validators in TODO_VALIDATORS
 
@@ -350,6 +360,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 
 ## Completed
+
+- [x] Expose `FormNodeValue<typeof node>` to extract the committed value type of any form, group, array, or field and document it in its own reference page. Extend the initial form-only helper to all node kinds while preserving the existing `FormValue<TNodes>` child-map contract, nested values, nullability, and configured primitives.
 
 - [x] Implement `field(..., { equal: 'shallow' | 'deep' | comparator })`, including strict/nullable/configured fields and template clones. Preserve equivalent committed values across callable/value/validator/parent reads, keep control input and interaction independent, and handle debounce cancellation. Deep comparison follows lodash-style value semantics without importing lodash. This completes the field portion of the original primitive equality proposal; aggregate support remains pending.
 

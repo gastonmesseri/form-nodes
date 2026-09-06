@@ -66,6 +66,19 @@ form(definitions, options?);
 form(definitions, validators, options?);
 ```
 
+### Extract the value type
+
+Use `FormNodeValue<typeof myForm>` to derive a reusable value type from a form instance, including
+nested objects, arrays, and field nullability:
+
+```ts
+type MyFormValue = FormNodeValue<typeof myForm>;
+```
+
+Import the type from `@gem/ng-forms`. See the dedicated
+[`FormNodeValue` reference](./form-node-value.md) for a complete example and the distinction from
+the child-map helper `FormValue<TNodes>`.
+
 ### Check a named value model
 
 Use `satisfies FormValueContract<Model>` when the complete value must conform to a named domain
