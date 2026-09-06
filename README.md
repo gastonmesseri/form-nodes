@@ -7,6 +7,30 @@
 <p align="center">A typed forms library for <strong>Angular 21 and 22</strong>.</p>
 
 <p align="center">
+  <a href="https://github.com/gastonmesseri/form-nodes/actions/workflows/angular-compatibility.yml">
+    <img src="https://github.com/gastonmesseri/form-nodes/actions/workflows/angular-compatibility.yml/badge.svg?branch=master&amp;event=push" alt="Angular compatibility status" />
+  </a>
+  <a href="https://github.com/gastonmesseri/form-nodes/actions/workflows/docs-pages.yml">
+    <img src="https://github.com/gastonmesseri/form-nodes/actions/workflows/docs-pages.yml/badge.svg?branch=master&amp;event=push" alt="Documentation deployment status" />
+  </a>
+  <a href="https://www.npmjs.com/package/@ngblocks/form-nodes">
+    <img src="https://img.shields.io/npm/v/@ngblocks/form-nodes?label=version" alt="npm version" />
+  </a>
+  <a href="https://www.npmjs.com/package/@ngblocks/form-nodes">
+    <img src="https://img.shields.io/npm/dw/@ngblocks/form-nodes?label=downloads" alt="Weekly npm downloads" />
+  </a>
+  <a href="https://www.npmjs.com/package/@ngblocks/form-nodes">
+    <img src="https://img.shields.io/npm/types/@ngblocks/form-nodes" alt="TypeScript declarations included" />
+  </a>
+  <a href="https://github.com/gastonmesseri/form-nodes/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" />
+  </a>
+  <a href="https://github.com/gastonmesseri/form-nodes/issues">
+    <img src="https://img.shields.io/github/issues-raw/gastonmesseri/form-nodes" alt="Open GitHub issues" />
+  </a>
+</p>
+
+<p align="center">
   <a href="https://gastonmesseri.github.io/form-nodes/"><strong>Documentation</strong></a> ·
   <a href="https://gastonmesseri.github.io/form-nodes/tutorial">Step-by-step tutorial</a> ·
   <a href="https://gastonmesseri.github.io/form-nodes/reference/api-overview">API reference</a>
