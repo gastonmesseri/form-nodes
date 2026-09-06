@@ -11,14 +11,16 @@ class for every primitive is not a requirement.
 - [x] Move state, operations, and node assembly into `FieldNodeFactory`; callers retrieve the existing node through `getNode()`.
 - [x] Preserve callable nodes, action aliases, callback-safe actions, and weak debounce ownership.
 - [x] Use plain internal member names and a blank line between class members.
-- [x] Group properties by responsibility, with computed signals in a separate block immediately before the constructor.
-- [x] Initialize argument-independent signals as members and argument-dependent signals in the constructor. Audit both class-field emit modes.
+- [x] Group properties by responsibility: non-signal members first, writable signals together immediately before `getError`, then computed signals in a separate block immediately before the constructor.
+- [x] Initialize argument-independent signals as members. After review, also declare the three availability signals with `false` defaults and apply their configured values in a narrow constructor `untracked()` block. Initialize the validator signal as a member with `[]` and populate it before validation setup. After further review, initialize value signals as members with temporary `undefined as TValue` storage and seed their actual values before context creation; verify both class-field emit modes.
 - [x] Distinguish mutable `selfTouched`/`selfDirty` from computed `touched`/`dirty`, consistently with availability state.
 - [x] Order methods so main operations precede their supporting helpers: value and interaction operations, validator management and its watcher, hierarchy and focus, debounce helpers, then node assembly.
 - [x] Clarify node assembly names. The final assembly uses `publicApi` for shared node members and `internalApi` for that API plus internal hooks.
 - [x] Extract custom debounce execution into `startCustomControlDebounce()` so `setControlValue()` shows the strategy selection directly. Preserve cancellation, synchronous failures, stale settlements, and weak callback ownership.
 - [x] Normalize computed callback formatting: concise simple expressions and array literals, explicit return blocks for longer conditions and decisions, and consistent statement terminators.
-- [x] Separate constructor phases with blank lines: configuration, values and context, availability, metadata, asynchronous validation, node assembly/registration, and watcher startup. Preserve initialization order without adding wrappers.
+- [x] Separate constructor phases with blank lines: prepare configuration, seed all signals in one
+  `untracked()` block, create the context, prepare metadata and asynchronous validation, assemble and
+  register the node, and start its watcher. Keep configuration reads outside `untracked()`.
 - [x] Review the field prototype after the first readability pass. Verify public tests, type checking, build, coverage, emitted declarations, runtime API shape, and weak debounce ownership; record the next candidates below.
 
 ## Second readability audit
@@ -110,6 +112,91 @@ Keep `context` as the stable shared context: `createValidatorContext()` enriches
 in place. Renaming it to suggest it permanently contains only a value would be misleading.
 No additional subcomponents, base classes, or generic API assembly are recommended by this audit.
 
+## Availability signal initialization
+
+`selfDisabled`, `selfReadonly`, and `selfHidden` are declared as class members initialized to
+`false`. The constructor reads their options, then seeds those existing signals inside a narrow
+`untracked()` block. It does this before metadata creation, asynchronous validation setup, node
+registration, and watcher startup, so consumers and validators see the configured initial state.
+
+Static booleans remain mutable initial state, and disabled messages (including an empty string)
+remain intact. Reactive functions are not invoked when seeding these signals: the existing
+availability computeds still evaluate them lazily and track their dependencies. Options are read
+outside `untracked()` so a getter's signal reads still participate in the caller's computation.
+The surrounding reactive consumer is restored when the initialization block returns.
+
+Angular `v22.1.5` (commit `468b65b74566537456c192ac4281795c5a1e1a5e`) was inspected for this change:
+
+- `packages/core/primitives/signals/src/signal.ts` checks whether writes are allowed before value
+  equality, so even assigning `false` to a fresh `signal(false)` fails inside a computed callback.
+- `packages/core/primitives/signals/src/graph.ts` governs that write permission, and `untracked.ts`
+  temporarily clears and then restores the active reactive consumer.
+- `packages/core/test/signals/computed_spec.ts` covers signal creation and prohibited writes inside
+  computeds; `non_reactive_spec.ts` covers untracked reads and dependency isolation.
+- `packages/forms/signals/src/field/state.ts` defines effective availability, while
+  `packages/forms/signals/test/node/api/readonly.spec.ts` and `hidden.spec.ts` cover initial states,
+  reactive changes, inheritance, and validation suppression. The `disabled` cases in
+  `packages/forms/signals/test/node/field_node.spec.ts` cover reactive disablement and messages. Gem's imperative overrides and
+  constructor options remain its existing API; this refactor does not alter those semantics.
+
+The incremental experiment moved `selfDisabled` first: six public tests failed without `untracked()`
+and passed with it. `selfReadonly` and `selfHidden` were then moved separately, with focused tests
+passing after each step. Coverage includes construction inside computed callbacks, default states,
+static overrides, disabled messages, lazy reactive sources, option-getter dependencies, validator
+execution timing, and nested-form aggregation. The focused field and form suites also pass with
+`useDefineForClassFields: true`; the normal configuration uses `false`.
+
+## Validator and value signal initialization
+
+`validators` is also declared as a member, with `signal<Validators<TValue>>([])`. The constructor
+normalizes `initialValidatorSource`, copies clone options, and reads availability options outside
+`untracked()`, preserving their relative order and dependency tracking. A single `untracked()` block
+then assigns validators, committed/control values, and availability state before context creation,
+metadata setup, asynchronous validation setup, node registration, and watcher startup.
+The temporary empty list is never used to run validation.
+
+Focused field tests check the first synchronous metadata/error read and the first asynchronous
+validator invocation for both a single validator and an array. They verify the supplied initial
+value, preserved object identity, pending transitions, and exact validator call counts, including
+construction inside a computed. A form-level test covers first-run asynchronous validation and
+aggregation through a nested form. Existing tests cover validator replacement, cancellation,
+reactive dependencies, and template cloning.
+
+After review, `value` and `controlValue` are also declared as members using
+`signal(undefined as TValue)`. There is no universal domain default for an arbitrary `TValue`;
+this cast explicitly marks temporary internal storage, not a consumer-visible default value.
+The constructor immediately seeds both signals from `initialValue` inside `untracked()` before
+creating the field context, metadata, asynchronous validation, or public node and before registering
+any bindings or watchers. `getNode()` is called only after construction completes.
+
+This ordering is the initialization invariant. Member computeds and the memoized error reader are
+lazy and must not read either signal before the seeding block. Keep validation setup, registration,
+and any future callback that can expose the node after that block. If construction throws, no node
+is returned. The public signals keep their original `TValue` type, including strict fields, without
+adding `undefined` to the public contract. An explicitly supplied `undefined` remains a valid actual
+initial value under the existing overloads.
+
+Public field tests exercise first value/control-value reads and the first validator observation
+inside a computed for strings, zero, negative zero, NaN, false, null, undefined, objects, arrays, and
+functions, followed by a buffered edit and reset. A nested-form test checks complete initial
+aggregate values before its first validation. Existing tests verify first asynchronous validation,
+cloning, cancellation, and control integration. Both class-field emit modes are verified.
+
+An isolated experiment moved both initializers to members using `this.initialValue`. It compiled
+and preserved the value with `useDefineForClassFields: false`; with `true`, TypeScript reported two
+TS2729 diagnostics and a runtime assertion observed `undefined` instead of the supplied string.
+Standard class-field initializers run before constructor parameter properties are assigned.
+`untracked()` changes reactive tracking/write permissions, not that JavaScript initialization order.
+The chosen member placeholder followed by constructor assignment supports both modes without
+reading parameter properties prematurely, adding inheritance, or introducing lazy signal wrappers.
+
+Angular `v22.1.5` remains the inspected reference. In addition to the signal sources above,
+`packages/forms/signals/src/field/validation.ts`,
+`packages/forms/signals/test/node/validation_status.spec.ts`, and
+`packages/forms/signals/test/node/api/validators/required.spec.ts` were inspected for initial
+validation and parent aggregation. Gem's existing first-invocation deferral and explicit watcher
+lifecycle are preserved by this refactor.
+
 ## Clone callback scope and placement
 
 Keep field clone creation in `FieldNodeFactory.createClone()`, alongside the other field operations.
@@ -153,10 +240,13 @@ explicit injectors keep their original identity and may themselves retain applic
 3. **Move code without redesigning behavior.** Preserve lazy reads, validator execution timing,
    injector ownership, cancellation, cloning, and control integration. For any behavioral question,
    inspect the latest Angular 22 maintenance source and tests and record the exact tag or commit.
-4. **Respect initialization dependencies.** Create signals with their real initial values. Do not
-   introduce placeholder casts and constructor `.set()` calls solely for uniform declarations:
-   writes can fail when construction happens inside a computed callback. Lazy computed callbacks
-   may refer to members initialized later; eagerly executed helpers require their dependencies first.
+4. **Respect initialization dependencies.** Declare writable signals as members. Use valid domain
+   defaults when available; generic value slots may use the explicitly approved `undefined as TValue`
+   placeholder only while the factory is being constructed. Seed them before context creation,
+   validation setup, node publication, or registration. Isolate initialization writes with `untracked()`
+   so construction inside computed callbacks remains supported, and read options before that block
+   to preserve getter dependencies. Lazy computed callbacks must not be read before seeding;
+   eagerly executed helpers require their dependencies first.
 5. **Apply the class conventions.** Use plain member names and blank lines. Keep related properties
    together, computed signals separate, and complementary states and constraints adjacent. Use
    `self…` for mutable local state when distinguishing it from an effective computed state. Preserve

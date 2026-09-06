@@ -13,8 +13,8 @@
 
 - [ ] Maybe: Transform field() form() array() and group() files in an organized class
   - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
-  - Insist in initializing the signals() in the class members and not in the constructor (for consistency)
-    - start with selfDisabled/selfReadonly... and check consecuences step by step
+
+- [ ] create-form-primitives doesn't have a test file? should it?
 
 - [ ] Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
 
@@ -358,6 +358,16 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Consolidate `FieldNodeFactory` constructor signal assignments into one `untracked()` block. Prepare validators and options outside it, then create the context, validation infrastructure, and public node only after all initial signal values are assigned.
+
+- [x] Group all writable signal members in `FieldNodeFactory` immediately before `getError`, keeping non-signal members above them, related signals adjacent, and the computed block separate.
+
+- [x] Complete writable signal member initialization in `FieldNodeFactory`: use the approved temporary `undefined as TValue` value/control-value slots and seed both synchronously inside `untracked()` before any context, validation, or node exposure. Preserve actual initial values, object identity, buffering/reset behavior, public types, and both class-field emit modes. This supersedes the earlier recommendation to keep these two signal declarations in the constructor.
+
+- [x] Initialize `FieldNodeFactory.validators` as a member with `[]`, then populate it before validation setup inside `untracked()`. Verify first synchronous and asynchronous validation, metadata, nested aggregation, and both class-field emit modes. Audit `value`/`controlValue`: retain constructor initialization because no universal `TValue` default exists and member reads of parameter properties fail with standard class-field emission.
+
+- [x] Initialize `FieldNodeFactory.selfDisabled`, `selfReadonly`, and `selfHidden` as members with `false` defaults. Apply static options inside a narrow constructor `untracked()` block, preserve reactive source and option-getter tracking, and verify each step through field/form behavior and both class-field emit modes.
 
 - [x] Shorten `FieldNodeFactory.getFieldNode()` to `getNode()` now that the class name supplies the field context. Update its callers and the internal conventions; the method still returns the existing node.
 

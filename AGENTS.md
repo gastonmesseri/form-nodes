@@ -44,6 +44,7 @@
 - Within the computed block and the other property declarations, group related members by responsibility. Keep complementary states and constraint pairs adjacent, respect initialization dependencies, and do not interleave computed signals with other properties.
 - Separate class members with a blank line.
 - In internal implementation classes such as `FieldNodeFactory`, prefer plain member names without `private`, `readonly`, or `_` prefixes. Keep the caller's intended access contract explicit; callers of `FieldNodeFactory` use `getNode()` to retrieve the existing node. Constructor parameter properties may use `public` to store their arguments concisely.
+- In `FieldNodeFactory`, declare writable signals as members and group them immediately before `getError`, after non-signal members and before the computed block. Temporary `undefined as TValue` storage is allowed for generic value signals only during construction; seed both committed and control values synchronously inside `untracked()` before creating the context, setting up validation, or publishing/registering the node. Preserve this order when adding eager helpers or callbacks.
 - End every completed change handoff with a suggested English Conventional Commit message that summarizes the delivered change.
 
 ## Import style

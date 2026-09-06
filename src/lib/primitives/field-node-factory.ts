@@ -1,4 +1,4 @@
-import { computed, signal, untracked, type WritableSignal } from '@angular/core';
+import { computed, signal, untracked } from '@angular/core';
 
 import { isNotNil } from '../utils/is-nil';
 import { markAsNode } from './utils/node-marker';
@@ -34,17 +34,7 @@ export class FieldNodeFactory<TValue> {
 
   stateRef = new WeakRef(this);
 
-  parent = signal<Node | null>(null);
-
-  keyInParent = signal<string | number | null>(null);
-
-  value: WritableSignal<TValue>;
-
-  controlValue: WritableSignal<TValue>;
-
   controlBindings = new Set<NodeControlBinding>();
-
-  debouncing = signal(false);
 
   debounceStrategy: ControlDebounce | undefined;
 
@@ -52,19 +42,7 @@ export class FieldNodeFactory<TValue> {
 
   debounceController: AbortController | null = null;
 
-  selfDisabled: WritableSignal<DisabledState>;
-
-  selfReadonly: WritableSignal<boolean>;
-
-  selfHidden: WritableSignal<boolean>;
-
-  selfTouched = signal(false);
-
-  selfDirty = signal(false);
-
   context: FieldContext<TValue>;
-
-  validators: WritableSignal<Validators<TValue>>;
 
   emptySyncMetadata = new Map();
 
@@ -75,6 +53,28 @@ export class FieldNodeFactory<TValue> {
   asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
 
   asyncValidationWatchRef: ReactiveWatchRef | null = null;
+
+  parent = signal<Node | null>(null);
+
+  keyInParent = signal<string | number | null>(null);
+
+  value = signal(undefined as TValue);
+
+  controlValue = signal(undefined as TValue);
+
+  debouncing = signal(false);
+
+  selfDisabled = signal<DisabledState>(false);
+
+  selfReadonly = signal(false);
+
+  selfHidden = signal(false);
+
+  selfTouched = signal(false);
+
+  selfDirty = signal(false);
+
+  validators = signal<Validators<TValue>>([]);
 
   getError = computedFunction((kind: string) => {
     return this.errors().find(error => error?.kind === kind);
@@ -197,16 +197,21 @@ export class FieldNodeFactory<TValue> {
     public initialValidatorSource: ValidatorSource<TValue, Field<TValue>>,
     public options?: FieldOptions<TValue>,
   ) {
-    this.validators = signal<Validators<TValue>>(normalizeValidatorSource(this.initialValidatorSource));
     this.cloneOptions = this.options === undefined ? undefined : { ...this.options };
+    const { disabled, readonly, hidden } = this.options ?? {};
+    const validators = normalizeValidatorSource(this.initialValidatorSource);
 
-    this.value = signal<TValue>(this.initialValue);
-    this.controlValue = signal<TValue>(this.initialValue);
+    // Seed all local state before creating the context, validation, or public node.
+    untracked(() => {
+      this.validators.set(validators);
+      this.value.set(this.initialValue);
+      this.controlValue.set(this.initialValue);
+      this.selfDisabled.set(getInitialDisabledState(disabled));
+      this.selfReadonly.set(getInitialMutableState(readonly));
+      this.selfHidden.set(getInitialMutableState(hidden));
+    });
+
     this.context = markAsFieldContext({ value: this.value.asReadonly() });
-
-    this.selfDisabled = signal<DisabledState>(getInitialDisabledState(this.options?.disabled));
-    this.selfReadonly = signal(getInitialMutableState(this.options?.readonly));
-    this.selfHidden = signal(getInitialMutableState(this.options?.hidden));
 
     this.metadata = createNodeMetadata(
       this.validators,
