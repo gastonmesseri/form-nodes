@@ -10,7 +10,7 @@ canonical release record.
 
 ## Unreleased
 
-## 2.0.0 — 2026-09-07
+## 1.1.0 — 2026-09-07
 
 ### Changed
 

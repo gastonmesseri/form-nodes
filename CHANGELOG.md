@@ -3,13 +3,13 @@
 All notable changes to Form Nodes are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
-uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Starting with 1.0.0, breaking changes require a major release and must be called out here and in
+uses [Semantic Versioning](https://semver.org/spec/v1.1.0.html). Starting with 1.0.0, breaking changes require a major release and must be called out here and in
 the consumer migration guide. Minor releases add backward-compatible features; patch releases
 provide backward-compatible fixes.
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-09-07
+## [1.1.0] - 2026-09-07
 
 ### Changed
 
@@ -160,7 +160,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v1.1.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
-[2.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v2.0.0
+[1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0

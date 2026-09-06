@@ -44,3 +44,9 @@ For each upgrade:
 
 The documentation website describes the current development line. When behavior differs between
 released versions, the changelog and migration guide are the authoritative starting points.
+
+## Initial release exception
+
+Version `1.1.0` includes the declared-child typing change documented in the migration guide.
+This is an explicit exception during initial development, before consumer adoption. The general
+Semantic Versioning policy above remains the rule for subsequent releases.
