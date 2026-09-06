@@ -8,7 +8,7 @@ class for every primitive is not a requirement.
 ## Field prototype roadmap
 
 - [x] Keep public overloads, argument normalization, and nullability helpers in `field.ts`.
-- [x] Move state, operations, and node assembly into `FieldState`; callers use its `node` property.
+- [x] Move state, operations, and node assembly into `FieldState`; callers retrieve the existing node through `getFieldNode()`.
 - [x] Preserve callable nodes, action aliases, callback-safe actions, and weak debounce ownership.
 - [x] Use plain internal member names and a blank line between class members.
 - [x] Group properties by responsibility, with computed signals in a separate block immediately before the constructor.
@@ -44,8 +44,8 @@ Review findings and boundaries:
 - Keep both asynchronous watcher references. The target is deliberately retained by the field
   because `createReactiveWatch()` keeps a weak reference to it; the watcher reference controls
   injector ownership. Combining or deleting them is not a cosmetic simplification.
-- Keep `.node` as the existing-instance access point. `createNode()` assembles a new node;
-  introducing `getNode()` would needlessly obscure that distinction for the current caller.
+- Use `getFieldNode()` as the existing-instance access point after review. It returns the node already
+  assembled during construction; `createNode()` remains responsible for that assembly.
 - `FieldState` still describes a long-lived implementation that owns state and operations.
   `FieldFactory` would emphasize construction while hiding the continuing ownership. Leave a
   class rename as an open preference rather than a prerequisite for readability improvements.
@@ -54,8 +54,8 @@ Review findings and boundaries:
 - `group()` already delegates to `createObjectNode()` in `form.ts`; inspect that shared boundary
   before proposing separate form and group implementation classes.
 
-Open naming and access alternatives remain recorded in [TODO.md](../TODO.md). These audit
-recommendations do not resolve those preferences on the user's behalf.
+Remaining naming alternatives are recorded in [TODO.md](../TODO.md). The instance-access preference
+is resolved by `getFieldNode()`; the class name remains open.
 
 ## Third readability audit
 

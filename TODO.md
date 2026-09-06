@@ -14,7 +14,6 @@
 - [ ] Maybe: Transform field() form() array() and group() files in an organized class
   - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
   - CONSIDER different name for field-state class, i don't like it
-  - maybe just create in FieldState class a method called getFieldInstance or getNode, or get... or something like that to make it more clear, accessing .node from the field() function, i don't like that
   - Insist in initializing the signals() in the class members and not in the constructor (for consistency)
     - start with selfDisabled/selfReadonly... and check consecuences step by step
 
@@ -361,6 +360,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Use `FieldState.getFieldNode()` in `field()` and clone creation instead of accessing `.node` directly. The method returns the existing node; construction and the public field API remain unchanged.
+
 - [x] Move `createFieldClone()` and `createObjectClone()` to the top of their owning files and document why retained recipes need isolated declarative inputs. Verify that a class method extracting those inputs can also release the source tree; module scope is an explicit ownership convention, not a language restriction.
   - After review, replace the external field helper with `FieldState.createClone()`. Extract configuration before returning the callback so clone creation stays in the class without retaining the source instance. Keep `createObjectClone()` beside the function-based form implementation.
 
@@ -368,7 +369,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Prototype an internal `FieldState` class behind the existing callable `field()` API.
   - [x] Sort non initialized variables first, then the rest
   - Keep public overloads and nullability helpers in `field.ts`, separate class members with blank lines, and preserve callback-safe actions and weak debounce ownership. Verify the emitted public declarations against the pre-refactor baseline.
-  - Use plain implementation member names without `private`, `readonly`, or `_` prefixes; callers access the class through `node`.
+  - Use plain implementation member names without `private`, `readonly`, or `_` prefixes; callers initially accessed `node` directly and now use `getFieldNode()` after review.
   - Group computed and other properties separately by responsibility, keeping complementary states and constraint pairs adjacent.
   - Name mutable interaction state `selfTouched`/`selfDirty` and its computed public state `touched`/`dirty`, consistently with `selfReadonly` and `selfHidden`.
   - Order methods by responsibility, with main operations before supporting helpers and node assembly last.
