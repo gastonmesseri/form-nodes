@@ -13,6 +13,71 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('keeps extracted array operations bound to their node and updates the owning form', () => {
+    const profile = form({ names: array(field(''), ['Marco']) });
+    const { push, insert, move, swap, removeAt, set, update, patch, reset, clear, map, filter, find } = profile.names;
+    const observed = computed(() => profile());
+    const marco = profile.names[0]!;
+    const lia = push('Lia');
+    const noa = insert(1, 'Noa');
+
+    move(2, 0);
+    swap(1, 2);
+    expect(observed()).toEqual({ names: ['Lia', 'Noa', 'Marco'] });
+    expect(map((item, index, owner) => [item(), index, owner === profile.names])).toEqual([
+      ['Lia', 0, true], ['Noa', 1, true], ['Marco', 2, true],
+    ]);
+    expect(filter(item => item() === 'Noa')).toEqual([noa]);
+    expect(find(item => item() === 'Lia')).toBe(lia);
+    expect(noa.path()).toEqual(['names', '1']);
+    expect(removeAt(2)).toBe(marco);
+    expect(marco.parent()).toBeNull();
+
+    set(['Ana', 'Leo']);
+    update(values => values.map(value => value?.toUpperCase() ?? ''));
+    patch(['Ada']);
+    expect(observed()).toEqual({ names: ['Ada', 'LEO'] });
+    expect(profile.names.items()).toEqual([lia, noa]);
+
+    lia.markAsTouched();
+    noa.markAsDirty();
+    reset();
+    expect(observed()).toEqual({ names: ['Ada', 'LEO'] });
+    expect(profile.untouched()).toBe(true);
+    expect(profile.pristine()).toBe(true);
+
+    reset(['Mia']);
+    expect(observed()).toEqual({ names: ['Mia'] });
+    expect(noa.parent()).toBeNull();
+    clear();
+    expect(observed()).toEqual({ names: [] });
+    expect(lia.parent()).toBeNull();
+  });
+
+  it('calls item factories and tracking callbacks without an implementation receiver', () => {
+    const factory = vi.fn(function (this: unknown) {
+      expect(this).toBeUndefined();
+      return { id: field(0), name: field('') };
+    });
+    const trackBy = vi.fn(function (this: unknown, value: { id: number | null }) {
+      expect(this).toBeUndefined();
+      return value.id;
+    });
+    const people = array(factory, {
+      initialValue: [{ id: 1, name: 'Marco' }],
+      trackBy,
+    });
+    const marco = people[0];
+    const lia = people.push({ id: 2, name: 'Lia' });
+
+    people.set([{ id: 2, name: 'Lia' }, { id: 1, name: 'Mark' }]);
+
+    expect(people.items()).toEqual([lia, marco]);
+    expect(people()).toEqual([{ id: 2, name: 'Lia' }, { id: 1, name: 'Mark' }]);
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(trackBy).toHaveBeenCalledTimes(4);
+  });
+
   it('exposes one node signal under both validator aliases', () => {
     let receivedNode: unknown;
     const validate = (context: { node: () => unknown; field: () => unknown }) => {

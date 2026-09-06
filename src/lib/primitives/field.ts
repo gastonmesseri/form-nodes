@@ -1,4 +1,4 @@
-import { FieldNodeFactory } from './field-node-factory';
+import { FieldNode } from './field-node';
 import type { Field, FieldOptions } from './field.type';
 import type { ValidatorSource } from '../validation/validation.type';
 import { isValidatorSource } from '../validation/utils/validator-source';
@@ -134,7 +134,7 @@ export function field<TValue>(
   const validatorSource = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions)
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
-  return new FieldNodeFactory<TValue>(initialValue, validatorSource, resolvedOptions).getNode();
+  return new FieldNode<TValue>(initialValue, validatorSource, resolvedOptions).getNode();
 }
 
 export namespace field {

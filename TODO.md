@@ -12,7 +12,16 @@
 - [ ] Request to suggest tests folders organization (including also tests in src/**/*)
 
 - [ ] Maybe: Transform field() form() array() and group() files in an organized class
+  - [x] Complete `FieldNodeFactory`.
+  - [x] Complete `ArrayNodeFactory` with the same organization and unchanged public API.
+  - [ ] Review the shared `form()` / `group()` implementation next.
   - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
+  - [x] ahora que veo lo del proxy de array-node-factory lo de deleteProperty deberia ser immutable no? deberiamos yo creo hacerlo immutable (quiza ya lo sea, no se)
+  - [x] arreglar signatures de computed() en array-node-factory
+  - audit ArrayNode class to improve readability
+  - see if i can unify somehow the Object.defineProperties in ArrayNode.createNode with the Object.assign in FieldNode.createNode (it seems they are not aligned in the style)
+
+- [IMPORTANT] [ ] Audit pending debounce ownership in the shared `createControlValueBuffer()` helper. A forced-GC experiment retained an otherwise unreachable array, its item, and its parent form while a numeric timer or custom debounce promise was pending; the immediate-debounce control was collected. This reproduced with both the pre-migration function and `ArrayNodeFactory`, under both class-field emit modes. Keep the correction separate from the completed array migration and verify live-node completion as well as collection.
 
 - [ ] create-form-primitives doesn't have a test file? should it?
 
@@ -358,6 +367,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Rename the internal `ArrayNodeFactory` and `FieldNodeFactory` classes and files to `ArrayNode` / `array-node.ts` and `FieldNode` / `field-node.ts`. Preserve the public `ArrayNode` type and package exports; use `ArrayNodeType` as its local import alias where it shares a module with the implementation class.
+
+- [x] Move `array()` state and operations into internal `ArrayNodeFactory`, preserving public overloads, callable proxies, item reconciliation, aggregate state, injector/control integration, and clone ownership. Apply the field conventions and record the completed array roadmap in `docs/primitive-state-refactor.md`.
 
 - [x] Consolidate `FieldNodeFactory` constructor signal assignments into one `untracked()` block. Prepare validators and options outside it, then create the context, validation infrastructure, and public node only after all initial signal values are assigned.
 

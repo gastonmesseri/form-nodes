@@ -16,15 +16,26 @@ Organize implementation code by responsibility directly under `src/lib/`:
 `src/public-api.ts` defines the package exports. Internal modules use direct relative imports.
 
 `primitives/field.ts` owns the public field overloads, argument normalization, and nullability
-shortcuts. Its internal `FieldNodeFactory` class in `field-node-factory.ts` owns the signals and operations and
+shortcuts. Its internal `FieldNode` class in `field-node.ts` owns the signals and operations and
 assembles the callable node. The class is not exported from the package; node actions remain safe
 to pass as callbacks, and scheduled debounce work uses weak ownership.
-Callers use `FieldNodeFactory.getNode()` to retrieve the already assembled node. Its implementation members use plain names without `private`
+Callers use `FieldNode.getNode()` to retrieve the already assembled node. Its implementation members use plain names without `private`
 or `readonly` modifiers; `_` prefixes remain on the existing node API's internal hooks.
 Mutable local state uses names such as `selfTouched` and `selfDirty`; the corresponding computed
 properties use the node's public names, `touched` and `dirty`.
 See the [primitive state refactor guide](primitive-state-refactor.md) for the migration checklist,
-the field prototype's decisions, and the remaining readability work.
+the completed migrations and their decisions.
+
+`primitives/array.ts` likewise keeps its public overloads and resolves templates, factories, initial
+contents, validators, and options. `ArrayNode` in `array-node.ts` owns item creation,
+reconciliation, aggregate state, and callable proxy assembly. Both factories expose `getNode()` and
+keep clone recipes in `createClone()` methods that capture configuration without retaining the source
+instance. `array.utils.ts` contains the object-template assertion shared by the facade and factory.
+Form and group still share the function-based implementation in `form.ts`.
+
+The implementation classes are named `FieldNode` and `ArrayNode`; neither is a package export.
+The existing public `ArrayNode` type still describes the callable node. Modules that also use the
+implementation class import that public type locally as `ArrayNodeType` to distinguish the two.
 
 ## Helpers
 

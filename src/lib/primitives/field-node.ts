@@ -27,7 +27,7 @@ import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledSt
 import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
 
 /** Owns a field's state while exposing the existing callable node and API objects. */
-export class FieldNodeFactory<TValue> {
+export class FieldNode<TValue> {
   node: Field<TValue>;
 
   cloneOptions: FieldOptions<TValue> | undefined;
@@ -362,7 +362,7 @@ export class FieldNodeFactory<TValue> {
   createClone() {
     // Capture configuration now so the retained callback does not reference this instance.
     const { initialValue, initialValidatorSource, cloneOptions } = this;
-    return () => new FieldNodeFactory<TValue>(initialValue, initialValidatorSource, cloneOptions).getNode();
+    return () => new FieldNode<TValue>(initialValue, initialValidatorSource, cloneOptions).getNode();
   }
 
   createNode(): Field<TValue> {
