@@ -10,6 +10,11 @@ canonical release record.
 
 ## Unreleased
 
+### Fixed
+
+- Compiled array templates no longer retain their source fields, forms, groups, arrays, or parent
+  trees through clone callbacks. Later items still use the declared values, validators, and options.
+
 ### Added
 
 - A reactive `root()` signal on every node returns the complete structural
@@ -29,6 +34,9 @@ canonical release record.
 - Angular `[formNode]` binding for native, signal-based, and `ControlValueAccessor` controls.
 
 ### Changed
+
+- Callable field objects now include a runtime `patch()` method equivalent to `set()`. The public
+  types continue to expose field patching only through `api` and `$api`.
 
 - Separately declared validators now preserve their declared value type when reading through
   `context.field()` or `context.node()`, including the node's value signal and API aliases.

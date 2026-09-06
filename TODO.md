@@ -9,29 +9,29 @@
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 
-- [ ] Consider changing the @example to something different, like a heading with asterisks **Like this** (for better readability)
+- [ ] Request to suggest tests folders organization (including also tests in src/**/*)
 
-- [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
-  - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
-  - this should also allow support for [formControl] [formControlNAme] [formField] bindings somehow
+- [ ] Maybe: Transform field() form() array() and group() files in an organized class
+  - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
+  - CONSIDER different name for field-state class, i don't like it
+  - maybe just create in FieldState class a method called getFieldInstance or getNode, or get... or something like that to make it more clear
+  - Sort non initialized variables first, then the rest
+  - Insist in initializing the signals() in the class members and not in the constructor (for consistency)
+    - start with selfDisabled/selfReadonly... and check consecuences step by step
+  - [ ] [Important] in the createObjectClone and createFieldClone,probably move to different file, or at least at the top of the file. and explain very carefully why that declaration should
+        not be done inside the class (i think i understood that it explicitly cannot be done inside the class right?)
+  - [ ] internalApi._nodeType i think it is repeated, wouldn't be enough with ust nodeType()
 
-- controlState
-  - [ ] Maybe: Consider naming if useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
 
-- Consider removing support for myForm.name.$field (maybe right now with useControlState() we don't need to support that)
+- [ ] Maybe: Consider naming useControlState to useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
 
-- Maybe: In the folder tests/types maybe structure each file with JS Comments like if we do something like it('should do....')
+- [ ] Maybe: Consider removing support for myForm.name.$field (maybe right now with useControlState() we don't need to support that)
 
-- Check what happens with the new angular FormValueControl (or whatever the name is) if:
-  - My custom control has value = model() and disabled = input();
-  - I instantiate my component like this: <my-component [formNode]="myNode" [disabled]="true" />
-  - i set myNode.enable()
-  - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
+- [ ] Maybe: In the folder tests/types maybe structure each file with JS Comments like if we do something like it('should do....')
 
-- [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
-  - consider possibilities and help me deciding, what does it make sense?
+- [ ] Maybe: Consider changing the @example to something different, like a heading with asterisks **Like this** (for better readability)
 
-- [ ] Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
+- [ ] Maybe: Consider wrapping all reactive calls that are prone to be called with self form reference in a try/catch with good defaults.
   e.g. validator functions, disabled, readonly, etc... (maybe not)
   - [ ] because if there is a form self-reference then it could fail if called when form hasn't been yet initialized.
   - [ ] be careful that the tracking in those computed/reactive functions is not destroyed by the function failure/error
@@ -47,11 +47,23 @@
       ]);
     });
 
+- [ ] Maybe: Public api: Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
+
+- [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
+  - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
+  - this should also allow support for [formControl] [formControlNAme] [formField] bindings somehow
+
+- Check what happens with the new angular FormValueControl (or whatever the name is) if:
+  - My custom control has value = model() and disabled = input();
+  - I instantiate my component like this: <my-component [formNode]="myNode" [disabled]="true" />
+  - i set myNode.enable()
+  - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
+
+- [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
+  - consider possibilities and help me deciding, what does it make sense?
+
 - [ ] Validator framework roadmap (implement in this order)
   - [ ] Check TODO_VALIDATORS.md file to include more builtin validators
-
-- [ ] Public api
-  - [ ] Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
 
 - [ ] Validators
   - [ ] Check how 1 validator maybe can set errors in several Nodes (remind of lab case)
@@ -351,6 +363,27 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Prototype an internal `FieldState` class behind the existing callable `field()` API.
+  - Keep public overloads and nullability helpers in `field.ts`, separate class members with blank lines, and preserve callback-safe actions and weak debounce ownership. Verify the emitted public declarations against the pre-refactor baseline.
+  - Use plain implementation member names without `private`, `readonly`, or `_` prefixes; callers access the class through `node`.
+  - Group computed and other properties separately by responsibility, keeping complementary states and constraint pairs adjacent.
+  - Name mutable interaction state `selfTouched`/`selfDirty` and its computed public state `touched`/`dirty`, consistently with `selfReadonly` and `selfHidden`.
+  - Order methods by responsibility, with main operations before supporting helpers and node assembly last.
+  - Audit `createNode()` and clarify its assembly names: `nodeMembers` are copied onto the callable node, `publicApi` adds the `patch` alias, and `internalApi` extends that API with internal hooks. Keep the assembly explicit and preserve the shared `api`/`$api` object.
+  - Extract custom debounce execution into `startCustomControlDebounce()`, keeping strategy selection in `setControlValue()` and preserving cancellation, synchronous completion/errors, stale settlements, and weak ownership in scheduled callbacks.
+  - Normalize computed callback formatting: concise expressions for simple reads, explicit return blocks for multiline expressions or decisions, and consistent statement terminators.
+  - Separate constructor phases with blank lines while preserving statement order; start the validation watcher after node assembly and registration.
+  - Resolve the initialization questions: argument-independent signals are initialized as members; argument-dependent signals, including `selfReadonly` and `selfHidden`, are initialized with their actual values in the constructor. Placeholder values plus `.set()` require casts for generic values and additional handling for construction inside computed callbacks.
+  - Record the ongoing field readability roadmap and a reusable checklist for later primitive refactors in `docs/primitive-state-refactor.md`.
+  - Complete the first global prototype review and record a second readability audit. Verify the current public contract and weak debounce ownership; keep the new implementation candidates and naming preferences open.
+  - Implement the four second-audit improvements: use the existing public root contract internally, extract control-binding registration and blur flushing, name the immediate numeric-debounce condition, and infer the renamed `stateRef` member's type. Preserve API hooks and weak callback ownership; class naming and access preferences remain open.
+  - Complete a third readability audit: identify pre-existing clone-template retention, reproduce it against the pre-class implementation, and verify an isolated clone-recipe experiment in both class-field emit modes. Record the pending fix and two smaller readability proposals in the refactor guide.
+  - Complete the third-audit improvements: isolate field, form/group, array, and shorthand-object clone recipes from live source trees; add collection and lifecycle regression coverage; rename `initialValidatorSource`; and separate node assembly groups visually. Preserve the existing public API and record the retention fix in consumer documentation and changelogs.
+  - Refine `createNode()` after review: inline forwarding callbacks in `nodeMembers`, reuse them for API aliases, and remove spacing between object properties while retaining class-member spacing. Keep the API-only `patch` alias and record `_nodeType` consolidation as a separate cross-node cleanup.
+  - After further review, include `patch` directly in field `nodeMembers` at runtime while retaining its omission from the callable public type. Remove the redundant `publicApi` assembly object; typed patch access remains on `api` and `$api`.
+  - Rename the remaining `nodeMembers` object to `publicApi` now that it contains the complete shared field API; keep `internalApi` as its extension with internal hooks.
+  - Colocate the template-ownership subprocess fixture with its primitive test as `template-ownership.fixture.ts`. Remove the file-specific TypeScript include and document the general fixture placement, build exclusion, and coverage exclusion conventions.
 
 - [x] Add tests for every function in `src/lib/utils`.
   - Add direct coverage for object classification, word counting, subscription detection, empty values, collection lengths, and DOM binding order. Extend injector tests for captured ownership, subscriber notifications, and binding-lease cleanup.

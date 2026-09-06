@@ -16,7 +16,7 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:browser": "npm run build && node scripts/create-form-node-signal-control-fixture.mjs && node scripts/create-form-node-hydration-fixture.mjs && vitest run --config vitest.browser.config.ts && vitest run --config vitest.browser.production-aot.config.ts",
-    "test:coverage": "vitest run --coverage --coverage.include='src/lib/**/*.ts' --coverage.exclude='src/**/*.spec.ts' --coverage.exclude='src/**/*.type.ts' --coverage.thresholds.statements=100 --coverage.thresholds.branches=99 --coverage.thresholds.functions=100 --coverage.thresholds.lines=100",
+    "test:coverage": "vitest run --coverage --coverage.include='src/lib/**/*.ts' --coverage.exclude='src/**/*.spec.ts' --coverage.exclude='src/**/*.fixture.ts' --coverage.exclude='src/**/*.type.ts' --coverage.thresholds.statements=100 --coverage.thresholds.branches=99 --coverage.thresholds.functions=100 --coverage.thresholds.lines=100",
     "test:package": "npm run build && node scripts/test-package-consumer.mjs",
     "test:templates": "node scripts/test-template-types.mjs",
     "test:types": "tsc -p tsconfig.type-tests.json --noEmit && node scripts/test-shorthand-type-performance.mjs",

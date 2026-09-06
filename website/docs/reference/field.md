@@ -997,7 +997,8 @@ username.pristine(); // true
 ```
 
 `api.patch(value)` also exists for a uniform node API and is equivalent to `set(value)`. Use
-`set()` directly in ordinary field code.
+`set()` directly in ordinary field code. The callable field also carries `patch` at runtime, but
+its public type exposes this operation only through `api` and `$api`.
 
 #### flush()
 

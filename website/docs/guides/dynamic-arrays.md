@@ -73,6 +73,8 @@ Declarative templates are compiled into a clone recipe. Every item receives fres
 
 The template node itself is not inserted. If application code retains it, it remains an independent live node. Use a factory when template construction itself must not start independent asynchronous work.
 
+Compiling a template does not keep its original nodes or their parent tree alive through the clone recipe. Values, validator callbacks, and explicit injectors retain their existing identity; references held by your own configuration still apply.
+
 A factory must return a fresh tree. Returning the same live node more than once throws rather than allowing items to share state.
 
 ## Reading items
