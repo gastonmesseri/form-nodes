@@ -5,6 +5,7 @@ title: Creating nodes
 import CodeBlock from '@theme/CodeBlock';
 
 import declarationShorthandMatrixSource from '!!raw-loader!../../examples/declaration-shorthand-matrix.example.ts';
+import computedDeclarationSource from '!!raw-loader!../../examples/computed-declaration.example.ts';
 
 # Creating nodes
 
@@ -327,6 +328,19 @@ export class ProfileEditor {
   });
 }
 ```
+
+## Declarations inside computed
+
+You can construct a form with nested groups and arrays inside Angular's `computed()`. Signals read
+while declaring initial values, normalizing children, running item factories, or reading configuration
+getters remain dependencies. Editing the resulting nodes does not itself reconstruct the form.
+
+<CodeBlock language="ts">{computedDeclarationSource}</CodeBlock>
+
+When a declaration dependency changes, the example creates a fresh tree with its declared initial
+values and fresh interaction state. Use a stable form with reactive options or validators when
+configuration should change while retaining current edits. Construct fresh children in the computed
+when each evaluation is intended to produce an independent tree.
 
 ## Current structural boundaries
 

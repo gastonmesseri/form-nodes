@@ -12,6 +12,8 @@ canonical release record.
 
 ### Fixed
 
+- Nested forms, groups, and populated arrays can now be constructed inside `computed()`. Declaration
+  inputs remain reactive, while internal initialization no longer makes node edits rebuild the tree.
 - Pending or cancelled control-value debounce work no longer retains otherwise unreachable fields,
   forms, groups, arrays, or their parent trees through timers and custom debounce promises.
 - Compiled array templates no longer retain their source fields, forms, groups, arrays, or parent

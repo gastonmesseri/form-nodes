@@ -26,6 +26,28 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('keeps a computed field instance when validators or parent ownership change', () => {
+    const initialName = signal('Marco');
+    const create = vi.fn(() => field(initialName(), [required]));
+    const model = computed(create);
+    const name = model();
+    expect(name.valid()).toBe(true);
+    name.setValidators([]);
+    const profile = form({ name });
+    name.set('');
+    expect(name.parent()).toBe(profile);
+    expect(model()).toBe(name);
+    expect(create).toHaveBeenCalledOnce();
+
+    name.setValidators([required]);
+    expect(profile.invalid()).toBe(true);
+    expect(model()).toBe(name);
+    initialName.set('Noa');
+    expect(model()()).toBe('Noa');
+    expect(model()).not.toBe(name);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
   it.each<{ label: string; initial: unknown }>([
     { label: 'string', initial: 'ready' },
     { label: 'zero', initial: 0 },

@@ -255,13 +255,15 @@ export class ArrayNode<TItem extends Node> {
     );
 
     this.node = this.createNode();
-    this.reparentItems();
+    untracked(() => this.reparentItems());
     markAsNode(this.node);
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerAngularField(this.node);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
-    this.refreshInjector();
-    this.ensureAsyncValidationWatch();
+    untracked(() => {
+      this.refreshInjector();
+      this.ensureAsyncValidationWatch();
+    });
   }
 
   getNode() {
@@ -447,7 +449,7 @@ export class ArrayNode<TItem extends Node> {
     const count = typeof initial === 'number' ? initial : initial.length;
     return Array.from({ length: count }, (_, index) => {
       const item = this.createItem();
-      if (values) item.$api.reset(values[index]!);
+      if (values) untracked(() => item.$api.reset(values[index]!));
       return item;
     });
   }

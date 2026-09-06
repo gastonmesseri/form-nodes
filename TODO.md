@@ -1,7 +1,5 @@
 ## Up next
 
-- [ ] Audit aggregate construction inside `computed()`: a form/group with children writes their parent-link signals during construction and fails in a read-only reactive context. Reproduced before and after the `FormGroupNode` migration with both class-field emit modes; empty aggregates preserve option-getter tracking. Keep any correction separate from the internal class migration and preserve child normalization and ownership dependencies.
-
 - [ ] website docs
   - [ ] add some sort of modifiable example (maybe open external web or something, like in some docs) to allow user
     to interact with the example
@@ -11,23 +9,45 @@
   - [x] try to color the template: in the components declaration
   - [x] change color of code, i don't like it, maybe use something like in vscode (check vt-theme)
 
-- [ ] refactor classes
-  - [x] maybe the createFieldNode createFormGroupNode createArrayNode functions, shouldn't handle the arguments thing, that should be the task for field() form() group() array()
-    but, it should handle the new FieldNode(...).getNode(); // this it should handle
-
 - [ ] Maybe: Consider that in the validators ctx.node() and ctx.field() to hide some members that we are sure that they are going to create circular infinite loop
 
-- [ ] The errors array, maybe should be a computed with a shallow check? (can we improve some other signals with a shallow check? perform an audit)
+- [ ] The errors array, maybe should be a computed with a shallow check? (can we improve some other signals with a shallow check? perform an audit) (will this improve reactivity? what is the cost?)
 
 - [ ] Request to suggest tests folders organization (including also tests in src/**/*)
 
-- [ ] Improve submit options api (right now is nested i think)
+- remove primitive-state-refactor.md file once finished
 
 - the folder metadata can probably just be a metadata.ts with metadata.spec.ts inside primitives/utils (put create-node-metadata.ts code inside metadta.ts)
 
 - [ ] create-form-primitives doesn't have a test file? should it?
 
+- [NEXT] [ ] Improve submit options api (right now is nested i think)
+
 - [NEXT] [ ] Implement equal option in primitives (with 'shallow' and 'deep' checks + function based (a,b) comparison)
+  - e.g.
+    field('', { equal: 'deep' })
+    field('', { equal: 'shallow' })
+    field('', { equal: (a,b) => ... })
+  - this should handle the equality check of the value() or the callable, so maybe wrap value inside a compute with some equality check? (let's explore this)
+
+- [NEXT] [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
+  - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
+  - this should also allow support for [formControl] [formControlNAme] [formField] bindings somehow
+  - [ ] Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
+
+- [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
+  - consider possibilities and help me deciding, what does it make sense?
+
+- [NEXT] [ ] Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
+  - [ ] maybe other ones that are not required, min(), max(), etc
+
+- [NEXT] [ ] NAME LIBRARY (form-nodes) ?
+  - Consider @gemgular/forms name for library
+  - [ ] Rename to something generic like @ng-tools/forms (maybe)
+
+- [NEXT] [ ] Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
+  - [ ] controlValue and setControlValue feel more like an internal thing
+  - [ ] also maybe hide disabledReasons
 
 - [ ] Audit: Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
 
@@ -57,18 +77,11 @@
 
 - [ ] Maybe: Public api: Consider exporting types with some sort of prefix like NgValidator GemFormsValidator (or something similar)
 
-- [ ] Validators internal (internal validators of a custom control component) (e.g. invalid date) [how to do that?]
-  - maybe through useControlState({ validationErrors: () => this.ownComponenteValidationErrorsSignal() })
-  - this should also allow support for [formControl] [formControlNAme] [formField] bindings somehow
-
 - Check what happens with the new angular FormValueControl (or whatever the name is) if:
   - My custom control has value = model() and disabled = input();
   - I instantiate my component like this: <my-component [formNode]="myNode" [disabled]="true" />
   - i set myNode.enable()
   - inside my-component what is happening? (imagine that if disabled = input() is true, then the component shows as red)
-
-- [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
-  - consider possibilities and help me deciding, what does it make sense?
 
 - [ ] Validator framework roadmap (implement in this order)
   - [ ] Check TODO_VALIDATORS.md file to include more builtin validators
@@ -119,14 +132,9 @@
 
 - [ ] Consider nesting disabledReasons in myForm.myField.disabled.reasons();
 
-- [ ] Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
-  - [ ] maybe other ones that are not required, min(), max(), etc
-
 - [ ] Expose restoreDefaultValidatorMessages() function in the public api
 
 - [ ] Add playground to the website, with simple example or something like that
-
-- [ ] Consider @gemgular/forms name for library
 
 - [ ] Create useFormNode() utility (or inject(FormNode)) to allow a custom component to access easily the formNode or even better to access some sort of signal based api that allows handling
   both formNode and formField (access formNode or formField state, or even formControl), something useful for the consumer and generic. So that inside the component it can for example
@@ -135,27 +143,12 @@
 - [ ] Ensure that disabled input on a custom component, works better than in reactive forms (message in console that it displays)
   - [ ] Although maybe it could have some collision with the new angular way of defining custom controls (for example, now disabled is passed as an input, and i suppose that the form() disabled will be there). Think about that.
 
-- [ ] Think about what is a good name to use in the examples for the form instance
-  - [ ] e.g.
-  form = form({ 
-    name: field(''),
-    age: field(23),
-  });
-  // later in the template <input type="text" [formNode]="form.name">
-  // 'form' is good for the instance? maybe formModel, maybe myForm? maybe personForm?
-
 - [ ] Check if the submission state, has to be explicitly coming from <form [formNode]="myForm">
   Maybe just binding a nested field with [formNode] could automatically detect the parent form (maybe not)
-
-- [ ] Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
-  - [ ] controlValue and setControlValue feel more like an internal thing
-  - [ ] also maybe hide disabledReasons
 
 - [ ] code style: functions declared with `export const` or `const` that return an expression directly should use braces
 
 - [ ] Implement shorthand for required in the field options similar to disbled
-
-- [ ] Rename to something generic like @ng-tools/forms (maybe)
 
 - [ ] In the future allow something like dynamic forms from a JSON or object definition
   - [ ] Schema-driven form generation from JSON definitions.
@@ -167,13 +160,15 @@
 - [ ] Consider allowing optionally a schemaFunction (like in angular 22 signal forms)
   - [ ] maybe better a init: () => void, in the form() options
 
-- [ ] Maybe, allow the components implementing it, to define errors inside the component into the field() (maybe, like the invalid date in the VtInputDateComponent)
 
-- [ ] Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
 
-- [ ] Restructure project folder structure, once project is solid and stable. think how to organize folders
 
-- [ ] Create repo to pass custom lintern rules in dlab
+
+
+
+
+
+
 
 - [ ] Allow defining global options
   - [ ] example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
@@ -372,64 +367,51 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Make components easily hookable to the formField (of this library, e.g. to display errors, or display required, etc, nice custom component implementation api)
+- [x] Audit and fix aggregate construction inside `computed()`, separately from the class migration. The pre-existing parent-link write failure affected forms, groups, and populated arrays under both class-field emit modes. Initialize links, array values, buffer snapshots, and watcher ownership without tracking mutable node state; preserve definition normalization, factory, option-getter, and injector dependencies.
+- [x] Think about what is a good name to use in the examples for the form instance
+  - [x] e.g.
+  form = form({ 
+    name: field(''),
+    age: field(23),
+  });
+  // later in the template <input type="text" [formNode]="form.name">
+  // 'form' is good for the instance? maybe formModel, maybe myForm? maybe personForm?
+- [x] refactor classes
+  - [x] maybe the createFieldNode createFormGroupNode createArrayNode functions, shouldn't handle the arguments thing, that should be the task for field() form() group() array()
+    but, it should handle the new FieldNode(...).getNode(); // this it should handle
 - [x] Simplify `FormGroupNode.submit()` with `async`/`await` and a single action-level `try/finally`, preserving the public promise contract and submission timing. This supersedes the explicit-promise implementation and separate `runSubmissionAction()` decision below.
-
 - [x] Audit and simplify `FormGroupNode.submit()` without `async`: extract action execution and submitting cleanup into `runSubmissionAction(submission)`. Retain paired promise completion handlers because a `finally()` chain changes cleanup or returned-promise settlement timing.
-
 - [x] Return argument interpretation to `field()`, `array()`, `form()`, `group()`, and configured primitives. Keep `createFieldNode()`, `createArrayNode()`, and `createFormGroupNode()` limited to constructing the instance and returning `getNode()`, preserving option precedence and public signatures. This supersedes the earlier construction-entry argument-resolution decision.
-
 - [x] Extract `createFieldNode()` and `createArrayNode()` beside their implementation classes, matching the construction boundary used by `createFormGroupNode()`. Preserve public overloads, argument precedence, omitted/undefined field values, and direct constructor use in clone recipes.
-
 - [x] Move `array.property.spec.ts` to `primitives/tests` alongside other primitive invariant suites, preserving its generated mutation and reconciliation coverage.
-
 - [x] Rename the shared implementation from `ObjectNode` to `FormGroupNode`, its entry helper to `createFormGroupNode()`, and its files to `form-group-node.ts`, `form-group-node.utils.ts`, and `form-group-node.utils.spec.ts`. Earlier completed entries retain their original names as decision history; public object-definition types remain unchanged.
-
 - [x] Rename `form.utils.ts` and its companion tests to `object-node.utils.ts` / `object-node.utils.spec.ts` so they match the shared form/group implementation. Preserve the local companion-file organization.
-
 - [x] Make `ObjectNode.submit()` return a promise explicitly without `async`, preserving synchronous action execution, early results, promise rejection for synchronous failures, and submitting cleanup timing for synchronous and asynchronous actions.
-
 - [x] Move field, form, array, and group implementation logic into organized internal classes.
   - Completed `FieldNodeFactory` and `ArrayNodeFactory`, subsequently renamed to `FieldNode` and `ArrayNode`.
   - Completed the shared form/group `ObjectNode`, preserving the public APIs, configured normalizers, dynamic children, submission boundaries, and weak clone/debounce ownership.
   - Reviewed immutable array proxy deletion, array computed signatures, and callable assembly alignment with `Object.defineProperties()`.
   - Follow the [primitive state refactor roadmap and reusable checklist](docs/primitive-state-refactor.md).
-
 - [x] Distinguish the form/group implementation from the `[formNode]` directive. Choose `ObjectNode` for the shared object aggregate; `FormNodeController` and `FormNodeState` were considered as alternative names.
-
 - [x] Complete the second `ArrayNode` readability audit: use explicit reconciliation modes, clarify remaining-item and incoming-key variables, explain schema-sample reuse, and group related methods. Keep the indexed proxy inside `createNode()` as decided during review.
-
 - [x] Audit and improve `ArrayNode` readability: extract `publicApi.forEach` into a class method, separate keyed reconciliation validation from item reconciliation, clarify item-factory and schema-sample names, and introduce a local alias for parent-aware item types. Preserve optional buffer cancellation with `controlValueBuffer?.cancel()`.
-
 - [x] Audit pending debounce ownership in the shared `createControlValueBuffer()` helper. A forced-GC experiment retained an otherwise unreachable array, its item, and its parent form while a numeric timer or custom debounce promise was pending; the immediate-debounce control was collected. This reproduced with both the pre-migration function and `ArrayNodeFactory`, under both class-field emit modes. Keep the correction separate from the completed array migration and verify live-node completion as well as collection.
   - Corrected shared-buffer callback scopes and weak controller ownership in both the buffer and `FieldNode`. Regression tests reproduce the original retention and verify collection, cancellation, late settlement, and live-node completion under both class-field emit modes.
-
 - [x] Enforce explicit block returns for multiline arrow expressions through the local ESLint `project/multiline-arrow-body` rule. Allow single-line expressions and direct multiline array/object literals, including TypeScript assertions; update the source formatting and cover the rule's exceptions in its own tests.
-
 - [x] Align `FieldNode.createNode()` with array and form/group callable assembly using `Object.defineProperties()` and `Object.getOwnPropertyDescriptors()`, preserving the public API, property descriptors, and action aliases.
-
 - [x] Rename the internal `ArrayNodeFactory` and `FieldNodeFactory` classes and files to `ArrayNode` / `array-node.ts` and `FieldNode` / `field-node.ts`. Preserve the public `ArrayNode` type and package exports; use `ArrayNodeType` as its local import alias where it shares a module with the implementation class.
-
 - [x] Move `array()` state and operations into internal `ArrayNodeFactory`, preserving public overloads, callable proxies, item reconciliation, aggregate state, injector/control integration, and clone ownership. Apply the field conventions and record the completed array roadmap in `docs/primitive-state-refactor.md`.
-
 - [x] Consolidate `FieldNodeFactory` constructor signal assignments into one `untracked()` block. Prepare validators and options outside it, then create the context, validation infrastructure, and public node only after all initial signal values are assigned.
-
 - [x] Group all writable signal members in `FieldNodeFactory` immediately before `getError`, keeping non-signal members above them, related signals adjacent, and the computed block separate.
-
 - [x] Complete writable signal member initialization in `FieldNodeFactory`: use the approved temporary `undefined as TValue` value/control-value slots and seed both synchronously inside `untracked()` before any context, validation, or node exposure. Preserve actual initial values, object identity, buffering/reset behavior, public types, and both class-field emit modes. This supersedes the earlier recommendation to keep these two signal declarations in the constructor.
-
 - [x] Initialize `FieldNodeFactory.validators` as a member with `[]`, then populate it before validation setup inside `untracked()`. Verify first synchronous and asynchronous validation, metadata, nested aggregation, and both class-field emit modes. Audit `value`/`controlValue`: retain constructor initialization because no universal `TValue` default exists and member reads of parameter properties fail with standard class-field emission.
-
 - [x] Initialize `FieldNodeFactory.selfDisabled`, `selfReadonly`, and `selfHidden` as members with `false` defaults. Apply static options inside a narrow constructor `untracked()` block, preserve reactive source and option-getter tracking, and verify each step through field/form behavior and both class-field emit modes.
-
 - [x] Shorten `FieldNodeFactory.getFieldNode()` to `getNode()` now that the class name supplies the field context. Update its callers and the internal conventions; the method still returns the existing node.
-
 - [x] Rename the internal `FieldState` class to `FieldNodeFactory` and its file to `field-node-factory.ts`. Keep `getFieldNode()` as the caller-facing accessor and update the refactor guide and project conventions.
-
 - [x] Use `FieldNodeFactory.getFieldNode()` in `field()` and clone creation instead of accessing `.node` directly. The method returns the existing node; construction and the public field API remain unchanged.
-
 - [x] Move `createFieldClone()` and `createObjectClone()` to the top of their owning files and document why retained recipes need isolated declarative inputs. Verify that a class method extracting those inputs can also release the source tree; module scope is an explicit ownership convention, not a language restriction.
   - After review, replace the external field helper with `FieldNodeFactory.createClone()`. Extract configuration before returning the callback so clone creation stays in the class without retaining the source instance. Keep `createObjectClone()` beside the function-based form implementation.
-
 - [x] Replace the duplicated internal `_nodeType` discriminant with `$api.nodeType()` in the directive and Angular adapter. Remove it from all primitive implementations and `InternalNodeApi`, retaining collision-safe access through `$api`.
 - [x] Prototype an internal `FieldState` class behind the existing callable `field()` API.
   - [x] Sort non initialized variables first, then the rest
@@ -993,3 +975,5 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Ensure that directive public api (in case it is referenced from the tempalte with #myFormNode), is nicely typed and useful, and hides non-public properties/methods
 - [x] Add reactive internationalization support for built-in validator messages. The original guide is now consolidated in `website/docs/guides/validator-messages.md`.
 - [x] Make that field(undefined) (i'd assume it'll go to null (maybe not)) also is declared as unknown
+- [x] Restructure project folder structure, once project is solid and stable. think how to organize folders
+- [x] Create repo to pass custom lintern rules in dlab

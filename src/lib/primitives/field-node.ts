@@ -241,7 +241,7 @@ export class FieldNode<TValue> {
     registerAngularField(this.node);
     registerNodeValidatorMessages(this.node, undefined, this.options?.injector);
 
-    this.ensureAsyncValidationWatch();
+    untracked(() => this.ensureAsyncValidationWatch());
   }
 
   getNode() {

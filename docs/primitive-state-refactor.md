@@ -353,7 +353,12 @@ A constructor audit also reproduced a pre-existing limitation in both implementa
 class-field emit modes: constructing a form/group with children inside `computed()` attempts a
 parent-link signal write in the child. Empty object nodes can be constructed there and retain
 option-getter dependencies; public tests cover their initial availability and first validation.
-The child-parenting issue is recorded separately in `TODO.md` rather than folded into this refactor.
+The child-parenting issue was corrected separately after the migration. Construction now isolates
+parent-link writes, initial array resets, buffer snapshots, and watcher ownership from the caller's
+reactive context. Keep child normalization, item factories, validator-source normalization, and
+configuration reads tracked so declaration inputs still rebuild the tree. Internal mutable state
+must not become an incidental reconstruction trigger. This distinction also applies to fields used
+inside aggregate declarations. The completed decision is retained in `TODO.md`.
 
 After a further readability review, `FormGroupNode.submit()` uses `async` and one `try/finally`
 around the awaited action. This supersedes the earlier explicit-promise implementation and its
