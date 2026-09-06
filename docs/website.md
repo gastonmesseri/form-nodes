@@ -1,5 +1,7 @@
 # Documentation website maintenance
 
+For npm publication, version tags, and GitHub Releases, see [Publishing a release](releasing.md).
+
 Edit the documentation in `website/docs/` and its canonical examples in `website/examples/`.
 Before pushing, check the examples and preview the production build:
 
