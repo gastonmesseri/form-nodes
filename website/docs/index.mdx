@@ -8,9 +8,11 @@ description: Typed, signal-based form primitives for Angular 22.
 ---
 
 import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 <header className="docs-hero">
   <div className="docs-hero__content">
+    <img className="docs-hero__logo" src={useBaseUrl('/img/form-nodes-logo-big.png')} alt="Form Nodes logo" width="160" height="160" />
     <div className="docs-hero__eyebrow">Forms designed for Angular signals</div>
     <h1>Typed forms that stay close to your model.</h1>
     <p>
@@ -33,13 +35,13 @@ import { field, FormNode, form } from '@gem/ng-forms';
   selector: 'app-profile-editor',
   imports: [FormNode],
   template: `
-    <input [formNode]="myForm.name" />
-    <p>Hello {{ myForm.name() }}</p>
+    <input [formNode]="myForm.username" />
+    <p>Hello {{ myForm.username() }}</p>
   `,
 })
 export class ProfileEditor {
   myForm = form({
-    name: field('Unknown'),
+    username: field(''),
   });
 }
 ```
