@@ -31,6 +31,8 @@
       }
     })
 
+- [ ] Improve and define way of handling focus() in form nodes, maybe native way is good, but maybe allow custom components to implement some interface or though useControlState
+
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
   - DO AS MUCH AS POSSIBLE TO INDEX IN NPM GITHUB AND GOOGLE
