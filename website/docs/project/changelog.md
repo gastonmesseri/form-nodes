@@ -16,6 +16,8 @@ canonical release record.
 
 ### Added
 
+- All primitive nodes now expose reactive `hasError(kind)` queries for their own errors and `hasValidator(validator)` queries for directly registered validator functions, including async validators.
+
 - Forms and groups now provide `forEachChild((child, key) => ...)` to visit a snapshot of immediate children, including dynamically added nodes, with reactive tracking of structural changes.
 
 ## 1.0.1 — 2026-09-07

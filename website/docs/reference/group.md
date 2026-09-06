@@ -4,6 +4,7 @@ description: Reference for object groups without an independent submission workf
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
 import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
 import groupRootSource from '!!raw-loader!../../examples/group-root.typecheck.ts';
@@ -1553,3 +1554,21 @@ added key, use `get(key)` or retain the exact node returned by `add()`.
 **Static approximation:** `add()` still inserts children into the runtime map, and `Object.values()`
 still includes them. Their types are not reflected in the declared union. Use `forEachChild()`
 when iterating a dynamically extensible tree so the callback accepts arbitrary `DynamicNode` values.
+
+## Query errors and registered validators
+
+`hasError(kind: string): boolean` checks the node's own current `errors()`, like
+`getError(kind) !== undefined`. It does not search descendants or `allErrors()`. Synchronous,
+asynchronous, and bound-control errors are included when present in `errors()`.
+
+`hasValidator(validator): boolean` checks the directly registered validator list by function
+identity, including async validators. Retain a factory's returned function to query it later.
+A registered validator remains present while passing, disabled, or skipped by a condition.
+Validators returned by a composing function and external control validators are not searched.
+
+<CodeBlock language="ts">{validationQueriesSource}</CodeBlock>
+
+Both queries participate in reactive tracking when read inside `computed()` or `effect()` and
+memoize their boolean result by argument. `hasError()` follows error changes; `hasValidator()`
+follows `setValidators()` without executing the validator. Neither query changes node state.
+For a child named `hasError` or `hasValidator`, use the parent's `$api` to call that operation.

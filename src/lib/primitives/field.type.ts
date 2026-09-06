@@ -296,6 +296,17 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & CustomValidationError<TKind>) | undefined;
+  /**
+   * Whether this node's own errors contain the given kind. Does not search descendants.
+   * @reactive Memoizes by kind and tracks the node's current errors.
+   */
+  hasError(kind: string): boolean;
+  /**
+   * Whether the same validator function is directly registered on this node, including async validators.
+   * Does not run validators or inspect validators returned by a composing function.
+   * @reactive Memoizes by function identity and tracks setValidators() changes.
+   */
+  hasValidator(validator: (context: any) => unknown): boolean;
   /** Strictest minimum value contributed by active numeric or date validators, or `null` when absent. */
   min: Signal<NonNullable<TValue> | null>;
   /** Strictest maximum value contributed by active numeric or date validators, or `null` when absent. */

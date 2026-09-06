@@ -101,6 +101,14 @@ export class FormGroupNode<TNodes extends Nodes> {
     return this.errors().find(error => error.kind === kind);
   }, { equal: shallowEqual, max: 20 }) as FormApi<TNodes>['getError'];
 
+  hasError = computedFunction((kind: string) => {
+    return this.errors().some(error => error.kind === kind);
+  }, { max: 20 });
+
+  hasValidator = computedFunction((validator: (context: any) => unknown) => {
+    return this.validators().some(candidate => candidate === validator);
+  }, { max: 20 });
+
   path = computed((): readonly string[] => {
     const parent = this.parent();
     const key = this.keyInParent();
@@ -516,6 +524,8 @@ export class FormGroupNode<TNodes extends Nodes> {
       valid: this.valid,
       invalid: this.invalid,
       getError: this.getError,
+      hasError: this.hasError,
+      hasValidator: this.hasValidator,
       required: this.required,
       pending: this.pending,
       submitting: this.submitting,

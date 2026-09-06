@@ -13,6 +13,7 @@ import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { createFormPrimitives } from './create-form-primitives';
+import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
@@ -25,6 +26,95 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('keeps hasError and hasValidator scoped to each node across groups, arrays, and nested forms', () => {
+    const profile = form({
+      nested: form({ name: field('', [required]) }),
+      address: group({ city: field('', [required]) }),
+      rows: array(field('', [required]), { initialValue: 1 }),
+    });
+    expect(profile.invalid()).toBe(true);
+    for (const node of [profile, profile.nested, profile.address, profile.rows]) {
+      expect(node.hasError('required')).toBe(false);
+      expect(node.hasValidator(required)).toBe(false);
+      node.setValidators(required);
+      expect(node.hasValidator(required)).toBe(true);
+      expect(node.hasError('required')).toBe(false);
+      node.setValidators(() => ({ kind: 'ownError' }));
+      expect(node.hasError('ownError')).toBe(true);
+      expect(node.hasValidator(required)).toBe(false);
+      node.setValidators([]);
+      expect(node.hasError('ownError')).toBe(false);
+    }
+    expect(profile.nested.name.hasError('required')).toBe(true);
+    expect(profile.address.city.hasError('required')).toBe(true);
+    expect(profile.rows[0]!.hasError('required')).toBe(true);
+    const minimum = minLength(2);
+    profile.rows.setValidators(minimum);
+    expect(profile.rows.hasValidator(minimum)).toBe(true);
+    expect(profile.rows.hasValidator(minLength(2))).toBe(false);
+    expect(profile.rows.hasError('minLength')).toBe(true);
+    profile.rows.push('ready');
+    expect(profile.rows.hasError('minLength')).toBe(false);
+    const collisions = form({ hasError: field('error'), hasValidator: field('validator') });
+    expect(collisions.hasError()).toBe('error');
+    expect(collisions.$api.hasError('missing')).toBe(false);
+    expect(collisions.$api.hasValidator(required)).toBe(false);
+  });
+
+  it('reactively queries own errors and directly registered validator identities', () => {
+    const blocked = signal(true);
+    const check = vi.fn(() => blocked() ? { kind: 'blocked' } : null);
+    const node = form({ name: field('Marco') }, { validators: [check] });
+    const present = computed(() => node.hasValidator(check));
+    expect(present()).toBe(true);
+    expect(check).not.toHaveBeenCalled();
+    const error = computed(() => node.hasError('blocked'));
+    expect(error()).toBe(true);
+    expect(node.hasError('missing')).toBe(false);
+    expect(check).toHaveBeenCalledTimes(1);
+    blocked.set(false);
+    expect(error()).toBe(false);
+    expect(present()).toBe(true);
+    expect(check).toHaveBeenCalledTimes(2);
+    node.setValidators([]);
+    expect(present()).toBe(false);
+    expect(error()).toBe(false);
+    node.setValidators(check);
+    expect(present()).toBe(true);
+    blocked.set(true);
+    node.disable();
+    expect(error()).toBe(false);
+    expect(present()).toBe(true);
+    node.enable();
+    expect(error()).toBe(true);
+    expect(node.$api.hasError('blocked')).toBe(true);
+    expect(node.$api.hasValidator(check)).toBe(true);
+    const composer = () => check;
+    node.setValidators(composer);
+    expect(node.hasValidator(composer)).toBe(true);
+    expect(node.hasValidator(check)).toBe(false);
+    expect(error()).toBe(true);
+  });
+
+  it('queries async registration independently of pending and completed errors', async () => {
+    let finish!: (result: { kind: string }) => void;
+    const run = vi.fn(() => new Promise<{ kind: string }>((resolve) => { finish = resolve; }));
+    const check = asyncValidator(run);
+    const node = form({ nested: form({ name: field('Marco') }) }, { validators: [check] });
+    expect(node.hasValidator(check)).toBe(true);
+    const error = computed(() => node.hasError('remote'));
+    expect(error()).toBe(false);
+    expect(node.pending()).toBe(true);
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    finish({ kind: 'remote' });
+    await vi.waitFor(() => expect(error()).toBe(true));
+    expect(node.pending()).toBe(false);
+    expect(node.hasValidator(check)).toBe(true);
+    node.setValidators([]);
+    expect(node.hasValidator(check)).toBe(false);
+    await vi.waitFor(() => expect(error()).toBe(false));
+  });
+
   it('keeps dynamic entries in children at runtime while enumeration types use the declaration', () => {
     const parent = form({ branch: form({ name: field('Marco'), age: field(30) }) });
     const branch = parent.branch;

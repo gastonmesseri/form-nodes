@@ -87,6 +87,12 @@ const myForm = form({
   // equal: 'deep',
 });
 
+/** @todo this is still not working, the type of the child should be an union */
+myForm.someNesting.forEachChild(child => {
+  child
+  // child.set();
+})
+
 
 myForm.company;
 myForm.someDate.value();

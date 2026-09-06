@@ -3,6 +3,7 @@ title: field()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.ts';
 import fieldEqualitySource from '!!raw-loader!../../examples/field-equality.example.ts';
 import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.example.ts';
@@ -1265,3 +1266,21 @@ export class ProfileEditor {
 The binding synchronizes values, interaction state, validation constraints, accessibility state,
 and debounce. See [Control binding](../guides/control-binding.md) and the
 [shared Node API](./node-api.md).
+
+## Query errors and registered validators
+
+`hasError(kind: string): boolean` checks the node's own current `errors()`, like
+`getError(kind) !== undefined`. It does not search descendants or `allErrors()`. Synchronous,
+asynchronous, and bound-control errors are included when present in `errors()`.
+
+`hasValidator(validator): boolean` checks the directly registered validator list by function
+identity, including async validators. Retain a factory's returned function to query it later.
+A registered validator remains present while passing, disabled, or skipped by a condition.
+Validators returned by a composing function and external control validators are not searched.
+
+<CodeBlock language="ts">{validationQueriesSource}</CodeBlock>
+
+Both queries participate in reactive tracking when read inside `computed()` or `effect()` and
+memoize their boolean result by argument. `hasError()` follows error changes; `hasValidator()`
+follows `setValidators()` without executing the validator. Neither query changes node state.
+For a child named `hasError` or `hasValidator`, use the parent's `$api` to call that operation.

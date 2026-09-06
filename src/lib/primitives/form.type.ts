@@ -526,6 +526,17 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+  /**
+   * Whether this node's own errors contain the given kind. Does not search descendants.
+   * @reactive Memoizes by kind and tracks the node's current errors.
+   */
+  hasError(kind: string): boolean;
+  /**
+   * Whether the same validator function is directly registered on this node, including async validators.
+   * Does not run validators or inspect validators returned by a composing function.
+   * @reactive Memoizes by function identity and tracks setValidators() changes.
+   */
+  hasValidator(validator: (context: any) => unknown): boolean;
   /** Whether active validation metadata marks this form itself as required. */
   required: Signal<boolean>;
   /** Whether asynchronous validation is active on this form or any descendant. */

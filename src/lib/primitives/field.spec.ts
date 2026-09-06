@@ -27,6 +27,60 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
+  it('reactively queries own errors and directly registered validator identities', () => {
+    const blocked = signal(true);
+    const check = vi.fn(() => blocked() ? { kind: 'blocked' } : null);
+    const node = field('Marco', [check]);
+    const present = computed(() => node.hasValidator(check));
+    expect(present()).toBe(true);
+    expect(check).not.toHaveBeenCalled();
+    const error = computed(() => node.hasError('blocked'));
+    expect(error()).toBe(true);
+    expect(node.hasError('missing')).toBe(false);
+    expect(check).toHaveBeenCalledTimes(1);
+    blocked.set(false);
+    expect(error()).toBe(false);
+    expect(present()).toBe(true);
+    expect(check).toHaveBeenCalledTimes(2);
+    node.setValidators([]);
+    expect(present()).toBe(false);
+    expect(error()).toBe(false);
+    node.setValidators(check);
+    expect(present()).toBe(true);
+    blocked.set(true);
+    node.disable();
+    expect(error()).toBe(false);
+    expect(present()).toBe(true);
+    node.enable();
+    expect(error()).toBe(true);
+    expect(node.$api.hasError('blocked')).toBe(true);
+    expect(node.$api.hasValidator(check)).toBe(true);
+    const composer = () => check;
+    node.setValidators(composer);
+    expect(node.hasValidator(composer)).toBe(true);
+    expect(node.hasValidator(check)).toBe(false);
+    expect(error()).toBe(true);
+  });
+
+  it('queries async registration independently of pending and completed errors', async () => {
+    let finish!: (result: { kind: string }) => void;
+    const run = vi.fn(() => new Promise<{ kind: string }>((resolve) => { finish = resolve; }));
+    const check = asyncValidator(run);
+    const node = field('Marco', [check]);
+    expect(node.hasValidator(check)).toBe(true);
+    const error = computed(() => node.hasError('remote'));
+    expect(error()).toBe(false);
+    expect(node.pending()).toBe(true);
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    finish({ kind: 'remote' });
+    await vi.waitFor(() => expect(error()).toBe(true));
+    expect(node.pending()).toBe(false);
+    expect(node.hasValidator(check)).toBe(true);
+    node.setValidators([]);
+    expect(node.hasValidator(check)).toBe(false);
+    await vi.waitFor(() => expect(error()).toBe(false));
+  });
+
   it('exposes a real signal with committed-value tracking and configured equality', () => {
     const name = field.strict('Marco', { debounce: 'blur', equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
     const observe = <T>(source: Signal<T>) => computed(() => source());

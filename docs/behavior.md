@@ -2850,3 +2850,27 @@ This is a deliberate static approximation: runtime maps and enumeration still in
 children, even when their types are absent from the declared union. The union is not a guarantee
 about every runtime entry after `add()`. Use `forEachChild()` for dynamically extensible trees.
 No runtime enumeration, attachment, removal, validation, or state propagation behavior changes.
+
+## Error and validator presence queries
+
+All primitive nodes, their public API aliases, and dynamically retrieved nodes expose
+`hasError(kind)` and `hasValidator(validator)`. `hasError` checks the current local `errors()` by
+kind, not descendant `allErrors()`. It includes async and external errors when they appear there,
+and follows existing disabled/hidden filtering and async completion/cancellation semantics.
+`hasValidator` checks the normalized directly registered list by function reference, including
+async functions. It does not execute validators, inspect composed return values, search children,
+or inspect external control validators. Passing, disabled, pending, and conditionally skipped
+validators remain registered until `setValidators()` replaces them.
+
+Both queries memoize with a bounded 20-argument cache and track the underlying error/list signal.
+Callbacks in reactive consumers observe boolean transitions; neither query mutates state.
+Factory instances compare by identity, so retain the original function for later lookup.
+Child-name collisions retain the ordinary `$api` escape hatch.
+
+Reference: Angular `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`), Signal Forms
+`packages/forms/signals/src/api/types.ts` defines local `getError` semantics. Its
+`packages/forms/signals/src/controls/interop_ng_control.ts` only implements a required-validator
+compatibility special case, not general validator registration queries. Form Nodes deliberately
+provides general identity-based lookup, comparable to the factory-reference tests in
+`packages/forms/test/form_control_spec.ts`. It searches its unified sync/async registry rather
+than Angular Reactive Forms' separate lists.

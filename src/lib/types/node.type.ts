@@ -135,6 +135,16 @@ export type NodeApi = {
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: Node }) | undefined;
+  /**
+   * Whether this node's own errors include the kind; does not search descendants.
+   * @reactive Tracks current errors.
+   */
+  hasError(kind: string): boolean;
+  /**
+   * Whether this exact validator is directly registered.
+   * @reactive Tracks validator list changes.
+   */
+  hasValidator(validator: (context: any) => unknown): boolean;
   /** Whether active validation metadata currently marks this node as required. */
   required: Signal<boolean>;
   /** Whether asynchronous validation is active on this node or any descendant. */
