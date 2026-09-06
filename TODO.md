@@ -367,6 +367,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Enforce explicit block returns for multiline arrow expressions through the local ESLint `project/multiline-arrow-body` rule. Allow single-line expressions and direct multiline array/object literals, including TypeScript assertions; update the source formatting and cover the rule's exceptions in its own tests.
+
 - [x] Align `FieldNode.createNode()` with array and form/group callable assembly using `Object.defineProperties()` and `Object.getOwnPropertyDescriptors()`, preserving the public API, property descriptors, and action aliases.
 
 - [x] Rename the internal `ArrayNodeFactory` and `FieldNodeFactory` classes and files to `ArrayNode` / `array-node.ts` and `FieldNode` / `field-node.ts`. Preserve the public `ArrayNode` type and package exports; use `ArrayNodeType` as its local import alias where it shares a module with the implementation class.

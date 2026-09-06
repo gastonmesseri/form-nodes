@@ -29,12 +29,14 @@ export const injectFormNodeControlStateAdapter = <TValue>(element: HTMLElement, 
     entry.consumers.delete(binding);
   });
   const node = () => binding()!.node();
-  const field = () => node() as ReturnType<typeof node> & {
-    max?: Signal<number | Date | undefined>;
-    maxLength?: Signal<number | undefined>;
-    min?: Signal<number | Date | undefined>;
-    minLength?: Signal<number | undefined>;
-    pattern?: Signal<readonly RegExp[]>;
+  const field = () => {
+    return node() as ReturnType<typeof node> & {
+      max?: Signal<number | Date | undefined>;
+      maxLength?: Signal<number | undefined>;
+      min?: Signal<number | Date | undefined>;
+      minLength?: Signal<number | undefined>;
+      pattern?: Signal<readonly RegExp[]>;
+    };
   };
   return {
     source: 'formNode',

@@ -27,9 +27,11 @@ const stateFixtures: readonly [string, () => StateFixture][] = [
     return { root, leaf: root.nested.value, descendants: [root.nested, root.nested.value] };
   }],
   ['array', () => {
-    const root = array(() => form({
-      value: field.strict('', [required]),
-    }), 1);
+    const root = array(() => {
+      return form({
+        value: field.strict('', [required]),
+      });
+    }, 1);
     const item = root.at(0)!;
     return { root, leaf: item.value, descendants: [item, item.value] };
   }],

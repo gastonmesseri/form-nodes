@@ -342,13 +342,17 @@ describe('asyncValidator', () => {
     let receivedForm: unknown;
     let receivedRoot: unknown;
     let receivedField: unknown;
-    const rootForm = form({ profile: { age: field(23, [asyncValidator(async ({ field: fieldNode, path: fieldPath }) => {
-      path = fieldPath();
-      receivedForm = fieldNode().form();
-      receivedRoot = fieldNode().root();
-      receivedField = fieldNode();
-      return null;
-    })]) } });
+    const rootForm = form({
+      profile: {
+        age: field(23, [asyncValidator(async ({ field: fieldNode, path: fieldPath }) => {
+          path = fieldPath();
+          receivedForm = fieldNode().form();
+          receivedRoot = fieldNode().root();
+          receivedField = fieldNode();
+          return null;
+        })]),
+      },
+    });
 
     await settle();
 
@@ -493,9 +497,9 @@ describe('asyncValidator', () => {
   it('tracks explicit params and debounces the initial service call', async () => {
     vi.useFakeTimers();
     const country = signal('CH');
-    const validate = vi.fn(async ({ params }: { params: { country: string; username: string | null } }) =>
-      params.country === 'US' ? { kind: 'unavailable' } : null,
-    );
+    const validate = vi.fn(async ({ params }: { params: { country: string; username: string | null } }) => {
+      return params.country === 'US' ? { kind: 'unavailable' } : null;
+    });
     const name = field('David', [asyncValidator({
       debounce: 100,
       params: ({ value }) => ({ country: country(), username: value() }),

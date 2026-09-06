@@ -555,25 +555,31 @@ export class ArrayNode<TItem extends Node> {
       at: index => this.items()[index] as ArrayItemWithParent<TItem, ArrayNodeType<TItem>> | undefined,
       forEach: (callback) => {
         const snapshot = this.items();
-        snapshot.forEach((item, index) => callback(
-          item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>,
-          index,
-          this.node,
-        ));
+        snapshot.forEach((item, index) => {
+          return callback(
+            item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>,
+            index,
+            this.node,
+          );
+        });
       },
       map: callback => this.getItemSnapshot().map((item, index) => callback(item, index, this.node)),
-      filter: ((predicate: Parameters<ArrayApi<TItem>['filter']>[0]) =>
-        this.filter(predicate)) as ArrayApi<TItem>['filter'],
-      find: ((predicate: Parameters<ArrayApi<TItem>['find']>[0]) =>
-        this.find(predicate)) as ArrayApi<TItem>['find'],
+      filter: ((predicate: Parameters<ArrayApi<TItem>['filter']>[0]) => {
+        return this.filter(predicate);
+      }) as ArrayApi<TItem>['filter'],
+      find: ((predicate: Parameters<ArrayApi<TItem>['find']>[0]) => {
+        return this.find(predicate);
+      }) as ArrayApi<TItem>['find'],
       findIndex: predicate => this.getItemSnapshot().findIndex((item, index) => predicate(item, index, this.node)),
       some: predicate => this.getItemSnapshot().some((item, index) => predicate(item, index, this.node)),
       every: predicate => this.getItemSnapshot().every((item, index) => predicate(item, index, this.node)),
       includes: (item, fromIndex) => this.getItemSnapshot().includes(item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>, fromIndex),
       indexOf: (item, fromIndex) => this.getItemSnapshot().indexOf(item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>, fromIndex),
-      [Symbol.iterator]: () => (
-        this.items() as ArrayItems<TItem, Node>
-      )[Symbol.iterator](),
+      [Symbol.iterator]: () => {
+        return (
+          this.items() as ArrayItems<TItem, Node>
+        )[Symbol.iterator]();
+      },
       push: (...args) => this.insert(this.items().length, ...args),
       insert: (index, ...args) => this.insert(index, ...args),
       removeAt: index => this.removeAt(index),

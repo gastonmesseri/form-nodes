@@ -121,8 +121,9 @@ describe('types', () => {
   });
 
   it('types dynamic array initial values, validator shorthand, and options', () => {
-    const validate = ({ value }: FieldContext<readonly (string | null)[]>) =>
-      value().length === 0 ? { kind: 'empty' } : null;
+    const validate = ({ value }: FieldContext<readonly (string | null)[]>) => {
+      return value().length === 0 ? { kind: 'empty' } : null;
+    };
     const names = array(field(''), ['Mono'], [validate], { disabled: true });
     const emptyNames = array(field(''), validate, { readonly: true });
 
@@ -157,8 +158,7 @@ describe('types', () => {
           expectTypeOf(index).toEqualTypeOf<number>();
           return value.id;
         },
-      },
-    );
+      });
 
     array(
       { city: field(''), country: field('') },
@@ -487,8 +487,9 @@ describe('types', () => {
   });
 
   it('types field errors as a readonly error array', () => {
-    const required = ({ value }: FieldContext<string>) =>
-      value() === '' ? { kind: 'required' } : null;
+    const required = ({ value }: FieldContext<string>) => {
+      return value() === '' ? { kind: 'required' } : null;
+    };
     const fieldNode = field.strict('', [required]);
     expectTypeOf(fieldNode.errors()).toEqualTypeOf<
       readonly ValidationError.WithTargetNode<typeof fieldNode>[]
@@ -503,8 +504,9 @@ describe('types', () => {
   });
 
   it('accepts validators on a field declared without them', () => {
-    const required = ({ value }: FieldContext<string>) =>
-      value() === '' ? { kind: 'required' } : null;
+    const required = ({ value }: FieldContext<string>) => {
+      return value() === '' ? { kind: 'required' } : null;
+    };
     const fieldNode = field.strict('David');
     expectTypeOf(fieldNode.setValidators).toBeCallableWith([required]);
     expectTypeOf(fieldNode.setValidators).toBeCallableWith(required);
@@ -583,8 +585,7 @@ describe('types', () => {
           return null;
         }],
         readonly: false,
-      },
-    );
+      });
   });
 
   it('rejects a third argument after second-argument options', () => {

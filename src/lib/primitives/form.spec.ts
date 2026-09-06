@@ -578,7 +578,7 @@ describe('form', () => {
     new Map([['name', 'Marco']]),
     new Set(['admin']),
     new Uint8Array([1, 2]),
-    new (class {})(),
+    new (class { })(),
     new (class Account { name = 'Marco'; })(),
     () => 'computed',
   ])('normalizes non-plain objects and functions to fields', (value) => {
@@ -615,7 +615,7 @@ describe('form', () => {
   });
 
   it('normalizes an inline company object to a group and a class instance to a field', () => {
-    class User {}
+    class User { }
     const user = new User();
     const myForm = form({
       company: { companyId: 23, companyName: 'Apple' },
@@ -758,7 +758,7 @@ describe('form', () => {
 
   it('allows pending validation by default and can require fully valid state', async () => {
     const action = vi.fn();
-    const unresolved = new Promise<null>(() => {});
+    const unresolved = new Promise<null>(() => { });
     const allowingPending = form({
       name: field('Marco', [asyncValidator(() => unresolved)]),
     }, { submission: { action } });
@@ -1066,14 +1066,15 @@ describe('form', () => {
   });
 
   it('allows an asynchronous field validator to read its owning class form on its first execution', async () => {
-    const validate = vi.fn(async (name: string | null | undefined) =>
-      name === null || name === undefined ? { kind: 'missingSiblingName' } : null,
-    );
+    const validate = vi.fn(async (name: string | null | undefined) => {
+      return name === null || name === undefined ? { kind: 'missingSiblingName' } : null;
+    });
     class ProfileComponent {
       readonly profile = form({
         name: field<string>(undefined, [required]),
-        age: field(23, [asyncValidator(async (): Promise<{ kind: string } | null> =>
-          validate(this.profile.name()),
+        age: field(23, [asyncValidator(async (): Promise<{ kind: string } | null> => {
+          return validate(this.profile.name());
+        },
         )]),
       });
     }
@@ -1383,7 +1384,7 @@ describe('form', () => {
     const profile = form({ name: field('Marco') }, {
       debounce: (signal) => {
         abortSignal = signal;
-        return new Promise<void>(() => {});
+        return new Promise<void>(() => { });
       },
     });
     (profile as unknown as InternalNode).$api._setControlValue({ name: 'pending' });
@@ -1597,8 +1598,9 @@ describe('form', () => {
   });
 
   it('reports its own validator through errors', () => {
-    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { kind: 'sameCity' };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) => {
+      return value().city === value().billingCity ? null : { kind: 'sameCity' };
+    };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -1612,8 +1614,9 @@ describe('form', () => {
   });
 
   it('reevaluates a cross-field validator when a field changes', () => {
-    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { kind: 'sameCity' };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) => {
+      return value().city === value().billingCity ? null : { kind: 'sameCity' };
+    };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -1642,9 +1645,9 @@ describe('form', () => {
 
   it('conditionally applies a synchronous form validator returned by another validator', () => {
     const enabled = signal(false);
-    const sameCity = vi.fn(({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { kind: 'sameCity' },
-    );
+    const sameCity = vi.fn(({ value }: Context<{ city: string | null; billingCity: string | null }>) => {
+      return value().city === value().billingCity ? null : { kind: 'sameCity' };
+    });
     const formGroup = form(
       { city: field('Zurich'), billingCity: field('Madrid') },
       [() => enabled() ? sameCity : null],
@@ -1866,8 +1869,9 @@ describe('form', () => {
         billingCity: field('Madrid'),
       },
       [
-        asyncValidator(async ({ value }) =>
-          value().city === value().billingCity ? null : { kind: 'citiesDoNotMatch' },
+        asyncValidator(async ({ value }) => {
+          return value().city === value().billingCity ? null : { kind: 'citiesDoNotMatch' };
+        },
         ),
       ],
     );
@@ -1885,7 +1889,7 @@ describe('form', () => {
 
   it('suppresses aggregate pending state while non-interactive and restores it afterwards', () => {
     const formGroup = form({
-      name: field('David', [asyncValidator(() => new Promise<null>(() => {}))]),
+      name: field('David', [asyncValidator(() => new Promise<null>(() => { }))]),
     });
     expect(formGroup.pending()).toBe(true);
 
@@ -1935,9 +1939,9 @@ describe('form', () => {
 
   it('reruns its asynchronous validator when a signal read by it changes', async () => {
     const allowedCountry = signal('Switzerland');
-    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) =>
-      value().country === allowedCountry() ? null : { kind: 'countryNotAllowed' },
-    );
+    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) => {
+      return value().country === allowedCountry() ? null : { kind: 'countryNotAllowed' };
+    });
     const formGroup = form({ country: field('Switzerland') }, [asyncValidator(validate)]);
 
     await Promise.resolve();
@@ -1958,9 +1962,9 @@ describe('form', () => {
 
   it('stops form-level reactive validation when its owning injector is destroyed', async () => {
     const allowedCountry = signal('Switzerland');
-    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) =>
-      value().country === allowedCountry() ? null : { kind: 'countryNotAllowed' },
-    );
+    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) => {
+      return value().country === allowedCountry() ? null : { kind: 'countryNotAllowed' };
+    });
     const injector = Injector.create({ providers: [] });
     const formGroup = form(
       { country: field('Switzerland') },
@@ -2057,9 +2061,9 @@ describe('form', () => {
 
   it('restarts its debounced asynchronous validation when a descendant changes', async () => {
     vi.useFakeTimers();
-    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) =>
-      value().country === 'Germany' ? { kind: 'countryNotAllowed' } : null,
-    );
+    const validate = vi.fn(async ({ value }: Context<{ country: string | null }>) => {
+      return value().country === 'Germany' ? { kind: 'countryNotAllowed' } : null;
+    });
     const formGroup = form(
       { country: field('Switzerland') },
       [asyncValidator(validate, { debounce: 100 })],
@@ -2078,9 +2082,9 @@ describe('form', () => {
 
   it('passes an explicit reactive params snapshot to its asynchronous validator', async () => {
     const allowedCountry = signal('Switzerland');
-    const validate = vi.fn(async ({ params }: { params: { allowed: string; country: string | null } }) =>
-      params.country === params.allowed ? null : { kind: 'countryNotAllowed' },
-    );
+    const validate = vi.fn(async ({ params }: { params: { allowed: string; country: string | null } }) => {
+      return params.country === params.allowed ? null : { kind: 'countryNotAllowed' };
+    });
     const formGroup = form({ country: field('Switzerland') }, [asyncValidator({
       params: ({ value }) => ({ allowed: allowedCountry(), country: value().country }),
       validate,
@@ -2161,8 +2165,9 @@ describe('form', () => {
   });
 
   it('recomputes its errors after setValidators', () => {
-    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { kind: 'sameCity' };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) => {
+      return value().city === value().billingCity ? null : { kind: 'sameCity' };
+    };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -2217,8 +2222,9 @@ describe('form', () => {
   });
 
   it('accepts validators and state in a second-argument options object', () => {
-    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { kind: 'sameCity' };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) => {
+      return value().city === value().billingCity ? null : { kind: 'sameCity' };
+    };
     const formGroup = form(
       {
         city: field('Moscow'),
@@ -2227,8 +2233,7 @@ describe('form', () => {
       {
         validators: [sameCity],
         hidden: true,
-      },
-    );
+      });
     expect(formGroup.api.validators()).toEqual([sameCity]);
     expect(formGroup.api.hidden()).toBe(true);
     expect(formGroup.api.errors()).toEqual([]);
@@ -2582,8 +2587,9 @@ describe('form', () => {
   });
 
   it('revalidates after reset with a value', () => {
-    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) =>
-      value().city === value().billingCity ? null : { kind: 'sameCity' };
+    const sameCity = ({ value }: Context<{ city: string | null; billingCity: string | null }>) => {
+      return value().city === value().billingCity ? null : { kind: 'sameCity' };
+    };
     const formGroup = form(
       {
         city: field('Zurich'),
@@ -2942,8 +2948,7 @@ describe('form', () => {
         disabled: () => locked(),
         readonly,
         hidden,
-      },
-    );
+      });
     locked.set(true);
     expect(formGroup.api.disabled()).toBe(true);
     expect(formGroup.address.city.disabled()).toBe(true);
@@ -2956,7 +2961,7 @@ describe('form', () => {
   });
 
   it('warns and ignores unknown keys passed to set', () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => { });
     const profile = form({ name: field('David') });
 
     profile.set({ name: 'Mark', unknown: true } as any);

@@ -15,8 +15,9 @@ type ComputedFunctionEntry<TArgs extends readonly unknown[], TResult> = {
   lastUsed: number;
 };
 
-const defaultArgsEqual = <TArgs extends readonly unknown[]>(left: TArgs, right: TArgs): boolean =>
-  left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
+const defaultArgsEqual = <TArgs extends readonly unknown[]>(left: TArgs, right: TArgs): boolean => {
+  return left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
+};
 
 /** Creates one memoized computed signal for each distinct argument combination. */
 export const computedFunction = <TArgs extends readonly unknown[], TResult>(

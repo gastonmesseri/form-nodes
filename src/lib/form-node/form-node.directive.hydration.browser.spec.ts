@@ -28,9 +28,9 @@ const installServerDom = (encodedHtml: string, selector: string): { host: HTMLEl
   const serverDocument = new DOMParser().parseFromString(atob(encodedHtml), 'text/html');
   const nodes = Array.from(serverDocument.body.childNodes, node => document.importNode(node, true));
   document.body.append(...nodes);
-  const host = nodes.find((node): node is HTMLElement =>
-    node instanceof HTMLElement && node.matches(selector),
-  );
+  const host = nodes.find((node): node is HTMLElement => {
+    return node instanceof HTMLElement && node.matches(selector);
+  });
   if (!host) throw new Error('The SSR fixture does not contain the hydration application host.');
   return { host, nodes };
 };

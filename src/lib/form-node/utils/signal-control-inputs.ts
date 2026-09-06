@@ -63,12 +63,14 @@ export const connectSignalControlInputs = <TNode extends Node>(
   effect(() => {
     const currentNode = node();
     const values = getBindingValues(currentNode, appId);
-    untracked(() => bindings.forEach(({ name, property }) => {
-      const written = mirror
-        ? writeComponentInput(control, name, values[name], injector)
-        : writeInputSignal((control as Record<PropertyKey, unknown>)[property], values[name]);
-      if (!written) warnFailedInputWrite(control, name, usesControlState);
-    }));
+    untracked(() => {
+      return bindings.forEach(({ name, property }) => {
+        const written = mirror
+          ? writeComponentInput(control, name, values[name], injector)
+          : writeInputSignal((control as Record<PropertyKey, unknown>)[property], values[name]);
+        if (!written) warnFailedInputWrite(control, name, usesControlState);
+      });
+    });
   }, { injector });
   return { inputNames };
 };

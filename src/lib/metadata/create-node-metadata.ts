@@ -8,10 +8,11 @@ export const createNodeMetadata = (
   validators: Signal<readonly Function[]>,
   validatorMetadata: Signal<MetadataContributions>,
   getContext: () => ValidatorContext<unknown>,
-): Signal<MetadataContributions> =>
-  computed<MetadataContributions>(() => {
+): Signal<MetadataContributions> => {
+  return computed<MetadataContributions>(() => {
     const result = new Map<MetadataKey<unknown, unknown>, unknown[]>();
     validators().forEach(validator => collectValidatorMetadata(validator, result, getContext()));
     appendMetadataContributions(result, validatorMetadata());
     return result;
   });
+};

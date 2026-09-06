@@ -19,12 +19,13 @@ const createValidityStyle = (root: ValidityRoot, nonce?: string): HTMLStyleEleme
 };
 
 /** Whether the native control can change bad-input validity without dispatching an input event. */
-export const nativeInputRequiresValidityTracking = (input: HTMLInputElement): boolean =>
-  input.type === 'date'
-  || input.type === 'datetime-local'
-  || input.type === 'month'
-  || input.type === 'time'
-  || input.type === 'week';
+export const nativeInputRequiresValidityTracking = (input: HTMLInputElement): boolean => {
+  return input.type === 'date'
+    || input.type === 'datetime-local'
+    || input.type === 'month'
+    || input.type === 'time'
+    || input.type === 'week';
+};
 
 /** Observes browser validity transitions that may happen without a native input event. */
 export const watchNativeInputValidity = (
@@ -32,7 +33,7 @@ export const watchNativeInputValidity = (
   callback: () => void,
   nonce?: string,
 ): (() => void) => {
-  if (typeof AnimationEvent !== 'function') return () => {};
+  if (typeof AnimationEvent !== 'function') return () => { };
   const root = input.getRootNode() as ValidityRoot;
   let tracked = trackedRoots.get(root);
   if (!tracked) {

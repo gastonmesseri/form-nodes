@@ -10,9 +10,11 @@ type ObjectNodeKind = 'array' | 'form' | 'group';
 const FIELD_VALUE_HINT = 'if this object is intended as a field value, wrap it with field(value)';
 
 const formatDefinitionPath = (path: readonly string[]): string => {
-  return path.map((segment, index) => /^[A-Za-z_$][\w$]*$/.test(segment)
-    ? `${index === 0 ? '' : '.'}${segment}`
-    : `[${JSON.stringify(segment)}]`,
+  return path.map((segment, index) => {
+    return /^[A-Za-z_$][\w$]*$/.test(segment)
+      ? `${index === 0 ? '' : '.'}${segment}`
+      : `[${JSON.stringify(segment)}]`;
+  },
   ).join('');
 };
 

@@ -4,13 +4,15 @@ import { array } from '../array';
 import { field } from '../field';
 import { asyncValidator } from '../../validation/async-validator';
 
-const createPeople = () => array({
-  id: field.strict(''),
-  name: field.strict(''),
-}, [
-  { id: 'alex', name: 'Alex' },
-  { id: 'kirill', name: 'Kirill' },
-], { trackBy: person => person.id });
+const createPeople = () => {
+  return array({
+    id: field.strict(''),
+    name: field.strict(''),
+  }, [
+    { id: 'alex', name: 'Alex' },
+    { id: 'kirill', name: 'Kirill' },
+  ], { trackBy: person => person.id });
+};
 
 /**
  * Interaction tests for keyed array reconciliation.
@@ -117,9 +119,11 @@ describe('array keyed reconciliation invariants', () => {
       return {
         id: field.strict(''),
         name: field.strict('', [
-          asyncValidator(() => isAlex
-            ? new Promise<{ kind: string }>((resolve) => { resolveAlex = resolve; })
-            : new Promise<null>(() => {})),
+          asyncValidator(() => {
+            return isAlex
+              ? new Promise<{ kind: string }>((resolve) => { resolveAlex = resolve; })
+              : new Promise<null>(() => { });
+          }),
         ]),
       };
     }, [
@@ -159,10 +163,12 @@ describe('array keyed reconciliation invariants', () => {
     beforeItems[0]!.name.markAsDirty();
     beforeItems[0]!.name.markAsTouched();
 
-    expect(() => people.set([
-      { id: 'same', name: 'One' },
-      { id: 'same', name: 'Two' },
-    ])).toThrow('array: duplicate trackBy key same in incoming values');
+    expect(() => {
+      return people.set([
+        { id: 'same', name: 'One' },
+        { id: 'same', name: 'Two' },
+      ]);
+    }).toThrow('array: duplicate trackBy key same in incoming values');
 
     expect(people()).toEqual(beforeValue);
     expect([...people]).toEqual(beforeItems);
@@ -206,10 +212,12 @@ describe('array keyed reconciliation invariants', () => {
     const beforeValue = people();
     const beforeItems = [...people];
 
-    expect(() => people.reset([
-      { id: 'alex', name: 'Would mutate if reconciliation had started' },
-      { id: 'throw', name: 'Failure' },
-    ])).toThrow('cannot identify person');
+    expect(() => {
+      return people.reset([
+        { id: 'alex', name: 'Would mutate if reconciliation had started' },
+        { id: 'throw', name: 'Failure' },
+      ]);
+    }).toThrow('cannot identify person');
 
     expect(people()).toEqual(beforeValue);
     expect([...people]).toEqual(beforeItems);

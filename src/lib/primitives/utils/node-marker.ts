@@ -7,5 +7,6 @@ export const markAsNode = <TNode extends object>(node: TNode): TNode => {
   return node;
 };
 
-export const isNode = (value: unknown): value is Node =>
-  typeof value === 'function' && nodeMarker in value;
+export const isNode = (value: unknown): value is Node => {
+  return typeof value === 'function' && nodeMarker in value;
+};

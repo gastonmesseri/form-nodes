@@ -14,5 +14,6 @@ export const firstControlBindingInDom = (
 
 export const findFirstControlBindingInDom = (
   bindings: Iterable<NodeControlBinding>,
-): NodeControlBinding | undefined =>
-  Array.from(bindings).reduce(firstControlBindingInDom, undefined);
+): NodeControlBinding | undefined => {
+  return Array.from(bindings).reduce(firstControlBindingInDom, undefined);
+};

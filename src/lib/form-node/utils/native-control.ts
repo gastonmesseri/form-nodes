@@ -5,21 +5,25 @@ import type { ValidationError } from '../../validation/validation.type';
 
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-export const isNativeInput = (element: NativeFormNodeControl): element is HTMLInputElement =>
-  element.tagName === 'INPUT';
+export const isNativeInput = (element: NativeFormNodeControl): element is HTMLInputElement => {
+  return element.tagName === 'INPUT';
+};
 
-export const isNativeSelect = (element: NativeFormNodeControl): element is HTMLSelectElement =>
-  element.tagName === 'SELECT';
+export const isNativeSelect = (element: NativeFormNodeControl): element is HTMLSelectElement => {
+  return element.tagName === 'SELECT';
+};
 
-export const isNativeFormNodeControl = (element: HTMLElement): element is NativeFormNodeControl =>
-  element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA';
+export const isNativeFormNodeControl = (element: HTMLElement): element is NativeFormNodeControl => {
+  return element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA';
+};
 
 export type NativeControlParseResult =
   | { readonly value: unknown; readonly error?: never }
   | { readonly value?: never; readonly error: ValidationError.WithoutTargetNode };
 
-const readSelectedValues = (select: HTMLSelectElement): string[] =>
-  Array.from(select.selectedOptions, option => option.value);
+const readSelectedValues = (select: HTMLSelectElement): string[] => {
+  return Array.from(select.selectedOptions, option => option.value);
+};
 
 export const readNativeControlValue = (
   element: NativeFormNodeControl,

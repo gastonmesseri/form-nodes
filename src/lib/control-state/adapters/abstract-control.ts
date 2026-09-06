@@ -68,9 +68,11 @@ export const injectAbstractControlStateAdapter = <TValue>(
     disabled: computed(() => currentControl().disabled),
     disabledReasons: computed(() => []),
     dirty: computed(() => currentControl().dirty),
-    errors: computed(() => Object.entries(currentControl().errors ?? {}).map(([kind, details]) =>
-      details && typeof details === 'object' ? { ...details, kind } : details === true ? { kind } : { kind, value: details },
-    )),
+    errors: computed(() => {
+      return Object.entries(currentControl().errors ?? {}).map(([kind, details]) => {
+        return details && typeof details === 'object' ? { ...details, kind } : details === true ? { kind } : { kind, value: details };
+      });
+    }),
     hidden: computed(() => false),
     invalid: computed(() => currentControl().invalid),
     max: computed(() => undefined),

@@ -40,10 +40,12 @@ const getControlModel = <TNode extends Node>(
     lastValue = value;
     if (!writeComponentInput(control, name, value, injector)) warnFailedInputWrite(control, name, usesControlState);
   };
-  model.subscribe = listener => output.subscribe((value) => {
-    lastValue = value;
-    listener(value);
-  });
+  model.subscribe = (listener) => {
+    return output.subscribe((value) => {
+      lastValue = value;
+      listener(value);
+    });
+  };
   return model;
 };
 

@@ -35,10 +35,12 @@ describe('Angular Signal Forms field adapter', () => {
   });
   it('exposes one stable Angular field tree for a form and its children', () => {
     const injector = TestBed.inject(Injector);
-    const profile = runInInjectionContext(injector, () => form({
-      name: field('David'),
-      age: field(30),
-    }));
+    const profile = runInInjectionContext(injector, () => {
+      return form({
+        name: field('David'),
+        age: field(30),
+      });
+    });
 
     expect(getAngularField<{ name: string | null; age: number | null }>(profile).name).toBe(getAngularField(profile.name));
     expect(getAngularField<{ name: string | null; age: number | null }>(profile).name().value()).toBe('David');
@@ -176,12 +178,14 @@ describe('Angular Signal Forms field adapter', () => {
 
   it('synchronizes aggregate interaction state across ancestors and descendants', () => {
     const injector = TestBed.inject(Injector);
-    const profile = runInInjectionContext(injector, () => form({
-      name: field('David'),
-      address: {
-        city: field('Zurich'),
-      },
-    }));
+    const profile = runInInjectionContext(injector, () => {
+      return form({
+        name: field('David'),
+        address: {
+          city: field('Zurich'),
+        },
+      });
+    });
     const angularProfile = getAngularField<{
       name: string | null;
       address: { city: string | null };
@@ -246,9 +250,11 @@ describe('Angular Signal Forms field adapter', () => {
 
   it('preserves interaction state across non-interactive transitions and existing array items', () => {
     const injector = TestBed.inject(Injector);
-    const tags = runInInjectionContext(injector, () => array(field(''), {
-      initialValue: ['angular', 'signals'],
-    }));
+    const tags = runInInjectionContext(injector, () => {
+      return array(field(''), {
+        initialValue: ['angular', 'signals'],
+      });
+    });
     const angularTags = getAngularField<(string | null)[]>(tags);
     getAngularField(tags[1]!);
 
@@ -380,11 +386,13 @@ describe('Angular Signal Forms field adapter', () => {
     const firstDate = new Date('2026-01-01T00:00:00.000Z');
     const lastDate = new Date('2026-12-31T00:00:00.000Z');
     const injector = TestBed.inject(Injector);
-    const profile = runInInjectionContext(injector, () => form({
-      amount: field(5, [min(() => minimum()), max(() => maximum())]),
-      code: field('abc', [minLength(() => minimumLength()), maxLength(8), pattern(() => activePattern()), pattern(/^.{3}$/)]),
-      departure: field<Date>(null, [minDate(firstDate), maxDate(lastDate)]),
-    }));
+    const profile = runInInjectionContext(injector, () => {
+      return form({
+        amount: field(5, [min(() => minimum()), max(() => maximum())]),
+        code: field('abc', [minLength(() => minimumLength()), maxLength(8), pattern(() => activePattern()), pattern(/^.{3}$/)]),
+        departure: field<Date>(null, [minDate(firstDate), maxDate(lastDate)]),
+      });
+    });
     const angularProfile = getAngularField<{
       amount: number | null;
       code: string | null;
@@ -459,21 +467,25 @@ describe('Angular Signal Forms field adapter', () => {
   it('preserves complete error data and maps cross-field target nodes to Angular fields', () => {
     const confirmation = field('different');
     const injector = TestBed.inject(Injector);
-    const profile = runInInjectionContext(injector, () => form({
-      password: field('secret'),
-      confirmation,
-    }, {
-      validators: ({ value }) => value().password === value().confirmation
-        ? null
-        : {
-          kind: 'passwordMismatch',
-          message: 'Passwords must match.',
-          expected: value().password,
-          actual: value().confirmation,
-          policy: { caseSensitive: true },
-          targetNode: confirmation,
+    const profile = runInInjectionContext(injector, () => {
+      return form({
+        password: field('secret'),
+        confirmation,
+      }, {
+        validators: ({ value }) => {
+          return value().password === value().confirmation
+            ? null
+            : {
+              kind: 'passwordMismatch',
+              message: 'Passwords must match.',
+              expected: value().password,
+              actual: value().confirmation,
+              policy: { caseSensitive: true },
+              targetNode: confirmation,
+            };
         },
-    }));
+      });
+    });
     const angularProfile = getAngularField<{
       password: string | null;
       confirmation: string | null;
@@ -499,9 +511,11 @@ describe('Angular Signal Forms field adapter', () => {
 
   it('maps existing array item nodes into the shared Angular tree', () => {
     const injector = TestBed.inject(Injector);
-    const tags = runInInjectionContext(injector, () => array(field(''), {
-      initialValue: ['angular'],
-    }));
+    const tags = runInInjectionContext(injector, () => {
+      return array(field(''), {
+        initialValue: ['angular'],
+      });
+    });
 
     expect(getAngularField(tags[0]!)).toBe(getAngularField<(string | null)[]>(tags)[0]);
     expect(getAngularField<(string | null)[]>(tags)[0]!().value()).toBe('angular');
@@ -509,10 +523,12 @@ describe('Angular Signal Forms field adapter', () => {
 
   it('resolves the root injector for descendants added outside its injection context', () => {
     const injector = TestBed.inject(Injector);
-    const people = runInInjectionContext(injector, () => array(() => ({
-      name: field(''),
-      address: { city: field('') },
-    })));
+    const people = runInInjectionContext(injector, () => {
+      return array(() => ({
+        name: field(''),
+        address: { city: field('') },
+      }));
+    });
 
     const person = people.push({ name: 'David', address: { city: 'Zurich' } });
     const angularPeople = getAngularField<{

@@ -12,7 +12,8 @@ it('displays inline validator values like the owning node value signal', () => {
     import { field, form, group, array, validator, asyncValidator, createFormPrimitives } from '../src/public-api';
     const configured = createFormPrimitives({ nullable: false });
     const definition = { subField: 2, subGroup: { username: field(''), email: field('') } };
-    ${primitives.map(primitive => `
+    ${primitives.map((primitive) => {
+    return `
       ${primitive}(definition, [(ctx) => { ${read} return null; }]);
       ${primitive}(definition, { validators: validator((ctx) => { ${read} return null; }) });
       ${primitive}(definition, [asyncValidator(async (ctx) => { ${read} return null; }, {
@@ -23,7 +24,8 @@ it('displays inline validator values like the owning node value signal', () => {
         params: (ctx) => { ${read} return ctx.value(); },
         validate: async (ctx) => { ${read} return null; },
       }) });
-    `).join('\n')}
+    `;
+  }).join('\n')}
   `;
   const service = ts.createLanguageService({
     getScriptFileNames: () => [fixture],
@@ -40,8 +42,9 @@ it('displays inline validator values like the owning node value signal', () => {
   });
 
   try {
-    expect(service.getSemanticDiagnostics(fixture).map(diagnostic =>
-      ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
+    expect(service.getSemanticDiagnostics(fixture).map((diagnostic) => {
+      return ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+    },
     )).toEqual([]);
     const reads = [...source.matchAll(/ctx\.value\(\); ctx\.field\(\)\.value\(\); ctx\.node\(\)\.value\(\);/g)];
     expect(reads).toHaveLength(primitives.length * 7);

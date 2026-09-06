@@ -1104,9 +1104,9 @@ describe('FormNode in Chromium', () => {
     const stylesBefore = document.head.querySelectorAll('style').length;
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
-    const validityStyle = Array.from(document.head.querySelectorAll('style')).find(style =>
-      style.textContent?.includes('@keyframes form-node-valid'),
-    );
+    const validityStyle = Array.from(document.head.querySelectorAll('style')).find((style) => {
+      return style.textContent?.includes('@keyframes form-node-valid');
+    });
     expect(document.head.querySelectorAll('style')).toHaveLength(stylesBefore + 1);
     expect(validityStyle?.nonce).toBe('test-nonce');
 
@@ -1161,8 +1161,9 @@ describe('FormNode in Chromium', () => {
     const { date } = fixture.componentInstance;
 
     expect(inputElement.value).toBe('2026-08-29');
-    expect(Array.from(shadowRoot.querySelectorAll('style')).some(style =>
-      style.textContent?.includes('@keyframes form-node-valid'),
+    expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) => {
+      return style.textContent?.includes('@keyframes form-node-valid');
+    },
     )).toBe(true);
 
     date.set('2026-09-01');
@@ -1179,8 +1180,9 @@ describe('FormNode in Chromium', () => {
     expect(inputElement.disabled).toBe(true);
 
     fixture.destroy();
-    expect(Array.from(shadowRoot.querySelectorAll('style')).some(style =>
-      style.textContent?.includes('@keyframes form-node-valid'),
+    expect(Array.from(shadowRoot.querySelectorAll('style')).some((style) => {
+      return style.textContent?.includes('@keyframes form-node-valid');
+    },
     )).toBe(false);
   });
 
@@ -1194,8 +1196,8 @@ describe('FormNode in Chromium', () => {
     class BrowserCva implements ControlValueAccessor, OnDestroy {
       value = '';
       disabled = false;
-      change = (_value: string) => {};
-      touch = () => {};
+      change = (_value: string) => { };
+      touch = () => { };
       destroyed = false;
       writeValue(value: string) { this.value = value; }
       registerOnChange(callback: (value: string) => void) { this.change = callback; }
@@ -1580,9 +1582,11 @@ describe('FormNode in Chromium', () => {
     expect(control.touched()).toBe(true);
 
     let resolveValidation!: (result: null) => void;
-    company.companyName.setValidators(asyncValidator(() => new Promise<null>((resolve) => {
-      resolveValidation = resolve;
-    })));
+    company.companyName.setValidators(asyncValidator(() => {
+      return new Promise<null>((resolve) => {
+        resolveValidation = resolve;
+      });
+    }));
     await Promise.resolve();
     fixture.detectChanges();
     expect(company.pending()).toBe(true);
@@ -1793,8 +1797,8 @@ describe('FormNode in Chromium', () => {
     class CompanyCvaSelector implements ControlValueAccessor {
       value = signal<CompanyValue>({ companyId: null, companyName: null });
       disabled = signal(false);
-      private change: (value: CompanyValue) => void = () => {};
-      private touched: () => void = () => {};
+      private change: (value: CompanyValue) => void = () => { };
+      private touched: () => void = () => { };
 
       writeValue(value: CompanyValue) { this.value.set(value); }
       registerOnChange(change: (value: CompanyValue) => void) { this.change = change; }
@@ -1938,13 +1942,13 @@ describe('FormNode in Chromium', () => {
     })
     class EchoingCva implements ControlValueAccessor {
       value = '';
-      change = (_value: string) => {};
+      change = (_value: string) => { };
       writeValue(value: string) {
         this.value = value;
         this.change(value);
       }
       registerOnChange(callback: (value: string) => void) { this.change = callback; }
-      registerOnTouched() {}
+      registerOnTouched() { }
     }
 
     @Component({
