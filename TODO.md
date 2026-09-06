@@ -33,6 +33,25 @@
 
 - [ ] Improve and define way of handling focus() in form nodes, maybe native way is good, but maybe allow custom components to implement some interface or though useControlState
 
+- [ ] think on way of a component validator adding errors to other nodes
+  - e.g. maybe something like:
+  myForm = form({
+    name: field('', {
+      validators: [
+        ctx => {
+          if (ctx.value().length < 3) return {
+            kind: 'not-adult',
+            message: 'it is not an adult',
+            sendError: [myForm.name], // this will make myForm.name to also have the error internally // think about this
+            // maybe also allow to exclude itself (myForm.name) from the error and just send it to other field
+          };
+        },
+      ],
+    }),
+    age: field(null),
+
+  })
+
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
   - DO AS MUCH AS POSSIBLE TO INDEX IN NPM GITHUB AND GOOGLE

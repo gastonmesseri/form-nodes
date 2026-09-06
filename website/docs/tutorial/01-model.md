@@ -32,7 +32,10 @@ export class ProfileEditor {
 }
 ```
 
-Fields are nullable by default. The inferred value is equivalent to:
+Fields are nullable by default. Use `field.strict('')` when a field should be non-nullable;
+its value type is `string` rather than `string | null`. See [Field nullability](../reference/field.md#nullability).
+
+For the declaration above, the inferred value is equivalent to:
 
 ```ts
 type ProfileValue = {
