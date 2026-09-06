@@ -69,7 +69,7 @@ export class FieldNode<TValue> {
 
   keyInParent = signal<string | number | null>(null);
 
-  value = signal(undefined as TValue, { equal: (previous, next) => this.valuesEqual(previous, next) });
+  value = signal(undefined as TValue, { equal: (previous, next) => this.areValuesEqual(previous, next) });
 
   controlValue = signal(undefined as TValue);
 
@@ -261,7 +261,7 @@ export class FieldNode<TValue> {
     this.controlValue.set(next);
   }
 
-  valuesEqual(previous: TValue, next: TValue): boolean {
+  areValuesEqual(previous: TValue, next: TValue): boolean {
     return untracked(() => this.equal(previous, next));
   }
 
@@ -275,7 +275,7 @@ export class FieldNode<TValue> {
       this.value.set(next);
       return;
     }
-    if (this.valuesEqual(this.value(), next)) return;
+    if (this.areValuesEqual(this.value(), next)) return;
     this.debouncing.set(true);
     this.debounceStrategy = debounce;
     if (debounce === 'blur') return;

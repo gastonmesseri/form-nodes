@@ -23,7 +23,7 @@
 
 - [NEXT] [ ] Improve submit options api (right now is nested i think)
   - [ ] Consider the following (changing submission api):
-    // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmit, and onInvalidSubmit to allow easier api
+    // Try to simplify the following. instead of submission.action, maybe just allow a callback onSubmitAction, and onInvalidSubmit to allow easier api (give me options and explore the meaning of the callback)
     // Same in case it has more options inside submission
     const profile = form({
       name: field('', [required]),
@@ -33,7 +33,6 @@
         onInvalid: () => showValidationMessage(),
       },
     });
-
     const submitted = await profile.submit();
 
 - [ ] Consider extending `equal` to `form()`, `group()`, and `array()` after reviewing retained aggregate values versus independently updated child values. Field equality is implemented; aggregate equality remains a separate decision.
