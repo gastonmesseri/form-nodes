@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { field, FormNode, form, required } from '@ngblocks/form-nodes';
+import { form, field, required, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',

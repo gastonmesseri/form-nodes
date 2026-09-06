@@ -10,27 +10,13 @@ canonical release record.
 
 ## Unreleased
 
-### Changed
+## 1.0.0 — 2026-09-07
 
-- The npm package is now named `@ngblocks/form-nodes`. Install it and update imports and module augmentations to the scoped name; the repository and documentation URLs remain the same.
-
-- **Breaking:** Form submission options are now flat: use `onSubmit(value, form)`, `onSubmitBlocked(form)`, and `submitWhen` instead of `submission`. The default still allows pending validation; use `'valid'` to require valid state or `'always'` to bypass the validation gate. The standalone `FormSubmissionOptions` type is removed; use `FormOptions`.
-
-- Package and documentation links now target `gastonmesseri/form-nodes`, and the documentation site uses the `/form-nodes/` base path.
+First public release of `@ngblocks/form-nodes`, establishing the stable public API. Supports Angular `^21.0.7 || ^22.1.5`.
 
 ### Fixed
 
 - Angular 21 consumers can now install Form Nodes on Node.js 20.19.0+, 22.12.0+, and 24.0.0+ within those majors without an engine mismatch. Angular 22 retains its higher Node.js requirements.
-
-### Added
-
-- The npm package now provides repository, issue-reporting, and author links, clearer search metadata, and a bundled changelog.
-
-## 1.0.0 — Pending publication
-
-First public release, establishing the stable public API. Supports Angular `^21.0.7 || ^22.1.5`.
-
-### Fixed
 
 - `[formNode]` now recognizes CVAs assigned directly through an injected `NgControl.valueAccessor`. Method-wrapping state hooks also observe values, errors, status, and interaction changes across node edits, async validation, reset, and rebinding without rerunning validators.
 
@@ -62,6 +48,8 @@ First public release, establishing the stable public API. Supports Angular `^21.
 
 ### Added
 
+- The npm package now provides repository, issue-reporting, and author links, clearer search metadata, and a bundled changelog.
+
 - `provideFormNodeConfig({ syncControlInputs: false })` lets custom components and consumer templates own state and constraint inputs while retaining value/checked synchronization, interaction hooks, native controls, and CVA disabled-state callbacks. Automatic input synchronization remains enabled by default.
 
 - `field()`, `form()`, `group()`, and `array()` accept shallow, deep, or custom equality for exposed values,
@@ -82,12 +70,16 @@ First public release, establishing the stable public API. Supports Angular `^21.
 - `FormValueContract<TValue>` checks an inferred form or group against a named aggregate value with
   `satisfies` while preserving concrete child-node types such as `ArrayNode`.
 - A complete consumer documentation website with tutorials, API reference, recipes, integration
-  guides, executable examples, and an interactive playground.
+  guides, and executable examples. The unfinished interactive playground remains deferred.
 - Typed `field()`, `form()`, `array()`, and `group()` signal-based primitives.
 - Synchronous and asynchronous validation with reactive, configurable messages.
 - Angular `[formNode]` binding for native, signal-based, and `ControlValueAccessor` controls.
 
 ### Changed
+
+- **Breaking:** Form submission options are now flat: use `onSubmit(value, form)`, `onSubmitBlocked(form)`, and `submitWhen` instead of `submission`. The default still allows pending validation; use `'valid'` to require valid state or `'always'` to bypass the validation gate. The standalone `FormSubmissionOptions` type is removed; use `FormOptions`.
+
+- Package and documentation links now target `gastonmesseri/form-nodes`, and the documentation site uses the `/form-nodes/` base path.
 
 - **Breaking:** Rename `useControlState()` to `useFormNodeState()`. Update imports and calls; the returned `ControlState` types and supported bindings are unchanged.
 
@@ -98,8 +90,8 @@ First public release, establishing the stable public API. Supports Angular `^21.
   coexist with Angular's class configuration. `useFormNodeState()` still observes independently
   created Angular Signal Forms, Reactive Forms, and template-driven controls.
 
-- **Breaking:** The package is now named `form-nodes`. Update dependencies, imports, and module
-  augmentations to use `form-nodes`; exported APIs and runtime behavior are unchanged by the rename.
+- The npm package is published as `@ngblocks/form-nodes`. Use the scoped name in dependencies,
+  imports, and module augmentations; exported APIs and runtime behavior are unchanged by the rename.
 
 - Callable field objects now include a runtime `patch()` method equivalent to `set()`. The public
   types continue to expose field patching only through `api` and `$api`.
