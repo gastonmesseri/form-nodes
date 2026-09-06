@@ -27,7 +27,41 @@ import { dateBetween } from '../validation/validators/date-between';
 type Context<TValue> = { readonly value: Signal<TValue> };
 
 describe('field', () => {
-  it.each(['shallow', 'deep'] as const)('retains equal committed values with %s equality while preserving control input', (equal) => {
+  it.each([false, true])('preserves async work when a computed dependency compares equal (injector: %s)', async (withInjector) => {
+    const injector = withInjector ? Injector.create({ providers: [] }) : undefined;
+    const source = signal('Marco');
+    const selected = computed(source, { equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    const runs: { abortSignal: AbortSignal; finish: (result: null) => void }[] = [];
+    const target = field('', {
+      ...(injector ? { injector } : {}),
+      validators: asyncValidator<string | null>((ctx) => {
+        selected();
+        return new Promise<null>((finish) => { runs.push({ abortSignal: ctx.abortSignal, finish }); });
+      }),
+    });
+    expect(target.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(1);
+    source.set('MARCO');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(1);
+    expect(runs[0]!.abortSignal.aborted).toBe(false);
+    source.set('Lia');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runs).toHaveLength(2);
+    expect(runs[0]!.abortSignal.aborted).toBe(true);
+    runs[1]!.finish(null);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(target.pending()).toBe(false);
+    expect(target.valid()).toBe(true);
+    injector?.destroy();
+  });
+
+  it.each(['shallow', 'deep'] as const)('retains equal exposed values with %s equality while preserving control input', (equal) => {
     const initial = { name: 'Marco' };
     const validate = vi.fn(({ value }: Context<unknown>) => { value(); return null; });
     const name = field(initial, [validate], { equal });
@@ -56,6 +90,8 @@ describe('field', () => {
     const initial = { values: new Map([['date', new Date(0)]]) };
     const shallow = field(initial, { equal: 'shallow' });
     const deep = field(initial, { equal: 'deep' });
+    expect(shallow()).toBe(initial);
+    expect(deep()).toBe(initial);
     const next = { values: new Map([['date', new Date(0)]]) };
     shallow.set(next);
     deep.set(next);
@@ -70,14 +106,16 @@ describe('field', () => {
       return a.toLowerCase() === b.toLowerCase();
     });
     const name = field.strict('Marco', { equal });
+    expect(name()).toBe('Marco');
     expect(equal).not.toHaveBeenCalled();
     const create = vi.fn(() => field.strict('Marco', { equal }));
     const model = computed(create);
     expect(model()()).toBe('Marco');
     expect(equal).not.toHaveBeenCalled();
     name.set('MARCO');
-    expect(equal).toHaveBeenCalledExactlyOnceWith('Marco', 'MARCO');
+    expect(equal).not.toHaveBeenCalled();
     expect(name()).toBe('Marco');
+    expect(equal).toHaveBeenCalledExactlyOnceWith('Marco', 'MARCO');
     unrelated.set(1);
     expect(model()()).toBe('Marco');
     expect(create).toHaveBeenCalledOnce();
@@ -86,6 +124,9 @@ describe('field', () => {
     alwaysDifferent.setValidators([validate]);
     alwaysDifferent.valid();
     alwaysDifferent.set('a');
+    alwaysDifferent.valid();
+    expect(validate).toHaveBeenCalledOnce();
+    alwaysDifferent.set('b');
     alwaysDifferent.valid();
     expect(validate).toHaveBeenCalledTimes(2);
   });
@@ -98,6 +139,7 @@ describe('field', () => {
       return a.toLowerCase() === b.toLowerCase();
     } });
     const schedule = vi.fn();
+    expect(name()).toBe('Marco');
     const writer = createWatch(() => name.set(next()), schedule, true);
     try {
       writer.run();
@@ -113,55 +155,86 @@ describe('field', () => {
     }
   });
 
-  it.each([0, 'blur', 100] as const)('keeps interaction and cancellation for equal control input with debounce %s', (debounce) => {
+  it.each([0, 'blur', 100] as const)('commits equivalent control input independently of exposed equality with debounce %s', (debounce) => {
     const initial = { name: 'Marco' };
     const name = field(initial, { equal: 'deep', debounce });
+    expect(name()).toBe(initial);
     name.setControlValue({ name: 'Lia' });
-    name.setControlValue({ name: 'Marco' });
+    const next = { name: 'Marco' };
+    name.setControlValue(next);
     expect(name.dirty()).toBe(true);
-    expect(name.debouncing()).toBe(false);
-    if (debounce !== 0) expect(name()).toBe(initial);
-    expect(name()).toEqual(initial);
+    expect(name.debouncing()).toBe(debounce !== 0);
+    expect(name()).toBe(initial);
     name.markAsTouched();
-    name.reset({ name: 'Marco' });
+    expect(name.debouncing()).toBe(false);
+    expect(name.touched()).toBe(true);
+    name.reset();
+    expect(name.controlValue()).toBe(next);
+    const resetValue = { name: 'Marco' };
+    name.reset(resetValue);
     expect(name.touched()).toBe(false);
     expect(name.pristine()).toBe(true);
-    expect(name.controlValue()).toBe(name());
+    expect(name.controlValue()).toBe(resetValue);
+    expect(name()).toBe(initial);
   });
 
-  it('propagates comparator errors without changing the committed value', () => {
+  it('reports comparator errors on exposed reads while preserving committed writes and recovery', () => {
     const failure = new Error('Comparison failed');
-    const name = field.strict('Marco', { equal: () => { throw failure; } });
-    expect(() => name.set('Lia')).toThrow(failure);
+    let shouldThrow = true;
+    const name = field.strict('Marco', { equal: (a, b) => {
+      if (shouldThrow) throw failure;
+      return a === b;
+    } });
     expect(name()).toBe('Marco');
-    expect(name.controlValue()).toBe('Marco');
+    name.set('Lia');
+    expect(name.controlValue()).toBe('Lia');
+    expect(() => name()).toThrow(failure);
+    name.reset();
+    expect(name.controlValue()).toBe('Lia');
+    expect(() => name.value()).toThrow(failure);
+    shouldThrow = false;
+    name.set('Ada');
+    expect(name()).toBe('Ada');
   });
 
-  it('cancels custom debounce work when the latest input equals the committed value', async () => {
-    let finish!: () => void;
-    let abortSignal!: AbortSignal;
+  it('replaces custom debounce work for publicly equivalent input and cancels only on identical committed input', async () => {
+    const runs: { abortSignal: AbortSignal; finish: () => void }[] = [];
     const debounce = vi.fn((signal: AbortSignal) => {
-      abortSignal = signal;
-      return new Promise<void>((resolve) => { finish = resolve; });
+      return new Promise<void>((finish) => { runs.push({ abortSignal: signal, finish }); });
     });
     const name = field.strict('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase(), debounce });
+    expect(name()).toBe('Marco');
     name.setControlValue('Lia');
     expect(name.debouncing()).toBe(true);
     name.setControlValue('MARCO');
-    expect(abortSignal.aborted).toBe(true);
-    expect(name.debouncing()).toBe(false);
-    expect(debounce).toHaveBeenCalledOnce();
-    finish();
+    expect(runs[0]!.abortSignal.aborted).toBe(true);
+    expect(name.debouncing()).toBe(true);
+    expect(debounce).toHaveBeenCalledTimes(2);
+    runs[0]!.finish();
     await Promise.resolve();
+    expect(name.debouncing()).toBe(true);
+    runs[1]!.finish();
+    await Promise.resolve();
+    expect(name.debouncing()).toBe(false);
     expect(name()).toBe('Marco');
     expect(name.controlValue()).toBe('MARCO');
     expect(name.dirty()).toBe(true);
+    name.setControlValue('Ada');
+    name.setControlValue('MARCO');
+    expect(runs[2]!.abortSignal.aborted).toBe(true);
+    expect(debounce).toHaveBeenCalledTimes(3);
+    expect(name.debouncing()).toBe(false);
+    runs[2]!.finish();
+    await Promise.resolve();
+    name.reset();
+    expect(name.controlValue()).toBe('MARCO');
   });
 
   it('captures equality at construction and accepts legitimate undefined values', () => {
     const equal = vi.fn((a: number | null | undefined, b: number | null | undefined) => a === b);
     const options = { equal };
     const value = field<number>(undefined, options);
+    expect(value()).toBeUndefined();
     expect(equal).not.toHaveBeenCalled();
     options.equal = vi.fn(() => true);
     value.set(1);
@@ -169,6 +242,22 @@ describe('field', () => {
     expect(equal).toHaveBeenCalledExactlyOnceWith(undefined, 1);
     value.set(null);
     expect(value()).toBeNull();
+  });
+
+  it('compares lazily against the last exposed value and coalesces intermediate writes', () => {
+    const equal = vi.fn((a: string, b: string) => a.toLowerCase() === b.toLowerCase());
+    const name = field.strict('Marco', { equal });
+    name.set('MARCO');
+    expect(name()).toBe('MARCO');
+    expect(equal).not.toHaveBeenCalled();
+    name.set('Lia');
+    name.set('marco');
+    expect(name()).toBe('MARCO');
+    expect(equal).toHaveBeenCalledExactlyOnceWith('MARCO', 'marco');
+    const updater = vi.fn(value => `${value}!`);
+    name.update(updater);
+    expect(updater).toHaveBeenCalledExactlyOnceWith('MARCO');
+    expect(name()).toBe('MARCO!');
   });
 
   it('keeps a computed field instance when validators or parent ownership change', () => {

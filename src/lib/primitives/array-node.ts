@@ -12,6 +12,7 @@ import { computedFunction } from '../utils/computed-function';
 import { registerAngularField } from '../interop/angular-field';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
+import { resolveValueEquality } from './utils/resolve-value-equality';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
@@ -48,6 +49,8 @@ export class ArrayNode<TItem extends Node> {
   cloneOptions: Omit<ArrayOptions<ArrayValue<TItem>, any>, 'initialValue'> | undefined;
 
   cloneInitial: number | ArraySet<TItem>;
+
+  equal: (previous: ArrayValue<TItem>, next: ArrayValue<TItem>) => boolean = Object.is;
 
   usedDefinitions = new WeakSet<object>();
 
@@ -105,7 +108,13 @@ export class ArrayNode<TItem extends Node> {
 
   length = computed(() => this.items().length);
 
-  value = computed<ArrayValue<TItem>>(() => this.items().map(item => item()) as ArrayValue<TItem>);
+  value = computed<ArrayValue<TItem>>(() => {
+    return this.items().map(item => (item as unknown as InternalNode).$api._value()) as ArrayValue<TItem>;
+  });
+
+  exposedValue = computed(() => {
+    return this.items().map(item => item()) as ArrayValue<TItem>;
+  }, { equal: (previous, next) => this.equal(previous, next) });
 
   controlDebounce = computed(() => {
     return this.options?.debounce
@@ -214,6 +223,7 @@ export class ArrayNode<TItem extends Node> {
     public initialValidatorSource: ValidatorSource<ArrayValue<TItem>, any>,
     public options?: ArrayOptions<ArrayValue<TItem>, any>,
   ) {
+    this.equal = resolveValueEquality(this.options?.equal);
     if (this.options !== undefined) {
       const { initialValue: _initialValue, ...cloneOptions } = this.options;
       this.cloneOptions = cloneOptions;
@@ -232,7 +242,7 @@ export class ArrayNode<TItem extends Node> {
       this.validators.set(validators);
     });
 
-    this.context = markAsFieldContext({ value: this.value });
+    this.context = markAsFieldContext({ value: this.exposedValue });
     this.metadata = createNodeMetadata(
       this.validators,
       computed(() => this.syncValidation().metadata),
@@ -536,7 +546,7 @@ export class ArrayNode<TItem extends Node> {
     const current = [...this.items()];
     const currentByKey = new Map<unknown, TItem>();
     current.forEach((item, index) => {
-      const key = getTrackingKey(item() as NodeValue<TItem>, index);
+      const key = getTrackingKey((item as unknown as InternalNode).$api._value() as NodeValue<TItem>, index);
       if (currentByKey.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in current items`);
       currentByKey.set(key, item);
     });
@@ -579,7 +589,7 @@ export class ArrayNode<TItem extends Node> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
-      value: this.value,
+      value: this.exposedValue,
       controlValue: this.controlValueBuffer.controlValue,
       at: index => this.items()[index] as ArrayItemNode<TItem> | undefined,
       forEach: callback => this.forEach(callback),
@@ -600,7 +610,7 @@ export class ArrayNode<TItem extends Node> {
       swap: (firstIndex, secondIndex) => this.swap(firstIndex, secondIndex),
       clear: () => this.clear(),
       set: value => this.set(value),
-      update: updater => untracked(() => this.set(updater(this.value()))),
+      update: updater => untracked(() => this.set(updater(this.exposedValue()))),
       patch: value => this.patch(value),
       reset: (...args) => this.reset(...args),
       validators: this.validators.asReadonly(),
@@ -643,6 +653,7 @@ export class ArrayNode<TItem extends Node> {
 
     const internalApi = {
       ...publicApi,
+      _value: this.value,
       _controlDebounce: this.controlDebounce,
       _controlValue: publicApi.controlValue,
       _setControlValue: (value: ArraySet<TItem> | null | undefined) => this.controlValueBuffer.set(this.normalizeArrayValue(value)),
@@ -657,7 +668,7 @@ export class ArrayNode<TItem extends Node> {
 
     // defineProperties replaces the callable's built-in length with the public signal.
     const callableNode = Object.defineProperties(
-      () => this.value(),
+      () => this.exposedValue(),
       Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, $api: internalApi }),
     );
 

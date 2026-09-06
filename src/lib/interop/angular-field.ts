@@ -187,7 +187,7 @@ const synchronizeNodeState = (node: Node, fieldTree: FieldTree<any>, injector: I
           element: binding.element,
           focus: options => binding.focus(options),
           reset: () => {
-            if (fieldTree().formFieldBindings()[0] === binding) fieldTree().reset(node());
+            if (fieldTree().formFieldBindings()[0] === binding) fieldTree().reset((node as InternalNode).$api._value());
           },
         }),
         registerExternalValidationErrors(node, binding, parseErrors),
@@ -284,18 +284,19 @@ export const getFormNodeBindingForAngularField = (binding: FormFieldBinding): Fo
 };
 
 const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
-  const model = signal(root());
+  const value = (root as InternalNode).$api._value;
+  const model = signal(value());
   const fieldTree = createAngularForm(model, (path) => {
     configureNode(path as unknown as SchemaPath<any>, () => root, root);
   }, { injector });
-  let previousNodeValue = root();
+  let previousNodeValue = value();
   let previousAngularValue = model();
   const angularControlValues: AngularControlValueSnapshots = new WeakMap();
   captureAngularControlValues(root, fieldTree, angularControlValues);
   const connectedNodeSynchronizer = createConnectedNodeSynchronizer(root, injector);
 
   effect(() => {
-    const nodeValue = root();
+    const nodeValue = value();
     const angularValue = model();
     const nodeChanged = !shallowEqual(nodeValue, previousNodeValue);
     const angularChanged = !shallowEqual(angularValue, previousAngularValue);
@@ -310,7 +311,7 @@ const createAdapter = (root: Node, injector: Injector): AngularFieldAdapter => {
     } else if (nodeChanged && !routedControlValue && !shallowEqual(nodeValue, angularValue)) {
       untracked(() => model.set(nodeValue));
     }
-    previousNodeValue = root();
+    previousNodeValue = value();
     previousAngularValue = model();
     captureAngularControlValues(root, fieldTree, angularControlValues);
     untracked(() => connectedNodeSynchronizer.reconcile(fieldTree));

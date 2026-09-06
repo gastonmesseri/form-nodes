@@ -8,7 +8,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators, type ControlValueAccessor } from '@angular/forms';
 
+import { form } from '../primitives/form';
 import { field } from '../primitives/field';
+import { array } from '../primitives/array';
+import { group } from '../primitives/group';
 import { useControlState } from './control-state';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
@@ -31,6 +34,60 @@ afterAll(() => TestBed.resetTestEnvironment());
 describe('useControlState', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
+
+  it.each(['field', 'form', 'group', 'array'] as const)('reads current committed %s values independently of public equality and pending control input', (kind) => {
+    const name = field.strict<string>('Marco', kind === 'field' ? {
+      equal: (a, b) => a.toLowerCase() === b.toLowerCase(),
+      debounce: 'blur',
+    } : {});
+    const objectOptions = { equal: (a: { name: string }, b: { name: string }) => a.name.toLowerCase() === b.name.toLowerCase(), debounce: 'blur' as const };
+    const target = kind === 'field' ? name : kind === 'form' ? form({ name }, objectOptions)
+      : kind === 'group' ? group({ name }, objectOptions)
+        : array(() => group({ name }), { initialValue: 1, debounce: 'blur', equal: (a, b) => a[0]!.name.toLowerCase() === b[0]!.name.toLowerCase() });
+    const expected = (value: string) => {
+      return kind === 'field' ? value : kind === 'array' ? [{ name: value }] : { name: value };
+    };
+    @Component({ selector: 'equality-state-control', template: '' })
+    class EqualityStateControl {
+      value = model<unknown>(null);
+      state = useControlState();
+    }
+    registerSignalModelForJit(EqualityStateControl, 'value');
+    @Component({ template: `<equality-state-control [formNode]="target" />`, imports: [EqualityStateControl, FormNode] })
+    class Host {
+      target = target;
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as EqualityStateControl;
+    const initial = target();
+    expect(control.state.value()).toEqual(expected('Marco'));
+    name.set('MARCO');
+    fixture.detectChanges();
+    expect(target()).toBe(initial);
+    expect(control.value()).toEqual(expected('MARCO'));
+    expect(control.state.value()).toEqual(expected('MARCO'));
+    control.value.set(expected('marco'));
+    fixture.detectChanges();
+    expect(target.debouncing()).toBe(true);
+    expect(control.state.value()).toEqual(expected('MARCO'));
+    expect(control.value()).toEqual(expected('marco'));
+    control.state.markAsTouched();
+    fixture.detectChanges();
+    expect(target.debouncing()).toBe(false);
+    expect(control.state.value()).toEqual(expected('marco'));
+    expect(target()).toBe(initial);
+    expect(control.state.dirty()).toBe(true);
+    expect(control.state.touched()).toBe(true);
+    target.reset();
+    fixture.detectChanges();
+    expect(control.state.value()).toEqual(expected('marco'));
+    expect(control.state.dirty()).toBe(false);
+    expect(control.state.touched()).toBe(false);
+    fixture.destroy();
+    expect(control.state.connected()).toBe(false);
+    expect(control.state.value()).toBeUndefined();
+  });
 
   it('does not let an older host registration disconnect a newer one', () => {
     const element = document.createElement('div');
@@ -79,7 +136,7 @@ describe('useControlState', () => {
     expect(state.maxLength()).toBe(20);
     expect(state.pattern()).toEqual([/^[a-z]+$/i]);
     expect(state.errors()).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'required' })]));
-    expect(state.name()).toContain('.form0');
+    expect(state.name()).toMatch(/\.form\d+$/);
     state.markAsTouched();
     expect(fixture.componentInstance.name.touched()).toBe(true);
     fixture.componentInstance.name.markAsUntouched();

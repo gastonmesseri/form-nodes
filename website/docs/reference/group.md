@@ -188,6 +188,7 @@ A group can inherit `submitting()` from an ancestor form but cannot initiate sub
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
 | [`validators`](#group-validators-option) | Validator, validator array, `null`, or `undefined` | Validates the complete object value. Child validators remain independent. |
+| [`equal`](#group-equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed aggregate values; defaults to `Object.is`. |
 | [`validatorMessages`](#group-validatormessages-option) | Message catalog or reactive catalog function | Overrides built-in validator messages for this subtree. |
 | [`debounce`](#group-debounce-option) | Milliseconds, `'blur'`, or cancelable asynchronous function | Provides the default control-value debounce inherited by descendants. |
 | [`hidden`](#group-hidden-option) | Boolean or reactive function | Sets or reactively derives hidden state for the complete subtree. |
@@ -221,6 +222,15 @@ concerns that child's value.
 Each option includes its signature, default behavior, scope, and a complete example.
 
 ### Values and validation
+
+#### equal {#group-equal-option}
+
+**Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
+
+Controls the public group snapshot used by callable/value reads, value-dependent validators,
+update callbacks, and public parent values. Child writes and control synchronization keep using
+current committed values. See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality)
+for the executable example and full contract shared with `form()`.
 
 #### validators {#group-validators-option}
 

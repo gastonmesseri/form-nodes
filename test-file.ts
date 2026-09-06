@@ -59,7 +59,7 @@ const myForm = form({
     validators: [minLength(1)],
     trackBy: 'name',
   }),
-  whatIsThis: field(undefined),
+  whatIsThis: field(undefined, { equal: 'deep' }),
   something: field(''),
   // a: field(2)
 
@@ -83,6 +83,8 @@ const myForm = form({
     b: field(2),
     c: field(true),
   }, [ctx => ctx.value() ? { kind: '' } : null]),
+}, {
+  // equal: 'deep',
 });
 
 

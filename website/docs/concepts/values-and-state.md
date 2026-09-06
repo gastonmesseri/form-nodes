@@ -2,6 +2,10 @@
 title: Values and state
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import aggregateValueEqualitySource from '!!raw-loader!../../examples/aggregate-value-equality.example.ts';
+import consumerValueEqualitySource from '!!raw-loader!../../examples/consumer-value-equality.example.ts';
+
 # Values and state
 
 Nodes are callable signals. **Prefer calling the node itself to read its committed value:**
@@ -43,9 +47,87 @@ application examples and ordinary consumer code.
 The [Tree navigation and API access](./tree-and-api.md) guide documents `.api` for the uncommon case
 where a child name collides with a node member and for generic infrastructure.
 
+## Custom equality for a consumer
+
+When a particular consumer needs its own definition of equality, derive a signal with Angular's
+`computed()` and supply an `equal` function. This works with `form()`, `group()`, `array()`, and
+`field()`: read the selected node inside the computation and compare the resulting values.
+
+The following preview treats name capitalization as irrelevant while still observing email changes:
+
+<CodeBlock language="ts">{consumerValueEqualitySource}</CodeBlock>
+
+Returning `true` retains the computed signal's **previous value and reference**. It does not keep
+the latest value while merely silencing notifications. Consumers depending only on that derived
+signal can skip recomputation; the source computation and equality check still run when needed
+to compare a changed source. Other reactive dependencies can still cause a consumer to run.
+
+In this example, `profile()` contains `'MARCO'` immediately, while `previewValue()` retains
+`'Marco'` until a non-equivalent change occurs. Read the node directly whenever the latest committed
+value matters. The derived signal does not alter the node's validation, submission, control values,
+interaction state, or debounce cancellation; those continue to use the node's own model and state.
+
+Keep the comparator pure and only treat values as equal when they are interchangeable for this
+consumer. Its arguments are inferred from the computation, including any field nullability.
+Signals read inside the equality function are not tracked as dependencies; read reactive inputs
+in the computation itself when they must trigger updates.
+
+This differs from configuring equality on a node, which affects its public value for all consumers.
+[`field(..., { equal })`](../reference/field.md#field-equal-option), `form()`, `group()`, and `array()` apply
+equality to their exposed values. Internal storage and controls still accept the latest writes.
+A derived `computed()` remains useful when the comparison belongs to only one consumer.
+
+## Aggregate value equality
+
+`form()`, `group()`, and `array()` accept `equal: 'shallow'`, `'deep'`, or a typed
+`(previous, next) => boolean` function. The default is `Object.is`. Equality controls the exposed
+aggregate snapshot while each child continues to accept its own committed values and apply its
+own public equality, if configured.
+
+<CodeBlock language="ts">{aggregateValueEqualitySource}</CodeBlock>
+
+| Operation or read | Value used |
+| --- | --- |
+| Node call and equivalent `value()` signal | Exposed aggregate value, retaining the previous value when equal. |
+| Validator `ctx.value()` and value passed to `submit()` | Exposed value. |
+| Input to an `update()` callback | Exposed value. |
+| Public parent composition, including arrays | Exposed values of its children. |
+| Child writes, reconciliation, and control synchronization | Current committed child values. |
+| Aggregate control debounce invalidation | Current committed values, independently of public equality. |
+
+`'shallow'` compares direct properties with `Object.is`. `'deep'` uses the same recursive comparison
+as [field equality](../reference/field.md#field-equal-option). Custom comparator arguments preserve
+the complete inferred object or array shape and child nullability. The option is captured at construction,
+is not inherited, and is preserved in configured factories and array template clones.
+
+The exposed aggregate is a lazy `computed()`. The first evaluation publishes the current snapshot
+without comparing it; later evaluations compare against the last exposed value. Intermediate
+writes may be combined before a read. Comparator reads are untracked. A throwing comparator can
+make an exposed read fail after children have already accepted their values; a later dependency
+change allows the computed to recover. Fields follow the same exposed-value strategy: equality
+does not reject writes at storage time.
+
+Value-only validators can retain their result or pending asynchronous work after an equal change.
+Other dependencies still matter: a validator that reads `ctx.node().name()` directly observes that
+child's public value, and child errors and interaction state continue propagating independently.
+The comparator must therefore treat values as interchangeable for the aggregate's validation and
+submission rules, as well as for its other consumers.
+
+`reset()` clears interaction and pending control work while preserving current child values.
+`reset(value)` assigns the supplied child values; the exposed aggregate may still retain an equal
+previous snapshot. Bound controls follow current committed values. Consequently `controlValue()`
+may differ from the exposed aggregate even without a pending debounce; it remains a control-facing
+signal, not an alternative general-purpose value accessor.
+
+Array equality filters the public value independently of structure. `items()`, indexed access,
+`length()`, paths, and reconciliation follow the current nodes even if the exposed value retains
+an older array. A comparator that ignores ordering can retain the old public order while item nodes
+move; one that ignores length can retain a different public item count. Use `items()` for rendering
+dynamic rows. See [array equality](../reference/array.md#equal-option) for an executable example.
+
 ## Set, update, and patch
 
-`set()` replaces a complete value. `update()` computes a complete value from the current committed value:
+`set()` replaces a complete value. `update()` computes a complete value from the current exposed value:
 
 ```ts
 profileForm.set({

@@ -24,6 +24,16 @@ Synchronous and asynchronous validators, forms, and arrays observe committed val
 [Alternative value access](../concepts/values-and-state.md#alternative-value-access) for the
 equivalent explicit signal paths used by generic infrastructure.
 
+If a consumer needs a custom comparison of committed values, use
+[`computed()` with an equality function](../concepts/values-and-state.md#custom-equality-for-a-consumer).
+Its retained value belongs to that consumer; it does not change model updates or debounce behavior.
+
+With [`equal` on a field](../reference/field.md#field-equal-option),
+[form, group, or array](../concepts/values-and-state.md#aggregate-value-equality), its public value can
+retain an earlier equivalent snapshot while internal storage and controls hold newer committed
+values. Pending aggregate control input is invalidated by the actual child changes,
+including changes hidden by public equality. Validation and submission receive the exposed value.
+
 ## Programmatic operations
 
 | Operation | Value effect | Dirty | Touched |
@@ -36,7 +46,8 @@ equivalent explicit signal paths used by generic infrastructure.
 
 Programmatic writes are synchronous and never debounced. They cancel pending control work and synchronize the directly bound control representation immediately.
 
-An `update()` callback runs once, synchronously and untracked, and receives the current committed value rather than a pending control value.
+An `update()` callback runs once, synchronously and untracked, and receives the current exposed
+value, including any value retained by `equal`, rather than a pending control value.
 
 ## Control-originated values
 
@@ -77,6 +88,10 @@ field('', {
 
 Every new control value restarts the strategy and aborts prior custom work. Rejected custom debounce work leaves the committed value unchanged. `flush()` commits the latest value immediately and aborts outstanding work.
 
+Field input identical to its current internal value under `Object.is` cancels earlier work without
+scheduling replacement work. Custom public equality does not skip a debounce: an equivalent but
+internally different value still needs to commit.
+
 Pending timers and custom debounce promises do not, by themselves, keep unused nodes or their
 parent trees alive. This also applies to cancelled custom work whose promise has not settled yet.
 Nodes you still retain complete their debounce normally. References held by your own controls,
@@ -87,6 +102,9 @@ callbacks, values, or injectors keep their normal ownership.
 Marking an interactive node touched commits its pending control value for every debounce strategy. Touching a form or array recursively does the same for descendants unless `{ skipDescendants: true }` is used.
 
 `reset()` without a value behaves differently: it cancels pending debounce, discards the buffered value, and restores `controlValue()` and rendered controls from the committed model.
+
+When `equal` retains an older exposed value, reset still restores the latest internally committed
+value to controls. It does not replace that value with the older public representative.
 
 ## Inherited debounce
 

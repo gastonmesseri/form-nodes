@@ -56,6 +56,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
           queueMicrotask(() => {
             if (execution !== notifiedExecution) return;
             const currentTracked = trackedValidators.get(validator);
+            if (!currentTracked?.runner.hasChanges()) return;
             if (currentTracked?.paramsReader) {
               const nextParams = currentTracked.runner.run(currentTracked.paramsReader);
               if (shallowEqual(currentTracked.paramsValue, nextParams)) return;

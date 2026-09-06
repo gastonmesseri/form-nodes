@@ -1,5 +1,6 @@
 import { computed, signal, type DestroyRef, type Signal, type WritableSignal } from '@angular/core';
 
+import type { InternalNode } from '../../types/node.type';
 import type { ControlStateAdapter } from '../control-state-adapter';
 import { getFormNodeName } from '../../form-node/utils/form-node-name';
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
@@ -41,7 +42,7 @@ export const injectFormNodeControlStateAdapter = <TValue>(element: HTMLElement, 
   return {
     source: 'formNode',
     connected: computed(() => binding() !== null),
-    value: computed(() => node()() as TValue),
+    value: computed(() => (node() as InternalNode).$api._value() as TValue),
     disabled: computed(() => node().$api.disabled()),
     disabledReasons: computed(() => node().$api.disabledReasons().map(({ message }) => message === undefined ? {} : { message })),
     dirty: computed(() => node().$api.dirty()),

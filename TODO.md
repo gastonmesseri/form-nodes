@@ -31,15 +31,17 @@
       }
     })
 
-- [NEXT] [ ] Consider extending `equal` to `form()`, `group()`, and `array()` after reviewing retained aggregate values versus independently updated child values. Field equality is implemented; aggregate equality remains a separate decision.
-
 - [NEXT] [ ] NAME LIBRARY (form-nodes) ?
   - Consider @gemgular/forms name for library
   - maybe @gem/ng-form-nodes and keep all my libraries under @gem?
+  - maybe @gem/ng-forms
+  - let's try to brainstorm names (200) names, and later select
+  - i'd like it to sound official
   - [ ] Rename to something generic like @ng-tools/forms (maybe)
 
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
+  - DO AS MUCH AS POSSIBLE TO INDEX IN NPM GITHUB AND GOOGLE
 
 - [NEXT] [ ] Improve submit options api (right now is nested i think)
   - [ ] Consider the following (changing submission api):
@@ -325,7 +327,6 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Pending decisions
 
--
 
 
 ## Bugs
@@ -360,6 +361,47 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 
 ## Completed
+
+- [x] Audit internal node-value reads across all library runtime folders after introducing exposed equality.
+  - [x] Inspect text references and typed callable reads; verify internal aggregation, trackBy, control buffers, Angular synchronization/reset, and clone recipes use their intended value sources.
+  - [x] Correct the `[formNode]` control-state adapter to read `$api._value()` and verify current committed values, pending input, reset, interaction, and disconnect through field/form/group/array bindings.
+  - [x] Preserve exposed reads for public parent composition, validation/metadata contexts, submission, and update callbacks; preserve control-value reads for UI/CVA rendering.
+  - [x] Record the routing criterion in `AGENTS.md` and the detailed audit in `docs/behavior.md`, with consumer documentation and real-browser coverage.
+
+- [x] Evaluate and implement equality on `ArrayNode` after the internal/public value split.
+  - [x] Accept shallow, deep, or typed custom comparison through `ArrayOptions`, including configured factories, object/field/factory templates, and nested arrays. Capture the comparator and apply it only to `exposedValue`.
+  - [x] Preserve structural identity, moves, paths, detachment, child state, keyed reconciliation, and pending array/ancestor buffer invalidation across equivalent public changes.
+  - [x] Cover lazy evaluation, comparator errors and recovery, template clones, public validation/submission/update routing, and asynchronous cancellation with and without injection contexts.
+  - [x] Document array equality and its independent structural state with an executable example and browser control coverage. Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`, computed implementation/tests, field structure, dynamic node tests, and deep-signal implementation/tests.
+
+- [x] Evaluate moving `FieldNode` to separate stored and exposed values and implement the shared exposed-value strategy.
+  - [x] Use `value` and `exposedValue` consistently in `FieldNode`, `FormGroupNode`, and `ArrayNode`. Simplify aggregate public composition to read exposed children directly, replacing the first-stage snapshot reuse optimization.
+  - [x] Apply field equality lazily to `exposedValue`; use internal `Object.is` storage for writes, reset, control synchronization, and debounce. Update callbacks and validators receive the exposed value.
+  - [x] Deliberately revise comparator timing/errors and identical-write behavior to follow Angular computed semantics. Preserve public parent composition, asynchronous validation ownership, and pending control invalidation across hidden internal changes.
+  - [x] Update behavioral tests, browser controls, executable documentation, and the consumer contract. Array-specific equality was deferred at this stage and implemented subsequently above.
+
+- [x] Implement the internal/exposed value split in `FormGroupNode` as the first stage of the dual-value design, replacing the earlier decision to defer all aggregate equality.
+  - [x] Expose `equal: 'shallow' | 'deep' | comparator` on form/group options, including configured factories and clones. Keep the existing field equality contract and defer array equality.
+  - [x] Route callable/value reads, validators, submission values, and update callbacks through the exposed model. Compose public parents from public children and internal parents from committed children; reuse snapshots when both paths agree.
+  - [x] Keep controls, reset, debounce invalidation, and array key reconciliation on committed values, including nested arrays and Angular bindings.
+  - [x] Preserve asynchronous work across equal computed dependencies without losing later notifications. Cover behavior through field/form tests, focused utilities, public type tests, and browser bindings.
+  - [x] Document the contract and executable example in the website and behavior reference. Array and field migration were deferred at this stage; the subsequent field migration is recorded above.
+
+- [x] Audit the proposed internal/public value split against Angular `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`) and the current primitive, validation-context, control-buffer, and Angular-adapter implementations.
+  - A temporary two-signal prototype kept callable/value reads on the same exposed computed while passing the committed aggregate to the real control-buffer helper. A later child edit invalidated pending aggregate control input even when the exposed comparator retained the old value. This resolves the earlier debounce objection for that architecture.
+  - Parent aggregates and the Angular adapter currently read callable nodes. An internal model must use a separate internal accessor when crossing node boundaries; changing only `createNode()` would still route these operations through exposed values. Parent raw-value aggregation can expose a child's latest internal value even while that child's public comparator retains an earlier representative; using public children for the parent view requires a separate aggregation path.
+  - Validators reading exposed values may skip revalidation of changes accepted internally. Submitting internal values therefore requires equality to preserve all relevant validation rules, or validation/submission routing must use a different explicit contract. `ctx.value()` and node-navigation reads also need a deliberate routing policy.
+  - Moving the existing field comparator from its writable signal to a computed changes update/reset inputs, comparison timing, handling of skipped intermediate writes, and comparator exceptions. A default `Object.is` internal signal also suppresses identical writes before an always-false exposed comparator can observe them. These are observable contract changes, not a transparent refactor.
+  - Temporary probes passed for separate value reads, debounce invalidation, validator/submission mismatch, parent-channel selection, and field compatibility differences. The focused field, form, group, array, buffer, and Angular-adapter suites passed: 535 tests in 6 files. No library behavior was changed; the architecture remains under exploration.
+
+- [x] Document consumer-specific equality through `computed(() => node(), { equal })` for all node kinds, with an executable example showing retained derived values, current committed values, and downstream recomputation. Keep configurable node equality on fields; extending it directly to aggregates is deferred following the audit.
+
+- [x] Audit extending field equality to aggregates before implementation (Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`).
+  - Inspected `packages/core/primitives/signals/src/computed.ts` and `packages/core/test/signals/computed_spec.ts`: equal computed results retain the previous value, skip value-dependent consumers, and do not track comparator reads. Signal Forms instead projects children from its shared writable model; inspected `packages/forms/signals/src/util/deep_signal.ts` and `packages/forms/signals/test/node/deep_signal.spec.ts`.
+  - Temporary probes simulated comparator installation on existing aggregate computed signals without changing shipped source. A case-insensitive form comparator retained `'Marco'` after its child changed to `'MARCO'`; form value-only validation did not rerun, child validation did, and submission received the retained value. Deep equality retained old object references in forms/groups after children accepted equivalent replacements.
+  - The control buffer currently uses committed value identity to invalidate pending aggregate input after child or structural changes. Retained custom equality allowed stale pending input to overwrite a later child edit. Even shallow equality preserved pending array input after swapping equal-valued item nodes, changing existing cancellation behavior.
+  - Shallow equality can preserve the aggregate value and skip value consumers when equal-valued array items are reordered, but structural state must still update independently. Any implementation must separate model/structure revisions from retained value equality before changing buffer invalidation.
+  - The focused field, form, group, array, and control-buffer suites passed: 504 tests across 5 files. Runtime behavior and the public API remain unchanged; the product decision is recorded under Pending decisions.
 
 - [x] Expose `FormNodeValue<typeof node>` to extract the committed value type of any form, group, array, or field and document it in its own reference page. Extend the initial form-only helper to all node kinds while preserving the existing `FormValue<TNodes>` child-map contract, nested values, nullability, and configured primitives.
 

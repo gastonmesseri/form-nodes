@@ -267,16 +267,20 @@ These reads refer to the same value. Most field state and actions are exposed bo
 
 `FieldOptions<TValue>.equal` accepts `'shallow'`, `'deep'`, or a typed
 `(previous: TValue, next: TValue) => boolean` comparator. The default remains `Object.is`.
-The option is captured at construction and applies to the committed writable value signal, so the
-callable field, `value()`, validator context, and parent aggregate all observe the same retained
-value. Equal writes preserve the previous reference and do not invalidate value-dependent sync
-or async validation. Other dependencies, including interaction and explicit validation requests,
-retain their existing effects. Array template clones preserve the field's equality option.
+The option is captured at construction and applies to an exposed computed value. The internal
+`value` signal always uses `Object.is`; `exposedValue` supplies the callable field, public `value()`,
+validator context, update callbacks, and public parent composition. Equivalent exposed values
+preserve the previous reference and do not rerun value-dependent sync or async validation.
+Other dependencies, including interaction and explicit validation requests, retain their existing
+effects. Array template clones preserve the field's equality option. Equality is not inherited.
 
-Comparators run untracked and are not invoked while seeding the temporary constructor storage.
-Actual nullable or undefined field values are still passed to comparators during later writes.
-Comparator exceptions propagate from a committed write without replacing its stored value.
-The option is currently field-only and is not inherited from ancestors.
+Comparators run untracked during exposed computation. The first evaluation publishes the current
+internal value without comparing, so writing before the first read can change that first exposed
+value. Later evaluations compare against the last exposed value; intermediate writes may coalesce.
+Actual nullable or undefined values are passed to subsequent comparisons, but temporary constructor
+storage is never exposed. Comparator exceptions affect exposed reads after internal writes have
+committed; a later internal change permits recovery. Identical internal writes are skipped under
+`Object.is`, even if the custom comparator always returns false.
 
 `shallow` uses the existing object/array own-key comparator with `Object.is` for direct values.
 `deep` is an independent implementation of lodash 4.18.1 `isEqual`-style value semantics, including
@@ -288,17 +292,95 @@ need not have identical aliasing in an otherwise equivalent acyclic graph. Deep 
 not snapshot in-place mutations. The implementation does not depend on lodash or unwrap its
 library-specific chain objects.
 
-`controlValue()` retains the latest input independently of committed equality. Control changes
-still mark dirty. An equal input cancels obsolete debounce work without scheduling replacement
-work; non-equal input follows the existing debounce strategy. `set()` still cancels pending control
-work, and `reset()` still clears interaction, resets control bindings, and reconciles control value
-to the retained committed value, even if its explicit value compares equal.
+`controlValue()` retains the latest input independently of exposed equality. Control changes still
+mark dirty. Only input identical to the current internal value under `Object.is` cancels obsolete
+debounce work without scheduling replacement work. Publicly equivalent but internally different
+input follows the existing debounce strategy. `set()` cancels pending control work and stores the
+new value. `reset()` clears interaction, resets control bindings, and restores the latest internally
+committed value, independently of a retained exposed value. `reset(value)` stores its explicit
+value even when publicly equivalent. `update()` receives the exposed value.
 
 The Angular reference is `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`):
-`packages/core/primitives/signals/src/signal.ts` and `packages/core/test/signals/signal_spec.ts`
-govern retained values and custom comparison. Signal Forms projects children from a shared model
-through `packages/forms/signals/src/util/deep_signal.ts`; Gem deliberately adds per-field equality
-to its independently owned values. Control interaction remains separate from committed equality.
+`packages/core/primitives/signals/src/signal.ts`, `computed.ts`, and their corresponding
+`packages/core/test/signals/` tests govern storage and exposed comparison. Signal Forms projects
+children from a shared model through `packages/forms/signals/src/util/deep_signal.ts`, covered by
+`packages/forms/signals/test/node/deep_signal.spec.ts`. Gem deliberately adds public equality over
+independently owned values; control interaction and committed storage remain separate.
+
+Consumers that need their own comparison of a form, group, array, or field value should derive a
+`computed(() => node(), { equal: comparator })`. A comparison returning true retains the derived
+signal's previous value/reference and can suppress downstream recomputation, while the node and
+its ancestors, validators, submission, and control buffers keep observing their own committed
+values. This pattern gives one consumer its own comparator. Comparators must be pure and regard
+values as interchangeable for that consumer; comparator signal reads are untracked. The Angular
+`v22.1.5` computed implementation and `packages/core/test/signals/computed_spec.ts` establish these
+semantics. The executable website example checks both retained consumer values and current node
+values, plus downstream recomputation after equal and non-equal changes.
+
+## Aggregate value equality
+
+`form()`, `group()`, and `array()` accept `equal: 'shallow' | 'deep' | ((previous, next) => boolean)` with the
+complete inferred aggregate value type. `Object.is` remains the default. The option is captured
+at construction, is not inherited, and survives configured factories and template cloning.
+`FieldNode`, `FormGroupNode`, and `ArrayNode` consistently name their internal model `value` and
+their public computed `exposedValue`. Array comparators receive the complete inferred array value,
+including nullable item values and properties; options are preserved in cloned array templates.
+
+| Operation | Value path |
+| --- | --- |
+| Callable, public `value`, validator context `value` | Exposed aggregate snapshot. |
+| Submission action value, update callback argument | Exposed aggregate snapshot. |
+| Public form/group/array composition | Exposed child values. |
+| Internal aggregation, reconciliation, keyed array matching | Current committed child values through internal `_value`. |
+| Control synchronization and aggregate debounce baseline | Current committed values, independently of exposed equality. |
+| Reset without a value | Preserve current child values; clear interaction and pending control work. |
+
+The exposed aggregate is a lazy computed signal. The first read publishes the current value
+without comparing; subsequent evaluation retains the previous value/reference when equality
+returns true. Reads inside the comparator are untracked, intermediate writes can be coalesced,
+and comparator errors affect exposed reads after child writes have already committed. A later
+dependency change permits recovery. Fields follow the same exposed-value strategy.
+
+Public parent computations track public child signals independently of the internal aggregate.
+Each aggregate independently constructs its internal snapshot from internal child values and its
+public snapshot from exposed child values. Both computations remain lazy and memoized. An equal
+public change therefore does not force public parents to revalidate, while controls and buffers
+still observe the latest committed child values, even across arrays. Public and control snapshots
+can contain equal data without sharing object/array identity.
+
+Array equality never filters structural operations. `items()`, indexed access, length, iteration,
+parent/key/path signals, detachment, interaction, and child validation remain based on current nodes.
+Keyed reconciliation uses internal committed values even when the public array retains an older
+snapshot. Reordering equal-valued nodes still changes the internal array snapshot and invalidates
+obsolete pending control input on the array or an ancestor. A custom comparator that ignores order
+or count can deliberately retain a public array with a different order or length from current nodes;
+consumers render dynamic rows using `items()`. Array equality is not inherited by item nodes.
+
+Value-only synchronous validation retains its result, and asynchronous validation keeps pending
+work when its computed dependencies compare equal. Tracked asynchronous callbacks poll actual
+producer changes before restarting; an unchanged computed dependency clears its dirty notification
+without losing subsequent notifications. Reads of other signals or direct child nodes remain
+independent validation triggers. Child errors, availability, and interaction propagate normally.
+Submission and update callbacks receive the same exposed model available to consumers; equality
+must represent interchangeable values for those operations and the aggregate's validation rules.
+
+`reset(value)` writes the supplied child values even if the public aggregate retains an equivalent
+snapshot. Control-facing values may therefore differ from public aggregate reads with no pending
+debounce. This is intentional; `controlValue` remains a control representation rather than another
+general-purpose public model accessor. Angular `[formField]` synchronization and `[formNode]`
+control buffers use committed values so retained snapshots cannot revert control input.
+
+Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`:
+`packages/core/primitives/signals/src/computed.ts`, `watch.ts`, and the matching computed tests
+govern retained values and dependency polling. Signal Forms `util/deep_signal.ts` and
+`test/node/deep_signal.spec.ts` project child values from a shared model. Gem's two aggregate value
+paths are an intentional extension for independently owned child nodes.
+
+For array identity and moves, also inspected Angular `packages/forms/signals/src/field/structure.ts`
+and `packages/forms/signals/test/node/dynamic.spec.ts` on the same release: object array children
+preserve their node identity across moves and subsequent writes target the new key. Gem retains its
+explicit `trackBy`/index reconciliation API and adds independent public equality without changing
+structural ownership.
 
 ## Creating forms
 
@@ -2518,6 +2600,14 @@ Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an
 
 ### Universal control-state state
 
+The facade's `value()` reports current committed binding data. For `[formNode]`, it reads the
+node's internal `_value`, so public equality cannot hide committed changes from a custom control.
+It does not report pending debounce input; that remains in the control's `model()` and the node's
+`controlValue()`. Error/validation signals still follow the node's exposed-value validation rules.
+The `[formField]` adapter reads Angular's own committed `FieldState.value`, and AbstractControl
+adapters read their source control values. Those are external forms APIs, not Gem public reads
+that should be rewritten to `_value`.
+
 `useControlState<TValue>()` returns a read-only `ControlState<TValue>` facade from a custom-control component's injection context. Each source adapter lives in its own file and owns the complete translation from its source into the common signal model, including source-specific defaults and normalization. The main facade only selects the first connected adapter and forwards its signals; it contains no source-specific state mapping. Its explicit precedence is `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, then `ngModel`. The `[formNode]` adapter rendezvous through the shared host element without injecting `_FormNode` during component construction. The `[formField]` adapter resolves Angular's public same-host `FORM_FIELD` token after rendering and forwards its `FieldState` signals. The `[formControl]`, `formControlName`, and `ngModel` adapters resolve their concrete same-host `NgControl` after rendering, avoiding CVA construction cycles, observe the public `AbstractControl.events` stream, and reconcile directive/control identity and silent state changes after each browser render. Replacing a bound `FormControl` unsubscribes the previous control. Silent `{ emitEvent: false }` mutations become visible on the next render rather than synchronously. Every adapter cleans up through `DestroyRef`.
 
 The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'`. Every state member is a signal. Angular Signal Forms supplies the complete state surface, while `AbstractControl` sources supply value, disabled, dirty, touched, invalid, pending, normalized errors, and directive names where applicable. State unavailable from `AbstractControl`—such as readonly, hidden, disabled reasons, and constraint metadata—keeps the same neutral defaults used while disconnected. Reactive Forms `ValidationErrors` record entries become individual `{ kind, ...details }` objects; `true` becomes `{ kind }`, while primitive payloads use `{ kind, value }`. Errors never expose Angular's `fieldTree` or `formField` references. Disabled reasons are normalized to source-neutral `{ message? }` objects instead of exposing Gem `sourceNode` or Angular `fieldTree` references. Unnamed active reasons are preserved as `{}`; only `[]` means that no reason is known.
@@ -2532,6 +2622,32 @@ remain owned by the source forms API. `ControlState` therefore does not duplicat
 reset, availability, or validation operations.
 
 ## Internal structural behavior
+
+### Internal value-read audit
+
+Audited all runtime folders under `src/lib`, using both a text search for value references and
+TypeScript type inspection of callable node reads. Value identifiers in primitive arguments,
+plain-data utilities, descriptors, metadata, DOM controls, and third-party control APIs are not
+Gem node-value reads. The relevant routing is:
+
+| Consumer | Intended value source |
+| --- | --- |
+| Internal aggregate computations and array `trackBy` matching | Child `$api._value()`. |
+| Control-buffer baseline/invalidation and field commits/reset | Internal class `value`, exposed across nodes as `$api._value`. |
+| Angular adapter model initialization, synchronization, and bound-control reset | `$api._value()`. |
+| `useControlState()` for a Gem `[formNode]` binding | `$api._value()`, independently of exposed equality. |
+| Native controls, signal control models, and CVA rendering/validation | `_controlValue()` (or equivalent field `controlValue()`), including pending input. |
+| Public aggregate construction, built-in/custom validators, metadata contexts, submit, and update callbacks | Exposed values, intentionally respecting public equality. |
+| Array-template/definition cloning | Captured initial values and definition recipes; no current node-value read. |
+
+The audit found and corrected the `[formNode]` control-state adapter's public callable read.
+Remaining direct callable reads in runtime infrastructure construct the public form/group and
+array aggregates. Angular reference: `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`),
+`packages/forms/signals/src/field/node.ts`, `util/deep_signal.ts`, and the deep-signal and debounce
+node tests. These establish the distinction between current committed values and pending control
+input; Gem additionally supports an independent equality-filtered public representation.
+
+### Node structure
 
 These details are not public API, but explain current propagation behavior:
 

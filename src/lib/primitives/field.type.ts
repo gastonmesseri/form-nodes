@@ -7,9 +7,10 @@ import type { CustomValidationError, ValidationError, ValidationErrorMap, Valida
 
 export type FieldOptions<TValue = any> = {
   /**
-   * Equality for committed values. Defaults to `Object.is`. Equal writes retain the previous
-   * committed value and do not invalidate its reactive consumers. Control input and interaction
-   * state remain independent. The comparator is captured at construction and runs untracked.
+   * Equality for the exposed value. Defaults to `Object.is`. Equivalent values retain the previous
+   * public value for consumers and validators while internal storage and controls accept new writes.
+   * The comparator is captured at construction and runs untracked when the exposed computed is
+   * evaluated. Its first evaluation does not compare; comparator errors affect exposed reads.
    *
    * @example Compare structured values by content.
    * ```ts
@@ -181,7 +182,8 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
   /**
-   * Current committed field value. Equal writes retain the previous value according to `equal`.
+   * Exposed field value. The `equal` option may retain an earlier equivalent value independently
+   * of the latest committed write used by controls and reset.
    *
    * Prefer calling the field directly instead of using `name.value()` for ordinary value reads:
    *
@@ -195,7 +197,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   value: Signal<TValue>;
   /**
    * Immediate value buffered from the bound UI control before any configured debounce completes.
-   * Keeps the latest control input even when `equal` retains a different committed representative.
+   * Keeps the latest control input even when `equal` retains a different exposed value.
    * Most consumers should read value() instead; controlValue() is primarily intended for control bindings.
    */
   controlValue: Signal<TValue>;
@@ -209,7 +211,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    */
   set(value: TValue): void;
   /**
-   * Computes and sets a complete value from the current committed value without marking the field dirty.
+   * Computes and sets a complete value from the current exposed value without marking the field dirty.
    *
    * @example
    * ```ts
@@ -246,12 +248,13 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   patch(value: TValue): void;
   /**
    * Clears touched and dirty state and cancels pending control input. Passing a value also replaces
-   * the committed value; omitting it preserves the current committed value.
+   * internally committed value; omitting it preserves that value even when `equal` retains an older
+   * exposed value. Controls reset to the internally committed value.
    */
   reset(...args: [] | [value: TValue]): void;
   /** Current normalized validators assigned directly to this field, in declaration order. */
   validators: Signal<Validators<TValue>>;
-  /** Replaces this field's validators and immediately validates the current committed value. */
+  /** Replaces this field's validators and immediately validates the current exposed value. */
   setValidators(validators: ValidatorSource<TValue, Field<TValue>>): void;
   /**
   * A signal containing the validation errors of **this field itself**.

@@ -1,5 +1,5 @@
-import { createWatch, type Watch } from '@angular/core/primitives/signals';
 import { DestroyRef, Injector, assertInInjectionContext, inject } from '@angular/core';
+import { SIGNAL, createWatch, consumerPollProducersForChange, type Watch } from '@angular/core/primitives/signals';
 
 export type ReactiveWatchTarget = {
   run(): void;
@@ -9,6 +9,7 @@ export type ReactiveWatchTarget = {
 
 export type TrackedRunner = {
   run<T>(callback: () => T): T;
+  hasChanges(): boolean;
   destroy(): void;
 };
 
@@ -91,6 +92,12 @@ export const createTrackedRunner = (target: TrackedRunnerTarget): TrackedRunner 
   );
   finalizationRegistry.register(target, watch, watch);
   return {
+    hasChanges: () => {
+      if (consumerPollProducersForChange(watch[SIGNAL])) return true;
+      // Clear the notification without rerunning the callback when computed equality kept its value.
+      watch.run();
+      return false;
+    },
     run: <T>(callback: () => T): T => {
       const currentTarget = targetRef.deref();
       if (!currentTarget) return callback();

@@ -4,6 +4,7 @@ title: array()
 
 import CodeBlock from '@theme/CodeBlock';
 import arrayFocusSource from '!!raw-loader!../../examples/array-focus.typecheck.ts';
+import arrayValueEqualitySource from '!!raw-loader!../../examples/array-value-equality.example.ts';
 import arrayTemplateFieldShorthandSource from '!!raw-loader!../../examples/array-template-field-shorthand.example.ts';
 
 # array()
@@ -147,6 +148,7 @@ Like every node, an array also adopts a directly bound `[formNode]` host injecto
 
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
+| [`equal`](#equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed array values; defaults to `Object.is`. |
 | [`initialValue`](#initialvalue-option) | Item-value array, non-negative integer, `null`, or `undefined` | Creates items from supplied values or creates a requested number of items from the template defaults. Nullish values produce an empty array. |
 | [`validators`](#validators-option) | Validator, validator array, `null`, or `undefined` | Validates the complete array value. Put validators on the item template instead when every item needs independent validation. |
 | [`validatorMessages`](#validatormessages-option) | Message catalog or reactive catalog function | Overrides built-in validator messages for the array subtree. Validator-local messages still take precedence. |
@@ -183,6 +185,36 @@ TypeScript intentionally rejects providing it in both places.
 Each option below includes its signature, default behavior, scope, and a complete example.
 
 ### Values and validation
+
+#### equal {#equal-option}
+
+**Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
+
+Applies equality to the complete exposed array. The comparator receives the inferred array value,
+including nullable item properties. The node call, equivalent `value()` signal, array validators,
+public parents, and `update()` callbacks all observe the exposed value. Ancestor form submission
+also receives that public representation.
+
+<CodeBlock language="ts">{arrayValueEqualitySource}</CodeBlock>
+
+- `'shallow'` compares array entries with `Object.is`; object entries need matching references.
+- `'deep'` compares nested values using the same recursive semantics as
+  [field equality](./field.md#field-equal-option).
+- A custom comparator must treat values as interchangeable for consumers and validation.
+
+Equality is captured at construction, is not inherited by items, and survives configured factories
+and template cloning. It runs untracked during lazy exposed computation. The first evaluation
+does not compare, intermediate writes may coalesce, and comparator errors affect exposed reads
+after item writes or structural operations have already completed.
+
+`equal` does not control node identity or structure. `items()`, indexed access, `length()`, paths,
+and `trackBy` reconciliation always follow the current collection. If a comparator ignores order
+or length, the retained exposed array may differ from the current item order or count. Render
+dynamic rows from `items()` and track their nodes as shown in the [dynamic arrays guide](../guides/dynamic-arrays.md).
+
+Controls, reset, and debounce use current committed values. Reordering equal-valued nodes still
+invalidates obsolete pending control input. See
+[Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality) for the shared contract.
 
 #### initialValue {#initialvalue-option}
 
@@ -401,9 +433,9 @@ and the shared node state API. Signal properties must be called to read their cu
 | Member | Description |
 | --- | --- |
 | **Value and tree** | |
-| [`myArray()`](#callable-value) | Returns the current committed array value. This is the preferred value-reading form. |
+| [`myArray()`](#callable-value) | Returns the exposed array value, applying `equal`. This is the preferred value-reading form. |
 | [`myArray[index]`](#indexed-access) | Returns the live item node at an index, or `undefined`. |
-| [`value()`](#value) | Current committed value. Equivalent to calling the array node directly. |
+| [`value()`](#value) | Exposed value. Equivalent to calling the array node directly. |
 | [`controlValue()`](#controlvalue) | Immediate value from a control bound directly to the array; it can differ during debounce. |
 | [`items()`](#items) | Readonly array of current live item nodes. Its reference changes with the structure. |
 | [`length()`](#length) | Current number of item nodes. |
@@ -673,8 +705,8 @@ precise parent and root types inferred from where the array is declared.
 
 **Signature:** `(): ArrayValue`
 
-Calls the array node as a signal and returns its current committed plain value. This is the
-recommended way to read an array value.
+Calls the array node as a signal and returns its exposed plain value, applying configured
+[equality](#equal-option). This is the recommended way to read an array value.
 
 ```ts
 const usernames = array(field(''), {
@@ -704,7 +736,7 @@ usernames[20]; // undefined
 
 **Signature:** `value: Signal<ArrayValue>`
 
-Contains the current committed plain value.
+Contains the exposed plain value, including any previous array retained by [equality](#equal-option).
 
 ```ts
 const usernames = array(field(''), {
