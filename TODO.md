@@ -52,6 +52,8 @@
 
   })
 
+- [NEXT] [ ] Make it evident in the README.md that it is an angular library, maybe an angular logo next to the library logo?
+
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
   - DO AS MUCH AS POSSIBLE TO INDEX IN NPM GITHUB AND GOOGLE
