@@ -19,7 +19,6 @@
   - [x] ahora que veo lo del proxy de array-node-factory lo de deleteProperty deberia ser immutable no? deberiamos yo creo hacerlo immutable (quiza ya lo sea, no se)
   - [x] arreglar signatures de computed() en array-node-factory
   - [x] see if i can unify somehow the Object.defineProperties in ArrayNode.createNode with the Object.assign in FieldNode.createNode (it seems they are not aligned in the style)
-  - audit ArrayNode class to improve readability
 
 - the folder metadata can probably just be a metadata.ts with metadata.spect.ts inside primitives/utils (put create-node-metadata.ts code inside metadta.ts)
 
@@ -367,6 +366,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Audit and improve `ArrayNode` readability: extract `publicApi.forEach` into a class method, separate keyed reconciliation validation from item reconciliation, clarify item-factory and schema-sample names, and introduce a local alias for parent-aware item types. Preserve optional buffer cancellation with `controlValueBuffer?.cancel()`.
 
 - [x] Audit pending debounce ownership in the shared `createControlValueBuffer()` helper. A forced-GC experiment retained an otherwise unreachable array, its item, and its parent form while a numeric timer or custom debounce promise was pending; the immediate-debounce control was collected. This reproduced with both the pre-migration function and `ArrayNodeFactory`, under both class-field emit modes. Keep the correction separate from the completed array migration and verify live-node completion as well as collection.
   - Corrected shared-buffer callback scopes and weak controller ownership in both the buffer and `FieldNode`. Regression tests reproduce the original retention and verify collection, cancellation, late settlement, and live-node completion under both class-field emit modes.

@@ -30,6 +30,8 @@ import type { FieldContext, ValidationStatus, ValidatorContext, ValidatorSource,
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from './utils/disabled-reasons';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode as ArrayNodeType, ArrayOptions, ArrayPatch, ArraySet, ArrayValue } from './array.type';
 
+type ArrayItemNode<TItem extends Node> = ArrayItemWithParent<TItem, ArrayNodeType<TItem>>;
+
 /** Owns a dynamic array's state and operations behind its callable public node. */
 export class ArrayNode<TItem extends Node> {
   node: ArrayNodeType<TItem>;
@@ -38,9 +40,9 @@ export class ArrayNode<TItem extends Node> {
 
   cloneInitial: number | ArraySet<TItem>;
 
-  createdDefinitions = new WeakSet<object>();
+  usedDefinitions = new WeakSet<object>();
 
-  preparedItem: TItem | undefined;
+  preparedSchemaItem: TItem | undefined;
 
   usesTrackBy: boolean;
 
@@ -198,7 +200,7 @@ export class ArrayNode<TItem extends Node> {
   });
 
   constructor(
-    public factory: () => unknown,
+    public itemFactory: () => unknown,
     initial: number | ArraySet<TItem>,
     public initialValidatorSource: ValidatorSource<ArrayValue<TItem>, any>,
     public options?: ArrayOptions<ArrayValue<TItem>, any>,
@@ -265,7 +267,7 @@ export class ArrayNode<TItem extends Node> {
     next.splice(index, 0, item);
     this.items.set(next);
     this.reparentItems();
-    return item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>;
+    return item as ArrayItemNode<TItem>;
   }
 
   removeAt(index: number) {
@@ -275,7 +277,7 @@ export class ArrayNode<TItem extends Node> {
     this.items.set(next);
     this.detachItem(removed!);
     this.reparentItems();
-    return removed as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>;
+    return removed as ArrayItemNode<TItem>;
   }
 
   moveUp(index: number) {
@@ -410,14 +412,14 @@ export class ArrayNode<TItem extends Node> {
   }
 
   createItem(): TItem {
-    const item = this.preparedItem ?? this.instantiateItem();
-    this.preparedItem = undefined;
+    const item = this.preparedSchemaItem ?? this.instantiateItem();
+    this.preparedSchemaItem = undefined;
     return item;
   }
 
   instantiateItem(): TItem {
-    const factory = this.factory;
-    const definition = factory();
+    const itemFactory = this.itemFactory;
+    const definition = itemFactory();
     this.trackDefinition(definition, true);
     if (isNode(definition)) return definition as TItem;
     assertArrayObjectTemplate(definition, 'factory');
@@ -428,18 +430,18 @@ export class ArrayNode<TItem extends Node> {
     if (definition === null || (typeof definition !== 'object' && typeof definition !== 'function')) return;
     const structural = root || isNode(definition) || isPlainObject(definition);
     if (!structural) return;
-    if (this.createdDefinitions.has(definition)) {
+    if (this.usedDefinitions.has(definition)) {
       throw new Error('array: factory must return a fresh node definition for every item');
     }
-    this.createdDefinitions.add(definition);
+    this.usedDefinitions.add(definition);
     if (!isNode(definition) && (root || isPlainObject(definition))) {
       Object.values(definition).forEach(child => this.trackDefinition(child));
     }
   }
 
   getSchemaSample(): TItem {
-    this.preparedItem ??= this.instantiateItem();
-    return this.preparedItem;
+    this.preparedSchemaItem ??= this.instantiateItem();
+    return this.preparedSchemaItem;
   }
 
   assertIndex(index: number, allowEnd = false) {
@@ -477,20 +479,8 @@ export class ArrayNode<TItem extends Node> {
       if (typeof trackBy === 'function') return trackBy(value, index);
       return (value as Record<string, unknown>)[trackBy as string];
     };
-    const current = [...this.items()];
-    const currentByKey = new Map<unknown, TItem>();
-    current.forEach((item, index) => {
-      const key = getTrackingKey(item() as NodeValue<TItem>, index);
-      if (currentByKey.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in current items`);
-      currentByKey.set(key, item);
-    });
-    const incomingKeys = new Set<unknown>();
-    const keys = values.map((value, index) => {
-      const key = getTrackingKey(value as NodeValue<TItem>, index);
-      if (incomingKeys.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in incoming values`);
-      incomingKeys.add(key);
-      return key;
-    });
+    const currentByKey = this.indexItemsByKey(getTrackingKey);
+    const keys = this.getIncomingKeys(values, getTrackingKey);
     const next = values.map((value, index) => {
       const existing = currentByKey.get(keys[index]!);
       const item = existing ?? this.createItem();
@@ -504,16 +494,42 @@ export class ArrayNode<TItem extends Node> {
     this.reparentItems();
   }
 
+  indexItemsByKey(getTrackingKey: (value: NodeValue<TItem>, index: number) => unknown) {
+    const current = [...this.items()];
+    const currentByKey = new Map<unknown, TItem>();
+    current.forEach((item, index) => {
+      const key = getTrackingKey(item() as NodeValue<TItem>, index);
+      if (currentByKey.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in current items`);
+      currentByKey.set(key, item);
+    });
+    return currentByKey;
+  }
+
+  getIncomingKeys(values: ArraySet<TItem>, getTrackingKey: (value: NodeValue<TItem>, index: number) => unknown) {
+    const incomingKeys = new Set<unknown>();
+    return values.map((value, index) => {
+      const key = getTrackingKey(value as NodeValue<TItem>, index);
+      if (incomingKeys.has(key)) throw new Error(`array: duplicate trackBy key ${String(key)} in incoming values`);
+      incomingKeys.add(key);
+      return key;
+    });
+  }
+
   normalizeArrayValue(value: ArraySet<TItem> | null | undefined): ArraySet<TItem> {
     return value ?? [];
   }
 
   getItemSnapshot() {
-    return [...this.items()] as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>[];
+    return [...this.items()] as ArrayItemNode<TItem>[];
+  }
+
+  forEach(callback: (item: ArrayItemNode<TItem>, index: number, array: ArrayNodeType<TItem>) => void) {
+    const snapshot = this.items();
+    snapshot.forEach((item, index) => callback(item as ArrayItemNode<TItem>, index, this.node));
   }
 
   filter(predicate: (
-    item: ArrayItemWithParent<TItem, ArrayNodeType<TItem>>,
+    item: ArrayItemNode<TItem>,
     index: number,
     array: ArrayNodeType<TItem>,
   ) => unknown) {
@@ -521,7 +537,7 @@ export class ArrayNode<TItem extends Node> {
   }
 
   find(predicate: (
-    item: ArrayItemWithParent<TItem, ArrayNodeType<TItem>>,
+    item: ArrayItemNode<TItem>,
     index: number,
     array: ArrayNodeType<TItem>,
   ) => unknown) {
@@ -536,8 +552,8 @@ export class ArrayNode<TItem extends Node> {
 
   createClone() {
     // Capture declarative inputs without retaining this instance or its parent tree.
-    const { factory, cloneInitial, initialValidatorSource, cloneOptions } = this;
-    return () => new ArrayNode<TItem>(factory, cloneInitial, initialValidatorSource, cloneOptions).getNode();
+    const { itemFactory, cloneInitial, initialValidatorSource, cloneOptions } = this;
+    return () => new ArrayNode<TItem>(itemFactory, cloneInitial, initialValidatorSource, cloneOptions).getNode();
   }
 
   createNode(): ArrayNodeType<TItem> {
@@ -552,34 +568,16 @@ export class ArrayNode<TItem extends Node> {
       keyInParent: this.keyInParent.asReadonly(),
       value: this.value,
       controlValue: this.controlValueBuffer.controlValue,
-      at: index => this.items()[index] as ArrayItemWithParent<TItem, ArrayNodeType<TItem>> | undefined,
-      forEach: (callback) => {
-        const snapshot = this.items();
-        snapshot.forEach((item, index) => {
-          return callback(
-            item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>,
-            index,
-            this.node,
-          );
-        });
-      },
+      at: index => this.items()[index] as ArrayItemNode<TItem> | undefined,
+      forEach: callback => this.forEach(callback),
       map: callback => this.getItemSnapshot().map((item, index) => callback(item, index, this.node)),
-      filter: ((predicate: Parameters<ArrayApi<TItem>['filter']>[0]) => {
-        return this.filter(predicate);
-      }) as ArrayApi<TItem>['filter'],
-      find: ((predicate: Parameters<ArrayApi<TItem>['find']>[0]) => {
-        return this.find(predicate);
-      }) as ArrayApi<TItem>['find'],
+      filter: ((predicate: Parameters<ArrayApi<TItem>['filter']>[0]) => this.filter(predicate)) as ArrayApi<TItem>['filter'],
+      find: ((predicate: Parameters<ArrayApi<TItem>['find']>[0]) => this.find(predicate)) as ArrayApi<TItem>['find'],
       findIndex: predicate => this.getItemSnapshot().findIndex((item, index) => predicate(item, index, this.node)),
       some: predicate => this.getItemSnapshot().some((item, index) => predicate(item, index, this.node)),
       every: predicate => this.getItemSnapshot().every((item, index) => predicate(item, index, this.node)),
-      includes: (item, fromIndex) => this.getItemSnapshot().includes(item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>, fromIndex),
-      indexOf: (item, fromIndex) => this.getItemSnapshot().indexOf(item as ArrayItemWithParent<TItem, ArrayNodeType<TItem>>, fromIndex),
-      [Symbol.iterator]: () => {
-        return (
-          this.items() as ArrayItems<TItem, Node>
-        )[Symbol.iterator]();
-      },
+      includes: (item, fromIndex) => this.getItemSnapshot().includes(item as ArrayItemNode<TItem>, fromIndex),
+      indexOf: (item, fromIndex) => this.getItemSnapshot().indexOf(item as ArrayItemNode<TItem>, fromIndex),
       push: (...args) => this.insert(this.items().length, ...args),
       insert: (index, ...args) => this.insert(index, ...args),
       removeAt: index => this.removeAt(index),
@@ -627,6 +625,7 @@ export class ArrayNode<TItem extends Node> {
       visible: this.visible,
       hide: () => this.selfHidden.set(true),
       show: () => this.selfHidden.set(false),
+      [Symbol.iterator]: () => (this.items() as ArrayItems<TItem, Node>)[Symbol.iterator](),
     };
 
     const internalApi = {

@@ -277,6 +277,21 @@ in `TODO.md`; template-source collection and future item creation retain their o
 `form()` and `group()` are the remaining candidates. Review their shared `createObjectNode()`
 boundary together before choosing the next class structure.
 
+## Array readability audit
+
+- [x] Extract `forEach()` into a class method and keep its public entry as a forwarding callback.
+  Preserve the iteration snapshot and callback arguments.
+- [x] Separate current-item indexing and incoming-key validation from `reconcileByKey()` so its
+  main body describes reuse, creation, detachment, and publication. Validate both key sets before
+  changing items, read `trackBy` once, and keep user tracking callbacks receiver-independent.
+- [x] Clarify internal names with `itemFactory`, `preparedSchemaItem`, and `usedDefinitions`.
+  Preserve receiver-independent factory calls and the configuration-only clone closure.
+- [x] Introduce the local `ArrayItemNode<TItem>` alias for repeated parent-aware item types without
+  changing public declarations.
+
+Keep `controlValueBuffer?.cancel()` in value/reset operations as an explicit defensive guard.
+Removing this optional chaining was considered and declined.
+
 ## Checklist for each subsequent primitive
 
 1. **Map the existing contract.** Identify overloads, inference, callable behavior, public members,
