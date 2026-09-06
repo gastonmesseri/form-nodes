@@ -775,7 +775,7 @@ as initial construction: concise values normalize to `field()`, while plain obje
 confirmed detached before normalization, so an invalid batch cannot attach or construct only some
 of its children. Dynamic
 children are not installed as direct properties: this makes an undeclared or misspelled property a
-TypeScript and Angular strict-template error. `get(key)` and `children[key]` return
+TypeScript and Angular strict-template error. `get(key)` returns
 `DynamicNode | undefined`; initially declared children keep their original precise and non-optional
 direct-property types. `DynamicNode` exposes the state and
 operations common to every primitive directly, including `value`, `disabled`, validation, and
@@ -803,7 +803,7 @@ removed node becomes its own structural root.
 
 The form's statically inferred value type remains based on its initial definition. Runtime values
 contain current dynamic properties, but callers should retain the typed result of `add()` or narrow
-the result of `get()` or `children[key]` when they need a dynamic value. Fixed-shape `set()`, `patch()`, `update()`, and
+the result of `get()` when they need a dynamic value. Fixed-shape `set()`, `patch()`, `update()`, and
 `reset(value)` signatures remain unchanged. Runtime dynamic keys supplied through untyped data are
 updated; omitted dynamic keys retain their values. Reset operations still clear their interaction
 state.
@@ -1605,7 +1605,6 @@ declare module '@ngblocks/form-nodes' {
       readonly suggestion: string;
     };
   }
-}
 
 username.getError('unavailableUsername')?.suggestion; // string | undefined
 ```
@@ -2590,7 +2589,6 @@ class ProfileEditor {
     node.set('Daniel');
     binding.focus();
   }
-}
 ```
 
 The three related names have distinct roles:
@@ -2839,3 +2837,16 @@ Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`,
 `packages/forms/signals/test/node/field_node.spec.ts` covers reactive child access and removal
 from aggregates. The public callback API and its snapshot mutation semantics are Form Nodes
 API decisions; they do not reproduce an Angular public method.
+
+## Declared-child map typing
+
+The public `children` map is typed from the initial declaration only. `Object.values(children)`
+therefore infers a union of the declared child node types without `undefined`; mixed fields,
+groups, forms, and arrays retain their concrete types. `children.name` remains precisely typed.
+Unknown string keys are accessed through `get(key): DynamicNode | undefined`, or through the exact
+node returned by `add()`. `DynamicFormChildren` remains available as an explicit runtime-map type.
+
+This is a deliberate static approximation: runtime maps and enumeration still include added
+children, even when their types are absent from the declared union. The union is not a guarantee
+about every runtime entry after `add()`. Use `forEachChild()` for dynamically extensible trees.
+No runtime enumeration, attachment, removal, validation, or state propagation behavior changes.

@@ -69,7 +69,7 @@ Children attached later with `add()` do not.
 | Child kind | Declaration | Supported access |
 | --- | --- | --- |
 | Initially declared | `form({ name: field('') })` | `profile.name` |
-| Added dynamically | `profile.add('age', field(23))` | returned node, `profile.get('age')`, or `profile.children['age']` |
+| Added dynamically | `profile.add('age', field(23))` | returned node, `profile.get('age')` |
 
 Neither `profile.age` nor `profile['age']` is supported for a dynamically added child. This is
 intentional: allowing arbitrary properties would also allow a typo such as
@@ -79,7 +79,7 @@ intentional: allowing arbitrary properties would also allow a typo such as
 
 ## Look up a runtime key
 
-Use `get(key)` or `children[key]` for a runtime key. Both return `DynamicNode | undefined`.
+Use `get(key)` for a runtime key. It returns `DynamicNode | undefined`.
 `DynamicNode` exposes every state and operation shared by all node kinds, such as `value`,
 `disabled`, `errors`, `set()`, and `reset()`. Primitive-specific operations such as `submit()` are
 not available until the node is narrowed. Children declared in the original definition retain
@@ -87,13 +87,11 @@ their exact direct-property types.
 
 ```ts
 profile.get('age')?.value(); // 23
-profile.children['age']?.value(); // 23
 profile.get('unknown'); // undefined
 profile.name(); // string | null
 
 const key: string = configuration.controlName;
 profile.get(key); // DynamicNode | undefined
-profile.children[key]; // DynamicNode | undefined
 ```
 
 `profile.age` does not compile merely because `age` was added at runtime. Retain the exact node
@@ -160,7 +158,7 @@ age(); // 36
 
 The original definition remains the form's statically known value shape. Runtime children appear
 in the JavaScript object returned by the form, but code that needs their values should retain the
-typed node returned by `add()` or narrow the result of `get()` or `children[key]`.
+typed node returned by `add()` or narrow the result of `get()`.
 
 `set()`, `patch()`, `update()`, and `reset(value)` keep their original fixed-shape input types.
 They update matching dynamic keys when an untyped runtime object supplies them; omitted dynamic
@@ -179,3 +177,10 @@ it does not expose an `addControl()` operation on a field tree. Form Nodes owns 
 - [`group()` reference](../reference/group.md)
 - [Dynamic arrays](./dynamic-arrays.md)
 - [Tree navigation and API access](../concepts/tree-and-api.md)
+
+## Enumerating children and static types
+
+`Object.values(node.children)` uses the union of initially declared child types in TypeScript.
+Runtime enumeration still includes nodes attached with `add()`, even if their types fall outside
+that union. This is a deliberate approximation for declaration-based code. Use `forEachChild()`
+for enumeration that accounts for arbitrary dynamic node types, and `get(key)` for dynamic lookup.

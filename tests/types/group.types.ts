@@ -61,7 +61,6 @@ type _ClassFieldNodeType = Expect<Equal<ReturnType<typeof atomicCompanyGroup.com
 const dynamicZip = address.add('zip', field('8001'));
 type _DynamicZipValue = Expect<Equal<ReturnType<typeof dynamicZip>, string | null>>;
 address.get('zip');
-address.children['zip'];
 // @ts-expect-error dynamically added children are not direct properties
 address.zip;
 // @ts-expect-error undeclared child names must not compile

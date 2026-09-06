@@ -325,8 +325,8 @@ export type FormRoot<TNodes extends Nodes, TParent extends Node> = Node extends 
 export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /** Returns the concrete primitive represented by this node. */
   nodeType(): 'form';
-  /** Stable readonly map of this form's immediate child nodes. */
-  readonly children: FormChildren<TNodes, TParent> & DynamicFormChildren;
+  /** Readonly map typed from the declared children. Runtime entries also include dynamically added nodes. */
+  readonly children: FormChildren<TNodes, TParent>;
   /**
    * Visits a snapshot of immediate children in object-entry order, including dynamically added nodes.
    * Does not recurse. Additions during iteration are deferred to the next call; removed nodes in the
@@ -366,8 +366,8 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    *
    * The key must not already belong to this form. Concise values are normalized to `field()` and
    * plain object definitions to `group()`. An explicitly supplied node must not have a parent.
-   * Dynamic children are not installed as direct properties. Read them through `get()`,
-   * `children[key]`, or the exact node returned by this method.
+   * Dynamic children are not installed as direct properties. Read them through `get()` or
+   * the exact node returned by this method.
    *
    * @example Add one named child and retain its exact node type.
    * ```ts
@@ -376,7 +376,6 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * const age = profile.add('age', field(23));
    * age(); // 23
    * profile.get('age') === age; // true
-   * profile.children['age'] === age; // true
    * ```
    */
   add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Form<TNodes, TParent>>;
@@ -396,7 +395,6 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * added.age(); // 36
    * added.address.city(); // 'London'
    * profile.get('address') === added.address; // true
-   * profile.children['address'] === added.address; // true
    * ```
    */
   add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {

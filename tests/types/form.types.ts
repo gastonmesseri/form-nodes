@@ -187,7 +187,6 @@ profile.children.name = field('Replacement');
 
 const dynamicAge = profile.add('dynamicAge', field(23));
 type _DynamicGet = Expect<Equal<ReturnType<typeof profile.get>, DynamicNode | undefined>>;
-type _DynamicChildMap = Expect<Equal<typeof profile.children['dynamicAge'], DynamicNode | undefined>>;
 type _ExactAddedNode = Expect<Equal<ReturnType<typeof dynamicAge>, number | null>>;
 // @ts-expect-error dynamically added children are not direct properties
 profile.dynamicAge;

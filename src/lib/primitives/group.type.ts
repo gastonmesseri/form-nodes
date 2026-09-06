@@ -3,7 +3,7 @@ import type { Signal } from '@angular/core';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DynamicNode, NearestForm, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
-import type { AddedNode, DynamicFormChildren, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { AddedNode, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
 export type GroupOptions<TValue = any, TGroup extends Node = Group<any>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
@@ -161,8 +161,8 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
     nodeType(): 'group';
     /** Replaces this group's validators while preserving its node type in inline callbacks. */
     setValidators(validators: ValidatorSource<GroupValue<TNodes>, Group<TNodes, TParent>>): void;
-    /** Stable readonly map of this group's immediate child nodes. */
-    readonly children: GroupChildren<TNodes, TParent> & DynamicFormChildren;
+    /** Readonly map typed from the declared children. Runtime entries also include dynamically added nodes. */
+    readonly children: GroupChildren<TNodes, TParent>;
     /**
      * Adds one child at runtime and returns the attached node with its exact inferred type.
      *
@@ -173,7 +173,6 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * const category = filters.add('category', field('all'));
      * category(); // 'all'
      * filters.get('category') === category; // true
-     * filters.children['category'] === category; // true
      * ```
      */
     add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Group<TNodes, TParent>>;
@@ -196,7 +195,6 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * added.sort(); // 'relevance'
      * added.range.maximum(); // 100
      * filters.get('range') === added.range; // true
-     * filters.children['range'] === added.range; // true
      * ```
      */
     add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {

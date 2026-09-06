@@ -102,7 +102,7 @@ Fields also expose constraint metadata through `min()`, `max()`, `minLength()`, 
 | `submit()` | Runs configured submission behavior and returns `Promise<boolean>` |
 
 Initially declared children are also direct properties. Runtime children are deliberately
-available only through the node returned by `add()`, `get(key)`, or `children[key]`, which lets
+available only through the node returned by `add()`, `get(key)`, which lets
 TypeScript and Angular reject misspelled direct properties.
 
 ## Array-specific API

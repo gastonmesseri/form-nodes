@@ -18,13 +18,13 @@ if (age.parent() !== profile || added.address.city.form() !== profile) {
   throw new Error('Dynamic children should join the form tree.');
 }
 
-if (profile.get('age') !== age || profile.children['age'] !== age) {
+if (profile.get('age') !== age || Reflect.get(profile.children, 'age') !== age) {
   throw new Error('Dynamic children should be available through explicit runtime-key lookup.');
 }
 
 profile.remove('nickname');
 
-if (profile.get('nickname') !== undefined || profile.children['nickname'] !== undefined || added.nickname.parent() !== null) {
+if (profile.get('nickname') !== undefined || Reflect.get(profile.children, 'nickname') !== undefined || added.nickname.parent() !== null) {
   throw new Error('Removed children should become detached standalone nodes.');
 }
 

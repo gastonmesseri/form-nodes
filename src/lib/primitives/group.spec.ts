@@ -9,6 +9,19 @@ import { required } from '../validation/validators/required';
 import { createFormPrimitives } from './create-form-primitives';
 
 describe('group', () => {
+  it('keeps dynamic entries in children at runtime while enumeration types use the declaration', () => {
+    const parent = form({ branch: group({ name: field('Marco'), age: field(30) }) });
+    const branch = parent.branch;
+    expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
+    const active = branch.add('active', field(true));
+    expect(Reflect.get(branch.children, 'active')).toBe(active);
+    expect(Object.values(branch.children)).toEqual([branch.name, branch.age, active]);
+    expect(branch.get('active')).toBe(active);
+    branch.remove('active');
+    expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
+    expect(branch.get('active')).toBeUndefined();
+  });
+
   it('visits only direct child nodes, including dynamic children, in a stable snapshot', () => {
     const profile = form({ branch: group({ name: field('Marco'), address: { city: field('Zurich') }, tags: array(field('')) }) });
     const branch = profile.branch;
@@ -366,7 +379,7 @@ describe('group', () => {
 
     expect(address()).toEqual({ city: 'Zurich', zip: '8001' });
     expect(address.get('zip')).toBe(zip);
-    expect(address.children['zip']).toBe(zip);
+    expect(Reflect.get(address.children, 'zip')).toBe(zip);
     expect((address as unknown as Record<string, unknown>)['zip']).toBeUndefined();
     expect(zip.parent()).toBe(address);
     expect(zip.form()).toBeNull();

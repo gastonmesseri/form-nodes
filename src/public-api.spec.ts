@@ -639,7 +639,7 @@ describe('types', () => {
     expectTypeOf(age.parent()).toEqualTypeOf<typeof profile | null>();
     expectTypeOf(profile.get('age')).toEqualTypeOf<DynamicNode | undefined>();
     const dynamicKey: string = 'age';
-    expectTypeOf(profile.children[dynamicKey]).toEqualTypeOf<DynamicNode | undefined>();
+    expectTypeOf(profile.get(dynamicKey)).toEqualTypeOf<DynamicNode | undefined>();
     expectTypeOf(added.nickname()).toEqualTypeOf<string | null>();
     expectTypeOf(added.address.city()).toEqualTypeOf<string | null>();
     expectTypeOf(added.address.parent()).toEqualTypeOf<typeof profile | null>();

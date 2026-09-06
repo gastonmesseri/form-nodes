@@ -4,6 +4,18 @@ title: Migration guides
 
 # Migration guides
 
+## Unreleased: declared-child map types
+
+`children` now exposes only initially declared keys in TypeScript. Replace dynamic
+`node.children[key]` access with `node.get(key)`, which returns `DynamicNode | undefined`,
+or retain the precisely typed node returned by `add()`.
+
+`Object.values(node.children)` now infers the union of declared child types. Runtime enumeration
+still includes dynamically added nodes, whose types may fall outside that union. Use
+`node.forEachChild()` when the iteration must account for arbitrary dynamic child types.
+
+This is a breaking typing change; runtime map contents and node behavior are unchanged.
+
 ## Scoped package name
 
 The package is published as `@ngblocks/form-nodes`. Update dependency declarations, imports,

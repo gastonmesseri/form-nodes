@@ -3,6 +3,7 @@ title: form()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
 import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
 import formFocusSource from '!!raw-loader!../../examples/form-focus.typecheck.ts';
 import formValueContractSource from '!!raw-loader!../../examples/form-value-contract.typecheck.ts';
@@ -47,7 +48,7 @@ const myForm = form({
 | Create or configure a form | `form(...)`, `FormOptions` | [Signatures](#signatures) and [options](#options) |
 | Read its value or navigate children | `myForm()`, direct children, `children` | [Properties and methods](#properties-and-methods) |
 | Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Method reference](#method-reference) |
-| Add, find, or remove runtime children | `add()`, `get()`, `children[key]`, `remove()` | [Dynamic children](#dynamic-children) |
+| Add, find, or remove runtime children | `add()`, `get()`, `remove()` | [Dynamic children](#dynamic-children) |
 | Inspect or replace validation | `errors()`, `allErrors()`, `valid()`, `setValidators()` | [Validation properties](#validation-properties) |
 | Manage touched and dirty state | `markAsTouched()`, `markAsDirty()`, `reset()` | [Interaction properties](#interaction-properties) |
 | Manage disabled, readonly, or hidden state | `disable()`, `markAsReadonly()`, `hide()` | [Availability properties](#availability-properties) |
@@ -574,7 +575,7 @@ const profile = form({
 profile.children.username(); // 'ada'
 ```
 
-Direct access is preferred for initially declared children. Use `get(key)` or `children[key]` for
+Direct access is preferred for initially declared children. Use `get(key)` for
 runtime keys. If a declared child is named `children`, use `profile.$api.children` for the map.
 
 #### value()
@@ -1104,7 +1105,6 @@ const profile = form({
 const age = profile.add('age', field(36));
 age(); // 36
 profile.get('age') === age; // true
-profile.children['age'] === age; // true
 
 const added = profile.add({
   nickname: field('countess'),
@@ -1116,12 +1116,11 @@ const added = profile.add({
 added.nickname(); // 'countess'
 added.preferences.theme(); // 'dark'
 profile.get('preferences') === added.preferences; // true
-profile.children['preferences'] === added.preferences; // true
 ```
 
 Keys must be new, definitions must be detached, and `$api` is reserved. The object
 form is atomic: validation completes before any supplied child is attached. Keep the returned node
-for its exact type, or retrieve it later with `get()` or `children[key]`. Array values become
+for its exact type, or retrieve it later with `get()`. Array values become
 fields; declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application
 object with `field(value)` when it should remain one atomic value.
 
@@ -1135,8 +1134,7 @@ direct properties, so misspelled names fail TypeScript and Angular template chec
 :::important
 
 Use `profile.name` only for a child included in the original `form()` declaration. After
-`profile.add('age', ...)`, use the returned node, `profile.get('age')`, or
-`profile.children['age']`. Neither `profile.age` nor `profile['age']` is supported.
+`profile.add('age', ...)`, use the returned node or `profile.get('age')`. Neither `profile.age` nor `profile['age']` is supported.
 
 :::
 
@@ -1145,7 +1143,6 @@ const profile = form({ username: field('ada') });
 profile.add('age', field(36));
 
 profile.get('age')?.value(); // 36
-profile.children['age']?.value(); // 36
 profile.get('missing'); // undefined
 ```
 
@@ -1547,3 +1544,17 @@ not change values, validation, or interaction state; operations called by the ca
 their usual behavior, including descendant propagation.
 
 If a child is named `forEachChild`, use `$api.forEachChild()` to access the operation.
+
+## Declared child types in Object.values
+
+`Object.values(node.children)` infers the union of the declared child node types, without
+`undefined`. Mixed fields, groups, forms, and arrays retain their concrete types.
+
+<CodeBlock language="ts">{childrenUnionSource}</CodeBlock>
+
+The map's TypeScript keys describe the initial declaration only. For an unknown or dynamically
+added key, use `get(key)` or retain the exact node returned by `add()`.
+
+**Static approximation:** `add()` still inserts children into the runtime map, and `Object.values()`
+still includes them. Their types are not reflected in the declared union. Use `forEachChild()`
+when iterating a dynamically extensible tree so the callback accepts arbitrary `DynamicNode` values.

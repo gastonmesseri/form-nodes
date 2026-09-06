@@ -4,6 +4,7 @@ description: Reference for object groups without an independent submission workf
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import childrenUnionSource from '!!raw-loader!../../examples/children-union.example.ts';
 import forEachChildSource from '!!raw-loader!../../examples/for-each-child.example.ts';
 import groupRootSource from '!!raw-loader!../../examples/group-root.typecheck.ts';
 import groupFocusSource from '!!raw-loader!../../examples/group-focus.typecheck.ts';
@@ -97,7 +98,7 @@ const myForm = form({
 | Create or configure an object branch | `group(...)`, `GroupOptions` | [Signatures](#signatures) and [options](#options) |
 | Decide between a group and submission boundary | `group()`, `form()` | [Group or form](#group-or-form) |
 | Read its value or navigate children | `myGroup()`, direct children, `children` | [Properties and methods](#properties-and-methods) |
-| Add, find, or remove runtime children | `add()`, `get()`, `children[key]`, `remove()` | [Dynamic children](#dynamic-children-1) |
+| Add, find, or remove runtime children | `add()`, `get()`, `remove()` | [Dynamic children](#dynamic-children-1) |
 | Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Method reference](#method-reference) |
 | Inspect or replace validation | `errors()`, `allErrors()`, `valid()`, `setValidators()` | [Validation properties](#validation-properties) |
 | Manage interaction or availability | State signals and marker methods | [Interaction](#interaction-properties) and [availability](#availability-properties) |
@@ -597,7 +598,7 @@ const address = group({
 address.children.city(); // 'Zurich'
 ```
 
-Direct access is preferred for initially declared children. Use `get(key)` or `children[key]` for
+Direct access is preferred for initially declared children. Use `get(key)` for
 runtime keys. If a child is named `children`, use `address.$api.children`.
 
 #### value()
@@ -1123,7 +1124,6 @@ const filters = group({
 const category = filters.add('category', field('all'));
 category(); // 'all'
 filters.get('category') === category; // true
-filters.children['category'] === category; // true
 
 const added = filters.add({
   sort: field('relevance'),
@@ -1136,12 +1136,11 @@ const added = filters.add({
 added.sort(); // 'relevance'
 added.range.maximum(); // 100
 filters.get('range') === added.range; // true
-filters.children['range'] === added.range; // true
 ```
 
 Keys must be new, definitions must be detached, and `$api` is reserved. The object
 form validates every supplied definition before attaching any child. Keep the returned node for
-its exact type, or retrieve it later with `get()` or `children[key]`. Array values become fields;
+its exact type, or retrieve it later with `get()`. Array values become fields;
 declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application object
 with `field(value)` when it should remain one atomic value.
 
@@ -1155,8 +1154,7 @@ misspelled names fail TypeScript and Angular template checking.
 :::important
 
 Use `filters.query` only for a child included in the original `group()` declaration. After
-`filters.add('category', ...)`, use the returned node, `filters.get('category')`, or
-`filters.children['category']`. Neither `filters.category` nor `filters['category']` is supported.
+`filters.add('category', ...)`, use the returned node or `filters.get('category')`. Neither `filters.category` nor `filters['category']` is supported.
 
 :::
 
@@ -1165,7 +1163,6 @@ const filters = group({ query: field('') });
 filters.add('category', field('all'));
 
 filters.get('category')?.value(); // 'all'
-filters.children['category']?.value(); // 'all'
 filters.get('missing'); // undefined
 ```
 
@@ -1542,3 +1539,17 @@ not change values, validation, or interaction state; operations called by the ca
 their usual behavior, including descendant propagation.
 
 If a child is named `forEachChild`, use `$api.forEachChild()` to access the operation.
+
+## Declared child types in Object.values
+
+`Object.values(node.children)` infers the union of the declared child node types, without
+`undefined`. Mixed fields, groups, forms, and arrays retain their concrete types.
+
+<CodeBlock language="ts">{childrenUnionSource}</CodeBlock>
+
+The map's TypeScript keys describe the initial declaration only. For an unknown or dynamically
+added key, use `get(key)` or retain the exact node returned by `add()`.
+
+**Static approximation:** `add()` still inserts children into the runtime map, and `Object.values()`
+still includes them. Their types are not reflected in the declared union. Use `forEachChild()`
+when iterating a dynamically extensible tree so the callback accepts arbitrary `DynamicNode` values.

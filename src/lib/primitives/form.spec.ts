@@ -25,6 +25,19 @@ const nodeTypeOf = (node: Node): NodeType => {
 };
 
 describe('form', () => {
+  it('keeps dynamic entries in children at runtime while enumeration types use the declaration', () => {
+    const parent = form({ branch: form({ name: field('Marco'), age: field(30) }) });
+    const branch = parent.branch;
+    expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
+    const active = branch.add('active', field(true));
+    expect(Reflect.get(branch.children, 'active')).toBe(active);
+    expect(Object.values(branch.children)).toEqual([branch.name, branch.age, active]);
+    expect(branch.get('active')).toBe(active);
+    branch.remove('active');
+    expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
+    expect(branch.get('active')).toBeUndefined();
+  });
+
   it('visits only direct child nodes, including dynamic children, in a stable snapshot', () => {
     const branch = form({ name: field('Marco'), address: { city: field('Zurich') }, tags: array(field('')) });
     const removed = branch.add('removed', field(1));
@@ -1274,8 +1287,8 @@ describe('form', () => {
     const values = form(definitions);
 
     expect(values()).toEqual({ own: 'included' });
-    expect(values.children['inherited']).toBeUndefined();
-    expect(values.children['hidden']).toBeUndefined();
+    expect(Reflect.get(values.children, 'inherited')).toBeUndefined();
+    expect(Reflect.get(values.children, 'hidden')).toBeUndefined();
   });
 
   it('makes an implicit field behaviorally equivalent to field(value)', () => {
@@ -3953,7 +3966,7 @@ describe('form', () => {
 
     expect(age()).toBe(23);
     expect(profile.get('age')).toBe(age);
-    expect(profile.children['age']).toBe(age);
+    expect(Reflect.get(profile.children, 'age')).toBe(age);
     expect((profile as unknown as Record<string, unknown>)['age']).toBeUndefined();
     expect(profile()).toEqual({ name: 'David', age: 23 });
     expect(age.parent()).toBe(profile);
@@ -3966,7 +3979,7 @@ describe('form', () => {
     expect(profile.remove('missing')).toBeUndefined();
     expect(profile.remove('age')).toBe(age);
     expect(profile.get('age')).toBeUndefined();
-    expect(profile.children['age']).toBeUndefined();
+    expect(Reflect.get(profile.children, 'age')).toBeUndefined();
     expect(profile()).toEqual({ name: 'David' });
     expect(age.parent()).toBeNull();
     expect(age.form()).toBeNull();
@@ -4121,7 +4134,7 @@ describe('form', () => {
     const profile = form({ name: field('David') });
     const setChild = profile.add('set', field('dynamic'));
 
-    expect(profile.children['set']).toBe(setChild);
+    expect(Reflect.get(profile.children, 'set')).toBe(setChild);
     expect(profile.get('set')).toBe(setChild);
     expect(typeof profile.set).toBe('function');
 
