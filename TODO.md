@@ -24,6 +24,8 @@
 
 - [ ] create-form-primitives doesn't have a test file? should it?
 
+- [NEXT] [ ] Implement equal option in primitives (with 'shallow' and 'deep' checks + function based (a,b) comparison)
+
 - [ ] Audit: Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
 
 - [ ] Maybe: Consider naming useControlState to useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
@@ -366,6 +368,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   })
 
 ## Completed
+
+- [x] Return argument interpretation to `field()`, `array()`, `form()`, `group()`, and configured primitives. Keep `createFieldNode()`, `createArrayNode()`, and `createFormGroupNode()` limited to constructing the instance and returning `getNode()`, preserving option precedence and public signatures. This supersedes the earlier construction-entry argument-resolution decision.
 
 - [x] Extract `createFieldNode()` and `createArrayNode()` beside their implementation classes, matching the construction boundary used by `createFormGroupNode()`. Preserve public overloads, argument precedence, omitted/undefined field values, and direct constructor use in clone recipes.
 

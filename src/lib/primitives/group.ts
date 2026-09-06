@@ -1,7 +1,8 @@
 import { createFormGroupNode } from './form-group-node';
 import type { ValidatorSource } from '../validation/validation.type';
+import { isValidatorSource } from '../validation/utils/validator-source';
 import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
-import type { Form, FormOptions, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 export type { Group, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
 
@@ -61,10 +62,11 @@ export function group<TDefinitions extends ObjectNodeDefinitions>(
 ): Group<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = GroupValue<TNodes>;
-  return createFormGroupNode<TDefinitions>(
-    definitions,
-    validatorsOrOptions as unknown as ValidatorSource<TValue> | FormOptions<TValue, Form<TNodes>> | undefined,
-    separateOptions as unknown as FormOptions<TValue, Form<TNodes>> | undefined,
-    'group',
-  ) as Group<TNodes>;
+  const resolvedOptions = isValidatorSource<TValue, Group<TNodes>>(validatorsOrOptions) || validatorsOrOptions === undefined
+    ? separateOptions
+    : validatorsOrOptions;
+  const validatorSource = isValidatorSource<TValue, Group<TNodes>>(validatorsOrOptions)
+    ? validatorsOrOptions
+    : resolvedOptions?.validators ?? [];
+  return createFormGroupNode<TDefinitions>(definitions, validatorSource, resolvedOptions, 'group') as Group<TNodes>;
 }

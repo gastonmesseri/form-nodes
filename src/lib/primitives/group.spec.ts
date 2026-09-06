@@ -8,6 +8,26 @@ import { required } from '../validation/validators/required';
 import { createFormPrimitives } from './create-form-primitives';
 
 describe('group', () => {
+  it('prefers positional validators over option validators and propagates their results to the form', () => {
+    const positional = vi.fn(({ value }: { value: () => { city: string | null } }) => {
+      return value().city ? null : { kind: 'cityRequired' };
+    });
+    const optionValidator = vi.fn(() => ({ kind: 'optionError' }));
+    const address = group({ city: field('') }, positional, { validators: optionValidator });
+    const profile = form({ address });
+
+    expect(address.errors()).toMatchObject([{ kind: 'cityRequired' }]);
+    expect(profile.invalid()).toBe(true);
+    expect(positional).toHaveBeenCalledOnce();
+    expect(optionValidator).not.toHaveBeenCalled();
+
+    address.city.set('Zurich');
+    expect(profile.valid()).toBe(true);
+    expect(address.errors()).toEqual([]);
+    expect(positional).toHaveBeenCalledTimes(2);
+    expect(optionValidator).not.toHaveBeenCalled();
+  });
+
   it('keeps extracted actions bound while propagating changes to its owning form', () => {
     const profile = form({ address: group({ city: field('Zurich') }) });
     const { set, update, patch, reset, add, remove, markAsTouched } = profile.address;

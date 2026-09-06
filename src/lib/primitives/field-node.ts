@@ -14,10 +14,10 @@ import { findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
+import { normalizeValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
-import { isValidatorSource, normalizeValidatorSource } from '../validation/utils/validator-source';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
@@ -28,16 +28,10 @@ import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA
 
 export function createFieldNode<TValue>(
   initialValue: TValue,
-  validatorsOrOptions?: ValidatorSource<TValue, Field<TValue>> | FieldOptions<TValue>,
-  separateOptions?: FieldOptions<TValue>,
+  validatorSource: ValidatorSource<TValue, Field<TValue>>,
+  options?: FieldOptions<TValue>,
 ): Field<TValue> {
-  const resolvedOptions = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions) || validatorsOrOptions === undefined
-    ? separateOptions
-    : validatorsOrOptions;
-  const validatorSource = isValidatorSource<TValue, Field<TValue>>(validatorsOrOptions)
-    ? validatorsOrOptions
-    : resolvedOptions?.validators ?? [];
-  return new FieldNode<TValue>(initialValue, validatorSource, resolvedOptions).getNode();
+  return new FieldNode<TValue>(initialValue, validatorSource, options).getNode();
 }
 
 /** Owns a field's state while exposing the existing callable node and API objects. */

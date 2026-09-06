@@ -1,7 +1,10 @@
+import { isNode } from './utils/node-marker';
 import type { NormalizedNode } from './form';
 import { createArrayNode } from './array-node';
 import type { Node } from '../types/node.type';
 import type { ValidatorSource } from '../validation/validation.type';
+import { assertArrayObjectTemplate, looksLikeValidatorSource } from './array.utils';
+import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import type { ArrayNode as ArrayNodeType, ArrayOptions, ArraySet, ArrayValue } from './array.type';
 
@@ -186,10 +189,37 @@ export function array<TDefinition extends ArrayTemplate>(
   validatorsOrOptions?: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
   separateOptions?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
 ): ArrayNodeType<NormalizedNode<TDefinition>> {
-  return createArrayNode<NormalizedNode<TDefinition>>(
-    source,
-    initialOrValidatorsOrOptions,
-    validatorsOrOptions,
-    separateOptions,
-  );
+  type TItem = NormalizedNode<TDefinition>;
+  type TValue = ArrayValue<TItem>;
+  type TSet = ArraySet<TItem>;
+  const secondIsValidators = looksLikeValidatorSource(initialOrValidatorsOrOptions);
+  const thirdIsValidators = looksLikeValidatorSource(validatorsOrOptions);
+  const hasInitial = initialOrValidatorsOrOptions === null
+    || typeof initialOrValidatorsOrOptions === 'number'
+    || (Array.isArray(initialOrValidatorsOrOptions) && (
+      !secondIsValidators || thirdIsValidators || separateOptions !== undefined
+    ));
+  const resolvedOptions = hasInitial
+    ? thirdIsValidators ? separateOptions : validatorsOrOptions as ArrayOptions<TValue, any> | undefined
+    : secondIsValidators ? validatorsOrOptions as ArrayOptions<TValue, any> | undefined : initialOrValidatorsOrOptions as ArrayOptions<TValue, any> | undefined;
+  const configuredInitial = resolvedOptions?.initialValue;
+  const initial = hasInitial
+    ? initialOrValidatorsOrOptions as number | TSet | null
+    : configuredInitial as number | TSet | null | undefined;
+  const validatorSource = hasInitial
+    ? thirdIsValidators ? validatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? []
+    : secondIsValidators ? initialOrValidatorsOrOptions as ValidatorSource<TValue> : resolvedOptions?.validators ?? [];
+  if (typeof initial === 'number' && (!Number.isSafeInteger(initial) || initial < 0)) {
+    throw new RangeError('array: initial count must be a non-negative safe integer');
+  }
+  const normalizedInitial = initial ?? [];
+
+  const sourceIsFactory = typeof source === 'function' && !isNode(source);
+  if (!sourceIsFactory && !isNode(source)) {
+    assertArrayObjectTemplate(source, 'template');
+  }
+  const factory = sourceIsFactory
+    ? source as () => unknown
+    : createNodeDefinitionFactory(source);
+  return createArrayNode<TItem>(factory, normalizedInitial, validatorSource, resolvedOptions);
 }
