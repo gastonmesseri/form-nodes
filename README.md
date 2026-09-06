@@ -93,7 +93,7 @@ profile(); // { name: 'LIA', age: 18 }
 Fields add validation and interaction state to that familiar API. Calling a form reads the
 combined values of its children.
 
-## At a glance
+## ✨ At a glance
 
 - **Inferred types:** values, nested children, patches, and validator contexts follow your model.
 - **Reactive state:** read `valid()`, `dirty()`, `touched()`, and other signals directly in templates
@@ -103,21 +103,21 @@ combined values of its children.
 - **Angular controls:** bind native inputs, custom controls, and `ControlValueAccessor` components.
 - **Form workflows:** submission, focus, reset, control-value debounce, and inherited state.
 
-## Contents
+## 📑 Contents
 
-- [Install](#install)
-- [Your first form](#your-first-form)
-- [The four building blocks](#the-four-building-blocks)
-- [Read and update values](#read-and-update-values)
-- [Types and nullability](#types-and-nullability)
-- [Validation](#validation)
-- [Reactive rules and state](#reactive-rules-and-state)
-- [Dynamic arrays](#dynamic-arrays)
-- [Submission](#submission)
-- [Control-value debounce](#control-value-debounce)
-- [Where to go next](#where-to-go-next)
+- [Install](#-install)
+- [Your first form](#-your-first-form)
+- [The four building blocks](#-the-four-building-blocks)
+- [Read and update values](#-read-and-update-values)
+- [Types and nullability](#-types-and-nullability)
+- [Validation](#-validation)
+- [Reactive rules and state](#-reactive-rules-and-state)
+- [Dynamic arrays](#-dynamic-arrays)
+- [Submission](#-submission)
+- [Control-value debounce](#️-control-value-debounce)
+- [Where to go next](#-where-to-go-next)
 
-## Install
+## 📦 Install
 
 In an Angular 21.0.7+ or 22.1.5+ application:
 
@@ -135,7 +135,7 @@ The current `1.0.x` line supports Angular `^21.0.7 || ^22.1.5`. Both `@angular/c
 compatible Angular versions. See [Compatibility](https://gastonmesseri.github.io/form-nodes/project/compatibility)
 for the Node.js and TypeScript requirements.
 
-## Your first form
+## 📝 Your first form
 
 This standalone component includes a model, bound controls, validation messages, and submission.
 The example records the submitted email locally; an application can replace that action with a
@@ -213,7 +213,7 @@ object. You do not need subscriptions to keep those values current.
 For an even smaller introduction, see [Your first form](https://gastonmesseri.github.io/form-nodes/getting-started/first-form).
 For NgModule applications, import and optionally re-export `FormNode` from a shared module.
 
-## The four building blocks
+## 🧱 The four building blocks
 
 A **node** is a part of the form tree. Every node has a value, validation state, interaction state,
 and operations such as `reset()`.
@@ -238,7 +238,7 @@ model or reading and updating its values.
 [Choosing a primitive](https://gastonmesseri.github.io/form-nodes/guides/choosing-a-primitive)
 explains the differences with more examples.
 
-## Read and update values
+## 🔄 Read and update values
 
 The following examples use a profile model. Import `computed` from `@angular/core` when deriving
 other signals from a node.
@@ -318,7 +318,7 @@ resulting value.
 See [Values and state](https://gastonmesseri.github.io/form-nodes/concepts/values-and-state)
 for the complete value flow and reset rules.
 
-## Types and nullability
+## 🧩 Types and nullability
 
 Fields are nullable by default. An initial string determines the non-null part of the type, but
 `null` remains an accepted value. Choose `field.strict()` to exclude it:
@@ -347,7 +347,7 @@ type ProfileValue = FormNodeValue<typeof profile>;
 nullability default can use [`createFormPrimitives()`](https://gastonmesseri.github.io/form-nodes/reference/create-form-primitives)
 to create a configured set of factories.
 
-## Validation
+## ✅ Validation
 
 Pass validators as the second argument to a field, or through its `validators` option.
 Common built-ins include `required`, `email`, `minLength`, `maxLength`, `min`, `max`, `pattern`,
@@ -449,7 +449,7 @@ catalog in a separate file and import it at the configuration point.
 See [Validator messages and i18n](https://gastonmesseri.github.io/form-nodes/guides/validator-messages)
 and the [Built-in validator reference](https://gastonmesseri.github.io/form-nodes/reference/built-in-validators).
 
-## Reactive rules and state
+## ⚡ Reactive rules and state
 
 Start with `requiredIf()`: require a company name only for business accounts. Import `requiredIf`
 from `@ngblocks/form-nodes` and `signal` from `@angular/core`:
@@ -519,7 +519,7 @@ what the UI needs.
 [Interaction and availability](https://gastonmesseri.github.io/form-nodes/guides/interaction-and-availability)
 covers the propagation rules and how configured state interacts with imperative operations.
 
-## Dynamic arrays
+## 📚 Dynamic arrays
 
 An object template creates independent item nodes. Iterate the array node directly and track each
 item node so its controls remain associated with the same item when the collection changes:
@@ -571,7 +571,7 @@ array `patch()` updates existing positions without resizing it.
 See [Dynamic arrays](https://gastonmesseri.github.io/form-nodes/guides/dynamic-arrays) for templates,
 factories, keyed reconciliation, and the complete operations API.
 
-## Submission
+## 🚀 Submission
 
 The first component configures `onSubmit` on `form()`. An action may return a promise, so a real
 application can replace the local action with a service call:
@@ -599,7 +599,7 @@ This is an options fragment: `accounts` represents your application's service. B
 See [Form submission](https://gastonmesseri.github.io/form-nodes/guides/submission) for validation
 policies and composing native forms with Angular controls.
 
-## Control-value debounce
+## ⏱️ Control-value debounce
 
 To delay committing user input, add `debounce` to a field declaration:
 
@@ -617,7 +617,7 @@ and `reset(value)` are never delayed by control-value debounce.
 This is separate from an asynchronous validator's `debounce` option, which delays validation work.
 See [Value flow and debounce](https://gastonmesseri.github.io/form-nodes/guides/value-flow-and-debounce).
 
-## Where to go next
+## 🧭 Where to go next
 
 | I want to… | Start here |
 | --- | --- |
@@ -630,7 +630,7 @@ See [Value flow and debounce](https://gastonmesseri.github.io/form-nodes/guides/
 | Extract a value type from any node | [FormNodeValue](https://gastonmesseri.github.io/form-nodes/reference/form-node-value) |
 | Check an upgrade | [Changelog](https://gastonmesseri.github.io/form-nodes/project/changelog) and [Migration guides](https://gastonmesseri.github.io/form-nodes/project/migrations) |
 
-## Development
+## 🛠️ Development
 
 For development, use Node.js 22.22.3 from `.nvmrc` (`nvm use`). The package builds with Angular 21.0.7 and TypeScript 5.9.3 and is also tested with Angular 22.1.5.
 
@@ -649,6 +649,6 @@ The complete README examples are generated from those same checked files. After 
 See [Project organization](docs/architecture.md) for repository conventions and the
 [Behavior reference](docs/behavior.md) for the detailed implementation contract.
 
-## License
+## 📄 License
 
 [MIT](LICENSE).
