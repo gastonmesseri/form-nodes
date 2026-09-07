@@ -12,11 +12,15 @@ canonical release record.
 
 ### Changed
 
-- **Breaking API change:** `provideFormNodesConfig({ validatorMessages, classes, syncControlInputs })` replaces `provideValidatorMessages()` and `provideFormNodeConfig()`; `FormNodesConfig` replaces `FormNodeConfig`. Message factories retain injection and reactive message support, and the unified provider also works in component providers. Omitted message or binding sections preserve their inherited providers; an empty configuration is a no-op.
+- **Breaking API change:** `provideFormNodesConfig({ validatorMessages, classes, syncControlInputs })` replaces `provideValidatorMessages()` and `provideFormNodeConfig()`; `FormNodesConfig` replaces `FormNodeConfig`. Message factories retain injection and reactive message support, and the unified provider also works in component providers. All three options inherit independently; configuring input synchronization preserves inherited classes, and configuring or clearing classes preserves synchronization. Explicit class maps replace rather than merge with inherited maps; an empty configuration is a no-op.
 
 - **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.
 
 ### Added
+
+- Each `provideFormNodesConfig()` option accepts `null` to reset only that option: no automatic classes, input synchronization enabled, or an empty provider message catalog with normal fallback. Omitted options and `undefined` still inherit.
+
+- `provideFormNodesConfig({ validatorMessages })` accepts a message catalog object directly as well as an injectable factory. Both forms retain reactive message callbacks and the same message precedence.
 
 - `validators({ resolve: true })` and `hasValidator(validator, { resolve: true })` inspect final validator references reached through synchronous compositions, share validation evaluation, and react to composition dependencies. Default queries retain direct-registration semantics; async validators are listed without starting their work.
 

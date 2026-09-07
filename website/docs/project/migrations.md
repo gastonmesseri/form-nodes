@@ -14,7 +14,7 @@ Use `provideFormNodesConfig()` for both validator messages and binding configura
 | `provideFormNodeConfig(options)` | `provideFormNodesConfig(options)` |
 | `FormNodeConfig` | `FormNodesConfig` |
 
-The old exports are removed. Combine both sections in one call per injector scope:
+The old exports are removed. Combine the options in one call per injector scope:
 
 ```ts
 provideFormNodesConfig({
@@ -28,10 +28,11 @@ The function returns `Provider[]`, so it supports component providers as well as
 route, and NgModule providers. Keep injectable factories inside `validatorMessages`.
 Messages are still captured when nodes are created; binding an existing node does not replace them.
 
-Omitted sections inherit independently. A messages-only configuration preserves inherited binding
-options, and a bindings-only configuration preserves inherited messages. Providing either binding
-option replaces the binding section, as before. An empty `{}` now registers no providers; use
-`{ classes: {} }` to clear inherited classes and restore default input synchronization.
+All three options inherit independently. A synchronization-only configuration preserves inherited
+classes and messages. A classes-only configuration preserves inherited synchronization and messages.
+An explicit class map replaces the inherited map without merging. An empty `{}` registers no
+providers; `{ classes: {} }` clears only classes. To also restore synchronization explicitly, use
+`{ classes: {}, syncControlInputs: true }`.
 See [Configuration provider](../reference/provide-form-nodes-config.md).
 
 ## Unreleased: opt in to dynamic child iteration

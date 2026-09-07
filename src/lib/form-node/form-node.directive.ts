@@ -2,8 +2,8 @@ import { NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Validators, type ControlVa
 import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterEveryRender, afterRenderEffect, computed, effect, forwardRef, inject, input, signal, untracked, type OnInit, type Signal } from '@angular/core';
 
 import type { Field } from '../primitives/field';
-import { FORM_NODE_CONFIG } from './form-node-config';
 import { shallowEqual } from '../utils/shallow-equal';
+import { FORM_NODE_CLASSES } from './form-node-config';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
@@ -79,7 +79,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private explicitPassThrough = inject(FORM_NODE_PASS_THROUGH, { optional: true, self: true }) ?? false;
 
-  private config = inject(FORM_NODE_CONFIG, { optional: true });
+  private configuredClasses = inject(FORM_NODE_CLASSES, { optional: true });
 
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
@@ -158,7 +158,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   }
 
   private installClassBindingEffect() {
-    const classes = Object.entries(this.config?.classes ?? {}).map(([className, predicate]) => [
+    const classes = Object.entries(this.configuredClasses ?? {}).map(([className, predicate]) => [
       className,
       computed(() => predicate(this)),
     ] as const);

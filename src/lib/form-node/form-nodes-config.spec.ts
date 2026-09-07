@@ -65,11 +65,11 @@ describe('unified Form Nodes configuration', () => {
     expect(input.classList.contains('has-error')).toBe(false);
   });
 
-  it.each(['messages', 'bindings', 'empty'])('inherits omitted sections with a %s override', (section) => {
+  it.each(['messages', 'classes', 'sync', 'empty', 'nullClasses', 'nullSync', 'nullMessages'])('inherits omitted options with a %s override', (section) => {
     @NgModule({
       imports: [FormNode],
       providers: [provideFormNodesConfig({
-        validatorMessages: () => ({ required: 'Parent message' }),
+        validatorMessages: { required: 'Parent message' },
         classes: { 'parent-invalid': binding => binding.node().$api.invalid() },
       })],
       exports: [FormNode],
@@ -77,7 +77,11 @@ describe('unified Form Nodes configuration', () => {
     class SharedModule {}
     const config = section === 'messages'
       ? { validatorMessages: () => ({ required: 'Local message' }) }
-      : section === 'bindings' ? { classes: {} } : {};
+      : section === 'classes' ? { classes: {} }
+        : section === 'sync' ? { syncControlInputs: false }
+          : section === 'nullClasses' ? { classes: null }
+            : section === 'nullSync' ? { syncControlInputs: null }
+              : section === 'nullMessages' ? { validatorMessages: null } : {};
     @Component({
       template: '<input [formNode]="name">',
       imports: [SharedModule],
@@ -89,7 +93,7 @@ describe('unified Form Nodes configuration', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    expect(fixture.componentInstance.name.getError('required')?.message).toBe(section === 'messages' ? 'Local message' : 'Parent message');
-    expect(input.classList.contains('parent-invalid')).toBe(section !== 'bindings');
+    expect(fixture.componentInstance.name.getError('required')?.message).toBe(section === 'messages' ? 'Local message' : section === 'nullMessages' ? 'This field is required.' : 'Parent message');
+    expect(input.classList.contains('parent-invalid')).toBe(section !== 'classes' && section !== 'nullClasses');
   });
 });

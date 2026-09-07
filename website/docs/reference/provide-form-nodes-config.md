@@ -15,15 +15,15 @@ Configures validator messages, custom-control input synchronization, and reactiv
 
 ```ts
 provideFormNodesConfig(config: {
-  validatorMessages?: () => ValidatorMessages;
-  syncControlInputs?: boolean; // Default: true
-  classes?: Record<string, (binding: FormNodeBinding) => boolean>;
+  validatorMessages?: ValidatorMessages | (() => ValidatorMessages) | null | undefined;
+  syncControlInputs?: boolean | null | undefined; // Default: true
+  classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
 }): Provider[];
 ```
 
 ## `syncControlInputs` {#custom-control-inputs}
 
-`syncControlInputs` defaults to `true`. Set it to `false` to preserve component defaults and
+`syncControlInputs` defaults to `true`; `null` explicitly restores that default. Set it to `false` to preserve component defaults and
 consumer template bindings for these custom-control inputs:
 
 - `disabled`, `disabledReasons`, `readonly`, and `hidden`.
@@ -46,7 +46,7 @@ for a complete application example. Angular's own binding directives use their o
 ## `classes` {#classes}
 
 Configure CSS class names and reactive predicates for `[formNode]` bindings.
-No classes are enabled by default.
+No classes are enabled by default. Set `classes: null` to restore that default in a nearer scope.
 
 ```ts
 // app.config.ts
@@ -81,11 +81,26 @@ See [Configuration](./configuration.md#binding-configuration) and [`[formNode]`]
 
 ## `validatorMessages` {#validator-messages}
 
+Pass a partial catalog directly for simple configuration, or a factory when you need `inject()`.
+Both forms support reactive message callbacks. Set `validatorMessages: null` to replace the inherited
+provider catalog with an empty one; normal form-tree, global, and built-in fallbacks still apply.
+
 For a standalone application, register the provider in `app.config.ts` and pass `appConfig` to
 `bootstrapApplication(AppComponent, appConfig)`. The [shared catalog example](./configure-global-validator-messages.md#where-to-call-it)
 exports the data used here; no initializer is needed.
 
 <CodeBlock language="ts" title="app.config.ts">{appConfigSource}</CodeBlock>
+
+For injectable configuration, use a factory instead of the object:
+
+```ts
+provideFormNodesConfig({
+  validatorMessages: () => {
+    const translations = inject(TranslationService);
+    return { required: () => translations.translate('validation.required') };
+  },
+});
+```
 
 The factory runs once when its provider is first resolved, in an Angular injection context, so
 it can inject a translation service. Return message callbacks that read signals for reactive
@@ -103,17 +118,59 @@ for the complete precedence rules.
 
 ## Provider scope
 
-Messages and binding options are independent sections:
+Each option inherits independently from the nearest provider that explicitly configures it:
 
-- Omitting `validatorMessages` preserves the inherited provider catalog.
-- Omitting both `classes` and `syncControlInputs` preserves the inherited binding configuration.
-- Providing either binding option replaces the binding section as a whole: omitted classes mean
-  no configured classes, and omitted `syncControlInputs` defaults to `true`. Class maps do not merge.
-- `{}` registers no providers. Use `{ classes: {} }` to clear inherited classes and restore the
-  default input synchronization. Use `{ validatorMessages: () => ({}) }` to supply an empty catalog.
+- Omit `validatorMessages` to preserve the inherited catalog.
+- Omit `classes` to preserve the inherited class map. An explicit map replaces it without merging;
+  `{ classes: {} }` clears only the inherited classes.
+- Omit `syncControlInputs` to preserve the inherited setting. Set `true` or `false` to override it.
+  With no provider for this option, synchronization defaults to `true`.
+- `{}` registers no providers. An option set to `undefined` also inherits.
+- `{ validatorMessages: {} }` supplies an empty catalog without changing classes or synchronization.
+
+`undefined` means **inherit**; `null` means **reset this option**:
+
+| Option set to `null` | Result |
+| --- | --- |
+| `classes` | No automatic classes; equivalent to an empty map. |
+| `syncControlInputs` | Synchronization enabled (`true`). |
+| `validatorMessages` | Empty provider catalog, with normal message fallback. |
+
+```ts
+// Component providers: reset all three options in this scope.
+provideFormNodesConfig({
+  classes: null,
+  syncControlInputs: null,
+  validatorMessages: null,
+});
+```
+
+Each `null` affects only its own option. Resetting messages does not force the built-in English
+text: node-local and form-tree catalogs, catalogs captured by ancestor nodes, and global messages
+still participate in normal resolution. It does not change catalogs captured by existing nodes.
+The null value belongs to the option itself; injectable factories still return a catalog object.
+
+For example, these provider registrations belong in different scopes:
+
+```ts
+// app.config.ts — application providers
+provideFormNodesConfig({
+  validatorMessages: { required: 'Please complete this field.' },
+  classes: ANGULAR_FORMS_STATUS_CLASSES,
+  syncControlInputs: true,
+});
+
+// app.component.ts — component providers
+provideFormNodesConfig({ syncControlInputs: false });
+```
+
+The component keeps the application messages and status classes while disabling matching
+custom-control input synchronization. A component provider with `{ classes: {} }` would instead
+clear the classes while keeping the application messages and synchronization setting.
 
 Options are static configuration. Class predicates and selected message callbacks track the
-signals they read. Register the combined configuration once per injector scope when possible.
+signals they read. Multiple calls in one injector also preserve omitted options; the last explicit
+provider for each option wins.
 
 ## Using FormNode through SharedModule
 
@@ -166,8 +223,7 @@ those templates; the configuration applies to nodes and bindings that resolve it
 Repeated imports into different injector contexts can install the configuration again. For
 example, a lazy feature importing a configured `SharedModule` can receive that module's config
 instead of the application's inherited config. Do not rely on a configured shared module and an
-application provider being merged. The nearest provider for each section wins. A messages-only provider preserves inherited bindings;
-a bindings-only provider preserves inherited messages. Class maps are not merged automatically.
+application provider being merged. The nearest explicit provider for each option wins. Changing one option preserves the other two. Class maps are not merged automatically.
 
 Use application-level registration for an application-wide policy. Use shared-module registration
 when the module intentionally establishes that policy for its consuming injector contexts. Both

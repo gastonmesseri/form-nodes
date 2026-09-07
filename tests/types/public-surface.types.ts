@@ -54,5 +54,23 @@ const combinedConfig: FormNodesConfig = {
 };
 const combinedProviders: Provider[] = provideFormNodesConfig(combinedConfig);
 void combinedProviders;
-// @ts-expect-error Message configuration accepts an injectable factory, not a static catalog.
-provideFormNodesConfig({ validatorMessages: { required: 'Required' } });
+const objectConfig: FormNodesConfig = {
+  validatorMessages: {
+    required: 'Required',
+    minLength: ({ minLength }) => `At least ${minLength} characters`,
+  },
+};
+provideFormNodesConfig(objectConfig);
+provideFormNodesConfig({ validatorMessages: { min: ({ min }) => `Minimum: ${min}` } });
+// @ts-expect-error Message entries must be strings or message callbacks.
+provideFormNodesConfig({ validatorMessages: { required: 123 } });
+
+const resetConfig: FormNodesConfig = {
+  validatorMessages: null,
+  classes: null,
+  syncControlInputs: null,
+};
+provideFormNodesConfig(resetConfig);
+provideFormNodesConfig({ validatorMessages: null, classes: null, syncControlInputs: null });
+
+provideFormNodesConfig({ validatorMessages: undefined, classes: undefined, syncControlInputs: undefined });

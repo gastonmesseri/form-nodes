@@ -59,6 +59,28 @@ array catalog can override individual messages.
 
 ## Angular application configuration
 
+### Direct provider catalogs
+
+`provideFormNodesConfig()` also accepts a catalog object directly:
+
+```ts
+provideFormNodesConfig({
+  validatorMessages: {
+    required: 'Please complete this field.',
+    min: ({ min }) => `The minimum value is ${min}.`,
+  },
+});
+```
+
+Use a factory when building the catalog requires `inject()`. Both forms support message callbacks
+that read signals; precedence and inherited configuration are the same.
+
+Use `validatorMessages: null` to replace the inherited provider catalog with an empty one.
+This preserves node-local, form-tree, ancestor-node provider, global, and built-in fallbacks.
+Omitting the option or passing `undefined` instead inherits the injector catalog.
+
+### Injectable catalogs
+
 Configure translated defaults once in an application, route, or environment injector:
 
 ```ts

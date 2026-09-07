@@ -9,7 +9,7 @@ import { field, form, required, FormNode, ANGULAR_FORMS_STATUS_CLASSES, provideF
   exports: [FormNode],
   providers: [
     provideFormNodesConfig({
-      validatorMessages: () => ({ required: 'Please enter your name.' }),
+      validatorMessages: { required: 'Please enter your name.' },
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],

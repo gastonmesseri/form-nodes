@@ -19,6 +19,7 @@ import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
 import { provideFormNodesConfig } from '../form-node/form-node-config';
 import type { InternalNode, Node, NodeType } from '../types/node.type';
+import { configureGlobalValidatorMessages } from '../validation/validator-messages';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -26,9 +27,11 @@ const nodeTypeOf = (node: Node): NodeType => {
   return node.$api.nodeType();
 };
 
-it('inherits message providers through unified configuration without requiring a binding', () => {
+it.each(['object', 'factory'])('inherits %s message providers without requiring a binding', (source) => {
+  const message = signal('Parent message');
+  const catalog = { required: () => message() };
   const parent = Injector.create({ providers: provideFormNodesConfig({
-    validatorMessages: () => ({ required: 'Parent message' }),
+    validatorMessages: source === 'object' ? catalog : () => catalog,
   }) });
   const bindingsOnly = Injector.create({ parent, providers: provideFormNodesConfig({ classes: {} }) });
   const messagesOnly = Injector.create({ parent, providers: provideFormNodesConfig({
@@ -42,10 +45,41 @@ it('inherits message providers through unified configuration without requiring a
   expect(node.nested.name.errors()).toEqual([]);
   node.nested.name.reset('');
   expect(node.nested.name.getError('required')?.message).toBe('Parent message');
+  message.set('Updated message');
+  expect(node.nested.name.getError('required')?.message).toBe('Updated message');
+  expect(localNode.nested.name.getError('required')?.message).toBe('Local message');
   expect(field('', [required]).getError('required')?.message).toBe('This field is required.');
   messagesOnly.destroy();
   bindingsOnly.destroy();
   parent.destroy();
+});
+
+it('resets provider messages with null while preserving reactive global and form-tree fallbacks', () => {
+  const globalMessage = signal('Global required');
+  const restore = configureGlobalValidatorMessages({ required: () => globalMessage() });
+  const providerFactory = vi.fn(() => ({ required: 'Ancestor provider required' }));
+  const parent = Injector.create({ providers: provideFormNodesConfig({ validatorMessages: providerFactory }) });
+  const resetInjector = Injector.create({ parent, providers: provideFormNodesConfig({ validatorMessages: null }) });
+  try {
+    const node = runInInjectionContext(resetInjector, () => form({ nested: form({ name: field('', [required]) }) }));
+    expect(node.nested.name.getError('required')?.message).toBe('Global required');
+    expect(providerFactory).not.toHaveBeenCalled();
+    globalMessage.set('Updated global required');
+    expect(node.nested.name.getError('required')?.message).toBe('Updated global required');
+    node.nested.name.set('Marco');
+    expect(node.nested.name.errors()).toEqual([]);
+    node.nested.name.reset('');
+    expect(node.nested.name.getError('required')?.message).toBe('Updated global required');
+    const parentForm = runInInjectionContext(parent, () => form({ branch: node }));
+    expect(node.nested.name.getError('required')?.message).toBe('Ancestor provider required');
+    expect(providerFactory).toHaveBeenCalledTimes(1);
+    form({ parentForm }, { validatorMessages: { required: 'Form-tree required' } });
+    expect(node.nested.name.getError('required')?.message).toBe('Form-tree required');
+  } finally {
+    restore();
+    resetInjector.destroy();
+    parent.destroy();
+  }
 });
 
 describe('resolved validator queries', () => {

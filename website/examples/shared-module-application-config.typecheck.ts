@@ -38,7 +38,7 @@ export class AppComponent {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideFormNodesConfig({
-      validatorMessages: () => ({ required: 'Please enter your name.' }),
+      validatorMessages: { required: 'Please enter your name.' },
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],

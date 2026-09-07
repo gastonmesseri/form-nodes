@@ -367,9 +367,11 @@ provideFormNodesConfig({
 ```
 
 The `classes` and `syncControlInputs` options affect rendered bindings, not node state or validation.
-Providing either replaces that scope's binding section; class maps are not merged automatically.
-A provider containing only `validatorMessages` preserves inherited binding options. See
-[Provider scope](./provide-form-nodes-config.md#provider-scope) for the independent sections.
+Each option inherits independently. Providing `classes` replaces only the class map; providing
+`syncControlInputs` changes only input synchronization. Omitting an option preserves its inherited
+provider. Set an option to `null` to reset it: no classes, synchronization enabled, or an empty
+provider message catalog with normal fallback. Class maps are not merged automatically. See
+[Provider scope](./provide-form-nodes-config.md#provider-scope) for examples.
 
 Angular's `provideSignalFormsConfig()` independently configures Angular `[formField]` controls.
 The two providers use separate tokens and can coexist in the same injector. See

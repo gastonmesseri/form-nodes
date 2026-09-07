@@ -2767,7 +2767,8 @@ warning paths in the separate production Chromium process.
 
 `provideFormNodesConfig({ syncControlInputs: false })` disables matching state and constraint
 input writes by `[formNode]` for custom signal controls, input-output pairs, and CVA components.
-The default is true. The nearest whole configuration wins; omitted properties use defaults.
+The default is true when no provider configures synchronization. This option inherits independently
+from classes and messages; omitted options preserve their nearest explicit provider.
 Configuration is resolved at connection time, and the choice persists through node rebinding.
 Input discovery still records public names and aliases so native fallback does not overwrite
 a custom control's own input channels. No synchronization effect is installed for these inputs
@@ -2943,10 +2944,13 @@ change Angular-comparable normal validation suppression or parent aggregation ru
 replace the two previous provider functions and the singular config type. The helper returns
 ordinary `Provider[]`, supporting application, route, NgModule, and component injectors.
 
-Messages and binding configuration use independent tokens. Omitting a section preserves its
-inherited provider. Providing `classes` or `syncControlInputs` replaces the binding section as a
-whole: omitted classes mean none, and omitted synchronization defaults to true. An empty config
-registers nothing; `{ classes: {} }` explicitly clears inherited classes and restores synchronization.
+Each of the three options uses an independent token. Omitting an option (or passing `undefined`)
+preserves its inherited provider. Explicit `classes` replace only the class map without merging;
+explicit `syncControlInputs` changes only synchronization. With no provider, classes default to an
+empty map and synchronization defaults to true. An empty configuration registers nothing;
+`{ classes: {} }` clears only classes. Multiple calls within one injector follow the same per-option
+rule, with the last explicit registration winning. Native controls, value binding, interaction
+hooks, node validation, and captured message catalogs retain their existing behavior.
 Providing a message catalog does not merge it with a parent injector's catalog.
 
 The message factory executes once on first provider resolution in an injection context. Selected
@@ -2961,3 +2965,33 @@ Reference inspected: Angular `v22.1.5`, commit
 `packages/forms/signals/test/web/form_field.spec.ts` configuration tests. Angular's binding provider
 also returns ordinary providers. Form Nodes intentionally adds its own message catalog section;
 Angular's configuration tokens remain independent.
+
+### Object catalogs in the unified provider
+
+`FormNodesConfig.validatorMessages` accepts `ValidatorMessages | (() => ValidatorMessages) | null`.
+A direct catalog is registered with `useValue`; a factory retains `useFactory` and its injection
+context. Both forms use the same token, capture at node creation, precedence, and reactive message
+callbacks. Omitting the option still inherits the provider catalog. Supplying `{}` installs an
+empty catalog, preserving normal ancestor-node, global, and built-in fallback.
+
+Checked against Angular `v22.1.5` configuration implementation and configuration tests cited above.
+Angular's configuration provider uses `useValue`; Form Nodes' message catalog remains an additional
+library feature with factory support.
+
+### Resetting individual provider options
+
+All three `provideFormNodesConfig()` options accept `null` to install that option's default in
+the current injector. `classes: null` registers an empty class map; `syncControlInputs: null`
+registers true; `validatorMessages: null` registers an empty catalog. These are explicit providers,
+so they shadow the same option in ancestor injectors and override earlier registrations in the
+same injector. Omission and `undefined` still inherit without registering a provider.
+
+A message reset does not force built-in wording. Node-local and form-tree catalogs, catalogs
+captured by ancestor nodes, and global messages still resolve as before. The overridden injector
+catalog is not resolved merely to supply the empty catalog. Existing nodes retain their captured
+catalogs; new nodes capture the reset catalog. Message callbacks in applicable fallback catalogs
+remain reactive. Factory return types remain catalogs; null is supported on the option itself.
+
+Angular reference remains `v22.1.5`, `packages/forms/signals/src/api/di.ts` and configuration tests
+in `packages/forms/signals/test/web/form_field.spec.ts`. Explicit null reset semantics are a
+Form Nodes API addition; the underlying Angular binding state transitions remain unchanged.

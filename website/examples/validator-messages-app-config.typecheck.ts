@@ -8,9 +8,7 @@ import { validatorMessages } from './validator-message-catalog';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideFormNodesConfig({
-      validatorMessages: () => {
-        return validatorMessages;
-      },
+      validatorMessages,
     }),
   ],
 };

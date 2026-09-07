@@ -9,7 +9,8 @@ import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
-import { provideFormNodesConfig } from './form-node-config';
+import { required } from '../validation/validators/required';
+import { provideFormNodesConfig, type FormNodesConfig } from './form-node-config';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -130,6 +131,71 @@ describe('custom-control input configuration', () => {
     fixture.destroy();
     control.value.set('detached');
     expect(replacement()).toEqual(kind === 'field' ? 'Later' : { name: 'Later' });
+  });
+
+  describe.each(['field', 'form'] as const)('%s option inheritance', (kind) => {
+    it.each(['classes', 'clearClasses', 'syncTrue', 'syncFalse', 'messages', 'empty', 'nullClasses', 'nullSync', 'nullMessages', 'allNull', 'undefined'] as const)('overrides only %s and keeps reactive state and value binding', (option) => {
+      TestBed.configureTestingModule({ providers: [
+        provideFormNodesConfig({ validatorMessages: { required: 'Root required' } }),
+        provideFormNodesConfig({ classes: { 'root-invalid': binding => binding.node().$api.invalid() } }),
+        provideFormNodesConfig({ syncControlInputs: option === 'syncFalse' }),
+      ] });
+      const options: Record<typeof option, FormNodesConfig> = {
+        classes: { classes: { 'local-invalid': binding => binding.node().$api.invalid() } },
+        clearClasses: { classes: {} },
+        syncTrue: { syncControlInputs: true },
+        syncFalse: { syncControlInputs: false },
+        messages: { validatorMessages: { required: 'Local required' } },
+        empty: {},
+        nullClasses: { classes: null },
+        nullSync: { syncControlInputs: null },
+        nullMessages: { validatorMessages: null },
+        allNull: { classes: null, syncControlInputs: null, validatorMessages: null },
+        undefined: { classes: undefined, syncControlInputs: undefined, validatorMessages: undefined },
+      };
+      @Component({
+        template: '<config-value-control [formNode]="node" />',
+        imports: [FormNode, ValueControl],
+        providers: [provideFormNodesConfig(options[option])],
+      })
+      class Host {
+        profile = form({ name: field('', [required]) });
+
+        node = kind === 'field' ? this.profile.name : this.profile;
+      }
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const host = fixture.componentInstance;
+      const element = fixture.debugElement.children[0]!;
+      const control = element.componentInstance as ValueControl;
+      const classes = (element.nativeElement as HTMLElement).classList;
+      expect(host.profile.name.getError('required')?.message).toBe(option === 'messages' ? 'Local required' : option === 'nullMessages' || option === 'allNull' ? 'This field is required.' : 'Root required');
+      expect(classes.contains('root-invalid')).toBe(!['classes', 'clearClasses', 'nullClasses', 'allNull'].includes(option));
+      expect(classes.contains('local-invalid')).toBe(option === 'classes');
+      expect(control.disabled()).toBe(!['syncTrue', 'nullSync', 'allNull'].includes(option));
+      expect(control.value()).toEqual(kind === 'field' ? '' : { name: '' });
+      control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
+      control.touch.emit();
+      fixture.detectChanges();
+      expect(host.profile.name()).toBe('Marco');
+      expect(host.node.$api.valid()).toBe(true);
+      expect(host.node.$api.dirty()).toBe(true);
+      expect(host.node.$api.touched()).toBe(true);
+      expect(classes.contains('root-invalid')).toBe(false);
+      expect(classes.contains('local-invalid')).toBe(false);
+      host.node.$api.disable();
+      fixture.detectChanges();
+      expect(control.disabled()).toBe(true);
+      host.node.$api.enable();
+      fixture.detectChanges();
+      expect(control.disabled()).toBe(!['syncTrue', 'nullSync', 'allNull'].includes(option));
+      host.profile.reset({ name: '' });
+      fixture.detectChanges();
+      expect(host.node.$api.touched()).toBe(false);
+      expect(control.value()).toEqual(kind === 'field' ? '' : { name: '' });
+      expect(classes.contains('root-invalid')).toBe(!['classes', 'clearClasses', 'nullClasses', 'allNull'].includes(option));
+      expect(classes.contains('local-invalid')).toBe(option === 'classes');
+    });
   });
 
   it('allows a nearer provider to enable inputs and preserves native and CVA disabled behavior', () => {
