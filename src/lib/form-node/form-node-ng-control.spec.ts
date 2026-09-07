@@ -90,6 +90,128 @@ const bind = (node: Node) => {
   return { fixture, cva, control: cva.ngControl.control! };
 };
 
+describe('FormNode NgControl update compatibility', () => {
+  it.each(['field', 'nested form'] as const)('preserves the %s CVA input pipeline and does not force or suppress notifications', (kind) => {
+    const name = field.strict('committed', kind === 'field' ? { debounce: 'blur' } : {});
+    const node = kind === 'field' ? name : form({ details: form({ name }) }, { debounce: 'blur' });
+    const root = form({ node });
+    const { fixture, cva, control } = bind(node);
+    const buffered = kind === 'field' ? 'buffered' : { details: { name: 'buffered' } };
+    cva.onChange(buffered);
+    control.updateValueAndValidity({ emitEvent: false, onlySelf: true });
+    expect(control.value).toEqual(buffered);
+    expect(name()).toBe('committed');
+    expect(node.$api.debouncing()).toBe(true);
+    expect(root.dirty()).toBe(true);
+    expect(root.untouched()).toBe(true);
+    fixture.detectChanges();
+    // Options on this no-op cannot silence an independently observed CVA write.
+    expect(cva.values).toEqual([buffered]);
+    const count = cva.events.length;
+    control.updateValueAndValidity();
+    fixture.detectChanges();
+    expect(cva.events).toHaveLength(count);
+    expect(node.$api.debouncing()).toBe(true);
+    cva.onTouched();
+    expect(name()).toBe('buffered');
+    expect(node.$api.debouncing()).toBe(false);
+    expect(root.touched()).toBe(true);
+    fixture.detectChanges();
+    // Committing an aggregate composes a new object; the field retains its string identity.
+    expect(cva.values).toEqual(kind === 'field' ? [buffered] : [buffered, buffered]);
+    const replacement = field.strict('replacement');
+    fixture.componentInstance.active.set(replacement);
+    fixture.detectChanges();
+    cva.onChange('current');
+    control.updateValueAndValidity();
+    expect(replacement()).toBe('current');
+    expect(name()).toBe('buffered');
+    fixture.destroy();
+    cva.onChange('stale');
+    cva.onTouched();
+    control.updateValueAndValidity();
+    expect(replacement()).toBe('current');
+  });
+
+  it.each(['field', 'nested form'] as const)('keeps %s reactive validation current without clearing errors or reexecuting rules', (kind) => {
+    const active = signal(true);
+    const validate = vi.fn(() => active() ? { kind: 'rule' } : null);
+    const name = field.strict('value', [validate]);
+    const node = kind === 'field' ? name : form({ details: form({ name }) });
+    const { fixture, cva, control } = bind(node);
+    expect(control.invalid).toBe(true);
+    const calls = validate.mock.calls.length;
+    const payload = { raw: 'invalid' };
+    control.setErrors({ parsing: payload });
+    fixture.detectChanges();
+    cva.events.length = 0;
+    control.updateValueAndValidity();
+    expect(validate).toHaveBeenCalledTimes(calls);
+    expect(control.errors?.['parsing']).toBe(payload);
+    expect(node.invalid()).toBe(true);
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+    fixture.detectChanges();
+    expect(cva.events).toEqual([]);
+    active.set(false);
+    control.updateValueAndValidity({ emitEvent: false });
+    expect(name.getError('rule')).toBeUndefined();
+    expect(validate).toHaveBeenCalledTimes(calls + 1);
+    expect(control.invalid).toBe(true);
+    expect(control.errors?.['parsing']).toBe(payload);
+    control.setErrors(null);
+    expect(control.valid).toBe(true);
+    name.setValidators(required);
+    name.set('');
+    control.updateValueAndValidity();
+    expect(name.getError('required')).toBeDefined();
+    expect(control.invalid).toBe(true);
+    fixture.destroy();
+  });
+
+  it.each(['field', 'nested form'] as const)('does not restart or cancel async validation for a %s', async (kind) => {
+    const dependency = signal('initial');
+    const requests: { abortSignal: AbortSignal; resolve: (result: ValidationResult) => void }[] = [];
+    const validate = vi.fn(({ abortSignal }: AsyncValidatorContext<unknown>) => {
+      dependency();
+      return new Promise<ValidationResult>(resolve => requests.push({ abortSignal, resolve }));
+    });
+    const options = { adoptBindingInjector: false, inheritInjector: false };
+    const node = kind === 'field'
+      ? field.strict('value', [asyncValidator(validate)], options)
+      : form({ details: form({ name: field.strict('value') }) }, [asyncValidator(validate)], options);
+    const root = form({ node });
+    const { fixture, cva, control } = bind(node);
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledOnce());
+    control.updateValueAndValidity();
+    control.updateValueAndValidity({ emitEvent: false, onlySelf: true });
+    expect(validate).toHaveBeenCalledOnce();
+    expect(requests[0]!.abortSignal.aborted).toBe(false);
+    expect(root.pending()).toBe(true);
+    requests[0]!.resolve({ kind: 'remote' });
+    await vi.waitFor(() => expect(control.pending).toBe(false));
+    fixture.detectChanges();
+    expect(cva.statuses.at(-1)).toBe('INVALID');
+    const count = cva.events.length;
+    control.updateValueAndValidity();
+    fixture.detectChanges();
+    expect(control.errors?.['remote']).toBeDefined();
+    expect(cva.events).toHaveLength(count);
+    expect(validate).toHaveBeenCalledOnce();
+    dependency.set('changed');
+    control.updateValueAndValidity({ emitEvent: false });
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    expect(control.pending).toBe(true);
+    requests[1]!.resolve(null);
+    await vi.waitFor(() => expect(control.pending).toBe(false));
+    fixture.detectChanges();
+    expect(root.valid()).toBe(true);
+    expect(cva.statuses.at(-1)).toBe('VALID');
+    expect(validate).toHaveBeenCalledTimes(2);
+    fixture.destroy();
+  });
+});
+
 describe('FormNode NgControl validator function boundary', () => {
   it.each(['field', 'nested form'] as const)('exposes no transferable functions while preserving reactive validation on a %s', (kind) => {
     const message = signal('first');

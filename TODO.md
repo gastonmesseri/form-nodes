@@ -90,6 +90,7 @@
 - en DL los componentes se suscriben a ngControl?.control?.statusChanges (y no a ngControl?.statusChanges), asegurarse de que esto funciona
 
 - [NEXT] [ ] Ensure that ALL console.warn are only shown in development mode, or at least not on production builds (maybe create a helper function for this?)
+
 - [NEXT] [ ] Rename ng-forms folder (root) to form-nodes
 
 - [NEXT] In the custom-controls page, simplify the page to the basics, and create another page create custom-controls-advanced, that contains all the details that i think right now are not that relevant to a user who just want to know how to easily integrate a custom component.
@@ -100,11 +101,12 @@
   - [x] Delivered `name` and `path`; see Completed for the structural identity contract and verification.
   - [x] Delivered node-owned `reset()` compatibility; see Completed for values, interaction, pending work, errors, and notification semantics.
   - [x] Audited `validator` and `asyncValidator`: both expose no transferable Angular functions (`null`), while node validation remains authoritative. See Completed for the supported observation contract.
-  - [ ] Audit `viewToModelUpdate()` and the existing no-op `updateValueAndValidity()` against concrete CVA requirements; define supported behavior instead of adding dummy methods merely to avoid exceptions.
-  - `hasValidator()` currently recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
-  - Verify components that obtain the adapter through a `useNgControl` hook, and distinguish internal adapter helpers from Angular contract members (see the notes above).
-  - Previous reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Resolve the latest Angular 22 maintenance release before continuing; inspect Signal Forms interop and relevant Reactive Forms implementation/tests. Keep the node API authoritative and document intentional compatibility differences.
-  - Update `docs/behavior.md`, the custom-controls website guide, and both unreleased changelogs for each delivered behavior change. Run focused integration tests and the required typecheck, build, coverage, browser, and documentation checks.
+  - [x] Audit `viewToModelUpdate()` and `updateValueAndValidity()`: keep directive-only `ngModelChange` emission unsupported, use registered CVA callbacks for input, and retain Signal Forms no-op refresh semantics. See Completed for evidence and integration coverage.
+  - [ ] Previous reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Resolve the latest Angular 22 maintenance release before continuing; inspect Signal Forms interop and relevant Reactive Forms implementation/tests. Keep the node API authoritative and document intentional compatibility differences.
+  - [ ] Update `docs/behavior.md`, the custom-controls website guide, and both unreleased changelogs for each delivered behavior change. Run focused integration tests and the required typecheck, build, coverage, browser, and documentation checks.
+  - [ ] `hasValidator()` currently recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
+
+- Verify components that obtain the adapter through a `useNgControl` hook, and distinguish internal adapter helpers from Angular contract members (see the notes above).
 
 - [NEXT] [ ] Implement hasError and hasValidator methods into my primitive nodes
 
@@ -1002,6 +1004,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Choose `[formNode]` as the node-binding directive name.
 - [x] Bind aggregate forms to native `<form [formNode]="form">` elements.
 - [x] Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
+  - [x] Audit CVA input and refresh requests against Angular `v22.1.5` (`468b65b`): `viewToModelUpdate()` stays unsupported because `[formNode]` has no `ngModelChange` output; registered CVA callbacks own input. Keep `updateValueAndValidity()` a no-op and verify no forced execution, notifications, error clearing, debounce flushing, or async cancellation. Document `registerOnValidatorChange()` for nonreactive CVA rule changes. Existing runtime behavior is preserved.
   - [x] Define read-only `validator`/`asyncValidator` as null on both adapter surfaces, meaning no exported Angular functions rather than no node validation. Preserve reactive rules, asynchronous ownership, required metadata, and binding-owned `NG_VALIDATORS`; test deferred `useNgControl` browser consumers. Document unsupported function invocation/copying and state-query alternatives. Angular reference `v22.1.5` (`468b65b`).
   - [x] Support adapter `reset()` through the current node API, including subtree interaction/errors, pending input cancellation, existing async ownership, rebinding, local `emitEvent` suppression, and `FormResetEvent`. Document raw values, preserved committed values, and ignored isolated-parent/default-value options with a console warning (replacing the initial throwing behavior). Cover deferred `useNgControl` reset in browser tests; Angular reference `v22.1.5` (`468b65b`).
   - [x] Define reactive `NgControl.name` and `path` from node structure for roots, nested groups/forms, array items, detached subtrees, reattachment, and binding replacement. Keep the combined runtime control identity while documenting Angular’s directive-only type contract; cover deferred `useNgControl` lookup in browser tests. Angular reference re-resolved to `v22.1.5` (`468b65b`).

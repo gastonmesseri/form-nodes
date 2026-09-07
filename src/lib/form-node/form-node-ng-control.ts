@@ -253,5 +253,10 @@ export class FormNodeNgControl {
     return validator === Validators.required && this.getNode().$api.required();
   }
 
+  /**
+   * No additional work is needed: node state is reactive and current when read.
+   * Does not flush input, restart validators, clear errors, or force/suppress notifications.
+   * CVA rule changes must use registerOnValidatorChange(); node rules use node APIs.
+   */
   updateValueAndValidity() {}
 }

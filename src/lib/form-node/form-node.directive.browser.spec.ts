@@ -177,6 +177,9 @@ describe('FormNode in Chromium', () => {
     expect(ngControl.control!.asyncValidator).toBeNull();
     expect(cva.validationCalls).toBe(calls);
     cva.reject = false;
+    ngControl.control!.updateValueAndValidity();
+    expect(cva.validationCalls).toBe(calls);
+    expect(ngControl.errors?.['cvaRule']).toBeDefined();
     cva.validatorChange();
     fixture.detectChanges();
     expect(cva.validationCalls).toBe(calls + 1);
@@ -376,6 +379,7 @@ describe('FormNode in Chromium', () => {
       changeValue(value: string) {
         this.value.set(value);
         this.change(value);
+        this.injector.get(NgControl).control!.updateValueAndValidity({ emitEvent: false });
       }
 
       writeValue(value: string) { this.value.set(value); }
@@ -415,7 +419,7 @@ describe('FormNode in Chromium', () => {
     dispatch(input, 'input');
     dispatch(input, 'blur');
     fixture.detectChanges();
-    expect(cva.values.at(-1)).toBe('Ada');
+    expect(cva.values.filter(value => value === 'Ada')).toHaveLength(1);
     expect(cva.statuses.at(-1)).toBe('VALID');
     expect(cva.errors).toBeNull();
     expect(fixture.componentInstance.profile.name.touched()).toBe(true);

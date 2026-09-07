@@ -2442,7 +2442,8 @@ describe('FormNodeNgControl', () => {
     expect(control.disabled).toBe(true);
     expect(control.enabled).toBe(false);
     expect(control.status).toBe('DISABLED');
-    expect(() => control.updateValueAndValidity()).not.toThrow();
+    control.updateValueAndValidity();
+    expect(control.status).toBe('DISABLED');
     name.enable();
     control.setErrors({ custom: { message: 'Control error' } });
     expect(name.getError('custom')).toMatchObject({ message: 'Control error', targetNode: name });
