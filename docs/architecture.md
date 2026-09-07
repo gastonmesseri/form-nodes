@@ -81,7 +81,7 @@ Within `signal-forms-control/`, `model-transport.ts` connects through public mod
 `paired-transport.ts` connects paired inputs and outputs, with activity gated by `syncInputs`
 in `custom-control-adapter.ts`. Optional state/constraint writes use the separate shared
 input synchronizer. The Angular input-writing implementation remains isolated in
-`form-node/angular-internals/component-input-writer.ts`.
+`form-node/ng-internals/component-input-writer.ts`.
 
 Adapters read the current node through the binding, so rebinding does not require replacing
 the adapter. Effects, subscriptions, and DOM listeners use the host injector's lifetime.

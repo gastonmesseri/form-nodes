@@ -2,7 +2,7 @@ import { reflectComponentType, type Injector, type ModelSignal, type Type } from
 
 import type { FormNodeControl } from '../../form-node-control';
 import type { Node, NodeValue } from '../../../types/node.type';
-import { warnFailedInputWrite, writeComponentInput } from '../../angular-internals/component-input-writer';
+import { warnFailedInputWrite, writeComponentInput } from '../../ng-internals/component-input-writer';
 
 /** Creates the internal input writer and public output subscription; the adapter gates its use. */
 export const createPairedTransport = <TNode extends Node>(

@@ -8,7 +8,7 @@ import { form } from '../primitives/form';
 import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
-import { warnFailedInputWrite } from './angular-internals/component-input-writer';
+import { warnFailedInputWrite } from './ng-internals/component-input-writer';
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 

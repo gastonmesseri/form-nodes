@@ -18,7 +18,7 @@ import { minLength } from '../../validation/validators/min-length';
 import { provideFormNodesConfig } from '../provide-form-nodes-config';
 import type { ValidationError } from '../../validation/validation.type';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
-import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
+import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../ng-internals/component-input-writer';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());

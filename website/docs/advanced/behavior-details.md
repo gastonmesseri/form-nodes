@@ -172,7 +172,7 @@ private input-signal node through the signal's own symbols, without importing An
 available to preserve `ngOnChanges`, and marks the component for checking after a write.
 
 The structural input node, `applyValueToInputSignal()`, and the component-definition writer remain
-Angular implementation details. They are isolated under `form-node/angular-internals` and tested on
+Angular implementation details. They are isolated under `form-node/ng-internals` and tested on
 every supported Angular upgrade rather than treated as version-stable.
 
 These private operations fail safely. If a future Angular release changes the component-definition

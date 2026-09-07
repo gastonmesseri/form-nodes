@@ -6,7 +6,7 @@ import { getFormNodeName } from '../utils/form-node-name';
 import { FORM_NODE_SYNC_INPUTS } from '../provide-form-nodes-config';
 import { getNodeInputConfig } from '../../configuration/node-input-config';
 import { getGlobalSyncInputs } from '../../configuration/configure-global-form-nodes';
-import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
+import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../ng-internals/component-input-writer';
 import { MIN_METADATA, MAX_METADATA, MIN_DATE_METADATA, MAX_DATE_METADATA, MIN_LENGTH_METADATA, MAX_LENGTH_METADATA, PATTERN_METADATA } from '../../validation/constraint-metadata';
 
 export type SignalControlInputConnection = {
