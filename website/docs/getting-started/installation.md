@@ -2,7 +2,7 @@
 title: Installation
 ---
 
-# Installation
+# Installation {#installation}
 
 Install Form Nodes alongside Angular 21.0.7+ or 22.1.5+:
 
@@ -22,7 +22,7 @@ other exports that are not imported.
 The published package includes TypeScript declarations, source maps, the MIT license, and a changelog.
 Use the [GitHub issue tracker](https://github.com/gastonmesseri/form-nodes/issues) to report bugs.
 
-## Requirements
+## 💡 Requirements {#requirements}
 
 - Angular `^21.0.7 || ^22.1.5`
 - TypeScript 5.9 for Angular 21, or TypeScript 6.0 for Angular 22
@@ -37,6 +37,6 @@ dependency injection is used only when an optional integration explicitly needs 
 
 :::
 
-## Next step
+## 🔗 Next step {#next-step}
 
 Continue with [Your first form](./first-form.md).

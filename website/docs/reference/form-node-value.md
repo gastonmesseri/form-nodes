@@ -6,7 +6,7 @@ description: Extract the committed value type from any form, group, array, or fi
 import CodeBlock from '@theme/CodeBlock';
 import formNodeValueSource from '!!raw-loader!../../examples/form-node-value.typecheck.ts';
 
-# FormNodeValue
+# FormNodeValue {#formnodevalue}
 
 `FormNodeValue<typeof node>` extracts the committed value type of any `form()`, `group()`,
 `array()`, or `field()` instance. Use it to type saved drafts, service parameters, or other values
@@ -18,7 +18,7 @@ import type { FormNodeValue } from '@ngblocks/form-nodes';
 type MyFormValue = FormNodeValue<typeof myForm>;
 ```
 
-## Infer form and child values
+## 🌳 Infer form and child values {#infer-form-and-child-values}
 
 <CodeBlock language="ts">{formNodeValueSource}</CodeBlock>
 
@@ -33,7 +33,7 @@ value type recursively:
 - Nodes created with `createFormPrimitives()` preserve their configured nullability defaults and
   any explicit field overrides.
 
-## Signature and scope
+## 📐 Signature and scope {#signature-and-scope}
 
 ```ts
 type FormNodeValue<TNode extends Node> = ReturnType<TNode>;
@@ -53,7 +53,7 @@ original form or group type; use the returned child for its exact inferred type.
 This is a type-only export. It does not read the node, create a subscription, validate a value, or
 change runtime behavior.
 
-## Related value types
+## 🔗 Related value types {#related-value-types}
 
 | Type | Input | Purpose |
 | --- | --- | --- |
@@ -65,7 +65,7 @@ Use `FormNodeValue` when the node declaration defines your model. Use
 [`FormValueContract`](./form-value-contract.md) when an existing domain model should constrain
 the form declaration.
 
-## Related reference
+## 🔗 Related reference {#related-reference}
 
 - [`form()`](./form.md) describes declarations, options, and value operations.
 - [`field()`](./field.md), [`group()`](./group.md), and [`array()`](./array.md) describe the other supported primitives.

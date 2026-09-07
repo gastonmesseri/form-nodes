@@ -2,7 +2,7 @@
 title: Node API
 ---
 
-# Node API
+# Node API {#node-api}
 
 This reference groups the public signals and operations available on fields, forms, and arrays. Exact value and parent types remain inferred from the node tree.
 
@@ -18,7 +18,7 @@ Use direct members for actions and state on every node: `name.set()`, `items.pus
 `profile.patch()`, and `profile.valid()`. The [Tree navigation and API access](../concepts/tree-and-api.md)
 guide documents `.api` only for name collisions and generic infrastructure.
 
-## API map
+## 🧭 API map {#api-map}
 
 | Node concern | Details |
 | --- | --- |
@@ -29,7 +29,7 @@ guide documents `.api` only for name collisions and generic infrastructure.
 | Array items, collection helpers, and structural operations | [Array-specific API](#array-specific-api) |
 | Concrete rendered controls | [Binding API](#binding-api) |
 
-## Shared value and tree API
+## 🌳 Shared value and tree API {#shared-value-and-tree-api}
 
 | Member | Description |
 | --- | --- |
@@ -61,7 +61,7 @@ if (node.nodeType() === 'array') {
 On forms and groups, a child named `nodeType` can shadow the direct method. Use
 `myForm.$api.nodeType()` when code must be collision-safe.
 
-## Validation API
+## ✅ Validation API {#validation-api}
 
 | Member | Description |
 | --- | --- |
@@ -77,7 +77,7 @@ On forms and groups, a child named `nodeType` can shadow the direct method. Use
 
 Fields also expose constraint metadata through `min()`, `max()`, `minLength()`, `maxLength()`, and `pattern()`.
 
-## Interaction and availability API
+## 👆 Interaction and availability API {#interaction-and-availability-api}
 
 | Signals | Operations |
 | --- | --- |
@@ -91,7 +91,7 @@ Fields also expose constraint metadata through `min()`, `max()`, `minLength()`, 
 
 `disabledReasons()` lists inherited and local causes with their source nodes.
 
-## Form-specific API
+## 🧩 Form-specific API {#form-specific-api}
 
 | Member | Description |
 | --- | --- |
@@ -105,7 +105,7 @@ Initially declared children are also direct properties. Runtime children are del
 available only through the node returned by `add()`, `get(key)`, which lets
 TypeScript and Angular reject misspelled direct properties.
 
-## Array-specific API
+## 📚 Array-specific API {#array-specific-api}
 
 | Member | Description |
 | --- | --- |
@@ -119,7 +119,7 @@ TypeScript and Angular reject misspelled direct properties.
 
 Arrays are iterable and expose `forEach`, `map`, `filter`, `find`, `findIndex`, `some`, `every`, `includes`, and `indexOf` over item nodes.
 
-## Binding API
+## 🔌 Binding API {#binding-api}
 
 A `FormNode<TNode>` obtained through `viewChild()` exposes:
 

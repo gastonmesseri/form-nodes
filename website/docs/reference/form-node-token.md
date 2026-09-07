@@ -2,18 +2,18 @@
 title: FORM_NODE
 ---
 
-# FORM_NODE
+# FORM_NODE {#form_node}
 
 `FORM_NODE` is the Angular injection token for the concrete `[formNode]` binding on the current
 host. Use it when a colocated directive or service needs that exact rendered control.
 
-## Type
+## 📐 Type {#type}
 
 ```ts
 const FORM_NODE: InjectionToken<FormNodeBinding<Node>>;
 ```
 
-## Same-host injection
+## 🔌 Same-host injection {#same-host-injection}
 
 ```ts
 import { FORM_NODE } from '@ngblocks/form-nodes';
@@ -35,7 +35,7 @@ export class FocusInvalidNode {
 Use `{ self: true }` to avoid resolving an ancestor control. If the directive also supports hosts
 without `[formNode]`, add `optional: true`; injection then returns `null` when absent.
 
-## Binding surface
+## 🔌 Binding surface {#binding-surface}
 
 | Member | Purpose |
 | --- | --- |

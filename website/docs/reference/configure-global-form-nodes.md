@@ -7,13 +7,13 @@ import catalogSource from '!!raw-loader!../../examples/validator-message-catalog
 import bootstrapSource from '!!raw-loader!../../examples/global-form-nodes-bootstrap.typecheck.ts';
 import runtimeSource from '!!raw-loader!../../examples/global-form-nodes-configuration.example.ts';
 
-# configureGlobalFormNodes()
+# configureGlobalFormNodes() {#configureglobalformnodes}
 
 Configures process-wide defaults for validator messages and automatic classes. Optional
 experimental control integration is documented at the end of this page. Angular providers override each option independently. The exported
 `GlobalFormNodesConfig` type describes these options.
 
-## Signature
+## 📐 Signature {#signature}
 
 ```ts
 configureGlobalFormNodes(config: {
@@ -25,7 +25,7 @@ configureGlobalFormNodes(config: {
 }): () => void;
 ```
 
-## Where to call it
+## 💡 Where to call it {#where-to-call-it}
 
 Call this function in **`main.ts`, before `bootstrapApplication()`**, or before bootstrapping
 `AppModule`. Keep startup configuration active for the application's lifetime. It requires no
@@ -45,7 +45,7 @@ or component-scoped overrides. Global state is shared across Angular application
 in the same JavaScript module instance; request-specific configuration belongs in providers or
 form options.
 
-## Independent options and precedence
+## ⚙️ Independent options and precedence {#independent-options-and-precedence}
 
 For each binding option, resolution is: **nearest explicit Angular provider → global setting →
 library default**. For messages, validator and form-tree overrides retain higher precedence;
@@ -65,7 +65,7 @@ bypassing the global value for that option. A provider with `validatorMessages: 
 empty provider catalog; normal message fallback still includes the global catalog. It does not
 force built-in English text.
 
-## Reactive messages and binding snapshots
+## 💬 Reactive messages and binding snapshots {#reactive-messages-and-binding-snapshots}
 
 Global catalog functions run reactively during failing validation and may return `undefined` to
 fall back to built-in messages. They are **reactive sources, not injectable factories**: this API
@@ -77,7 +77,7 @@ Class predicates remain reactive after a binding captures their map. Changing th
 map later affects new bindings; it does not reconfigure existing ones. Configure those defaults before bootstrap. Native-control state,
 value/checked binding, touch, focus, and reset behavior retain their existing rules.
 
-## Restoring temporary configuration
+## ⚙️ Restoring temporary configuration {#restoring-temporary-configuration}
 
 The returned callback removes only the overrides installed by its call. It is idempotent and
 preserves later overrides of the same option. Cleanup can run out of order: when a later override
@@ -110,7 +110,7 @@ standard CVAs remain connected independently of this setting.
 
 See [paired binding and its lifecycle](./provide-form-nodes-config.md#bind-input-output-pairs).
 
-### Scope of experimental defaults
+### 🔸 Scope of experimental defaults {#scope-of-experimental-defaults}
 
 Each option resolves independently: explicit node option → nearest explicit Angular provider →
 global setting → library default (`false`). False or `null` disables that option without changing

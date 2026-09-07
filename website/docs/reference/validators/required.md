@@ -2,9 +2,9 @@
 title: required()
 ---
 
-# required()
+# required() {#required}
 
-## API map
+## 🧭 API map {#api-map}
 
 | I want to… | Details |
 | --- | --- |
@@ -14,7 +14,7 @@ title: required()
 | Understand reactive constraints | [Reactive behavior](#reactive-behavior) |
 | Return to the complete catalog | [Built-in validators](../built-in-validators.md) |
 
-## Signatures
+## 📐 Signatures {#signatures}
 
 ```ts
 required
@@ -25,7 +25,7 @@ required(options)
 This validator has no configurable constraint value. Its options customize the failure message,
 which may itself be reactive, and the reactive `when` condition.
 
-## Usage and behavior
+## 📖 Usage and behavior {#usage-and-behavior}
 
 Requires a value to be present. It can be passed directly or called with message options:
 
@@ -46,7 +46,7 @@ const myForm = form({
 
 A failure is `{ kind: 'required', message }`. The validator contributes `required() === true` metadata to its node.
 
-## Message configuration
+## 💬 Message configuration {#message-configuration}
 
 Every failure has a default English message. Where supported, pass a string as the final argument
 or use an options object for a static or reactive message, as shown above.
@@ -55,7 +55,7 @@ A message function may read signals. Returning `undefined` continues through nod
 provider, process-wide, and built-in message fallbacks. See
 [Validator messages](../../guides/validator-messages.md).
 
-## Reactive behavior
+## ⚡ Reactive behavior {#reactive-behavior}
 
 The options object accepts a reactive `when` predicate. Signals read from its validator context are
 tracked; while it returns `false`, the rule contributes neither errors nor constraint metadata.
@@ -74,7 +74,7 @@ stop contributing their error and metadata.
 The validator runs synchronously as part of its node's validator source. Disabled, readonly, and
 hidden nodes skip validation until they become interactive again.
 
-## Related reference
+## 🔗 Related reference {#related-reference}
 
 - [Built-in validators](../built-in-validators.md)
 - [Validation](../validation.md)

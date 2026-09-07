@@ -2,7 +2,7 @@
 title: Form nodes
 ---
 
-# Form nodes
+# Form nodes {#form-nodes}
 
 import CodeBlock from '@theme/CodeBlock';
 import SignalInteropExample from '!!raw-loader!../../examples/signal-interop.example.ts';
@@ -13,7 +13,7 @@ Form Nodes represents every part of a form as a node:
 - `form()` combines named child nodes into an object value.
 - `array()` manages an ordered collection of repeated node definitions.
 
-## Use nodes with Angular signal utilities
+## 🔌 Use nodes with Angular signal utilities {#use-nodes-with-angular-signal-utilities}
 
 Every field, form, group, and array is an Angular `Signal<T>` of its exposed committed value.
 Pass a node directly to a utility that accepts `Signal<T>`; `isSignal(node)` also returns `true`.
@@ -30,7 +30,7 @@ when committed, for example by `flush()`. Use `node.controlValue` when a utility
 pending input instead. Nodes satisfy `Signal<T>`; their form operations do not implement Angular's
 complete `WritableSignal<T>` interface.
 
-## Think of a field as a signal with form features
+## ⚡ Think of a field as a signal with form features {#think-of-a-field-as-a-signal-with-form-features}
 
 Conceptually, `field()` starts from the same value-access pattern as a normal writable Angular
 `signal()`: call it to read its current value, and use `set()` or `update()` to change that value.

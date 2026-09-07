@@ -2,7 +2,7 @@
 title: Value flow and debounce
 ---
 
-# Value flow and debounce
+# Value flow and debounce {#value-flow-and-debounce}
 
 The complete [debounce example](../examples/executable-examples.mdx#control-value-debounce) is
 compiled and executed with assertions for control value, committed value, dirty, touched, and
@@ -10,7 +10,7 @@ debouncing state.
 
 Form Nodes distinguishes programmatic model updates from values originating in a bound UI control. That distinction determines debounce and dirty behavior.
 
-## Committed values
+## 📝 Committed values {#committed-values}
 
 Calling a node is the preferred committed-value read:
 
@@ -34,7 +34,7 @@ retain an earlier equivalent snapshot while internal storage and controls hold n
 values. Pending aggregate control input is invalidated by the actual child changes,
 including changes hidden by public equality. Validation and submission receive the exposed value.
 
-## Programmatic operations
+## 💡 Programmatic operations {#programmatic-operations}
 
 | Operation | Value effect | Dirty | Touched |
 | --- | --- | --- | --- |
@@ -49,7 +49,7 @@ Programmatic writes are synchronous and never debounced. They cancel pending con
 An `update()` callback runs once, synchronously and untracked, and receives the current exposed
 value, including any value retained by `equal`, rather than a pending control value.
 
-## Control-originated values
+## 🔌 Control-originated values {#control-originated-values}
 
 `setControlValue()` represents a UI edit:
 
@@ -68,7 +68,7 @@ myForm.search.dirty(); // true immediately
 
 It marks the directly bound node dirty even when the reported value equals the existing value. It does not mark the node touched; blur, a custom-control touch event, or `markAsTouched()` does that.
 
-## Debounce strategies
+## ⏱️ Debounce strategies {#debounce-strategies}
 
 ```ts
 field('', { debounce: 250 });
@@ -97,7 +97,7 @@ parent trees alive. This also applies to cancelled custom work whose promise has
 Nodes you still retain complete their debounce normally. References held by your own controls,
 callbacks, values, or injectors keep their normal ownership.
 
-## Touch and reset interaction
+## ↩️ Touch and reset interaction {#touch-and-reset-interaction}
 
 Marking an interactive node touched commits its pending control value for every debounce strategy. Touching a form or array recursively does the same for descendants unless `{ skipDescendants: true }` is used.
 
@@ -106,7 +106,7 @@ Marking an interactive node touched commits its pending control value for every 
 When `equal` retains an older exposed value, reset still restores the latest internally committed
 value to controls. It does not replace that value with the older public representative.
 
-## Inherited debounce
+## ⏱️ Inherited debounce {#inherited-debounce}
 
 Forms and arrays can establish a default for their subtree:
 
@@ -123,7 +123,7 @@ const profile = form({
 
 `name` inherits 300 ms and `address.city` overrides it with 100 ms. The nearest configured node wins, including an explicit zero that disables an inherited delay. New array items resolve inherited debounce after attachment.
 
-## Aggregate nodes
+## 💡 Aggregate nodes {#aggregate-nodes}
 
 `form.debouncing()` and `array.debouncing()` are true while any current descendant has buffered control work. Their `flush()` recursively commits only their current subtree.
 

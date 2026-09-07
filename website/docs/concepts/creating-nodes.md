@@ -7,7 +7,7 @@ import CodeBlock from '@theme/CodeBlock';
 import declarationShorthandMatrixSource from '!!raw-loader!../../examples/declaration-shorthand-matrix.example.ts';
 import computedDeclarationSource from '!!raw-loader!../../examples/computed-declaration.example.ts';
 
-# Creating nodes
+# Creating nodes {#creating-nodes}
 
 Form Nodes models a workflow as a tree of `field()`, `form()`, `array()`, and `group()` nodes.
 TypeScript infers the complete value shape from that tree.
@@ -15,7 +15,7 @@ TypeScript infers the complete value shape from that tree.
 When a named domain model should check that inferred value without replacing concrete child types,
 use [`satisfies FormValueContract<Model>`](../reference/form-value-contract.md).
 
-## Fields
+## 🧩 Fields {#fields}
 
 Use `field()` for a leaf value. Fields normally appear inside a form definition:
 
@@ -89,7 +89,7 @@ the tree. A normalization error reports the complete declaration path and,
 when the object may be application data rather than structure, recommends wrapping it with
 `field(value)`.
 
-## Declaration shorthand matrix
+## 🧩 Declaration shorthand matrix {#declaration-shorthand-matrix}
 
 Shorthand is intentionally predictable: atomic values become fields, plain objects become groups,
 and dynamic collections require an explicit `array()`.
@@ -114,7 +114,7 @@ An empty array shorthand is also one atomic field and widens to `unknown[] | nul
 `array(field<T>())` for a dynamic collection. Definition objects reject symbol child keys,
 enumerable accessors, and `__proto__` before creating any node.
 
-## A container is optional
+## ⚙️ A container is optional {#a-container-is-optional}
 
 You do not have to place fields inside `form()` or `group()`. A normal JavaScript object can organize
 independent nodes when no aggregate node behavior is needed:
@@ -152,7 +152,7 @@ Use `form()` when the root additionally represents a submission workflow or bind
 `<form>` element. A root `group()` is therefore a normal and reasonable choice for settings panels,
 reusable editors, filter models, and other structured UI that has no independent submit action.
 
-## Forms
+## 🧩 Forms {#forms}
 
 Use `form()` to combine named nodes into an object:
 
@@ -207,7 +207,7 @@ independent submission action.
 An empty form is valid, enabled, writable, visible, untouched, and pristine by default and has the
 value `{}`, unless a form-level validator or state option changes that result.
 
-## Arrays
+## 📚 Arrays {#arrays}
 
 Use `array()` for a dynamic collection. Its first argument is a node template cloned for every item:
 
@@ -240,7 +240,7 @@ myForm.tags[0]?.set('typescript');
 
 Arrays always expose an array value. Passing `null` or `undefined` to `set()` or `reset(value)` clears the array.
 
-## Node options
+## ⚙️ Node options {#node-options}
 
 Fields, forms, and arrays accept options for validators, debounce, and initial or reactive state:
 
@@ -258,7 +258,7 @@ const account = form({
 
 The closest configured node provides inherited `disabled`, `readonly`, `hidden`, and debounce behavior to its descendants. A descendant can define its own option to override the inherited debounce or add another state cause.
 
-## Compile-time value safety
+## 📐 Compile-time value safety {#compile-time-value-safety}
 
 TypeScript recursively infers the complete form value from the node tree. `set()` and
 `reset(value)` require a complete value, while `patch()` accepts only known recursive partial
@@ -284,7 +284,7 @@ form or group. Initially declared children remain fixed and precisely typed; run
 `DynamicNode | undefined`, exposing the state and operations common to every node kind. See
 [Dynamic object children](../guides/dynamic-object-children.md).
 
-## Using nodes outside Angular
+## 🔌 Using nodes outside Angular {#using-nodes-outside-angular}
 
 Node creation, synchronous validation, state transitions, and explicitly triggered asynchronous validation work without dependency injection:
 
@@ -297,7 +297,7 @@ console.log(counter()); // 1
 
 Provide an Angular `Injector` only when you want its `DestroyRef` to own asynchronous validation cleanup deterministically.
 
-## Declaring a form in a component
+## 🧩 Declaring a form in a component {#declaring-a-form-in-a-component}
 
 In an Angular application, the form is commonly a component property:
 
@@ -331,7 +331,7 @@ export class ProfileEditor {
 }
 ```
 
-## Declarations inside computed
+## ⚡ Declarations inside computed {#declarations-inside-computed}
 
 You can construct a form with nested groups and arrays inside Angular's `computed()`. Signals read
 while declaring initial values, normalizing children, running item factories, or reading configuration
@@ -344,7 +344,7 @@ values and fresh interaction state. Use a stable form with reactive options or v
 configuration should change while retaining current edits. Construct fresh children in the computed
 when each evaluation is intended to produce an independent tree.
 
-## Current structural boundaries
+## 🔌 Current structural boundaries {#current-structural-boundaries}
 
 Initially declared object children are fixed, while explicitly added runtime children can later be
 removed. Use `array()` when equivalent items form an ordered collection that can also be reordered.

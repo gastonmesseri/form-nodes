@@ -2,7 +2,7 @@
 title: Async validation
 ---
 
-# Async validation
+# Async validation {#async-validation}
 
 The complete [asynchronous validation example](../examples/executable-examples.mdx#asynchronous-validation)
 is compiled and executed with assertions for pending, failure, rerun, and recovery.
@@ -28,7 +28,7 @@ const myForm = form({
 
 The callback may return a promise, an Observable-like value, a validation result, or a collection of those results.
 
-## Pending and cancellation
+## ⏳ Pending and cancellation {#pending-and-cancellation}
 
 While current asynchronous work is running, `pending()` is true. With no completed error, `validationStatus()` is `unknown` and both `valid()` and `invalid()` are false. A completed error makes the status `invalid` even while other validators remain pending.
 
@@ -36,7 +36,7 @@ Each execution receives its own `AbortSignal`. A newer execution aborts the prev
 
 The validator's `debounce` delays validation work. This is independent from a field's control-value debounce.
 
-## Conditions and failures
+## 🚨 Conditions and failures {#conditions-and-failures}
 
 Use `when` to skip work based on the current context:
 
@@ -58,7 +58,7 @@ rejected operation contributes no validation error. Its pending state ends and
 the rejection is not confused with a domain-validation failure. Use `onError` when service failure
 must block the form or produce a visible message.
 
-## Reactive dependencies
+## ⚡ Reactive dependencies {#reactive-dependencies}
 
 Signals read by the callback, `when`, or options participate in dependency tracking. Changing a dependency schedules a new execution even when the field value is unchanged.
 
@@ -92,7 +92,7 @@ Without `params`, signals read before the callback's first asynchronous boundary
 dependencies automatically. Prefer `params` for reusable validators because it makes the service
 inputs and restart conditions explicit.
 
-## Execution order
+## 📖 Execution order {#execution-order}
 
 - The node becomes pending synchronously; the first callback begins in the next microtask.
 - Synchronous validation runs first. Async validators do not run while synchronous errors exist.
@@ -107,7 +107,7 @@ When some async validators have completed with errors and others remain pending,
 already true and `pending()` remains true. Pending work produces `'unknown'` only while no completed
 error makes the node invalid.
 
-## Lifecycle
+## 🔌 Lifecycle {#lifecycle}
 
 Async validation works inside and outside Angular injection contexts. A node's explicit or currently
 captured injector owns its watcher. Without one, the node temporarily adopts the injector of a

@@ -2,18 +2,18 @@
 title: provideFormNodePassThrough()
 ---
 
-# provideFormNodePassThrough()
+# provideFormNodePassThrough() {#provideformnodepassthrough}
 
 Marks a directive or host directive that consumes and delegates `formNode`, keeping the outer
 `[formNode]` binding passive while an inner control performs synchronization.
 
-## Signature
+## 📐 Signature {#signature}
 
 ```ts
 provideFormNodePassThrough(): Provider;
 ```
 
-## Example
+## 🧪 Example {#example}
 
 ```ts
 @Directive({

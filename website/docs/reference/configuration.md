@@ -3,7 +3,7 @@ title: Configuration
 description: Configuration scopes, reactivity, precedence, inheritance, and Angular providers in Form Nodes.
 ---
 
-# Configuration
+# Configuration {#configuration}
 
 The [reactive configuration example](../examples/executable-examples.mdx#reactive-configuration-and-precedence)
 is compiled and executed to verify message precedence and inherited state.
@@ -11,7 +11,7 @@ is compiled and executed to verify message precedence and inherited state.
 Form Nodes keeps configuration close to the feature it affects. Node options configure one node or
 tree, Angular providers configure an injector scope, and the process-wide API supplies fallback messages and defaults for new bindings.
 
-## Configuration map
+## ⚙️ Configuration map {#configuration-map}
 
 | Scope | API | Affects | Reactive |
 | --- | --- | --- | --- |
@@ -26,7 +26,7 @@ node defaults such as nullability, debounce, disabled state, or validators. `cre
 and injector inheritance policies to one factory set; configure other decisions at the appropriate
 node or ancestor.
 
-### Find configuration by concern
+### 🔸 Find configuration by concern {#find-configuration-by-concern}
 
 | Concern | Details |
 | --- | --- |
@@ -40,7 +40,7 @@ node or ancestor.
 | Async watcher cleanup and explicit injectors | [Injector ownership](#injector-ownership) |
 | One consolidated resolution table | [Precedence at a glance](#precedence-at-a-glance) |
 
-## Node options
+## ⚙️ Node options {#node-options}
 
 `syncInputs` and `bindInputOutputPairs` are **independent experimental binding options** accepted by every
 primitive and `createFormPrimitives()` defaults. They affect the bound node, not descendants, and
@@ -59,7 +59,7 @@ available when an application wants to construct or reuse configuration separate
 consumer-owned mutable objects, so their properties are not marked `readonly`; the library reads
 the selected values when the node is created.
 
-### Options shared by nodes
+### 🔸 Options shared by nodes {#options-shared-by-nodes}
 
 | Option | `field()` | `form()` | `array()` | `group()` | Inheritance |
 | --- | --- | --- | --- | --- | --- |
@@ -75,7 +75,7 @@ the selected values when the node is created.
 `form()`, `array()`, and `group()` additionally accept `validatorMessages`. Only a form accepts `onSubmit`.
 An array additionally accepts `initialValue` and `trackBy`. Only `field()` accepts `nullable`.
 
-### Static and reactive state
+### 🔸 Static and reactive state {#static-and-reactive-state}
 
 `hidden` and `readonly` accept a boolean or a reactive function. `disabled` also accepts a reason
 string or a function returning a boolean or reason string:
@@ -98,7 +98,7 @@ the union of configured state, imperative state, and inherited ancestor state. C
 
 See [Interaction and availability](../guides/interaction-and-availability.md).
 
-### Debounce inheritance
+### 🔸 Debounce inheritance {#debounce-inheritance}
 
 A form or array can establish a default control-value debounce for its subtree. A closer option
 overrides it, including `0`, which disables an inherited delay:
@@ -124,7 +124,7 @@ input supersedes its work. Programmatic `set()`, `update()`, and `patch()` are n
 
 See [Value flow and debounce](../guides/value-flow-and-debounce.md).
 
-### Validators
+### 🔸 Validators {#validators}
 
 Validators belong to the exact node where they are declared; they do not inherit. The
 `FormOptions.validators` option accepts one validator directly or an array. Start with a named
@@ -184,7 +184,7 @@ declared through `asyncValidator()` so the node can own pending state, cancellat
 results. See [Validation](../guides/validation.md) and
 [`asyncValidator()`](./async-validator.md).
 
-### Nullability
+### 🔸 Nullability {#nullability}
 
 Fields are nullable by default. The option changes the public value type as well as accepted
 writes:
@@ -199,7 +199,7 @@ const profileForm = form({
 `form()` and `array()` are permanent structural containers and are not nullable. Individual array
 items remain as nullable as their template permits. See [Choosing a primitive](../guides/choosing-a-primitive.md).
 
-### Form submission
+### 🔸 Form submission {#form-submission}
 
 `onSubmit` belongs to the form on which it is declared and is not inherited as another form's
 action:
@@ -217,7 +217,7 @@ const profileForm = form({
 `submitWhen` accepts `'not-invalid'` (default), `'valid'`, or `'all'`. See
 [Form submission](../guides/submission.md) for their behavior.
 
-### Array creation and identity
+### 🔸 Array creation and identity {#array-creation-and-identity}
 
 `initialValue` controls initial contents; a number creates that many items from template defaults.
 `trackBy` controls identity during complete reconciliation:
@@ -235,7 +235,7 @@ const contacts = array({
 These options configure the array itself and are not inherited by nested arrays. See
 [`array()`](./array.md).
 
-## Validator-message configuration
+## 💬 Validator-message configuration {#validator-message-configuration}
 
 Message resolution uses the first definition that returns a message:
 
@@ -249,7 +249,7 @@ Message resolution uses the first definition that returns a message:
 Missing catalog entries and callbacks returning `undefined` continue to the next layer. A nested
 catalog therefore overrides individual keys without having to repeat every message.
 
-### Angular application scope
+### 🔸 Angular application scope {#angular-application-scope}
 
 Register provider configuration in `app.config.ts` and pass that `ApplicationConfig` to
 `bootstrapApplication(AppComponent, appConfig)` for a standalone Angular application. See the
@@ -285,7 +285,7 @@ request scope and include every override required by that injector scope.
 
 For an NgModule application, place the same provider call in the module's `providers` array.
 
-### Form-tree scope
+### 🔸 Form-tree scope {#form-tree-scope}
 
 Use `validatorMessages` when one subtree needs domain-specific wording:
 
@@ -302,7 +302,7 @@ const checkoutForm = form({
 The catalog source and the selected message callback track signals while a built-in validator is
 failing.
 
-### Process-wide fallback
+### 🔸 Process-wide fallback {#process-wide-fallback}
 
 `configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, `syncInputs`, and `bindInputOutputPairs`.
 Each option is a fallback below its nearest explicit Angular provider. Omitted options preserve
@@ -336,7 +336,7 @@ See [Validator messages and i18n](../guides/validator-messages.md).
 
 :::
 
-## Binding configuration
+## ⚙️ Binding configuration {#binding-configuration}
 
 A shared NgModule can re-export `FormNode` while configuration stays in the application providers,
 or install its own config through `SharedModule.providers`. See
@@ -390,7 +390,7 @@ Angular's `provideSignalFormsConfig()` independently configures Angular `[formFi
 The two providers use separate tokens and can coexist in the same injector. See
 [`FormNode` binding configuration](./form-node-binding.md#automatic-css-classes).
 
-## Injector ownership
+## 🔌 Injector ownership {#injector-ownership}
 
 `form()`, `field()`, `array()`, and `group()` remain safe outside Angular dependency injection. A
 node first uses an explicit `injector` or the injector captured when it was created. Otherwise it
@@ -426,7 +426,7 @@ export class ProfileEditor {
 }
 ```
 
-## Precedence at a glance
+## 🧭 Precedence at a glance {#precedence-at-a-glance}
 
 | Feature | Resolution rule |
 | --- | --- |

@@ -7,7 +7,7 @@ description: Experiment interactively with Form Nodes values, state, validation,
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import FormsPlayground from '../src/components/FormsPlayground';
 
-# Playground
+# Playground {#playground}
 
 This playground runs the real `form()`, `field()`, `array()`, and built-in validator implementations
 in your browser. The declaration, editable controls, value pipeline, public signals, errors, and
@@ -17,7 +17,7 @@ resulting JSON are shown together so you can connect the API with its observable
   {() => <FormsPlayground />}
 </BrowserOnly>
 
-## What to try
+## 🧪 What to try {#what-to-try}
 
 1. Type a two-character display name and compare the immediate control value with the committed
    form value during the 300 ms debounce.
@@ -27,7 +27,7 @@ resulting JSON are shown together so you can connect the API with its observable
 5. Add, reorder, and remove contacts while watching their paths and the aggregate value.
 6. Reset the playground to restore the initial value and clear interaction state.
 
-## What the panels represent
+## 💡 What the panels represent {#what-the-panels-represent}
 
 - **Model declaration:** the exact `form()` tree instantiated by the playground.
 - **Editor:** control-originated changes, equivalent to changes received through `[formNode]`.

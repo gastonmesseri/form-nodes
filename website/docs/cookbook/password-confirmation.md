@@ -2,7 +2,7 @@
 title: Confirm a password
 ---
 
-# Confirm a password
+# Confirm a password {#confirm-a-password}
 
 Use `equalTo()` with a reactive source pointing to the password field. Keeping the model and
 bindings in one component makes the complete interaction visible:

@@ -2,7 +2,7 @@
 title: Dynamic arrays
 ---
 
-# Dynamic arrays
+# Dynamic arrays {#dynamic-arrays}
 
 For a complete program whose assertions verify keyed reconciliation and structural operations, see
 the [executable array example](../examples/executable-examples.mdx#array-reconciliation-and-operations).
@@ -49,7 +49,7 @@ array(personTemplate, {
 
 The positional `array(template, initialValue)` signature remains available for concise declarations. Positional and option-based initial values are alternatives; TypeScript prevents specifying both.
 
-## Templates and factories
+## 💡 Templates and factories {#templates-and-factories}
 
 A template may be a field, form, nested array, shorthand object, or explicit factory:
 
@@ -77,7 +77,7 @@ Compiling a template does not keep its original nodes or their parent tree alive
 
 A factory must return a fresh tree. Returning the same live node more than once throws rather than allowing items to share state.
 
-## Reading items
+## 📚 Reading items {#reading-items}
 
 Read values by calling the array and nodes through indexes, `at()`, `items()`, iteration, or familiar helpers:
 
@@ -105,7 +105,7 @@ Array traversal helpers snapshot `items()` when the operation begins. Structural
 
 `items()` is a signal whose array reference changes when structure changes. Its nodes are live and readonly as a collection. Calling the array also produces a new value-array reference after a structural change, so `computed()` and `effect()` consumers react to `push()` and the other structural operations. Previously read item and value snapshots remain unchanged.
 
-## Add and remove items
+## 📚 Add and remove items {#add-and-remove-items}
 
 ```ts
 const created = people.push({ id: '2', name: 'Grace' });
@@ -123,7 +123,7 @@ and no longer contributes value, errors, pending work, touched state, or dirty s
 array. If the removed item is itself a form or array, its descendants remain attached to that
 removed root and continue working normally.
 
-## Reorder items
+## 📚 Reorder items {#reorder-items}
 
 Structural operations preserve node identity, interaction state, validation state, and pending work:
 
@@ -142,7 +142,7 @@ Because moves preserve nodes rather than values alone, in-flight validation and 
 bindings remain owned by the moved item. Angular templates should continue tracking the item node,
 not its current index.
 
-## Complete reconciliation
+## 💡 Complete reconciliation {#complete-reconciliation}
 
 `set()` and `update()` reconcile a complete value. Without `trackBy`, current nodes are reused by index:
 
@@ -179,7 +179,7 @@ Matching keys reuse and move existing nodes. Keys must be unique among current a
 
 Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying it to `reset(value)` clears the collection. The observable array value itself remains `[]`, never nullish.
 
-## Positional patching
+## 📝 Positional patching {#positional-patching}
 
 `patch()` partially updates existing nodes by index without resizing the array:
 
@@ -190,7 +190,7 @@ people.patch([, { name: 'Grace Murray Hopper' }]);
 
 Sparse positions are skipped. Values beyond the current structure are ignored with a warning. Use `set()` for complete reconciliation and structural methods for explicit collection changes.
 
-## State aggregation
+## ⚡ State aggregation {#state-aggregation}
 
 Array validity, errors, dirty, touched, disabled, readonly, hidden, pending, debouncing, focus, and reset behavior aggregate or propagate like forms. Removed items detach from that aggregation immediately.
 

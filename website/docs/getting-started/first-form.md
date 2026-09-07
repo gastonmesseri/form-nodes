@@ -2,7 +2,7 @@
 title: Your first form
 ---
 
-# Your first form
+# Your first form {#your-first-form}
 
 Define and bind the form in an Angular component:
 
@@ -55,7 +55,7 @@ myForm.allErrors();
 // ]
 ```
 
-## Reactive state signals
+## ⚡ Reactive state signals {#reactive-state-signals}
 
 If you already use Angular writable signals, a field follows the same basic value pattern:
 `myForm.username()` reads its value and `myForm.username.set(value)` changes it. Unlike a plain

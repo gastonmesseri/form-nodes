@@ -2,7 +2,7 @@
 title: 3. Add validation
 ---
 
-# 3. Add validation
+# 3. Add validation {#3-add-validation}
 
 Add built-in validators where each field is declared:
 
@@ -22,7 +22,7 @@ import { FormNode, between, email, field, form, integer, minLength, required } f
 
 Optional format and constraint validators accept empty values so they compose with `required`. For example, `email` checks format while `required` checks presence.
 
-## Render errors after interaction
+## 🚨 Render errors after interaction {#render-errors-after-interaction}
 
 Use `getError()` for a specific rule. Known built-in kinds expose their typed payload:
 
@@ -54,7 +54,7 @@ this.myForm.allErrors();
 
 A field error makes every interactive ancestor invalid. The error remains owned by its field through `targetNode`.
 
-## Related guides and reference
+## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Validation](../guides/validation.md) covers custom validators, cross-field rules, reactive
   constraints, and validator metadata.

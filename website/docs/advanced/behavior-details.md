@@ -2,7 +2,7 @@
 title: Advanced behavior and edge cases
 ---
 
-# Advanced behavior and edge cases
+# Advanced behavior and edge cases {#advanced-behavior-and-edge-cases}
 
 This page collects precise runtime semantics that are rarely needed during ordinary form
 development but matter when building reusable validators, generic infrastructure, custom controls,
@@ -11,7 +11,7 @@ or complex dynamic editors.
 Start with the task-focused guides first. Return here when a result depends on scheduling, node
 identity, ownership, or an unusual combination of APIs.
 
-## Reactive validation execution
+## ✅ Reactive validation execution {#reactive-validation-execution}
 
 Synchronous validators run inside a lazy reactive computation. Reading `errors()`, `valid()`,
 `invalid()`, or `validationStatus()` evaluates that computation. When a signal dependency changes,
@@ -39,7 +39,7 @@ myForm.username.errors(); // [{ kind: 'blocked', ... }]
 `update()` callbacks are different: they execute once, synchronously and untracked. Reading a
 signal inside an updater does not create a persistent dependency.
 
-## Conditional validator composition
+## ✅ Conditional validator composition {#conditional-validator-composition}
 
 A synchronous validator may return another synchronous validator or an array of validators. Every
 returned validator receives the same context, and signals read at any composition level are tracked.
@@ -59,7 +59,7 @@ or validation errors—not a mixture of both. An `asyncValidator()` must be conf
 the node's validator list; returning one from a synchronous validator is intentionally unsupported
 because its watcher lifecycle must be established without executing arbitrary validators.
 
-## Asynchronous scheduling and dependencies
+## ⏳ Asynchronous scheduling and dependencies {#asynchronous-scheduling-and-dependencies}
 
 Adding an async validator makes its node pending synchronously. Its first callback is deferred to
 the next microtask, so a class property initializer may safely refer to the completed owning form.
@@ -87,7 +87,7 @@ operation finishes or becomes stale.
 Multiple async validators run independently. Completed errors become visible while other work is
 pending, but errors remain ordered by validator declaration rather than network completion order.
 
-## Ownership and lifetime
+## 🔌 Ownership and lifetime {#ownership-and-lifetime}
 
 An explicit or currently captured injector takes precedence. Otherwise, a directly bound
 `[formNode]` injector and then the nearest ancestor injector own async validation watchers by
@@ -117,7 +117,7 @@ their paths relative to that new root.
 Moving or swapping items has the opposite behavior: the exact nodes remain attached and preserve
 their values, bindings, errors, interaction state, and pending work while indexes and paths update.
 
-## Stored state while non-interactive
+## 🎛️ Stored state while non-interactive {#stored-state-while-non-interactive}
 
 Disabled, readonly, and hidden nodes are treated as non-interactive. Their public validation,
 pending, touched, and dirty state is suppressed, but configured validators and stored interaction
@@ -128,7 +128,7 @@ reports its stored touched state again after being enabled. Programmatic writes 
 every state. Async work is cancelled on entry and validation restarts against the current value when
 the node becomes interactive again.
 
-## Multiple bindings and control-owned errors
+## 🚨 Multiple bindings and control-owned errors {#multiple-bindings-and-control-owned-errors}
 
 Several controls may bind to the same field. Node-owned validator errors appear in every binding,
 but a control-owned error—such as a native parse failure—belongs to the concrete binding that
@@ -147,7 +147,7 @@ concrete binding and `targetNode` for the field.
 Programmatic writes and reset clear stale native parse errors and synchronize every current binding.
 Rebinding or destroying a directive removes its previous error ownership and focus registration.
 
-## Binding selection and compatibility
+## 🔌 Binding selection and compatibility {#binding-selection-and-compatibility}
 
 When an element exposes several compatible control mechanisms, `[formNode]` uses this precedence:
 
@@ -163,7 +163,7 @@ Synchronous `NG_VALIDATORS` errors participate in the node's real validation sta
 `NG_ASYNC_VALIDATORS` are not adapted; use `asyncValidator()` so cancellation, debounce, pending
 state, and stale-result handling remain owned by the node.
 
-### Read-only signal-input compatibility
+### 🔸 Read-only signal-input compatibility {#read-only-signal-input-compatibility}
 
 Angular does not expose a public setter for an `input()` signal on an existing host component. Form Nodes resolves aliases, property names, signal flags, and transforms through public
 `reflectComponentType()` metadata. A narrowly isolated compatibility adapter then discovers the
@@ -203,7 +203,7 @@ export class DatePicker {
 `[formNode]` state. The same API is reserved for future `[formField]`, Reactive Forms, and `ngModel`
 adapters. See [Advanced custom controls](../guides/custom-controls-advanced.md) for the complete contract.
 
-## Server rendering and hydration
+## 💡 Server rendering and hydration {#server-rendering-and-hydration}
 
 Native controls, signal controls, and CVAs receive their initial value and supported state during
 server rendering. Browser-only observation of changing select options and native date-like parse
@@ -213,7 +213,7 @@ their events and reactive bindings.
 The native validity observer is compatible with Angular's CSP nonce. These mechanisms are binding
 details and do not change node behavior outside the browser.
 
-## Defensive runtime behavior
+## 📖 Defensive runtime behavior {#defensive-runtime-behavior}
 
 TypeScript rejects incomplete complete-value writes and unknown object keys. If unsafe casts or
 untyped data bypass those checks, unknown form keys and array patch indexes are ignored with a
@@ -223,7 +223,7 @@ Array movement and insertion indexes must identify valid positions and throw `Ra
 do not. Duplicate `trackBy` keys are detected before reconciliation mutates the array. A factory
 that returns the same live node more than once also throws, preventing shared parentage and state.
 
-## Current structural boundaries
+## 🔌 Current structural boundaries {#current-structural-boundaries}
 
 Initially declared form child keys remain fixed, while `add()` and `remove()` manage explicitly
 dynamic named children. Use `array()` for runtime addition, removal, and reordering of repeated
@@ -234,7 +234,7 @@ Continue with [Async validation](../guides/async-validation.md),
 [Dynamic arrays](../guides/dynamic-arrays.md), [Control binding](../guides/control-binding.md), or
 [Interaction and availability](../guides/interaction-and-availability.md) for task-oriented usage.
 
-## Development diagnostics
+## 🔍 Development diagnostics {#development-diagnostics}
 
 Form Nodes console warnings are emitted only in Angular development mode. This includes unknown
 form keys, extra array patch indexes, unsupported reset options, hidden rendered nodes, and

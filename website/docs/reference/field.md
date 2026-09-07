@@ -8,7 +8,7 @@ import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.
 import fieldEqualitySource from '!!raw-loader!../../examples/field-equality.example.ts';
 import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.example.ts';
 
-# field()
+# field() {#field}
 
 `field()` creates a leaf node for a scalar, object, date, or any other application value. Fields
 normally live inside a `form()` so their parent, path, validation, and state participate in a tree.
@@ -36,7 +36,7 @@ const myForm = form({
 });
 ```
 
-## API map
+## 🧭 API map {#api-map}
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ const myForm = form({
 | Manage touched, dirty, or availability | State signals and marker methods | [Interaction](#interaction-properties) and [availability](#availability-properties) |
 | Connect it to an Angular control | `FormNode`, `[formNode]` | [Binding in Angular](#binding-in-angular) |
 
-## Fields can hold arrays and objects
+## 📚 Fields can hold arrays and objects {#fields-can-hold-arrays-and-objects}
 
 `field()` means “one leaf node,” not “one scalar.” A field can hold an array when the complete
 array is edited as one value—for example, by a native multi-select or a multi-select component:
@@ -82,7 +82,7 @@ value type and any declared children or array items. Inline `validator()` and `a
 helpers retain that inference when their generics are omitted. See
 [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
-## Signatures
+## 📐 Signatures {#signatures}
 
 ```ts
 field();
@@ -93,7 +93,7 @@ field(initialValue, validators, options?);
 
 A field with no initial value starts at `null`.
 
-## Nullability
+## 📝 Nullability {#nullability}
 
 ```ts
 field.strict(initialValue, options?);
@@ -172,7 +172,7 @@ const myForm = form({
 // myForm.countryCode.set(null); // TypeScript error
 ```
 
-## Options
+## ⚙️ Options {#options}
 
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
@@ -203,11 +203,11 @@ the inherited debounce.
 
 <div className="api-member-reference">
 
-## Option reference
+## ⚙️ Option reference {#option-reference}
 
-### Value and validation
+### 🔸 Value and validation {#value-and-validation}
 
-#### equal {#field-equal-option}
+#### ⚙️ equal {#field-equal-option}
 
 **Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
 
@@ -260,7 +260,7 @@ committed value to the control. `reset(value)` stores the supplied value even if
 remains unchanged. Mutating an object in place does not create an old snapshot for deep comparison;
 supply a new value when editing structured data.
 
-#### validators {#field-validators-option}
+#### ✅ validators {#field-validators-option}
 
 **Signature:** `validators?: ValidatorSource<TValue, Field<TValue>>`
 
@@ -276,7 +276,7 @@ const username = field('', [required, minLength(3)]);
 username.invalid(); // true
 ```
 
-#### debounce {#field-debounce-option}
+#### ⏱️ debounce {#field-debounce-option}
 
 **Signature:** `debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>)`
 
@@ -288,9 +288,9 @@ const username = field('', {
 });
 ```
 
-### Availability
+### 🔸 Availability {#availability}
 
-#### disabled {#field-disabled-option}
+#### ⚙️ disabled {#field-disabled-option}
 
 **Signature:** `disabled?: boolean | string | (() => boolean | string)`
 
@@ -304,7 +304,7 @@ const username = field('', {
 username.disabled(); // true
 ```
 
-#### readonly {#field-readonly-option}
+#### ⚙️ readonly {#field-readonly-option}
 
 **Signature:** `readonly?: boolean | (() => boolean)`
 
@@ -316,7 +316,7 @@ const username = field('', {
 });
 ```
 
-#### hidden {#field-hidden-option}
+#### ⚙️ hidden {#field-hidden-option}
 
 **Signature:** `hidden?: boolean | (() => boolean)`
 
@@ -328,9 +328,9 @@ const username = field('', {
 });
 ```
 
-### Injector ownership
+### 🔸 Injector ownership {#injector-ownership}
 
-#### injector {#field-injector-option}
+#### ⚙️ injector {#field-injector-option}
 
 **Signature:** `injector?: Injector`
 
@@ -341,7 +341,7 @@ const injector = inject(Injector);
 const username = field('', { injector });
 ```
 
-#### inheritInjector {#field-inheritinjector-option}
+#### ⚙️ inheritInjector {#field-inheritinjector-option}
 
 **Signature:** `inheritInjector?: boolean`
 
@@ -354,7 +354,7 @@ const username = field('', {
 });
 ```
 
-#### adoptBindingInjector {#field-adoptbindinginjector-option}
+#### ⚙️ adoptBindingInjector {#field-adoptbindinginjector-option}
 
 **Signature:** `adoptBindingInjector?: boolean`
 
@@ -369,7 +369,7 @@ const username = field('', {
 
 </div>
 
-## Properties and methods
+## 📖 Properties and methods {#properties-and-methods}
 
 A field is a callable committed-value reader with reactive signal properties and the shared node
 state API. Signal properties must be called to read their current value.
@@ -444,15 +444,15 @@ state; the state is visible again when the field becomes interactive.
 
 <div className="api-member-reference">
 
-## Property reference
+## 📖 Property reference {#property-reference}
 
 Each entry includes its consumer-facing signature, what it represents or returns, and a complete
 example. `TValue` means the field's inferred value type. `ParentNode` and `RootNode` represent the
 precise parent and root types inferred from where the field is declared.
 
-### Value and tree properties
+### 🔸 Value and tree properties {#value-and-tree-properties}
 
-#### Callable value
+#### 📝 Callable value {#callable-value}
 
 **Signature:** `(): TValue`
 
@@ -465,7 +465,7 @@ const username = field('ada');
 username(); // 'ada'
 ```
 
-#### value()
+#### 📝 value() {#value}
 
 **Signature:** `value: Signal<TValue>`
 
@@ -479,7 +479,7 @@ username.value(); // 'ada'
 
 Prefer the equivalent callable form, `username()`, for ordinary value reads.
 
-#### controlValue()
+#### 🔌 controlValue() {#controlvalue}
 
 **Signature:** `controlValue: Signal<TValue>`
 
@@ -496,7 +496,7 @@ username.controlValue(); // 'ada'
 During debounce, `controlValue()` contains the pending control value while `username()` still
 contains the last committed value.
 
-#### nodeType()
+#### 💡 nodeType() {#nodetype}
 
 **Signature:** `nodeType(): 'field'`
 
@@ -508,7 +508,7 @@ const username = field('ada');
 username.nodeType(); // 'field'
 ```
 
-#### form()
+#### 🧩 form() {#form}
 
 **Signature:** `form: Signal<Form | null>`
 
@@ -524,7 +524,7 @@ const profile = form({
 profile.username.form() === profile; // true
 ```
 
-#### root()
+#### 🌳 root() {#root}
 
 **Signature:** `root: Signal<RootNode>`
 
@@ -537,7 +537,7 @@ const username = field('ada');
 username.root() === username; // true
 ```
 
-#### parent()
+#### 🌳 parent() {#parent}
 
 **Signature:** `parent: Signal<ParentNode | null>`
 
@@ -551,7 +551,7 @@ const profile = form({
 profile.username.parent() === profile; // true
 ```
 
-#### path()
+#### 🌳 path() {#path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
@@ -568,7 +568,7 @@ const profile = form({
 profile.address.city.path(); // ['address', 'city']
 ```
 
-#### keyInParent()
+#### 🌳 keyInParent() {#keyinparent}
 
 **Signature:** `keyInParent: Signal<string | number | null>`
 
@@ -582,7 +582,7 @@ const profile = form({
 profile.username.keyInParent(); // 'username'
 ```
 
-#### api
+#### 📖 api {#api}
 
 **Signature:** `api: FieldApi<TValue>`
 
@@ -597,7 +597,7 @@ username.api.valid(); // true
 Direct access such as `username.valid()` is preferred. `api` is useful to generic infrastructure
 that works with a consistent API object.
 
-#### $api
+#### 📖 $api {#api-1}
 
 **Signature:** `$api: FieldApi<TValue>`
 
@@ -614,9 +614,9 @@ profile.$api.valid(); // true
 profile.username.$api.valid(); // true
 ```
 
-### Validation properties
+### 🔸 Validation properties {#validation-properties}
 
-#### validators()
+#### ✅ validators() {#validators}
 
 **Signature:** `validators: Signal<Validators<TValue>> & { (options: { resolve?: boolean }): Validators<TValue> }`
 
@@ -628,7 +628,7 @@ const username = field('', [required, minLength(3)]);
 username.validators().length; // 2
 ```
 
-#### errors()
+#### 🚨 errors() {#errors}
 
 **Signature:** `errors: Signal<readonly ValidationError[]>`
 
@@ -640,7 +640,7 @@ const username = field('', [required]);
 username.errors()[0]?.kind; // 'required'
 ```
 
-#### allErrors()
+#### 🚨 allErrors() {#allerrors}
 
 **Signature:** `allErrors: Signal<readonly ValidationError[]>`
 
@@ -653,7 +653,7 @@ const username = field('', [required]);
 username.allErrors()[0]?.targetNode === username; // true
 ```
 
-#### valid()
+#### 💡 valid() {#valid}
 
 **Signature:** `valid: Signal<boolean>`
 
@@ -665,7 +665,7 @@ const username = field('ada', [required]);
 username.valid(); // true
 ```
 
-#### invalid()
+#### 🚨 invalid() {#invalid}
 
 **Signature:** `invalid: Signal<boolean>`
 
@@ -677,7 +677,7 @@ const username = field('', [required]);
 username.invalid(); // true
 ```
 
-#### required()
+#### ✅ required() {#required}
 
 **Signature:** `required: Signal<boolean>`
 
@@ -689,7 +689,7 @@ const username = field('', [required]);
 username.required(); // true
 ```
 
-#### pending()
+#### ⏳ pending() {#pending}
 
 **Signature:** `pending: Signal<boolean>`
 
@@ -706,7 +706,7 @@ const username = field('', {
 username.pending(); // true while checkUsername() is running
 ```
 
-#### validationStatus()
+#### ✅ validationStatus() {#validationstatus}
 
 **Signature:** `validationStatus: Signal<'valid' | 'invalid' | 'unknown'>`
 
@@ -721,12 +721,12 @@ username.validationStatus(); // 'invalid'
 `'unknown'` means asynchronous validation is pending and no existing error currently makes the
 field invalid. In that phase, both `valid()` and `invalid()` are `false`.
 
-### Constraint metadata
+### 🔸 Constraint metadata {#constraint-metadata}
 
 Built-in validators expose reactive metadata used by `[formNode]` to synchronize native control
 constraints. See the [built-in validator reference](./built-in-validators.md) for each validator.
 
-#### min()
+#### ✅ min() {#min}
 
 **Signature:** `min: Signal<NonNullable<TValue> | null>`
 
@@ -738,7 +738,7 @@ const age = field(18, [min(16), min(18)]);
 age.min(); // 18
 ```
 
-#### max()
+#### ✅ max() {#max}
 
 **Signature:** `max: Signal<NonNullable<TValue> | null>`
 
@@ -750,7 +750,7 @@ const age = field(18, [max(120), max(99)]);
 age.max(); // 99
 ```
 
-#### minLength()
+#### ✅ minLength() {#minlength}
 
 **Signature:** `minLength: Signal<number | null>`
 
@@ -762,7 +762,7 @@ const username = field('', [minLength(3), minLength(5)]);
 username.minLength(); // 5
 ```
 
-#### maxLength()
+#### ✅ maxLength() {#maxlength}
 
 **Signature:** `maxLength: Signal<number | null>`
 
@@ -774,7 +774,7 @@ const username = field('', [maxLength(30), maxLength(20)]);
 username.maxLength(); // 20
 ```
 
-#### pattern()
+#### ✅ pattern() {#pattern}
 
 **Signature:** `pattern: Signal<readonly RegExp[]>`
 
@@ -786,9 +786,9 @@ const username = field('', [pattern(/^[a-z]+$/)]);
 username.pattern(); // [/^[a-z]+$/]
 ```
 
-### Interaction properties
+### 🔸 Interaction properties {#interaction-properties}
 
-#### touched()
+#### 👆 touched() {#touched}
 
 **Signature:** `touched: Signal<boolean>`
 
@@ -801,7 +801,7 @@ username.markAsTouched();
 username.touched(); // true
 ```
 
-#### untouched()
+#### 👆 untouched() {#untouched}
 
 **Signature:** `untouched: Signal<boolean>`
 
@@ -813,7 +813,7 @@ const username = field('ada');
 username.untouched(); // true
 ```
 
-#### dirty()
+#### 👆 dirty() {#dirty}
 
 **Signature:** `dirty: Signal<boolean>`
 
@@ -826,7 +826,7 @@ username.markAsDirty();
 username.dirty(); // true
 ```
 
-#### pristine()
+#### 👆 pristine() {#pristine}
 
 **Signature:** `pristine: Signal<boolean>`
 
@@ -838,9 +838,9 @@ const username = field('ada');
 username.pristine(); // true
 ```
 
-### Availability properties
+### 🔸 Availability properties {#availability-properties}
 
-#### disabled()
+#### 🎛️ disabled() {#disabled}
 
 **Signature:** `disabled: Signal<boolean>`
 
@@ -854,7 +854,7 @@ const username = field('', {
 username.disabled(); // true
 ```
 
-#### disabledReasons()
+#### 🎛️ disabledReasons() {#disabledreasons}
 
 **Signature:** `disabledReasons: Signal<readonly DisabledReason[]>`
 
@@ -869,7 +869,7 @@ const username = field('', {
 username.disabledReasons()[0]?.message; // 'Profile is locked'
 ```
 
-#### enabled()
+#### 🎛️ enabled() {#enabled}
 
 **Signature:** `enabled: Signal<boolean>`
 
@@ -881,7 +881,7 @@ const username = field('ada');
 username.enabled(); // true
 ```
 
-#### readonly()
+#### 🎛️ readonly() {#readonly}
 
 **Signature:** `readonly: Signal<boolean>`
 
@@ -895,7 +895,7 @@ const username = field('', {
 username.readonly(); // true
 ```
 
-#### writable()
+#### 🎛️ writable() {#writable}
 
 **Signature:** `writable: Signal<boolean>`
 
@@ -908,7 +908,7 @@ const username = field('ada');
 username.writable(); // true
 ```
 
-#### hidden()
+#### 🎛️ hidden() {#hidden}
 
 **Signature:** `hidden: Signal<boolean>`
 
@@ -922,7 +922,7 @@ const username = field('', {
 username.hidden(); // true
 ```
 
-#### visible()
+#### 🎛️ visible() {#visible}
 
 **Signature:** `visible: Signal<boolean>`
 
@@ -934,9 +934,9 @@ const username = field('ada');
 username.visible(); // true
 ```
 
-### Control and submission properties
+### 🔸 Control and submission properties {#control-and-submission-properties}
 
-#### debouncing()
+#### ⏱️ debouncing() {#debouncing}
 
 **Signature:** `debouncing: Signal<boolean>`
 
@@ -951,7 +951,7 @@ const username = field('', {
 username.debouncing(); // false before a bound control has a pending value
 ```
 
-#### submitting()
+#### 📨 submitting() {#submitting}
 
 **Signature:** `submitting: Signal<boolean>`
 
@@ -968,13 +968,13 @@ const profile = form({
 profile.username.submitting(); // true while saveProfile() is running
 ```
 
-## Method reference
+## 📖 Method reference {#method-reference}
 
 Each entry includes its consumer-facing signature, behavior, and return value.
 
-### Update values and control state
+### 🔸 Update values and control state {#update-values-and-control-state}
 
-#### set()
+#### 📝 set() {#set}
 
 **Signature:** `set(value: TValue): void`
 
@@ -989,7 +989,7 @@ username(); // 'grace'
 username.dirty(); // false
 ```
 
-#### update()
+#### 📝 update() {#update}
 
 **Signature:** `update(updater: (value: TValue) => TValue): void`
 
@@ -1003,7 +1003,7 @@ username.update(value => value?.trim() ?? null);
 username(); // 'ada'
 ```
 
-#### setControlValue()
+#### 🔌 setControlValue() {#setcontrolvalue}
 
 **Signature:** `setControlValue(value: TValue): void`
 
@@ -1021,7 +1021,7 @@ username(); // ''
 username.dirty(); // true
 ```
 
-#### reset()
+#### ↩️ reset() {#reset}
 
 **Signatures:** `reset(): void` · `reset(value: TValue): void`
 
@@ -1044,7 +1044,7 @@ username.pristine(); // true
 `set()` directly in ordinary field code. The callable field also carries `patch` at runtime, but
 its public type exposes this operation only through `api` and `$api`.
 
-#### flush()
+#### ⏱️ flush() {#flush}
 
 **Signature:** `flush(): void`
 
@@ -1062,7 +1062,7 @@ username(); // 'ada'
 username.debouncing(); // false
 ```
 
-#### focus()
+#### 👆 focus() {#focus}
 
 **Signature:** `focus(options?: FocusOptions): void`
 
@@ -1071,9 +1071,9 @@ Focuses the first `[formNode]` control bound to the field in DOM order. It forwa
 
 <CodeBlock language="ts">{fieldFocusSource}</CodeBlock>
 
-### Validation and interaction
+### 🔸 Validation and interaction {#validation-and-interaction}
 
-#### setValidators()
+#### ✅ setValidators() {#setvalidators}
 
 **Signature:** `setValidators(validators: ValidatorSource<TValue, Field<TValue>>): void`
 
@@ -1087,7 +1087,7 @@ username.setValidators(minLength(5));
 username.invalid(); // true
 ```
 
-#### getError()
+#### 🚨 getError() {#geterror}
 
 **Signature:** `getError(kind: string): ValidationError | undefined`
 
@@ -1101,7 +1101,7 @@ username.getError('required')?.kind; // 'required'
 username.getError('minLength'); // undefined
 ```
 
-#### markAsTouched()
+#### 👆 markAsTouched() {#markastouched}
 
 **Signature:** `markAsTouched(options?: { skipDescendants?: boolean }): void`
 
@@ -1115,7 +1115,7 @@ username.markAsTouched();
 username.touched(); // true
 ```
 
-#### markAsUntouched()
+#### 👆 markAsUntouched() {#markasuntouched}
 
 **Signature:** `markAsUntouched(): void`
 
@@ -1129,7 +1129,7 @@ username.markAsUntouched();
 username.untouched(); // true
 ```
 
-#### markAsDirty()
+#### 👆 markAsDirty() {#markasdirty}
 
 **Signature:** `markAsDirty(): void`
 
@@ -1142,7 +1142,7 @@ username.markAsDirty();
 username.dirty(); // true
 ```
 
-#### markAsPristine()
+#### 👆 markAsPristine() {#markaspristine}
 
 **Signature:** `markAsPristine(): void`
 
@@ -1156,9 +1156,9 @@ username.markAsPristine();
 username.pristine(); // true
 ```
 
-### Availability
+### 🔸 Availability {#availability-1}
 
-#### disable()
+#### 🎛️ disable() {#disable}
 
 **Signature:** `disable(message?: string): void`
 
@@ -1172,7 +1172,7 @@ username.disabled(); // true
 username.disabledReasons()[0]?.message; // 'Profile is locked'
 ```
 
-#### enable()
+#### 🎛️ enable() {#enable}
 
 **Signature:** `enable(): void`
 
@@ -1187,7 +1187,7 @@ username.enable();
 username.enabled(); // true
 ```
 
-#### markAsReadonly()
+#### 🎛️ markAsReadonly() {#markasreadonly}
 
 **Signature:** `markAsReadonly(): void`
 
@@ -1200,7 +1200,7 @@ username.markAsReadonly();
 username.writable(); // false
 ```
 
-#### markAsWritable()
+#### 🎛️ markAsWritable() {#markaswritable}
 
 **Signature:** `markAsWritable(): void`
 
@@ -1215,7 +1215,7 @@ username.markAsWritable();
 username.writable(); // true
 ```
 
-#### hide()
+#### 🎛️ hide() {#hide}
 
 **Signature:** `hide(): void`
 
@@ -1228,7 +1228,7 @@ username.hide();
 username.visible(); // false
 ```
 
-#### show()
+#### 🎛️ show() {#show}
 
 **Signature:** `show(): void`
 
@@ -1244,7 +1244,7 @@ username.visible(); // true
 
 </div>
 
-## Binding in Angular
+## 🔌 Binding in Angular {#binding-in-angular}
 
 ```ts
 import { Component } from '@angular/core';
@@ -1266,7 +1266,7 @@ The binding synchronizes values, interaction state, validation constraints, acce
 and debounce. See [Control binding](../guides/control-binding.md) and the
 [shared Node API](./node-api.md).
 
-## Query errors and registered validators
+## 🚨 Query errors and registered validators {#query-errors-and-registered-validators}
 
 `hasError(kind: string): boolean` checks the node's own current `errors()`, like
 `getError(kind) !== undefined`. It does not search descendants or `allErrors()`. Synchronous,

@@ -6,7 +6,7 @@ import CodeBlock from '@theme/CodeBlock';
 import aggregateValueEqualitySource from '!!raw-loader!../../examples/aggregate-value-equality.example.ts';
 import consumerValueEqualitySource from '!!raw-loader!../../examples/consumer-value-equality.example.ts';
 
-# Values and state
+# Values and state {#values-and-state}
 
 Nodes are callable signals. **Prefer calling the node itself to read its committed value:**
 
@@ -26,7 +26,7 @@ const profileValue = profileForm(); // { name: 'Marco', age: null, address: { ..
 const nameValue = profileForm.name(); // 'Marco'
 ```
 
-## Alternative value access
+## 📝 Alternative value access {#alternative-value-access}
 
 Examples throughout this documentation call nodes directly. The same committed value is also
 available through `value()` directly or under `.api`:
@@ -47,7 +47,7 @@ application examples and ordinary consumer code.
 The [Tree navigation and API access](./tree-and-api.md) guide documents `.api` for the uncommon case
 where a child name collides with a node member and for generic infrastructure.
 
-## Custom equality for a consumer
+## 📝 Custom equality for a consumer {#custom-equality-for-a-consumer}
 
 When a particular consumer needs its own definition of equality, derive a signal with Angular's
 `computed()` and supply an `equal` function. This works with `form()`, `group()`, `array()`, and
@@ -77,7 +77,7 @@ This differs from configuring equality on a node, which affects its public value
 equality to their exposed values. Internal storage and controls still accept the latest writes.
 A derived `computed()` remains useful when the comparison belongs to only one consumer.
 
-## Aggregate value equality
+## 📝 Aggregate value equality {#aggregate-value-equality}
 
 `form()`, `group()`, and `array()` accept `equal: 'shallow'`, `'deep'`, or a typed
 `(previous, next) => boolean` function. The default is `Object.is`. Equality controls the exposed
@@ -125,7 +125,7 @@ an older array. A comparator that ignores ordering can retain the old public ord
 move; one that ignores length can retain a different public item count. Use `items()` for rendering
 dynamic rows. See [array equality](../reference/array.md#equal-option) for an executable example.
 
-## Set, update, and patch
+## 📝 Set, update, and patch {#set-update-and-patch}
 
 `set()` replaces a complete value. `update()` computes a complete value from the current exposed value:
 
@@ -150,7 +150,7 @@ see [Dynamic arrays](../guides/dynamic-arrays.md).
 
 Programmatic writes preserve dirty and touched state.
 
-## Reset
+## ↩️ Reset {#reset}
 
 `reset()` clears dirty and touched state while preserving current values. Pass a complete value to replace values and clear interaction state together:
 
@@ -166,7 +166,7 @@ profileForm.reset({
 
 Resetting a nested node affects only that subtree. Validators remain configured and immediately evaluate the reset value.
 
-## Control values and debounce
+## ⏱️ Control values and debounce {#control-values-and-debounce}
 
 `controlValue()` is not another general-purpose value accessor. It is the immediate value buffered
 from a bound UI control, while the node call reads the committed model observed by validators and
@@ -201,7 +201,7 @@ Forms and arrays can define an inherited debounce for descendant fields and expo
 
 See [Value flow and debounce](../guides/value-flow-and-debounce.md) for the complete transition table, custom debounce cancellation, aggregate buffers, and reset interaction.
 
-## Interaction state
+## 👆 Interaction state {#interaction-state}
 
 Every node exposes paired state signals and actions:
 
@@ -217,7 +217,7 @@ A control-originated value change marks its directly bound node dirty. Blur or a
 
 `markAsTouched()` applies to an aggregate subtree by default. Pass `{ skipDescendants: true }` to touch only that node.
 
-## Disabled, readonly, and hidden
+## 🎛️ Disabled, readonly, and hidden {#disabled-readonly-and-hidden}
 
 These states suppress a node's validation errors and exclude its invalid or pending state from ancestor validity. They do not prevent programmatic reads or writes.
 
@@ -242,7 +242,7 @@ profileForm.disabledReasons();
 
 See [Interaction and availability](../guides/interaction-and-availability.md) for exact propagation, stored state, and non-interactive validation behavior.
 
-## Tree navigation
+## 🌳 Tree navigation {#tree-navigation}
 
 Every node exposes reactive `parent()`, `form()`, `root()`, `path()`, and `keyInParent()` signals:
 

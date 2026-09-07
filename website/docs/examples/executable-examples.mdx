@@ -18,7 +18,7 @@ import reactiveConfigurationSource from '!!raw-loader!../../examples/reactive-co
 import submissionSource from '!!raw-loader!../../examples/submission.example.ts';
 import validationSource from '!!raw-loader!../../examples/validation.example.ts';
 
-# Executable and type-checked examples
+# Executable and type-checked examples {#executable-and-type-checked-examples}
 
 The examples on this page are rendered directly from real TypeScript files. The documentation
 verification compiles every file under strict settings. Files ending in `.example.ts` are also
@@ -28,7 +28,7 @@ of the same verification.
 
 These are the canonical, complete versions of the shorter snippets used throughout the guides.
 
-## First form
+## 🚀 First form {#first-form}
 
 **Type-checked · Executed**
 
@@ -38,7 +38,7 @@ This verifies value inference, required validation, programmatic updates, aggreg
 the final form value. Start with [Your first form](../getting-started/first-form.md) for the guided
 version.
 
-## Choosing primitives
+## 🧭 Choosing primitives {#choosing-primitives}
 
 **Type-checked · Executed**
 
@@ -47,7 +47,7 @@ version.
 The example deliberately combines an atomic object field, a nested form, and a dynamic array. See
 [Choosing a primitive](../guides/choosing-a-primitive.md) for the trade-offs.
 
-## Array reconciliation and operations
+## 📚 Array reconciliation and operations {#array-reconciliation-and-operations}
 
 **Type-checked · Executed**
 
@@ -56,7 +56,7 @@ The example deliberately combines an atomic object field, a nested form, and a d
 The assertions prove that `trackBy` preserves item nodes while complete values reorder, then cover
 positional patching, swapping, and insertion. Continue with [Dynamic arrays](../guides/dynamic-arrays.md).
 
-## Dynamic form children
+## 🌳 Dynamic form children {#dynamic-form-children}
 
 **Type-checked · Executed**
 
@@ -65,7 +65,7 @@ positional patching, swapping, and insertion. Continue with [Dynamic arrays](../
 The assertions cover typed insertion, shorthand-group normalization, lookup, aggregation, and
 detachment. Continue with [Dynamic object children](../guides/dynamic-object-children.md).
 
-## Validation ownership
+## ✅ Validation ownership {#validation-ownership}
 
 **Type-checked · Executed**
 
@@ -74,7 +74,7 @@ detachment. Continue with [Dynamic object children](../guides/dynamic-object-chi
 This combines field-level built-ins with a form-level cross-field rule and checks both failure and
 recovery. See [Validation](../guides/validation.md) for composition and reactive dependencies.
 
-## Built-in validator error overrides
+## 🚨 Built-in validator error overrides {#built-in-validator-error-overrides}
 
 **Type-checked · Executed**
 
@@ -83,7 +83,7 @@ recovery. See [Validation](../guides/validation.md) for composition and reactive
 This verifies static failure detection, reactive custom-error replacement, and suppression through
 an empty error list. See [Built-in validators](../reference/built-in-validators.md#custom-errors).
 
-## Submission
+## 📨 Submission {#submission}
 
 **Type-checked · Executed**
 
@@ -92,7 +92,7 @@ an empty error list. See [Built-in validators](../reference/built-in-validators.
 Both invalid and valid submission paths execute. The assertions cover return values, `onSubmitBlocked`,
 and the asynchronous action. See [Submission](../guides/submission.md).
 
-## Control-value debounce
+## ⏱️ Control-value debounce {#control-value-debounce}
 
 **Type-checked · Executed**
 
@@ -102,7 +102,7 @@ The assertions distinguish immediate control state from committed model state, t
 touched, debouncing, and blur-commit behavior. See
 [Value flow and debounce](../guides/value-flow-and-debounce.md).
 
-## Asynchronous validation
+## ⏳ Asynchronous validation {#asynchronous-validation}
 
 **Type-checked · Executed**
 
@@ -111,7 +111,7 @@ touched, debouncing, and blur-commit behavior. See
 This runs both failing and recovering async validation transitions, including pending and unknown
 status. See [Async validation](../guides/async-validation.md).
 
-## Reactive configuration and precedence
+## ⚙️ Reactive configuration and precedence {#reactive-configuration-and-precedence}
 
 **Type-checked · Executed**
 
@@ -120,7 +120,7 @@ status. See [Async validation](../guides/async-validation.md).
 This verifies reactive message catalogs, tree-over-global precedence, inherited disabled state,
 and disabled reasons. See the [Configuration reference](../reference/configuration.md).
 
-## Angular binding and viewChild()
+## 🔌 Angular binding and viewChild() {#angular-binding-and-viewchild}
 
 **Type-checked**
 
@@ -130,7 +130,7 @@ This is compiled as an Angular component example. It verifies the standalone `Fo
 template binding, typed `FormNode`, and `viewChild.required()` query. See
 [Control binding](../guides/control-binding.md).
 
-## Native form binding
+## 🔌 Native form binding {#native-form-binding}
 
 **Type-checked**
 
@@ -140,7 +140,7 @@ Angular's compiler verifies that one `FormNode` import binds both the native for
 controls, including reset, submit, errors, and submission state. See
 [Form submission](../guides/submission.md).
 
-## Every built-in validator signature
+## 📐 Every built-in validator signature {#every-built-in-validator-signature}
 
 **Type-checked**
 
@@ -150,7 +150,7 @@ This compilation fixture keeps the common call signature of every built-in valid
 the public API. The [built-in validator reference](../reference/built-in-validators.md) documents
 each validator individually, including options, empty-value behavior, and error shape.
 
-## What remains a documentation snippet
+## 💡 What remains a documentation snippet {#what-remains-a-documentation-snippet}
 
 Not every code block should become a program. The following stay inline intentionally:
 

@@ -2,7 +2,7 @@
 title: 4. Add nesting and state
 ---
 
-# 4. Add nesting and reactive state
+# 4. Add nesting and reactive state {#4-add-nesting-and-reactive-state}
 
 Group related fields with shorthand objects. Use an explicit `group()` when that branch needs its
 own configuration.
@@ -56,7 +56,7 @@ this.myForm.patch({
 });
 ```
 
-## Related guides and reference
+## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Interaction and availability](../guides/interaction-and-availability.md) documents touched,
   dirty, disabled, readonly, hidden, propagation, and suppression behavior.

@@ -2,7 +2,7 @@
 title: Validation
 ---
 
-# Validation reference
+# Validation reference {#validation-reference}
 
 Every Form Nodes node can own validation rules. Fields validate one leaf value; forms, groups, and
 arrays can validate their aggregate value while also collecting validation state from descendants.
@@ -32,7 +32,7 @@ const myForm = form({
 });
 ```
 
-## API map
+## 🧭 API map {#api-map}
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ const myForm = form({
 | Target a child from an aggregate rule | `targetNode` | [Error ownership](#error-ownership) |
 | Replace rules at runtime | `setValidators()` | [Replacing validators](#replacing-validators) |
 
-## The validators property
+## ✅ The validators property {#the-validators-property}
 
 The `validators` option accepts one validator or a readonly array. Array entries may be `null` or
 `undefined`, which are ignored.
@@ -72,7 +72,7 @@ const name = field('', [required, minLength(3)]);
 Use the options form when the node also needs configuration such as `disabled`, `readonly`,
 `hidden`, debounce, injector ownership, array tracking, or form submission.
 
-### Accepted validator entries
+### 🔸 Accepted validator entries {#accepted-validator-entries}
 
 | Entry | Example | Behavior |
 | --- | --- | --- |
@@ -100,7 +100,7 @@ or constraint metadata.
 Async validators must be direct source entries. Do not return an `asyncValidator()` from a
 synchronous validator.
 
-## Validation by node type
+## 📐 Validation by node type {#validation-by-node-type}
 
 | Node | Own validator value | Descendant validation | Important distinction |
 | --- | --- | --- | --- |
@@ -114,7 +114,7 @@ These node boundaries are unchanged by concise declarations. The
 [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix) shows
 which primitive owns validation for every shorthand category.
 
-### field()
+### 🔸 field() {#field}
 
 A field validator observes the complete field value. If a field stores an object or array, the
 validator still sees that value as one leaf:
@@ -129,7 +129,7 @@ const tags = field<string[]>([], {
 
 Use `array()` instead when each item needs independent validation, errors, paths, or state.
 
-### group() and object shorthand
+### 🔸 group() and object shorthand {#group-and-object-shorthand}
 
 A group validator observes the aggregate object. It is appropriate for cross-field rules:
 
@@ -149,7 +149,7 @@ const credentials = group({
 The object shorthand creates the same kind of aggregate branch, but use explicit `group()` when
 that branch needs its own `validators` or other group options.
 
-### form()
+### 🔸 form() {#form}
 
 Form validation behaves like aggregate group validation. A form additionally uses its validation
 state to gate submission and exposes submission operations:
@@ -173,7 +173,7 @@ const booking = form({
 Invalid or unresolved validation prevents a normal submission run. See
 [Submission](../guides/submission.md) for the complete submission lifecycle.
 
-### array()
+### 🔸 array() {#array}
 
 An array can validate the collection while item nodes validate individual values:
 
@@ -191,7 +191,7 @@ const contacts = array({
 Array-level errors belong to the array unless `targetNode` names an item or descendant. Item
 errors remain owned by their item node after insertions, removals, moves, or reconciliation.
 
-## Synchronous validators
+## ✅ Synchronous validators {#synchronous-validators}
 
 A synchronous validator receives `ValidatorContext<TValue>` and may return success, one error,
 several errors, or synchronous conditional composition.
@@ -208,7 +208,7 @@ type ValidationResult =
 Every signal read during execution is a dependency. When it changes, validation is recomputed.
 See [`validator()`](./validator.md) for the complete callback context and composition rules.
 
-## Asynchronous validators
+## ⏳ Asynchronous validators {#asynchronous-validators}
 
 `asyncValidator()` marks a validator for managed scheduling. It can return a Promise-like or
 Observable-like operation. Form Nodes owns pending state, debounce, cancellation, dependency
@@ -228,7 +228,7 @@ Synchronous validation runs first. Async validators on the same node do not star
 has a synchronous error. See [`asyncValidator()`](./async-validator.md) for both signatures and
 the complete execution lifecycle.
 
-## Validation state
+## ✅ Validation state {#validation-state}
 
 Every node exposes its validation state directly:
 
@@ -249,7 +249,7 @@ Every node exposes its validation state directly:
 `unknown` means no error currently makes the node invalid, but an asynchronous result is still
 pending. It does not refer to the TypeScript value type.
 
-### Aggregate state
+### 🔸 Aggregate state {#aggregate-state}
 
 Forms, groups, and arrays combine their own validation with descendant state:
 
@@ -258,7 +258,7 @@ Forms, groups, and arrays combine their own validation with descendant state:
 - an existing error takes precedence over pending work for `validationStatus()`;
 - `errors()` remains local, while `allErrors()` traverses the subtree.
 
-## Error ownership
+## 🚨 Error ownership {#error-ownership}
 
 An error returned without `targetNode` is assigned to the node whose validator produced it.
 Aggregate validators can target a descendant so the error appears where the user can resolve it:
@@ -275,7 +275,7 @@ return {
 it while preserving the descendant as `targetNode`. The `formNode` property is reserved for errors
 created by a concrete rendered control binding.
 
-## When validation is skipped
+## ✅ When validation is skipped {#when-validation-is-skipped}
 
 Disabled, readonly, and hidden state exclude a node's validation while that state is active.
 In-flight asynchronous validation is cancelled. When the node returns to an interactive state,
@@ -284,7 +284,7 @@ validation runs again against its current value.
 Disabled children are also omitted from aggregate values. See
 [Interaction and availability](../guides/interaction-and-availability.md) for propagation rules.
 
-## Replacing validators
+## ✅ Replacing validators {#replacing-validators}
 
 `setValidators(source)` replaces the node's complete validator source and immediately revalidates
 the committed value:
@@ -296,7 +296,7 @@ myForm.username.setValidators([required, minLength(5)]);
 Replacing rules does not change the current value or mark the node dirty or touched. Read the
 normalized current collection with `validators()`.
 
-## Related reference
+## 🔗 Related reference {#related-reference}
 
 - [`validator()`](./validator.md) — reusable synchronous validators and callback context
 - [`asyncValidator()`](./async-validator.md) — asynchronous scheduling and cancellation
@@ -304,7 +304,7 @@ normalized current collection with `validators()`.
 - [Node API](./node-api.md) — shared validation properties and methods
 - [Errors and validation status](../guides/errors-and-status.md) — displaying and typing errors
 
-### Validator inspection and resolution
+### 🔸 Validator inspection and resolution {#validator-inspection-and-resolution}
 
 `validators` remains an Angular `Signal` of directly registered functions. Its options overload and
 `hasValidator` accept `{ resolve?: boolean }`, defaulting to false. Resolved inspection shares

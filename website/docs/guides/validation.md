@@ -2,7 +2,7 @@
 title: Validation
 ---
 
-# Validation
+# Validation {#validation}
 
 import CodeBlock from '@theme/CodeBlock';
 import validatorResolutionSource from '!!raw-loader!../../examples/validator-resolution.example.ts';
@@ -27,7 +27,7 @@ Validators may be a single validator or an array. `null` and `undefined` array e
 The `validators()` signal returns the normalized list of directly registered functions. It does not
 execute those functions or expand returned compositions by default.
 
-## Reading validation state
+## ✅ Reading validation state {#reading-validation-state}
 
 ```ts
 name.valid();
@@ -62,7 +62,7 @@ The replacement is evaluated only while the built-in rule fails. It cannot be co
 `message`; return an empty array, `null`, or `undefined` when the failed rule should currently
 contribute no error. See [Built-in validator custom errors](../reference/built-in-validators.md#custom-errors).
 
-## Custom validators
+## ✅ Custom validators {#custom-validators}
 
 A synchronous validator receives a stable context with its value signal and access to the validated node:
 
@@ -97,7 +97,7 @@ const age = field<number>(null, [({ value }) => {
 }]);
 ```
 
-## Form and cross-field validation
+## ✅ Form and cross-field validation {#form-and-cross-field-validation}
 
 Attach a validator to a form to validate its aggregated value:
 
@@ -122,7 +122,7 @@ const myForm = form({
 });
 ```
 
-## Conditional validators
+## ✅ Conditional validators {#conditional-validators}
 
 A validator may return another synchronous validator or an array of validators. This supports reactive conditions without rebuilding the node:
 
@@ -147,7 +147,7 @@ Configure `asyncValidator()` directly in the node's validator list. It cannot be
 synchronous validator because the node must establish its cancellation and ownership lifecycle
 without executing arbitrary synchronous callbacks.
 
-## Evaluation model
+## 🧩 Evaluation model {#evaluation-model}
 
 Synchronous validation is lazy. Signal changes invalidate its result, and validators rerun when
 `errors()`, `valid()`, `invalid()`, or `validationStatus()` is next consumed. Templates and other
@@ -159,7 +159,7 @@ signals directly inside the callback is sufficient; an extra `computed()` wrappe
 See [Advanced behavior and edge cases](../advanced/behavior-details.md#reactive-validation-execution)
 for composition limits, execution timing, and async dependency details.
 
-## Constraint metadata
+## ✅ Constraint metadata {#constraint-metadata}
 
 Built-in constraints expose metadata for UI bindings:
 
@@ -178,7 +178,7 @@ See [Built-in validators](../reference/built-in-validators.md) and [Validator me
 For reusable helpers, context types, result shapes, and conditional composition, see the
 [`validator()` reference](../reference/validator.md).
 
-## Inspect resolved validators
+## ✅ Inspect resolved validators {#inspect-resolved-validators}
 
 Use `validators({ resolve: true })` to inspect the final function references reached through
 synchronous compositions. Use `hasValidator(validator, { resolve: true })` to query the same list.

@@ -3,11 +3,11 @@ title: Complete form example
 description: A large, nested Form Nodes example with Angular bindings, arrays, validation, state, and submission.
 ---
 
-# Complete form example
+# Complete form example {#complete-form-example}
 
 Large forms remain ordinary typed trees. This customer-onboarding example combines nested objects, explicitly configured forms, arrays inside arrays, reactive state, validation, message overrides, debounce, and submission in one declaration.
 
-## Component and form model
+## 🧩 Component and form model {#component-and-form-model}
 
 ```ts
 import { Component, signal } from '@angular/core';
@@ -140,7 +140,7 @@ export class CustomerEditor {
 
 The declaration remains readable because every branch owns its value, validators, and local configuration. TypeScript derives the complete submission value and narrows every child access without a separately maintained interface.
 
-## Template excerpt
+## 💡 Template excerpt {#template-excerpt}
 
 The template follows the same tree. Arrays expose live item nodes, so nested controls need no string paths or index-based lookup:
 
@@ -204,7 +204,7 @@ The template follows the same tree. Arrays expose live item nodes, so nested con
 </form>
 ```
 
-## Working with the tree
+## 🌳 Working with the tree {#working-with-the-tree}
 
 The large shape does not change the API conventions:
 

@@ -2,7 +2,7 @@
 title: Compatibility
 ---
 
-# Compatibility
+# Compatibility {#compatibility}
 
 The current development line supports these verified minimum Angular patches:
 
@@ -26,7 +26,7 @@ Angular 21.0.7 is the minimum because it introduces `FormField` and `FORM_FIELD`
 `useFormNodeState()` uses to observe Angular Signal Forms. The supported range includes later
 Angular 21 releases such as 21.2.18.
 
-## Installing
+## 🚀 Installing {#installing}
 
 In an application already using a supported Angular version:
 
@@ -36,7 +36,7 @@ npm install @ngblocks/form-nodes
 
 Resolve peer conflicts by aligning Angular packages rather than bypassing npm's checks.
 
-## Controls and state
+## 🔌 Controls and state {#controls-and-state}
 
 Use `[formNode]` to bind Form Nodes fields, forms, groups, and arrays. The former `$field` adapter
 has been removed; see the [migration instructions](./migrations.md#removing-the-field-adapter).
@@ -50,7 +50,7 @@ The optional `FormNodeUiControl`, `FormNodeValueControl`, and `FormNodeCheckboxC
 belong to Form Nodes and remain consistent across versions. Form Nodes' internal state rules
 continue to follow the inspected Angular 22 baseline even when running on Angular 21.
 
-## Repository verification
+## 🧪 Repository verification {#repository-verification}
 
 The compatibility workflow builds one archive with Angular 21 and installs it into independently
 locked Angular 21.0.7 / TypeScript 5.9.3 and Angular 22.1.5 / TypeScript 6.0.3 consumers. Both checks
@@ -68,7 +68,7 @@ The full release checks additionally cover type inference, validation outside in
 custom controls, CVAs, production AOT, server rendering, hydration, and executable documentation.
 Application browser support remains determined by Angular's supported build targets.
 
-## Future Angular versions
+## 🔌 Future Angular versions {#future-angular-versions}
 
 A new major enters the peer range only after the package and integration checks pass. See
 [Versioning and releases](./versioning.md#angular-support-policy).

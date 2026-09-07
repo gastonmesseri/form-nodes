@@ -13,7 +13,7 @@ import groupRootSource from '!!raw-loader!../../examples/group-root.typecheck.ts
 import groupFocusSource from '!!raw-loader!../../examples/group-focus.typecheck.ts';
 import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-shorthand-form-node.typecheck.ts';
 
-# group()
+# group() {#group}
 
 `group()` creates a typed object aggregate. It provides named children, value aggregation,
 validation, state propagation, configuration, and the common node operations. It deliberately has
@@ -94,7 +94,7 @@ const myForm = form({
 });
 ```
 
-## API map
+## 🧭 API map {#api-map}
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
@@ -113,7 +113,7 @@ value type and any declared children or array items. Inline `validator()` and `a
 helpers retain that inference when their generics are omitted. See
 [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
-## Signatures
+## 📐 Signatures {#signatures}
 
 ```ts
 group(definitions, options?);
@@ -123,7 +123,7 @@ group(definitions, validators, options?);
 Use [`FormValueContract<Model>`](./form-value-contract.md) with `satisfies` to check a group against
 a named aggregate value while preserving its inferred child-node types.
 
-### `field()` shorthand
+### 🔸 `field()` shorthand {#field-shorthand}
 
 Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as arrays
 and class instances, can stand in for `field()` when defining a group:
@@ -185,7 +185,7 @@ retain whether an annotated object originated as a plain object or a class insta
 `field()` is the safest choice at factory, deserialization, and other broadly typed boundaries. It
 is also required when the child needs validators or field options.
 
-## Options
+## ⚙️ Options {#options}
 
 `GroupOptions` accepts the object-node configuration shared with `form()`, except for submission.
 A group can inherit `submitting()` from an ancestor form but cannot initiate submission itself.
@@ -222,13 +222,13 @@ concerns that child's value.
 
 <div className="api-member-reference">
 
-## Option reference
+## ⚙️ Option reference {#option-reference}
 
 Each option includes its signature, default behavior, scope, and a complete example.
 
-### Values and validation
+### 🔸 Values and validation {#values-and-validation}
 
-#### equal {#group-equal-option}
+#### ⚙️ equal {#group-equal-option}
 
 **Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
 
@@ -237,7 +237,7 @@ update callbacks, and public parent values. Child writes and control synchroniza
 current committed values. See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality)
 for the executable example and full contract shared with `form()`.
 
-#### validators {#group-validators-option}
+#### ✅ validators {#group-validators-option}
 
 **Signature:** `validators?: ValidatorSource<GroupValue, Group<TNodes>>`
 
@@ -253,7 +253,7 @@ const dateRange = group({
 });
 ```
 
-#### validatorMessages {#group-validatormessages-option}
+#### 💬 validatorMessages {#group-validatormessages-option}
 
 **Signature:** `validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined)`
 
@@ -273,7 +273,7 @@ const address = group({
 address.allErrors()[0]?.message; // 'Enter a city.'
 ```
 
-#### debounce {#group-debounce-option}
+#### ⏱️ debounce {#group-debounce-option}
 
 **Signature:** `debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>)`
 
@@ -289,9 +289,9 @@ const address = group({
 });
 ```
 
-### Availability
+### 🔸 Availability {#availability}
 
-#### hidden {#group-hidden-option}
+#### ⚙️ hidden {#group-hidden-option}
 
 **Signature:** `hidden?: boolean | (() => boolean)`
 
@@ -305,7 +305,7 @@ const shippingAddress = group({
 });
 ```
 
-#### disabled {#group-disabled-option}
+#### ⚙️ disabled {#group-disabled-option}
 
 **Signature:** `disabled?: boolean | string | (() => boolean | string)`
 
@@ -322,7 +322,7 @@ const address = group({
 address.disabledReasons()[0]?.message; // 'Address is managed by your organization'
 ```
 
-#### readonly {#group-readonly-option}
+#### ⚙️ readonly {#group-readonly-option}
 
 **Signature:** `readonly?: boolean | (() => boolean)`
 
@@ -336,9 +336,9 @@ const identity = group({
 });
 ```
 
-### Injector ownership
+### 🔸 Injector ownership {#injector-ownership}
 
-#### injector {#group-injector-option}
+#### ⚙️ injector {#group-injector-option}
 
 **Signature:** `injector?: Injector`
 
@@ -353,7 +353,7 @@ const address = group({
 });
 ```
 
-#### inheritInjector {#group-inheritinjector-option}
+#### ⚙️ inheritInjector {#group-inheritinjector-option}
 
 **Signature:** `inheritInjector?: boolean`
 
@@ -368,7 +368,7 @@ const address = group({
 });
 ```
 
-#### adoptBindingInjector {#group-adoptbindinginjector-option}
+#### ⚙️ adoptBindingInjector {#group-adoptbindinginjector-option}
 
 **Signature:** `adoptBindingInjector?: boolean`
 
@@ -385,7 +385,7 @@ const address = group({
 
 </div>
 
-## Value and children
+## 🌳 Value and children {#value-and-children}
 
 The group is callable, and direct child access is preferred:
 
@@ -398,7 +398,7 @@ myForm.address.children.city; // the same field node, through the explicit child
 Groups always expose a non-null object value. Model an atomic or nullable object with `field()`
 instead. Use `array()` when the structure has a dynamic number of independently addressable items.
 
-## Properties and methods
+## 📖 Properties and methods {#properties-and-methods}
 
 A group is a callable aggregate-value reader with named child properties, reactive signals,
 structural operations, and the shared node state API. Signal properties must be called to read
@@ -485,7 +485,7 @@ details.$api.reset();
 See [Tree navigation and API access](../concepts/tree-and-api.md) for collision and generic-code
 patterns.
 
-## Group or form?
+## 🌳 Group or form? {#group-or-form}
 
 Use `group()` for structure and `form()` for a submission boundary:
 
@@ -509,7 +509,7 @@ is prevented and marks and flushes the group tree, while native reset delegates 
 Because a group has no submission action, use `form()` when the element must execute application
 submission behavior.
 
-## Group or plain object?
+## 🌳 Group or plain object? {#group-or-plain-object}
 
 A normal object containing standalone fields is also valid:
 
@@ -525,7 +525,7 @@ you need an aggregate callable value, parent and path relationships, recursive u
 aggregate validity and interaction state, inherited availability or debounce, or validators for the
 complete object. The plain object itself has none of those node capabilities.
 
-## Dynamic children
+## 🌳 Dynamic children {#dynamic-children}
 
 Groups support the same explicit `add()`, `get()`, and `remove()` operations as forms:
 
@@ -544,16 +544,16 @@ and detached children remain usable independently. See
 
 <div className="api-member-reference">
 
-## Property reference
+## 📖 Property reference {#property-reference}
 
 Each entry includes its consumer-facing signature, what it represents or returns, and a complete
 example. `GroupValue` means the inferred committed object value, `GroupSet` means the complete
 value accepted by `set()`, and `GroupPatch` means the recursively partial value accepted by
 `patch()`.
 
-### Value and tree properties
+### 🔸 Value and tree properties {#value-and-tree-properties}
 
-#### Callable value
+#### 📝 Callable value {#callable-value}
 
 **Signature:** `(): GroupValue`
 
@@ -569,7 +569,7 @@ const address = group({
 address(); // { city: 'Zurich', country: 'CH' }
 ```
 
-#### Named child access
+#### 🌳 Named child access {#named-child-access}
 
 **Signature:** `readonly [childName]: ChildNode`
 
@@ -587,7 +587,7 @@ address.city(); // 'Zurich'
 address.coordinates.latitude(); // 47.3769
 ```
 
-#### children
+#### 🌳 children {#children}
 
 **Signature:** `readonly children: GroupChildren`
 
@@ -604,7 +604,7 @@ address.children.city(); // 'Zurich'
 Direct access is preferred for initially declared children. Use `get(key)` for
 runtime keys. If a child is named `children`, use `address.$api.children`.
 
-#### value()
+#### 📝 value() {#value}
 
 **Signature:** `value: Signal<GroupValue>`
 
@@ -620,7 +620,7 @@ address.value(); // { city: 'Zurich' }
 
 Prefer the equivalent callable form, `address()`, for ordinary value reads.
 
-#### controlValue()
+#### 🔌 controlValue() {#controlvalue}
 
 **Signature:** `controlValue: Signal<GroupValue>`
 
@@ -637,7 +637,7 @@ address.controlValue(); // { city: 'Zurich' }
 Pending descendant control values are not aggregated into this signal. Read a descendant's
 `controlValue()` when its immediate buffered value is needed.
 
-#### nodeType()
+#### 💡 nodeType() {#nodetype}
 
 **Signature:** `nodeType(): 'group'`
 
@@ -652,7 +652,7 @@ const address = group({
 address.nodeType(); // 'group'
 ```
 
-#### form()
+#### 🧩 form() {#form}
 
 **Signature:** `form: Signal<Form | null>`
 
@@ -667,7 +667,7 @@ const address = group({
 address.form(); // null
 ```
 
-#### root()
+#### 🌳 root() {#root}
 
 **Signature:** `root: Signal<RootNode>`
 
@@ -682,7 +682,7 @@ const address = group({
 address.root() === address; // true
 ```
 
-#### parent()
+#### 🌳 parent() {#parent}
 
 **Signature:** `parent: Signal<ParentNode | null>`
 
@@ -698,7 +698,7 @@ const profile = form({
 profile.address.parent() === profile; // true
 ```
 
-#### path()
+#### 🌳 path() {#path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
@@ -714,7 +714,7 @@ const profile = form({
 profile.address.path(); // ['address']
 ```
 
-#### keyInParent()
+#### 🌳 keyInParent() {#keyinparent}
 
 **Signature:** `keyInParent: Signal<string | number | null>`
 
@@ -730,9 +730,9 @@ const profile = form({
 profile.address.keyInParent(); // 'address'
 ```
 
-### API properties
+### 🔸 API properties {#api-properties}
 
-#### api
+#### 📖 api {#api}
 
 **Signature:** `api: GroupApi`
 
@@ -748,7 +748,7 @@ address.api.valid(); // true
 
 Direct operations such as `address.valid()` are preferred.
 
-#### $api
+#### 📖 $api {#api-1}
 
 **Signature:** `$api: GroupApi`
 
@@ -765,9 +765,9 @@ details.reset(); // 'reset label'
 details.$api.reset();
 ```
 
-### Validation properties
+### 🔸 Validation properties {#validation-properties}
 
-#### validators()
+#### ✅ validators() {#validators}
 
 **Signature:** `validators: Signal<Validators<GroupValue>> & { (options: { resolve?: boolean }): Validators<GroupValue> }`
 
@@ -784,7 +784,7 @@ const address = group({
 address.validators().length; // 1
 ```
 
-#### errors()
+#### 🚨 errors() {#errors}
 
 **Signature:** `errors: Signal<readonly ValidationError[]>`
 
@@ -801,7 +801,7 @@ const filters = group({
 filters.errors()[0]?.kind; // 'emptyFilters'
 ```
 
-#### allErrors()
+#### 🚨 allErrors() {#allerrors}
 
 **Signature:** `allErrors: Signal<readonly ValidationError[]>`
 
@@ -817,7 +817,7 @@ address.allErrors()[0]?.kind; // 'required'
 address.errors(); // []
 ```
 
-#### valid()
+#### 💡 valid() {#valid}
 
 **Signature:** `valid: Signal<boolean>`
 
@@ -831,7 +831,7 @@ const address = group({
 address.valid(); // true
 ```
 
-#### invalid()
+#### 🚨 invalid() {#invalid}
 
 **Signature:** `invalid: Signal<boolean>`
 
@@ -845,7 +845,7 @@ const address = group({
 address.invalid(); // true
 ```
 
-#### required()
+#### ✅ required() {#required}
 
 **Signature:** `required: Signal<boolean>`
 
@@ -862,7 +862,7 @@ const address = group({
 address.required(); // true
 ```
 
-#### pending()
+#### ⏳ pending() {#pending}
 
 **Signature:** `pending: Signal<boolean>`
 
@@ -881,7 +881,7 @@ const address = group({
 address.pending(); // true while checkAddress() is running
 ```
 
-#### validationStatus()
+#### ✅ validationStatus() {#validationstatus}
 
 **Signature:** `validationStatus: Signal<'valid' | 'invalid' | 'unknown'>`
 
@@ -898,9 +898,9 @@ address.validationStatus(); // 'invalid'
 `'unknown'` means asynchronous validation is pending and no available error currently makes the
 subtree invalid.
 
-### Interaction properties
+### 🔸 Interaction properties {#interaction-properties}
 
-#### touched()
+#### 👆 touched() {#touched}
 
 **Signature:** `touched: Signal<boolean>`
 
@@ -915,7 +915,7 @@ address.city.markAsTouched();
 address.touched(); // true
 ```
 
-#### untouched()
+#### 👆 untouched() {#untouched}
 
 **Signature:** `untouched: Signal<boolean>`
 
@@ -929,7 +929,7 @@ const address = group({
 address.untouched(); // true
 ```
 
-#### dirty()
+#### 👆 dirty() {#dirty}
 
 **Signature:** `dirty: Signal<boolean>`
 
@@ -944,7 +944,7 @@ address.city.markAsDirty();
 address.dirty(); // true
 ```
 
-#### pristine()
+#### 👆 pristine() {#pristine}
 
 **Signature:** `pristine: Signal<boolean>`
 
@@ -958,9 +958,9 @@ const address = group({
 address.pristine(); // true
 ```
 
-### Availability properties
+### 🔸 Availability properties {#availability-properties}
 
-#### disabled()
+#### 🎛️ disabled() {#disabled}
 
 **Signature:** `disabled: Signal<boolean>`
 
@@ -976,7 +976,7 @@ const address = group({
 address.disabled(); // true
 ```
 
-#### disabledReasons()
+#### 🎛️ disabledReasons() {#disabledreasons}
 
 **Signature:** `disabledReasons: Signal<readonly DisabledReason[]>`
 
@@ -994,7 +994,7 @@ address.disabledReasons()[0]?.message; // 'Address is locked'
 address.city.disabled(); // true
 ```
 
-#### enabled()
+#### 🎛️ enabled() {#enabled}
 
 **Signature:** `enabled: Signal<boolean>`
 
@@ -1008,7 +1008,7 @@ const address = group({
 address.enabled(); // true
 ```
 
-#### readonly()
+#### 🎛️ readonly() {#readonly}
 
 **Signature:** `readonly: Signal<boolean>`
 
@@ -1024,7 +1024,7 @@ const address = group({
 address.readonly(); // true
 ```
 
-#### writable()
+#### 🎛️ writable() {#writable}
 
 **Signature:** `writable: Signal<boolean>`
 
@@ -1039,7 +1039,7 @@ const address = group({
 address.writable(); // true
 ```
 
-#### hidden()
+#### 🎛️ hidden() {#hidden}
 
 **Signature:** `hidden: Signal<boolean>`
 
@@ -1055,7 +1055,7 @@ const address = group({
 address.hidden(); // true
 ```
 
-#### visible()
+#### 🎛️ visible() {#visible}
 
 **Signature:** `visible: Signal<boolean>`
 
@@ -1069,9 +1069,9 @@ const address = group({
 address.visible(); // true
 ```
 
-### Control and workflow properties
+### 🔸 Control and workflow properties {#control-and-workflow-properties}
 
-#### debouncing()
+#### ⏱️ debouncing() {#debouncing}
 
 **Signature:** `debouncing: Signal<boolean>`
 
@@ -1085,7 +1085,7 @@ const address = group({
 address.debouncing(); // false before a bound control has a pending value
 ```
 
-#### submitting()
+#### 📨 submitting() {#submitting}
 
 **Signature:** `submitting: Signal<boolean>`
 
@@ -1104,13 +1104,13 @@ const profile = form({
 profile.address.submitting(); // true while saveProfile() is running
 ```
 
-## Method reference
+## 📖 Method reference {#method-reference}
 
 Each entry includes its consumer-facing signature, behavior, and return value.
 
-### Dynamic children
+### 🔸 Dynamic children {#dynamic-children-1}
 
-#### add()
+#### 💡 add() {#add}
 
 **Signatures:** `add(key: string, definition): AddedNode` ·
 `add(definitions): AddedNodes`
@@ -1147,7 +1147,7 @@ its exact type, or retrieve it later with `get()`. Array values become fields;
 declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application object
 with `field(value)` when it should remain one atomic value.
 
-#### get()
+#### 💡 get() {#get}
 
 **Signature:** `get(key: string): DynamicNode | undefined`
 
@@ -1169,7 +1169,7 @@ filters.get('category')?.value(); // 'all'
 filters.get('missing'); // undefined
 ```
 
-#### remove()
+#### 📚 remove() {#remove}
 
 **Signature:** `remove(key: string): DynamicNode | undefined`
 
@@ -1188,9 +1188,9 @@ removed?.parent(); // null
 filters.remove('missing'); // undefined
 ```
 
-### Update values and reset state
+### 🔸 Update values and reset state {#update-values-and-reset-state}
 
-#### set()
+#### 📝 set() {#set}
 
 **Signature:** `set(value: GroupSet): void`
 
@@ -1213,7 +1213,7 @@ address(); // { city: 'London', country: 'UK' }
 
 Unknown runtime keys are ignored with a warning in development mode.
 
-#### update()
+#### 📝 update() {#update}
 
 **Signature:** `update(updater: (value: GroupValue) => GroupSet): void`
 
@@ -1233,7 +1233,7 @@ address.update(value => ({
 address.city(); // 'Zurich'
 ```
 
-#### patch()
+#### 📝 patch() {#patch}
 
 **Signature:** `patch(value: GroupPatch): void`
 
@@ -1261,7 +1261,7 @@ address.coordinates(); // { latitude: 47.3769, longitude: -0.1276 }
 
 Unknown runtime keys are ignored with a warning in development mode.
 
-#### reset()
+#### ↩️ reset() {#reset}
 
 **Signatures:** `reset(): void` · `reset(value: GroupSet): void`
 
@@ -1282,9 +1282,9 @@ address.touched(); // false
 address.pristine(); // true
 ```
 
-### Validation and interaction
+### 🔸 Validation and interaction {#validation-and-interaction}
 
-#### setValidators()
+#### ✅ setValidators() {#setvalidators}
 
 **Signature:** `setValidators(validators: ValidatorSource<GroupValue, Group<TNodes>>): void`
 
@@ -1301,7 +1301,7 @@ filters.setValidators(nonEmptyFilters);
 filters.invalid(); // true
 ```
 
-#### getError()
+#### 🚨 getError() {#geterror}
 
 **Signature:** `getError(kind: string): ValidationError | undefined`
 
@@ -1319,7 +1319,7 @@ const filters = group({
 filters.getError('emptyFilters')?.kind; // 'emptyFilters'
 ```
 
-#### markAsTouched()
+#### 👆 markAsTouched() {#markastouched}
 
 **Signature:** `markAsTouched(options?: { skipDescendants?: boolean }): void`
 
@@ -1339,7 +1339,7 @@ address.markAsTouched({ skipDescendants: true });
 address.city.touched(); // false
 ```
 
-#### markAsUntouched()
+#### 👆 markAsUntouched() {#markasuntouched}
 
 **Signature:** `markAsUntouched(): void`
 
@@ -1356,7 +1356,7 @@ address.markAsUntouched();
 address.untouched(); // true
 ```
 
-#### markAsDirty()
+#### 👆 markAsDirty() {#markasdirty}
 
 **Signature:** `markAsDirty(): void`
 
@@ -1371,7 +1371,7 @@ address.markAsDirty();
 address.dirty(); // true
 ```
 
-#### markAsPristine()
+#### 👆 markAsPristine() {#markaspristine}
 
 **Signature:** `markAsPristine(): void`
 
@@ -1388,9 +1388,9 @@ address.markAsPristine();
 address.pristine(); // true
 ```
 
-### Availability
+### 🔸 Availability {#availability-1}
 
-#### disable()
+#### 🎛️ disable() {#disable}
 
 **Signature:** `disable(message?: string): void`
 
@@ -1406,7 +1406,7 @@ address.disabled(); // true
 address.city.disabled(); // true
 ```
 
-#### enable()
+#### 🎛️ enable() {#enable}
 
 **Signature:** `enable(): void`
 
@@ -1423,7 +1423,7 @@ address.enable();
 address.enabled(); // true
 ```
 
-#### markAsReadonly()
+#### 🎛️ markAsReadonly() {#markasreadonly}
 
 **Signature:** `markAsReadonly(): void`
 
@@ -1438,7 +1438,7 @@ address.markAsReadonly();
 address.city.writable(); // false
 ```
 
-#### markAsWritable()
+#### 🎛️ markAsWritable() {#markaswritable}
 
 **Signature:** `markAsWritable(): void`
 
@@ -1455,7 +1455,7 @@ address.markAsWritable();
 address.writable(); // true
 ```
 
-#### hide()
+#### 🎛️ hide() {#hide}
 
 **Signature:** `hide(): void`
 
@@ -1470,7 +1470,7 @@ address.hide();
 address.city.visible(); // false
 ```
 
-#### show()
+#### 🎛️ show() {#show}
 
 **Signature:** `show(): void`
 
@@ -1487,9 +1487,9 @@ address.show();
 address.visible(); // true
 ```
 
-### Control methods
+### 🔸 Control methods {#control-methods}
 
-#### flush()
+#### ⏱️ flush() {#flush}
 
 **Signature:** `flush(): void`
 
@@ -1507,7 +1507,7 @@ address.city(); // 'Zurich'
 address.debouncing(); // false
 ```
 
-#### focus()
+#### 👆 focus() {#focus}
 
 **Signature:** `focus(options?: FocusOptions): void`
 
@@ -1522,7 +1522,7 @@ See [Dynamic object children](../guides/dynamic-object-children.md),
 [Tree navigation and API access](../concepts/tree-and-api.md), and the
 [shared Node API](./node-api.md).
 
-## Iterate over immediate children
+## 🌳 Iterate over immediate children {#iterate-over-immediate-children}
 
 `forEachChild(callback)` calls `callback(child, key)` once per declared immediate child and returns
 `void`. It excludes children added with `add()`. A child can be a field, group, form, or array;
@@ -1554,7 +1554,7 @@ their usual behavior, including descendant propagation.
 
 If a child is named `forEachChild`, use `$api.forEachChild()` to access the operation.
 
-## Declared child types in Object.values
+## 📐 Declared child types in Object.values {#declared-child-types-in-objectvalues}
 
 `Object.values(node.children)` infers the union of the declared child node types, without
 `undefined`. Mixed fields, groups, forms, and arrays retain their concrete types.
@@ -1569,7 +1569,7 @@ still includes them. Their types are not reflected in the declared union. In con
 `forEachChild()` excludes them by default, matching its declared-child union. Use
 `forEachChild(callback, { includeDynamic: true })` for all children with `DynamicNode` typing.
 
-## Query errors and registered validators
+## 🚨 Query errors and registered validators {#query-errors-and-registered-validators}
 
 `hasError(kind: string): boolean` checks the node's own current `errors()`, like
 `getError(kind) !== undefined`. It does not search descendants or `allErrors()`. Synchronous,
@@ -1593,7 +1593,7 @@ follows `setValidators()` and, with resolution enabled, dependencies read by syn
 The default registration query does not execute validators.
 For a child named `hasError` or `hasValidator`, use the parent's `$api` to call that operation.
 
-## Empty declarations as dynamic records
+## 🌳 Empty declarations as dynamic records {#empty-declarations-as-dynamic-records}
 
 With `form({})` or `group({})`, the empty declaration acts as a dynamic record for child access:
 `Object.values(node.children)` is `DynamicNode[]`. Use

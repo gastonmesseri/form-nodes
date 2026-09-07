@@ -3,7 +3,7 @@ title: API overview
 description: A task-oriented map of the Form Nodes public API and its detailed reference pages.
 ---
 
-# API overview
+# API overview {#api-overview}
 
 Use this page to find the API that matches what you are trying to model or integrate. Import public
 symbols from `@ngblocks/form-nodes`; do not import internal files or deep package paths.
@@ -11,7 +11,7 @@ symbols from `@ngblocks/form-nodes`; do not import internal files or deep packag
 If you already have a concrete failure or unexpected state, use the symptom-oriented
 [Troubleshooting guide](../help/troubleshooting.md).
 
-## Choose an API by task
+## 🧭 Choose an API by task {#choose-an-api-by-task}
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
@@ -39,9 +39,9 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Use Angular Material controls | `FormNode` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
 | Use PrimeNG controls | `FormNode` with PrimeNG's normal modules | [PrimeNG integration](../integrations/primeng.md) |
 
-## Modeling primitives
+## 🧩 Modeling primitives {#modeling-primitives}
 
-### field()
+### 🔸 field() {#field}
 
 Creates one leaf node. Its value can be a string, number, date, object, array, or any other
 application type. Fields are nullable by default.
@@ -62,7 +62,7 @@ Main exports: `field`, `Field`, `FieldApi`, and `FieldOptions`.
 Use `createFormPrimitives({ nullable: false })` to obtain application-scoped factories whose fields and
 shorthands are non-nullable by default. Explicit field options always take precedence.
 
-### form()
+### 🔸 form() {#form}
 
 Creates the typed object tree that owns a submission workflow. It has the same structural behavior
 as a group plus `onSubmit` configuration and `submit()`. Root application workflows normally
@@ -76,7 +76,7 @@ of item nodes. Ordinary functions and non-plain object instances become concise 
 Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormNodeValue`, `FormValueContract`, `FormSet`,
 `FormPatch`.
 
-### array()
+### 🔸 array() {#array}
 
 Creates a dynamic collection by cloning one node template or invoking a factory. Use it when items
 need independent bindings, paths, validation, interaction state, or structural operations.
@@ -93,7 +93,7 @@ const myForm = form({
 Main exports: `array`, `ArrayNode`, `ArrayApi`, `ArrayOptions`, `ArrayValue`, `ArraySet`,
 `ArrayPatch`, `ArrayItems`, `ArrayIndexes`, and `ArrayItemWithParent`.
 
-### Explicit group()
+### 🔸 Explicit group() {#explicit-group}
 
 Plain nested objects already create structural groups and are the preferred way to model ordinary
 fixed branches:
@@ -112,9 +112,9 @@ Use explicit `group({...}, options)` only when an object branch needs its own ag
 state options, or message configuration without becoming a submission workflow. Main exports:
 `group`, `Group`, `GroupApi`, `GroupOptions`, `GroupValue`, `GroupSet`, and `GroupPatch`.
 
-## Validation
+## ✅ Validation {#validation}
 
-### Synchronous validation
+### 🔸 Synchronous validation {#synchronous-validation}
 
 Pass built-in or custom validators to any node. `validator<TValue>()` supplies an explicit reusable
 authoring type but does not wrap or alter the callback at runtime.
@@ -136,7 +136,7 @@ const myForm = form({
 Frequently used types include `ValidationError`, `ValidationResult`, `ValidationStatus`,
 `ValidatorContext`, `ValidatorSource`, `Validators`, and the extensible `ValidationErrorMap`.
 
-### Asynchronous validation
+### 🔸 Asynchronous validation {#asynchronous-validation}
 
 `asyncValidator()` marks asynchronous work explicitly so the node owns pending state, debounce,
 cancellation, dependency tracking, and stale-result protection.
@@ -158,7 +158,7 @@ const myForm = form({
 Related types include `AsyncValidator`, `AsyncValidatorContext`, `AsyncValidatorOptions`,
 `ParameterizedAsyncValidatorConfig`, and `ParameterizedAsyncValidatorContext`.
 
-### Validator messages
+### 🔸 Validator messages {#validator-messages}
 
 Message configuration follows this precedence, from highest to lowest:
 
@@ -195,9 +195,9 @@ provideFormNodesConfig({
 });
 ```
 
-## Angular integration
+## 🔌 Angular integration {#angular-integration}
 
-### [formNode]
+### 🔸 [formNode] {#formnode}
 
 Import `FormNode` into a standalone component and bind nodes directly:
 
@@ -221,7 +221,7 @@ and input/output control pairs (the latter require experimental `bindInputOutput
 
 Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNode` import supports native controls, custom controls, and native form roots.
 
-### Custom-control and binding configuration
+### 🔸 Custom-control and binding configuration {#custom-control-and-binding-configuration}
 
 | API | Purpose |
 | --- | --- |
@@ -260,7 +260,7 @@ unless this provider is configured.
 Most ordinary signal components and CVAs require no explicit provider. See
 [Custom controls](../guides/custom-controls.md) before choosing a lower-level integration API.
 
-## Shared node state
+## ⚡ Shared node state {#shared-node-state}
 
 Every field, form, and array exposes common reactive state:
 
@@ -277,7 +277,7 @@ Call the node itself for its committed value and use direct members for normal a
 Use `.api` for generic infrastructure or name collisions and `$api` only when a guaranteed
 collision-safe path is required.
 
-## Importing types
+## 📐 Importing types {#importing-types}
 
 Use type-only imports when a symbol is used only by TypeScript:
 

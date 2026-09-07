@@ -7,7 +7,7 @@ import CodeBlock from '@theme/CodeBlock';
 
 import createFormPrimitivesSource from '!!raw-loader!../../examples/create-form-primitives.typecheck.ts';
 
-# `createFormPrimitives()`
+# `createFormPrimitives()` {#createformprimitives}
 
 `createFormPrimitives()` creates an isolated set of `form`, `field`, `group`, and `array` factories
 with shared defaults. Use it to establish field nullability, translated validator messages, and
@@ -16,7 +16,7 @@ injector inheritance policies once for an application or feature.
 The package-level factories remain nullable by default. Creating a configured set does not change
 them or any other configured set.
 
-## Signature
+## 📐 Signature {#signature}
 
 ```ts
 createFormPrimitives();
@@ -34,14 +34,14 @@ defaultForms.field('');         // Field<string | null>
 explicitDefaultForms.field(''); // Field<string | null>
 ```
 
-## Create non-nullable factories
+## 📝 Create non-nullable factories {#create-non-nullable-factories}
 
 <CodeBlock language="ts" title="create-form-primitives.typecheck.ts">{createFormPrimitivesSource}</CodeBlock>
 
 Here, `field('')` and the `city: ''` shorthand both produce `Field<string>`. A local
 `field.nullable('')` declaration still produces `Field<string | null>`.
 
-## Configure validator messages
+## 💬 Configure validator messages {#configure-validator-messages}
 
 Pass a partial static or reactive catalog to localize built-in validator messages for every node
 created by the configured factories:
@@ -63,7 +63,7 @@ A validator's own `message` has highest priority. An explicit `validatorMessages
 form, group, or array overrides the configured default for that subtree. The configured catalog is
 then considered before Angular provider and process-wide catalogs.
 
-## Configure injector policies
+## ⚙️ Configure injector policies {#configure-injector-policies}
 
 `inheritInjector` and `adoptBindingInjector` can also be defaulted for every created node:
 
@@ -79,7 +79,7 @@ node-level option overrides the configured value. `injector` is intentionally no
 default: assigning it to every node would turn inherited ownership into explicit ownership. Pass
 an injector to the relevant root or boundary node instead.
 
-## Precedence
+## ⚙️ Precedence {#precedence}
 
 An explicit field method takes precedence over the shared default:
 
@@ -115,7 +115,7 @@ const nickname = field.nullable<string>();
 nickname(); // null
 ```
 
-## Shorthands and dynamic nodes
+## 🌳 Shorthands and dynamic nodes {#shorthands-and-dynamic-nodes}
 
 The default applies throughout definitions created by the configured factories. This includes
 nested object shorthands, children added later with `add()`, and current or future items created by
@@ -135,7 +135,7 @@ const profile = nonNullableForms.form({
 
 The configured `form()` attaches that existing node without changing its value type.
 
-## Application entry point
+## 🚀 Application entry point {#application-entry-point}
 
 Applications can expose one configured entry point so declarations share the same policy:
 
@@ -154,7 +154,7 @@ export const {
 
 Import those factories from the application module when declaring forms.
 
-## Related references
+## 🔗 Related references {#related-references}
 
 - [`field()`](./field.md)
 - [`form()`](./form.md)

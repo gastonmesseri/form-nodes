@@ -9,11 +9,11 @@ import validatorAncestrySource from '!!raw-loader!../../examples/validator-ances
 import validatorFieldSignalSource from '!!raw-loader!../../examples/validator-field-signal.example.ts';
 import inlineValidatorNodesSource from '!!raw-loader!../../examples/inline-validator-nodes.typecheck.ts';
 
-# Tree navigation and API access
+# Tree navigation and API access {#tree-navigation-and-api-access}
 
 A form is both a callable value signal and a typed tree of child nodes. Form Nodes keeps those two views connected without requiring string paths.
 
-## Direct child access
+## 🌳 Direct child access {#direct-child-access}
 
 Every form child is exposed directly on the form under its definition key. This is the normal and
 preferred way to navigate the tree:
@@ -61,7 +61,7 @@ response.api.children.status(); // 200
 In ordinary application code, continue to prefer `profile.name` and `profile.address.city` over
 their longer `children` paths.
 
-## Direct members by default
+## ⚙️ Direct members by default {#direct-members-by-default}
 
 Use node members directly in application code:
 
@@ -82,7 +82,7 @@ profile.reset();
 profile.valid();
 ```
 
-## .api for collisions and generic code
+## 📖 .api for collisions and generic code {#api-for-collisions-and-generic-code}
 
 Every node also exposes the same members through `.api`, but ordinary application examples should
 not use that longer path. It exists for two specific situations:
@@ -129,7 +129,7 @@ Do not use `$api` merely because it exists. Reserve it for infrastructure requir
 path or for a form that actually declares an `api` child. The `$api` property is supported and not
 scheduled for removal; its deprecation annotation only keeps it less prominent in autocomplete.
 
-## Parent, root, and path
+## 🌳 Parent, root, and path {#parent-root-and-path}
 
 Every node exposes reactive tree-location signals:
 
@@ -160,7 +160,7 @@ example also covers standalone fields, groups, and arrays:
 Both signals are stable and reactive, so validators and effects can observe a node being attached,
 detached, or moved. Validators access those signals through `ctx.node().form()` and `ctx.node().root()`.
 
-### Navigation inside validators
+### 🔸 Navigation inside validators {#navigation-inside-validators}
 
 `ctx.node` and `ctx.field` are the same readonly signal. Both return the validated node and never
 return `null`. Prefer `ctx.node()` when writing validation that can apply to different primitives.
@@ -183,7 +183,7 @@ Interaction, availability, required, and submission signals live on the node. Us
 `ctx.node().touched()`, `ctx.node().disabled()`, or `ctx.node().submitting()` instead of flat context
 properties. This applies to synchronous validators and every `asyncValidator()` callback.
 
-### Inline node inference
+### 🔸 Inline node inference {#inline-node-inference}
 
 An inline validator knows the primitive being created. A field validator receives `Field<TValue>`;
 a form or group validator retains its declared children; an array validator retains its item type.
@@ -215,7 +215,7 @@ The same context is available to synchronous and asynchronous validators, includ
 `params`, `validate`, and `onError`. Async execution adds `abortSignal`; parameterized execution
 also adds `params`.
 
-## Function property names
+## 💡 Function property names {#function-property-names}
 
 Native JavaScript function members such as `name`, `apply`, `call`, and `length` are hidden from node IntelliSense. A form may use those names for children, and the child remains available normally:
 

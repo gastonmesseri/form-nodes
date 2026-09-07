@@ -2,9 +2,9 @@
 title: uniqueItems()
 ---
 
-# uniqueItems()
+# uniqueItems() {#uniqueitems}
 
-## API map
+## 🧭 API map {#api-map}
 
 | I want to… | Details |
 | --- | --- |
@@ -14,7 +14,7 @@ title: uniqueItems()
 | Understand reactive constraints | [Reactive behavior](#reactive-behavior) |
 | Return to the complete catalog | [Built-in validators](../built-in-validators.md) |
 
-## Signatures
+## 📐 Signatures {#signatures}
 
 ```ts
 uniqueItems
@@ -27,7 +27,7 @@ uniqueItems(selectKey, options?)
 Property selectors read the named property. Function selectors receive each item and may read
 signals; those signal reads become reactive dependencies of the validator.
 
-## Usage and behavior
+## 📖 Usage and behavior {#usage-and-behavior}
 
 Requires every array item—or a selected item key—to be unique. It supports direct use, an options factory, a property key selector, and a key-selector function:
 
@@ -68,7 +68,7 @@ Calling `uniqueItems()` without arguments is equivalent to direct `[uniqueItems]
 
 `null` and `undefined` pass as empty arrays. Empty and one-item arrays pass. A failure is `{ kind: 'uniqueItems', duplicateIndexes, message }`. It belongs to the array node and reports every participating index in ascending order while deliberately omitting duplicate values.
 
-## Message configuration
+## 💬 Message configuration {#message-configuration}
 
 Every failure has a default English message. Where supported, pass a string as the final argument
 or use an options object for a static or reactive message, as shown above.
@@ -77,7 +77,7 @@ A message function may read signals. Returning `undefined` continues through nod
 provider, process-wide, and built-in message fallbacks. See
 [Validator messages](../../guides/validator-messages.md).
 
-## Reactive behavior
+## ⚡ Reactive behavior {#reactive-behavior}
 
 The options object accepts a reactive `when` predicate. Signals read from its validator context are
 tracked; while it returns `false`, the rule contributes neither errors nor constraint metadata.
@@ -96,7 +96,7 @@ stop contributing their error and metadata.
 The validator runs synchronously as part of its node's validator source. Disabled, readonly, and
 hidden nodes skip validation until they become interactive again.
 
-## Related reference
+## 🔗 Related reference {#related-reference}
 
 - [Built-in validators](../built-in-validators.md)
 - [Validation](../validation.md)

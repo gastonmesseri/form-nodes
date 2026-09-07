@@ -9,7 +9,7 @@ import syncInputsSource from '!!raw-loader!../../examples/experimental-sync-inpu
 import customInputsSource from '!!raw-loader!../../examples/custom-control-inputs.typecheck.ts';
 import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
 
-# Custom controls
+# Custom controls {#custom-controls}
 
 Bind a custom component with `[formNode]`, just as you would a native input. For a new
 component, expose a `value = model(...)`. Existing `ControlValueAccessor` components
@@ -20,7 +20,7 @@ Optional input synchronization is [experimental and off by default](#keep-contro
 component should manage them.
 :::
 
-## FormValueControl: value models and state {#create-a-signal-model-control}
+## 🔌 FormValueControl: value models and state {#create-a-signal-model-control}
 
 A component implementing Angular's `FormValueControl<T>` can use `[formNode]` without
 experimental input synchronization. The integration has two separate responsibilities:
@@ -90,7 +90,7 @@ precedence even when they also expose a model; this preset does not write their 
 Use `'all'` for all inputs on any active custom-control adapter, including CVAs and enabled pairs.
 Native controls and standard CVA disabled callbacks remain connected in every mode.
 
-### 🧪 Select inputs and target controls {#select-inputs-and-target-controls}
+### 🔸 Select inputs and target controls {#select-inputs-and-target-controls}
 
 Lists select exactly those inputs. Objects separate the input selection from its target:
 
@@ -129,7 +129,7 @@ follow normal node behavior while connected. Use initialized inputs rather than 
 `bindInputOutputPairs` inherits independently from `syncInputs` through node/factory, provider, and global
 configuration. See [pair configuration and rebinding](../reference/provide-form-nodes-config.md#bind-input-output-pairs).
 
-## ControlValueAccessor
+## 🔌 ControlValueAccessor {#controlvalueaccessor}
 
 If your component already implements Angular's `ControlValueAccessor`, bind it directly.
 Both `NG_VALUE_ACCESSOR` providers and hooks that assign `inject(NgControl).valueAccessor`
@@ -149,7 +149,7 @@ For utility-based components, see [direct NgControl registration](./custom-contr
 See the [Angular Material](../integrations/angular-material.md) and
 [PrimeNG](../integrations/primeng.md) guides for library-specific examples.
 
-## Go further
+## 🔗 Go further {#go-further}
 
 The optional `FormNodeValueControl<T>` and `FormNodeCheckboxControl` types can document a
 component's contract consistently on Angular 21 and 22. Runtime discovery does not require them.
@@ -158,7 +158,7 @@ The [advanced custom-controls guide](./custom-controls-advanced.md) covers aggre
 object and array values, optional state inputs and hooks, wrapper components, Angular
 `[formField]`, and detailed CVA integration, including validation and parsing errors.
 
-## Related guides and reference
+## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Build a custom rating control](../cookbook/custom-rating-control.md) shows a button-based control.
 - [`useFormNodeState()`](../reference/form-node-state.md) documents the available state signals.

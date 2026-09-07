@@ -5,7 +5,7 @@ title: Control binding
 import CodeBlock from '@theme/CodeBlock';
 import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.typecheck.ts';
 
-# Control binding
+# Control binding {#control-binding}
 
 The [type-checked Angular example](../examples/executable-examples.mdx#angular-binding-and-viewchild)
 covers the standalone directive import, `[formNode]`, `FormNode`, and `viewChild.required()`.
@@ -32,7 +32,7 @@ are also available through [experimental `bindInputOutputPairs`](./custom-contro
 [Advanced custom controls](./custom-controls-advanced.md#angular-api-compatibility) for the complete compatibility
 matrix and integration boundaries.
 
-## Native controls
+## 🔌 Native controls {#native-controls}
 
 The directive synchronizes value, disabled, readonly, required, name, and applicable constraint state. DOM input updates use `setControlValue()`, mark the field dirty, and follow its debounce. Blur marks it touched.
 
@@ -51,7 +51,7 @@ Bindings receive a stable generated `name` based on the application, structural 
 
 Select values are reapplied when options change, including asynchronously rendered options. Radio bindings reevaluate their authored option value after Angular renders.
 
-### Radio buttons
+### 🔸 Radio buttons {#radio-buttons}
 
 Bind every radio in a group to the same field and give each option a distinct string `value`.
 The field's initial value selects the matching option. `[formNode]` generates the shared `name`,
@@ -63,7 +63,7 @@ Standard delivery starts selected. Selecting Express delivery updates `checkout.
 to `'express'` and updates the displayed selection. The labels make each option clickable,
 and the `fieldset` and `legend` identify the group.
 
-## Native constraints
+## ✅ Native constraints {#native-constraints}
 
 `required`, `aria-invalid`, `min`, `max`, `minLength`, `maxLength`, and combined pattern metadata are synchronized when applicable:
 
@@ -75,7 +75,7 @@ and the `fieldset` and `legend` identify the group.
 
 Invalid native numeric or date input produces a `parse` error while retaining the last valid model value and the user's raw text. A later valid input, programmatic update, reset, rebind, or binding destruction clears the binding-owned parse error.
 
-## Querying the binding
+## 🔌 Querying the binding {#querying-the-binding}
 
 Export the directive and query it with Angular's signal-based `viewChild()`:
 
@@ -99,7 +99,7 @@ export class Editor {
 
 The public binding exposes `node()`, `errors()`, `element`, `injector`, `focus()`, `flush()`, and `reset()`.
 
-## Focus
+## 👆 Focus {#focus}
 
 Every node also exposes `focus(options?)`. A field focuses its first binding in DOM order; a form or array searches its current subtree. Calling it without a rendered binding is a no-op.
 
@@ -108,7 +108,7 @@ profile.name.focus();
 profile.focus();
 ```
 
-## Status classes
+## ⚡ Status classes {#status-classes}
 
 If your application uses a shared NgModule, it can import and re-export `FormNode`. Configure
 bindings in either the application providers or `SharedModule.providers`, according to who owns
@@ -160,11 +160,11 @@ state. No status classes are installed by default. See
 [`ANGULAR_FORMS_STATUS_CLASSES`](../reference/form-node-binding.md#automatic-css-classes) for the
 complete mapping and extension example.
 
-## Hidden controls
+## 🔌 Hidden controls {#hidden-controls}
 
 `hidden()` is form state and does not alter DOM visibility. Remove hidden controls in the template with `@if`. Development builds warn when a hidden node remains rendered.
 
-## Server rendering and hydration
+## 💡 Server rendering and hydration {#server-rendering-and-hydration}
 
 Initial native and custom-control state renders on the server. Browser-only observation is deferred until the browser, and hydration reuses the rendered controls while reconnecting events and reactive state.
 

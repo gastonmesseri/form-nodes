@@ -2,7 +2,7 @@
 title: Reorderable arrays
 ---
 
-# Build a reorderable array
+# Build a reorderable array {#build-a-reorderable-array}
 
 Use a stable domain identifier when server snapshots or drag-and-drop can reorder items:
 

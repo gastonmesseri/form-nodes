@@ -2,11 +2,11 @@
 title: Interaction and availability
 ---
 
-# Interaction and availability
+# Interaction and availability {#interaction-and-availability}
 
 Touched and dirty describe user interaction. Disabled, readonly, and hidden determine whether a node currently participates as an interactive part of the form.
 
-## Touched state
+## 👆 Touched state {#touched-state}
 
 Nodes start untouched. Value changes do not imply touch.
 
@@ -23,7 +23,7 @@ profile.name.touched(); // false
 profile.touched(); // true
 ```
 
-## Dirty state
+## 👆 Dirty state {#dirty-state}
 
 Nodes start pristine. Programmatic `set()`, `update()`, and `patch()` preserve dirty state; a control-originated update marks its directly bound node dirty immediately.
 
@@ -35,7 +35,7 @@ Nodes start pristine. Programmatic `set()`, `update()`, and `patch()` preserve d
 
 Touched, dirty, and validity are independent dimensions.
 
-## Configured state sources
+## ⚙️ Configured state sources {#configured-state-sources}
 
 Readonly and hidden accept a boolean or reactive function. Disabled additionally accepts a reason string:
 
@@ -59,7 +59,7 @@ Effective state is the union of three independent causes:
 
 `enable()`, `markAsWritable()`, and `show()` clear mutable local state but cannot override an active configured or inherited condition.
 
-## State propagation
+## ⚡ State propagation {#state-propagation}
 
 Disabled, readonly, and hidden propagate downward, never upward:
 
@@ -69,7 +69,7 @@ Disabled, readonly, and hidden propagate downward, never upward:
 - Changing a nested aggregate affects only its subtree, siblings excluded.
 - A parent does not become disabled, readonly, or hidden merely because every child is.
 
-## Disabled reasons
+## 🎛️ Disabled reasons {#disabled-reasons}
 
 `disabledReasons()` identifies every cause in outermost-to-innermost order:
 
@@ -82,7 +82,7 @@ profile.name.disabledReasons();
 
 Each reason retains the node where it originated. Multiple local causes remain distinct. Calling `disable()` again replaces the prior imperative reason; `enable()` removes only that imperative reason.
 
-## Non-interactive behavior
+## 🎛️ Non-interactive behavior {#non-interactive-behavior}
 
 A node is non-interactive while hidden, disabled, or readonly. During that time:
 

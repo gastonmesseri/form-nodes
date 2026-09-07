@@ -7,14 +7,14 @@ import CodeBlock from '@theme/CodeBlock';
 import cvaControlBindingSource from '!!raw-loader!../../examples/cva-control-binding.typecheck.ts';
 import nativeControlsSource from '!!raw-loader!../../examples/tutorial-native-controls.typecheck.ts';
 
-# 2. Bind controls
+# 2. Bind controls {#2-bind-controls}
 
 `[formNode]` binds naturally to native elements, signal custom controls, Angular Material, PrimeNG,
 and other controls built on Angular's standard forms contracts. There are no Form Nodes adapters to
 install, wrappers to write, or per-library providers to configure. Import the control as its own
 documentation requires, then bind your node with the same `[formNode]` syntax.
 
-## Bind native controls
+## 🔌 Bind native controls {#bind-native-controls}
 
 Expand the initial name binding to every field with `[formNode]`. The same directive also binds
 radio buttons, selects, checkboxes, and textareas:
@@ -43,7 +43,7 @@ The model remains the source of truth; no `FormControl`, `formControlName`, or s
 
 The same `[formNode]` binding works across Angular's common control contracts.
 
-## Bind signal custom controls naturally
+## 🔌 Bind signal custom controls naturally {#bind-signal-custom-controls-naturally}
 
 A custom component can expose Angular's standard `model()` value contract:
 
@@ -80,7 +80,7 @@ export class ReviewEditor {
 No Form Nodes-specific interface or provider is required for the conventional `value = model()`
 shape.
 
-## Bind a custom ControlValueAccessor
+## 🔌 Bind a custom ControlValueAccessor {#bind-a-custom-controlvalueaccessor}
 
 A component registered through Angular's `NG_VALUE_ACCESSOR` token uses the same `[formNode]`
 binding. The control implements `ControlValueAccessor`; Form Nodes connects its callbacks to the
@@ -101,7 +101,7 @@ provider is needed. The same component can still be used with Angular's other fo
 See [ControlValueAccessor in the custom-controls guide](../guides/custom-controls.md#controlvalueaccessor)
 for accessor selection, validation integration, and other supported contracts.
 
-## Bind Angular Material controls naturally
+## 🔌 Bind Angular Material controls naturally {#bind-angular-material-controls-naturally}
 
 No Angular Material-specific Form Nodes integration is required. After installing Material, import
 its component modules normally and place `[formNode]` directly on controls that implement Angular
@@ -138,7 +138,7 @@ for its ordinary installation and theming requirements. Form Nodes requires no a
 setup. Continue with the complete [Angular Material integration](../integrations/angular-material.md)
 for inputs, selects, checkboxes, datepickers, errors, submission, and testing.
 
-## Bind PrimeNG controls naturally
+## 🔌 Bind PrimeNG controls naturally {#bind-primeng-controls-naturally}
 
 PrimeNG also needs no Form Nodes adapter or wrapper. Import its module normally and bind
 `p-select` directly; its Angular Forms compatibility supplies the `ControlValueAccessor` contract
@@ -173,7 +173,7 @@ available options. Once PrimeNG itself is configured, there is no extra Form Nod
 Continue with the complete [PrimeNG integration](../integrations/primeng.md) for installation,
 inputs, selects, checkboxes, datepickers, validation styling, submission, and testing.
 
-## Bind other Angular-compatible controls
+## 🔌 Bind other Angular-compatible controls {#bind-other-angular-compatible-controls}
 
 In general, use `[formNode]` with native elements, `value = model()` or `checked = model()` custom
 controls, and components implementing `ControlValueAccessor`. This is why established Angular
@@ -212,7 +212,7 @@ For components with unusual integration requirements, see the
 The [Advanced custom controls](../guides/custom-controls-advanced.md) guide documents the complete compatibility
 matrix, state inputs, hooks, precedence, and limitations.
 
-## Related guides and reference
+## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Control binding](../guides/control-binding.md) details native value conversion, constraints,
   focus, status classes, SSR, and hydration.

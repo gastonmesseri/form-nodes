@@ -4,7 +4,7 @@ slug: /tutorial
 description: A progressive Form Nodes tutorial from the first model to validation, arrays, and submission.
 ---
 
-# Build a complete form
+# Build a complete form {#build-a-complete-form}
 
 This tutorial builds a customer profile editor one capability at a time. Every step starts from working code and adds one concept, so you can stop at the level your application needs.
 
@@ -18,7 +18,7 @@ By the end, the form will include:
 - Cancelable asynchronous username validation.
 - Native form submission and pending UI.
 
-## Before you begin
+## 🚀 Before you begin {#before-you-begin}
 
 Install the package in an Angular 22 application:
 
@@ -28,7 +28,7 @@ npm install --save @ngblocks/form-nodes
 
 The tutorial uses standalone components and Angular's built-in control flow. The form model itself does not require dependency injection.
 
-## The progression
+## 🧭 The progression {#the-progression}
 
 1. [Declare the model](./01-model.md)
 2. [Bind controls](./02-bind-controls.md)
@@ -38,7 +38,7 @@ The tutorial uses standalone components and Angular's built-in control flow. The
 6. [Validate asynchronously](./06-async-validation.md)
 7. [Submit the form](./07-submission.md)
 
-## Tutorial and reference together
+## 📖 Tutorial and reference together {#tutorial-and-reference-together}
 
 Each step ends with a small set of related guides, API references, and cookbook recipes. Follow the
 steps in order for a working progression, then use those contextual links when you need exact

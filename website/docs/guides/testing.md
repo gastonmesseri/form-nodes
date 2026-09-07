@@ -3,14 +3,14 @@ title: Testing forms
 description: Test Form Nodes nodes, validators, arrays, Angular bindings, and submission through the public API.
 ---
 
-# Testing forms
+# Testing forms {#testing-forms}
 
 Most form behavior can be tested as plain TypeScript. Use Angular's testing utilities only when the
 test is specifically about a rendered control, DOM event, custom component, or native form.
 
 The examples use Vitest, but the same structure works with Jest, Jasmine, or another test runner.
 
-## Testing strategy
+## 🧪 Testing strategy {#testing-strategy}
 
 | What you are testing | Recommended environment |
 | --- | --- |
@@ -24,7 +24,7 @@ Assert behavior through public node calls, signals, and methods. Avoid testing `
 when the same operation is available directly, and do not depend on private members or internal
 package paths.
 
-## Test a node tree without Angular
+## 🧪 Test a node tree without Angular {#test-a-node-tree-without-angular}
 
 `form()`, `field()`, and `array()` do not require an Angular injection context:
 
@@ -57,7 +57,7 @@ describe('profile form', () => {
 Prefer asserting the complete observable transition: value, relevant state, validation, and parent
 aggregation. This catches regressions that a single return-value assertion can miss.
 
-## Test synchronous validation
+## ✅ Test synchronous validation {#test-synchronous-validation}
 
 Assert both the failing state and recovery:
 
@@ -94,7 +94,7 @@ describe('account validation', () => {
 Use `errors()` for rules owned by the exact node and `allErrors()` when testing aggregate validity.
 See [Errors and validation status](./errors-and-status.md).
 
-## Test asynchronous validation deterministically
+## ⏳ Test asynchronous validation deterministically {#test-asynchronous-validation-deterministically}
 
 Control the promise yourself instead of relying on network access or arbitrary delays:
 
@@ -132,7 +132,7 @@ For reactive or cancellable validators, additionally assert how many times the c
 that the previous `abortSignal` becomes aborted, and that a stale result never replaces the latest
 one. See [Async validation](./async-validation.md).
 
-## Test debounce with fake timers
+## ⏱️ Test debounce with fake timers {#test-debounce-with-fake-timers}
 
 Control-originated values expose an immediate `controlValue()` and a delayed committed node value:
 
@@ -167,7 +167,7 @@ describe('search debounce', () => {
 Also test `flush()` or blur when application behavior depends on those commit paths. See
 [Value flow and debounce](./value-flow-and-debounce.md).
 
-## Test dynamic arrays
+## 🧪 Test dynamic arrays {#test-dynamic-arrays}
 
 Assert values and node identity separately. `trackBy` should preserve the same item objects when
 complete values arrive in a different order:
@@ -210,7 +210,7 @@ describe('people array', () => {
 For `push()`, `insert()`, `removeAt()`, `move()`, and `swap()`, check the returned or retained node,
 the resulting value, and updated paths. See [Dynamic arrays](./dynamic-arrays.md).
 
-## Test submission without the DOM
+## 🧪 Test submission without the DOM {#test-submission-without-the-dom}
 
 Call `submit()` directly when testing validation policy and action state:
 
@@ -245,7 +245,7 @@ describe('profile submission', () => {
 When the action returns a controlled promise, assert that `submitting()` is true on the form and
 its descendants until that promise settles. See [Form submission](./submission.md).
 
-## Test a native [formNode] binding
+## 🧪 Test a native [formNode] binding {#test-a-native-formnode-binding}
 
 Use `TestBed` when the behavior starts in the DOM. Import the same standalone `FormNode` directive
 as production code:
@@ -294,7 +294,7 @@ platform-specific events. This keeps most tests fast without weakening the brows
 
 :::
 
-## Test native submit and reset
+## 🧪 Test native submit and reset {#test-native-submit-and-reset}
 
 Dispatch cancelable events and verify both the browser-facing event and the node-facing result:
 
@@ -317,7 +317,7 @@ The component needs only `imports: [FormNode]`; the same directive handles the n
 controls. For reset, verify that the event is prevented, committed values remain unless an explicit
 value is supplied, rendered controls resynchronize, and interaction state clears.
 
-## Test custom controls
+## 🧪 Test custom controls {#test-custom-controls}
 
 Test the component's own Angular contract independently, then add one integration test with
 `[formNode]`:
@@ -331,7 +331,7 @@ Test the component's own Angular contract independently, then add one integratio
 
 See [Advanced custom controls](./custom-controls-advanced.md) for every supported integration shape.
 
-## What not to test
+## 🧪 What not to test {#what-not-to-test}
 
 Avoid assertions tied to implementation details:
 

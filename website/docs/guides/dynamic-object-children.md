@@ -2,7 +2,7 @@
 title: Dynamic object children
 ---
 
-# Dynamic object children
+# Dynamic object children {#dynamic-object-children}
 
 Use dynamic object children when a form or group gains named controls at runtime. For repeated
 ordered entries, use [`array()`](./dynamic-arrays.md) instead.
@@ -10,7 +10,7 @@ ordered entries, use [`array()`](./dynamic-arrays.md) instead.
 The complete [executable example](../examples/executable-examples.mdx#dynamic-form-children)
 verifies insertion, lookup, aggregate values, and detachment.
 
-## Add one child
+## 🌳 Add one child {#add-one-child}
 
 `add(name, definition)` accepts the same shorthand as an initial `form()` or `group()` declaration,
 attaches the normalized node, and returns it with its exact inferred type:
@@ -29,7 +29,7 @@ profile();
 The new child immediately participates in aggregate value, validation, pending, touched, dirty,
 disabled, readonly, hidden, debounce, focus, and injector inheritance.
 
-## Add several children
+## 🌳 Add several children {#add-several-children}
 
 Pass an object to add several definitions in one structural update. Plain nested objects become
 `group()` nodes and concise values become `field()` nodes, just as they do in the original
@@ -77,7 +77,7 @@ intentional: allowing arbitrary properties would also allow a typo such as
 
 :::
 
-## Look up a runtime key
+## 💡 Look up a runtime key {#look-up-a-runtime-key}
 
 Use `get(key)` for a runtime key. It returns `DynamicNode | undefined`.
 `DynamicNode` exposes every state and operation shared by all node kinds, such as `value`,
@@ -127,7 +127,7 @@ const age = profile.add('age', field(23));
 <input [formNode]="age" />
 ```
 
-## Remove a dynamic child
+## 📚 Remove a dynamic child {#remove-a-dynamic-child}
 
 `remove(name)` detaches and returns a dynamically added child:
 
@@ -154,7 +154,7 @@ previousAge?.parent(); // null
 age(); // 36
 ```
 
-## Value typing
+## 📐 Value typing {#value-typing}
 
 The original definition remains the form's statically known value shape. Runtime children appear
 in the JavaScript object returned by the form, but code that needs their values should retain the
@@ -164,13 +164,13 @@ typed node returned by `add()` or narrow the result of `get()`.
 They update matching dynamic keys when an untyped runtime object supplies them; omitted dynamic
 children retain their current value. `reset()` still clears their interaction state recursively.
 
-## Angular comparison
+## 🔌 Angular comparison {#angular-comparison}
 
 Angular Signal Forms 22.1.5 derives object and array children from the shape of its writable model;
 it does not expose an `addControl()` operation on a field tree. Form Nodes owns explicit nodes, so
 `add()` and `remove()` are deliberate library-specific structural operations.
 
-## Related guides and reference
+## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Creating nodes](../concepts/creating-nodes.md)
 - [`form()` reference](../reference/form.md)
@@ -178,7 +178,7 @@ it does not expose an `addControl()` operation on a field tree. Form Nodes owns 
 - [Dynamic arrays](./dynamic-arrays.md)
 - [Tree navigation and API access](../concepts/tree-and-api.md)
 
-## Enumerating children and static types
+## 📐 Enumerating children and static types {#enumerating-children-and-static-types}
 
 `Object.values(node.children)` uses the union of initially declared child types in TypeScript.
 Runtime enumeration still includes nodes attached with `add()`, even if their types fall outside
@@ -189,7 +189,7 @@ union matches runtime iteration. Pass `{ includeDynamic: true }` as the second a
 include all immediate children and receive `DynamicNode` callbacks. A runtime boolean also uses
 `DynamicNode`; an omitted option or a literal false preserves the declared union.
 
-## Start with an empty record
+## 🚀 Start with an empty record {#start-with-an-empty-record}
 
 Use `form({})` or `group({})` for a container whose children will be attached with `add()`.
 Call `forEachChild(callback, { includeDynamic: true })` to visit its added children with

@@ -2,7 +2,7 @@
 title: Choosing a primitive
 ---
 
-# Choosing between field(), form(), array(), and group()
+# Choosing between field(), form(), array(), and group() {#choosing-between-field-form-array-and-group}
 
 Choose a primitive from the shape and lifecycle of the value you need to model:
 
@@ -36,7 +36,7 @@ const myForm = form({
 });
 ```
 
-## At a glance
+## 🧭 At a glance {#at-a-glance}
 
 | Question | `field()` | `form()` | `array()` | `group()` |
 | --- | --- | --- | --- | --- |
@@ -46,7 +46,7 @@ const myForm = form({
 | Nullable by default | Yes | No | No | No |
 | Typical use | Name, selection, optional object | Registration, checkout, subflow | Contacts, line items | Exceptional configured object boundary |
 
-## Plain object, root group, or form?
+## 🌳 Plain object, root group, or form? {#plain-object-root-group-or-form}
 
 All three declarations are valid, but they provide different capabilities:
 
@@ -78,7 +78,7 @@ const searchForm = form({
 Choose the smallest capability boundary that matches the UI. A root group is particularly useful
 for reusable editors, filters, and settings sections that need aggregate state without submission.
 
-## Use field() for one replaceable value
+## 📝 Use field() for one replaceable value {#use-field-for-one-replaceable-value}
 
 A field is a leaf even when its value happens to be an object or an array. Choose it when the
 application treats the complete value as one unit and does not need independently addressable
@@ -109,7 +109,7 @@ Use a field for an object when:
 - the object itself must be nullable; or
 - individual properties do not need their own errors, touched state, or bindings.
 
-## Use array() for repeated dynamic nodes
+## 📚 Use array() for repeated dynamic nodes {#use-array-for-repeated-dynamic-nodes}
 
 An array owns a variable number of nodes cloned from one template or factory.
 
@@ -154,7 +154,7 @@ const milestones = array(field<Date>(), {
 });
 ```
 
-## Object field or group?
+## 🌳 Object field or group? {#object-field-or-group}
 
 The same TypeScript value shape can represent different UI behavior.
 
@@ -183,7 +183,7 @@ bindable `city` and `country` nodes.
 Prefer the group for ordinary groups of HTML inputs. Prefer the object field when the UI and
 domain genuinely treat the object atomically.
 
-## Use form() for a workflow boundary
+## 🔌 Use form() for a workflow boundary {#use-form-for-a-workflow-boundary}
 
 `form()` has the same object-node behavior as a group and additionally exposes `onSubmit` and
 `submit()`. Use it at the root of an application workflow. An explicit nested `form()` is useful
@@ -191,7 +191,7 @@ only when that branch is independently submittable; ordinary nested structure sh
 group or shorthand object. Binding a group to a native `<form [formNode]>` is tolerated and retains
 touch, flush, and reset behavior, but only a form can configure and run a submission action.
 
-## Use explicit group() for an exceptional object boundary
+## 🔌 Use explicit group() for an exceptional object boundary {#use-explicit-group-for-an-exceptional-object-boundary}
 
 Ordinary fixed child structures should use the object shorthand. It already creates a group node,
 gives every property independent controls and state, and aggregates them into a typed object:
@@ -226,7 +226,7 @@ Here the explicit boundary owns both its reactive disabled state and a validator
 complete `{ query, category }` value. The object shorthand remains preferable when the boundary
 does not need configuration of its own.
 
-## Array field or array()?
+## 📚 Array field or array()? {#array-field-or-array}
 
 An array value does **not** require `array()`. A normal field can hold an array—or any other
 JavaScript value. Choose between them based on the controls and state the UI needs, not only on the
@@ -282,7 +282,7 @@ dirty state, and exposes operations such as `push()`, `insert()`, `removeAt()`, 
 Unlike `field<string[]>()`, an `array()` value is never null. Passing `null` or `undefined` to its
 complete-value operations clears it to `[]`.
 
-## Where should validation live?
+## ✅ Where should validation live? {#where-should-validation-live}
 
 Place a validator on the smallest node that owns the rule:
 
@@ -307,7 +307,7 @@ const registration = form({
 Errors remain owned by the node that runs the validator. Aggregate `valid()` includes descendant
 failures; `errors()` does not. Use `allErrors()` when a summary needs the complete subtree.
 
-## Quick decision sequence
+## 🧭 Quick decision sequence {#quick-decision-sequence}
 
 1. Does the value need independently addressable child controls? If not, use `field()`.
 2. Are heterogeneous children identified by meaningful names? Use `form()` or `group()`; dynamic

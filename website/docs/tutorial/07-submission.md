@@ -2,7 +2,7 @@
 title: 7. Submit the form
 ---
 
-# 7. Submit the form
+# 7. Submit the form {#7-submit-the-form}
 
 Add a submission action to the root form options:
 
@@ -31,7 +31,7 @@ myForm = form({
 
 The `value` argument is inferred from the complete form tree, including nested addresses and contact items.
 
-## Bind the native form
+## 🔌 Bind the native form {#bind-the-native-form}
 
 The existing `FormNode` import handles both the native form and its controls:
 
@@ -67,7 +67,7 @@ Submission:
 
 Native reset delegates to the form tree. It clears touched and dirty state, cancels pending control work, and preserves current committed values.
 
-## Where to go next
+## 🔗 Where to go next {#where-to-go-next}
 
 You now have a typed form that scales from local fields to nested and repeated data without changing its core access pattern.
 

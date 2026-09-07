@@ -2,19 +2,19 @@
 title: ANGULAR_FORMS_STATUS_CLASSES
 ---
 
-# ANGULAR_FORMS_STATUS_CLASSES
+# ANGULAR_FORMS_STATUS_CLASSES {#angular_forms_status_classes}
 
 `ANGULAR_FORMS_STATUS_CLASSES` is a ready-made reactive class map for applications whose styles
 expect Angular Forms status classes. It is an ordinary object, not a provider by itself.
 
-## Type
+## 📐 Type {#type}
 
 ```ts
 const ANGULAR_FORMS_STATUS_CLASSES:
   NonNullable<FormNodesConfig['classes']>;
 ```
 
-## Usage
+## 📖 Usage {#usage}
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-## Included classes
+## 💡 Included classes {#included-classes}
 
 | Class | Active state |
 | --- | --- |
@@ -44,7 +44,7 @@ export const appConfig: ApplicationConfig = {
 Opposite classes update together. The preset only reflects state; classes never mutate the node.
 No automatic status classes are installed by default.
 
-## Extend the preset
+## ↩️ Extend the preset {#extend-the-preset}
 
 ```ts
 provideFormNodesConfig({

@@ -3,13 +3,13 @@ title: Form modeling patterns
 description: Design Form Nodes trees around domain ownership, UI interaction, nullability, repeated data, validation, and server boundaries.
 ---
 
-# Form modeling patterns
+# Form modeling patterns {#form-modeling-patterns}
 
 A good form model describes how the application edits data, not only the final TypeScript shape.
 Two screens can submit identical JSON while needing different node trees because their controls,
 validation boundaries, or item lifecycles differ.
 
-## Start with ownership and lifecycle
+## 🚀 Start with ownership and lifecycle {#start-with-ownership-and-lifecycle}
 
 Ask these questions for every value:
 
@@ -30,7 +30,7 @@ Ask these questions for every value:
 
 The detailed feature comparison is in [Choosing a primitive](./choosing-a-primitive.md).
 
-## Model control ownership, not JavaScript shape
+## 🔌 Model control ownership, not JavaScript shape {#model-control-ownership-not-javascript-shape}
 
 An object does not automatically require a nested form. If a map picker edits coordinates as one
 value, keep it atomic:
@@ -79,7 +79,7 @@ const teamForm = form({
 });
 ```
 
-## Use shorthand for ordinary nested objects
+## 🌳 Use shorthand for ordinary nested objects {#use-shorthand-for-ordinary-nested-objects}
 
 Plain nested objects are the least cluttered representation of fixed structure:
 
@@ -111,7 +111,7 @@ const profileForm = form({
 
 This keeps ordinary hierarchy visually obvious while making exceptional behavior explicit.
 
-## Treat nullability as a domain decision
+## 🧭 Treat nullability as a domain decision {#treat-nullability-as-a-domain-decision}
 
 :::tip Model absence deliberately
 
@@ -152,7 +152,7 @@ const employmentForm = form({
 });
 ```
 
-## Give repeated domain entities stable identity
+## 💡 Give repeated domain entities stable identity {#give-repeated-domain-entities-stable-identity}
 
 When complete values can be refreshed or reordered, use a stable domain key:
 
@@ -185,7 +185,7 @@ In Angular templates, track the live node:
 
 See [Dynamic arrays](./dynamic-arrays.md#complete-reconciliation).
 
-## Put validation at the smallest owning boundary
+## ✅ Put validation at the smallest owning boundary {#put-validation-at-the-smallest-owning-boundary}
 
 Field rules belong to fields, relationships belong to forms, and collection invariants belong to
 arrays:
@@ -215,7 +215,7 @@ This gives each error a meaningful `targetNode` and keeps rendering straightforw
 Avoid copying the same relationship error onto several fields. Focus or render the owning form
 error near the related controls instead. See [Errors and validation status](./errors-and-status.md).
 
-## Derive availability instead of duplicating state
+## 🎛️ Derive availability instead of duplicating state {#derive-availability-instead-of-duplicating-state}
 
 When permissions or business state already exist as signals, derive form availability from them:
 
@@ -238,7 +238,7 @@ their dependencies and preserve the reason that caused a node to become disabled
 Use imperative `disable()`, `markAsReadonly()`, and `hide()` for genuinely imperative temporary
 causes, not as synchronization mechanisms for other application state.
 
-## Separate presentation from participation
+## 💡 Separate presentation from participation {#separate-presentation-from-participation}
 
 Angular control flow decides what is rendered. Form Nodes `hidden` state decides whether a node
 participates in validation and aggregate interaction state.
@@ -278,7 +278,7 @@ const checkoutForm = form({
 Hidden state does not remove DOM. Pair it with `@if` when both semantics are wanted. See
 [Interaction and availability](./interaction-and-availability.md).
 
-## Normalize server DTOs at the boundary
+## 🔌 Normalize server DTOs at the boundary {#normalize-server-dtos-at-the-boundary}
 
 Transport types often do not match UI value types. Convert them before writing to the form and
 serialize them again during submission:
@@ -317,7 +317,7 @@ Choose the write operation from intent:
 
 See [Load and edit server data](../cookbook/edit-server-data.md).
 
-## Model runtime-keyed data deliberately
+## 📝 Model runtime-keyed data deliberately {#model-runtime-keyed-data-deliberately}
 
 `form()` has a fixed, statically typed child set. If users can create arbitrary keys, choose one of
 these representations:
@@ -335,7 +335,7 @@ Use the record-valued field when one editor owns the complete object. Use array 
 entry needs its own binding, error, path, or add/remove lifecycle. Convert rows to a record at the
 server boundary if necessary.
 
-## Create fresh reusable definitions
+## 💡 Create fresh reusable definitions {#create-fresh-reusable-definitions}
 
 Extract factories for repeated fixed structures. Return fresh nodes each time; one live node should
 not be attached to two parents:
@@ -358,7 +358,7 @@ const checkoutForm = form({
 For repeated dynamic items, pass a template or factory to `array()`; the array owns cloning and
 fresh runtime state.
 
-## Partition large forms by domain sections
+## 🧩 Partition large forms by domain sections {#partition-large-forms-by-domain-sections}
 
 Large forms remain readable when top-level children match product concepts rather than visual CSS
 containers:
@@ -388,7 +388,7 @@ This gives each section a natural focus, validation, touch, reset, and testing b
 multi-step UI can render one branch at a time while retaining one complete typed value. See the
 [multi-step recipe](../cookbook/multi-step-form.md) and [complete form example](../examples/complex-form.md).
 
-## Keep one submission boundary per workflow
+## 🔌 Keep one submission boundary per workflow {#keep-one-submission-boundary-per-workflow}
 
 Configure submission on the form that owns the complete operation. Nested forms remain useful
 validation and focus boundaries without needing separate actions:
@@ -411,7 +411,7 @@ const checkoutForm = form({
 Use separate root forms when sections are saved independently, have different lifecycles, or can be
 submitted without the rest of the screen.
 
-## Review checklist
+## 🧪 Review checklist {#review-checklist}
 
 Before finalizing a model, check that:
 

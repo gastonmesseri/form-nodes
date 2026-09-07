@@ -2,7 +2,7 @@
 title: Custom rating control
 ---
 
-# Build a custom rating control
+# Build a custom rating control {#build-a-custom-rating-control}
 
 A signal custom control needs a `value` model. Optional standard inputs and a `touch` output integrate additional form state:
 

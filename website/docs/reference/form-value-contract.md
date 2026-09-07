@@ -7,7 +7,7 @@ import CodeBlock from '@theme/CodeBlock';
 import formValueContractSource from '!!raw-loader!../../examples/form-value-contract.typecheck.ts';
 import formValueContractArraySource from '!!raw-loader!../../examples/form-value-contract-array.typecheck.ts';
 
-# FormValueContract
+# FormValueContract {#formvaluecontract}
 
 `FormValueContract<TValue>` is a compile-time contract for checking the aggregate committed value
 of a `form()` or `group()`. Use it with TypeScript's `satisfies` operator so the definitions remain
@@ -26,7 +26,7 @@ Import it from the package entry point:
 import { type FormValueContract } from '@ngblocks/form-nodes';
 ```
 
-## Check a form value
+## 📝 Check a form value {#check-a-form-value}
 
 <CodeBlock language="ts">{formValueContractSource}</CodeBlock>
 
@@ -41,7 +41,7 @@ The expression retains the type inferred by `form()`. `username` and `age` remai
 `Field` nodes, and `country` remains a `Field<string>` declared with `field.strict<string>()`.
 The `Profile` model verifies their aggregate value.
 
-## Incompatible values
+## 📝 Incompatible values {#incompatible-values}
 
 An incompatible child makes the `satisfies` expression fail:
 
@@ -58,7 +58,7 @@ form({
 // TypeScript error: `number | null` is not assignable to `string | null`.
 ```
 
-## Use with group()
+## 🌳 Use with group() {#use-with-group}
 
 The contract is structural and also accepts a group:
 
@@ -77,7 +77,7 @@ address(); // { city: '', postcode: 0 }
 address.city(); // ''
 ```
 
-## Why satisfies matters
+## 💡 Why satisfies matters {#why-satisfies-matters}
 
 Avoid annotating the variable as the contract:
 
@@ -96,7 +96,7 @@ Likewise, `FormValueContract` is separate from the first generic currently infer
 That generic describes the definitions so TypeScript can preserve each concrete node. The contract
 lets a named value model provide an additional check without replacing that definition inference.
 
-## Arrays and nullability
+## 📚 Arrays and nullability {#arrays-and-nullability}
 
 After the basic object contract, the same pattern can validate dynamic arrays while preserving
 their concrete `ArrayNode` API:
@@ -135,7 +135,7 @@ const dynamicItems = form({
 }) satisfies FormValueContract<DynamicItems>;
 ```
 
-## Structural compatibility
+## 🌳 Structural compatibility {#structural-compatibility}
 
 The check follows TypeScript's normal structural assignability. A form value must provide every
 required property in `TValue` with a compatible type. A form may contain additional properties and
@@ -145,7 +145,7 @@ already inferred value.
 `FormValueContract` has no runtime representation, performs no validation after compilation, and
 does not affect values, state propagation, validators, or control bindings.
 
-## Related reference
+## 🔗 Related reference {#related-reference}
 
 - [`FormNodeValue`](./form-node-value.md) extracts a value model from an existing form instance.
 - [`form()`](./form.md) creates a submission workflow and infers its complete child tree.

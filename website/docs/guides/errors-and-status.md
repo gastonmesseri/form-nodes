@@ -2,11 +2,11 @@
 title: Errors and validation status
 ---
 
-# Errors and validation status
+# Errors and validation status {#errors-and-validation-status}
 
 Form Nodes separates errors owned by one node from errors aggregated across a subtree, and every exposed error identifies its target node.
 
-## Error shape and ownership
+## 🚨 Error shape and ownership {#error-shape-and-ownership}
 
 A custom validator returns an error without assigning ownership:
 
@@ -42,7 +42,7 @@ const myForm = form({
 });
 ```
 
-## Own versus descendant errors
+## 🚨 Own versus descendant errors {#own-versus-descendant-errors}
 
 ```ts
 profile.errors();
@@ -56,7 +56,7 @@ profile.allErrors();
 
 Use `errors()` to render a group-level rule and `allErrors()` for summaries or diagnostics.
 
-## Typed lookup
+## 💡 Typed lookup {#typed-lookup}
 
 `getError(kind)` returns the first own error of that kind. Built-in kinds infer their complete payload:
 
@@ -87,7 +87,7 @@ declare module '@ngblocks/form-nodes' {
 username.getError('unavailableUsername')?.suggestion;
 ```
 
-## Status calculation
+## ⚡ Status calculation {#status-calculation}
 
 | Situation | `valid()` | `invalid()` | `pending()` | `validationStatus()` |
 | --- | --- | --- | --- | --- |
@@ -98,11 +98,11 @@ username.getError('unavailableUsername')?.suggestion;
 
 An aggregate is invalid when it has an own error or an interactive descendant is invalid. It is pending when it or an interactive descendant is pending, unless an available error already makes the status invalid.
 
-## Error ordering
+## 🚨 Error ordering {#error-ordering}
 
 Validators preserve declaration order. Async results become visible as they complete, but the exposed error array remains in validator order rather than completion order. Replacing validators, changing a `when` condition, disabling the node, or changing dependencies invalidates stale work.
 
-## Binding-filtered errors
+## 🚨 Binding-filtered errors {#binding-filtered-errors}
 
 A `FormNode` binding's `errors()` includes:
 
@@ -111,7 +111,7 @@ A `FormNode` binding's `errors()` includes:
 
 If two controls bind the same field, a parse error produced by one appears in the field's aggregate errors and that binding's errors, but not in the other binding's errors.
 
-## Suppressed errors
+## 🚨 Suppressed errors {#suppressed-errors}
 
 Disabled, readonly, and hidden nodes expose no own errors while non-interactive. The configured validators and stored state are retained, and validation resumes when the node becomes interactive again.
 

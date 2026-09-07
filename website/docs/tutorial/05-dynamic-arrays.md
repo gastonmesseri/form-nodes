@@ -2,7 +2,7 @@
 title: 5. Manage a dynamic array
 ---
 
-# 5. Manage a dynamic array
+# 5. Manage a dynamic array {#5-manage-a-dynamic-array}
 
 Start with a small form-object template:
 
@@ -19,7 +19,7 @@ The array starts empty. Each item added later gets an independent copy of the te
 
 Add `array` to the package import.
 
-## Start with initial items
+## 🚀 Start with initial items {#start-with-initial-items}
 
 Pass an initial count when the form should start with ready-to-edit items:
 
@@ -50,7 +50,7 @@ this.myForm.contacts();
 // ]
 ```
 
-## Start with existing data
+## 🚀 Start with existing data {#start-with-existing-data}
 
 Use `initialValue` when the array should start with complete domain values:
 
@@ -70,7 +70,7 @@ myForm = form({
 
 Each value initializes an independent item node created from the same template.
 
-## Add identity and collection validation
+## ✅ Add identity and collection validation {#add-identity-and-collection-validation}
 
 Once the basic collection is clear, add stable domain identity and array-level validation:
 
@@ -95,7 +95,7 @@ Add `uniqueItems` to the package import.
 
 The template is cloned into independent item nodes. `trackBy: 'id'` preserves those nodes—and their touched, dirty, and pending state—when complete values arrive in a different order.
 
-## Render and change the collection
+## 📚 Render and change the collection {#render-and-change-the-collection}
 
 Track each node instance in Angular so structural moves retain their DOM and bindings:
 
@@ -134,7 +134,7 @@ this.myForm.contacts.push({
 this.myForm.contacts.swap(0, 1);
 ```
 
-## Related guides and reference
+## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Dynamic arrays](../guides/dynamic-arrays.md) covers templates, factories, identity,
   reconciliation, patching, and every structural operation.

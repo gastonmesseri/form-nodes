@@ -2,7 +2,7 @@
 title: Localized messages
 ---
 
-# Translate validator messages once
+# Translate validator messages once {#translate-validator-messages-once}
 
 Register application defaults through Angular dependency injection instead of repeating messages on every validator:
 

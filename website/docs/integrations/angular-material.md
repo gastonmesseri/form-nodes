@@ -3,12 +3,12 @@ title: Angular Material
 description: Bind Form Nodes directly to Angular Material inputs, selects, checkboxes, datepickers, errors, and native forms.
 ---
 
-# Angular Material
+# Angular Material {#angular-material}
 
 Angular Material controls work with `[formNode]` through their normal Angular Forms contracts. No
 Form Nodes adapter, wrapper, `FormControl`, `FormsModule`, or `ReactiveFormsModule` is required.
 
-## Install Material
+## 🚀 Install Material {#install-material}
 
 Use Angular Material's schematic so dependencies, theme, and animations are configured together:
 
@@ -19,7 +19,7 @@ ng add @angular/material
 Follow the official [Angular Material installation guide](https://material.angular.dev/guide/getting-started)
 for theme and application setup. Form Nodes adds no Material-specific provider.
 
-## Complete example
+## 🧪 Complete example {#complete-example}
 
 This component binds a native Material input, `mat-select`, `mat-checkbox`, and Material datepicker
 to one form. The same `FormNode` import also handles the native `<form>` submission boundary.
@@ -107,7 +107,7 @@ export class MaterialProfileEditor {
 The date field uses `Date | null` because `provideNativeDateAdapter()` configures Material's native
 `Date` representation. Use the field type that matches a different Material `DateAdapter`.
 
-## How each control connects
+## 🔌 How each control connects {#how-each-control-connects}
 
 | Material control | Connection used by `FormNode` |
 | --- | --- |
@@ -125,7 +125,7 @@ See the official [input API](https://material.angular.dev/components/input/api),
 [select guide](https://material.angular.dev/components/select/overview), and
 [datepicker guide](https://material.angular.dev/components/datepicker/overview).
 
-## Error messages
+## 🚨 Error messages {#error-messages}
 
 Form Nodes errors already contain their resolved message and target node. Render the relevant error
 inside `mat-error`:
@@ -149,14 +149,14 @@ space for one error message:
 
 See [Errors and validation status](../guides/errors-and-status.md).
 
-## Required and constraint state
+## ✅ Required and constraint state {#required-and-constraint-state}
 
 Built-in validators expose constraint metadata through the node. `FormNode` synchronizes supported
 state such as `required`, `min`, `max`, `minLength`, `maxLength`, and `pattern` with native elements
 and compatible component inputs. This lets Material display required markers and native input
 constraints without duplicating validator configuration in the template.
 
-## Disabled, readonly, focus, and reset
+## ↩️ Disabled, readonly, focus, and reset {#disabled-readonly-focus-and-reset}
 
 - Disabled state is passed through Material's `ControlValueAccessor` contract.
 - Native Material inputs receive readonly state directly when applicable.
@@ -164,7 +164,7 @@ constraints without duplicating validator configuration in the template.
 - `profileForm.reset()` resynchronizes Material controls and clears interaction state.
 - A native reset button inside the bound form delegates to the same node reset.
 
-## Testing with Material harnesses
+## 🧪 Testing with Material harnesses {#testing-with-material-harnesses}
 
 Material harnesses can drive the rendered control while assertions remain on the public node API:
 
@@ -181,7 +181,7 @@ expect(component.profileForm.email.touched()).toBe(true);
 
 See [Testing forms](../guides/testing.md).
 
-## Troubleshooting
+## 🔍 Troubleshooting {#troubleshooting}
 
 - If Material reports that a form field has no control, import `MatInputModule` and add `matInput`.
 - If the datepicker reports a missing `DateAdapter`, configure one such as

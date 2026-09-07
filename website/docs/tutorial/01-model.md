@@ -2,7 +2,7 @@
 title: 1. Declare the model
 ---
 
-# 1. Declare the model
+# 1. Declare the model {#1-declare-the-model}
 
 Start with a component-owned form tree. `field()` creates leaf values and `form()` infers their combined object shape.
 
@@ -53,7 +53,7 @@ where it communicates a boundary or constrains a nullable/union value more preci
 
 :::
 
-## Read and update values
+## 📝 Read and update values {#read-and-update-values}
 
 Call nodes directly to read their committed values:
 
@@ -78,7 +78,7 @@ The model itself also works outside Angular and does not require dependency inje
 field is already connected to a native input; next, bind the remaining fields and examine the
 control interaction behavior.
 
-## Related guides and reference
+## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Creating nodes](../concepts/creating-nodes.md) covers every `field()`, `form()`, nested-object,
   and `array()` declaration shape.

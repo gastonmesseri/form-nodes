@@ -2,7 +2,7 @@
 title: provideFormNodesConfig()
 ---
 
-# provideFormNodesConfig()
+# provideFormNodesConfig() {#provideformnodesconfig}
 
 import CodeBlock from '@theme/CodeBlock';
 import signalControlConfigSource from '!!raw-loader!../../examples/signal-control-sync-config.typecheck.ts';
@@ -12,7 +12,7 @@ import sharedConfigSource from '!!raw-loader!../../examples/shared-module-shared
 
 Configures validator messages and reactive CSS classes with one provider function. Optional experimental control integration is documented at the end of this page. The exported `FormNodesConfig` type describes the same options.
 
-## Signature
+## 📐 Signature {#signature}
 
 ```ts
 provideFormNodesConfig(config: {
@@ -24,7 +24,7 @@ provideFormNodesConfig(config: {
 }): Provider[];
 ```
 
-## `classes` {#classes}
+## 💡 `classes` {#classes}
 
 Configure CSS class names and reactive predicates for `[formNode]` bindings.
 No classes are enabled by default. Set `classes: null` to restore that default in a nearer scope.
@@ -58,7 +58,7 @@ independent tokens and configure their respective binding directives.
 
 See [Configuration](./configuration.md#binding-configuration) and [`[formNode]`](./form-node-binding.md#automatic-css-classes).
 
-## `validatorMessages` {#validator-messages}
+## 💬 `validatorMessages` {#validator-messages}
 
 Pass a partial catalog directly for simple configuration, or a factory when you need `inject()`.
 Both forms support reactive message callbacks. Set `validatorMessages: null` to replace the inherited
@@ -95,7 +95,7 @@ Use [`configureGlobalFormNodes()`](./configure-global-form-nodes.md) for a
 process-wide fallback, including code outside Angular DI. See [Validator messages](../guides/validator-messages.md)
 for the complete precedence rules.
 
-## Provider scope
+## ⚙️ Provider scope {#provider-scope}
 
 Each option inherits independently from the nearest provider that explicitly configures it.
 Without one, bindings use [`configureGlobalFormNodes()`](./configure-global-form-nodes.md) defaults,
@@ -156,7 +156,7 @@ Options are static configuration. Class predicates and selected message callback
 signals they read. Multiple calls in one injector also preserve omitted options; the last explicit
 provider for each option wins.
 
-## Using FormNode through SharedModule
+## 🔌 Using FormNode through SharedModule {#using-formnode-through-sharedmodule}
 
 `FormNode` is a standalone directive. A shared NgModule can import it and re-export it so that
 consuming components can import `SharedModule` instead of importing `FormNode` directly.
@@ -169,7 +169,7 @@ in a larger application, place them in `shared.module.ts`, `app.component.ts`, `
 when applicable, and `main.ts`, with the corresponding local imports. Comments mark the suggested
 file for each section; imports are grouped at the top to keep each combined example executable.
 
-### Application-level configuration
+### 🔸 Application-level configuration {#application-level-configuration}
 
 Choose this when the application owns the default configuration and `SharedModule` only makes
 `FormNode` available to templates. Register `provideFormNodesConfig()` once in `app.config.ts` or the
@@ -183,7 +183,7 @@ In an application bootstrapped with `AppModule`, put the same provider call in
 `[formNode]`. Components declared in NgModules must use `standalone: false`; their template
 dependencies belong in the declaring module's `imports`.
 
-### Configuration supplied by SharedModule
+### 🔸 Configuration supplied by SharedModule {#configuration-supplied-by-sharedmodule}
 
 Choose this when importing `SharedModule` should also install your shared FormNode conventions.
 Put `FormNode` in `imports` and `exports`, and call `provideFormNodesConfig()` in
@@ -196,7 +196,7 @@ This is a valid pattern, but provider scope follows Angular's injector hierarchy
 source files that import the module. Importing the module makes the directive available to
 those templates; the configuration applies to nodes and bindings that resolve its providers.
 
-### Choose the scope deliberately
+### 🔸 Choose the scope deliberately {#choose-the-scope-deliberately}
 
 | Registration | Configuration scope |
 | --- | --- |
@@ -254,7 +254,7 @@ A component with both CVA and a model follows the CVA path. Signal-control detec
 actual `value` or `checked` model, not an `implements FormValueControl` or `FormCheckboxControl`
 declaration. An active paired input/output control only matches target `'all'`.
 
-### Configure model controls
+### 🔸 Configure model controls {#configure-model-controls}
 
 <CodeBlock language="ts" title="app.config.ts">{signalControlConfigSource}</CodeBlock>
 
@@ -268,7 +268,7 @@ To narrow the selection further:
 syncInputs: { inputs: ['disabled', 'required'], target: 'signal-controls' }
 ```
 
-### State, constraints, and declarations
+### 🔸 State, constraints, and declarations {#state-constraints-and-declarations}
 
 Supported public input names are `disabled`, `disabledReasons`, `readonly`, `hidden`, `dirty`,
 `touched`, `invalid`, `pending`, `errors`, `name`, `required`, `min`, `max`, `minLength`, `maxLength`,
@@ -284,7 +284,7 @@ selected inputs to current or neutral values. Writes can replace component defau
 bindings; unselected inputs retain their existing values. Selecting a CVA's disabled input may write
 it in addition to the standard `setDisabledState()` call.
 
-### Scope and rebinding
+### 🔸 Scope and rebinding {#scope-and-rebinding}
 
 Each binding option resolves independently: node option (including factory defaults), nearest
 explicit provider, global fallback, then false. Lists and objects replace inherited selections as

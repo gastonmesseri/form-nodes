@@ -2,7 +2,7 @@
 title: Form submission
 ---
 
-# Form submission
+# Form submission {#form-submission}
 
 The [executable submission example](../examples/executable-examples.mdx#submission) runs both the
 invalid callback and the successful asynchronous action.
@@ -30,7 +30,7 @@ const submitted = await registration.submit();
 
 Submission marks the form subtree touched, which also commits pending control values, before deciding whether validation allows the action. It returns `true` when the action completes and `false` when validation blocks it or another action is already running. A rejected action rejects the returned promise and still clears submission state.
 
-## Native form elements
+## 🧩 Native form elements {#native-form-elements}
 
 Import `FormNode` once and use it for both the native form and its controls:
 
@@ -56,7 +56,7 @@ runs the configured action. Binding a `group()` is intentionally tolerated: subm
 flushes the tree but runs no action. This makes an accidental group/form choice non-destructive
 while keeping submission configuration exclusive to `form()`.
 
-## Submission state
+## 📨 Submission state {#submission-state}
 
 `submitting()` is true while an asynchronous action is running and is inherited by descendants. Repeated submissions do not start overlapping actions.
 

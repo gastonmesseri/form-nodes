@@ -3,12 +3,12 @@ title: Troubleshooting
 description: Diagnose common Form Nodes symptoms and apply concrete fixes.
 ---
 
-# Troubleshooting
+# Troubleshooting {#troubleshooting}
 
 Start with the symptom you can observe. Each solution links to the guide that explains the
 underlying behavior in more detail.
 
-## Angular does not recognize [formNode]
+## 🔌 Angular does not recognize [formNode] {#angular-does-not-recognize-formnode}
 
 **Symptom:** Angular reports that it cannot bind to `formNode`, or the directive does not run.
 
@@ -30,7 +30,7 @@ export class AccountEditor {}
 
 No separate root-form directive is required. See [Control binding](../guides/control-binding.md).
 
-## A [formNode] host is rejected
+## 🔌 A [formNode] host is rejected {#a-formnode-host-is-rejected}
 
 **Symptom:** development fails with `formNode: the host must be a native form control, provide a
 signal custom control, or provide ControlValueAccessor`.
@@ -45,7 +45,7 @@ one supported Angular contract:
 
 See [Advanced custom controls](../guides/custom-controls-advanced.md) for the supported shapes and precedence.
 
-## The node value has not changed after typing
+## 📐 The node value has not changed after typing {#the-node-value-has-not-changed-after-typing}
 
 **Symptom:** the control displays the latest text, but calling the node still returns its previous
 value.
@@ -63,7 +63,7 @@ myForm.search.debouncing();   // true
 explicit action must commit immediately. Blur, touch, and form submission also commit pending
 control values. See [Value flow and debounce](../guides/value-flow-and-debounce.md).
 
-## A form is invalid but errors() is empty
+## 🚨 A form is invalid but errors() is empty {#a-form-is-invalid-but-errors-is-empty}
 
 **Symptom:** `myForm.invalid()` is `true`, but `myForm.errors()` returns `[]`.
 
@@ -77,7 +77,7 @@ myForm.allErrors(); // Form-level and descendant errors.
 
 See [Own versus descendant errors](../guides/errors-and-status.md#own-versus-descendant-errors).
 
-## A required array is still valid when empty
+## ✅ A required array is still valid when empty {#a-required-array-is-still-valid-when-empty}
 
 **Symptom:** `required` does not reject `[]`.
 
@@ -94,7 +94,7 @@ const myForm = form({
 See [`required`](../reference/built-in-validators.md#required) and
 [`minLength`](../reference/built-in-validators.md#minlength).
 
-## An asynchronous validator does not react as expected
+## ⏳ An asynchronous validator does not react as expected {#an-asynchronous-validator-does-not-react-as-expected}
 
 **Symptom:** changing a related signal does not rerun validation, or returning a newly allocated
 parameter object starts work more often than expected.
@@ -115,7 +115,7 @@ asyncValidator(checkAvailability, {
 Form Nodes cancels stale work when dependencies or values change. See
 [`asyncValidator()` parameters](../reference/async-validator.md#explicit-parameters).
 
-## Array rows keep the wrong touched or pending state
+## ⏳ Array rows keep the wrong touched or pending state {#array-rows-keep-the-wrong-touched-or-pending-state}
 
 **Symptom:** after replacing or reordering server data, interaction state appears attached to the
 wrong row.
@@ -136,7 +136,7 @@ const people = array({
 In an Angular `@for`, track the node instance: `@for (person of people; track person)`. See
 [Complete reconciliation](../guides/dynamic-arrays.md#complete-reconciliation).
 
-## set(null) on an array does not leave a null value
+## 📚 set(null) on an array does not leave a null value {#setnull-on-an-array-does-not-leave-a-null-value}
 
 **Symptom:** calling `myArray.set(null)` produces `[]`.
 
@@ -147,7 +147,7 @@ its items instead of making the node nullable.
 control. Use `array()` when each item needs its own node and state. See
 [Array field or `array()`](../guides/choosing-a-primitive.md#array-field-or-array).
 
-## Calling reset() did not restore the original value
+## ↩️ Calling reset() did not restore the original value {#calling-reset-did-not-restore-the-original-value}
 
 **Symptom:** interaction state clears, but the current value remains.
 
@@ -165,7 +165,7 @@ myForm.reset({
 
 See [Reset](../concepts/values-and-state.md#reset).
 
-## enable() does not make a node enabled
+## 🎛️ enable() does not make a node enabled {#enable-does-not-make-a-node-enabled}
 
 **Symptom:** the node remains disabled after calling `enable()`.
 
@@ -176,7 +176,7 @@ removes only the local imperative reason created by `disable()`.
 model applies to readonly and hidden state. See
 [Interaction and availability](../guides/interaction-and-availability.md).
 
-## Native form submission does not run the action
+## 📨 Native form submission does not run the action {#native-form-submission-does-not-run-the-action}
 
 Check these conditions:
 
@@ -198,7 +198,7 @@ myForm = form({
 
 See [Form submission](../guides/submission.md).
 
-## A custom validator message is not the one expected
+## 💬 A custom validator message is not the one expected {#a-custom-validator-message-is-not-the-one-expected}
 
 Message catalogs use nearest-wins precedence:
 
@@ -212,7 +212,7 @@ Message catalogs use nearest-wins precedence:
 Check the higher-priority scopes before changing a global catalog. See
 [Validator messages and internationalization](../guides/validator-messages.md).
 
-## Still investigating?
+## 🔍 Still investigating? {#still-investigating}
 
 Reduce the case to one node and inspect its callable value, `controlValue()`, `validationStatus()`,
 `errors()`, `allErrors()`, `disabledReasons()`, `touched()`, and `dirty()` as applicable. The

@@ -2,9 +2,9 @@
 title: requiredIf()
 ---
 
-# requiredIf()
+# requiredIf() {#requiredif}
 
-## API map
+## 🧭 API map {#api-map}
 
 | I want to… | Details |
 | --- | --- |
@@ -14,7 +14,7 @@ title: requiredIf()
 | Understand signal tracking | [Reactive behavior](#reactive-behavior) |
 | Compare it with unconditional presence | [`required()`](./required.md) |
 
-## Signatures
+## 📐 Signatures {#signatures}
 
 ```ts
 requiredIf(condition)
@@ -33,7 +33,7 @@ requiredIf(() => businessAccount())
 required({ when: () => businessAccount() })
 ```
 
-## Usage and behavior
+## 📖 Usage and behavior {#usage-and-behavior}
 
 Use `requiredIf()` when whether a value is mandatory depends on reactive application or form state:
 
@@ -67,7 +67,7 @@ const myForm = form({
 });
 ```
 
-## Message configuration
+## 💬 Message configuration {#message-configuration}
 
 Pass a string for a static message:
 
@@ -87,7 +87,7 @@ Returning `undefined` from the message function continues through node, Angular 
 process-wide, and built-in message fallbacks. See
 [Validator messages](../../guides/validator-messages.md).
 
-## Reactive behavior
+## ⚡ Reactive behavior {#reactive-behavior}
 
 Signals read by `condition` are tracked. Changing one invalidates validation and required metadata;
 the condition is evaluated again when either state is next consumed. A reactive consumer of
@@ -97,7 +97,7 @@ The message function is evaluated only for an active, failing rule. Disabled, re
 nodes skip validation until they become interactive again, while the configured required metadata
 continues to reflect the condition.
 
-## Related reference
+## 🔗 Related reference {#related-reference}
 
 - [`required()`](./required.md)
 - [Built-in validators](../built-in-validators.md)

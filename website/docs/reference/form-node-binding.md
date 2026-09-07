@@ -2,7 +2,7 @@
 title: "[formNode] directive"
 ---
 
-# [formNode] directive
+# [formNode] directive {#formnode-directive}
 
 `FormNode` is the standalone Angular directive imported by components to make `[formNode]`
 available. The same symbol is also the public generic type returned by binding queries.
@@ -29,7 +29,7 @@ export class EmailEditor {
 Import neither `_FormNode` nor internal package paths. `_FormNode` is exported only for Angular AOT
 and linker infrastructure.
 
-## API map
+## 🧭 API map {#api-map}
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ and linker infrastructure.
 | Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
 | Bind submit and reset on `<form>` | The same `FormNode` import | [Native form submission](#native-form-submission) |
 
-## Directive input
+## 🔌 Directive input {#directive-input}
 
 Import `FormNode` in the component and bind a Form Nodes node to the required `formNode` input:
 
@@ -69,7 +69,7 @@ recognized custom component that models their complete value.
 | Native `<form>` | `form()` or `group()` | Handles submit and reset |
 | Pass-through wrapper | Any delegated node | Leaves synchronization to an inner binding |
 
-## Binding instance
+## 🔌 Binding instance {#binding-instance}
 
 | Member | Description |
 | --- | --- |
@@ -86,9 +86,9 @@ generic configuration code.
 
 <div className="api-member-reference">
 
-## Binding property reference
+## 🔌 Binding property reference {#binding-property-reference}
 
-### node
+### 🔸 node {#node}
 
 **Signature:** `node: Signal<TNode>`
 
@@ -101,7 +101,7 @@ const binding = this.emailBinding();
 binding.node() === this.myForm.email; // true
 ```
 
-### errors
+### 🔸 errors {#errors}
 
 **Signature:** `errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]>`
 
@@ -117,7 +117,7 @@ firstError?.targetNode === this.myForm.email; // true
 This distinction matters when the same field is rendered by multiple controls and one binding has
 a native parsing error.
 
-### element
+### 🔸 element {#element}
 
 **Signature:** `element: HTMLElement`
 
@@ -129,7 +129,7 @@ this.emailBinding().element.focus();
 
 Prefer `focus()` on the binding when a custom control may provide specialized focus behavior.
 
-### injector
+### 🔸 injector {#injector}
 
 **Signature:** `injector: Injector`
 
@@ -140,9 +140,9 @@ configuration infrastructure.
 const locale = this.emailBinding().injector.get(LOCALE_ID);
 ```
 
-## Binding method reference
+## 🔌 Binding method reference {#binding-method-reference}
 
-### focus()
+### 🔸 focus() {#focus}
 
 **Signature:** `focus(options?: FocusOptions): void`
 
@@ -156,7 +156,7 @@ this.emailBinding().focus({ preventScroll: true });
 This differs from `node.focus()`, which selects one registered binding for a node. Calling the
 binding directly targets this exact rendered control.
 
-### flush()
+### 🔸 flush() {#flush}
 
 **Signature:** `flush(): void`
 
@@ -170,7 +170,7 @@ this.myForm.email(); // latest control value
 
 Programmatic `set()` calls are already immediate and do not require a flush.
 
-### reset()
+### 🔸 reset() {#reset}
 
 **Signature:** `reset(): void`
 
@@ -183,7 +183,7 @@ this.emailBinding().reset();
 
 </div>
 
-## FORM_NODE
+## 🔌 FORM_NODE {#form_node}
 
 `FORM_NODE` is the injection token for the binding on the current host. Most application code uses
 a template reference and `viewChild()` instead. Inject the token only when a directive or service
@@ -208,7 +208,7 @@ export class FocusInvalidNode {
 Use `{ self: true }` when the directive must share the same host rather than accidentally resolving
 an ancestor binding.
 
-## Binding lifecycle and rebinding
+## 🔌 Binding lifecycle and rebinding {#binding-lifecycle-and-rebinding}
 
 `[formNode]` may receive a computed or otherwise changing node. When it changes, the directive
 disconnects the previous node, releases its binding ownership, connects the new node, and updates
@@ -229,7 +229,7 @@ export class DynamicEditor {
 Destroying the host removes listeners, class effects, external control errors, and its temporary
 injector ownership. A node can then remain in use or bind somewhere else.
 
-## Automatic CSS classes
+## 💡 Automatic CSS classes {#automatic-css-classes}
 
 For the common application-wide setup, register `provideFormNodesConfig()` in the standalone
 application configuration. Its predicates apply to `[formNode]` controls:
@@ -303,7 +303,7 @@ state, or submission behavior.
 The binding options in `provideFormNodesConfig()` configure `[formNode]` only; its `validatorMessages` option configures node messages. Angular's `provideSignalFormsConfig()`
 configures Angular `[formField]` independently, so both providers can share an injector.
 
-## Custom-control components
+## 🔌 Custom-control components {#custom-control-components}
 
 Components exposing `value = model<T>()`, `checked = model<boolean>()`,
 or a CVA are normally discovered automatically. Separate `value`/`valueChange` and
@@ -380,7 +380,7 @@ These contracts are declared by Form Nodes using Angular core signal types. They
 value/checked models, typed constraints, `touch` output, and `focus()`/`reset()` hooks on Angular
 21 and 22; implementing Angular's version-specific `FormUiControl` is not required.
 
-## Pass-through wrappers
+## 🔌 Pass-through wrappers {#pass-through-wrappers}
 
 A component with a public `formNode` input can delegate the node to an inner control and is detected
 automatically. A directive or host directive doing the same must install
@@ -393,7 +393,7 @@ automatically. A directive or host directive doing the same must install
 export class FormNodeWrapperDirective {}
 ```
 
-## Native form submission
+## 📨 Native form submission {#native-form-submission}
 
 Use `FormNode` as the single root binding. Its controls may use either `[formNode]` or Angular's
 `[formField]` adapter:
@@ -442,7 +442,7 @@ See [the simple example](../guides/custom-controls.md#keep-control-of-your-compo
 and [all configuration details](./provide-form-nodes-config.md#custom-control-inputs).
 
 
-## Direct NgControl accessors
+## 🔌 Direct NgControl accessors {#direct-ngcontrol-accessors}
 
 Hooks that assign `inject(NgControl).valueAccessor` during component construction work with
 `[formNode]` without an `NG_VALUE_ACCESSOR` provider. The direct accessor takes precedence;

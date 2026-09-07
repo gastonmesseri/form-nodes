@@ -2,7 +2,7 @@
 title: Edit server data
 ---
 
-# Load and edit server data
+# Load and edit server data {#load-and-edit-server-data}
 
 Declare the form once, then reset it with the complete server response:
 

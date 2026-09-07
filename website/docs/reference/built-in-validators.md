@@ -7,7 +7,7 @@ import CodeBlock from '@theme/CodeBlock';
 
 import builtInValidatorErrorSource from '!!raw-loader!../../examples/built-in-validator-error.example.ts';
 
-# Built-in validators
+# Built-in validators {#built-in-validators}
 
 This page documents every built-in validator, including every supported call style and the values each rule intentionally does not reject.
 
@@ -49,7 +49,7 @@ const myForm = form({
 Calls that pass a message string directly remain unchanged. Use the options object when `when` is
 needed.
 
-## Custom errors
+## 🚨 Custom errors {#custom-errors}
 
 Every built-in validator accepts an `error` option that replaces its standard error when the rule
 fails. Supply one error, an array of errors, or a function receiving the validator context. The
@@ -63,7 +63,7 @@ The validator's constraint metadata remains active even when the replacement fun
 the error. A false `when` predicate disables both the rule and its metadata before `error` is
 evaluated.
 
-## Validator map
+## ✅ Validator map {#validator-map}
 
 | Need | Validators |
 | --- | --- |
@@ -78,7 +78,7 @@ evaluated.
 | Native/custom-control constraint hints | [Constraint metadata](#constraint-metadata) |
 | Bundle behavior | [Tree shaking](#tree-shaking) |
 
-## required
+## ✅ required {#required}
 
 Requires a value to be present. It can be passed directly or called with message options:
 
@@ -102,7 +102,7 @@ const myForm = form({
 
 A failure is `{ kind: 'required', message }`. The validator contributes `required() === true` metadata to its node.
 
-## requiredIf
+## ✅ requiredIf {#requiredif}
 
 Requires a value only while a reactive condition is true:
 
@@ -118,7 +118,7 @@ Signals read by the condition are tracked. While it returns `false`, the rule co
 an error nor required metadata. While it returns `true`, `requiredIf()` has the same empty-value,
 message, and `{ kind: 'required' }` behavior as [`required`](./validators/required.md).
 
-## min
+## ✅ min {#min}
 
 Requires a number greater than or equal to an inclusive minimum:
 
@@ -132,7 +132,7 @@ const myForm = form({
 
 `null` and `NaN` pass. A reactive minimum returning `undefined` or `NaN` disables the constraint temporarily. A failure is `{ kind: 'min', min, actual, message }`. The resolved limit contributes to `min()` metadata.
 
-## max
+## ✅ max {#max}
 
 Requires a number less than or equal to an inclusive maximum:
 
@@ -146,7 +146,7 @@ const myForm = form({
 
 `null` and `NaN` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint temporarily. A failure is `{ kind: 'max', max, actual, message }`. The resolved limit contributes to `max()` metadata.
 
-## between
+## ✅ between {#between}
 
 Requires a number within an inclusive range:
 
@@ -167,7 +167,7 @@ const myForm = form({
 
 `null` and `NaN` pass. If either boundary resolves to `undefined` or `NaN`, the complete range is temporarily disabled. A failure is `{ kind: 'between', min, max, actual, message }`. Both boundaries contribute to `min()` and `max()` metadata.
 
-## integer
+## ✅ integer {#integer}
 
 Requires a JavaScript safe integer. It can be passed directly or called with message options:
 
@@ -182,7 +182,7 @@ const myForm = form({
 
 It uses `Number.isSafeInteger()`, rejecting decimals, `NaN`, infinities, and integers outside JavaScript's exactly representable safe range. `null` passes. A failure is `{ kind: 'integer', actual, message }`.
 
-## minLength
+## ✅ minLength {#minlength}
 
 Requires a numeric `length` or `size` to meet a minimum:
 
@@ -199,7 +199,7 @@ const myForm = form({
 
 It supports strings, arrays, sets, maps, and other values with numeric `length` or `size`. `null` and `''` pass, but empty collections are measured normally. A reactive minimum returning `undefined` disables the constraint. A failure is `{ kind: 'minLength', minLength, actual, message }`. The resolved limit contributes to `minLength()` metadata.
 
-## maxLength
+## ✅ maxLength {#maxlength}
 
 Requires a numeric `length` or `size` not to exceed a maximum:
 
@@ -216,7 +216,7 @@ const myForm = form({
 
 It supports the same `length` and `size` values as `minLength`. `null` and `''` pass, while empty collections are measured normally. A reactive maximum returning `undefined` disables the constraint. A failure is `{ kind: 'maxLength', maxLength, actual, message }`. The resolved limit contributes to `maxLength()` metadata.
 
-## minWords
+## ✅ minWords {#minwords}
 
 Requires a non-empty string to contain at least a number of words:
 
@@ -230,7 +230,7 @@ const myForm = form({
 
 `null` and `''` pass. A reactive minimum returning `undefined` or `NaN` disables the constraint. A word is a Unicode letter-or-number sequence that may contain internal apostrophes or hyphens, so `L'été` and `well-known` each count as one word. A failure is `{ kind: 'minWords', minWords, actual, message }`, where `actual` is the observed word count.
 
-## maxWords
+## ✅ maxWords {#maxwords}
 
 Requires a non-empty string to contain no more than a number of words:
 
@@ -244,7 +244,7 @@ const myForm = form({
 
 `null` and `''` pass. A reactive maximum returning `undefined` or `NaN` disables the constraint. It uses the same Unicode word definition as `minWords`. A failure is `{ kind: 'maxWords', maxWords, actual, message }`.
 
-## pattern
+## ✅ pattern {#pattern}
 
 Requires a non-empty string to match a regular expression:
 
@@ -258,7 +258,7 @@ const myForm = form({
 
 `null` and `''` pass. A reactive expression returning `undefined` disables the constraint. The expression's `lastIndex` is reset before every check, so global and sticky regular expressions do not reuse stale match state. A failure is `{ kind: 'pattern', pattern, actual, message }`. Every active expression appears in `pattern()` metadata.
 
-## email
+## ✅ email {#email}
 
 Validates Angular's standard email-address format. It can be passed directly or called with message options:
 
@@ -273,7 +273,7 @@ const myForm = form({
 
 `null` and `''` pass. Use `required` when the address must be present. The format includes local-part, domain-label, and total-length restrictions. A failure is `{ kind: 'email', message }`; the rejected address is intentionally omitted from the error.
 
-## url
+## ✅ url {#url}
 
 Validates an absolute WHATWG URL. It can be passed directly or called with message options:
 
@@ -288,7 +288,7 @@ const myForm = form({
 
 `null` and `''` pass. The validator uses `new URL(value)` without a base URL. It accepts absolute URLs with any valid scheme—including `https:`, `mailto:`, and custom schemes—but rejects relative references such as `/account`. A failure is `{ kind: 'url', message }`; the rejected URL is intentionally omitted.
 
-## minDate
+## ✅ minDate {#mindate}
 
 Requires a valid date on or after an inclusive minimum:
 
@@ -314,7 +314,7 @@ const myForm = form({
 
 The limit accepts a `Date`, an ISO calendar-date string (`YYYY-MM-DD`), the relative shortcut `'today'`, or a reactive function returning any of them. Strings and the shortcut use UTC midnight by default; `parseAs: 'local'` selects local midnight. The shortcut is resolved when validation runs, so `minDate('today')` does not permanently capture its declaration date. The library does not create a midnight timer; after the day changes, the boundary updates on the next value or reactive dependency change. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'minDate', minDate, actual, message }`. The normalized `Date` contributes to `min()` metadata.
 
-## maxDate
+## ✅ maxDate {#maxdate}
 
 Requires a valid date on or before an inclusive maximum:
 
@@ -337,7 +337,7 @@ const myForm = form({
 
 It accepts the same absolute dates, relative shortcuts, reactive sources, and parsing modes as `minDate`. `null` and invalid current dates pass. An absent or invalid resolved limit disables the constraint. A failure is `{ kind: 'maxDate', maxDate, actual, message }`. The normalized `Date` contributes to `max()` metadata.
 
-## dateBetween
+## ✅ dateBetween {#datebetween}
 
 Requires a valid date within an inclusive range:
 
@@ -368,7 +368,7 @@ const myForm = form({
 
 Both boundaries accept a `Date`, `YYYY-MM-DD`, `'today'`, or a reactive source. `parseAs` applies to both string limits and the shortcut. `null` and invalid current dates pass. If either limit is absent or invalid, the range and both metadata constraints are disabled together. A failure is `{ kind: 'dateBetween', minDate, maxDate, actual, message }`. The normalized boundaries contribute to `min()` and `max()` metadata.
 
-## oneOf
+## ✅ oneOf {#oneof}
 
 Requires a non-empty value to equal one of the allowed values:
 
@@ -384,7 +384,7 @@ const myForm = form({
 
 `null`, `undefined`, and `''` pass. A reactive source returning `undefined` disables the constraint. Membership uses `Array.prototype.includes`: `NaN` matches `NaN`, while objects compare by reference. A failure is `{ kind: 'oneOf', options, actual, message }`.
 
-## equalTo
+## ✅ equalTo {#equalto}
 
 Requires a value to equal a static or reactive expected value using `Object.is()`:
 
@@ -402,7 +402,7 @@ const myForm = form({
 
 Unlike optional format validators, `null` and `undefined` are compared as real values rather than skipped. Signals read by the expected-value source are tracked. A failure is `{ kind: 'equalTo', message }`; both compared values are deliberately omitted so confirmation errors do not expose secrets.
 
-## uniqueItems
+## ✅ uniqueItems {#uniqueitems}
 
 Requires every array item—or a selected item key—to be unique. It supports direct use, an options factory, a property key selector, and a key-selector function:
 
@@ -443,7 +443,7 @@ Calling `uniqueItems()` without arguments is equivalent to direct `[uniqueItems]
 
 `null` and `undefined` pass as empty arrays. Empty and one-item arrays pass. A failure is `{ kind: 'uniqueItems', duplicateIndexes, message }`. It belongs to the array node and reports every participating index in ascending order while deliberately omitting duplicate values.
 
-## Constraint metadata
+## ✅ Constraint metadata {#constraint-metadata}
 
 Built-in constraints expose state even when the current value is valid:
 
@@ -458,7 +458,7 @@ name.required();
 
 Multiple minimum constraints expose the strictest, largest minimum; multiple maximum constraints expose the strictest, smallest maximum. `pattern()` contains every active expression. Conditionally composed validators contribute metadata only while their branch is active. `[formNode]` forwards applicable metadata to native and compatible custom controls.
 
-## Tree shaking
+## 🌳 Tree shaking {#tree-shaking}
 
 Validators are independent, side-effect-free exports. Consumer bundlers can remove validators and default messages that an application does not import; every validator remains available in the published package itself.
 

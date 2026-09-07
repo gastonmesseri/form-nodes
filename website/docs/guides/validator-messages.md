@@ -2,7 +2,7 @@
 title: Validator messages and i18n
 ---
 
-# Validator messages and i18n
+# Validator messages and i18n {#validator-messages-and-i18n}
 
 Built-in validators include English fallback messages. Applications can override them through a
 configured primitive set, Angular dependency injection, one form tree, one validator, or a global
@@ -11,7 +11,7 @@ fallback.
 For all node and binding options—not only messages—see the
 [Configuration reference](../reference/configuration.md).
 
-## Where to configure messages
+## 💬 Where to configure messages {#where-to-configure-messages}
 
 | Intended scope | API and recommended location |
 | --- | --- |
@@ -28,7 +28,7 @@ application initializer or side-effect-only import.
 See the complete [global startup example](../reference/configure-global-form-nodes.md#where-to-call-it)
 and [application provider example](../reference/provide-form-nodes-config.md#validator-messages).
 
-## Precedence
+## ⚙️ Precedence {#precedence}
 
 The closest definition wins:
 
@@ -41,7 +41,7 @@ The closest definition wins:
 
 Missing entries and message functions returning `undefined` continue through the fallback chain.
 
-## Configured primitive defaults
+## ⚙️ Configured primitive defaults {#configured-primitive-defaults}
 
 Use one isolated factory set when application forms import their primitives from a shared module:
 
@@ -57,9 +57,9 @@ export const { form, group, array, field } = createFormPrimitives({
 This also covers standalone fields created by that `field()` factory. A closer form, group, or
 array catalog can override individual messages.
 
-## Angular application configuration
+## ⚙️ Angular application configuration {#angular-application-configuration}
 
-### Direct provider catalogs
+### 🔸 Direct provider catalogs {#direct-provider-catalogs}
 
 `provideFormNodesConfig()` also accepts a catalog object directly:
 
@@ -79,7 +79,7 @@ Use `validatorMessages: null` to replace the inherited provider catalog with an 
 This preserves node-local, form-tree, ancestor-node provider, global, and built-in fallbacks.
 Omitting the option or passing `undefined` instead inherits the injector catalog.
 
-### Injectable catalogs
+### 🔸 Injectable catalogs {#injectable-catalogs}
 
 Configure translated defaults once in an application, route, or environment injector:
 
@@ -108,7 +108,7 @@ complete catalog captured in that scope; Angular does not merge it with an outer
 Missing entries continue through any different catalog captured by an ancestor node, followed by
 the global and built-in fallbacks.
 
-## Global configuration
+## ⚙️ Global configuration {#global-configuration}
 
 Use process-wide configuration outside Angular or for one shared application default. In an Angular
 browser entry point, call it in `main.ts` before bootstrapping. The
@@ -129,7 +129,7 @@ restore();
 
 Global configuration is shared module state. Do not mutate it per request during SSR; use an Angular provider or form catalog for request-specific locales.
 
-## Form-tree configuration
+## ⚙️ Form-tree configuration {#form-tree-configuration}
 
 ```ts
 const checkout = form({
@@ -143,7 +143,7 @@ const checkout = form({
 
 The catalog applies to that form or array and all descendants. A nested catalog overrides only the keys it defines.
 
-## Validator-local messages
+## 💬 Validator-local messages {#validator-local-messages}
 
 ```ts
 const myForm = form({
@@ -183,7 +183,7 @@ Local message functions close over their dependencies and take no parameters. Ca
 The callback receives the resolved constraint, not its original signal or source function. For
 example, a reactive `min(() => minimumAge())` supplies the current numeric `min` value.
 
-## Reactive locale changes
+## 💬 Reactive locale changes {#reactive-locale-changes}
 
 Catalog sources and the selected message function run reactively while the validator is failing:
 

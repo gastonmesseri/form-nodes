@@ -3,7 +3,7 @@ title: PrimeNG
 description: Bind Form Nodes directly to PrimeNG inputs, selects, checkboxes, datepickers, validation styles, and native forms.
 ---
 
-# PrimeNG
+# PrimeNG {#primeng}
 
 PrimeNG form controls work with `[formNode]` through native elements and Angular's
 `ControlValueAccessor` contract. No Form Nodes adapter, wrapper, `FormControl`, `FormsModule`, or
@@ -12,7 +12,7 @@ PrimeNG form controls work with `[formNode]` through native elements and Angular
 PrimeNG aligns its major releases with Angular. For Angular 22, use a compatible PrimeNG 22 release;
 the official changelog records Angular 22 compatibility in PrimeNG 22.1.
 
-## Install and configure PrimeNG
+## 🚀 Install and configure PrimeNG {#install-and-configure-primeng}
 
 ```bash
 npm install --save primeng @primeuix/themes
@@ -41,7 +41,7 @@ export const appConfig: ApplicationConfig = {
 See the official [PrimeNG installation guide](https://primeng.org/installation). Form Nodes requires
 no additional PrimeNG provider.
 
-## Complete example
+## 🧪 Complete example {#complete-example}
 
 This example combines the native `pInputText` directive with PrimeNG Select, Checkbox, and
 DatePicker components:
@@ -130,7 +130,7 @@ export class PrimeNgProfileEditor {
 type the node for the complete selected option object. PrimeNG DatePicker uses `Date` values in its
 ordinary single-date mode.
 
-## How each control connects
+## 🔌 How each control connects {#how-each-control-connects}
 
 | PrimeNG control | Connection used by `FormNode` |
 | --- | --- |
@@ -144,7 +144,7 @@ PrimeNG's official guides document Angular Forms support for
 [Select](https://primeng.org/select), [Checkbox](https://primeng.org/checkbox), and
 [DatePicker](https://primeng.org/datepicker). `[formNode]` connects to those contracts directly.
 
-## Validation styling
+## ✅ Validation styling {#validation-styling}
 
 PrimeNG uses Angular-style status classes such as `ng-invalid` and `ng-dirty` for invalid-state
 styling. For an application that uses PrimeNG broadly, register the preset once in the standalone
@@ -181,14 +181,14 @@ The preset adds `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`,
 `ng-untouched`/`ng-touched` reactively. It is optional: node validity and message rendering work
 without it. Form Nodes adds no status classes by default.
 
-## Binary and collection checkboxes
+## 📚 Binary and collection checkboxes {#binary-and-collection-checkboxes}
 
 Use `[binary]="true"` with a boolean field. For a checkbox group that owns one complete collection
 value, use an array-valued `field()` rather than `array()`. Use `array()` only when each item needs
 an independent Form Nodes node. See
 [Choosing a primitive](../guides/choosing-a-primitive.md#array-field-or-array).
 
-## Disabled, focus, and reset
+## ↩️ Disabled, focus, and reset {#disabled-focus-and-reset}
 
 - Disabled state is passed through PrimeNG's `ControlValueAccessor` contract.
 - `profileForm.countryCode.focus()` focuses its first rendered binding; a component without a
@@ -196,13 +196,13 @@ an independent Form Nodes node. See
 - `profileForm.reset()` resynchronizes PrimeNG controls and clears interaction state.
 - A native reset button inside the bound form delegates to the node reset.
 
-## Testing PrimeNG bindings
+## 🧪 Testing PrimeNG bindings {#testing-primeng-bindings}
 
 Use `TestBed` and interact with the rendered component as a user would. Keep assertions on the
 public node API. Overlay controls such as Select and DatePicker are best covered in a real browser
 when keyboard, focus, or overlay behavior matters. See [Testing forms](../guides/testing.md).
 
-## Troubleshooting
+## 🔍 Troubleshooting {#troubleshooting}
 
 - Import the module belonging to every PrimeNG component used by the template.
 - Configure PrimeNG's theme and animation providers as its installation guide requires.

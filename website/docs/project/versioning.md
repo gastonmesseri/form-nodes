@@ -2,13 +2,13 @@
 title: Versioning and releases
 ---
 
-# Versioning and releases
+# Versioning and releases {#versioning-and-releases}
 
 Form Nodes versions describe the library itself; they do **not** mirror Angular's version number.
 For example, Form Nodes `1.x` supports Angular 21 and 22, but that does not imply that Angular 22 requires
 Form Nodes 22.
 
-## Version policy
+## 📦 Version policy {#version-policy}
 
 Form Nodes follows [Semantic Versioning](https://semver.org/):
 
@@ -23,7 +23,7 @@ and migration guide before every major upgrade. Breaking changes must be identif
 Dropping a supported Angular version requires a major release. Adding support for a new Angular
 major without breaking existing consumers does not require matching that Angular version number.
 
-## Angular support policy
+## 🔌 Angular support policy {#angular-support-policy}
 
 Compatibility is based on verified peer-dependency ranges and the project's test matrix, not only
 on whether npm can install a combination. A new Angular major is supported only after the package
@@ -33,7 +33,7 @@ tests pass against it.
 Support for an Angular major is not assumed to include earlier or later majors. Consult the
 [compatibility table](./compatibility.md) before installing or upgrading.
 
-## Reading a release
+## 📦 Reading a release {#reading-a-release}
 
 For each upgrade:
 
@@ -45,7 +45,7 @@ For each upgrade:
 The documentation website describes the current development line. When behavior differs between
 released versions, the changelog and migration guide are the authoritative starting points.
 
-## Initial release exception
+## 📦 Initial release exception {#initial-release-exception}
 
 Version `1.1.0` includes the declared-child typing change documented in the migration guide.
 This is an explicit exception during initial development, before consumer adoption. The general
