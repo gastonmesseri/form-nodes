@@ -10,91 +10,134 @@ import appConfigSource from '!!raw-loader!../../examples/validator-messages-app-
 import applicationConfigSource from '!!raw-loader!../../examples/shared-module-application-config.typecheck.ts';
 import sharedConfigSource from '!!raw-loader!../../examples/shared-module-shared-config.typecheck.ts';
 
-Configures validator messages, custom-control input synchronization, and reactive CSS classes with one provider function. The exported `FormNodesConfig` type describes the same options.
+Configures validator messages, custom-control input synchronization, paired value binding, and reactive CSS classes with one provider function. The exported `FormNodesConfig` type describes the same options.
 
 ## Signature
 
 ```ts
 provideFormNodesConfig(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages) | null | undefined;
-  syncInputs?: boolean | 'only-declared' | 'always' | 'only-signal-controls' | readonly SyncInputName[]
-    | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined; // Experimental; default: false
+  syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[]
+    | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' } | null | undefined; // Experimental; default: false
+  bindValuePairs?: boolean | null | undefined; // Experimental; default: false
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
 }): Provider[];
 ```
 
 ## `syncInputs` {#custom-control-inputs}
 
-**Experimental and disabled by default.** `syncInputs` controls optional custom-control input
-writes that depend on Angular internals. It applies to the input contract used by Angular's
-`FormValueControl` and `FormCheckboxControl`, and matching inputs on other supported custom controls.
+**Experimental: writes component inputs through Angular internals. Default: `false`.**
 
-| Value | Behavior |
+This option copies node state and constraints into matching inputs on the selected custom control.
+It never enables value binding. Use [`bindValuePairs`](#bind-value-pairs) separately for paired
+inputs and outputs. Node validation continues independently of both options.
+
+| Selection | Inputs synchronized |
 | --- | --- |
-| `false` or `null` | Do not synchronize optional inputs. |
-| `true` or `'only-declared'` | Synchronize initial `disabled`, `readonly`, and `hidden` declarations only; validator constraints are excluded. |
-| `'always'` | Synchronize every matching supported input, including derived state. |
-| `'only-signal-controls'` | Synchronize every supported input, including constraints, only for a selected Signal Forms model control. No optional CVA writes or paired input/output transport. |
-| `['disabled', 'dirty']` | Always synchronize exactly these inputs, regardless of initial declarations. |
-| `{ mode: 'always', inputs: [...] }` | Same behavior as the array shorthand. |
-| `{ mode: 'only-declared', inputs: [...] }` | Synchronize only listed inputs that were also initially declared. |
-| `[]` or an object with `inputs: []` | Do not synchronize optional inputs. |
-| Omitted or `undefined` | Inherit the provider/global setting. |
+| `false` or `null` | None; explicitly overrides inherited input synchronization. |
+| `'declared'` | Initial `disabled`, `readonly`, and `hidden` declarations, plus `disabledReasons` with disabled. |
+| `'all'` | Every supported input exposed by the selected control. |
+| `'signal-controls'` | Every supported input, only on a selected value/checked model control. |
+| `['disabled', 'required']` | Exactly the listed inputs, regardless of declarations. |
+| `{ inputs, target }` | Select inputs and restrict which adapter receives writes. |
+| `[]` or `{ inputs: [] }` | No additional writes; does not enable a value connection. |
+| Omitted or `undefined` | Inherit the next applicable setting. |
 
-`SyncInputName` and `SyncInputs` are exported types. Supported names are `disabled`,
-`disabledReasons`, `dirty`, `errors`, `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`,
-`name`, `pattern`, `pending`, `readonly`, `required`, and `touched`. Names refer to public inputs,
-not aliased component property names. `value` and `checked` are model channels, not optional inputs.
-Selections are exact: `['disabled']` does not also select `disabledReasons`. Explicit lists replace
-inherited selections; they do not merge. Unselected inputs retain their current component values.
-Treat configuration objects and arrays as fixed declarations; to change a selection, configure a
-new binding or rebind to a node with different options.
+The object form is:
 
-### Restrict synchronization to Signal Forms controls
+```ts
+{
+  inputs: 'declared' | 'all' | readonly SyncInputName[];
+  target?: 'all' | 'signal-controls' | 'cva'; // Default: 'all'.
+}
+```
+
+`'signal-controls'` is shorthand for `{ inputs: 'all', target: 'signal-controls' }`.
+Targets filter the **selected adapter**, without changing selection priority: directly assigned
+`NgControl.valueAccessor`, provided CVA, recognized custom control, then native control.
+A component with both CVA and a model follows the CVA path. Signal-control detection checks an
+actual `value` or `checked` model, not an `implements FormValueControl` or `FormCheckboxControl`
+declaration. An active paired input/output control only matches target `'all'`.
+
+### Configure model controls
 
 <CodeBlock language="ts" title="app.config.ts">{signalControlConfigSource}</CodeBlock>
 
-`'only-signal-controls'` behaves like `'always'` for a selected `signal-forms-control` adapter with
-`value = model()` or `checked = model()`, including validator constraints. Detection uses the
-runtime model structure; an explicit `implements FormValueControl` or `FormCheckboxControl`
-declaration is not required. This mode remains experimental because input writes use Angular internals.
+This configuration supplies model controls with all supported state and constraints. CVAs keep
+their standard value, touch, and disabled callbacks without additional input writes. Native controls
+keep their normal DOM behavior. Paired controls remain inactive because `bindValuePairs` is false.
 
-A CVA keeps its standard value, touch, and disabled connection without optional input writes,
-even if that component also exposes a model: CVA selection takes precedence. Native controls keep
-their normal behavior. Separate `value`/`valueChange` or `checked`/`checkedChange` pairs stay
-inactive in this mode. Node options still override providers and global configuration on rebinding.
+To narrow the selection further:
 
-### Declaration-based selection
+```ts
+syncInputs: { inputs: ['disabled', 'required'], target: 'signal-controls' }
+```
 
-`disabledReasons` follows an initial `disabled` declaration. A declaration with a false value still
-counts. Validators never select inputs in this mode, even when registered initially. To synchronize
-`required`, `min`, `max`, `minLength`, `maxLength`, or `pattern`, use `'always'` or an explicit input
-list such as `['required', 'minLength']`. Those selections track reactive and conditional constraints
-and clear removed constraints to neutral values. Validation runs normally in every mode.
+### State, constraints, and declarations
 
-Derived `dirty`, `touched`, `invalid`, `pending`, `errors`, and the generated `name` are synchronized
-in `'always'` mode or through an explicit input list. Component inputs not selected by the mode retain their own values or
-explicit template bindings. Full synchronization may replace authored template input values.
+Supported public input names are `disabled`, `disabledReasons`, `readonly`, `hidden`, `dirty`,
+`touched`, `invalid`, `pending`, `errors`, `name`, `required`, `min`, `max`, `minLength`, `maxLength`,
+and `pattern`. Use public aliases, not the component's private property names. Missing inputs are ignored.
 
-Set this option on `field()`, `form()`, `group()`, or `array()` to override a provider for that node's
-own binding. Node options do not propagate to descendants. `createFormPrimitives({ syncInputs })`
-can supply defaults for nodes created by its factories. Resolution is **node option → nearest
-explicit provider → global setting → false**. Null explicitly opts out at any level.
+The `'declared'` preset only considers initial node options with values other than undefined;
+`disabled: false` counts. Validators never select inputs in this preset. Use `'all'`,
+`'signal-controls'`, or a list for constraints and derived states. A list containing disabled does
+not implicitly include disabledReasons.
 
-Value/checked models, the optional `node` model, touch, focus, and reset hooks remain connected.
-Native controls still receive their state, and CVAs still receive `setDisabledState()`. With synchronization disabled, value binding requires actual `model()` properties or a CVA; separate input/output pairs require enabled experimental `syncInputs`. `useFormNodeState()` is available for public state reads.
+Every enabled selection updates reactively. Conditional constraints and validator removal update
+selected inputs to current or neutral values. Writes can replace component defaults and authored
+bindings; unselected inputs retain their existing values. Selecting a CVA's disabled input may write
+it in addition to the standard `setDisabledState()` call.
 
-See [Experimental input synchronization](../guides/custom-controls.md#keep-control-of-your-components-inputs)
-for a complete component example.
+### Scope and rebinding
 
-### Experimental input/output value pairs
+Each binding option resolves independently: node option (including factory defaults), nearest
+explicit provider, global fallback, then false. Lists and objects replace inherited selections as
+one value; they do not merge. A node option affects its own binding, not descendants.
 
-Enabled `syncInputs` also connects separate `value`/`valueChange` and `checked`/`checkedChange`
-pairs. Every enabled mode except `'only-signal-controls'`, list, or mode/inputs object opts into this value transport. Lists filter
-only optional state inputs, so `[]` connects the value pair without optional state writes.
-`false`, `null`, and `'only-signal-controls'` pause pair writes and ignore its change/touch outputs. Rebinding to an enabled
-node resynchronizes its current control value. This transport uses Angular's internal input writer;
-actual models and CVAs remain available without it. See [the complete example](../guides/custom-controls.md#separate-input-output-pairs).
+Provider/global fallbacks are captured when a connection is created. Rebinding uses the replacement
+node's options. Inputs no longer selected retain their last values rather than restoring defaults.
+For state access without experimental writes, use a model with `useFormNodeState()` and render its
+signals. See [custom controls](../guides/custom-controls.md).
+
+## `bindValuePairs` {#bind-value-pairs}
+
+**Experimental: writes value inputs through Angular internals. Default: `false`.**
+
+Set `bindValuePairs: true` to connect a recognized `value`/`valueChange` or
+`checked`/`checkedChange` input/output pair. Both signal and decorator inputs and public aliases
+are supported. CVAs and actual value/checked models take precedence and work without this opt-in.
+
+| Setting | Paired control behavior |
+| --- | --- |
+| `true` | Connect value writes, change and touch outputs, optional focus/reset hooks, and optional writable node reference. |
+| `false` or `null` | Keep the pair inactive, including optional state-input writes and its interaction hooks. |
+| Omitted or `undefined` | Inherit independently of `syncInputs`. |
+
+Input synchronization and value binding are separate decisions:
+
+```ts
+// Value and interaction only; no state-input writes.
+{ bindValuePairs: true, syncInputs: false }
+
+// Value and interaction, plus exactly these state inputs.
+{ bindValuePairs: true, syncInputs: ['disabled', 'required'] }
+
+// The pair stays inactive even though input synchronization is configured.
+{ bindValuePairs: false, syncInputs: 'all' }
+```
+
+Pairs follow normal dirty/touched, validation, propagation, and pending/committed debounce rules.
+Touch commits pending blur updates. Rebinding to an inactive node pauses the complete connection
+and clears its writable node reference; existing component input values remain unchanged. Returning
+to an active node writes its current control value again, even when unchanged since the pause.
+Inactive pairs remain recognized hosts rather than causing a missing-adapter error. Initialize
+separate inputs with defaults; an inactive pair cannot supply required inputs.
+
+Configuration precedence and snapshots follow the independent rules above. Use this option on
+fields, forms, groups, arrays, factory defaults, providers, or global configuration. A parent node
+option does not enable pairs on its descendants. See the
+[complete paired component example](../guides/custom-controls.md#separate-input-output-pairs).
 
 ## `classes` {#classes}
 
@@ -176,8 +219,9 @@ then the library defaults. Message catalogs follow their normal fallback chain:
 - Omit `validatorMessages` to preserve the inherited catalog.
 - Omit `classes` to preserve the inherited class map. An explicit map replaces it without merging;
   `{ classes: {} }` clears only the inherited classes.
-- Omit `syncInputs` to preserve the inherited setting. Set a boolean, named mode, list, or mode/inputs object to override it.
+- Omit `syncInputs` to preserve the inherited setting. Set false, a named preset, a list, or an inputs/target object to override it.
   With no provider, this option uses the global setting, which defaults to `false`.
+- Omit `bindValuePairs` to preserve its independent inherited value. True enables pairs; false/null disables them.
 - `{}` registers no providers. An option set to `undefined` also inherits.
 - `{ validatorMessages: {} }` supplies an empty catalog without changing classes or synchronization.
 
@@ -186,6 +230,7 @@ null bypasses global defaults. An empty provider message catalog still permits g
 
 | Option set to `null` | Result |
 | --- | --- |
+| `bindValuePairs` | Paired value and interaction binding disabled. |
 | `classes` | No automatic classes; equivalent to an empty map. |
 | `syncInputs` | Synchronization disabled (`false`). |
 | `validatorMessages` | Empty provider catalog, with normal message fallback. |
@@ -211,7 +256,7 @@ For example, these provider registrations belong in different scopes:
 provideFormNodesConfig({
   validatorMessages: { required: 'Please complete this field.' },
   classes: ANGULAR_FORMS_STATUS_CLASSES,
-  syncInputs: 'always',
+  syncInputs: 'all',
 });
 
 // app.component.ts — component providers

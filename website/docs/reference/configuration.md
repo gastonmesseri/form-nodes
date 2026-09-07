@@ -42,14 +42,12 @@ node or ancestor.
 
 ## Node options
 
-`syncInputs` is an **experimental binding option** accepted by every primitive and by
-`createFormPrimitives()` defaults. It affects only the bound node, not descendants. It is off by
-default; true means `'only-declared'`, `'always'` synchronizes every supported input, and null opts
-out. An input list such as `['disabled', 'dirty']` always synchronizes exactly those inputs;
-`{ mode: 'only-declared', inputs: ['disabled'] }` also requires an initial declaration.
-Separate value/input-output pairs also require an enabled setting; `[]` enables their value
-transport alone. Node options take precedence over providers and global defaults. See
-[custom-control input modes](./provide-form-nodes-config.md#custom-control-inputs).
+`syncInputs` and `bindValuePairs` are **independent experimental binding options** accepted by every
+primitive and `createFormPrimitives()` defaults. They affect the bound node, not descendants, and
+default to false. SyncInputs accepts false, `'declared'`, `'all'`, `'signal-controls'`, exact input
+lists, or `{ inputs, target }`. It only selects state/constraint writes; it never enables values.
+BindValuePairs true connects paired value/checked inputs and outputs, including interaction hooks.
+Null disables either option and undefined inherits. See [input selections and pair connections](./provide-form-nodes-config.md#custom-control-inputs).
 
 The call-site types are designed for discovery in IntelliSense. Small accepted unions—such as
 `number | 'blur'` for debounce or `boolean | string | (() => boolean | string)` for disabled
@@ -216,7 +214,7 @@ const profileForm = form({
 });
 ```
 
-`submitWhen` accepts `'not-invalid'` (default), `'valid'`, or `'always'`. See
+`submitWhen` accepts `'not-invalid'` (default), `'valid'`, or `'all'`. See
 [Form submission](../guides/submission.md) for their behavior.
 
 ### Array creation and identity
@@ -306,7 +304,7 @@ failing.
 
 ### Process-wide fallback
 
-`configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, and `syncInputs`.
+`configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, `syncInputs`, and `bindValuePairs`.
 Each option is a fallback below its nearest explicit Angular provider. Omitted options preserve
 previous global settings; `null` resets that global option to the library default.
 Configure binding defaults before bootstrap: existing bindings retain their class maps and
@@ -381,9 +379,9 @@ provideFormNodesConfig({
 });
 ```
 
-The `classes` and `syncInputs` options affect rendered bindings, not node state or validation.
+The `classes`, `syncInputs`, and `bindValuePairs` options affect rendered bindings, not node state or validation.
 Each option inherits independently. Providing `classes` replaces only the class map; providing
-`syncInputs` changes only input synchronization. Omitting an option preserves its inherited
+`syncInputs` changes only state-input synchronization; `bindValuePairs` enables paired value and interaction binding. Omitting an option preserves its inherited
 provider. Set an option to `null` to reset it: no classes, synchronization disabled, or an empty
 provider message catalog with normal fallback. Class maps are not merged automatically. See
 [Provider scope](./provide-form-nodes-config.md#provider-scope) for examples.
@@ -447,7 +445,7 @@ For runtime symptoms caused by configuration, see [Troubleshooting](../help/trou
 ## Custom-control input synchronization
 
 Optional custom-control input synchronization is experimental and disabled by default.
-Use `syncInputs: true` for initial declarations or `'always'` for all supported state inputs.
+Use `syncInputs: 'declared'` for initial declarations or `'all'` for all supported state inputs.
 Use `provideFormNodesConfig({ syncInputs: false })` when your component or template
 should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
 Native controls and CVA `setDisabledState()` remain connected.

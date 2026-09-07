@@ -26,7 +26,7 @@ declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
 beforeAll(() => {
   TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
-  TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] });
+  TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'all' })] });
 });
 afterAll(() => TestBed.resetTestEnvironment());
 

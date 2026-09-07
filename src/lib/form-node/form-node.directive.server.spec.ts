@@ -113,7 +113,7 @@ describe('FormNode server rendering', () => {
       imports: [TestControl, FormNode],
     })
     class App {
-      readonly name = field('Marco', { syncInputs: 'always' });
+      readonly name = field('Marco', { syncInputs: 'all' });
     }
 
     const html = await render(App);
@@ -122,7 +122,7 @@ describe('FormNode server rendering', () => {
     expect(html).toMatch(/<span>[^<.]+\.form\d+<\/span>/);
   });
 
-  it.each([false, true, 'always'] as const)('renders a signal control with syncInputs=%s', async (syncInputs) => {
+  it.each([false, 'declared', 'all'] as const)('renders a signal control with syncInputs=%s', async (syncInputs) => {
     @Component({
       selector: 'app-root',
       template: '<test-signal-control [formNode]="name" />',
@@ -135,6 +135,6 @@ describe('FormNode server rendering', () => {
 
     const html = await render(App);
 
-    expect(html).toContain(`<span>Marco</span><span>${syncInputs === 'always'}</span>`);
+    expect(html).toContain(`<span>Marco</span><span>${syncInputs === 'all'}</span>`);
   });
 });

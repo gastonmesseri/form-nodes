@@ -8,8 +8,8 @@ title: Migration guides
 
 Rename `syncControlInputs` to `syncInputs`. Optional custom-control input synchronization is now
 **disabled by default**. To preserve the old full synchronization, explicitly pass
-`{ syncInputs: 'always' }` at the node, factory, provider, or global scope. `true` now means
-`'only-declared'`, not full synchronization. Null resets to false.
+`{ syncInputs: 'all' }` at the node, factory, provider, or global scope. `true` now means
+`'declared'`, not full synchronization. Null resets to false.
 
 Value/checked models, native-control state, CVA callbacks, and interaction hooks retain their
 normal behavior. A node option configures only its own binding. See
@@ -58,7 +58,7 @@ All three options inherit independently. A synchronization-only configuration pr
 classes and messages. A classes-only configuration preserves inherited synchronization and messages.
 An explicit class map replaces the inherited map without merging. An empty `{}` registers no
 providers; `{ classes: {} }` clears only classes. To also restore synchronization explicitly, use
-`{ classes: {}, syncInputs: 'always' }`.
+`{ classes: {}, syncInputs: 'all' }`.
 See [Configuration provider](../reference/provide-form-nodes-config.md).
 
 ## Unreleased: opt in to dynamic child iteration
@@ -301,14 +301,27 @@ When migrating from Angular Reactive Forms or Angular 22 Signal Forms, use the
 version upgrades, so application behavior should be translated deliberately instead of through
 mechanical symbol replacement.
 
-## Custom-control value models and input/output pairs
+## Custom-control binding configuration
 
-`value = model(initialValue)` and `checked = model(false)` bind through public model APIs without
-experimental options. Existing separate `value`/`valueChange` or `checked`/`checkedChange` pairs
-must opt into experimental `syncInputs`. Use `[]` for value transport alone, `true` for value plus
-initially declared state inputs, or `'always'` for every supported state input. Lists and mode/inputs
-objects filter optional state inputs independently of the enabled value transport.
+Models (`value = model(...)` or `checked = model(...)`) and CVAs keep their standard connections
+without experimental options. State input writes and paired value connections now have independent
+options, each defaulting to false and inheriting independently.
 
-With `false` or `null`, paired input writes are paused and change/touch outputs are ignored through
-that transport. Replace the pair with a model, or implement `ControlValueAccessor`, to bind values
-without experimental input writes. See [paired controls](../guides/custom-controls.md#separate-input-output-pairs).
+| Earlier configuration | Replacement |
+| --- | --- |
+| `syncInputs: true` or `'only-declared'` | `syncInputs: 'declared'` |
+| `syncInputs: 'always'` | `syncInputs: 'all'` |
+| `syncInputs: 'only-signal-controls'` | `syncInputs: 'signal-controls'` |
+| `{ mode: 'always', inputs: [...] }` | `{ inputs: [...] }` |
+| `{ mode: 'only-declared', inputs: [...] }` | Use `{ inputs: 'declared' }` for all declarations, or explicitly list the desired declared inputs. |
+| `syncInputs: []` to enable paired values | `bindValuePairs: true` with syncInputs false/omitted |
+
+Add `bindValuePairs: true` wherever a separate value/valueChange or checked/checkedChange pair
+previously relied on syncInputs to connect. Keep syncInputs separately for the desired state inputs.
+False/null now pauses the entire pair connection, including component focus/reset hooks and writable
+node access. Returning to an enabled node resynchronizes its current value.
+
+Targets in `{ inputs, target }` filter the selected adapter, not component interfaces. A CVA with a
+model still matches cva. Active pairs only match all. Model controls can receive complete supported
+input synchronization with signal-controls, or use useFormNodeState() without experimental writes.
+See [the full configuration reference](../reference/provide-form-nodes-config.md#custom-control-inputs).

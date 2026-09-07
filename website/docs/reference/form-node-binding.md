@@ -307,12 +307,12 @@ configures Angular `[formField]` independently, so both providers can share an i
 
 Components exposing `value = model<T>()`, `checked = model<boolean>()`,
 or a CVA are normally discovered automatically. Separate `value`/`valueChange` and
-`checked`/`checkedChange` pairs are recognized too, but their value transport excludes `'only-signal-controls'` and requires enabled
-experimental `syncInputs` (including `[]` for value transport without optional state writes).
+`checked`/`checkedChange` pairs are recognized too, but their value transport requires
+experimental `bindValuePairs: true` (including `[]` for value transport without optional state writes).
 
 For `FormValueControl`, value binding through `model()` works without experimental options.
-Full automatic state/constraint input synchronization requires experimental `syncInputs: 'always'`;
-`'only-signal-controls'` also synchronizes all supported inputs for model controls, while excluding CVAs and paired input/output controls. Other modes select fewer inputs. Alternatively, a component can combine its value model with
+Full automatic state/constraint input synchronization requires experimental `syncInputs: 'all'`;
+`'signal-controls'` also synchronizes all supported inputs for model controls, while excluding CVAs and paired input/output controls. Other modes select fewer inputs. Alternatively, a component can combine its value model with
 `useFormNodeState()` for full bound-state access and render that state itself without input writes.
 Standard CVA value, touch, and disabled-state integration does not require `syncInputs`.
 See [FormValueControl support and a complete example](../guides/custom-controls.md#create-a-signal-model-control).
@@ -434,7 +434,7 @@ and [Form submission](../guides/submission.md).
 ## Custom-control input synchronization
 
 Optional custom-control input synchronization is experimental and disabled by default.
-Use `syncInputs: true` for initial declarations or `'always'` for all supported state inputs.
+Use `syncInputs: 'declared'` for initial declarations or `'all'` for all supported state inputs.
 Use `provideFormNodesConfig({ syncInputs: false })` when your component or template
 should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
 Native controls and CVA `setDisabledState()` remain connected.

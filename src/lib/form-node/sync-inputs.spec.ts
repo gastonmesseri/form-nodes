@@ -118,7 +118,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
     }
   });
 
-  it.each([true, 'only-declared'] as const)('syncs initial declarations with %s without enabling other inputs', (mode) => {
+  it.each(['declared', { inputs: 'declared' }] as const)('syncs initial declarations with %s without enabling other inputs', (mode) => {
     const disabled = signal(false);
     const node = createRoot(kind, { syncInputs: mode, disabled: () => disabled() });
     const { fixture, control } = bind(node);
@@ -140,7 +140,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
   });
 
   it('keeps validator state separate from constraint inputs through edits and removal', () => {
-    const node = createRoot(kind, { syncInputs: true, disabled: false });
+    const node = createRoot(kind, { syncInputs: 'declared', disabled: false });
     const parent = form({ nested: form({ child: node }) });
     const { fixture, control } = bind(node);
     expect(node.$api.required()).toBe(true);
@@ -160,7 +160,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
 
   it.each(([
     ['disabled', 'dirty'],
-    { mode: 'always', inputs: ['disabled', 'dirty'] },
+    { inputs: ['disabled', 'dirty'] },
   ] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('synchronizes only explicitly selected inputs with %j', ({ syncInputs }) => {
     const node = createRoot(kind, { syncInputs });
     const { fixture, control } = bind(node);
@@ -182,16 +182,16 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
     expect(control.value()).toEqual(node());
   });
 
-  it('intersects explicit inputs with initial declarations in only-declared mode', () => {
+  it('targets declared input selection at model controls', () => {
     const node = createRoot(kind, {
       disabled: false,
       readonly: false,
-      syncInputs: { mode: 'only-declared', inputs: ['disabled', 'dirty', 'required'] },
+      syncInputs: { inputs: 'declared', target: 'signal-controls' },
     });
     const { fixture, control } = bind(node);
     expect(control.disabled()).toBe(false);
     expect(control.dirty()).toBe(true);
-    expect(control.readonly()).toBe(true);
+    expect(control.readonly()).toBe(false);
     expect(control.required()).toBe(false);
     expect(node.$api.required()).toBe(true);
     node.$api.disable();
@@ -199,7 +199,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
     expect(control.disabled()).toBe(true);
   });
 
-  it.each(([[], { mode: 'always', inputs: [] }] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('leaves inputs owned by the component with empty selection %j', ({ syncInputs }) => {
+  it.each(([[], { inputs: [] }] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('leaves inputs owned by the component with empty selection %j', ({ syncInputs }) => {
     const { control } = bind(createRoot(kind, { syncInputs, disabled: false }));
     expect(control.disabled()).toBe(true);
     expect(control.dirty()).toBe(true);
@@ -207,7 +207,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
   });
 
   it('inherits signal-control-only synchronization and honors node overrides on rebinding', () => {
-    cleanups.push(configureGlobalFormNodes({ syncInputs: 'only-signal-controls' }));
+    cleanups.push(configureGlobalFormNodes({ syncInputs: 'signal-controls' }));
     const initial = createRoot(kind);
     const parent = form({ nested: form({ child: initial }) });
     const { fixture, control } = bind(initial);
@@ -222,7 +222,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
     fixture.componentInstance.node.set(optedOut);
     fixture.detectChanges();
     expect(control.disabled()).toBe(false);
-    const replacement = createRoot(kind, { syncInputs: 'only-signal-controls', disabled: true });
+    const replacement = createRoot(kind, { syncInputs: 'signal-controls', disabled: true });
     fixture.componentInstance.node.set(replacement);
     fixture.detectChanges();
     expect(control.disabled()).toBe(true);
@@ -233,11 +233,11 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
   });
 
   it('lets node options override providers and updates selection when the bound node changes', () => {
-    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] });
+    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'all' })] });
     const original = createRoot(kind, { syncInputs: false });
     const { fixture, control } = bind(original);
     expect(control.disabled()).toBe(true);
-    const replacement = createRoot(kind, { syncInputs: true, readonly: false });
+    const replacement = createRoot(kind, { syncInputs: 'declared', readonly: false });
     fixture.componentInstance.node.set(replacement);
     fixture.detectChanges();
     expect(control.readonly()).toBe(false);
@@ -256,7 +256,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
 });
 
 describe('declared constraints and synchronization scopes', () => {
-  it.each(([true, 'always', 'only-signal-controls', ['required', 'minLength', 'maxLength', 'pattern']] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('tracks constraints only when their inputs are selected: %j', ({ syncInputs }) => {
+  it.each((['declared', 'all', 'signal-controls', ['required', 'minLength', 'maxLength', 'pattern']] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('tracks constraints only when their inputs are selected: %j', ({ syncInputs }) => {
     const enabled = signal(false);
     const minimum = signal(2);
     const custom = vi.fn(() => null);
@@ -264,9 +264,9 @@ describe('declared constraints and synchronization scopes', () => {
     expect(custom).not.toHaveBeenCalled();
     const { fixture, control } = bind(name);
     expect(control.required()).toBe(false);
-    expect(control.minLength()).toBe(syncInputs === true ? 8 : 2);
+    expect(control.minLength()).toBe(syncInputs === 'declared' ? 8 : 2);
     expect(control.maxLength()).toBe(10);
-    expect(control.pattern()).toEqual(syncInputs === true ? ['owned'] : [/a/]);
+    expect(control.pattern()).toEqual(syncInputs === 'declared' ? ['owned'] : [/a/]);
     enabled.set(true);
     minimum.set(4);
     fixture.detectChanges();
@@ -274,19 +274,19 @@ describe('declared constraints and synchronization scopes', () => {
     expect(name.minLength()).toBe(4);
     expect(name.hasError('minLength')).toBe(true);
     expect(custom).toHaveBeenCalled();
-    expect(control.required()).toBe(syncInputs !== true);
-    expect(control.minLength()).toBe(syncInputs === true ? 8 : 4);
+    expect(control.required()).toBe(syncInputs !== 'declared');
+    expect(control.minLength()).toBe(syncInputs === 'declared' ? 8 : 4);
     name.setValidators([]);
     fixture.detectChanges();
     expect(control.required()).toBe(false);
     expect(name.valid()).toBe(true);
-    expect(control.minLength()).toBe(syncInputs === true ? 8 : undefined);
-    expect(control.pattern()).toEqual(syncInputs === true ? ['owned'] : []);
+    expect(control.minLength()).toBe(syncInputs === 'declared' ? 8 : undefined);
+    expect(control.pattern()).toEqual(syncInputs === 'declared' ? ['owned'] : []);
   });
 
   it('does not infer declarations from later validators, state mutations, or parent options', () => {
-    const name = field('a', { syncInputs: true });
-    const parent = form({ name }, { syncInputs: 'always', disabled: false });
+    const name = field('a', { syncInputs: 'declared' });
+    const parent = form({ name }, { syncInputs: 'all', disabled: false });
     const { fixture, control } = bind(name);
     name.setValidators(minLength(3));
     parent.disable();
@@ -295,7 +295,7 @@ describe('declared constraints and synchronization scopes', () => {
     expect(control.minLength()).toBe(8);
     expect(control.disabled()).toBe(true);
     expect(control.readonly()).toBe(true);
-    const fresh = field('a', { syncInputs: 'always' });
+    const fresh = field('a', { syncInputs: 'all' });
     fresh.setValidators(minLength(3));
     fixture.componentInstance.node.set(fresh);
     fixture.detectChanges();
@@ -303,7 +303,7 @@ describe('declared constraints and synchronization scopes', () => {
   });
 
   it('excludes validator constraints with only-declared factory defaults in cloned array templates', () => {
-    const factories = createFormPrimitives({ syncInputs: true });
+    const factories = createFormPrimitives({ syncInputs: 'declared' });
     const rows = factories.array({ age: factories.field(2, [min(1), max(4)], { disabled: false }) }, { initialValue: 1 });
     const first = rows.at(0)!.age;
     const { fixture, control } = bind(first);
@@ -328,7 +328,7 @@ describe('declared constraints and synchronization scopes', () => {
     expect(globalBinding.control.dirty()).toBe(true);
     globalBinding.fixture.destroy();
     TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: { mode: 'always', inputs: ['dirty'] } })] });
+    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: { inputs: ['dirty'] } })] });
     const { fixture, control } = bind(field(''));
     expect(control.disabled()).toBe(true);
     expect(control.dirty()).toBe(false);
@@ -355,7 +355,7 @@ describe('declared constraints and synchronization scopes', () => {
   });
 
   it('lets an explicit provider opt out of global synchronization', () => {
-    cleanups.push(configureGlobalFormNodes({ syncInputs: 'always' }));
+    cleanups.push(configureGlobalFormNodes({ syncInputs: 'all' }));
     TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: null })] });
     const { control } = bind(field(''));
     expect(control.disabled()).toBe(true);

@@ -16,8 +16,8 @@ state observation, detailed CVA behavior, wrappers, and compatibility boundaries
 
 :::tip Experimental state input synchronization
 
-Optional state and constraint inputs are not synchronized by default. Opt in with `syncInputs: true`
-for initial declarations or `'always'` for all supported inputs. Value/checked models still work
+Optional state and constraint inputs are not synchronized by default. Opt in with `syncInputs: 'declared'`
+for initial declarations or `'all'` for all supported inputs. Value/checked models still work
 without this Angular-internal adapter. See [input synchronization](./custom-controls.md#keep-control-of-your-components-inputs).
 
 :::
@@ -31,7 +31,7 @@ Form Nodes interface, base class, or registration provider.
 | --- | --- | --- |
 | Signal Forms value control | `value = model<T>()` | Fields, forms, and arrays |
 | Signal Forms checkbox control | `checked = model<boolean>()` | Boolean fields |
-| Separate input/output control | `value`/`valueChange` or `checked`/`checkedChange` | Experimental; requires enabled `syncInputs` |
+| Separate input/output control | `value`/`valueChange` or `checked`/`checkedChange` | Experimental; requires `bindValuePairs: true` |
 | Reactive Forms / Forms API | `ControlValueAccessor` through `NG_VALUE_ACCESSOR` | Fields and compatible aggregate values |
 | Native form element | `input`, `select`, or `textarea` | Scalar fields |
 
@@ -43,8 +43,8 @@ The `value` and `checked` contracts follow Angular's `FormValueControl<T>` and
 
 The `value = model()` contract works without experimental options. **Full automatic population
 of `FormValueControl` state and constraint inputs is experimental** because those writes use
-Angular internals. Enable `syncInputs: 'always'` to synchronize every supported input, or use
-`true`/`'only-declared'`, an input list, or `{ mode, inputs }` to limit the selection.
+Angular internals. Enable `syncInputs: 'all'` to synchronize every supported input, or use
+`'declared'`, an input list, or `{ inputs, target }` to limit the selection.
 
 The same option is available on `field()`, `form()`, `group()`, `array()`, `createFormPrimitives()`
 defaults, `provideFormNodesConfig()`, and `configureGlobalFormNodes()`. Node settings apply only
@@ -64,7 +64,7 @@ state/constraint input writes require `syncInputs`.
 Binding precedence is deterministic when a component exposes more than one mechanism:
 
 1. `ControlValueAccessor`
-2. An automatically discovered model or input/output pair (pairs require enabled `syncInputs`)
+2. An automatically discovered model or input/output pair (pairs require `bindValuePairs: true`)
 3. Native element handling
 
 ## Signal model controls
@@ -93,10 +93,10 @@ export class Rating {
 ```
 
 Model value binding uses public `set()` and `subscribe()` APIs. Separate `value`/`valueChange`
-or `checked`/`checkedChange` input/output properties require enabled experimental `syncInputs`.
-Any enabled mode except `'only-signal-controls'`, or an explicit selection, enables the pair; lists filter only optional state inputs.
-`syncInputs: []` therefore enables value transport alone. False or null pauses pair writes and
-ignores change/touch outputs through this transport. See the [complete paired-control example](./custom-controls.md#separate-input-output-pairs).
+or `checked`/`checkedChange` input/output properties require experimental `bindValuePairs: true`.
+Use syncInputs independently to select state inputs. An empty list never enables a pair. False/null
+for bindValuePairs pauses value and state writes, change/touch processing, and optional component
+focus/reset hooks. See the [complete paired-control example](./custom-controls.md#separate-input-output-pairs).
 
 :::caution Do not require the control model input
 
@@ -130,7 +130,7 @@ A value emitted by the control marks the directly bound aggregate node dirty and
 reconciles the complete value through its children. The descendants are not individually marked
 dirty solely because the aggregate control changed them.
 
-Optional standard state inputs—such as `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `min`, `max`, `name`, `pending`, `readonly`, `required`, and `touched`—receive node state only with experimental `syncInputs: 'always'` or when selected by another experimental mode. `'only-signal-controls'` synchronizes every supported input on a model control while excluding CVAs and paired input/output controls. Optional `touch`, `focus()`, and `reset()` hooks integrate with interaction and reset behavior.
+Optional standard state inputs—such as `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `min`, `max`, `name`, `pending`, `readonly`, `required`, and `touched`—receive node state only with experimental `syncInputs: 'all'` or when selected by another experimental mode. `'signal-controls'` synchronizes every supported input on a model control while excluding CVAs and paired input/output controls. Optional `touch`, `focus()`, and `reset()` hooks integrate with interaction and reset behavior.
 
 The complete recognized state surface is `errors`, `disabled`, `disabledReasons`, `dirty`,
 `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`,

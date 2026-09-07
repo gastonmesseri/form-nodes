@@ -30,7 +30,7 @@ export class ProfileComponent {
   profile = form({
     name: field('', [required, minLength(3)], {
       // Experimental: only explicit state options; validator inputs are not synchronized.
-      syncInputs: true,
+      syncInputs: 'declared',
       disabled: () => this.saving(),
     }),
   });

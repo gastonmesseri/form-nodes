@@ -78,7 +78,7 @@ describe('unified Form Nodes configuration', () => {
     const config = section === 'messages'
       ? { validatorMessages: () => ({ required: 'Local message' }) }
       : section === 'classes' ? { classes: {} }
-        : section === 'sync' ? { syncInputs: false }
+        : section === 'sync' ? { syncInputs: false as const }
           : section === 'nullClasses' ? { classes: null }
             : section === 'nullSync' ? { syncInputs: null }
               : section === 'nullMessages' ? { validatorMessages: null } : {};

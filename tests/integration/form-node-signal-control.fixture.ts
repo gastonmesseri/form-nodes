@@ -76,7 +76,7 @@ export class AotCompanySelector implements FormValueControl<CompanyValue> {
 @Component({
   standalone: true,
   selector: 'aot-company-selector-host',
-  providers: [provideFormNodesConfig({ syncInputs: 'always' })],
+  providers: [provideFormNodesConfig({ syncInputs: 'all' })],
   imports: [AotCompanySelector, FormNode],
   template: `<aot-company-selector [formNode]="myForm.company" />`,
 })
@@ -91,7 +91,7 @@ export class AotCompanySelectorHost {
 @Component({
   standalone: true,
   selector: 'aot-signal-control-host',
-  providers: [provideFormNodesConfig({ syncInputs: 'always' })],
+  providers: [provideFormNodesConfig({ syncInputs: 'all' })],
   imports: [AotSignalValueControl, AotSignalCheckboxControl, FormNode],
   template: `
     <aot-signal-value-control [formNode]="name" />
@@ -158,16 +158,16 @@ export class AotPairedCheckbox {
   `,
 })
 export class AotPairedControlHost {
-  name = signal(field.strict('node text', { syncInputs: [] }));
-  active = signal(field.strict(true, { syncInputs: 'only-declared' }));
+  name = signal(field.strict('node text', { bindValuePairs: true }));
+  active = signal(field.strict(true, { bindValuePairs: true }));
 
   pause() {
-    this.name.set(field.strict('paused text', { syncInputs: false }));
-    this.active.set(field.strict(true, { syncInputs: null }));
+    this.name.set(field.strict('paused text', { bindValuePairs: false }));
+    this.active.set(field.strict(true, { bindValuePairs: null }));
   }
 
   resume() {
-    this.name.set(field.strict('resumed', { syncInputs: { mode: 'always', inputs: [] } }));
-    this.active.set(field.strict(true, { syncInputs: true }));
+    this.name.set(field.strict('resumed', { bindValuePairs: true }));
+    this.active.set(field.strict(true, { bindValuePairs: true }));
   }
 }

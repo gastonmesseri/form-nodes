@@ -155,12 +155,12 @@ describe('custom-control input configuration', () => {
       TestBed.configureTestingModule({ providers: [
         provideFormNodesConfig({ validatorMessages: { required: 'Root required' } }),
         provideFormNodesConfig({ classes: { 'root-invalid': binding => binding.node().$api.invalid() } }),
-        provideFormNodesConfig({ syncInputs: option === 'syncFalse' ? 'always' : false }),
+        provideFormNodesConfig({ syncInputs: option === 'syncFalse' ? 'all' : false }),
       ] });
       const options: Record<typeof option, FormNodesConfig> = {
         classes: { classes: { 'local-invalid': binding => binding.node().$api.invalid() } },
         clearClasses: { classes: {} },
-        syncTrue: { syncInputs: 'always' },
+        syncTrue: { syncInputs: 'all' },
         syncFalse: { syncInputs: false },
         messages: { validatorMessages: { required: 'Local required' } },
         empty: {},
@@ -227,7 +227,7 @@ describe('custom-control input configuration', () => {
       const options: Record<typeof override, FormNodesConfig> = {
         none: {},
         classes: { classes: { 'local-invalid': binding => binding.node().$api.invalid() } },
-        sync: { syncInputs: 'always' },
+        sync: { syncInputs: 'all' },
         messages: { validatorMessages: { required: 'Local required' } },
         reset: { classes: null, syncInputs: null, validatorMessages: null },
         undefined: { classes: undefined, syncInputs: undefined, validatorMessages: undefined },
@@ -279,8 +279,8 @@ describe('custom-control input configuration', () => {
 
   describe.each(['field', 'form'] as const)('%s declared input selection', (kind) => {
     it.each([
-      { mode: 'always', inputs: ['disabled', 'readonly'] },
-      { mode: 'only-declared', inputs: ['disabled', 'readonly'] },
+      { inputs: ['disabled', 'readonly'] },
+      { inputs: 'declared' },
     ] as const)('applies selected public input names and aliases with %j', (selection) => {
       @Component({
         template: '<config-value-control [formNode]="node" />',
@@ -298,7 +298,7 @@ describe('custom-control input configuration', () => {
       const control = fixture.debugElement.children[0]!.componentInstance as ValueControl;
       expect(control.disabled()).toBe(false);
       expect(control.required()).toBe(false);
-      expect(control.readOnly()).toBe(selection.mode !== 'always');
+      expect(control.readOnly()).toBe(selection.inputs === 'declared');
       node.$api.disable();
       fixture.detectChanges();
       expect(control.disabled()).toBe(true);
@@ -310,7 +310,7 @@ describe('custom-control input configuration', () => {
       expect(control.required()).toBe(false);
     });
 
-    it.each([false, true, 'only-declared', 'always', 'only-signal-controls'] as const)('keeps value and touch binding with mode %s', (syncInputs) => {
+    it.each([false, 'declared', 'all', 'signal-controls'] as const)('keeps value and touch binding with mode %s', (syncInputs) => {
       @Component({
         template: '<config-value-control [formNode]="node" />',
         imports: [FormNode, ValueControl],
@@ -325,8 +325,8 @@ describe('custom-control input configuration', () => {
       const node = fixture.componentInstance.node;
       const control = fixture.debugElement.children[0]!.componentInstance as ValueControl;
       expect(control.disabled()).toBe(syncInputs === false);
-      expect(control.required()).toBe(syncInputs === 'always' || syncInputs === 'only-signal-controls');
-      expect(control.readOnly()).toBe(syncInputs !== 'always' && syncInputs !== 'only-signal-controls');
+      expect(control.required()).toBe(syncInputs === 'all' || syncInputs === 'signal-controls');
+      expect(control.readOnly()).toBe(syncInputs !== 'all' && syncInputs !== 'signal-controls');
       control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
       control.touch.emit();
       fixture.detectChanges();
@@ -341,7 +341,8 @@ describe('custom-control input configuration', () => {
     });
   });
 
-  it.each(['field', 'form'] as const)('restricts signal-only provider writes while keeping native and hybrid CVA %s bindings', (kind) => {
+  it.each((['field', 'form'] as const).flatMap(kind => (['all', 'signal-controls', 'cva'] as const).map(target => ({ kind, target }))))('targets input writes while keeping native and hybrid CVA bindings with %j', ({ kind, target }) => {
+    const syncSelection = { inputs: 'all', target } as const;
     @Component({
       template: `
         <config-value-control [formNode]="node" />
@@ -350,7 +351,7 @@ describe('custom-control input configuration', () => {
         <input [formNode]="native">
       `,
       imports: [FormNode, ValueControl, CvaControl, CheckboxControl],
-      providers: [provideFormNodesConfig({ syncInputs: 'only-signal-controls' })],
+      providers: [provideFormNodesConfig({ syncInputs: syncSelection })],
     })
     class Host {
       profile = form({ nested: form({ name: field('Mark', [required]) }, [required]) });
@@ -366,13 +367,13 @@ describe('custom-control input configuration', () => {
     const cva = cvaHost!.componentInstance as CvaControl;
     const checkbox = checkboxHost!.componentInstance as CheckboxControl;
     const native = nativeHost!.nativeElement as HTMLInputElement;
-    expect(value.required()).toBe(true);
-    expect(value.readOnly()).toBe(false);
-    expect(cva.readonly()).toBe(true);
+    expect(value.required()).toBe(target !== 'cva');
+    expect(value.readOnly()).toBe(target === 'cva');
+    expect(cva.readonly()).toBe(target === 'signal-controls');
     expect(cva.value()).toBe('owned');
     expect(cva.rendered).toEqual(host.node());
     expect(checkbox.checked()).toBe(true);
-    expect(checkbox.disabled()).toBe(false);
+    expect(checkbox.disabled()).toBe(target === 'cva');
     expect(native.value).toBe('Native');
     expect(native.required).toBe(true);
     cva.change(kind === 'field' ? 'Edited' : { name: 'Edited' });
@@ -396,7 +397,7 @@ describe('custom-control input configuration', () => {
     fixture.detectChanges();
     expect(cva.disabled).toBe(false);
     expect(cva.rendered).toEqual(host.node());
-    expect(cva.readonly()).toBe(true);
+    expect(cva.readonly()).toBe(target === 'signal-controls');
     expect(value.resets).toBe(1);
   });
 
@@ -405,7 +406,7 @@ describe('custom-control input configuration', () => {
       selector: 'config-opt-in',
       template: '<config-value-control [formNode]="name" />',
       imports: [FormNode, ValueControl],
-      providers: [provideFormNodesConfig({ syncInputs: 'always' })],
+      providers: [provideFormNodesConfig({ syncInputs: 'all' })],
     })
     class OptIn {
       name = field('Mark');

@@ -19,8 +19,9 @@ input synchronization. Angular providers override each option independently. The
 configureGlobalFormNodes(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined) | null | undefined;
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
-  syncInputs?: boolean | 'only-declared' | 'always' | 'only-signal-controls' | readonly SyncInputName[]
-    | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined; // Experimental
+  bindValuePairs?: boolean | null | undefined; // Experimental; default: false
+  syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[]
+    | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' } | null | undefined; // Experimental
 }): () => void;
 ```
 
@@ -47,14 +48,15 @@ form options.
 ## Independent options and precedence
 
 For each binding option, resolution is: **nearest explicit Angular provider → global setting →
-library default**. A node's explicit `syncInputs` option takes precedence over every provider. For messages, validator and form-tree overrides retain higher precedence;
+library default**. A node's explicit `syncInputs` or `bindValuePairs` option takes precedence over every provider. For messages, validator and form-tree overrides retain higher precedence;
 global messages remain the fallback after catalogs captured by nodes from Angular providers.
 
 | Option | Global behavior | `null` resets to |
 | --- | --- | --- |
 | `validatorMessages` | Static or reactive fallback catalog | Empty catalog, leaving built-in messages as the final fallback |
 | `classes` | Class map captured by new bindings | No automatic classes |
-| `syncInputs` | Experimental mode for new control connections (`false`, `true`/`'only-declared'`, `'always'`, an input list, or a mode/inputs object) | `false` |
+| `syncInputs` | Input selection for new connections: false, declared, all, signal-controls, a list, or `{ inputs, target }` | `false` |
+| `bindValuePairs` | Enables complete paired value connections for new bindings | `false` |
 
 Omitting an option or passing `undefined` preserves the current global setting. Multiple calls
 update only the supplied options. Explicit catalogs and class maps replace their previous maps;
@@ -65,13 +67,12 @@ bypassing the global value for that option. A provider with `validatorMessages: 
 empty provider catalog; normal message fallback still includes the global catalog. It does not
 force built-in English text.
 
-Input synchronization is **experimental and disabled by default**. `true` means `'only-declared'`;
-use `'always'` for every supported state input, or `'only-signal-controls'` to do so only for
-selected value/checked model controls, excluding CVAs and paired input/output controls. Pass `['disabled', 'dirty']` to always synchronize
-only those inputs, or `{ mode: 'only-declared', inputs: ['disabled'] }` to restrict the initial declarations. See [Modes and node overrides](./provide-form-nodes-config.md#custom-control-inputs).
-Value/checked models remain connected in every mode. Separate input/output value pairs require
-enabled experimental `syncInputs` other than `'only-signal-controls'`; even `[]` enables their value transport while selecting no
-optional state inputs. See [paired controls](../guides/custom-controls.md#separate-input-output-pairs).
+Both binding options are **experimental and disabled by default**. Use `syncInputs: 'signal-controls'`
+for all state inputs on actual model controls, or `{ inputs: ['disabled'], target: 'cva' }` for
+selected CVA inputs. The selected adapter determines the target even when a component offers both
+contracts. SyncInputs never enables paired value binding; use `bindValuePairs: true` independently.
+False/null disables either option without changing the other. Value models and standard CVAs always
+remain connected. See [input selection and paired binding](./provide-form-nodes-config.md#custom-control-inputs).
 
 ## Reactive messages and binding snapshots
 

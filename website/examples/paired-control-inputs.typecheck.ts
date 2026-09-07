@@ -27,6 +27,6 @@ export class PairedText {
 export class ProfileComponent {
   profile = form({
     // Experimental value transport, without any optional state input writes.
-    name: field('Ada', { syncInputs: [] }),
+    name: field('Ada', { bindValuePairs: true }),
   });
 }

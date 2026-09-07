@@ -89,10 +89,10 @@ configureGlobalFormNodes({ validatorMessages: { required: () => 123 } });
 void restoreGlobal;
 
 // Experimental synchronization modes are available on every configuration scope.
-field('', { syncInputs: true });
-field('', { syncInputs: 'only-declared', disabled: false });
-configureGlobalFormNodes({ syncInputs: 'always' });
-provideFormNodesConfig({ syncInputs: 'only-declared' });
-createFormPrimitives({ syncInputs: 'always' }).form({ name: field('') }, { syncInputs: null });
+field('', { syncInputs: 'declared' });
+field('', { syncInputs: 'declared', disabled: false });
+configureGlobalFormNodes({ syncInputs: 'all' });
+provideFormNodesConfig({ syncInputs: 'declared' });
+createFormPrimitives({ syncInputs: 'all' }).form({ name: field('') }, { syncInputs: null });
 // @ts-expect-error Only documented synchronization modes are accepted.
 field('', { syncInputs: 'sometimes' });

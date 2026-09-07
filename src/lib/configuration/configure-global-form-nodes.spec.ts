@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from '../validation/validators/required';
-import { configureGlobalFormNodes, getGlobalFormNodeClasses, getGlobalSyncInputs } from './configure-global-form-nodes';
+import { configureGlobalFormNodes, getGlobalFormNodeClasses, getGlobalSyncInputs, getGlobalBindValuePairs } from './configure-global-form-nodes';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => cleanups.splice(0).reverse().forEach(cleanup => cleanup()));
@@ -47,12 +47,12 @@ describe('global Form Nodes configuration', () => {
     const name = field('', [required]);
     if (kind === 'form') form({ nested: form({ name }) });
     const classMap = { active: () => true };
-    const first = configure({ validatorMessages: { required: 'First' }, classes: classMap, syncInputs: 'always' });
+    const first = configure({ validatorMessages: { required: 'First' }, classes: classMap, syncInputs: 'all' });
     const second = configure({ validatorMessages: { required: 'Second' } });
     const noop = configure({ validatorMessages: undefined, classes: undefined, syncInputs: undefined });
     expect(name.getError('required')?.message).toBe('Second');
     expect(getGlobalFormNodeClasses()).toBe(classMap);
-    expect(getGlobalSyncInputs()).toBe('always');
+    expect(getGlobalSyncInputs()).toBe('all');
     noop();
     first();
     expect(name.getError('required')?.message).toBe('Second');
@@ -65,20 +65,37 @@ describe('global Form Nodes configuration', () => {
     expect(name.getError('required')?.message).toBe('This field is required.');
   });
 
+  it('restores pair defaults independently of input selections', () => {
+    const first = configure({ bindValuePairs: true, syncInputs: 'signal-controls' });
+    const second = configure({ bindValuePairs: false });
+    const noop = configure({ bindValuePairs: undefined });
+    expect(getGlobalBindValuePairs()).toBe(false);
+    expect(getGlobalSyncInputs()).toBe('signal-controls');
+    noop();
+    second();
+    expect(getGlobalBindValuePairs()).toBe(true);
+    const cleared = configure({ bindValuePairs: null });
+    expect(getGlobalBindValuePairs()).toBe(false);
+    first();
+    cleared();
+    expect(getGlobalBindValuePairs()).toBe(false);
+    expect(getGlobalSyncInputs()).toBe(false);
+  });
+
   it('resets each option with null and restores nested identical values independently', () => {
     const classMap = { active: () => true };
-    const first = configure({ classes: classMap, syncInputs: 'always', validatorMessages: { required: 'Global' } });
-    const second = configure({ classes: classMap, syncInputs: 'always' });
+    const first = configure({ classes: classMap, syncInputs: 'all', validatorMessages: { required: 'Global' } });
+    const second = configure({ classes: classMap, syncInputs: 'all' });
     const reset = configure({ classes: null, syncInputs: null, validatorMessages: null });
     expect(getGlobalFormNodeClasses()).toEqual({});
     expect(getGlobalSyncInputs()).toBe(false);
     expect(field('', [required]).getError('required')?.message).toBe('This field is required.');
     reset();
     expect(getGlobalFormNodeClasses()).toBe(classMap);
-    expect(getGlobalSyncInputs()).toBe('always');
+    expect(getGlobalSyncInputs()).toBe('all');
     expect(field('', [required]).getError('required')?.message).toBe('Global');
     first();
-    expect(getGlobalSyncInputs()).toBe('always');
+    expect(getGlobalSyncInputs()).toBe('all');
     expect(getGlobalFormNodeClasses()).toBe(classMap);
     second();
     expect(getGlobalSyncInputs()).toBe(false);

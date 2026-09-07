@@ -41,7 +41,7 @@ one supported Angular contract:
 - `value = model(...)` or `checked = model(...)`.
 - `ControlValueAccessor` registered through `NG_VALUE_ACCESSOR`.
 - An automatically discovered signal-control component.
-- A separate `value`/`valueChange` or `checked`/`checkedChange` pair with enabled experimental `syncInputs`. Use `[]` for paired value transport alone; `false`/`null` leave it paused.
+- A separate `value`/`valueChange` or `checked`/`checkedChange` pair with experimental `bindValuePairs: true`. Use `syncInputs` separately for state inputs; false/null for bindValuePairs leaves the whole pair connection inactive.
 
 See [Advanced custom controls](../guides/custom-controls-advanced.md) for the supported shapes and precedence.
 

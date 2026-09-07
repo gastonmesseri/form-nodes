@@ -1,21 +1,22 @@
 # Signal Forms control adapter
 
-This folder connects `[formNode]` to custom components compatible with Angular Signal Forms'
-**`FormValueControl`** (`value = model(...)`) and **`FormCheckboxControl`** (`checked = model(...)`) contracts.
+This folder connects `[formNode]` to components compatible with Angular's **FormValueControl**
+(`value = model(...)`) and **FormCheckboxControl** (`checked = model(...)`) contracts. Detection
+uses runtime inputs/outputs and model operations; an explicit implements declaration is not required.
 See Angular's [custom controls guide](https://angular.dev/guide/forms/signals/custom-controls).
 
-Controls are discovered by their inputs and outputs; an explicit `implements` declaration is
-not required. `model-transport.ts` connects values through public model operations.
+`model-transport.ts` connects models through public operations. Model value, node reference,
+touch, focus, and reset connections work without experimental options.
 
-This adapter also supports paired `value`/`valueChange` or `checked`/`checkedChange` inputs and
-outputs through `paired-transport.ts`. That compatibility requires experimental `syncInputs`
-to be enabled with a mode other than `'only-signal-controls'`. Optional state and constraint input writes use the shared
-[`sync-control-inputs.ts`](../sync-control-inputs.ts) and are also gated by `syncInputs`.
-Model value connections remain available with `syncInputs: false`.
+`paired-transport.ts` handles separate value/valueChange and checked/checkedChange pairs.
+`bindValuePairs` gates their complete connection: values, interaction hooks, node reference, and
+any optional input writes. False/null leaves pairs recognized but inactive. Rebinding can pause
+and resume the connection; existing component input values remain unchanged while inactive.
 
-ControlValueAccessor and native DOM controls have separate adapters in
-[`control-value-accessor/`](../control-value-accessor/) and [`native-control/`](../native-control/).
+`syncInputs` independently selects additional state/constraint writes through the shared
+[`sync-control-inputs.ts`](../sync-control-inputs.ts). It never enables values. Signal-controls
+selects all inputs on model controls; `{ inputs, target }` can restrict a selection. Active pairs
+match only target all. Both experimental features use [`ng-internals`](../../ng-internals/).
 
-With `syncInputs: 'only-signal-controls'`, model controls receive all supported optional state
-and constraint inputs. Paired input/output controls remain inactive, and selecting the CVA
-adapter takes precedence even if the component also exposes a model.
+CVA and native controls have separate adapters. CVA takes precedence even on a component with a
+model, so it matches target cva rather than signal-controls.

@@ -49,7 +49,8 @@ export const connectControlInputs = <TNode extends Node>(
   node: () => TNode,
   injector: Injector,
   usesControlState = false,
-  signalModelControl = false,
+  controlKind: 'signal-controls' | 'cva' | 'pairs' = 'cva',
+  isConnected: () => boolean = () => true,
 ): SignalControlInputConnection => {
   const appId = injector.get(APP_ID);
   const inheritedMode = injector.get(FORM_NODE_SYNC_INPUTS, null) ?? getGlobalSyncInputs();
@@ -73,19 +74,20 @@ export const connectControlInputs = <TNode extends Node>(
   if (!bindings.length) return { inputNames };
 
   effect(() => {
+    if (!isConnected()) return;
     const currentNode = node();
     const config = getNodeInputConfig(currentNode);
-    const configuredMode = config.mode === undefined ? inheritedMode : config.mode;
-    const mode = configuredMode === 'only-signal-controls'
-      ? (signalModelControl ? 'always' : false)
-      : configuredMode;
-    if (mode === false || mode === null) return;
-    const selection = typeof mode === 'object'
-      ? ('inputs' in mode ? mode : { mode: 'always' as const, inputs: mode })
-      : { mode, inputs: undefined };
+    const configured = config.mode === undefined ? inheritedMode : config.mode;
+    if (configured === false || configured === null) return;
+    const selection = typeof configured === 'object'
+      ? ('inputs' in configured ? configured : { inputs: configured })
+      : configured === 'signal-controls'
+        ? { inputs: 'all' as const, target: 'signal-controls' as const }
+        : { inputs: configured };
+    if (selection.target && selection.target !== 'all' && selection.target !== controlKind) return;
     const selected = bindings.filter(({ name }) => {
-      return (!selection.inputs || selection.inputs.includes(name))
-        && (selection.mode === 'always' || config.declared.has(name));
+      return selection.inputs === 'all'
+        || (selection.inputs === 'declared' ? config.declared.has(name) : selection.inputs.includes(name));
     });
     const values = selected.map(binding => ({ ...binding, value: readBindingValue(currentNode, binding.name, appId) }));
     untracked(() => {

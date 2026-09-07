@@ -33,7 +33,7 @@ registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
 beforeAll(() => {
   TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
-  TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] });
+  TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'all' })] });
 });
 afterAll(() => TestBed.resetTestEnvironment());
 

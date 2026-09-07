@@ -92,7 +92,7 @@ describe('connectCustomControlAdapter', () => {
     }
     registerSignalModelForJit(Control, 'value');
     const fixture = TestBed.createComponent(Control);
-    const name = field('node', { syncInputs: true });
+    const name = field('node', { bindValuePairs: true });
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       connectCustomControlAdapter(fixture.componentInstance as never, () => name, fixture.debugElement.injector);

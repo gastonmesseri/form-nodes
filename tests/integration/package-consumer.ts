@@ -69,5 +69,5 @@ export class PackageConsumer {
   }
 }
 
-const restoreGlobal = configureGlobalFormNodes({ classes: null, syncInputs: true });
+const restoreGlobal = configureGlobalFormNodes({ classes: null, syncInputs: 'declared' });
 restoreGlobal();

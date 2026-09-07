@@ -24,7 +24,7 @@ beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platfor
 afterAll(() => TestBed.resetTestEnvironment());
 
 describe('connectControlInputs', () => {
-  beforeEach(() => TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] }));
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'all' })] }));
   afterEach(() => TestBed.resetTestingModule());
 
   it('keeps declared input names without writing state when synchronization is disabled', () => {

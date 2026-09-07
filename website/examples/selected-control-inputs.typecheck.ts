@@ -30,12 +30,12 @@ export class ProfileComponent {
   profile = form({
     // Lists always synchronize exactly the selected inputs.
     name: field('', { syncInputs: ['disabled', 'dirty'] }),
-    // Explicit mode with a selection: equivalent to ['disabled'].
-    nickname: field('', { syncInputs: { mode: 'always', inputs: ['disabled'] } }),
-    // Only disabled is initially declared; dirty remains component-owned.
+    // Explicit input selection: equivalent to ['disabled'].
+    nickname: field('', { syncInputs: { inputs: ['disabled'] } }),
+    // Select disabled only on model controls; dirty remains component-owned.
     notes: field('', {
       disabled: false,
-      syncInputs: { mode: 'only-declared', inputs: ['disabled', 'dirty'] },
+      syncInputs: { inputs: ['disabled'], target: 'signal-controls' },
     }),
   });
 }
