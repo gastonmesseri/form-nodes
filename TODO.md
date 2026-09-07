@@ -52,9 +52,9 @@
 
   })
 
-- [NEXT] [ ] What version name should i use when i publish the package?
+- [NEXT] [ ] Change useControlState to useFormNodeState
 
-- [NEXT] [ ] Check if useNgControl hook in DL works
+- [NEXT] [ ] What version name should i use when i publish the package?
 
 - [NEXT] Support at least node version v20.19.4 (the one installed in DL)
 
@@ -377,6 +377,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 
 ## Completed
+
+- [x] Check and support the supplied DL `useNgControl` hook registration and method-wrapping `useFormControlState` observer with `[formNode]`. Cover fields, forms, nested rebinding, async errors, reset, destruction, and production AOT. Document unsupported dynamic validator options and the requirement to forward every blur callback for blur-debounced inputs.
 
 - [x] Make custom-control state input synchronization optional with `provideFormNodeConfig({ syncControlInputs: false })`, preserving value/checked models, native and CVA behavior. Explain input-name detection instead of interface checks and highlight the option in the basic guide, advanced guide, and configuration reference.
 - [x] Lower the Angular 21 minimum to 21.0.7 with TypeScript 5.9.3. Preserve error normalization across Signal Forms versions, build with the minimum toolchain, and verify the same tarball in Angular 21.0.7, 21.2.18, and 22.1.5 consumers.

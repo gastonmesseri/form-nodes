@@ -1,7 +1,8 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
-import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, type OnChanges, type SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 
 import { field, form, FormNode, useControlState, required, type Field } from '../../src/public-api';
+import { useLegacyNgControl } from '../helpers/legacy-ng-control-hook';
 
 type Company = { companyId: number; companyName: string };
 type CompanyValue = { companyId: number | null; companyName: string | null };
@@ -111,4 +112,29 @@ export class AotSignalControlHost {
   name = field.strict('AOT initial', [required]);
   active = field.strict(false);
   pairedName = field.strict('AOT paired initial');
+}
+
+@Component({
+  selector: 'aot-direct-hook-control',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <button [disabled]="hook.disabled()" (click)="rendered.set('clicked'); hook.emitChange(rendered())" (blur)="hook.markAsTouched()">
+      {{ rendered() }} / {{ hook.value() }} / {{ hook.touched() }} / {{ hook.invalid() }}
+    </button>
+  `,
+})
+export class AotDirectHookControl {
+  rendered = signal('');
+
+  hook = useLegacyNgControl<string>({
+    writeValue: value => this.rendered.set(value ?? ''),
+  });
+}
+
+@Component({
+  imports: [FormNode, AotDirectHookControl],
+  template: '<aot-direct-hook-control [formNode]="profile.name" />',
+})
+export class AotDirectHookHost {
+  profile = form({ name: field('', [required]) });
 }

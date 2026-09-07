@@ -52,6 +52,13 @@ export class FormNodeNgControl {
 
   _destroyed = false;
 
+  // Match the reactive state surface read by Angular-aware control observers.
+  _touched = computed(() => this.touched);
+
+  _pristine = computed(() => this.pristine);
+
+  _status = computed(() => this.status);
+
   _manualErrorSource = computed<readonly ValidationError.WithOptionalTargetNode<Node>[]>(() => {
     return Object.entries(this._manualErrors() ?? {}).map(([kind, context]) => ({
       kind,
@@ -80,6 +87,9 @@ export class FormNodeNgControl {
       const silentStatus = this._silentStatus;
       this._silentStatus = undefined;
       untracked(() => {
+        // Method-wrapping observers deliberately read data untracked. Notify that boundary
+        // on node changes without running Angular validators or emitting extra control events.
+        this.updateValueAndValidity();
         if (!last || !Object.is(last.value, current.value)) {
           this._valueEmitter.emit(current.value);
           this._eventEmitter.emit(new ValueChangeEvent(current.value, this.control));
