@@ -4,6 +4,7 @@ import type { Node } from '../../types/node.type';
 import { getFormNodeName } from './form-node-name';
 import type { Field } from '../../primitives/field';
 import { FORM_NODE_SYNC_CONTROL_INPUTS } from '../form-node-config';
+import { getGlobalSyncControlInputs } from '../../configuration/global-form-nodes-config';
 import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
 
 export type SignalControlInputConnection = {
@@ -54,7 +55,7 @@ export const connectSignalControlInputs = <TNode extends Node>(
       return isInputSignal(candidate) ? [[name, name]] : [];
     }));
   const inputNames = new Set(inputs.keys());
-  if (injector.get(FORM_NODE_SYNC_CONTROL_INPUTS, true) === false) return { inputNames };
+  if ((injector.get(FORM_NODE_SYNC_CONTROL_INPUTS, null) ?? getGlobalSyncControlInputs()) === false) return { inputNames };
   const bindingNames = Object.keys(bindingValues) as (keyof ReturnType<typeof getBindingValues>)[];
   const bindings = bindingNames.flatMap((name) => {
     const property = inputs.get(name);

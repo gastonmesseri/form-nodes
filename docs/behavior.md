@@ -1518,7 +1518,7 @@ and examples for every configuration scope.
 Built-in messages resolve from lowest to highest priority as follows:
 
 1. The English message included with the library.
-2. The process-wide catalog installed by `configureGlobalValidatorMessages()`.
+2. The process-wide catalog installed by `configureGlobalFormNodes()`.
 3. The closest Angular catalog captured from `provideFormNodesConfig()`.
 4. The closest fallback catalog from the node's `createFormPrimitives()` factory set.
 5. The closest ancestor form or array `validatorMessages` option.
@@ -1530,19 +1530,21 @@ to the next lower-priority layer.
 Use global configuration for non-Angular applications or a deliberate process-wide default:
 
 ```ts
-const restoreMessages = configureGlobalValidatorMessages(() => ({
-  required: () => language() === 'es'
-    ? 'Este campo es obligatorio.'
-    : 'This field is required.',
-  min: ({ min }) => `The minimum value is ${min}.`,
-}));
+const restoreMessages = configureGlobalFormNodes({
+  validatorMessages: () => ({
+    required: () => language() === 'es'
+      ? 'Este campo es obligatorio.'
+      : 'This field is required.',
+    min: ({ min }) => `The minimum value is ${min}.`,
+  }),
+});
 
 // Useful in tests or temporary scopes.
 restoreMessages();
 ```
 
-The returned function restores the catalog that preceded that call, provided it is still the
-current global configuration. Because this state belongs to the JavaScript module, concurrent SSR
+The returned function removes this call's overrides independently, preserving later registrations
+and skipping already cleaned-up registrations during restoration. Because this state belongs to the JavaScript module, concurrent SSR
 requests must not mutate it per request; use a provider or form scope instead.
 
 Configure an Angular application or route once with a factory that may use `inject()`:
@@ -2621,7 +2623,7 @@ bootstrapApplication(App, {
 });
 ```
 
-Each class predicate has its own computed reactive context. A predicate reruns only when a signal it read changes, including signals unrelated to the bound node. After rendering, `[formNode]` adds the class when the predicate returns `true` and removes it when it returns `false`. The nearest injected configuration applies to the binding.
+Each class predicate has its own computed reactive context. A predicate reruns only when a signal it read changes, including signals unrelated to the bound node. After rendering, `[formNode]` adds the class when the predicate returns `true` and removes it when it returns `false`. The nearest explicit class provider applies to the binding, with the global map as fallback.
 
 The predicate receives the same stable `FormNodeBinding` exposed by the template directive, including the host `element`, its `injector`, the reactive `node` and binding-filtered `errors` signals, and the binding-specific operations. Generic binding code uses `$api` because the bound form may legally contain a child named `api`; this is one of the cases for which the collision-safe escape hatch exists.
 
@@ -2767,7 +2769,7 @@ warning paths in the separate production Chromium process.
 
 `provideFormNodesConfig({ syncControlInputs: false })` disables matching state and constraint
 input writes by `[formNode]` for custom signal controls, input-output pairs, and CVA components.
-The default is true when no provider configures synchronization. This option inherits independently
+With no provider, synchronization uses the global setting, whose library default is true. This option inherits independently
 from classes and messages; omitted options preserve their nearest explicit provider.
 Configuration is resolved at connection time, and the choice persists through node rebinding.
 Input discovery still records public names and aliases so native fallback does not overwrite
@@ -2946,8 +2948,8 @@ ordinary `Provider[]`, supporting application, route, NgModule, and component in
 
 Each of the three options uses an independent token. Omitting an option (or passing `undefined`)
 preserves its inherited provider. Explicit `classes` replace only the class map without merging;
-explicit `syncControlInputs` changes only synchronization. With no provider, classes default to an
-empty map and synchronization defaults to true. An empty configuration registers nothing;
+explicit `syncControlInputs` changes only synchronization. With no provider, each binding option uses its global setting, then the library default
+(an empty class map or true synchronization). An empty configuration registers nothing;
 `{ classes: {} }` clears only classes. Multiple calls within one injector follow the same per-option
 rule, with the last explicit registration winning. Native controls, value binding, interaction
 hooks, node validation, and captured message catalogs retain their existing behavior.
@@ -2995,3 +2997,32 @@ remain reactive. Factory return types remain catalogs; null is supported on the 
 Angular reference remains `v22.1.5`, `packages/forms/signals/src/api/di.ts` and configuration tests
 in `packages/forms/signals/test/web/form_field.spec.ts`. Explicit null reset semantics are a
 Form Nodes API addition; the underlying Angular binding state transitions remain unchanged.
+
+## Process-wide Form Nodes configuration
+
+`configureGlobalFormNodes()` and `GlobalFormNodesConfig` replace the message-only global setter.
+Each option updates independently; omission and undefined preserve current global values. Null
+resets only that option to an empty class map, true synchronization, or an empty message catalog.
+Explicit maps replace rather than merge. The global setter is safe outside Angular DI.
+
+Binding precedence is nearest explicit option provider, then global option, then library default.
+Provider null class/synchronization options bypass the global setting. Provider null messages
+supply an empty catalog but preserve node-tree and global fallback. Node-local and captured
+provider message precedence is unchanged.
+
+Global class maps are captured at directive creation and input synchronization at control
+connection. Changing or restoring global settings does not reconnect existing controls or replace
+existing class effects. Captured class predicates keep their signal dependencies. Global message
+sources and selected callbacks remain reactive for existing and new failing nodes. Global sources
+are not DI factories; the setter does not establish an injection context.
+
+Every configuration call returns an idempotent per-option cleanup. Removing an older registration
+does not overwrite a newer one; when newer registrations are removed, inactive registrations are
+skipped. Identity is tracked per registration, including equal primitive values and reused maps.
+Global defaults are shared module state; request-scoped values belong in providers or node options.
+
+Reference: Angular v22.1.5, commit 468b65b74566537456c192ac4281795c5a1e1a5e,
+packages/forms/signals/src/api/di.ts and configuration tests in
+packages/forms/signals/test/web/form_field.spec.ts. Angular configures binding classes through DI;
+this process-wide fallback is an intentional Form Nodes extension. Native-control state, model
+binding, touch, reset, validation, and injector ownership retain their existing transitions.

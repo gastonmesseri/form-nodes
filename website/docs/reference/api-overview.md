@@ -32,7 +32,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
 | Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
 | Configure validator messages through Angular DI | `provideFormNodesConfig()` | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) |
-| Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [`configureGlobalValidatorMessages()`](./configure-global-validator-messages.md) |
+| Configure process-wide messages and binding defaults | `configureGlobalFormNodes()` | [`configureGlobalFormNodes()`](./configure-global-form-nodes.md) |
 | Add reactive status classes to every binding | `provideFormNodesConfig()` | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) |
 | Inspect the API shared by all nodes | `Node`, `DynamicNode`, and `NodeApi` | [Node API](./node-api.md) |
 | Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
@@ -166,16 +166,18 @@ Message configuration follows this precedence, from highest to lowest:
 2. Closest form or array `validatorMessages` catalog.
 3. Closest `createFormPrimitives()` validator-message default.
 4. Closest `provideFormNodesConfig()` provider.
-5. `configureGlobalValidatorMessages()`.
+5. `configureGlobalFormNodes()`.
 6. Built-in English message.
 
 Use provider or form scopes for request-specific SSR locales. Process-wide configuration is better
 suited to non-Angular usage or one immutable application default.
 
 ```ts
-const restoreMessages = configureGlobalValidatorMessages({
-  required: 'This value is required.',
-  min: ({ min }) => `The minimum value is ${min}.`,
+const restoreMessages = configureGlobalFormNodes({
+  validatorMessages: {
+    required: 'This value is required.',
+    min: ({ min }) => `The minimum value is ${min}.`,
+  },
 });
 
 // Restore the previous global catalog when a temporary scope ends.

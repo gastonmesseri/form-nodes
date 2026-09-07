@@ -9,8 +9,7 @@ The [reactive configuration example](../examples/executable-examples.mdx#reactiv
 is compiled and executed to verify message precedence and inherited state.
 
 Form Nodes keeps configuration close to the feature it affects. Node options configure one node or
-tree, Angular providers configure an injector scope, and the process-wide API supplies only a
-fallback validator-message catalog.
+tree, Angular providers configure an injector scope, and the process-wide API supplies fallback messages and defaults for new bindings.
 
 ## Configuration map
 
@@ -20,10 +19,10 @@ fallback validator-message catalog.
 | Node or subtree | `field()`, `form()`, `array()`, and `group()` options | The declared node; selected options inherit | Function sources are reactive |
 | Angular injector | `provideFormNodesConfig()` | Messages for nodes created in that scope; descendant `[formNode]` bindings | Selected message functions and class predicates are reactive |
 | Factory set | `createFormPrimitives()` | Nodes created through that set | Catalog sources are reactive; node options override shared defaults |
-| JavaScript process | `configureGlobalValidatorMessages()` | Fallback for every node | Catalog sources and selected messages are reactive |
+| JavaScript process | `configureGlobalFormNodes()` | Fallback messages; classes and input synchronization for new bindings | Catalog sources, selected messages, and captured class predicates are reactive |
 
-There is currently no process-wide API that changes defaults such as nullability, debounce,
-disabled state, or validators. `createFormPrimitives()` can scope nullability, validator messages,
+Global configuration controls messages, classes, and input synchronization. It does not change
+node defaults such as nullability, debounce, disabled state, or validators. `createFormPrimitives()` can scope nullability, validator messages,
 and injector inheritance policies to one factory set; configure other decisions at the appropriate
 node or ancestor.
 
@@ -237,7 +236,7 @@ Message resolution uses the first definition that returns a message:
 2. The closest form or array `validatorMessages` catalog, walking toward the root.
 3. The closest `createFormPrimitives()` validator-message default, walking toward the root.
 4. The closest captured `provideFormNodesConfig()` catalog, walking toward the root.
-5. `configureGlobalValidatorMessages()`.
+5. `configureGlobalFormNodes()`.
 6. The built-in English message.
 
 Missing catalog entries and callbacks returning `undefined` continue to the next layer. A nested
@@ -299,16 +298,24 @@ failing.
 
 ### Process-wide fallback
 
-For a shared fallback in an Angular browser application, call `configureGlobalValidatorMessages()`
+`configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, and `syncControlInputs`.
+Each option is a fallback below its nearest explicit Angular provider. Omitted options preserve
+previous global settings; `null` resets that global option to the library default.
+Configure binding defaults before bootstrap: existing bindings retain their class maps and
+synchronization settings. Global messages and captured class predicates remain reactive.
+
+For a shared fallback in an Angular browser application, call `configureGlobalFormNodes()`
 in `main.ts`, before `bootstrapApplication()` (or before bootstrapping `AppModule`). Keep the catalog
 in a separate data file and perform setup explicitly at the entry point; no initializer is needed
-for a static catalog. See the [complete startup example](./configure-global-validator-messages.md#where-to-call-it).
+for a static catalog. See the [complete startup example](./configure-global-form-nodes.md#where-to-call-it).
 
 Keep startup configuration active. The following fragment shows how to restore a temporary override:
 
 ```ts
-const restoreMessages = configureGlobalValidatorMessages({
-  required: 'This value is required.',
+const restoreMessages = configureGlobalFormNodes({
+  validatorMessages: {
+    required: 'This value is required.',
+  },
 });
 
 // Restore the previous catalog when this temporary scope ends.

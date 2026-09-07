@@ -1,4 +1,3 @@
-// app.config.ts
 import type { ApplicationConfig } from '@angular/core';
 
 import { provideFormNodesConfig } from '@ngblocks/form-nodes';

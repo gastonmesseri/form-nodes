@@ -17,7 +17,7 @@ For all node and binding options—not only messages—see the
 | --- | --- |
 | Standalone Angular application | `provideFormNodesConfig()` in `app.config.ts`, passed to `bootstrapApplication` |
 | NgModule application | `provideFormNodesConfig()` in `AppModule.providers` |
-| Shared process-wide fallback, including nodes outside DI | `configureGlobalValidatorMessages()` in `main.ts`, before bootstrapping |
+| Shared process-wide fallback, including nodes outside DI | `configureGlobalFormNodes()` in `main.ts`, before bootstrapping |
 | Larger message catalog | Export the data from a separate file and import it at the chosen configuration point |
 
 Prefer the Angular provider for application configuration, particularly when messages depend on
@@ -25,7 +25,7 @@ injected translations or an SSR request. Use the global setter when a shared fal
 Do not repeat global setup in component constructors or lifecycle hooks. A static catalog needs no
 application initializer or side-effect-only import.
 
-See the complete [global startup example](../reference/configure-global-validator-messages.md#where-to-call-it)
+See the complete [global startup example](../reference/configure-global-form-nodes.md#where-to-call-it)
 and [application provider example](../reference/provide-form-nodes-config.md#validator-messages).
 
 ## Precedence
@@ -36,7 +36,7 @@ The closest definition wins:
 2. Closest form or array `validatorMessages` catalog.
 3. Closest `createFormPrimitives()` validator-message default.
 4. Closest Angular `provideFormNodesConfig()` catalog.
-5. Process-wide `configureGlobalValidatorMessages()` catalog.
+5. Process-wide `configureGlobalFormNodes()` catalog.
 6. Built-in English message.
 
 Missing entries and message functions returning `undefined` continue through the fallback chain.
@@ -112,13 +112,15 @@ the global and built-in fallbacks.
 
 Use process-wide configuration outside Angular or for one shared application default. In an Angular
 browser entry point, call it in `main.ts` before bootstrapping. The
-[startup example](../reference/configure-global-validator-messages.md#where-to-call-it) keeps the
+[startup example](../reference/configure-global-form-nodes.md#where-to-call-it) keeps the
 catalog active; the following fragment instead shows a temporary override:
 
 ```ts
-const restore = configureGlobalValidatorMessages({
-  required: 'This value is required.',
-  min: ({ min, actual }) => `${actual} must be at least ${min}.`,
+const restore = configureGlobalFormNodes({
+  validatorMessages: {
+    required: 'This value is required.',
+    min: ({ min, actual }) => `${actual} must be at least ${min}.`,
+  },
 });
 
 // Restore the previous catalog when a temporary scope ends.
@@ -188,11 +190,13 @@ Catalog sources and the selected message function run reactively while the valid
 ```ts
 const locale = signal<'en' | 'es'>('en');
 
-configureGlobalValidatorMessages(() => ({
-  required: () => locale() === 'es'
-    ? 'Este campo es obligatorio.'
-    : 'This field is required.',
-}));
+configureGlobalFormNodes({
+  validatorMessages: () => ({
+    required: () => locale() === 'es'
+      ? 'Este campo es obligatorio.'
+      : 'This field is required.',
+  }),
+});
 ```
 
 Changing `locale` updates existing failing errors without recreating the form. This works inside and outside Angular dependency injection.

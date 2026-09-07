@@ -1,11 +1,13 @@
 import { signal } from '@angular/core';
 
-import { configureGlobalValidatorMessages, field, form, required } from '@ngblocks/form-nodes';
+import { configureGlobalFormNodes, field, form, required } from '@ngblocks/form-nodes';
 
 const locale = signal<'en' | 'es'>('en');
 const locked = signal(false);
-const restoreMessages = configureGlobalValidatorMessages({
-  required: 'Global required message.',
+const restoreMessages = configureGlobalFormNodes({
+  validatorMessages: {
+    required: 'Global required message.',
+  },
 });
 
 try {

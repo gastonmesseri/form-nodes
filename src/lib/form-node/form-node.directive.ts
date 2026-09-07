@@ -14,6 +14,7 @@ import { registerNodeBindingInjector } from '../utils/node-injector';
 import type { ValidationError } from '../validation/validation.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
+import { getGlobalFormNodeClasses } from '../configuration/global-form-nodes-config';
 import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../types/node.type';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';
@@ -79,7 +80,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 
   private explicitPassThrough = inject(FORM_NODE_PASS_THROUGH, { optional: true, self: true }) ?? false;
 
-  private configuredClasses = inject(FORM_NODE_CLASSES, { optional: true });
+  private configuredClasses = inject(FORM_NODE_CLASSES, { optional: true }) ?? getGlobalFormNodeClasses();
 
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
@@ -158,7 +159,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   }
 
   private installClassBindingEffect() {
-    const classes = Object.entries(this.configuredClasses ?? {}).map(([className, predicate]) => [
+    const classes = Object.entries(this.configuredClasses).map(([className, predicate]) => [
       className,
       computed(() => predicate(this)),
     ] as const);

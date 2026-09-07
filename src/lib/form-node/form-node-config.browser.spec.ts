@@ -11,6 +11,7 @@ import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { provideFormNodesConfig, type FormNodesConfig } from './form-node-config';
+import { configureGlobalFormNodes } from '../configuration/global-form-nodes-config';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -65,7 +66,11 @@ registerSignalInputForJit(CheckboxControl, 'disabled', 'disabled');
 registerSignalInputForJit(CvaControl, 'readonly', 'readonly');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
-afterEach(() => TestBed.resetTestingModule());
+const restoreGlobalConfig: (() => void)[] = [];
+afterEach(() => {
+  TestBed.resetTestingModule();
+  restoreGlobalConfig.splice(0).reverse().forEach(restore => restore());
+});
 afterAll(() => TestBed.resetTestEnvironment());
 
 describe('custom-control input configuration', () => {
@@ -195,6 +200,68 @@ describe('custom-control input configuration', () => {
       expect(control.value()).toEqual(kind === 'field' ? '' : { name: '' });
       expect(classes.contains('root-invalid')).toBe(!['classes', 'clearClasses', 'nullClasses', 'allNull'].includes(option));
       expect(classes.contains('local-invalid')).toBe(option === 'classes');
+    });
+  });
+
+  describe.each(['field', 'form'] as const)('%s global defaults', (kind) => {
+    it.each(['none', 'classes', 'sync', 'messages', 'reset', 'undefined'] as const)('applies global defaults below a %s provider and snapshots binding options', (override) => {
+      const showClass = signal(true);
+      const restore = configureGlobalFormNodes({
+        classes: { 'global-invalid': binding => showClass() && binding.node().$api.invalid() },
+        syncControlInputs: false,
+        validatorMessages: { required: 'Global required' },
+      });
+      restoreGlobalConfig.push(restore);
+      const options: Record<typeof override, FormNodesConfig> = {
+        none: {},
+        classes: { classes: { 'local-invalid': binding => binding.node().$api.invalid() } },
+        sync: { syncControlInputs: true },
+        messages: { validatorMessages: { required: 'Local required' } },
+        reset: { classes: null, syncControlInputs: null, validatorMessages: null },
+        undefined: { classes: undefined, syncControlInputs: undefined, validatorMessages: undefined },
+      };
+      @Component({
+        template: '<config-value-control [formNode]="node" />',
+        imports: [FormNode, ValueControl],
+        providers: [provideFormNodesConfig(options[override])],
+      })
+      class Host {
+        profile = form({ name: field('', [required]) });
+
+        node = kind === 'field' ? this.profile.name : this.profile;
+      }
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const host = fixture.componentInstance;
+      const element = fixture.debugElement.children[0]!;
+      const control = element.componentInstance as ValueControl;
+      const classes = (element.nativeElement as HTMLElement).classList;
+      const inheritedClass = override !== 'classes' && override !== 'reset';
+      expect(classes.contains('global-invalid')).toBe(inheritedClass);
+      expect(classes.contains('local-invalid')).toBe(override === 'classes');
+      expect(control.disabled()).toBe(override !== 'sync' && override !== 'reset');
+      expect(host.profile.name.getError('required')?.message).toBe(override === 'messages' ? 'Local required' : 'Global required');
+      showClass.set(false);
+      fixture.detectChanges();
+      expect(classes.contains('global-invalid')).toBe(false);
+      showClass.set(true);
+      restore();
+      fixture.detectChanges();
+      expect(classes.contains('global-invalid')).toBe(inheritedClass);
+      expect(control.disabled()).toBe(override !== 'sync' && override !== 'reset');
+      expect(host.profile.name.getError('required')?.message).toBe(override === 'messages' ? 'Local required' : 'This field is required.');
+      control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
+      control.touch.emit();
+      fixture.detectChanges();
+      expect(host.profile.name()).toBe('Marco');
+      expect(host.node.$api.touched()).toBe(true);
+      expect(classes.contains('global-invalid')).toBe(false);
+      expect(classes.contains('local-invalid')).toBe(false);
+      const later = TestBed.createComponent(Host);
+      later.detectChanges();
+      const laterElement = later.debugElement.children[0]!;
+      expect((laterElement.nativeElement as HTMLElement).classList.contains('global-invalid')).toBe(false);
+      expect((laterElement.componentInstance as ValueControl).disabled()).toBe(false);
     });
   });
 

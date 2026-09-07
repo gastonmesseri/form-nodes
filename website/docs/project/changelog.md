@@ -12,6 +12,8 @@ canonical release record.
 
 ### Changed
 
+- **Breaking API change:** `configureGlobalFormNodes({ validatorMessages, classes, syncControlInputs })` replaces `configureGlobalValidatorMessages()`. Global options update independently below Angular providers; binding defaults are captured on connection, while global messages remain reactive. Cleanup callbacks preserve later overrides and skip already cleaned-up configurations.
+
 - **Breaking API change:** `provideFormNodesConfig({ validatorMessages, classes, syncControlInputs })` replaces `provideValidatorMessages()` and `provideFormNodeConfig()`; `FormNodesConfig` replaces `FormNodeConfig`. Message factories retain injection and reactive message support, and the unified provider also works in component providers. All three options inherit independently; configuring input synchronization preserves inherited classes, and configuring or clearing classes preserves synchronization. Explicit class maps replace rather than merge with inherited maps; an empty configuration is a no-op.
 
 - **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.

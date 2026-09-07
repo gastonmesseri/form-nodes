@@ -1,6 +1,6 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, createFormPrimitives, field, form, group, required, provideFormNodesConfig, type FormNodeValue } from '@ngblocks/form-nodes';
+import { FormNode, array, createFormPrimitives, field, form, group, required, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -68,3 +68,6 @@ export class PackageConsumer {
     this.nameBinding().errors();
   }
 }
+
+const restoreGlobal = configureGlobalFormNodes({ classes: null, syncControlInputs: true });
+restoreGlobal();

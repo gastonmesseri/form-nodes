@@ -6,7 +6,7 @@ import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from './validators/required';
 import { provideFormNodesConfig } from '../form-node/form-node-config';
-import { configureGlobalValidatorMessages } from './validator-messages';
+import { configureGlobalFormNodes } from '../configuration/global-form-nodes-config';
 
 describe('validator messages', () => {
   const restoreConfigurations: (() => void)[] = [];
@@ -17,9 +17,9 @@ describe('validator messages', () => {
 
   it('resolves reactive messages by local, form, provider, global, and built-in precedence', () => {
     const language = signal<'en' | 'es'>('en');
-    const restore = configureGlobalValidatorMessages(() => ({
+    const restore = configureGlobalFormNodes({ validatorMessages: () => ({
       required: () => `global:${language()}`,
-    }));
+    }) });
     restoreConfigurations.push(restore);
     const globalField = field('', [required]);
 
@@ -66,9 +66,9 @@ describe('validator messages', () => {
   });
 
   it('passes structured constraint parameters to configured messages', () => {
-    const restore = configureGlobalValidatorMessages({
+    const restore = configureGlobalFormNodes({ validatorMessages: {
       min: ({ min, actual }) => `${actual} must be at least ${min}`,
-    });
+    } });
     restoreConfigurations.push(restore);
     const age = field(16, [min(18)]);
 

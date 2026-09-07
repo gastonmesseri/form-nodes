@@ -75,7 +75,7 @@ const sidebars: SidebarsConfig = {
             'reference/form-value-contract',
             'reference/provide-form-nodes-config',
             'reference/provide-form-node-pass-through',
-            'reference/configure-global-validator-messages',
+            'reference/configure-global-form-nodes',
             'reference/angular-forms-status-classes',
             'reference/form-node-token',
           ],

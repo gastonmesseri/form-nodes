@@ -1,7 +1,8 @@
-import { InjectionToken, assertInInjectionContext, inject, signal, type Injector } from '@angular/core';
+import { InjectionToken, assertInInjectionContext, inject, type Injector } from '@angular/core';
 
 import type { Node } from '../types/node.type';
 import type { BuiltInValidationErrorMap, ValidationError } from './validation.type';
+import { getGlobalValidatorMessages } from '../configuration/global-form-nodes-config';
 
 /** Structured built-in error data available to a configured message function. */
 export type ValidatorMessageParameters<TKind extends keyof BuiltInValidationErrorMap> = Omit<
@@ -26,7 +27,6 @@ type ValidatorMessageResolver = <TKind extends keyof BuiltInValidationErrorMap>(
 ) => string | undefined;
 
 export const VALIDATOR_MESSAGES = new InjectionToken<ValidatorMessages>('ValidatorMessages');
-const globalValidatorMessages = signal<ValidatorMessagesSource>({});
 const nodeValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
 const nodeDefaultValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
 const nodeProvidedValidatorMessages = new WeakMap<Node, ValidatorMessages>();
@@ -57,28 +57,6 @@ const getCurrentProvidedMessages = (injector?: Injector): ValidatorMessages | un
 
 const getParent = (node: Node): Node | null => {
   return (node as Node & { $api: { parent: () => Node | null } }).$api.parent();
-};
-
-/**
- * Configures the process-wide fallback catalog used outside or below Angular configuration.
- *
- * A source function is evaluated reactively during failing validation. Calling the returned
- * function restores the catalog that was active before this call. Prefer scoped providers or form
- * configuration for concurrent SSR requests, where module state is shared between requests.
- *
- * @reactive Tracks signals read by the catalog source and its selected message function.
- *
- * @param messages Static or reactive partial message catalog.
- * @returns A function that restores the previous global catalog when this configuration is current.
- */
-export const configureGlobalValidatorMessages = (
-  messages: ValidatorMessages | (() => ValidatorMessages | undefined),
-): (() => void) => {
-  const previousMessages = globalValidatorMessages();
-  globalValidatorMessages.set(messages);
-  return () => {
-    if (globalValidatorMessages() === messages) globalValidatorMessages.set(previousMessages);
-  };
 };
 
 export const registerNodeValidatorMessages = (
@@ -123,7 +101,7 @@ const createNodeValidatorMessageResolver = (targetNode: Node): ValidatorMessageR
       currentNode = getParent(currentNode);
     }
 
-    return resolveFromMessages(readMessages(globalValidatorMessages()), kind, parameters);
+    return resolveFromMessages(readMessages(getGlobalValidatorMessages()), kind, parameters);
   };
 };
 

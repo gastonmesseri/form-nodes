@@ -24,7 +24,7 @@ import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { dateBetween } from '../validation/validators/date-between';
 import { provideFormNodesConfig } from '../form-node/form-node-config';
-import { configureGlobalValidatorMessages } from '../validation/validator-messages';
+import { configureGlobalFormNodes } from '../configuration/global-form-nodes-config';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
@@ -57,7 +57,7 @@ it.each(['object', 'factory'])('inherits %s message providers without requiring 
 
 it('resets provider messages with null while preserving reactive global and form-tree fallbacks', () => {
   const globalMessage = signal('Global required');
-  const restore = configureGlobalValidatorMessages({ required: () => globalMessage() });
+  const restore = configureGlobalFormNodes({ validatorMessages: { required: () => globalMessage() } });
   const providerFactory = vi.fn(() => ({ required: 'Ancestor provider required' }));
   const parent = Injector.create({ providers: provideFormNodesConfig({ validatorMessages: providerFactory }) });
   const resetInjector = Injector.create({ parent, providers: provideFormNodesConfig({ validatorMessages: null }) });

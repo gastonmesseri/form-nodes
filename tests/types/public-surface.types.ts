@@ -1,7 +1,7 @@
 import type { Provider } from '@angular/core';
 
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNode, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
+import { FormNode, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, configureGlobalFormNodes, type GlobalFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
 
 const name = field.strict('David');
 const configuredForms: FormPrimitives<false> = createFormPrimitives({ nullable: false } satisfies FormPrimitivesOptions<false>);
@@ -74,3 +74,16 @@ provideFormNodesConfig(resetConfig);
 provideFormNodesConfig({ validatorMessages: null, classes: null, syncControlInputs: null });
 
 provideFormNodesConfig({ validatorMessages: undefined, classes: undefined, syncControlInputs: undefined });
+
+const globalConfig: GlobalFormNodesConfig = {
+  validatorMessages: () => ({ min: ({ min }) => `Minimum ${min}` }),
+  classes: { invalid: binding => binding.node().$api.invalid() },
+  syncControlInputs: false,
+};
+const restoreGlobal: () => void = configureGlobalFormNodes(globalConfig);
+configureGlobalFormNodes({ validatorMessages: null, classes: null, syncControlInputs: null });
+configureGlobalFormNodes({ validatorMessages: undefined, classes: undefined, syncControlInputs: undefined });
+configureGlobalFormNodes({ validatorMessages: () => undefined });
+// @ts-expect-error Global message callbacks must return messages or undefined.
+configureGlobalFormNodes({ validatorMessages: { required: () => 123 } });
+void restoreGlobal;

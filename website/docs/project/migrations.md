@@ -4,6 +4,20 @@ title: Migration guides
 
 # Migration guides
 
+## Unreleased: global configuration
+
+Replace `configureGlobalValidatorMessages(messages)` with
+`configureGlobalFormNodes({ validatorMessages: messages })`. The old export is removed.
+The new `GlobalFormNodesConfig` type additionally accepts `classes` and `syncControlInputs`.
+
+Configure global binding defaults before bootstrap; each explicit Angular provider takes
+precedence for its own option. Existing bindings retain their captured settings. Global message
+sources remain reactive and do not receive an injection context. Null resets only the supplied
+global option, and omission preserves earlier settings.
+
+Cleanup callbacks now restore independent options and skip already cleaned-up overrides when
+called out of order. See [Global configuration](../reference/configure-global-form-nodes.md).
+
 ## Unreleased: unified configuration provider
 
 Use `provideFormNodesConfig()` for both validator messages and binding configuration:

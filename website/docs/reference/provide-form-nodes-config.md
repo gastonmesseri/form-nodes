@@ -48,8 +48,7 @@ for a complete application example. Angular's own binding directives use their o
 Configure CSS class names and reactive predicates for `[formNode]` bindings.
 No classes are enabled by default. Set `classes: null` to restore that default in a nearer scope.
 
-```ts
-// app.config.ts
+```ts title="app.config.ts"
 import type { ApplicationConfig } from '@angular/core';
 
 import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
@@ -86,7 +85,7 @@ Both forms support reactive message callbacks. Set `validatorMessages: null` to 
 provider catalog with an empty one; normal form-tree, global, and built-in fallbacks still apply.
 
 For a standalone application, register the provider in `app.config.ts` and pass `appConfig` to
-`bootstrapApplication(AppComponent, appConfig)`. The [shared catalog example](./configure-global-validator-messages.md#where-to-call-it)
+`bootstrapApplication(AppComponent, appConfig)`. The [shared catalog example](./configure-global-form-nodes.md#where-to-call-it)
 exports the data used here; no initializer is needed.
 
 <CodeBlock language="ts" title="app.config.ts">{appConfigSource}</CodeBlock>
@@ -112,23 +111,26 @@ Node-local catalogs take precedence. Missing entries or callbacks returning `und
 through catalogs captured by ancestor nodes, the process-wide fallback, and built-in messages.
 A nearer injector's catalog does not merge with an ancestor injector's catalog automatically.
 
-Use [`configureGlobalValidatorMessages()`](./configure-global-validator-messages.md) for a
+Use [`configureGlobalFormNodes()`](./configure-global-form-nodes.md) for a
 process-wide fallback, including code outside Angular DI. See [Validator messages](../guides/validator-messages.md)
 for the complete precedence rules.
 
 ## Provider scope
 
-Each option inherits independently from the nearest provider that explicitly configures it:
+Each option inherits independently from the nearest provider that explicitly configures it.
+Without one, bindings use [`configureGlobalFormNodes()`](./configure-global-form-nodes.md) defaults,
+then the library defaults. Message catalogs follow their normal fallback chain:
 
 - Omit `validatorMessages` to preserve the inherited catalog.
 - Omit `classes` to preserve the inherited class map. An explicit map replaces it without merging;
   `{ classes: {} }` clears only the inherited classes.
 - Omit `syncControlInputs` to preserve the inherited setting. Set `true` or `false` to override it.
-  With no provider for this option, synchronization defaults to `true`.
+  With no provider, this option uses the global setting, which defaults to `true`.
 - `{}` registers no providers. An option set to `undefined` also inherits.
 - `{ validatorMessages: {} }` supplies an empty catalog without changing classes or synchronization.
 
-`undefined` means **inherit**; `null` means **reset this option**:
+`undefined` means **inherit**; `null` means **reset this option**. For classes and synchronization,
+null bypasses global defaults. An empty provider message catalog still permits global fallback:
 
 | Option set to `null` | Result |
 | --- | --- |

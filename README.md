@@ -442,7 +442,7 @@ For shared messages, set `validatorMessages` in `provideFormNodesConfig()` in An
 `AppModule.providers`. This is also the appropriate scope for injected translations or SSR
 request-specific messages.
 
-Use `configureGlobalValidatorMessages()` for a process-wide fallback, including models created
+Use `configureGlobalFormNodes()` for a process-wide fallback, including models created
 outside DI. In an Angular application, call it once in `main.ts` before bootstrapping. Keep a larger
 catalog in a separate file and import it at the configuration point.
 

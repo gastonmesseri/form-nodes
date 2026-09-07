@@ -53,7 +53,6 @@ export {
 export {
   type ValidatorMessages,
   type ValidatorMessageParameters,
-  configureGlobalValidatorMessages,
 } from './lib/validation/validator-messages';
 export {
   type FormNodeControl,
@@ -108,3 +107,5 @@ export type {
   ComposableValidationResult,
   ParameterizedAsyncValidatorContext,
 } from './lib/validation/validation.type';
+
+export { configureGlobalFormNodes, type GlobalFormNodesConfig } from './lib/configuration/global-form-nodes-config';
