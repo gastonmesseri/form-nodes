@@ -7,11 +7,14 @@ const records = [form({}), group({}), configured.form({}), configured.group({}),
 for (const record of records) {
   const children = Object.values(record.children);
   type _Children = Expect<Equal<typeof children, DynamicNode[]>>;
+  record.forEachChild(child => {
+    type _EmptyDeclared = Expect<Equal<typeof child, never>>;
+  });
   record.forEachChild((child, key) => {
     type _Child = Expect<Equal<typeof child, DynamicNode>>;
     type _Key = Expect<Equal<typeof key, string>>;
     child.set('value');
-  });
+  }, { includeDynamic: true });
   const values = Object.values(record.$api.children);
   type _ApiChildren = Expect<Equal<typeof values, DynamicNode[]>>;
   const missing = record.get('missing');

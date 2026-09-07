@@ -1,4 +1,4 @@
-import { computed } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { form } from './form';
@@ -20,8 +20,10 @@ describe('group', () => {
     const age = record.add('age', field(18));
     expect(Object.values(record.children)).toEqual([name, age]);
     record.forEachChild(visit);
+    expect(visit).not.toHaveBeenCalled();
+    record.forEachChild(visit, { includeDynamic: true });
     expect(visit.mock.calls).toEqual([[name, 'name'], [age, 'age']]);
-    record.forEachChild(child => child.markAsTouched());
+    record.forEachChild(child => child.markAsTouched(), { includeDynamic: true });
     expect(name.touched()).toBe(true);
     expect(age.touched()).toBe(true);
     name.set('Lia');
@@ -45,6 +47,51 @@ describe('group', () => {
     expect(branch.get('active')).toBeUndefined();
   });
 
+  it('visits only declared children by default and includes dynamic nodes only when requested', () => {
+    const branch = group({ name: field('Marco'), age: field(30) });
+    const added = branch.add('extra', field(true));
+    const visit = vi.fn((child: { markAsTouched(): void }) => child.markAsTouched());
+    branch.forEachChild(visit);
+    expect(visit.mock.calls.map(([child]) => child)).toEqual([branch.name, branch.age]);
+    expect(branch.name.touched()).toBe(true);
+    expect(added.touched()).toBe(false);
+    visit.mockClear();
+    branch.forEachChild(visit, { includeDynamic: false });
+    expect(visit.mock.calls.map(([child]) => child)).toEqual([branch.name, branch.age]);
+    visit.mockClear();
+    branch.forEachChild(visit, {});
+    expect(visit.mock.calls.map(([child]) => child)).toEqual([branch.name, branch.age]);
+    visit.mockClear();
+    branch.forEachChild(visit, { includeDynamic: true });
+    expect(visit.mock.calls.map(([child]) => child)).toEqual([branch.name, branch.age, added]);
+    expect(added.touched()).toBe(true);
+    expect(Object.values(branch.children)).toEqual([branch.name, branch.age, added]);
+    expect(branch()).toEqual({ name: 'Marco', age: 30, extra: true });
+  });
+
+  it('tracks runtime inclusion options without reading excluded dynamic values', () => {
+    const branch = group({ name: field('Marco'), age: field(30) });
+    const extra = branch.add('extra', field(true));
+    const includeDynamic = signal(false);
+    const read = vi.fn(() => {
+      const values: unknown[] = [];
+      branch.forEachChild(child => values.push(child()), { includeDynamic: includeDynamic() });
+      return values;
+    });
+    const values = computed(read);
+    expect(values()).toEqual(['Marco', 30]);
+    extra.set(false);
+    expect(values()).toEqual(['Marco', 30]);
+    expect(read).toHaveBeenCalledTimes(1);
+    includeDynamic.set(true);
+    expect(values()).toEqual(['Marco', 30, false]);
+    extra.set(true);
+    expect(values()).toEqual(['Marco', 30, true]);
+    branch.remove('extra');
+    expect(values()).toEqual(['Marco', 30]);
+    expect(read).toHaveBeenCalledTimes(4);
+  });
+
   it('visits only direct child nodes, including dynamic children, in a stable snapshot', () => {
     const profile = form({ branch: group({ name: field('Marco'), address: { city: field('Zurich') }, tags: array(field('')) }) });
     const branch = profile.branch;
@@ -56,13 +103,13 @@ describe('group', () => {
         branch.remove('removed');
         branch.add('later', field(2));
       }
-    });
+    }, { includeDynamic: true });
     expect(result).toBeUndefined();
     expect(visited).toEqual([
       ['name', branch.name], ['address', branch.address], ['tags', branch.tags], ['removed', removed],
     ]);
     const keys: string[] = [];
-    branch.forEachChild((_child, key) => keys.push(key));
+    branch.forEachChild((_child, key) => keys.push(key), { includeDynamic: true });
     expect(keys).toEqual(['name', 'address', 'tags', 'later']);
   });
 
@@ -70,7 +117,7 @@ describe('group', () => {
     const branch = group({ name: field('Marco'), age: field(30) });
     const visits = vi.fn(() => {
       const values: unknown[] = [];
-      branch.forEachChild((child, key) => values.push(key === 'name' ? child() : key));
+      branch.forEachChild((child, key) => values.push(key === 'name' ? child() : key), { includeDynamic: true });
       return values;
     });
     const observed = computed(visits);

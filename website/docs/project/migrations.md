@@ -4,6 +4,20 @@ title: Migration guides
 
 # Migration guides
 
+## Unreleased: opt in to dynamic child iteration
+
+`forEachChild(callback)` now visits only initially declared children. To preserve the previous
+behavior of including children added with `add()`, pass the new option:
+
+```ts
+node.forEachChild(callback, { includeDynamic: true });
+```
+
+The opted-in callback receives `DynamicNode`, so update callbacks that assumed only declared
+child types. A runtime boolean also requires a `DynamicNode` callback. Empty forms and groups
+need the option to visit any children; their default callback child type is `never`.
+`Object.values(node.children)` continues to include added nodes and retains its existing types.
+
 ## 1.1.0: declared-child map types
 
 `children` now exposes only initially declared keys in TypeScript. Replace dynamic

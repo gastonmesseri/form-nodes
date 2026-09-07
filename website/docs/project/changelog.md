@@ -10,13 +10,17 @@ canonical release record.
 
 ## Unreleased
 
+### Changed
+
+- **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.
+
 ### Added
 
 - `validators({ resolve: true })` and `hasValidator(validator, { resolve: true })` inspect final validator references reached through synchronous compositions, share validation evaluation, and react to composition dependencies. Default queries retain direct-registration semantics; async validators are listed without starting their work.
 
 ### Fixed
 
-- Empty `form({})` and `group({})` declarations now infer `DynamicNode` for `forEachChild()` callbacks and `DynamicNode[]` for `Object.values(children)`, supporting records populated with `add()`. Nonempty declarations retain their concrete child unions; `get(key)` still accounts for missing children.
+- Empty `form({})` and `group({})` declarations now infer `DynamicNode[]` for `Object.values(children)`, supporting records populated with `add()`. Nonempty declarations retain their concrete child unions; `get(key)` still accounts for missing children.
 
 ## 1.1.0 — 2026-09-07
 

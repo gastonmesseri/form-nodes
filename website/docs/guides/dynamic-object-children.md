@@ -182,13 +182,18 @@ it does not expose an `addControl()` operation on a field tree. Form Nodes owns 
 
 `Object.values(node.children)` uses the union of initially declared child types in TypeScript.
 Runtime enumeration still includes nodes attached with `add()`, even if their types fall outside
-that union. This is a deliberate approximation for declaration-based code. `forEachChild()` also infers this declared-child union. Use `get(key)` inside its callback
-when handling arbitrary dynamic node types.
+that union. This is a deliberate approximation for declaration-based code.
+
+`forEachChild()` excludes dynamically added nodes by default, so its callback's declared-child
+union matches runtime iteration. Pass `{ includeDynamic: true }` as the second argument to
+include all immediate children and receive `DynamicNode` callbacks. A runtime boolean also uses
+`DynamicNode`; an omitted option or a literal false preserves the declared union.
 
 ## Start with an empty record
 
 Use `form({})` or `group({})` for a container whose children will be attached with `add()`.
-Its `forEachChild()` callback receives `DynamicNode`, and `Object.values(children)` returns
-`DynamicNode[]`. For a requested runtime key, `get(key)` still returns `DynamicNode | undefined`. Definitions with declared children
+Call `forEachChild(callback, { includeDynamic: true })` to visit its added children with
+`DynamicNode` callbacks. Without that option, iteration visits nothing and the callback child type
+is `never`. `Object.values(children)` still returns all children as `DynamicNode[]`. For a requested runtime key, `get(key)` still returns `DynamicNode | undefined`. Definitions with declared children
 retain the declared-child union described above. See the [form reference](../reference/form.md#empty-declarations-as-dynamic-records)
 for a complete example.

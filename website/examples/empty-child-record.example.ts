@@ -6,12 +6,12 @@ const profile = form({
 const name = profile.answers.add('name', field('Marco'));
 const age = profile.answers.add('age', field(18));
 
-// Both forms and groups declared with {} enumerate DynamicNode values.
+// Empty declarations expose dynamic children; iteration opts in explicitly.
 const children = Object.values(profile.answers.children); // DynamicNode[]
 profile.answers.forEachChild(child => {
   // child: DynamicNode, without undefined
   child.markAsTouched();
-});
+}, { includeDynamic: true });
 
 name(); // 'Marco'
 age(); // 18

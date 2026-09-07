@@ -1,5 +1,5 @@
 import type { Equal, Expect } from './assert.types';
-import { array, field, form, group } from '../../src/public-api';
+import { array, field, form, group, type DynamicNode } from '../../src/public-api';
 
 const profile = form({ name: field('Marco'), address: group({ city: field('Zurich') }) });
 profile.forEachChild((child, key) => {
@@ -30,3 +30,30 @@ const tree = group({ nested: form({ name: field('') }), rows: array(field(0)) })
 tree.forEachChild(child => {
   type _Tree = Expect<Equal<typeof child, typeof tree.nested | typeof tree.rows>>;
 });
+
+for (const node of [profile, profile.address, tree]) {
+  node.forEachChild((child, key) => {
+    type _Dynamic = Expect<Equal<typeof child, DynamicNode>>;
+    type _DynamicKey = Expect<Equal<typeof key, string>>;
+    child.markAsTouched();
+  }, { includeDynamic: true });
+  node.$api.forEachChild(child => {
+    type _DynamicApi = Expect<Equal<typeof child, DynamicNode>>;
+  }, { includeDynamic: true });
+}
+profile.forEachChild(child => {
+  type _ExplicitFalse = Expect<Equal<typeof child, typeof profile.name | typeof profile.address>>;
+}, { includeDynamic: false });
+profile.address.forEachChild(child => {
+  type _EmptyOptions = Expect<Equal<typeof child, typeof profile.address.city>>;
+}, {});
+declare const includeDynamic: boolean;
+profile.forEachChild(child => {
+  type _BooleanOption = Expect<Equal<typeof child, DynamicNode>>;
+}, { includeDynamic });
+declare const optionalOptions: { includeDynamic?: boolean };
+profile.address.forEachChild(child => {
+  type _OptionalBoolean = Expect<Equal<typeof child, DynamicNode>>;
+}, optionalOptions);
+// @ts-expect-error Inclusion options accept only booleans.
+profile.forEachChild(() => {}, { includeDynamic: 'yes' });

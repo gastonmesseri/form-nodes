@@ -2821,22 +2821,31 @@ is a deliberate public API difference, not a change to validation or state propa
 
 ## Immediate-child iteration
 
-`form()` and `group()` expose `forEachChild((child, key) => ...)`, returning `void`. It snapshots
-immediate child instances in object-entry order, including dynamic children, without descending
-into groups, nested forms, or arrays. Callbacks receive the union of declared child node types and a string key. Additions
-during iteration are deferred to the next call; removals do not remove nodes from the current
-snapshot. Callback exceptions propagate and stop iteration. A child named `forEachChild` takes
-precedence on the direct surface; `$api.forEachChild()` remains available.
+`form()` and `group()` expose `forEachChild(callback, options?)`, returning `void`. Without options,
+or with includeDynamic false, it snapshots only initially declared immediate children. The
+callback receives their concrete union and a string key. With `{ includeDynamic: true }`, it
+includes declared and dynamically added nodes and the callback receives `DynamicNode`. A runtime
+boolean also uses `DynamicNode`, since added nodes may be included. These rules apply equally to
+root and nested forms, explicit and shorthand groups, and their collision-safe API aliases.
+
+Snapshots retain object-entry order after filtering, without descending into groups, forms, or
+arrays. Additions during iteration are deferred to the next opted-in call; removals do not remove
+nodes from the current snapshot. Callback exceptions propagate and stop iteration. A child named
+`forEachChild` takes precedence on the direct surface; `$api.forEachChild()` remains available.
 
 Iteration tracks the structure version and the callback's own signal reads, but does not read
 child values or alter validation, state, or ownership by itself. Callback operations retain their
-normal propagation rules. Empty objects perform no callbacks.
+normal propagation rules. An empty declaration performs no default callbacks even after add();
+its default child type is never. Opting in visits its added children as DynamicNode. The children
+map and Object.values(children) still include all runtime children with their existing types.
 
 Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`,
 `packages/forms/signals/src/field/structure.ts` (`children()`) returns an immediate-child list;
 `packages/forms/signals/test/node/field_node.spec.ts` covers reactive child access and removal
 from aggregates. The public callback API and its snapshot mutation semantics are Form Nodes
-API decisions; they do not reproduce an Angular public method.
+API decisions; they do not reproduce an Angular public method. The latest maintenance tag was
+rechecked for this change. Filtering uses the existing dynamic-key ownership classification;
+attachment, removal, aggregate values, validation, and descendant state propagation are unchanged.
 
 ## Declared-child map typing
 
@@ -2848,9 +2857,10 @@ node returned by `add()`. `DynamicFormChildren` remains available as an explicit
 
 This is a deliberate static approximation: runtime maps and enumeration still include added
 children, even when their types are absent from the declared union. The union is not a guarantee
-about every runtime entry after `add()`. `forEachChild()` uses the same static union; retrieve `get(key)` inside its callback
-when handling arbitrary dynamic types.
-No runtime enumeration, attachment, removal, validation, or state propagation behavior changes.
+about every runtime entry after `add()`. `forEachChild()` uses the declared union only for default
+iteration, which excludes added nodes. Its includeDynamic option provides all-child iteration
+with DynamicNode callbacks. The map's runtime enumeration, attachment, removal, validation, and
+state propagation rules are unchanged.
 
 ## Error and validator presence queries
 
@@ -2879,18 +2889,19 @@ than Angular Reactive Forms' separate lists.
 `forEachChild()` preserves the concrete parent types of declared children for both forms and groups.
 The union is inferred without `undefined`. Mixed string and number fields expose a union of values
 on reads, but writes must be accepted by every possible member: `set('')` is rejected when a numeric
-field may be visited. Homogeneous string fields can all accept `set('')`. This typing change does
-not alter the runtime snapshot, order, reactive tracking, or dynamic-child inclusion semantics.
+field may be visited. Homogeneous string fields can all accept `set('')`. Explicit dynamic inclusion
+widens the callback to DynamicNode, matching the additional nodes that can be visited.
 
 ## Empty-declaration enumeration types
 
 When the declared child key set is empty, forms and groups expose `children` as a readonly
-string-keyed `DynamicNode` map and `forEachChild()` accepts a `DynamicNode` callback. This yields
-`DynamicNode[]` for `Object.values(children)`, without `undefined`. Nonempty declarations preserve
-their concrete child union. This is determined statically and applies to nested nodes and configured
+string-keyed `DynamicNode` map. This yields `DynamicNode[]` for `Object.values(children)`, without
+`undefined`. Default forEachChild iteration visits no declared children and has a never callback
+child type; `{ includeDynamic: true }` visits added children with a DynamicNode callback.
+Nonempty declarations preserve their concrete child union for default iteration. This is determined statically and applies to nested nodes and configured
 factories; adding or removing runtime children does not change the chosen type. `get(key)` remains
 optional, direct dynamic properties remain unsupported, and `add()` retains its exact return type.
-The value shape, iteration order, snapshots, tracking, and all runtime behavior remain unchanged.
+The value shape, map enumeration, lookup, and attachment behavior remain unchanged.
 
 ## Explicit validator resolution queries
 

@@ -1524,11 +1524,15 @@ See [Dynamic object children](../guides/dynamic-object-children.md),
 
 ## Iterate over immediate children
 
-`forEachChild(callback)` calls `callback(child, key)` once per immediate child and returns `void`.
-The callback receives the actual node and its string key. A child can be a field, group, form,
-or array; iteration does not recurse. Its type is the union of the initially declared child types,
-with each child retaining its concrete node and parent types. The key is a `string`. Runtime
-iteration includes dynamically added children too, even if their types fall outside this union.
+`forEachChild(callback)` calls `callback(child, key)` once per declared immediate child and returns
+`void`. It excludes children added with `add()`. A child can be a field, group, form, or array;
+iteration does not recurse. The callback receives the union of declared child types, preserving
+their concrete node and parent types, and a string key.
+
+Pass `{ includeDynamic: true }` as the second argument to visit both declared and added
+children. The callback then receives `DynamicNode`, without `undefined`. A runtime boolean also
+uses `DynamicNode`, since dynamic nodes may be included. Omitted options, `{}`, and an explicit
+`{ includeDynamic: false }` preserve the declared-child union.
 
 <CodeBlock language="ts">{forEachChildSource}</CodeBlock>
 
@@ -1539,8 +1543,8 @@ child. A string cannot be assigned to a union that includes a numeric field.
 
 
 Iteration uses a snapshot in `Object.entries()` order: integer-like keys come first in numeric
-order, followed by other string keys in insertion order. Children added during a callback are
-visited on the next call. Children removed during a callback remain in the current snapshot.
+order, followed by other string keys in insertion order. Children added during a callback can be
+visited on the next call with dynamic inclusion enabled. Children removed during a callback remain in the current snapshot.
 An exception from a callback propagates immediately and stops the remaining callbacks.
 
 Inside `computed()` or `effect()`, iteration tracks additions and removals, plus any signals
@@ -1561,8 +1565,9 @@ The map's TypeScript keys describe the initial declaration only. For an unknown 
 added key, use `get(key)` or retain the exact node returned by `add()`.
 
 **Static approximation:** `add()` still inserts children into the runtime map, and `Object.values()`
-still includes them. Their types are not reflected in the declared union. `forEachChild()` uses that same union.
-For arbitrary dynamic types, use `get(key)` inside its callback or retain the result of `add()`.
+still includes them. Their types are not reflected in the declared union. In contrast,
+`forEachChild()` excludes them by default, matching its declared-child union. Use
+`forEachChild(callback, { includeDynamic: true })` for all children with `DynamicNode` typing.
 
 ## Query errors and registered validators
 
@@ -1591,9 +1596,11 @@ For a child named `hasError` or `hasValidator`, use the parent's `$api` to call 
 ## Empty declarations as dynamic records
 
 With `form({})` or `group({})`, the empty declaration acts as a dynamic record for child access:
-`Object.values(node.children)` is `DynamicNode[]`, and `forEachChild()` receives `DynamicNode`
-without `undefined`. This also applies to nested empty groups and forms. Nonempty declarations
-continue to infer their concrete child union.
+`Object.values(node.children)` is `DynamicNode[]`. Use
+`forEachChild(callback, { includeDynamic: true })` to visit added children with a `DynamicNode`
+callback. Without that option there are no declared children to visit, and the callback's child
+type is `never`. This also applies to nested empty groups and forms. Nonempty declarations retain
+their concrete child union for default iteration.
 
 <CodeBlock language="ts">{emptyChildRecordSource}</CodeBlock>
 

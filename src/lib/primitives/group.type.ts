@@ -164,14 +164,21 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
     /** Readonly map of declared children, or a DynamicNode record for an empty declaration. Runtime entries include added nodes. */
     readonly children: keyof TNodes extends never ? Readonly<Record<string, DynamicNode>> : GroupChildren<TNodes, TParent>;
     /**
-     * Visits a snapshot of immediate children in object-entry order without recursion.
-     * The callback type is the declared-child union, or DynamicNode for an empty declaration.
-     * Runtime iteration still includes dynamic children.
+     * Visits a snapshot of declared immediate children in object-entry order without recursion.
+     * The callback type is the declared-child union, or never for an empty declaration.
+     * Dynamic children are excluded unless includeDynamic is true.
      * Additions during iteration are deferred; removed snapshot entries are still visited.
      * Callback errors propagate and stop iteration.
      * @reactive Tracks child additions and removals, plus signals read by the callback.
      */
-    forEachChild(callback: (child: keyof TNodes extends never ? DynamicNode : GroupChildren<TNodes, TParent>[keyof TNodes], key: string) => void): void;
+    forEachChild(callback: (child: GroupChildren<TNodes, TParent>[keyof TNodes], key: string) => void, options?: { includeDynamic?: false }): void;
+    /**
+     * Includes children added with add() when includeDynamic is true. A runtime boolean uses
+     * DynamicNode callbacks because added nodes may be visited. Empty declarations require true
+     * to visit their added children.
+     * @reactive Tracks structure changes and reactive reads performed by the callback.
+     */
+    forEachChild(callback: (child: DynamicNode, key: string) => void, options: { includeDynamic?: boolean }): void;
     /**
      * Adds one child at runtime and returns the attached node with its exact inferred type.
      *
