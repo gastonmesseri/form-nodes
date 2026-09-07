@@ -388,6 +388,26 @@ error; errors supplied through `control.setErrors()` return their original Angul
 `value` includes pending debounced input, even when the
 node's committed or equality-filtered public value still differs.
 
+Both surfaces also support `getError(code, path?)` and `hasError(code, path?)`. For example,
+after the date control below reports an invalid date:
+
+```ts
+ngControl.hasError('invalidDateFormat'); // true
+ngControl.control!.getError('invalidDateFormat'); // { message: 'Enter a date as YYYY-MM-DD.', actual: '2026-02-30' }
+```
+
+Without a path, these methods inspect only the bound node's own errors. When a custom control
+binds a form, group, or array, a relative path can select a descendant, for example
+`control.getError('required', 'contacts.0.email')` or
+`control.hasError('required', ['contacts', 0, 'email'])`. Queries follow current children and array
+positions after structural changes. Segment arrays also support child names containing dots.
+
+`getError()` returns the same payload as the corresponding entry in `control.errors`: the complete
+Form Nodes error for validators, or the original payload passed to `setErrors()`. It returns `null`
+for an unresolved path or a node without errors, and `undefined` for a missing key in an existing
+error map. Like Angular, `hasError()` checks the payload's truthiness, so a payload of `false`,
+`null`, or `undefined` returns `false` even though that error key can make the node invalid.
+
 The adapter supports these observable subscriptions:
 
 - `ngControl.valueChanges` and `ngControl.control.valueChanges` report control-value changes.
@@ -407,7 +427,7 @@ the replacement's state. Destroying the binding completes all three streams.
 
 The adapter supports state observation and control-originated errors through `control.setErrors()`.
 Keep value writes in the CVA change callback and programmatic operations on the Form Nodes node.
-`control.setValue()` and Reactive Forms tree traversal are not provided.
+`control.setValue()` and general Reactive Forms tree traversal such as `control.get()` are not provided.
 
 If an existing component copies these errors into its own Angular `FormControl`, check the order
 of its operations: `setErrors(externalErrors)` followed by `enable()` runs the internal validators

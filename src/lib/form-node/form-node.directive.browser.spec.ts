@@ -90,12 +90,16 @@ describe('FormNode in Chromium', () => {
     expect(profile.appointment.dirty()).toBe(true);
     expect(profile.appointment.errors().map(error => error.kind)).toEqual(['required', 'invalidDateFormat']);
     expect(cva.control!.errors?.['invalidDateFormat']).toEqual({ message: 'Use YYYY-MM-DD', actual: '2026-02-30' });
+    expect(cva.control!.hasError('invalidDateFormat')).toBe(true);
+    expect(cva.control!.getError('invalidDateFormat')).toEqual({ message: 'Use YYYY-MM-DD', actual: '2026-02-30' });
     input.value = '2026-09-07';
     dispatch(input, 'input');
     dispatch(input, 'blur');
     fixture.detectChanges();
     expect(profile.valid()).toBe(true);
     expect(profile.appointment()).toEqual(new Date('2026-09-07T00:00:00.000Z'));
+    expect(cva.control!.hasError('invalidDateFormat')).toBe(false);
+    expect(cva.control!.getError('invalidDateFormat')).toBeNull();
     expect(profile.appointment.touched()).toBe(true);
     input.value = 'invalid';
     dispatch(input, 'input');
