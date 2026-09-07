@@ -52,18 +52,13 @@
 
   })
 
-- [NEXT] [ ] Lo de connectSignalControlInputs, quiza podria ser perjudicial para mis custom components que implementan inputs llamadas como [disabled] o [readonly]
-  - consider doing this maybe optional in a provider or something? in a global configuration for angular?
-  - que todavia soporte eso si lo de value y checked model()s
-  - Does angular check if the component has implemented FormValueControl, or how does angular know if it should pass the inputs?
+- [NEXT] [ ] What version name should i use when i publish the package?
 
 - [NEXT] [ ] Check if useNgControl hook in DL works
 
 - [NEXT] Support at least node version v20.19.4 (the one installed in DL)
 
 - [NEXT] Add CI support in 
-
-- [NEXT] Support angular 21, and research versioning of the library to be in line with angular libraries
 
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
@@ -383,8 +378,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Make custom-control state input synchronization optional with `provideFormNodeConfig({ syncControlInputs: false })`, preserving value/checked models, native and CVA behavior. Explain input-name detection instead of interface checks and highlight the option in the basic guide, advanced guide, and configuration reference.
 - [x] Lower the Angular 21 minimum to 21.0.7 with TypeScript 5.9.3. Preserve error normalization across Signal Forms versions, build with the minimum toolchain, and verify the same tarball in Angular 21.0.7, 21.2.18, and 22.1.5 consumers.
-
+- [x] Support angular 21, and research versioning of the library to be in line with angular libraries
 - [x] Resolve the proposal to remove `myForm.name.$field`: remove the adapter while retaining `useControlState()` support for external Angular forms.
 - [x] Implement Angular 21 support after the [compatibility audit](docs/angular-21-compatibility.md), using the oldest supported build toolchain and requiring both verified Angular majors.
 - [x] Retire adapter follow-ups for mirroring asynchronous pending state, exposing submission state, and growing pattern metadata slots. Removing `$field` eliminates those bridge-specific concerns; Form Nodes retains ownership of validation and submission.
@@ -1066,4 +1062,3 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Allow defining global options
   - [x] example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
 - [x] Rename ng-forms folder (root) to form-nodes
-

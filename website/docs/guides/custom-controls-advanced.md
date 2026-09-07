@@ -13,6 +13,12 @@ Start with [Custom controls](./custom-controls.md) for a minimal component integ
 This page covers alternative control contracts, state inputs and hooks, Angular forms
 state observation, detailed CVA behavior, wrappers, and compatibility boundaries.
 
+:::tip Optional state input synchronization
+If your application already binds `disabled`, `readonly`, or other state inputs, you can
+[disable automatic input synchronization](./custom-controls.md#keep-control-of-your-components-inputs)
+with `provideFormNodeConfig({ syncControlInputs: false })`. Value/checked models still work.
+:::
+
 ## Angular API compatibility
 
 Choose the Angular contract that already fits your control. Conventional components require no
