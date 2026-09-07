@@ -3,8 +3,8 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Component, Injector, model, output, runInInjectionContext, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { Component, EventEmitter, Injector, Input, Output, input, model, output, runInInjectionContext, signal } from '@angular/core';
 
 import { connectSignalControl } from './signal-control';
 import { field, type Field } from '../primitives/field';
@@ -69,56 +69,50 @@ describe('connectSignalControl', () => {
     expect(control.checked()).toBe(true);
   });
 
-  it('supports separate signal and decorator input-output pairs', () => {
-    @Component({
-      selector: 'signal-pair-control',
-      template: '',
-      standalone: true,
-    })
-    class SignalPairControl {
-      value = input('');
+  it('rejects an input whose declared output cannot subscribe', () => {
+    @Component({ template: '' })
+    class Control {
+      value = model('');
+
+      valueChange = undefined;
+    }
+    registerSignalModelForJit(Control, 'value');
+    const fixture = TestBed.createComponent(Control);
+    Object.assign(fixture.componentInstance, { value: 'plain input' });
+    expect(() => connectSignalControl(fixture.componentInstance as never, () => field(''), fixture.debugElement.injector)).toThrow('matching input-output pair');
+  });
+
+  it('keeps paired output updates available when an incompatible input writer fails', () => {
+    @Component({ template: '' })
+    class Control {
+      // Simulate a component whose signal-input metadata no longer matches its runtime shape.
+      value = 'owned';
+
       valueChange = output<string>();
     }
-    registerSignalModelForJit(SignalPairControl, 'value');
-
-    @Component({
-      selector: 'decorator-pair-control',
-      template: '',
-      standalone: true,
-    })
-    class DecoratorPairControl {
-      // eslint-disable-next-line @angular-eslint/prefer-signals -- Exercise legacy decorator input-output interoperability.
-      @Input() checked = false;
-      @Output() checkedChange = new EventEmitter<boolean>();
+    registerSignalModelForJit(Control, 'value');
+    const fixture = TestBed.createComponent(Control);
+    const name = field('node', { syncInputs: true });
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      connectSignalControl(fixture.componentInstance as never, () => name, fixture.debugElement.injector);
+      TestBed.flushEffects();
+      expect(fixture.componentInstance.value).toBe('owned');
+      expect(warning).toHaveBeenCalledOnce();
+      fixture.componentInstance.valueChange.emit('edited');
+      TestBed.flushEffects();
+      expect(name()).toBe('edited');
+      expect(warning).toHaveBeenCalledOnce();
+    } finally {
+      warning.mockRestore();
     }
-
-    const signalFixture = TestBed.createComponent(SignalPairControl);
-    const decoratorFixture = TestBed.createComponent(DecoratorPairControl);
-    const name = field.strict('David');
-    const active = field.strict(false);
-    connectSignalControl(signalFixture.componentInstance as never, () => name, signalFixture.debugElement.injector.get(Injector));
-    connectSignalControl(decoratorFixture.componentInstance as never, () => active, decoratorFixture.debugElement.injector.get(Injector));
-    TestBed.flushEffects();
-    expect(signalFixture.componentInstance.value()).toBe('David');
-    expect(decoratorFixture.componentInstance.checked).toBe(false);
-
-    signalFixture.componentInstance.valueChange.emit('Mark');
-    decoratorFixture.componentInstance.checkedChange.emit(true);
-    expect(name()).toBe('Mark');
-    expect(active()).toBe(true);
-
-    name.set('Ada');
-    active.set(false);
-    TestBed.flushEffects();
-    expect(signalFixture.componentInstance.value()).toBe('Ada');
-    expect(decoratorFixture.componentInstance.checked).toBe(false);
   });
 
   it('rejects an invalid signal-control shape', () => {
     const injector = TestBed.inject(Injector);
     const name = field.strict('');
     expect(() => connectSignalControl({ checked: undefined } as never, () => name, injector)).toThrowError(
-      'formNode: a signal custom control requires a \'checked\' model or \'checked\'/\'checkedChange\' input-output pair',
+      'formNode: a custom control requires a \'value\' or \'checked\' model, or a matching input-output pair',
     );
   });
 });

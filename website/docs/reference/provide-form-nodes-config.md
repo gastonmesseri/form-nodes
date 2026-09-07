@@ -16,32 +16,67 @@ Configures validator messages, custom-control input synchronization, and reactiv
 ```ts
 provideFormNodesConfig(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages) | null | undefined;
-  syncControlInputs?: boolean | null | undefined; // Default: true
+  syncInputs?: boolean | 'only-declared' | 'always' | readonly SyncInputName[]
+    | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined; // Experimental; default: false
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
 }): Provider[];
 ```
 
-## `syncControlInputs` {#custom-control-inputs}
+## `syncInputs` {#custom-control-inputs}
 
-`syncControlInputs` defaults to `true`; `null` explicitly restores that default. Set it to `false` to preserve component defaults and
-consumer template bindings for these custom-control inputs:
+**Experimental and disabled by default.** `syncInputs` controls optional custom-control input
+writes that depend on Angular internals. It applies to the input contract used by Angular's
+`FormValueControl` and `FormCheckboxControl`, and matching inputs on other supported custom controls.
 
-- `disabled`, `disabledReasons`, `readonly`, and `hidden`.
-- `dirty`, `touched`, `invalid`, `pending`, and `errors`.
-- `required`, `min`, `max`, `minLength`, `maxLength`, and `pattern`.
-- `name`.
+| Value | Behavior |
+| --- | --- |
+| `false` or `null` | Do not synchronize optional inputs. |
+| `true` or `'only-declared'` | Synchronize initial `disabled`, `readonly`, and `hidden` declarations and initial built-in validator constraints. |
+| `'always'` | Synchronize every matching supported input, including derived state. |
+| `['disabled', 'dirty']` | Always synchronize exactly these inputs, regardless of initial declarations. |
+| `{ mode: 'always', inputs: [...] }` | Same behavior as the array shorthand. |
+| `{ mode: 'only-declared', inputs: [...] }` | Synchronize only listed inputs that were also initially declared. |
+| `[]` or an object with `inputs: []` | Do not synchronize optional inputs. |
+| Omitted or `undefined` | Inherit the provider/global setting. |
 
-The option applies to signal controls, separate value/checked input-output pairs, and matching
-inputs on custom CVA components. It uses public input names, including aliases. It is read when
-the control connects and remains effective when the bound node changes.
+`SyncInputName` and `SyncInputs` are exported types. Supported names are `disabled`,
+`disabledReasons`, `dirty`, `errors`, `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`,
+`name`, `pattern`, `pending`, `readonly`, `required`, and `touched`. Names refer to public inputs,
+not aliased component property names. `value` and `checked` are model channels, not optional inputs.
+Selections are exact: `['disabled']` does not also select `disabledReasons`. Explicit lists replace
+inherited selections; they do not merge. Unselected inputs retain their current component values.
+Treat configuration objects and arrays as fixed declarations; to change a selection, configure a
+new binding or rebind to a node with different options.
 
-Value/checked synchronization, the optional `node` signal, touch, focus, and reset hooks remain
-connected. Native controls still receive their state, and CVAs still receive `setDisabledState()`.
-Disabling input synchronization does not change the node's own disabled state, validation, or
-value behavior. `useFormNodeState()` remains available for explicit state reads.
+`disabledReasons` follows an initial `disabled` declaration. A declaration with a false value still
+counts. Initial validators with known metadata enable `required`, `min`, `max`, `minLength`,
+`maxLength`, and `pattern`; their reactive values and conditional activation keep updating.
+Arbitrary validator compositions and validators added later require `'always'` to discover new
+constraint inputs. Removing an initially declared constraint clears its previously synchronized value.
 
-See [Keep control of your component's inputs](../guides/custom-controls.md#keep-control-of-your-components-inputs)
-for a complete application example. Angular's own binding directives use their own configuration.
+Derived `dirty`, `touched`, `invalid`, `pending`, `errors`, and the generated `name` are synchronized
+only in `'always'` mode. Component inputs not selected by the mode retain their own values or
+explicit template bindings. Full synchronization may replace authored template input values.
+
+Set this option on `field()`, `form()`, `group()`, or `array()` to override a provider for that node's
+own binding. Node options do not propagate to descendants. `createFormPrimitives({ syncInputs })`
+can supply defaults for nodes created by its factories. Resolution is **node option → nearest
+explicit provider → global setting → false**. Null explicitly opts out at any level.
+
+Value/checked models, the optional `node` model, touch, focus, and reset hooks remain connected.
+Native controls still receive their state, and CVAs still receive `setDisabledState()`. With synchronization disabled, value binding requires actual `model()` properties or a CVA; separate input/output pairs require enabled experimental `syncInputs`. `useFormNodeState()` is available for public state reads.
+
+See [Experimental input synchronization](../guides/custom-controls.md#keep-control-of-your-components-inputs)
+for a complete component example.
+
+### Experimental input/output value pairs
+
+Enabled `syncInputs` also connects separate `value`/`valueChange` and `checked`/`checkedChange`
+pairs. Every enabled mode, list, or mode/inputs object opts into this value transport. Lists filter
+only optional state inputs, so `[]` connects the value pair without optional state writes.
+`false` and `null` pause pair writes and ignore its change/touch outputs. Rebinding to an enabled
+node resynchronizes its current control value. This transport uses Angular's internal input writer;
+actual models and CVAs remain available without it. See [the complete example](../guides/custom-controls.md#separate-input-output-pairs).
 
 ## `classes` {#classes}
 
@@ -123,8 +158,8 @@ then the library defaults. Message catalogs follow their normal fallback chain:
 - Omit `validatorMessages` to preserve the inherited catalog.
 - Omit `classes` to preserve the inherited class map. An explicit map replaces it without merging;
   `{ classes: {} }` clears only the inherited classes.
-- Omit `syncControlInputs` to preserve the inherited setting. Set `true` or `false` to override it.
-  With no provider, this option uses the global setting, which defaults to `true`.
+- Omit `syncInputs` to preserve the inherited setting. Set a boolean, named mode, list, or mode/inputs object to override it.
+  With no provider, this option uses the global setting, which defaults to `false`.
 - `{}` registers no providers. An option set to `undefined` also inherits.
 - `{ validatorMessages: {} }` supplies an empty catalog without changing classes or synchronization.
 
@@ -134,14 +169,14 @@ null bypasses global defaults. An empty provider message catalog still permits g
 | Option set to `null` | Result |
 | --- | --- |
 | `classes` | No automatic classes; equivalent to an empty map. |
-| `syncControlInputs` | Synchronization enabled (`true`). |
+| `syncInputs` | Synchronization disabled (`false`). |
 | `validatorMessages` | Empty provider catalog, with normal message fallback. |
 
 ```ts
 // Component providers: reset all three options in this scope.
 provideFormNodesConfig({
   classes: null,
-  syncControlInputs: null,
+  syncInputs: null,
   validatorMessages: null,
 });
 ```
@@ -158,11 +193,11 @@ For example, these provider registrations belong in different scopes:
 provideFormNodesConfig({
   validatorMessages: { required: 'Please complete this field.' },
   classes: ANGULAR_FORMS_STATUS_CLASSES,
-  syncControlInputs: true,
+  syncInputs: 'always',
 });
 
 // app.component.ts — component providers
-provideFormNodesConfig({ syncControlInputs: false });
+provideFormNodesConfig({ syncInputs: false });
 ```
 
 The component keeps the application messages and status classes while disabling matching

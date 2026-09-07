@@ -23,7 +23,7 @@ class AppComponent {
 configureGlobalFormNodes({
   validatorMessages,
   classes: ANGULAR_FORMS_STATUS_CLASSES,
-  syncControlInputs: true,
+  syncInputs: true,
 });
 
 bootstrapApplication(AppComponent).catch(error => console.error(error));

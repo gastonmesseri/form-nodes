@@ -3,6 +3,9 @@ title: Custom controls
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import pairedControlSource from '!!raw-loader!../../examples/paired-control-inputs.typecheck.ts';
+import selectedInputsSource from '!!raw-loader!../../examples/selected-control-inputs.typecheck.ts';
+import syncInputsSource from '!!raw-loader!../../examples/experimental-sync-inputs.typecheck.ts';
 import customInputsSource from '!!raw-loader!../../examples/custom-control-inputs.typecheck.ts';
 import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
 
@@ -13,22 +16,41 @@ component, expose a `value = model(...)`. Existing `ControlValueAccessor` compon
 can use the same binding.
 
 :::tip Already binding disabled or readonly?
-By default, `[formNode]` also writes matching state inputs on your custom component.
-Use [`syncControlInputs: false`](#keep-control-of-your-components-inputs) if your template or
+Optional input synchronization is [experimental and off by default](#keep-control-of-your-components-inputs). Your template or
 component should manage them.
 :::
 
-## Create a signal model control
+## FormValueControl: value models and state {#create-a-signal-model-control}
 
-This text input exposes its value through `model('')` and uses `useFormNodeState()` to read
-required and disabled state and report blur. The parent imports `FormNode` and the custom
-component, then binds a field:
+A component implementing Angular's `FormValueControl<T>` can use `[formNode]` without
+experimental input synchronization. The integration has two separate responsibilities:
 
-<CodeBlock language="ts">{formNodeStateSource}</CodeBlock>
+| Component design | Value and state integration |
+| --- | --- |
+| `value = model()` with `useFormNodeState()` | Value binding and full access to the bound Form Nodes state without experimental input writes. The component renders the state itself. |
+| `value = model()` with state/constraint `input()` properties | Value binding works by default. Automatically populating those inputs requires experimental `syncInputs`; use `'always'` for every supported input. |
+| `ControlValueAccessor` / `NG_VALUE_ACCESSOR` | Values, change/touch callbacks, and `setDisabledState()` use the normal CVA contract, independently of `syncInputs`. |
+
+**Full automatic `FormValueControl` input synchronization is experimental; using the
+`FormValueControl` value contract is not.** Merely implementing the interface does not enable
+input writes. A component designed around `useFormNodeState()` can use the bound node's state,
+constraints, errors, and interaction operations without enabling them.
+
+This complete example implements `FormValueControl<string>` with `value = model('')` and reads
+state through `useFormNodeState()`. It applies disabled, readonly, required, and minimum length
+to its native input, renders validation messages, and reports blur. The parent explicitly keeps
+`syncInputs` off, including when a surrounding provider enables it:
+
+<CodeBlock language="ts" title="Text input and profile editor">{formNodeStateSource}</CodeBlock>
 
 `[formNode]` discovers the value model automatically. Updating `value` from the component
 sends the user's input to the field; updating the field updates the component. No custom
 provider, base class, or Form Nodes interface is required.
+
+`useFormNodeState()` reads state; it does not apply attributes to the DOM or populate the
+component's own `disabled = input()` properties. An existing control that reads those properties
+must adopt the hook in its implementation, receive explicit bindings, or opt into experimental
+synchronization. Focus and reset integration still use the optional `focus()` and `reset()` hooks.
 
 The component has three responsibilities:
 
@@ -42,36 +64,79 @@ The bound field supplies its value during setup. For a checkbox-style component,
 
 ## Keep control of your component's inputs
 
-If your component has inputs such as `disabled`, `readonly`, `required`, or `name`,
-`[formNode]` normally supplies their values from the bound node. This also applies when the
-node supplies `false` or an empty value. An explicit template binding does not automatically
-take priority over that synchronization.
+Optional custom-control input synchronization is **experimental and disabled by default**.
+This concerns the state and constraint inputs used by Angular's `FormValueControl` and
+`FormCheckboxControl` contracts. Value/checked models remain connected through their public APIs;
+`markAsTouched()`, the `touch` output, focus, reset, and normal node validation still work.
 
-Set `syncControlInputs: false` in your application's providers to let your component defaults
-and template bindings own those inputs:
+Opt in per node with `syncInputs: true` (equivalent to `'only-declared'`). This example synchronizes
+`disabled`, `required`, and `minLength` because they are declared in the initial node definition:
+
+<CodeBlock language="ts" title="Text control and profile component">{syncInputsSource}</CodeBlock>
+
+The initial declaration selects an input, not a fixed value. Reactive conditions and constraints
+keep updating. Explicit `disabled: false` still selects disabled synchronization. Constraints use
+known metadata on the initially registered validators; arbitrary compositions and later-added
+validators require `'always'`. Initial disabled declarations also select `disabledReasons`.
+
+Use `syncInputs: 'always'` to synchronize all supported inputs, including `dirty`, `touched`,
+`invalid`, `pending`, `errors`, and generated `name`. These are derived states, so `'only-declared'`
+does not select them. A selected input receives node state even when its value is false or empty;
+that can override a component default or an authored template binding.
+
+Precedence is node option, nearest explicit provider, global setting, then false. A node option
+applies only to that node, not descendants. Providers and `configureGlobalFormNodes()` accept the
+same modes; `createFormPrimitives()` supports a shared factory default. False or null explicitly
+opts out. When rebinding to another node, input selection follows the new node; unselected inputs
+are left as they are, without restoring a previous component value.
+
+Component defaults and template bindings own optional inputs when synchronization is off:
 
 <CodeBlock language="ts">{customInputsSource}</CodeBlock>
 
-Register the exported `appConfig` when bootstrapping your application. In this example,
-`saving()` controls the component's disabled input and `locked()` controls its readonly input.
-Editing the value still updates `profile.name`, and changes to the node still update the control.
-Checkbox controls using `checked = model(false)` work the same way.
+**Native controls and CVA `setDisabledState()` still receive disabled state.** To read state without
+these experimental writes, use `useFormNodeState()` or explicit template bindings. Actual `model()` controls use public value APIs.
+Separate input/output pairs use [experimental value transport](#separate-input-output-pairs) when `syncInputs` is enabled. See [all configuration details](../reference/provide-form-nodes-config.md#custom-control-inputs).
 
-This option leaves the node's state unchanged. If the node is disabled, its form behavior stays
-disabled even when the component's input says otherwise. Use `useFormNodeState()` when the
-component needs to read node state explicitly.
+### Select individual inputs
 
-The setting defaults to `true`. You can also place `provideFormNodesConfig()` in a component's
-`providers` to configure an injector scope; a nearer provider can set `syncControlInputs: true`
-to restore automatic input synchronization.
+Pass an array to synchronize **only those inputs, always**, even without initial node declarations.
+The object form makes the mode explicit; `'only-declared'` intersects your list with the node's
+initial declarations. An empty list synchronizes no optional inputs.
 
-**Native inputs and the CVA `setDisabledState()` callback still receive disabled state.**
-Touch, focus, reset, and value/checked bindings stay connected. The option only controls
-Form Nodes' automatic custom-control state and constraint inputs; it does not configure
-Angular's own `[formField]`, `formControl`, or `ngModel` directives.
+<CodeBlock language="ts" title="Selected inputs and profile component">{selectedInputsSource}</CodeBlock>
 
-See [the configuration reference](../reference/provide-form-nodes-config.md#custom-control-inputs)
-for the complete input list and provider inheritance rules.
+Selections use supported public input names, including aliases such as `readonly`, rather than
+component property names. Selecting `disabled` alone does not also select `disabledReasons`.
+These forms work on all primitives, factory defaults, providers, and global configuration.
+They never change `value`/`checked` model transport or CVA `setDisabledState()`.
+
+## Separate input/output pairs
+
+Components with `value`/`valueChange` or `checked`/`checkedChange` pairs are supported **only when
+the effective `syncInputs` setting is enabled**. This supports both `input()`/`output()` and
+classic `@Input()`/`@Output()` properties, including public aliases. Unlike `model()`, writing a
+separate value input requires Angular internals, so this integration is experimental.
+
+Any enabled mode, input list, or mode/inputs object enables paired value transport. Lists select
+only optional state inputs: `syncInputs: []` connects the value pair without copying any optional
+state inputs. The equivalent explicit form is `{ mode: 'always', inputs: [] }`.
+
+<CodeBlock language="ts" title="Paired text input and profile component">{pairedControlSource}</CodeBlock>
+
+For state input writes as well, use `true`/`'only-declared'`, `'always'`, or a selection such as
+`['disabled']`. The same option works in factory defaults, providers, and global configuration,
+with node options taking precedence.
+
+With `false` or `null` (including the default), the component keeps its current input value;
+its change/touch outputs do not update the node through this transport. If the binding switches
+to an enabled node, its current control value is written again. Programmatic values, debounced
+input, validation, and dirty/touched transitions follow the usual node behavior while connected.
+Initialize separate inputs with defaults; do not use `input.required()` for these value inputs.
+
+Use a genuine `value = model()` / `checked = model()` or a CVA to bind values without this
+experimental input writer. Optional `FormNodeValueControl`/`FormNodeCheckboxControl` types describe
+the model contracts; a separate pair does not need to implement them.
 
 ## ControlValueAccessor
 
@@ -84,7 +149,9 @@ during construction are supported:
 ```
 
 Import `FormNode` in the parent component. `[formNode]` writes values, registers change and
-touch callbacks, and forwards disabled state through the normal CVA contract.
+touch callbacks, and forwards disabled state through the normal CVA contract. These standard
+CVA operations do not require `syncInputs`. Automatically writing additional state or constraint
+inputs on a CVA component remains subject to the same experimental option.
 
 For utility-based components, see [direct NgControl registration](./custom-controls-advanced.md#hooks-that-assign-ngcontrolvalueaccessor).
 
@@ -96,7 +163,7 @@ See the [Angular Material](../integrations/angular-material.md) and
 The optional `FormNodeValueControl<T>` and `FormNodeCheckboxControl` types can document a
 component's contract consistently on Angular 21 and 22. Runtime discovery does not require them.
 
-The [advanced custom-controls guide](./custom-controls-advanced.md) covers input/output pairs,
+The [advanced custom-controls guide](./custom-controls-advanced.md) covers aggregate models,
 object and array values, optional state inputs and hooks, wrapper components, Angular
 `[formField]`, and detailed CVA integration, including validation and parsing errors.
 

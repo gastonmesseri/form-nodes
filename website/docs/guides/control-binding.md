@@ -26,9 +26,9 @@ export class Editor {
 ```
 
 It supports native `input`, `select`, and `textarea` elements, Angular `ControlValueAccessor`
-components, `value = model<T>()` controls, `checked = model<boolean>()` checkbox controls, and
-equivalent input/output pairs. Native controls bind scalar `field()` nodes; aggregate forms and
-arrays require a custom control that represents their complete value. See
+components, `value = model<T>()` controls, and `checked = model<boolean>()` checkbox controls. Native controls bind scalar `field()` nodes; aggregate forms and
+arrays require a custom control that represents their complete value. Separate input/output pairs
+are also available through [experimental `syncInputs`](./custom-controls.md#separate-input-output-pairs). See
 [Advanced custom controls](./custom-controls-advanced.md#angular-api-compatibility) for the complete compatibility
 matrix and integration boundaries.
 

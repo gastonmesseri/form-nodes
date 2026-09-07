@@ -42,6 +42,15 @@ node or ancestor.
 
 ## Node options
 
+`syncInputs` is an **experimental binding option** accepted by every primitive and by
+`createFormPrimitives()` defaults. It affects only the bound node, not descendants. It is off by
+default; true means `'only-declared'`, `'always'` synchronizes every supported input, and null opts
+out. An input list such as `['disabled', 'dirty']` always synchronizes exactly those inputs;
+`{ mode: 'only-declared', inputs: ['disabled'] }` also requires an initial declaration.
+Separate value/input-output pairs also require an enabled setting; `[]` enables their value
+transport alone. Node options take precedence over providers and global defaults. See
+[custom-control input modes](./provide-form-nodes-config.md#custom-control-inputs).
+
 The call-site types are designed for discovery in IntelliSense. Small accepted unions—such as
 `number | 'blur'` for debounce or `boolean | string | (() => boolean | string)` for disabled
 state—are shown directly instead of being hidden behind another type name. Reactive callbacks are
@@ -297,7 +306,7 @@ failing.
 
 ### Process-wide fallback
 
-`configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, and `syncControlInputs`.
+`configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, and `syncInputs`.
 Each option is a fallback below its nearest explicit Angular provider. Omitted options preserve
 previous global settings; `null` resets that global option to the library default.
 Configure binding defaults before bootstrap: existing bindings retain their class maps and
@@ -372,10 +381,10 @@ provideFormNodesConfig({
 });
 ```
 
-The `classes` and `syncControlInputs` options affect rendered bindings, not node state or validation.
+The `classes` and `syncInputs` options affect rendered bindings, not node state or validation.
 Each option inherits independently. Providing `classes` replaces only the class map; providing
-`syncControlInputs` changes only input synchronization. Omitting an option preserves its inherited
-provider. Set an option to `null` to reset it: no classes, synchronization enabled, or an empty
+`syncInputs` changes only input synchronization. Omitting an option preserves its inherited
+provider. Set an option to `null` to reset it: no classes, synchronization disabled, or an empty
 provider message catalog with normal fallback. Class maps are not merged automatically. See
 [Provider scope](./provide-form-nodes-config.md#provider-scope) for examples.
 
@@ -437,8 +446,9 @@ For runtime symptoms caused by configuration, see [Troubleshooting](../help/trou
 
 ## Custom-control input synchronization
 
-Automatic synchronization of custom-control state inputs is enabled by default.
-Use `provideFormNodesConfig({ syncControlInputs: false })` when your component or template
+Optional custom-control input synchronization is experimental and disabled by default.
+Use `syncInputs: true` for initial declarations or `'always'` for all supported state inputs.
+Use `provideFormNodesConfig({ syncInputs: false })` when your component or template
 should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
 Native controls and CVA `setDisabledState()` remain connected.
 See [the simple example](../guides/custom-controls.md#keep-control-of-your-components-inputs)

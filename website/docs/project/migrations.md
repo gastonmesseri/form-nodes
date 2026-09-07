@@ -4,11 +4,23 @@ title: Migration guides
 
 # Migration guides
 
+## Unreleased: experimental input synchronization
+
+Rename `syncControlInputs` to `syncInputs`. Optional custom-control input synchronization is now
+**disabled by default**. To preserve the old full synchronization, explicitly pass
+`{ syncInputs: 'always' }` at the node, factory, provider, or global scope. `true` now means
+`'only-declared'`, not full synchronization. Null resets to false.
+
+Value/checked models, native-control state, CVA callbacks, and interaction hooks retain their
+normal behavior. A node option configures only its own binding. See
+[the mode reference](../reference/provide-form-nodes-config.md#custom-control-inputs) before enabling
+this experimental Angular-internal adapter.
+
 ## Unreleased: global configuration
 
 Replace `configureGlobalValidatorMessages(messages)` with
 `configureGlobalFormNodes({ validatorMessages: messages })`. The old export is removed.
-The new `GlobalFormNodesConfig` type additionally accepts `classes` and `syncControlInputs`.
+The new `GlobalFormNodesConfig` type additionally accepts `classes` and `syncInputs`.
 
 Configure global binding defaults before bootstrap; each explicit Angular provider takes
 precedence for its own option. Existing bindings retain their captured settings. Global message
@@ -34,7 +46,7 @@ The old exports are removed. Combine the options in one call per injector scope:
 provideFormNodesConfig({
   validatorMessages: () => ({ required: 'Please complete this field.' }),
   classes: ANGULAR_FORMS_STATUS_CLASSES,
-  syncControlInputs: false,
+  syncInputs: false,
 });
 ```
 
@@ -46,7 +58,7 @@ All three options inherit independently. A synchronization-only configuration pr
 classes and messages. A classes-only configuration preserves inherited synchronization and messages.
 An explicit class map replaces the inherited map without merging. An empty `{}` registers no
 providers; `{ classes: {} }` clears only classes. To also restore synchronization explicitly, use
-`{ classes: {}, syncControlInputs: true }`.
+`{ classes: {}, syncInputs: 'always' }`.
 See [Configuration provider](../reference/provide-form-nodes-config.md).
 
 ## Unreleased: opt in to dynamic child iteration
@@ -288,3 +300,15 @@ When migrating from Angular Reactive Forms or Angular 22 Signal Forms, use the
 [control-binding guide](../guides/control-binding.md). These are conceptual migrations rather than
 version upgrades, so application behavior should be translated deliberately instead of through
 mechanical symbol replacement.
+
+## Custom-control value models and input/output pairs
+
+`value = model(initialValue)` and `checked = model(false)` bind through public model APIs without
+experimental options. Existing separate `value`/`valueChange` or `checked`/`checkedChange` pairs
+must opt into experimental `syncInputs`. Use `[]` for value transport alone, `true` for value plus
+initially declared state inputs, or `'always'` for every supported state input. Lists and mode/inputs
+objects filter optional state inputs independently of the enabled value transport.
+
+With `false` or `null`, paired input writes are paused and change/touch outputs are ignored through
+that transport. Replace the pair with a model, or implement `ControlValueAccessor`, to bind values
+without experimental input writes. See [paired controls](../guides/custom-controls.md#separate-input-output-pairs).

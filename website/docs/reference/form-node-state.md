@@ -29,6 +29,17 @@ and does not replace the control's existing value contract.
 
 :::
 
+### FormValueControl without experimental input writes
+
+Combine `value = model()` with `useFormNodeState()` to implement `FormValueControl` with value
+binding and full access to the state exposed by a bound Form Nodes node. Keep `syncInputs` off:
+the model carries values through public APIs, and the component reads state signals and applies
+them to its own view. Use `markAsTouched()` to report blur. For checkboxes, use `checked = model()`.
+
+Experimental `syncInputs` is needed only if you want `[formNode]` to automatically populate
+optional state and constraint input properties. The hook does not populate those properties.
+See the [complete component example and support comparison](../guides/custom-controls.md#create-a-signal-model-control).
+
 :::tip Signal-based by design
 
 `useFormNodeState()` is designed for modern signal-based Angular components. Call the hook once as

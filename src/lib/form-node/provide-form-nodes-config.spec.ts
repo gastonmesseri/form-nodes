@@ -9,8 +9,8 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { FormNode } from './form-node.directive';
-import { provideFormNodesConfig } from './form-node-config';
 import { required } from '../validation/validators/required';
+import { provideFormNodesConfig } from './provide-form-nodes-config';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -78,9 +78,9 @@ describe('unified Form Nodes configuration', () => {
     const config = section === 'messages'
       ? { validatorMessages: () => ({ required: 'Local message' }) }
       : section === 'classes' ? { classes: {} }
-        : section === 'sync' ? { syncControlInputs: false }
+        : section === 'sync' ? { syncInputs: false }
           : section === 'nullClasses' ? { classes: null }
-            : section === 'nullSync' ? { syncControlInputs: null }
+            : section === 'nullSync' ? { syncInputs: null }
               : section === 'nullMessages' ? { validatorMessages: null } : {};
     @Component({
       template: '<input [formNode]="name">',

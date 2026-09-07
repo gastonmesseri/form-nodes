@@ -6,7 +6,7 @@ const profile = form({ name: field('', [required]) });
 const restore = configureGlobalFormNodes({
   validatorMessages: { required: () => message() },
 });
-const restoreBindings = configureGlobalFormNodes({ syncControlInputs: false });
+const restoreBindings = configureGlobalFormNodes({ syncInputs: false });
 
 try {
   if (profile.name.getError('required')?.message !== 'Please enter your name.') {

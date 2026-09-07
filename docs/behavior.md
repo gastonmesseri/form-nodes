@@ -2327,7 +2327,7 @@ The directive currently provides these behaviors:
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - A wrapper component may consume an input whose template name is exactly `formNode` and delegate that node to an inner `[formNode]` control. The outer directive becomes pass-through: it performs no synchronization, validation, CSS-class work, hidden-field warning, or focus registration. Only the delegated inner control is a binding. This is automatic and requires no provider. An aliased property is valid as long as its public template input name is `formNode`.
 - Component wrappers are detected automatically from Angular's public component metadata. A directive that consumes or re-exports `formNode`, including a host directive, must add `providers: [provideFormNodePassThrough()]` because Angular exposes no equivalent public runtime reflection API for directive inputs. The provider affects only the injector on that host element.
-- Components implementing Angular's standard `FormValueControl<T>` (`value = model<T>()`) or `FormCheckboxControl` (`checked = model<boolean>()`) are discovered automatically from their compiled component metadata. Components may alternatively expose separate `value`/`valueChange` or `checked`/`checkedChange` input-output pairs, using either signal APIs or classic `@Input()`/`@Output()` declarations. They require no library-specific interface, provider, or registration. The model synchronizes in both directions and user changes follow the field's normal `setControlValue()` debounce behavior. A separate input must provide an initial value rather than use `input.required()` or `@Input({ required: true })`: Angular's template compiler has a special rule allowing `[formField]` to satisfy its custom control's required model input, but cannot extend that rule to third-party binding directives. Unlike Angular's internal control-creation hook, `[formNode]` connects during directive initialization, so the model is synchronized after the custom component's own `ngOnInit` and before its initialized view is consumed.
+- Components implementing Angular's standard `FormValueControl<T>` (`value = model<T>()`) or `FormCheckboxControl` (`checked = model<boolean>()`) are discovered automatically from their compiled component metadata. Separate input/output pairs require enabled experimental syncInputs; actual models and CVAs do not. They require no library-specific interface, provider, or registration. The model synchronizes in both directions and user changes follow the field's normal `setControlValue()` debounce behavior. A model must provide an initial value rather than use `model.required()`: Angular's template compiler has a special rule allowing `[formField]` to satisfy its custom control's required model input, but cannot extend that rule to third-party binding directives. Unlike Angular's internal control-creation hook, `[formNode]` connects during directive initialization, so the model is synchronized after the custom component's own `ngOnInit` and before its initialized view is consumed.
 - A `FormValueControl<T>` may bind to an aggregate `form()` or `array()` when `T` matches the node's complete value. A control-originated aggregate value marks that aggregate node dirty and then uses its normal structural update path: forms distribute the complete object to their children, while arrays reconcile, create, move, or detach item nodes according to their configured index or `trackBy` identity. Descendants are not individually marked dirty merely because the aggregate control supplied their values. Programmatic `set()` remains pristine and updates the custom model in the opposite direction.
 - Standard Signal Forms state inputs implemented by the component are synchronized when this library has an equivalent node state: `errors`, `disabled`, `disabledReasons`, `dirty`, `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`, `readonly`, `required`, and `touched`. The `name` input receives the same stable, path-aware value used by native controls. Constraint inputs receive the same strictest limits and complete pattern list exposed by the field. `disabledReasons` receives this library's `DisabledReason[]`, whose `sourceNode` is the equivalent of Angular's originating `fieldTree`. Input transforms are honored.
 - A state input declared by a component custom control takes precedence over a native DOM property with the same template name. Custom-element hosts never receive synthetic `disabled`, `required`, `readonly`, `name`, or constraint properties. When a component signal control or component CVA is hosted on a native form element, native fallback remains available only for properties the component does not declare. This matches Angular Signal Forms' `customControlHasInput()` precedence and prevents duplicate or accidental host writes. Unlike Angular's internal renderer, the public reflection API cannot enumerate inputs belonging to arbitrary directives on the same native host; directive-based controls therefore need to handle native-host collisions explicitly until Angular exposes an equivalent public facility.
@@ -2767,21 +2767,22 @@ warning paths in the separate production Chromium process.
 
 ## Optional custom-control state inputs
 
-`provideFormNodesConfig({ syncControlInputs: false })` disables matching state and constraint
-input writes by `[formNode]` for custom signal controls, input-output pairs, and CVA components.
-With no provider, synchronization uses the global setting, whose library default is true. This option inherits independently
+`provideFormNodesConfig({ syncInputs: false })` disables matching state and constraint
+input writes by `[formNode]` for custom signal controls and CVA components.
+With no provider, synchronization uses the global setting, whose library default is false. This option inherits independently
 from classes and messages; omitted options preserve their nearest explicit provider.
-Configuration is resolved at connection time, and the choice persists through node rebinding.
+Provider/global fallback is captured at connection time. Rebinding resolves the new node's own mode and initial declarations before using that fallback.
 Input discovery still records public names and aliases so native fallback does not overwrite
-a custom control's own input channels. No synchronization effect is installed for these inputs
-when disabled. Model value/checked, optional node access, touch, focus, reset, native state,
+a custom control's own input channels. The effect observes rebinding but skips state reads and
+optional writes while the effective mode is disabled. Model value/checked, optional node access, touch, focus, reset, native state,
 and CVA `setDisabledState()` retain their existing behavior. Node state and validation do not
 change merely because the corresponding UI inputs are owned by the consumer.
 
-This is an intentional opt-out from Angular 22 `v22.1.5`
+This is an intentional experimental opt-in boundary compared with Angular 22 `v22.1.5`
 (`468b65b74566537456c192ac4281795c5a1e1a5e`), whose
 `packages/forms/signals/src/directive/control_custom.ts` synchronizes recognized state inputs
-and whose `test/web/form_field.spec.ts` covers that propagation. The default remains comparable.
+and whose `test/web/form_field.spec.ts` covers that propagation. Angular synchronizes inputs
+by default; Form Nodes intentionally does not.
 This provider does not configure Angular's own directives.
 
 
@@ -2942,14 +2943,14 @@ change Angular-comparable normal validation suppression or parent aggregation ru
 
 ## Unified Angular configuration provider
 
-`provideFormNodesConfig({ validatorMessages, classes, syncControlInputs })` and `FormNodesConfig`
+`provideFormNodesConfig({ validatorMessages, classes, syncInputs })` and `FormNodesConfig`
 replace the two previous provider functions and the singular config type. The helper returns
 ordinary `Provider[]`, supporting application, route, NgModule, and component injectors.
 
 Each of the three options uses an independent token. Omitting an option (or passing `undefined`)
 preserves its inherited provider. Explicit `classes` replace only the class map without merging;
-explicit `syncControlInputs` changes only synchronization. With no provider, each binding option uses its global setting, then the library default
-(an empty class map or true synchronization). An empty configuration registers nothing;
+explicit `syncInputs` changes only synchronization. With no provider, each binding option uses its global setting, then the library default
+(an empty class map or disabled synchronization). An empty configuration registers nothing;
 `{ classes: {} }` clears only classes. Multiple calls within one injector follow the same per-option
 rule, with the last explicit registration winning. Native controls, value binding, interaction
 hooks, node validation, and captured message catalogs retain their existing behavior.
@@ -2983,8 +2984,8 @@ library feature with factory support.
 ### Resetting individual provider options
 
 All three `provideFormNodesConfig()` options accept `null` to install that option's default in
-the current injector. `classes: null` registers an empty class map; `syncControlInputs: null`
-registers true; `validatorMessages: null` registers an empty catalog. These are explicit providers,
+the current injector. `classes: null` registers an empty class map; `syncInputs: null`
+registers false; `validatorMessages: null` registers an empty catalog. These are explicit providers,
 so they shadow the same option in ancestor injectors and override earlier registrations in the
 same injector. Omission and `undefined` still inherit without registering a provider.
 
@@ -3002,7 +3003,7 @@ Form Nodes API addition; the underlying Angular binding state transitions remain
 
 `configureGlobalFormNodes()` and `GlobalFormNodesConfig` replace the message-only global setter.
 Each option updates independently; omission and undefined preserve current global values. Null
-resets only that option to an empty class map, true synchronization, or an empty message catalog.
+resets only that option to an empty class map, disabled synchronization, or an empty message catalog.
 Explicit maps replace rather than merge. The global setter is safe outside Angular DI.
 
 Binding precedence is nearest explicit option provider, then global option, then library default.
@@ -3010,7 +3011,7 @@ Provider null class/synchronization options bypass the global setting. Provider 
 supply an empty catalog but preserve node-tree and global fallback. Node-local and captured
 provider message precedence is unchanged.
 
-Global class maps are captured at directive creation and input synchronization at control
+Global class maps are captured at directive creation and provider/global input synchronization at control
 connection. Changing or restoring global settings does not reconnect existing controls or replace
 existing class effects. Captured class predicates keep their signal dependencies. Global message
 sources and selected callbacks remain reactive for existing and new failing nodes. Global sources
@@ -3026,3 +3027,90 @@ packages/forms/signals/src/api/di.ts and configuration tests in
 packages/forms/signals/test/web/form_field.spec.ts. Angular configures binding classes through DI;
 this process-wide fallback is an intentional Form Nodes extension. Native-control state, model
 binding, touch, reset, validation, and injector ownership retain their existing transitions.
+
+## Experimental custom-control input synchronization
+
+`syncInputs` replaces `syncControlInputs` and is marked `@experimental` on all option declarations.
+It accepts boolean, 'only-declared', 'always', null, or undefined on field/form/group/array options,
+createFormPrimitives defaults, Angular providers, and global configuration. It defaults to false;
+null opts out, undefined inherits, true aliases only-declared, and always writes all supported inputs.
+Resolution is the bound node's captured option, then the nearest explicit provider, then the global
+setting captured by the connection, then false. A parent node's option does not configure descendants.
+
+Only-declared selects initial disabled (including disabledReasons), readonly, and hidden options
+whose values are not undefined. False declarations count. It selects constraints from known metadata
+on initially registered validators: required, min/max including dates, minLength/maxLength, and
+pattern. This metadata inspection does not execute validators. Conditional metadata retains its
+selection while inactive and updates reactively. Arbitrary compositions and validators installed
+later require always to select additional inputs; removal of initially declared constraints clears
+their synchronized values. Initial template declarations and factory defaults survive cloning.
+
+Dirty, touched, invalid, pending, errors, and generated name require always. Metadata constraints
+are available for directly bound aggregate nodes as well as fields. Native-control writes and CVA
+setDisabledState stay enabled. Value/checked models, node models, touch/focus/reset hooks, validation,
+and state propagation are independent of optional input synchronization. Value/checked transport requires actual models and uses public `set()` and `subscribe()` APIs.
+Separate input/output pairs connect only when syncInputs is enabled; false/null pause their value transport.
+
+Optional input writes are disabled without evaluating their node-state readers. A rebound control
+uses the replacement node's mode and declarations; unselected inputs retain their last component
+value rather than restoring a captured default. Public aliases and input transforms still apply
+when writes are enabled. Provider/global modes are snapshots for the connection; node modes are
+snapshots from creation. Experimental writes may overwrite authored input values.
+
+Angular reference: v22.1.5, commit 468b65b74566537456c192ac4281795c5a1e1a5e,
+packages/forms/signals/src/directive/control_custom.ts and bindings.ts; custom-control state/input
+and metadata tests in packages/forms/signals/test/web/form_field.spec.ts. Angular synchronizes all
+matching inputs; Form Nodes intentionally requires an experimental opt-in for its internal writer.
+
+### Deferred: subtree binding defaults
+
+A proposed form/group/array option tentatively called globalOptions would configure that node and
+its descendants. It is not implemented in this change; naming, precedence, and inheritance remain
+open for a later review. Individual syncInputs options do not introduce subtree inheritance.
+
+
+### Explicit custom-control input selection
+
+Experimental `syncInputs` also accepts readonly input-name arrays and
+`{ mode: 'always' | 'only-declared', inputs: readonly SyncInputName[] }` on every primitive,
+factory default, provider, and global configuration. An array means always for exactly those
+inputs, even if state or constraints were not declared initially. Object only-declared mode
+intersects the selection with initial declarations. Empty lists write no optional state inputs; they enable experimental paired value transport. Selecting disabled
+alone does not implicitly select disabledReasons. Public input names and aliases identify inputs;
+value/checked models remain separate and cannot be selected here.
+
+Lists replace inherited settings as a whole. Rebinding resolves the replacement node's own
+selection; previously selected but now unselected inputs retain their last component values.
+Selected states track reactive changes and validation metadata normally, including later validators
+in always mode. Selection does not change node state, propagation, validation, native behavior, or
+CVA setDisabledState. Factory template clones retain the selected input configuration.
+
+Inspected Angular v22.1.5 (`468b65b74566537456c192ac4281795c5a1e1a5e`),
+`packages/forms/signals/src/directive/control_custom.ts` and
+`packages/forms/signals/test/web/form_field.spec.ts` (custom-control dirty state and rebinding).
+Angular writes its recognized binding inputs; this explicit filtering is a Form Nodes API choice.
+
+
+### Experimental paired value transport
+
+Separate value/valueChange and checked/checkedChange input/output properties use the internal
+component input writer only while the effective syncInputs setting is enabled. Discovery uses
+public component metadata and recognizes signal and decorator pairs and public aliases. Actual
+models take precedence over pairs; CVA selection still takes precedence over signal controls.
+All enabled modes, arrays, and mode/inputs objects enable paired value transport, including empty
+lists: lists select optional state inputs only. False/null pause input writes and ignore paired
+change/touch outputs. The component retains its previous input value. Rebinding to an enabled node
+writes its current control value again, even when equal to the value last written before pausing.
+
+Output values follow normal pending/committed debounce behavior, dirty state, validation, and
+parent aggregation. Touch commits pending blur input. Model-driven writes suppress synchronous
+output feedback. Destroy unsubscribes the connection. Node, provider, factory, and global
+configuration use the usual precedence and captured provider/global fallback. Input writer
+incompatibility warns without interrupting node state or output updates; consumer transforms may
+still throw. Inputs need defaults rather than required-input declarations.
+
+Inspected Angular v22.1.5 (468b65b74566537456c192ac4281795c5a1e1a5e):
+packages/core/src/render3/instructions/control.ts identifies matching named input/output pairs;
+packages/forms/signals/src/directive/control_custom.ts binds them; the separate signal/decorator
+value and checkbox tests in packages/forms/signals/test/web/form_field.spec.ts cover both directions.
+The experimental opt-in gate is an intentional Form Nodes difference.

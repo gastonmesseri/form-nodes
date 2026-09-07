@@ -43,7 +43,9 @@ has been removed; see the [migration instructions](./migrations.md#removing-the-
 `useFormNodeState()` still observes `[formNode]`, Angular `[formField]`, Reactive Forms, and `ngModel`.
 For Angular `[formField]`, the form model is created by Angular Signal Forms itself.
 
-Custom controls can use `model()`, input/output pairs, or `ControlValueAccessor` on either major.
+Custom controls can use `model()` or `ControlValueAccessor` on either major. Separate
+input/output value pairs require enabled experimental `syncInputs`; see
+[paired controls](../guides/custom-controls.md#separate-input-output-pairs).
 The optional `FormNodeUiControl`, `FormNodeValueControl`, and `FormNodeCheckboxControl` contracts
 belong to Form Nodes and remain consistent across versions. Form Nodes' internal state rules
 continue to follow the inspected Angular 22 baseline even when running on Angular 21.

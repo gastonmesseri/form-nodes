@@ -23,8 +23,8 @@ import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { dateBetween } from '../validation/validators/date-between';
-import { provideFormNodesConfig } from '../form-node/form-node-config';
-import { configureGlobalFormNodes } from '../configuration/global-form-nodes-config';
+import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
+import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 

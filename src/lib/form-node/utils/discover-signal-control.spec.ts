@@ -2,7 +2,7 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, input, model, output } from '@angular/core';
+import { Component, input, model } from '@angular/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
@@ -29,22 +29,13 @@ describe('discoverSignalControl', () => {
       standalone: true,
     })
     class CheckedControl { checked = model(false); }
-    @Component({
-      selector: 'paired-control',
-      template: '',
-      standalone: true,
-    })
-    class PairedControl { value = input(''); valueChange = output<string>(); }
     registerSignalModelForJit(ValueControl, 'value');
     registerSignalModelForJit(CheckedControl, 'checked');
-    registerSignalModelForJit(PairedControl, 'value');
 
     const valueFixture = TestBed.createComponent(ValueControl);
     const checkedFixture = TestBed.createComponent(CheckedControl);
-    const pairedFixture = TestBed.createComponent(PairedControl);
     expect(discoverSignalControl(valueFixture.nativeElement)).toBe(valueFixture.componentInstance);
     expect(discoverSignalControl(checkedFixture.nativeElement)).toBe(checkedFixture.componentInstance);
-    expect(discoverSignalControl(pairedFixture.nativeElement)).toBe(pairedFixture.componentInstance);
   });
 
   it('rejects an ordinary input and the owning component of a native child element', () => {

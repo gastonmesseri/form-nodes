@@ -1,8 +1,8 @@
 import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signals';
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 
-import { field, form, FormNode, useFormNodeState, required, type Field } from '../../src/public-api';
 import { useLegacyNgControl } from '../helpers/legacy-ng-control-hook';
+import { field, form, FormNode, useFormNodeState, provideFormNodesConfig, required, type Field } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string };
 type CompanyValue = { companyId: number | null; companyName: string | null };
@@ -42,17 +42,6 @@ export class AotSignalCheckboxControl implements FormCheckboxControl {
 
 @Component({
   standalone: true,
-  selector: 'aot-paired-value-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<button type="button" (click)="valueChange.emit('AOT paired value')">{{ value() }}</button>`,
-})
-export class AotPairedValueControl {
-  value = input('');
-  valueChange = output<string>();
-}
-
-@Component({
-  standalone: true,
   selector: 'aot-delegating-control',
   imports: [FormNode],
   template: `<input [formNode]="formNode()">`,
@@ -87,6 +76,7 @@ export class AotCompanySelector implements FormValueControl<CompanyValue> {
 @Component({
   standalone: true,
   selector: 'aot-company-selector-host',
+  providers: [provideFormNodesConfig({ syncInputs: 'always' })],
   imports: [AotCompanySelector, FormNode],
   template: `<aot-company-selector [formNode]="myForm.company" />`,
 })
@@ -101,17 +91,16 @@ export class AotCompanySelectorHost {
 @Component({
   standalone: true,
   selector: 'aot-signal-control-host',
-  imports: [AotSignalValueControl, AotSignalCheckboxControl, AotPairedValueControl, FormNode],
+  providers: [provideFormNodesConfig({ syncInputs: 'always' })],
+  imports: [AotSignalValueControl, AotSignalCheckboxControl, FormNode],
   template: `
     <aot-signal-value-control [formNode]="name" />
     <aot-signal-checkbox-control [formNode]="active" />
-    <aot-paired-value-control [formNode]="pairedName" />
   `,
 })
 export class AotSignalControlHost {
   name = field.strict('AOT initial', [required]);
   active = field.strict(false);
-  pairedName = field.strict('AOT paired initial');
 }
 
 @Component({
@@ -137,4 +126,48 @@ export class AotDirectHookControl {
 })
 export class AotDirectHookHost {
   profile = form({ name: field('', [required]) });
+}
+
+
+@Component({
+  selector: 'aot-paired-text',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<button (click)="valueChange.emit('edited')">{{ value() }}</button>`,
+})
+export class AotPairedText {
+  value = input('component text');
+  valueChange = output<string>();
+  disabled = input(true);
+}
+
+@Component({
+  selector: 'aot-paired-checkbox',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<button (click)="checkedChange.emit(!checked())">{{ checked() }}</button>`,
+})
+export class AotPairedCheckbox {
+  checked = input(false);
+  checkedChange = output<boolean>();
+}
+
+@Component({
+  imports: [FormNode, AotPairedText, AotPairedCheckbox],
+  template: `
+    <aot-paired-text [formNode]="name()" />
+    <aot-paired-checkbox [formNode]="active()" />
+  `,
+})
+export class AotPairedControlHost {
+  name = signal(field.strict('node text', { syncInputs: [] }));
+  active = signal(field.strict(true, { syncInputs: 'only-declared' }));
+
+  pause() {
+    this.name.set(field.strict('paused text', { syncInputs: false }));
+    this.active.set(field.strict(true, { syncInputs: null }));
+  }
+
+  resume() {
+    this.name.set(field.strict('resumed', { syncInputs: { mode: 'always', inputs: [] } }));
+    this.active.set(field.strict(true, { syncInputs: true }));
+  }
 }

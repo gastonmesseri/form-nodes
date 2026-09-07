@@ -10,12 +10,12 @@ import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
-import { provideFormNodesConfig } from '../form-node-config';
 import { pattern } from '../../validation/validators/pattern';
 import { required } from '../../validation/validators/required';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
 import { connectSignalControlInputs } from './signal-control-inputs';
+import { provideFormNodesConfig } from '../provide-form-nodes-config';
 import type { ValidationError } from '../../validation/validation.type';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSignal } from '../angular-internals/component-input-writer';
@@ -24,11 +24,11 @@ beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platfor
 afterAll(() => TestBed.resetTestEnvironment());
 
 describe('connectSignalControlInputs', () => {
-  beforeEach(() => TestBed.configureTestingModule({}));
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] }));
   afterEach(() => TestBed.resetTestingModule());
 
   it('keeps declared input names without writing state when synchronization is disabled', () => {
-    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncControlInputs: false })] });
+    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: false })] });
     @Component({ selector: 'consumer-state-control', template: '' })
     class Control {
       disabled = input(true);

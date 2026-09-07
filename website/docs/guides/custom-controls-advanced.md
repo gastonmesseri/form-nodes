@@ -14,10 +14,12 @@ Start with [Custom controls](./custom-controls.md) for a minimal component integ
 This page covers alternative control contracts, state inputs and hooks, Angular forms
 state observation, detailed CVA behavior, wrappers, and compatibility boundaries.
 
-:::tip Optional state input synchronization
-If your application already binds `disabled`, `readonly`, or other state inputs, you can
-[disable automatic input synchronization](./custom-controls.md#keep-control-of-your-components-inputs)
-with `provideFormNodesConfig({ syncControlInputs: false })`. Value/checked models still work.
+:::tip Experimental state input synchronization
+
+Optional state and constraint inputs are not synchronized by default. Opt in with `syncInputs: true`
+for initial declarations or `'always'` for all supported inputs. Value/checked models still work
+without this Angular-internal adapter. See [input synchronization](./custom-controls.md#keep-control-of-your-components-inputs).
+
 :::
 
 ## Angular API compatibility
@@ -29,8 +31,7 @@ Form Nodes interface, base class, or registration provider.
 | --- | --- | --- |
 | Signal Forms value control | `value = model<T>()` | Fields, forms, and arrays |
 | Signal Forms checkbox control | `checked = model<boolean>()` | Boolean fields |
-| Signal input and output pair | `value` + `valueChange`, or `checked` + `checkedChange` | Fields, forms, and arrays |
-| Classic input and output pair | `@Input() value` + `@Output() valueChange` | Fields, forms, and arrays |
+| Separate input/output control | `value`/`valueChange` or `checked`/`checkedChange` | Experimental; requires enabled `syncInputs` |
 | Reactive Forms / Forms API | `ControlValueAccessor` through `NG_VALUE_ACCESSOR` | Fields and compatible aggregate values |
 | Native form element | `input`, `select`, or `textarea` | Scalar fields |
 
@@ -38,10 +39,32 @@ The `value` and `checked` contracts follow Angular's `FormValueControl<T>` and
 `FormCheckboxControl` shapes. A component does not have to declare that it implements those types;
 `[formNode]` discovers the public Angular inputs and outputs from component metadata.
 
+### FormValueControl support and the experimental boundary
+
+The `value = model()` contract works without experimental options. **Full automatic population
+of `FormValueControl` state and constraint inputs is experimental** because those writes use
+Angular internals. Enable `syncInputs: 'always'` to synchronize every supported input, or use
+`true`/`'only-declared'`, an input list, or `{ mode, inputs }` to limit the selection.
+
+The same option is available on `field()`, `form()`, `group()`, `array()`, `createFormPrimitives()`
+defaults, `provideFormNodesConfig()`, and `configureGlobalFormNodes()`. Node settings apply only
+to that node's binding. See [selection modes and precedence](../reference/provide-form-nodes-config.md#custom-control-inputs).
+
+A component implementing `FormValueControl` can instead combine `value = model()` with
+`useFormNodeState()`. It then has value binding and full access to Form Nodes state through public
+APIs, without enabling input synchronization. The component reads the hook's signals to render
+state, constraints, and errors and calls `markAsTouched()` on blur. The hook does not write the
+component's existing input properties or render its DOM for it. The same approach works with a
+`checked = model()` checkbox. See the [complete FormValueControl example](./custom-controls.md#create-a-signal-model-control).
+
+`ControlValueAccessor`, including `NG_VALUE_ACCESSOR` registration, retains its standard value,
+touch, and disabled-state integration without experimental options. Only additional automatic
+state/constraint input writes require `syncInputs`.
+
 Binding precedence is deterministic when a component exposes more than one mechanism:
 
 1. `ControlValueAccessor`
-2. An automatically discovered signal or input/output control
+2. An automatically discovered model or input/output pair (pairs require enabled `syncInputs`)
 3. Native element handling
 
 ## Signal model controls
@@ -69,26 +92,11 @@ export class Rating {
 <app-rating [formNode]="review.rating" />
 ```
 
-Separate `value`/`valueChange` or `checked`/`checkedChange` pairs are also supported. A separate input must have a default value rather than be required.
-
-For example, the equivalent value contract can be written without `model()`:
-
-```ts
-import { Component, input, output } from '@angular/core';
-
-@Component({
-  selector: 'app-rating',
-  template: `...`,
-})
-export class Rating {
-  readonly value = input<number | null>(null);
-  readonly valueChange = output<number | null>();
-
-  choose(value: number) {
-    this.valueChange.emit(value);
-  }
-}
-```
+Model value binding uses public `set()` and `subscribe()` APIs. Separate `value`/`valueChange`
+or `checked`/`checkedChange` input/output properties require enabled experimental `syncInputs`.
+Any enabled mode or selection enables the pair; lists filter only optional state inputs.
+`syncInputs: []` therefore enables value transport alone. False or null pauses pair writes and
+ignores change/touch outputs through this transport. See the [complete paired-control example](./custom-controls.md#separate-input-output-pairs).
 
 :::caution Do not require the control model input
 
@@ -122,7 +130,7 @@ A value emitted by the control marks the directly bound aggregate node dirty and
 reconciles the complete value through its children. The descendants are not individually marked
 dirty solely because the aggregate control changed them.
 
-Optional standard state inputs—such as `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `min`, `max`, `name`, `pending`, `readonly`, `required`, and `touched`—receive node state automatically. Optional `touch`, `focus()`, and `reset()` hooks integrate with interaction and reset behavior.
+Optional standard state inputs—such as `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `min`, `max`, `name`, `pending`, `readonly`, `required`, and `touched`—receive node state only with experimental `syncInputs: 'always'` or when selected by `'only-declared'`. Optional `touch`, `focus()`, and `reset()` hooks integrate with interaction and reset behavior.
 
 The complete recognized state surface is `errors`, `disabled`, `disabledReasons`, `dirty`,
 `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`,

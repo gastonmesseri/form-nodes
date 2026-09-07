@@ -17,9 +17,9 @@ import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
-import { provideFormNodesConfig } from '../form-node/form-node-config';
 import type { InternalNode, Node, NodeType } from '../types/node.type';
-import { configureGlobalFormNodes } from '../configuration/global-form-nodes-config';
+import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
+import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 

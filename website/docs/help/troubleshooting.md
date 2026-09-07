@@ -39,9 +39,9 @@ signal custom control, or provide ControlValueAccessor`.
 one supported Angular contract:
 
 - `value = model(...)` or `checked = model(...)`.
-- A matching `value`/`valueChange` or `checked`/`checkedChange` pair.
 - `ControlValueAccessor` registered through `NG_VALUE_ACCESSOR`.
 - An automatically discovered signal-control component.
+- A separate `value`/`valueChange` or `checked`/`checkedChange` pair with enabled experimental `syncInputs`. Use `[]` for paired value transport alone; `false`/`null` leave it paused.
 
 See [Advanced custom controls](../guides/custom-controls-advanced.md) for the supported shapes and precedence.
 

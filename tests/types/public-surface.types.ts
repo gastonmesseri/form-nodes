@@ -49,7 +49,7 @@ const combinedConfig: FormNodesConfig = {
     required: 'Required',
     minLength: ({ minLength }) => `At least ${minLength} characters`,
   }),
-  syncControlInputs: false,
+  syncInputs: false,
   classes: classConfig.classes,
 };
 const combinedProviders: Provider[] = provideFormNodesConfig(combinedConfig);
@@ -68,22 +68,31 @@ provideFormNodesConfig({ validatorMessages: { required: 123 } });
 const resetConfig: FormNodesConfig = {
   validatorMessages: null,
   classes: null,
-  syncControlInputs: null,
+  syncInputs: null,
 };
 provideFormNodesConfig(resetConfig);
-provideFormNodesConfig({ validatorMessages: null, classes: null, syncControlInputs: null });
+provideFormNodesConfig({ validatorMessages: null, classes: null, syncInputs: null });
 
-provideFormNodesConfig({ validatorMessages: undefined, classes: undefined, syncControlInputs: undefined });
+provideFormNodesConfig({ validatorMessages: undefined, classes: undefined, syncInputs: undefined });
 
 const globalConfig: GlobalFormNodesConfig = {
   validatorMessages: () => ({ min: ({ min }) => `Minimum ${min}` }),
   classes: { invalid: binding => binding.node().$api.invalid() },
-  syncControlInputs: false,
+  syncInputs: false,
 };
 const restoreGlobal: () => void = configureGlobalFormNodes(globalConfig);
-configureGlobalFormNodes({ validatorMessages: null, classes: null, syncControlInputs: null });
-configureGlobalFormNodes({ validatorMessages: undefined, classes: undefined, syncControlInputs: undefined });
+configureGlobalFormNodes({ validatorMessages: null, classes: null, syncInputs: null });
+configureGlobalFormNodes({ validatorMessages: undefined, classes: undefined, syncInputs: undefined });
 configureGlobalFormNodes({ validatorMessages: () => undefined });
 // @ts-expect-error Global message callbacks must return messages or undefined.
 configureGlobalFormNodes({ validatorMessages: { required: () => 123 } });
 void restoreGlobal;
+
+// Experimental synchronization modes are available on every configuration scope.
+field('', { syncInputs: true });
+field('', { syncInputs: 'only-declared', disabled: false });
+configureGlobalFormNodes({ syncInputs: 'always' });
+provideFormNodesConfig({ syncInputs: 'only-declared' });
+createFormPrimitives({ syncInputs: 'always' }).form({ name: field('') }, { syncInputs: null });
+// @ts-expect-error Only documented synchronization modes are accepted.
+field('', { syncInputs: 'sometimes' });

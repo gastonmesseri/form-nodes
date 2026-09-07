@@ -25,13 +25,16 @@ import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { provideFormNodePassThrough } from './form-node-pass-through';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from './form-node-config';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from './provide-form-nodes-config';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 
-beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
+beforeAll(() => {
+  TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+  TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] });
+});
 afterAll(() => TestBed.resetTestEnvironment());
 
 const dispatch = (element: HTMLElement, type: string) => {

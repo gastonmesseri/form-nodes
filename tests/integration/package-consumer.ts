@@ -12,7 +12,7 @@ class Company {
   selector: 'package-consumer',
   standalone: true,
   imports: [FormNode],
-  providers: [provideFormNodesConfig({ syncControlInputs: false })],
+  providers: [provideFormNodesConfig({ syncInputs: false })],
   template: `
     <form [formNode]="profile">
       <input #nameBinding="formNode" [formNode]="profile.name">
@@ -69,5 +69,5 @@ export class PackageConsumer {
   }
 }
 
-const restoreGlobal = configureGlobalFormNodes({ classes: null, syncControlInputs: true });
+const restoreGlobal = configureGlobalFormNodes({ classes: null, syncInputs: true });
 restoreGlobal();

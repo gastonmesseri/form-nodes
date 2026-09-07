@@ -19,7 +19,8 @@ input synchronization. Angular providers override each option independently. The
 configureGlobalFormNodes(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined) | null | undefined;
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
-  syncControlInputs?: boolean | null | undefined;
+  syncInputs?: boolean | 'only-declared' | 'always' | readonly SyncInputName[]
+    | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined; // Experimental
 }): () => void;
 ```
 
@@ -46,23 +47,30 @@ form options.
 ## Independent options and precedence
 
 For each binding option, resolution is: **nearest explicit Angular provider → global setting →
-library default**. For messages, validator and form-tree overrides retain higher precedence;
+library default**. A node's explicit `syncInputs` option takes precedence over every provider. For messages, validator and form-tree overrides retain higher precedence;
 global messages remain the fallback after catalogs captured by nodes from Angular providers.
 
 | Option | Global behavior | `null` resets to |
 | --- | --- | --- |
 | `validatorMessages` | Static or reactive fallback catalog | Empty catalog, leaving built-in messages as the final fallback |
 | `classes` | Class map captured by new bindings | No automatic classes |
-| `syncControlInputs` | Setting captured when controls connect | `true` |
+| `syncInputs` | Experimental mode for new control connections (`false`, `true`/`'only-declared'`, `'always'`, an input list, or a mode/inputs object) | `false` |
 
 Omitting an option or passing `undefined` preserves the current global setting. Multiple calls
 update only the supplied options. Explicit catalogs and class maps replace their previous maps;
 they do not merge entries automatically.
 
-A provider with `classes: null` or `syncControlInputs: null` explicitly selects the library default,
+A provider with `classes: null` or `syncInputs: null` explicitly selects the library default,
 bypassing the global value for that option. A provider with `validatorMessages: null` supplies an
 empty provider catalog; normal message fallback still includes the global catalog. It does not
 force built-in English text.
+
+Input synchronization is **experimental and disabled by default**. `true` means `'only-declared'`;
+use `'always'` for every supported state input. Pass `['disabled', 'dirty']` to always synchronize
+only those inputs, or `{ mode: 'only-declared', inputs: ['disabled'] }` to restrict the initial declarations. See [Modes and node overrides](./provide-form-nodes-config.md#custom-control-inputs).
+Value/checked models remain connected in every mode. Separate input/output value pairs require
+enabled experimental `syncInputs`; even `[]` enables their value transport while selecting no
+optional state inputs. See [paired controls](../guides/custom-controls.md#separate-input-output-pairs).
 
 ## Reactive messages and binding snapshots
 

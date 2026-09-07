@@ -305,8 +305,18 @@ configures Angular `[formField]` independently, so both providers can share an i
 
 ## Custom-control components
 
-Components exposing `value = model<T>()`, `checked = model<boolean>()`, compatible input/output
-pairs, or a CVA are normally discovered automatically.
+Components exposing `value = model<T>()`, `checked = model<boolean>()`,
+or a CVA are normally discovered automatically. Separate `value`/`valueChange` and
+`checked`/`checkedChange` pairs are recognized too, but their value transport requires enabled
+experimental `syncInputs` (including `[]` for value transport without optional state writes).
+
+For `FormValueControl`, value binding through `model()` works without experimental options.
+Full automatic state/constraint input synchronization requires experimental `syncInputs: 'always'`;
+other modes select fewer inputs. Alternatively, a component can combine its value model with
+`useFormNodeState()` for full bound-state access and render that state itself without input writes.
+Standard CVA value, touch, and disabled-state integration does not require `syncInputs`.
+See [FormValueControl support and a complete example](../guides/custom-controls.md#create-a-signal-model-control).
+
 
 Signal custom controls are discovered from their compiled component metadata and require no
 library-specific provider. The integration intentionally applies to components: `getDebugNode()`
@@ -423,8 +433,9 @@ and [Form submission](../guides/submission.md).
 
 ## Custom-control input synchronization
 
-Automatic synchronization of custom-control state inputs is enabled by default.
-Use `provideFormNodesConfig({ syncControlInputs: false })` when your component or template
+Optional custom-control input synchronization is experimental and disabled by default.
+Use `syncInputs: true` for initial declarations or `'always'` for all supported state inputs.
+Use `provideFormNodesConfig({ syncInputs: false })` when your component or template
 should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
 Native controls and CVA `setDisabledState()` remain connected.
 See [the simple example](../guides/custom-controls.md#keep-control-of-your-components-inputs)

@@ -1,8 +1,11 @@
 import { DestroyRef, effect, reflectComponentType, signal, untracked, type Injector, type ModelSignal, type Type, type WritableSignal } from '@angular/core';
 
 import type { FormNodeControl } from './form-node-control';
+import { FORM_NODE_SYNC_INPUTS } from './provide-form-nodes-config';
 import type { InternalNode, Node, NodeValue } from '../types/node.type';
+import { getNodeInputConfig } from '../configuration/node-input-config';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
+import { getGlobalSyncInputs } from '../configuration/configure-global-form-nodes';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 import { warnFailedInputWrite, writeComponentInput } from './angular-internals/component-input-writer';
 
@@ -20,33 +23,31 @@ const getControlModel = <TNode extends Node>(
   control: FormNodeControl<NodeValue<TNode>, TNode>,
   injector: Injector,
   usesControlState: boolean,
-): ModelSignal<NodeValue<TNode>> => {
-  const candidate = control as unknown as Record<PropertyKey, unknown>;
-  const mirror = reflectComponentType((control as unknown as { constructor: Type<unknown> }).constructor);
-  const valueCandidate = candidate['value'] as ModelCandidate<NodeValue<TNode>> | undefined;
-  const hasValueModel = typeof valueCandidate === 'function' && typeof valueCandidate.set === 'function' && typeof valueCandidate.subscribe === 'function';
-  const name = hasValueModel || mirror?.inputs.some(({ templateName }) => templateName === 'value') ? 'value' : 'checked';
-  const currentModel = candidate[name] as ModelCandidate<NodeValue<TNode>> | undefined;
-  if (typeof currentModel === 'function' && typeof currentModel.set === 'function' && typeof currentModel.subscribe === 'function') {
-    return currentModel as ModelSignal<NodeValue<TNode>>;
+): { model: ModelSignal<NodeValue<TNode>>; experimental: boolean } => {
+  for (const name of ['value', 'checked'] as const) {
+    const candidate = control[name] as ModelCandidate<NodeValue<TNode>> | undefined;
+    if (typeof candidate === 'function' && typeof candidate.set === 'function' && typeof candidate.subscribe === 'function') {
+      return { model: candidate as ModelSignal<NodeValue<TNode>>, experimental: false };
+    }
   }
-  const inputMetadata = mirror?.inputs.find(({ templateName }) => templateName === name);
-  const outputMetadata = mirror?.outputs.find(({ templateName }) => templateName === `${name}Change`);
-  const output = outputMetadata ? candidate[outputMetadata.propName] as { subscribe(listener: (value: NodeValue<TNode>) => void): { unsubscribe(): void } } : undefined;
-  if (!inputMetadata || !output?.subscribe) throw new Error(`formNode: a signal custom control requires a '${name}' model or '${name}'/'${name}Change' input-output pair`);
-  let lastValue: NodeValue<TNode> | symbol = Symbol('unset');
-  const model = (() => lastValue as NodeValue<TNode>) as ModelSignal<NodeValue<TNode>>;
-  model.set = (value) => {
-    lastValue = value;
-    if (!writeComponentInput(control, name, value, injector)) warnFailedInputWrite(control, name, usesControlState);
-  };
-  model.subscribe = (listener) => {
-    return output.subscribe((value) => {
-      lastValue = value;
-      listener(value);
-    });
-  };
-  return model;
+  const mirror = reflectComponentType((control as unknown as { constructor: Type<unknown> }).constructor);
+  const record = control as unknown as Record<string, unknown>;
+  for (const name of ['value', 'checked'] as const) {
+    const input = mirror?.inputs.find(({ templateName }) => templateName === name);
+    const output = mirror?.outputs.find(({ templateName }) => templateName === `${name}Change`);
+    if (!input || !output) continue;
+    const emitter = record[output.propName] as { subscribe?: ModelSignal<NodeValue<TNode>>['subscribe'] } | undefined;
+    if (typeof emitter?.subscribe !== 'function') continue;
+    let lastValue: unknown = Symbol('unset');
+    const model = (() => lastValue) as ModelSignal<NodeValue<TNode>>;
+    model.set = (value) => {
+      if (writeComponentInput(control, name, value, injector)) lastValue = value;
+      else warnFailedInputWrite(control, name, usesControlState);
+    };
+    model.subscribe = listener => emitter.subscribe!(listener);
+    return { model, experimental: true };
+  }
+  throw new Error('formNode: a custom control requires a \'value\' or \'checked\' model, or a matching input-output pair');
 };
 
 /** Connects a provided signal-based custom control to a field, form, or array node. */
@@ -56,7 +57,15 @@ export const connectSignalControl = <TNode extends Node>(
   injector: Injector,
   usesControlState = false,
 ): SignalControlConnection => {
-  const model = getControlModel(control, injector, usesControlState);
+  const { model, experimental } = getControlModel(control, injector, usesControlState);
+  const inheritedMode = injector.get(FORM_NODE_SYNC_INPUTS, null) ?? getGlobalSyncInputs();
+  const enabled = () => {
+    if (!experimental) return true;
+    const ownMode = getNodeInputConfig(node()).mode;
+    const mode = ownMode === undefined ? inheritedMode : ownMode;
+    return mode !== false && mode !== null;
+  };
+  let lastWrittenNode: TNode | undefined;
   const nodeInput = control.node as WritableSignal<TNode | null> | undefined;
   const validationOwner = {};
   const noErrors = signal<readonly []>([]);
@@ -65,9 +74,10 @@ export const connectSignalControl = <TNode extends Node>(
   const { inputNames } = connectSignalControlInputs(control, node, injector, usesControlState);
 
   const valueSubscription = model.subscribe((value) => {
-    if (!writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);
+    if (enabled() && !writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);
   });
   const touchSubscription = control.touch?.subscribe(() => {
+    if (!enabled()) return;
     const currentNode = node() as unknown as InternalNode;
     currentNode.$api.markAsTouched();
     currentNode.$api._flushControlValueOnBlur();
@@ -81,13 +91,18 @@ export const connectSignalControl = <TNode extends Node>(
 
   effect(() => {
     const currentNode = node();
+    if (!enabled()) {
+      lastWrittenNode = undefined;
+      return;
+    }
     const value = (currentNode as unknown as InternalNode).$api._controlValue();
     untracked(() => {
       nodeInput?.set(currentNode);
-      if (Object.is(model(), value)) return;
+      if ((!experimental || lastWrittenNode === currentNode) && Object.is(model(), value)) return;
       writingControlValue = true;
       try {
         model.set(value);
+        lastWrittenNode = currentNode;
       } finally {
         writingControlValue = false;
       }

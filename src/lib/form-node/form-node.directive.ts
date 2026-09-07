@@ -3,18 +3,18 @@ import { APP_ID, CSP_NONCE, DestroyRef, Directive, ElementRef, InjectionToken, I
 
 import type { Field } from '../primitives/field';
 import { shallowEqual } from '../utils/shallow-equal';
-import { FORM_NODE_CLASSES } from './form-node-config';
 import { connectSignalControl } from './signal-control';
 import { getFormNodeName } from './utils/form-node-name';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { FormNodeNgControl } from './form-node-ng-control';
 import type { FormNodeControl } from './form-node-control';
+import { FORM_NODE_CLASSES } from './provide-form-nodes-config';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import { registerNodeBindingInjector } from '../utils/node-injector';
 import type { ValidationError } from '../validation/validation.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { connectSignalControlInputs } from './utils/signal-control-inputs';
-import { getGlobalFormNodeClasses } from '../configuration/global-form-nodes-config';
+import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
 import type { InternalNode, InternalNodeApi, Node, NodeValue } from '../types/node.type';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 import { componentAcceptsFormNode, discoverSignalControl } from './utils/discover-signal-control';

@@ -2,7 +2,7 @@ import { InjectionToken, assertInInjectionContext, inject, type Injector } from 
 
 import type { Node } from '../types/node.type';
 import type { BuiltInValidationErrorMap, ValidationError } from './validation.type';
-import { getGlobalValidatorMessages } from '../configuration/global-form-nodes-config';
+import { getGlobalValidatorMessages } from '../configuration/configure-global-form-nodes';
 
 /** Structured built-in error data available to a configured message function. */
 export type ValidatorMessageParameters<TKind extends keyof BuiltInValidationErrorMap> = Omit<

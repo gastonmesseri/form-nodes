@@ -10,8 +10,8 @@ import { field } from '../primitives/field';
 import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
 import { required } from '../validation/validators/required';
-import { provideFormNodesConfig, type FormNodesConfig } from './form-node-config';
-import { configureGlobalFormNodes } from '../configuration/global-form-nodes-config';
+import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
+import { provideFormNodesConfig, type FormNodesConfig } from './provide-form-nodes-config';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -21,6 +21,8 @@ class ValueControl {
   value = model<unknown>('');
 
   disabled = input(true);
+
+  required = input(false);
 
   readOnly = input(true, { alias: 'readonly' });
 
@@ -59,6 +61,7 @@ class CvaControl implements ControlValueAccessor {
 
 registerSignalModelForJit(ValueControl, 'value');
 registerSignalInputForJit(ValueControl, 'disabled', 'disabled');
+registerSignalInputForJit(ValueControl, 'required', 'required');
 registerSignalInputForJit(ValueControl, 'readonly', 'readOnly');
 registerSignalOutputForJit(ValueControl, 'touch', 'touch');
 registerSignalModelForJit(CheckboxControl, 'checked');
@@ -81,7 +84,7 @@ describe('custom-control input configuration', () => {
         <config-checkbox-control [formNode]="profile.active" />
       `,
       imports: [FormNode, ValueControl, CheckboxControl],
-      providers: [provideFormNodesConfig({ syncControlInputs: false })],
+      providers: [provideFormNodesConfig({ syncInputs: false })],
     })
     class Host {
       profile = form({ name: field('Mark'), active: field(false) });
@@ -143,20 +146,20 @@ describe('custom-control input configuration', () => {
       TestBed.configureTestingModule({ providers: [
         provideFormNodesConfig({ validatorMessages: { required: 'Root required' } }),
         provideFormNodesConfig({ classes: { 'root-invalid': binding => binding.node().$api.invalid() } }),
-        provideFormNodesConfig({ syncControlInputs: option === 'syncFalse' }),
+        provideFormNodesConfig({ syncInputs: option === 'syncFalse' ? 'always' : false }),
       ] });
       const options: Record<typeof option, FormNodesConfig> = {
         classes: { classes: { 'local-invalid': binding => binding.node().$api.invalid() } },
         clearClasses: { classes: {} },
-        syncTrue: { syncControlInputs: true },
-        syncFalse: { syncControlInputs: false },
+        syncTrue: { syncInputs: 'always' },
+        syncFalse: { syncInputs: false },
         messages: { validatorMessages: { required: 'Local required' } },
         empty: {},
         nullClasses: { classes: null },
-        nullSync: { syncControlInputs: null },
+        nullSync: { syncInputs: null },
         nullMessages: { validatorMessages: null },
-        allNull: { classes: null, syncControlInputs: null, validatorMessages: null },
-        undefined: { classes: undefined, syncControlInputs: undefined, validatorMessages: undefined },
+        allNull: { classes: null, syncInputs: null, validatorMessages: null },
+        undefined: { classes: undefined, syncInputs: undefined, validatorMessages: undefined },
       };
       @Component({
         template: '<config-value-control [formNode]="node" />',
@@ -177,7 +180,7 @@ describe('custom-control input configuration', () => {
       expect(host.profile.name.getError('required')?.message).toBe(option === 'messages' ? 'Local required' : option === 'nullMessages' || option === 'allNull' ? 'This field is required.' : 'Root required');
       expect(classes.contains('root-invalid')).toBe(!['classes', 'clearClasses', 'nullClasses', 'allNull'].includes(option));
       expect(classes.contains('local-invalid')).toBe(option === 'classes');
-      expect(control.disabled()).toBe(!['syncTrue', 'nullSync', 'allNull'].includes(option));
+      expect(control.disabled()).toBe(option !== 'syncTrue');
       expect(control.value()).toEqual(kind === 'field' ? '' : { name: '' });
       control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
       control.touch.emit();
@@ -193,7 +196,7 @@ describe('custom-control input configuration', () => {
       expect(control.disabled()).toBe(true);
       host.node.$api.enable();
       fixture.detectChanges();
-      expect(control.disabled()).toBe(!['syncTrue', 'nullSync', 'allNull'].includes(option));
+      expect(control.disabled()).toBe(option !== 'syncTrue');
       host.profile.reset({ name: '' });
       fixture.detectChanges();
       expect(host.node.$api.touched()).toBe(false);
@@ -208,17 +211,17 @@ describe('custom-control input configuration', () => {
       const showClass = signal(true);
       const restore = configureGlobalFormNodes({
         classes: { 'global-invalid': binding => showClass() && binding.node().$api.invalid() },
-        syncControlInputs: false,
+        syncInputs: false,
         validatorMessages: { required: 'Global required' },
       });
       restoreGlobalConfig.push(restore);
       const options: Record<typeof override, FormNodesConfig> = {
         none: {},
         classes: { classes: { 'local-invalid': binding => binding.node().$api.invalid() } },
-        sync: { syncControlInputs: true },
+        sync: { syncInputs: 'always' },
         messages: { validatorMessages: { required: 'Local required' } },
-        reset: { classes: null, syncControlInputs: null, validatorMessages: null },
-        undefined: { classes: undefined, syncControlInputs: undefined, validatorMessages: undefined },
+        reset: { classes: null, syncInputs: null, validatorMessages: null },
+        undefined: { classes: undefined, syncInputs: undefined, validatorMessages: undefined },
       };
       @Component({
         template: '<config-value-control [formNode]="node" />',
@@ -239,7 +242,7 @@ describe('custom-control input configuration', () => {
       const inheritedClass = override !== 'classes' && override !== 'reset';
       expect(classes.contains('global-invalid')).toBe(inheritedClass);
       expect(classes.contains('local-invalid')).toBe(override === 'classes');
-      expect(control.disabled()).toBe(override !== 'sync' && override !== 'reset');
+      expect(control.disabled()).toBe(override !== 'sync');
       expect(host.profile.name.getError('required')?.message).toBe(override === 'messages' ? 'Local required' : 'Global required');
       showClass.set(false);
       fixture.detectChanges();
@@ -248,7 +251,7 @@ describe('custom-control input configuration', () => {
       restore();
       fixture.detectChanges();
       expect(classes.contains('global-invalid')).toBe(inheritedClass);
-      expect(control.disabled()).toBe(override !== 'sync' && override !== 'reset');
+      expect(control.disabled()).toBe(override !== 'sync');
       expect(host.profile.name.getError('required')?.message).toBe(override === 'messages' ? 'Local required' : 'This field is required.');
       control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
       control.touch.emit();
@@ -261,7 +264,71 @@ describe('custom-control input configuration', () => {
       later.detectChanges();
       const laterElement = later.debugElement.children[0]!;
       expect((laterElement.nativeElement as HTMLElement).classList.contains('global-invalid')).toBe(false);
-      expect((laterElement.componentInstance as ValueControl).disabled()).toBe(false);
+      expect((laterElement.componentInstance as ValueControl).disabled()).toBe(override !== 'sync');
+    });
+  });
+
+  describe.each(['field', 'form'] as const)('%s declared input selection', (kind) => {
+    it.each([
+      { mode: 'always', inputs: ['disabled', 'readonly'] },
+      { mode: 'only-declared', inputs: ['disabled', 'readonly'] },
+    ] as const)('applies selected public input names and aliases with %j', (selection) => {
+      @Component({
+        template: '<config-value-control [formNode]="node" />',
+        imports: [FormNode, ValueControl],
+        providers: [provideFormNodesConfig({ syncInputs: selection })],
+      })
+      class Host {
+        node = kind === 'field'
+          ? field('', [required], { disabled: false })
+          : form({ name: field('') }, [required], { disabled: false });
+      }
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const node = fixture.componentInstance.node;
+      const control = fixture.debugElement.children[0]!.componentInstance as ValueControl;
+      expect(control.disabled()).toBe(false);
+      expect(control.required()).toBe(false);
+      expect(control.readOnly()).toBe(selection.mode !== 'always');
+      node.$api.disable();
+      fixture.detectChanges();
+      expect(control.disabled()).toBe(true);
+      node.$api.enable();
+      control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
+      fixture.detectChanges();
+      expect(node()).toEqual(kind === 'field' ? 'Marco' : { name: 'Marco' });
+      expect(control.disabled()).toBe(false);
+      expect(control.required()).toBe(false);
+    });
+
+    it.each([false, true, 'only-declared', 'always'] as const)('keeps value and touch binding with mode %s', (syncInputs) => {
+      @Component({
+        template: '<config-value-control [formNode]="node" />',
+        imports: [FormNode, ValueControl],
+      })
+      class Host {
+        node = kind === 'field'
+          ? field('', [required], { syncInputs, disabled: false })
+          : form({ name: field('') }, [required], { syncInputs, disabled: false });
+      }
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const node = fixture.componentInstance.node;
+      const control = fixture.debugElement.children[0]!.componentInstance as ValueControl;
+      expect(control.disabled()).toBe(syncInputs === false);
+      expect(control.required()).toBe(syncInputs !== false);
+      expect(control.readOnly()).toBe(syncInputs !== 'always');
+      control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
+      control.touch.emit();
+      fixture.detectChanges();
+      expect(node()).toEqual(kind === 'field' ? 'Marco' : { name: 'Marco' });
+      expect(node.$api.touched()).toBe(true);
+      node.$api.disable();
+      fixture.detectChanges();
+      expect(control.disabled()).toBe(true);
+      node.$api.enable();
+      fixture.detectChanges();
+      expect(control.disabled()).toBe(syncInputs === false);
     });
   });
 
@@ -270,7 +337,7 @@ describe('custom-control input configuration', () => {
       selector: 'config-opt-in',
       template: '<config-value-control [formNode]="name" />',
       imports: [FormNode, ValueControl],
-      providers: [provideFormNodesConfig({ syncControlInputs: true })],
+      providers: [provideFormNodesConfig({ syncInputs: 'always' })],
     })
     class OptIn {
       name = field('Mark');
@@ -284,7 +351,7 @@ describe('custom-control input configuration', () => {
         <input [formNode]="profile.name">
       `,
       imports: [FormNode, ValueControl, CvaControl, OptIn],
-      providers: [provideFormNodesConfig({ syncControlInputs: false })],
+      providers: [provideFormNodesConfig({ syncInputs: false })],
     })
     class Host {
       profile = form({ name: field('Mark') });

@@ -5,8 +5,8 @@ import { min } from './validators/min';
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from './validators/required';
-import { provideFormNodesConfig } from '../form-node/form-node-config';
-import { configureGlobalFormNodes } from '../configuration/global-form-nodes-config';
+import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
+import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 describe('validator messages', () => {
   const restoreConfigurations: (() => void)[] = [];

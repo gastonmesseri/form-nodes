@@ -12,15 +12,21 @@ canonical release record.
 
 ### Changed
 
-- **Breaking API change:** `configureGlobalFormNodes({ validatorMessages, classes, syncControlInputs })` replaces `configureGlobalValidatorMessages()`. Global options update independently below Angular providers; binding defaults are captured on connection, while global messages remain reactive. Cleanup callbacks preserve later overrides and skip already cleaned-up configurations.
+- **Breaking behavior change:** separate `value`/`valueChange` and `checked`/`checkedChange` controls require enabled experimental `syncInputs`. Modes, lists, and mode/inputs objects enable their value transport; empty lists select no optional state inputs. False/null pause paired writes and ignore change/touch outputs; rebinding to an enabled node resynchronizes its control value. Actual models and CVAs remain connected without this opt-in.
 
-- **Breaking API change:** `provideFormNodesConfig({ validatorMessages, classes, syncControlInputs })` replaces `provideValidatorMessages()` and `provideFormNodeConfig()`; `FormNodesConfig` replaces `FormNodeConfig`. Message factories retain injection and reactive message support, and the unified provider also works in component providers. All three options inherit independently; configuring input synchronization preserves inherited classes, and configuring or clearing classes preserves synchronization. Explicit class maps replace rather than merge with inherited maps; an empty configuration is a no-op.
+- **Breaking behavior/API change:** optional custom-control input synchronization is experimental and off by default. `syncInputs` replaces `syncControlInputs` and is available on every primitive, factory defaults, providers, and global configuration. True means `'only-declared'`; `'always'` preserves full synchronization. Null disables it. Node options affect only their own binding; native controls, value/checked models, and interaction hooks keep working.
+
+- **Breaking API change:** `configureGlobalFormNodes({ validatorMessages, classes, syncInputs })` replaces `configureGlobalValidatorMessages()`. Global options update independently below Angular providers; binding defaults are captured on connection, while global messages remain reactive. Cleanup callbacks preserve later overrides and skip already cleaned-up configurations.
+
+- **Breaking API change:** `provideFormNodesConfig({ validatorMessages, classes, syncInputs })` replaces `provideValidatorMessages()` and `provideFormNodeConfig()`; `FormNodesConfig` replaces `FormNodeConfig`. Message factories retain injection and reactive message support, and the unified provider also works in component providers. All three options inherit independently; configuring input synchronization preserves inherited classes, and configuring or clearing classes preserves synchronization. Explicit class maps replace rather than merge with inherited maps; an empty configuration is a no-op.
 
 - **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.
 
 ### Added
 
-- Each `provideFormNodesConfig()` option accepts `null` to reset only that option: no automatic classes, input synchronization enabled, or an empty provider message catalog with normal fallback. Omitted options and `undefined` still inherit.
+- Experimental `syncInputs` accepts typed input lists (always synchronize exactly those inputs) or `{ mode, inputs }` selections on nodes, factory defaults, providers, and global configuration. Only-declared mode intersects the list with initial declarations; empty lists disable optional writes. Exported `SyncInputs` and `SyncInputName` types support reusable configuration.
+
+- Each `provideFormNodesConfig()` option accepts `null` to reset only that option: no automatic classes, input synchronization disabled, or an empty provider message catalog with normal fallback. Omitted options and `undefined` still inherit.
 
 - `provideFormNodesConfig({ validatorMessages })` accepts a message catalog object directly as well as an injectable factory. Both forms retain reactive message callbacks and the same message precedence.
 

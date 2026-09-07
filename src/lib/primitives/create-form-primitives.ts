@@ -36,12 +36,16 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
 export const createFormPrimitives = <const TNullable extends boolean = true>(options: FormPrimitivesOptions<TNullable> = {}): FormPrimitives<TNullable> => {
   const defaultNullable = options.nullable ?? true;
   const defaultNodeOptions = {
+    syncInputs: options.syncInputs,
     inheritInjector: options.inheritInjector,
     adoptBindingInjector: options.adoptBindingInjector,
   };
   const mergeNodeOptions = <TOptions extends object>(nodeOptions?: TOptions): TOptions => {
     return {
       ...nodeOptions,
+      syncInputs: (nodeOptions as FieldOptions | undefined)?.syncInputs === undefined
+        ? defaultNodeOptions.syncInputs
+        : (nodeOptions as FieldOptions).syncInputs,
       inheritInjector: (nodeOptions as FieldOptions | undefined)?.inheritInjector ?? defaultNodeOptions.inheritInjector,
       adoptBindingInjector: (nodeOptions as FieldOptions | undefined)?.adoptBindingInjector ?? defaultNodeOptions.adoptBindingInjector,
     } as TOptions;

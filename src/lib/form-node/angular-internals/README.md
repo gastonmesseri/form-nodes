@@ -18,7 +18,12 @@ The matching custom-component inputs are:
 - Constraints: `required`, `min`, `max`, `minLength`, `maxLength`, and `pattern`.
 - Control name: `name`.
 
-Set `provideFormNodesConfig({ syncControlInputs: false })` to disable this optional synchronization.
+**This synchronization is experimental and disabled by default.** Opt in with `syncInputs: true`
+(`'only-declared'`) for initial node declarations or `'always'` for all supported inputs. The option
+is available on field, form, group, and array options, factory defaults, Angular providers, and
+global configuration. False or null explicitly disables it. Node options apply only to that node.
+Initial validator metadata selects constraint inputs; derived states and generated names require
+`'always'`. Arbitrary compositions and later-added validators also require `'always'`.
 This does not disable the state itself or the following functionality:
 
 - Two-way value binding through `value = model<T>()` and checkbox binding through
@@ -35,11 +40,12 @@ that state is simply not copied automatically into a custom component's `touched
 Custom controls can observe state through `useFormNodeState()` or receive explicit template
 bindings; the application or component then owns the inputs listed above.
 
-Separate `value`/`valueChange` or `checked`/`checkedChange` input-output pairs are a different
-integration path: their model-to-control writes also use `writeComponentInput` from this
-directory. `syncControlInputs: false` does not disable those value writes or remove their
-dependency on this adapter. Use actual `model()` controls, native controls, or a
-ControlValueAccessor for value binding that does not depend on this internal input writer.
+Actual `value = model()` and `checked = model()` controls use public model APIs, and CVAs use
+their standard contract. Separate `value`/`valueChange` and `checked`/`checkedChange` pairs require
+enabled experimental `syncInputs` because their value writes use this internal input writer.
+Every enabled mode, list, or mode/inputs object enables paired value transport. Empty lists enable
+only value transport, without optional state writes. False/null pause pair writes and ignore its
+change/touch outputs; rebinding to an enabled node resynchronizes its control value.
 
 Files in this directory isolate behavior that depends on Angular implementation details rather
 than its supported public API. Keep this boundary small, structural, and covered by JIT, AOT,
@@ -59,3 +65,8 @@ warning must state that the control remains connected, identify the potentially 
 recommend `useFormNodeState()` as the stable state channel unless that component already uses
 it. Mention `ControlValueAccessor` only as an alternative for value and disabled interoperability;
 it does not represent every optional state.
+
+Explicit input lists such as `syncInputs: ['disabled', 'dirty']` use always mode for exactly
+those public inputs. The `{ mode, inputs }` form can instead filter initial declarations with
+`mode: 'only-declared'`. Empty lists perform no optional input writes. These selections remain
+experimental and do not affect public model transport.

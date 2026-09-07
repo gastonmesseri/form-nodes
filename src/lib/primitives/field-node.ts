@@ -11,6 +11,7 @@ import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
@@ -258,6 +259,7 @@ export class FieldNode<TValue> {
 
     this.node = this.createNode();
     markAsNode(this.node);
+    registerNodeInputConfig(this.node, this.options, validators, () => this.metadata());
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerNodeValidatorMessages(this.node, undefined, this.options?.injector);
 

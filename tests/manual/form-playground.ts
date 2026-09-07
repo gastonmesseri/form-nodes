@@ -83,10 +83,12 @@ const myForm = form({
     b: field(2),
     c: field(true),
   }, [ctx => ctx.value() ? { kind: '' } : null]),
+  myValo: field('', { syncInputs: false })
 }, {
   // equal: 'deep',
 });
 
+myForm.myValo.validators({ resolve: true })
 
 /** @todo this is still not working, the type of the child should be an union */
 myForm.someNesting.forEachChild(child => {
@@ -114,7 +116,8 @@ const myFormTyped = form({
   // listB: field<number[]>([]),
 });
 
-myFormTyped.forEachChild(child => child.set(null));
+myFormTyped.forEachChild(child => child.set(''));
+myFormTyped.forEachChild(child => child.set(''), { includeDynamic: true });
 
 Object.values(myFormTyped.children).forEach(child => child.set(2))
 
