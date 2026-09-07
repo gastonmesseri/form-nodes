@@ -1538,7 +1538,7 @@ describe('FormNode in Chromium', () => {
 
     @Component({
       selector: 'browser-signal-checkbox-control',
-      template: `<button type="button" (click)="checked.update(value => !value)">{{ checked() }}</button>`,
+      template: `<button type="button" (click)="checked.set(!checked())">{{ checked() }}</button>`,
       standalone: true,
     })
     class BrowserSignalCheckboxControl implements FormCheckboxControl {

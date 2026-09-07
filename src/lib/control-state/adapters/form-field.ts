@@ -26,7 +26,8 @@ export const injectFormFieldControlStateAdapter = <TValue>(): ControlStateAdapte
     dirty: computed(() => state().dirty()),
     errors: computed(() => {
       return state().errors().map((error) => {
-        const { fieldTree, formField: errorFormField, ...details } = error;
+        // Angular 21.0 exposes fieldTree; later versions can also attach a formField binding.
+        const { fieldTree, formField: errorFormField, ...details } = error as typeof error & { formField?: unknown };
         void fieldTree;
         void errorFormField;
         return details;

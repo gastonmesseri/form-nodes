@@ -33,7 +33,7 @@ export class AotSignalValueControl implements FormValueControl<string>, OnChange
   standalone: true,
   selector: 'aot-signal-checkbox-control',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<button type="button" (click)="checked.update(value => !value)">{{ checked() }}</button>`,
+  template: `<button type="button" (click)="checked.set(!checked())">{{ checked() }}</button>`,
 })
 export class AotSignalCheckboxControl implements FormCheckboxControl {
   checked = model(false);

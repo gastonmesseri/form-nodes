@@ -33,7 +33,7 @@ and read state with `binding.node()` instead of `binding.state()`.
 [control-state example](../reference/control-state.md#bind-with-formfield).
 
 Custom components may implement the Form Nodes control types without depending on Angular's
-version-specific `FormUiControl` type. The supported Angular ranges are now `^21.2.22 || ^22.1.5`;
+version-specific `FormUiControl` type. The supported Angular ranges are now `^21.0.7 || ^22.1.5`;
 update older Angular installations to a verified patch before upgrading this development version.
 
 ## Upgrade checklist
