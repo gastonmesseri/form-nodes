@@ -70,12 +70,12 @@
  * valueAccessor
  * statusChanges
  * valueChanges
+ * getError
+ * hasError
  * 
  * // not implemented (ng control has them exposed publicly)
  * // maybe we should implement them? maybe just a dummy value to avoid failing? maybe implement for full contract?
  * asyncValidator
- * getError
- * hasError
  * name
  * path
  * reset
@@ -85,7 +85,21 @@
 
  - ensure that components that implement ngControl through the useNgControl hook, also work
 
- - Los metodos que no sean publicos de FormNodeNgControl, mejor prefijarlos con _ para distinguirlos de los que el contrato de NgControl espera
+ - Los metodos que no sean publicos de FormNodeNgControl, mejor prefijarlos con _ para distinguirlos de los que el contrato de NgControl espera (ya sea el contrato publico o privado, esos asegurarse que esten ahi sin _)
+
+- en DL los componentes se suscriben a ngControl?.control?.statusChanges (y no a ngControl?.statusChanges), asegurarse de que esto funciona
+
+- [NEXT] [ ] Complete the remaining `NgControl` compatibility contract for `[formNode]`, one step at a time.
+  - Start in `src/lib/form-node/form-node-ng-control.ts`; integration tests live in `form-node-ng-control.spec.ts` and `form-node.directive.browser.spec.ts`.
+  - Already implemented: current value/validation/interaction state, `control`, `valueAccessor`, observable `valueChanges`/`statusChanges`/`events`, binding-owned `setErrors()`, and `getError()`/`hasError()` with relative descendant paths. Preserve rebinding, cleanup, original imperative error payloads, and reactive queries across structural changes and public equality filtering.
+  - [x] Delivered `name` and `path`; see Completed for the structural identity contract and verification.
+  - [ ] Audit and implement meaningful `reset()` compatibility, including values, interaction state, pending work, binding-owned errors, and notification options, using the existing node reset behavior.
+  - [ ] Audit `validator` and `asyncValidator`: decide how existing components can inspect or invoke them without duplicating validation execution, losing reactive dependencies, or changing asynchronous validation ownership. Use `null` only when it accurately represents the supported contract.
+  - [ ] Audit `viewToModelUpdate()` and the existing no-op `updateValueAndValidity()` against concrete CVA requirements; define supported behavior instead of adding dummy methods merely to avoid exceptions.
+  - `hasValidator()` currently recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
+  - Verify components that obtain the adapter through a `useNgControl` hook, and distinguish internal adapter helpers from Angular contract members (see the notes above).
+  - Previous reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Resolve the latest Angular 22 maintenance release before continuing; inspect Signal Forms interop and relevant Reactive Forms implementation/tests. Keep the node API authoritative and document intentional compatibility differences.
+  - Update `docs/behavior.md`, the custom-controls website guide, and both unreleased changelogs for each delivered behavior change. Run focused integration tests and the required typecheck, build, coverage, browser, and documentation checks.
 
 - [NEXT] [ ] Implement hasError and hasValidator methods into my primitive nodes
 
@@ -983,6 +997,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Choose `[formNode]` as the node-binding directive name.
 - [x] Bind aggregate forms to native `<form [formNode]="form">` elements.
 - [x] Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
+  - [x] Define reactive `NgControl.name` and `path` from node structure for roots, nested groups/forms, array items, detached subtrees, reattachment, and binding replacement. Keep the combined runtime control identity while documenting Angular’s directive-only type contract; cover deferred `useNgControl` lookup in browser tests. Angular reference re-resolved to `v22.1.5` (`468b65b`).
   - [x] Support binding-owned `NgControl.control.setErrors()` for CVA parsing errors, preserving other validators and cleaning up on reset, rebinding, and destruction.
   - [x] Add observable value, validation, and interaction state for CVAs that obtain `NgControl` in `ngAfterViewInit`, including rebinding and destruction cleanup.
 - [x] Automatically support Angular `FormValueControl` and `FormCheckboxControl`, retaining `provideFormNodeControl()` as the explicit fallback.

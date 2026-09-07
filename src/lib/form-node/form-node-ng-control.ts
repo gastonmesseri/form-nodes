@@ -186,6 +186,12 @@ export class FormNodeNgControl {
 
   get value(): unknown { return (this.getNode() as InternalNode).$api._controlValue(); }
 
+  /** Structural key in the node's parent; roots and detached nodes have no name. */
+  get name(): string | number | null { return this.getNode().$api.keyInParent(); }
+
+  /** Structural path from the current node root, copied for Angular's mutable array contract. */
+  get path(): string[] { return [...this.getNode().$api.path()]; }
+
   get valid(): boolean { return this.getNode().$api.valid(); }
 
   get invalid(): boolean { return this.getNode().$api.invalid(); }
@@ -230,8 +236,6 @@ export class FormNodeNgControl {
  * getError
  * hasError
  * invalid
- * name
- * path
  * pending
  * pristine
  * reset
