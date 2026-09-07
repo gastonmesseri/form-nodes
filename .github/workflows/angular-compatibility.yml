@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   package:
-    name: Build shared package
+    name: Build shared package with Angular 21
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,9 +40,7 @@ jobs:
       matrix:
         include:
           - angular: '22'
-            experimental: false
           - angular: '21'
-            experimental: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -56,7 +54,6 @@ jobs:
           path: artifacts
       - name: Check packed consumer
         id: compatibility
-        continue-on-error: ${{ matrix.experimental }}
         shell: bash
         run: |
           packages=(artifacts/*.tgz)
@@ -66,7 +63,6 @@ jobs:
         if: always()
         env:
           ANGULAR_MAJOR: ${{ matrix.angular }}
-          EXPERIMENTAL: ${{ matrix.experimental }}
           OUTCOME: ${{ steps.compatibility.outcome }}
         run: |
-          echo "Angular ${ANGULAR_MAJOR}: ${OUTCOME}; experimental=${EXPERIMENTAL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Angular ${ANGULAR_MAJOR}: ${OUTCOME}" >> "$GITHUB_STEP_SUMMARY"

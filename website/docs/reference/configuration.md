@@ -19,7 +19,7 @@ fallback validator-message catalog.
 | Validator call | `{ message }` | That validator instance | Message functions are reactive |
 | Node or subtree | `field()`, `form()`, `array()`, and `group()` options | The declared node; selected options inherit | Function sources are reactive |
 | Angular injector | `provideValidatorMessages()` | Nodes created in that injector scope | Selected message functions are reactive |
-| Angular injector | `provideFormNodeConfig()` | Descendant `[formNode]` and `$field`-backed `[formField]` bindings | Class predicates are reactive |
+| Angular injector | `provideFormNodeConfig()` | Descendant `[formNode]` | Class predicates are reactive |
 | Factory set | `createFormPrimitives()` | Nodes created through that set | Catalog sources are reactive; node options override shared defaults |
 | JavaScript process | `configureGlobalValidatorMessages()` | Fallback for every node | Catalog sources and selected messages are reactive |
 
@@ -326,10 +326,8 @@ See [Validator messages and i18n](../guides/validator-messages.md).
 
 ## Binding configuration
 
-`provideFormNodeConfig()` configures automatic CSS classes for bindings below the closest Angular
-provider. It applies to native `[formNode]` bindings and to Angular `[formField]` bindings backed by
-a node's `$field`; unrelated Angular `FieldTree` bindings are left unchanged. Predicates run
-independently in reactive contexts:
+`provideFormNodeConfig()` configures automatic CSS classes for `[formNode]` bindings below the
+closest Angular provider. Predicates run independently in reactive contexts:
 
 ```ts
 provideFormNodeConfig({
@@ -368,14 +366,8 @@ This provider affects rendered bindings, not node state or validation. A closer
 `provideFormNodeConfig()` supplies that binding scope's complete config; class maps are not merged
 automatically.
 
-The provider installs Angular's Signal Forms class configuration internally when `classes` is
-present. Do not also call `provideSignalFormsConfig({ classes })` in the same injector: Angular's
-configuration token is not multi, so whichever provider appears last would replace the other.
-Choose one provider for that scope. Use `provideFormNodeConfig()` when the classes should follow Form Nodes nodes through either binding directive. If an application already uses
-`provideSignalFormsConfig({ classes })`, its Angular `FormFieldBinding` predicates automatically
-apply to `$field`-backed `[formField]` controls because `$field` is a real Angular `FieldTree`; use
-that provider when the configuration is intentionally expressed through Angular's binding API or
-also covers native Angular Signal Forms trees. See
+Angular's `provideSignalFormsConfig()` independently configures Angular `[formField]` controls.
+The two providers use separate tokens and can coexist in the same injector. See
 [`FormNode` binding configuration](./form-node-binding.md#automatic-css-classes).
 
 ## Injector ownership

@@ -1,12 +1,13 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { FormField, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
+import { FormField, form as createAngularForm, required as angularRequired, provideSignalFormsConfig, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 import { FormResetEvent, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { CSP_NONCE, Component, EventEmitter, Injector, Input, Output, ViewEncapsulation, forwardRef, inject, input, model, output, signal, type OnDestroy } from '@angular/core';
 
 import { form } from '../primitives/form';
+import { provideFormNodeConfig } from './form-node-config';
 import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { group } from '../primitives/group';
@@ -14,11 +15,8 @@ import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
-import { provideFormNodeConfig } from './form-node-config';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
-import { maxLength } from '../validation/validators/max-length';
-import { minLength } from '../validation/validators/min-length';
 import { useControlState } from '../control-state/control-state';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
@@ -432,7 +430,63 @@ describe('FormNode in Chromium', () => {
     expect(cva.complete).toHaveBeenCalledOnce();
   });
 
-  it.each(['formNode', 'formField'] as const)('exposes current committed control state through %s while public equality retains an older value', (binding) => {
+  it('observes external Angular Signal Forms and keeps class providers independent', async () => {
+    @Component({
+      selector: 'external-angular-control',
+      template: `<input [value]="value()" [disabled]="state.disabled()" (input)="value.set($any($event.target).value)" (blur)="state.markAsTouched()">`,
+    })
+    class ExternalControl {
+      value = model('');
+
+      state = useControlState<string>();
+    }
+    registerSignalModelForJit(ExternalControl, 'value');
+    registerSignalOutputForJit(ExternalControl, 'valueChange', 'value');
+    @Component({
+      template: `<input class="node" [formNode]="profile.name"><external-angular-control [formField]="angularProfile.name" />`,
+      imports: [FormNode, FormField, ExternalControl],
+      providers: [
+        provideFormNodeConfig({ classes: { 'node-invalid': binding => binding.node().$api.invalid() } }),
+        provideSignalFormsConfig({ classes: { 'angular-invalid': binding => binding.state().invalid() } }),
+      ],
+    })
+    class Host {
+      profile = form({ name: field('', [required]) });
+
+      model = signal({ name: '' });
+
+      angularProfile = createAngularForm(this.model, path => angularRequired(path.name));
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const custom = fixture.debugElement.children[1]!.componentInstance as ExternalControl;
+    const nodeInput = fixture.nativeElement.querySelector('input.node') as HTMLInputElement;
+    const angularHost = fixture.nativeElement.querySelector('external-angular-control') as HTMLElement;
+    const angularInput = angularHost.querySelector('input')!;
+    expect(custom.state.source()).toBe('formField');
+    expect(custom.state.invalid()).toBe(true);
+    expect(nodeInput.classList.contains('node-invalid')).toBe(true);
+    expect(angularHost.classList.contains('angular-invalid')).toBe(true);
+    angularInput.value = 'Marco';
+    dispatch(angularInput, 'input');
+    dispatch(angularInput, 'blur');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(host.model()).toEqual({ name: 'Marco' });
+    expect(custom.state.value()).toBe('Marco');
+    expect(custom.state.touched()).toBe(true);
+    expect(custom.state.invalid()).toBe(false);
+    expect(host.profile.name()).toBe('');
+    expect(nodeInput.classList.contains('node-invalid')).toBe(true);
+    expect(angularHost.classList.contains('angular-invalid')).toBe(false);
+    fixture.destroy();
+    expect(custom.state.connected()).toBe(false);
+  });
+
+  it('exposes current committed control state through formNode while public equality retains an older value', () => {
     @Component({ selector: 'equality-control-state', template: '' })
     class EqualityControl {
       value = model('');
@@ -441,10 +495,8 @@ describe('FormNode in Chromium', () => {
     registerSignalModelForJit(EqualityControl, 'value');
     registerSignalOutputForJit(EqualityControl, 'valueChange', 'value');
     @Component({
-      template: binding === 'formNode'
-        ? `<equality-control-state [formNode]="profile.name" />`
-        : `<equality-control-state [formField]="profile.name.$field" />`,
-      imports: binding === 'formNode' ? [EqualityControl, FormNode] : [EqualityControl, FormField],
+      template: `<equality-control-state [formNode]="profile.name" />`,
+      imports: [EqualityControl, FormNode],
     })
     class Host {
       profile = form({ name: field.strict<string>('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase() }) });
@@ -484,12 +536,10 @@ describe('FormNode in Chromium', () => {
     expect(control.state.value()).toBeUndefined();
   });
 
-  it.each(['formNode', 'formField'] as const)('synchronizes array item controls through %s independently of array equality', (binding) => {
+  it('synchronizes array item controls through formNode independently of array equality', () => {
     @Component({
-      template: binding === 'formNode'
-        ? `@for (person of profile.people.items(); track person) { <input [formNode]="person.name"> }`
-        : `@for (person of profile.people.items(); track person) { <input [formField]="person.name.$field"> }`,
-      imports: binding === 'formNode' ? [FormNode] : [FormField],
+      template: `@for (person of profile.people.items(); track person) { <input [formNode]="person.name"> }`,
+      imports: [FormNode],
     })
     class Host {
       profile = form({ people: array({ name: field.strict<string>('Marco') }, {
@@ -526,10 +576,10 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
-  it.each(['formNode', 'formField'] as const)('synchronizes current child values through %s while the form retains its public value', (binding) => {
+  it('synchronizes current child values through formNode while the form retains its public value', () => {
     @Component({
-      template: binding === 'formNode' ? `<input [formNode]="profile.name">` : `<input [formField]="profile.name.$field">`,
-      imports: binding === 'formNode' ? [FormNode] : [FormField],
+      template: `<input [formNode]="profile.name">`,
+      imports: [FormNode],
     })
     class Host {
       profile = form({ name: field.strict<string>('Marco') }, {
@@ -566,10 +616,10 @@ describe('FormNode in Chromium', () => {
     fixture.destroy();
   });
 
-  it.each(['formNode', 'formField'] as const)('synchronizes current field writes through %s while retaining the exposed value', (binding) => {
+  it('synchronizes current field writes through formNode while retaining the exposed value', () => {
     @Component({
-      template: binding === 'formNode' ? `<input [formNode]="profile.name">` : `<input [formField]="profile.name.$field">`,
-      imports: binding === 'formNode' ? [FormNode] : [FormField],
+      template: `<input [formNode]="profile.name">`,
+      imports: [FormNode],
     })
     class Host {
       profile = form({ name: field.strict('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase() }) });
@@ -649,351 +699,6 @@ describe('FormNode in Chromium', () => {
     expect(fixture.componentInstance.profile.implicit.pristine()).toBe(true);
     expect(fixture.componentInstance.profile.explicit.pristine()).toBe(true);
     fixture.destroy();
-  });
-
-  it('binds a library field through the Angular formField adapter', () => {
-    @Component({
-      template: `<input [formField]="profile.name.$field">`,
-      imports: [FormField],
-    })
-    class Host {
-      profile = form({ name: field('David') });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-
-    expect(input.value).toBe('David');
-    input.value = 'Ana';
-    dispatch(input, 'input');
-    TestBed.flushEffects();
-    expect(fixture.componentInstance.profile.name()).toBe('Ana');
-
-    fixture.componentInstance.profile.name.set('Mark');
-    TestBed.flushEffects();
-    fixture.detectChanges();
-    expect(input.value).toBe('Mark');
-
-    fixture.componentInstance.profile.name.focus({ preventScroll: true });
-    expect(document.activeElement).toBe(input);
-  });
-
-  it('preserves a formField control edit during a simultaneous node write', () => {
-    @Component({
-      template: `<input [formField]="name.$field">`,
-      imports: [FormField],
-    })
-    class Host {
-      name = field('David');
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const name = fixture.componentInstance.name;
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-
-    input.value = 'Control edit';
-    dispatch(input, 'input');
-    name.set('Programmatic write');
-    TestBed.flushEffects();
-    fixture.detectChanges();
-
-    expect(name()).toBe('Control edit');
-    expect(input.value).toBe('Control edit');
-  });
-
-  it('synchronizes formField interaction events and node-owned availability', () => {
-    @Component({
-      template: `<input [formField]="name.$field">`,
-      imports: [FormField],
-    })
-    class Host {
-      name = field('David', { debounce: 'blur' });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-
-    input.value = 'Ana';
-    dispatch(input, 'input');
-    TestBed.flushEffects();
-
-    expect(fixture.componentInstance.name()).toBe('David');
-    expect(fixture.componentInstance.name.controlValue()).toBe('Ana');
-    expect(fixture.componentInstance.name.debouncing()).toBe(true);
-
-    dispatch(input, 'blur');
-    TestBed.flushEffects();
-
-    expect(fixture.componentInstance.name()).toBe('Ana');
-    expect(fixture.componentInstance.name.debouncing()).toBe(false);
-    expect(fixture.componentInstance.name.dirty()).toBe(true);
-    expect(fixture.componentInstance.name.touched()).toBe(true);
-
-    fixture.componentInstance.name.disable('Unavailable');
-    fixture.detectChanges();
-    expect(input.disabled).toBe(true);
-
-    fixture.componentInstance.name.enable();
-    fixture.detectChanges();
-    expect(input.disabled).toBe(false);
-  });
-
-  it('propagates formField native parsing errors into Form Nodes validation', () => {
-    @Component({
-      template: `<input [formField]="profile.age.$field">`,
-      imports: [FormField],
-    })
-    class Host {
-      profile = form({
-        age: field(5),
-      });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const profile = fixture.componentInstance.profile;
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-
-    input.value = 'invalid';
-    dispatch(input, 'input');
-    TestBed.flushEffects();
-
-    expect(profile.age()).toBe(5);
-    expect(profile.age.getError('parse')?.kind).toBe('parse');
-    expect(profile.age.invalid()).toBe(true);
-    expect(profile.invalid()).toBe(true);
-    expect(profile.allErrors()).toHaveLength(1);
-
-    input.value = '12';
-    dispatch(input, 'input');
-    TestBed.flushEffects();
-
-    expect(profile.age()).toBe(12);
-    expect(profile.age.getError('parse')).toBeUndefined();
-    expect(profile.valid()).toBe(true);
-
-    input.value = 'pending invalid value';
-    dispatch(input, 'input');
-    TestBed.flushEffects();
-    profile.age.reset();
-    TestBed.flushEffects();
-    fixture.detectChanges();
-
-    expect(profile.age.getError('parse')).toBeUndefined();
-    expect(input.value).toBe('12');
-  });
-
-  it('reflects reactive Form Nodes constraints through formField native properties', () => {
-    @Component({
-      template: `
-        <input id="amount" type="number" [formField]="profile.amount.$field">
-        <input id="code" [formField]="profile.code.$field">
-      `,
-      imports: [FormField],
-    })
-    class Host {
-      minimum = signal(2);
-      maximum = signal(10);
-      minimumLength = signal(2);
-      profile = form({
-        amount: field(5, [min(() => this.minimum()), max(() => this.maximum())]),
-        code: field('abc', [minLength(() => this.minimumLength()), maxLength(8)]),
-      });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const host = fixture.componentInstance;
-    const amount = fixture.nativeElement.querySelector('#amount') as HTMLInputElement;
-    const code = fixture.nativeElement.querySelector('#code') as HTMLInputElement;
-
-    expect(amount.min).toBe('2');
-    expect(amount.max).toBe('10');
-    expect(code.minLength).toBe(2);
-    expect(code.maxLength).toBe(8);
-
-    host.minimum.set(4);
-    host.maximum.set(9);
-    host.minimumLength.set(3);
-    fixture.detectChanges();
-
-    expect(amount.min).toBe('4');
-    expect(amount.max).toBe('9');
-    expect(code.minLength).toBe(3);
-    expect(code.maxLength).toBe(8);
-  });
-
-  it('reconciles dynamic array formField controls without orphaning moved or removed items', () => {
-    @Component({
-      template: `
-        @for (person of people; track person) {
-          <input [formField]="person.name.$field">
-        }
-      `,
-      imports: [FormField],
-    })
-    class Host {
-      people = array({
-        id: field(0),
-        name: field('', [minLength(2)]),
-      }, {
-        trackBy: 'id',
-      });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const people = fixture.componentInstance.people;
-
-    people.push({ id: 1, name: 'Ada' });
-    people.push({ id: 2, name: 'Grace' });
-    TestBed.flushEffects();
-    fixture.detectChanges();
-    const initialInputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
-    const graceInput = initialInputs[1]!;
-
-    graceInput.value = 'Grace Hopper';
-    dispatch(graceInput, 'input');
-    dispatch(graceInput, 'blur');
-    TestBed.flushEffects();
-    expect(people[1]!.name()).toBe('Grace Hopper');
-    expect(people[1]!.name.touched()).toBe(true);
-    expect(graceInput.minLength).toBe(2);
-
-    people.move(1, 0);
-    TestBed.flushEffects();
-    fixture.detectChanges();
-    const movedInputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
-    expect(movedInputs[0]).toBe(graceInput);
-    expect(movedInputs[0]!.value).toBe('Grace Hopper');
-    expect(people[0]!.name.touched()).toBe(true);
-
-    graceInput.focus();
-    people.removeAt(0);
-    TestBed.flushEffects();
-    fixture.detectChanges();
-    const remainingInput = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    expect(graceInput.isConnected).toBe(false);
-    expect(remainingInput.value).toBe('Ada');
-    expect(people.length()).toBe(1);
-  });
-
-  it('bridges a native form reset through formNode into formField controls', () => {
-    @Component({
-      template: `
-        <form [formNode]="profile">
-          <input [formField]="profile.name.$field">
-        </form>
-      `,
-      imports: [FormNode, FormField],
-    })
-    class Host {
-      profile = form({
-        name: field('David', { debounce: 'blur' }),
-      });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const profile = fixture.componentInstance.profile;
-    const formElement = fixture.nativeElement.querySelector('form') as HTMLFormElement;
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-
-    input.value = 'Pending';
-    dispatch(input, 'input');
-    dispatch(input, 'blur');
-    TestBed.flushEffects();
-    expect(profile.name()).toBe('Pending');
-    expect(profile.name.touched()).toBe(true);
-    expect(profile.name.dirty()).toBe(true);
-
-    input.value = 'Another pending value';
-    dispatch(input, 'input');
-    TestBed.flushEffects();
-    expect(profile.name()).toBe('Pending');
-    expect(profile.name.debouncing()).toBe(true);
-
-    formElement.reset();
-    TestBed.flushEffects();
-    fixture.detectChanges();
-
-    expect(profile.name()).toBe('Pending');
-    expect(profile.name.controlValue()).toBe('Pending');
-    expect(profile.name.debouncing()).toBe(false);
-    expect(profile.name.touched()).toBe(false);
-    expect(profile.name.dirty()).toBe(false);
-    expect(input.value).toBe('Pending');
-  });
-
-  it('uses the Form Nodes form root for invalid submission and focus with formField controls', () => {
-    const action = vi.fn();
-
-    @Component({
-      template: `
-        <form [formNode]="profile">
-          <input [formField]="profile.displayName.$field">
-          <button type="submit">Save</button>
-        </form>
-      `,
-      imports: [FormNode, FormField],
-    })
-    class Host {
-      profile = form({
-        displayName: field('', [required]),
-      }, {
-        submission: {
-          action,
-          onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus(),
-        },
-      });
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const profile = fixture.componentInstance.profile;
-    const formElement = fixture.nativeElement.querySelector('form') as HTMLFormElement;
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-
-    formElement.dispatchEvent(submitEvent);
-    TestBed.flushEffects();
-
-    expect(formElement.noValidate).toBe(true);
-    expect(submitEvent.defaultPrevented).toBe(true);
-    expect(action).not.toHaveBeenCalled();
-    expect(profile.displayName.touched()).toBe(true);
-    expect(document.activeElement).toBe(input);
-  });
-
-  it('applies form-node classes through the Angular formField adapter', () => {
-    @Component({
-      template: `<input [formField]="name.$field">`,
-      imports: [FormField],
-      providers: [provideFormNodeConfig({
-        classes: {
-          'is-invalid': binding => binding.node().$api.invalid(),
-          'is-touched': binding => binding.node().$api.touched(),
-        },
-      })],
-    })
-    class Host {
-      name = field('', [required]);
-    }
-
-    const fixture = TestBed.createComponent(Host);
-    fixture.detectChanges();
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-
-    expect(input.classList.contains('is-invalid')).toBe(true);
-    expect(input.classList.contains('is-touched')).toBe(false);
-
-    dispatch(input, 'blur');
-    fixture.detectChanges();
-
-    expect(input.classList.contains('is-touched')).toBe(true);
   });
 
   it('tolerates a group as a native form root and preserves submit and reset state behavior', () => {

@@ -47,8 +47,8 @@ export type FieldFactory<TNullable extends boolean> = ([TNullable] extends [fals
 type ConfiguredAddedNode<TDefinition, TParent extends Node, TNullable extends boolean> = AddedNode<NormalizedNodeWithDefault<TDefinition, TNullable>, TParent>;
 
 export type ConfiguredForm<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean> = {
-  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' | '$field' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
-  add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api' | '$field', never>>): {
+  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
+  add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api', never>>): {
     readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   };
 } & Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>;
@@ -78,8 +78,8 @@ export interface GroupFactory<TNullable extends boolean> {
 }
 
 export type ConfiguredGroup<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean> = {
-  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' | '$field' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
-  add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api' | '$field', never>>): {
+  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
+  add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api', never>>): {
     readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   };
 } & Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>;

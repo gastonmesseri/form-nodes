@@ -59,7 +59,7 @@ provideFormNodeConfig({
 ```
 
 Each predicate tracks its dependencies independently. Through `provideFormNodeConfig()`, the map
-applies to descendant `[formNode]` bindings and `$field`-backed `[formField]` bindings.
+applies to descendant `[formNode]` bindings.
 
 See [`provideFormNodeConfig()`](./provide-form-node-config.md) and
 [`[formNode]`](./form-node-binding.md#automatic-css-classes).

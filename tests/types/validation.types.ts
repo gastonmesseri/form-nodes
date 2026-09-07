@@ -1,7 +1,6 @@
 import type { Equal, Expect, HasKey } from './assert.types';
 import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 
-type IsAny<TValue> = 0 extends (1 & TValue) ? true : false;
 type _NoExampleCustomError = Expect<Equal<HasKey<ValidationErrorMap, 'unavailableUsername'>, false>>;
 
 const nameValidator = (context: ValidatorContext<string | null>) => {
@@ -13,7 +12,6 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
 };
 
 const name = field('David', [required, nameValidator]);
-type _OpaqueAngularNameField = Expect<IsAny<typeof name.$field>>;
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);
@@ -40,8 +38,6 @@ field<Date>(null, [dateBetween('2026-01-01', '2026-12-31', 'Outside range')]);
 field<Date>(null, [minDate('today'), maxDate(() => 'today')]);
 field<Date>(null, [dateBetween('today', () => '2026-12-31')]);
 
-const angularProfile = form({ name: field('David'), age: field(30) });
-type _OpaqueAngularProfileField = Expect<IsAny<typeof angularProfile.$field>>;
 
 const adult = validator<number | null>(({ value, field: targetField }) => {
   const api = targetField().api;

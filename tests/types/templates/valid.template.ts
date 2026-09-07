@@ -1,7 +1,7 @@
 import { Component, model, viewChild } from '@angular/core';
-import { FormField, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
+import { type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 
-import { array, field, form, group, FormNode } from '../../../src/public-api';
+import { array, field, form, FormNode } from '../../../src/public-api';
 
 @Component({
   standalone: true,
@@ -91,23 +91,4 @@ class ValidAggregateControlHost {
   people = array({ name: field('') }, []);
 }
 
-@Component({
-  standalone: true,
-  imports: [ValidValueControl, ValidProfileControl, ValidPeopleControl, FormField],
-  template: `
-    <input [formField]="name.$field">
-    <valid-value-control [formField]="customName.$field" />
-    <valid-profile-control [formField]="profile.$field" />
-    <valid-profile-control [formField]="profileGroup.$field" />
-    <valid-people-control [formField]="people.$field" />
-  `,
-})
-class ValidAngularFormFieldHost {
-  name = field('David');
-  customName = field.strict('David');
-  profile = form({ name: field('David') });
-  profileGroup = group({ name: field('David') });
-  people = array({ name: field('') }, []);
-}
-
-void [ValidFormNodeHost, ValidSignalControlHost, ValidAggregateControlHost, ValidAngularFormFieldHost];
+void [ValidFormNodeHost, ValidSignalControlHost, ValidAggregateControlHost];

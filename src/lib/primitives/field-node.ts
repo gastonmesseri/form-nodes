@@ -5,7 +5,6 @@ import { markAsNode } from './utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { computedFunction } from '../utils/computed-function';
-import { registerAngularField } from '../interop/angular-field';
 import type { Field, FieldApi, FieldOptions } from './field.type';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
@@ -244,7 +243,6 @@ export class FieldNode<TValue> {
     this.node = this.createNode();
     markAsNode(this.node);
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
-    registerAngularField(this.node);
     registerNodeValidatorMessages(this.node, undefined, this.options?.injector);
 
     untracked(() => this.ensureAsyncValidationWatch());

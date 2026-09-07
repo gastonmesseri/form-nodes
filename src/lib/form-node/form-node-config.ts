@@ -1,19 +1,17 @@
 import { InjectionToken, type Provider } from '@angular/core';
-import { provideSignalFormsConfig, type FormFieldBinding } from '@angular/forms/signals';
 
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import { getFormNodeBindingForAngularField } from '../interop/angular-field';
 
 export type { FormNodeBinding } from '../types/form-node-binding.type';
 
-/** Configuration inherited by `[formNode]` and interoperable Angular `[formField]` bindings. */
+/** Configuration inherited by `[formNode]` bindings. */
 export type FormNodeConfig = {
   /**
    * CSS class names and their reactive activation predicates.
    *
    * Each predicate runs in a reactive context. Signals read from the binding or elsewhere cause
    * that class to be reevaluated without reevaluating unrelated class predicates. The classes
-   * apply to both `[formNode]` and Angular `[formField]` bindings backed by a node's `$field`.
+   * apply to `[formNode]` bindings.
    */
   classes?: Record<string, (binding: FormNodeBinding) => boolean>;
 };
@@ -47,14 +45,8 @@ export const ANGULAR_FORMS_STATUS_CLASSES: NonNullable<FormNodeConfig['classes']
 export const FORM_NODE_CONFIG = new InjectionToken<FormNodeConfig>('FORM_NODE_CONFIG');
 
 /**
- * Configures automatic CSS classes for every `[formNode]` binding and every Angular `[formField]`
- * binding backed by `$field` below this provider.
- * Each predicate is evaluated reactively and toggles its corresponding class.
- *
- * This provider installs Angular's Signal Forms class config internally. Do not combine it with
- * `provideSignalFormsConfig({ classes })` in the same injector because Angular's config token is
- * not multi and the last provider would replace the first. Unrelated Angular field trees do not
- * receive these predicates.
+ * Configures reactive CSS classes for every `[formNode]` binding below this provider.
+ * Angular's `provideSignalFormsConfig()` independently configures `[formField]` bindings.
  *
  * @example Configure application-wide Angular-style states and one custom class.
  * ```ts
@@ -80,21 +72,5 @@ export const provideFormNodeConfig = (config: {
   /** Reactive class predicates keyed by the CSS class to toggle on each supported binding. */
   classes?: Record<string, (binding: FormNodeBinding) => boolean>;
 }): Provider[] => {
-  const classes = Object.fromEntries(Object.entries(config.classes ?? {}).map(([className, predicate]) => [
-    className,
-    (binding: FormFieldBinding) => {
-      const formNodeBinding = getFormNodeBindingForAngularField(binding);
-      return formNodeBinding
-        ? predicate(formNodeBinding)
-        : binding.element.classList.contains(className);
-    },
-  ]));
-  const providers: Provider[] = [
-    {
-      provide: FORM_NODE_CONFIG,
-      useValue: config,
-    },
-  ];
-  if (config.classes) providers.push(...provideSignalFormsConfig({ classes }));
-  return providers;
+  return [{ provide: FORM_NODE_CONFIG, useValue: config }];
 };
