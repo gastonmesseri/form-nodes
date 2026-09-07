@@ -67,9 +67,9 @@ focus, CSS classes, and native form submission/reset. Control-specific connectio
 | --- | --- |
 | `control-adapter.ts` | Shared binding context and connection result. |
 | `resolve-control-adapter.ts` | Select the connection for the host. |
-| `native/` | Native input events, value parsing/rendering, composition, radio/select updates, and browser validity. |
-| `cva/` | ControlValueAccessor callbacks, disabled state, accessor selection, and host validators. |
-| `custom/` | Custom-control discovery, model connections, and experimental paired input/output connections. |
+| `native-control/` | Native input events, value parsing/rendering, composition, radio/select updates, and browser validity. |
+| `control-value-accessor/` | ControlValueAccessor callbacks, disabled state, accessor selection, and host validators. |
+| `signal-forms-control/` | FormValueControl/FormCheckboxControl-compatible components, model connections, and experimental paired input/output connections. |
 | `sync-control-inputs.ts` | Experimental state/constraint input synchronization shared by CVA and custom controls. |
 
 The resolver preserves the existing precedence: an accessor supplied by `NgControl`, then an
@@ -77,7 +77,7 @@ accessor selected from `NG_VALUE_ACCESSOR`, then a recognized custom control, th
 control. Both accessor discovery paths use the same CVA adapter. `form-node-ng-control.ts`
 remains the Angular compatibility facade outside the adapters.
 
-Within `custom/`, `model-transport.ts` connects through public model operations.
+Within `signal-forms-control/`, `model-transport.ts` connects through public model operations.
 `paired-transport.ts` connects paired inputs and outputs, with activity gated by `syncInputs`
 in `custom-control-adapter.ts`. Optional state/constraint writes use the separate shared
 input synchronizer. The Angular input-writing implementation remains isolated in
@@ -85,7 +85,7 @@ input synchronizer. The Angular input-writing implementation remains isolated in
 
 Adapters read the current node through the binding, so rebinding does not require replacing
 the adapter. Effects, subscriptions, and DOM listeners use the host injector's lifetime.
-`native/sync-native-control-state.ts` applies native attributes and accessibility state after
+`native-control/sync-native-control-state.ts` applies native attributes and accessibility state after
 selection, skipping properties already handled as custom inputs. The directive retains
 node-binding registration and injector leases. Native `<form>` hosts follow the directive's
 submission/reset path instead of selecting a value adapter.

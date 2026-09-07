@@ -1,15 +1,15 @@
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 
-import { connectCvaAdapter } from './cva/cva-adapter';
 import type { FormNodeControl } from '../form-node-control';
 import type { Node, NodeValue } from '../../types/node.type';
-import { selectValueAccessor } from './cva/select-value-accessor';
-import { isNativeFormNodeControl } from './native/native-control-value';
-import { discoverCustomControl } from './custom/discover-custom-control';
-import { connectCustomControlAdapter } from './custom/custom-control-adapter';
-import { connectNativeControlAdapter } from './native/native-control-adapter';
+import { connectCvaAdapter } from './control-value-accessor/cva-adapter';
+import { isNativeFormNodeControl } from './native-control/native-control-value';
 import { hasControlStateConsumer } from '../../form-node-state/adapters/form-node';
+import { selectValueAccessor } from './control-value-accessor/select-value-accessor';
+import { connectNativeControlAdapter } from './native-control/native-control-adapter';
+import { discoverCustomControl } from './signal-forms-control/discover-custom-control';
 import type { ControlAdapterContext, ControlAdapterConnection } from './control-adapter';
+import { connectCustomControlAdapter } from './signal-forms-control/custom-control-adapter';
 
 /** Resolves and connects one value transport: direct CVA, provided CVA, custom control, native. */
 export const resolveControlAdapter = <TNode extends Node>(

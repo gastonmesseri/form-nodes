@@ -13,9 +13,9 @@ import type { ControlAdapterContext } from './adapters/control-adapter';
 import { resolveControlAdapter } from './adapters/resolve-control-adapter';
 import type { InternalNode, InternalNodeApi, Node } from '../types/node.type';
 import { registerControlStateBinding } from '../form-node-state/adapters/form-node';
-import { syncNativeControlState } from './adapters/native/sync-native-control-state';
-import { componentAcceptsFormNode } from './adapters/custom/discover-custom-control';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
+import { syncNativeControlState } from './adapters/native-control/sync-native-control-state';
+import { componentAcceptsFormNode } from './adapters/signal-forms-control/discover-custom-control';
 
 /** Public injection token for the nearest `[formNode]` binding. */
 export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
