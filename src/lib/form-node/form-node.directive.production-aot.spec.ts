@@ -1,8 +1,14 @@
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { enableProdMode, getDebugNode } from '@angular/core';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { Injector, enableProdMode, getDebugNode } from '@angular/core';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+import { form } from '../primitives/form';
+import { array } from '../primitives/array';
+import { field } from '../primitives/field';
+import { FormNodeNgControl } from './form-node-ng-control';
+import { warnFailedInputWrite } from './angular-internals/component-input-writer';
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
@@ -12,6 +18,31 @@ beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platfor
 afterAll(() => TestBed.resetTestEnvironment());
 
 describe('FormNode production AOT discovery in Chromium', () => {
+  it('silences library warnings while preserving ignored-input and reset behavior in production', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const profile = form({ name: field.strict('initial'), details: { city: field.strict('Zurich') } });
+      profile.set({ name: 'set', details: { city: 'Basel' }, extra: true } as never);
+      profile.patch({ name: 'patched', extra: true } as never);
+      profile.details.patch({ city: 'Bern', extra: true } as never);
+      expect(profile()).toEqual({ name: 'patched', details: { city: 'Bern' } });
+      const items = array(field.strict(''), { initialValue: ['initial'] });
+      items.patch(['updated', 'ignored']);
+      expect(items()).toEqual(['updated']);
+      const adapter = new FormNodeNgControl(() => profile.name, TestBed.inject(Injector));
+      profile.name.markAsTouched();
+      adapter.setErrors({ parsing: true });
+      adapter.reset('reset', { onlySelf: true, overwriteDefaultValue: true });
+      expect(profile.name()).toBe('reset');
+      expect(profile.untouched()).toBe(true);
+      expect(profile.valid()).toBe(true);
+      warnFailedInputWrite({}, 'value');
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('discovers an AOT component instance through getDebugNode without an adapter provider', async () => {
     const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
     const fixture = TestBed.createComponent(module.AotSignalControlHost);

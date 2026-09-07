@@ -52,8 +52,6 @@
 
   })
 
-- [NEXT] [ ] Ensure that ALL console.warn are only shown in development mode, or at least not on production builds (maybe create a helper function for this?)
-
 - [NEXT] [ ] Rename ng-forms folder (root) to form-nodes
 
 - [NEXT] In the custom-controls page, simplify the page to the basics, and create another page create custom-controls-advanced, that contains all the details that i think right now are not that relevant to a user who just want to know how to easily integrate a custom component.
@@ -387,6 +385,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Restrict all library console warnings to Angular development mode through the internal `warnInDevMode()` helper. Unknown keys/indexes, unsupported reset options, failed input synchronization, and hidden-node diagnostics remain nonfatal and silent in production. Cover the helper without DI and real operations in the production Chromium process.
 - [x] Complete the remaining `NgControl` compatibility contract for `[formNode]`, one step at a time.
   - Start in `src/lib/form-node/form-node-ng-control.ts`; integration tests live in `form-node-ng-control.spec.ts` and `form-node.directive.browser.spec.ts`.
   - Already implemented: current value/validation/interaction state, `control`, `valueAccessor`, observable `valueChanges`/`statusChanges`/`events`, binding-owned `setErrors()`, and `getError()`/`hasError()` with relative descendant paths. Preserve rebinding, cleanup, original imperative error payloads, and reactive queries across structural changes and public equality filtering.
@@ -397,11 +396,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Verified reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Re-resolved the latest Angular 22 maintenance release and inspected Signal Forms interop and relevant Reactive Forms implementation/tests. Node ownership and intentional differences are documented.
   - [x] Updated behavior and consumer documentation, plus both unreleased changelogs for delivered behavior changes. Focused integration, typecheck/lint, build, coverage, browser, and documentation checks passed. Internal refactors and audit-only work do not add changelog noise.
   - [x] `hasValidator()` recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
-
   - [x] Verified CVAs that obtain the adapter through a deferred `useNgControl` hook. All 16 internal runtime members use `_`; all 27 unprefixed members match Angular names. Existing integration tests verify rebinding, cleanup, notifications, errors, and required metadata.
   - [x] Original naming requirement: prefix Form Nodes implementation details with `_`, while retaining Angular names for implemented contract members.
   - [x] Original DL subscription requirement: `ngControl.control.statusChanges` works alongside `ngControl.statusChanges`; both refer to the same stable observable.
-
 - [x] IMPLEMENT REQUIRED SUPPORT FOR ANGULAR REQUIRED, FOR EXISTING CUSTOM COMPONENTS THAT CHECK angular old validators.required to display the mark
 - [x] Choose `form-nodes` as the library name and unscoped npm package.
   - Considered a shared library-family scope, Angular-themed scoped names, and a generic tools scope; selected the unscoped name instead.

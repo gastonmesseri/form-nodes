@@ -12,6 +12,9 @@ canonical release record.
 
 ### Fixed
 
+- Library console warnings now appear only in Angular development mode, including ignored keys/indexes,
+  unsupported reset options, and custom-control input synchronization diagnostics.
+
 - `[formNode]` now supports CVAs that subscribe to an injected `NgControl`: value/status streams
   and Angular control-state events follow the bound node, survive rebinding, and complete on destruction.
   CVAs can also report parsing errors through `control.setErrors()`: binding-owned errors affect node
