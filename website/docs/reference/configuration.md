@@ -325,6 +325,11 @@ See [Validator messages and i18n](../guides/validator-messages.md).
 
 ## Binding configuration
 
+A shared NgModule can re-export `FormNode` while configuration stays in the application providers,
+or install its own config through `SharedModule.providers`. See
+[Using FormNode through SharedModule](./provide-form-node-config.md#using-formnode-through-sharedmodule)
+for complete examples and an explanation of eager, lazy, and standalone injector scopes.
+
 `provideFormNodeConfig()` configures custom-control input synchronization and automatic CSS classes for `[formNode]` bindings below the
 closest Angular provider. Predicates run independently in reactive contexts:
 

@@ -110,6 +110,11 @@ profile.focus();
 
 ## Status classes
 
+If your application uses a shared NgModule, it can import and re-export `FormNode`. Configure
+bindings in either the application providers or `SharedModule.providers`, according to who owns
+the convention. See [Using FormNode through SharedModule](../reference/provide-form-node-config.md#using-formnode-through-sharedmodule)
+for complete examples of both approaches and their injector scopes.
+
 Configure reactive classes once in the standalone application providers:
 
 ```ts
@@ -130,9 +135,10 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-The configuration applies to `[formNode]` bindings below that injector. Register it in a route,
-component, or NgModule for a narrower scope. The nearest provider wins, and each predicate tracks
-only the signals it reads. Angular's `provideSignalFormsConfig()` independently configures
+The configuration applies to `[formNode]` bindings below that injector. Routes and components can
+provide a more local configuration. An NgModule provider's scope depends on how that module is
+loaded: an eagerly imported root module does not create an isolated configuration scope.
+The nearest provider wins, and each predicate tracks only the signals it reads. Angular's `provideSignalFormsConfig()` independently configures
 Angular `[formField]` controls; both providers can coexist.
 
 Use the optional preset when application styles or a UI library expect Angular Forms status
