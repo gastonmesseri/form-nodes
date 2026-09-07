@@ -188,3 +188,31 @@ it.each(['field', 'form'] as const)('observes async errors on a %s without start
   expect(component.state.invalid()).toBe(true);
   expect(validate).toHaveBeenCalledTimes(1);
 });
+
+it.each(['field', 'form', 'nested form'] as const)('memoizes error queries on a %s without retaining replaced error objects', async (kind) => {
+  const { fixture, render, component } = await bind('formNode');
+  const issues = signal([{ kind: 'issue', message: 'First' }]);
+  const validator = () => issues();
+  const profile = form({ nested: form({ name: field('Ada') }, { validators: [validator] }) }, { validators: [validator] });
+  fixture.componentInstance.node.set(kind === 'field' ? field('Ada', [validator]) : kind === 'form' ? profile : profile.nested);
+  await render();
+  const hasIssue = vi.fn(() => component.state.hasError('issue'));
+  const missing = vi.fn(() => component.state.getError('missing'));
+  const present = computed(hasIssue);
+  const absent = computed(missing);
+  expect(present()).toBe(true);
+  expect(absent()).toBeUndefined();
+  const first = component.state.getError('issue');
+  issues.set([{ kind: 'issue', message: 'Second' }]);
+  expect(present()).toBe(true);
+  expect(absent()).toBeUndefined();
+  expect(hasIssue).toHaveBeenCalledTimes(1);
+  expect(missing).toHaveBeenCalledTimes(1);
+  expect(component.state.getError('issue')).not.toBe(first);
+  expect(component.state.getError('issue')).toBe(component.state.errors()[0]);
+  issues.set([]);
+  expect(present()).toBe(false);
+  expect(hasIssue).toHaveBeenCalledTimes(2);
+  fixture.destroy();
+  expect(component.state.getError('issue')).toBeUndefined();
+});

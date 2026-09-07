@@ -3164,8 +3164,80 @@ returns the complete normalized object and reports presence even for false, zero
 This follows the existing Form Nodes kind-based query semantics across all sources. It does not
 change node validation, error propagation, adapter normalization, or required metadata.
 
+With { resolve: true }, Form Nodes bindings forward to the node's resolved query: synchronous
+compositions are evaluated to inspect their final references, reuse validation evaluation, and track
+reactive dependencies. Resolution works for fields, forms, and nested forms, including disabled
+nodes, and does not start asynchronous validators. Angular AbstractControl bindings retain direct
+reference semantics because no public composition-resolution API exists; FormField arbitrary
+queries remain undefined. The two required aliases retain semantic required-state behavior
+regardless of resolve. Rebinding selects the replacement node's resolution and dependencies.
+
 Reference: Angular v22.1.5, commit 468b65b74566537456c192ac4281795c5a1e1a5e, re-resolved from tags.
 Inspected packages/forms/src/model/abstract_model.ts (getError, hasError),
 packages/forms/signals/src/api/control.ts, and packages/forms/signals/test/node/field_node.spec.ts
 (error-list behavior). Tests exercise field and aggregate Form Nodes, Angular Signal Forms,
 Reactive Forms, template-driven forms, asynchronous completion, rebinding, and disconnection.
+
+
+### Validator queries on the common control-state facade
+
+`useFormNodeState().hasValidator(validator: unknown, options?: { resolve?: boolean })` returns boolean or undefined. The exact
+exported Form Nodes required function and Angular Validators.required are semantic aliases for
+the active adapter's required() state, including conditional requirements and requiredTrue-based
+obligations. Other function arguments delegate to direct reference queries: node.hasValidator()
+without resolution by default for Form Nodes, and Angular hasValidator() OR hasAsyncValidator() for
+AbstractControl sources. FormField has no arbitrary-reference capability and returns undefined.
+No binding and non-function arguments also return undefined. Supported queries return false for
+unregistered references, even when they came from a different forms library.
+
+Factory results (including required('Message') and requiredIf()) are not special aliases; a registered
+conditional function can be present while inactive. Validators.requiredTrue is an ordinary
+reference query. Default queries do not execute validators or resolve compositions. The facade
+uses closures so methods can be destructured. Queries track active bindings and validator changes.
+Angular snapshots now include the public validator and asyncValidator function references, catching
+silent registration changes even when value, errors, status, and constraints remain unchanged.
+Normal Angular updateValueAndValidity() remains necessary to update validation results; reading
+an async registration never starts async work. Rebinding and destruction release the current source.
+
+With { resolve: true }, Form Nodes bindings forward to the node's resolved query: synchronous
+compositions are evaluated to inspect their final references, reuse validation evaluation, and track
+reactive dependencies. Resolution works for fields, forms, and nested forms, including disabled
+nodes, and does not start asynchronous validators. Angular AbstractControl bindings retain direct
+reference semantics because no public composition-resolution API exists; FormField arbitrary
+queries remain undefined. The two required aliases retain semantic required-state behavior
+regardless of resolve. Rebinding selects the replacement node's resolution and dependencies.
+
+Reference: Angular v22.1.5, commit 468b65b74566537456c192ac4281795c5a1e1a5e, re-resolved from tags.
+Inspected packages/forms/src/model/abstract_model.ts (hasValidator, hasAsyncValidator, validator
+assignment), packages/forms/test/form_control_spec.ts (reference queries), and
+packages/forms/signals/src/controls/interop_ng_control.ts (required metadata bridge).
+The facade deliberately extends the required equivalence to Form Nodes' export, combines Angular
+sync/async reference queries, and uses undefined for unsupported Signal Forms queries rather than
+claiming absence. Node-level hasValidator semantics and validation execution are unchanged.
+
+### Memoized control-state queries
+
+The common facade memoizes hasError, getError, and hasValidator with computedFunction, allowing
+20 argument combinations per error query and 32 per validator query. Error queries use the kind;
+validator queries use the function reference and options.resolve === true. Fresh options objects and omitted/false resolve
+values therefore reuse equivalent queries. Cache eviction affects reuse, not query results.
+Each computation tracks the active binding, including replacement and destruction.
+Boolean/undefined results use Object.is equality to suppress unchanged downstream computations.
+getError also uses reference equality, preserving the current normalized error object rather than
+retaining an older shallow-equal object. Resolution and asynchronous execution rules are unchanged.
+
+Reference: Angular v22.1.5, commit 468b65b74566537456c192ac4281795c5a1e1a5e.
+Inspected packages/core/primitives/signals/src/computed.ts and
+packages/core/test/signals/computed_spec.ts for equality, dependency tracking, and version changes;
+packages/forms/signals/src/field/state.ts and controls/interop_ng_control.ts for computed form state
+and the required query bridge. Argument-keyed caching is a Form Nodes API choice.
+
+The same shared cache limits apply to FieldNode, ArrayNode, FormGroupNode, and the control-state
+facade. Each hasError/getError cache allows 20 distinct error kinds, including absent kinds.
+Each hasValidator cache allows 32 reference/resolve combinations, enough for 16 validator
+references queried in both modes. Limits are per function per instance, not application-wide.
+Entries are allocated on demand; increasing a limit does not preallocate computed signals.
+The existing least-recently-used eviction keeps cache ownership bounded; consumers may retain
+evicted computations until their dependencies are updated or they become unreachable.
+These are internal sizing choices, not Angular behavior requirements. The Angular v22.1.5
+computed implementation and equality tests inspected above remain the behavioral reference.

@@ -63,6 +63,9 @@ export const injectFormNodeControlStateAdapter = <TValue>(element: HTMLElement, 
     readonly: computed(() => node().$api.readonly()),
     required: computed(() => node().$api.required()),
     touched: computed(() => node().$api.touched()),
+    hasValidator(validator, options) {
+      return node().$api.hasValidator(validator as (context: any) => unknown, options);
+    },
     markAsTouched() {
       node().$api.markAsTouched();
     },

@@ -12,6 +12,8 @@ canonical release record.
 
 ### Changed
 
+- Validator queries on nodes and `useFormNodeState()` retain up to 32 reference/resolve combinations to reduce cache eviction when querying many rules; error queries retain their 20-entry limits.
+
 - **Breaking behavior/API change:** `bindInputOutputPairs: true` now independently enables separate value/valueChange and checked/checkedChange connections. False/null pauses the complete pair connection, including state writes, touch/focus/reset hooks, and writable node access. SyncInputs no longer enables values; empty lists do nothing. Models, CVAs, and native controls retain their standard connections.
 
 - **Breaking behavior/API change:** experimental `syncInputs` now selects only state/constraint inputs: false, 'declared', 'all', 'signal-controls', exact lists, or `{ inputs, target }`. Targets are all, signal-controls, and cva; CVA precedence is preserved on hybrid components. True and the earlier presets/mode objects are replaced by explicit selections. Declared includes initial disabled/readonly/hidden options, excluding validators. Both binding options default to false and inherit independently through nodes, factory defaults, providers, and global configuration. Validation is unchanged.
@@ -23,6 +25,8 @@ canonical release record.
 - **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.
 
 ### Added
+
+- `useFormNodeState().hasValidator()` supports equivalent Form Nodes/Angular required queries and direct synchronous/asynchronous validator references where available, with reactive updates, opt-in `{ resolve: true }` composition queries for `[formNode]`, and `undefined` for unsupported or disconnected queries. Its queries and `hasError()` / `getError()` now use bounded memoization to avoid recomputing consumers when results are unchanged.
 
 - `useFormNodeState()` exposes reactive `hasError(kind)` and `getError(kind)` queries for every supported binding, returning normalized error presence and the first matching error object without traversing child paths.
 

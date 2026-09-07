@@ -20,6 +20,7 @@ import { normalizeValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
+import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
@@ -90,16 +91,16 @@ export class FieldNode<TValue> {
 
   getError = computedFunction((kind: string) => {
     return this.errors().find(error => error?.kind === kind);
-  }, { equal: shallowEqual, max: 20 }) as FieldApi<TValue>['getError'];
+  }, { equal: shallowEqual, max: ERROR_QUERY_CACHE_SIZE }) as FieldApi<TValue>['getError'];
 
   hasError = computedFunction((kind: string) => {
     return this.errors().some(error => error.kind === kind);
-  }, { max: 20 });
+  }, { max: ERROR_QUERY_CACHE_SIZE });
 
   hasValidator = computedFunction((validator: (context: any) => unknown, resolve: boolean) => {
     const validators = resolve ? this.validatorResolution().resolvedValidators : this.validators();
     return validators.some(candidate => candidate === validator);
-  }, { max: 20 });
+  }, { max: VALIDATOR_QUERY_CACHE_SIZE });
 
   path = computed((): readonly string[] => {
     const parent = this.parent();

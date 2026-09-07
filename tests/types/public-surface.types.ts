@@ -109,3 +109,16 @@ provideFormNodesConfig({ syncInputs: 'declared' });
 createFormPrimitives({ syncInputs: 'all' }).form({ name: field('') }, { syncInputs: null });
 // @ts-expect-error Only documented synchronization modes are accepted.
 field('', { syncInputs: 'sometimes' });
+
+declare const requiredReference: unknown;
+const hasValidatorResult = injectedControlState.hasValidator(requiredReference);
+type _StateHasValidator = Expect<Equal<typeof hasValidatorResult, boolean | undefined>>;
+injectedControlState.hasValidator(null);
+injectedControlState.hasValidator({});
+
+const resolvedValidatorResult = injectedControlState.hasValidator(requiredReference, { resolve: true });
+type _ResolvedStateValidator = Expect<Equal<typeof resolvedValidatorResult, boolean | undefined>>;
+injectedControlState.hasValidator(requiredReference, { resolve: false });
+injectedControlState.hasValidator(requiredReference, {});
+// @ts-expect-error Resolution must be a boolean.
+injectedControlState.hasValidator(requiredReference, { resolve: 'yes' });

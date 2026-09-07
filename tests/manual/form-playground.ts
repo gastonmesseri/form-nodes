@@ -116,7 +116,7 @@ const myFormTyped = form({
   // listB: field<number[]>([]),
 });
 
-myFormTyped.forEachChild(child => child.set(''));
+myFormTyped.forEachChild(child => child.set(null));
 myFormTyped.forEachChild(child => child.set(''), { includeDynamic: true });
 
 Object.values(myFormTyped.children).forEach(child => child.set(2))

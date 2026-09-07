@@ -3,6 +3,7 @@ title: useFormNodeState()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import validatorQueriesSource from '!!raw-loader!../../examples/form-node-state-validator-queries.typecheck.ts';
 import constraintSource from '!!raw-loader!../../examples/form-node-state-constraints.typecheck.ts';
 import formNodeStateComponentSource from '!!raw-loader!../../examples/form-node-state-component.typecheck.ts';
 import formNodeSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
@@ -98,6 +99,7 @@ No provider or adapter selection is required.
 | Mirror UI state | `disabled()`, `readonly()`, `hidden()`, `required()` | [Interaction and availability properties](#interaction-and-availability-properties) |
 | Apply native constraints | `min()`, `max()`, lengths, `pattern()` | [Constraint properties](#constraint-properties) |
 | Check or inspect an error | `hasError(kind)`, `getError(kind)` | [Error queries](#haserrorkind) |
+| Inspect a validator or known rule | `hasValidator(validator)` | [Validator queries](#hasvalidatorvalidator) |
 | Report blur interaction | `markAsTouched()` | [Method reference](#method-reference) |
 | Understand source selection | Adapter priority | [Selection and lifecycle](#selection-and-lifecycle) |
 
@@ -570,6 +572,67 @@ all five supported bindings the same query semantics.
 Queries follow control replacement and disconnection. Angular control events update them normally;
 silent Angular changes are reconciled after rendering, just like `errors()`. See the
 [complete custom-control example](#constraint-properties) for template use with error details.
+
+### hasValidator(validator)
+
+**Signature:** `hasValidator(validator: unknown, options?: { resolve?: boolean }): boolean | undefined`
+
+**The exported Form Nodes `required` and Angular `Validators.required` are equivalent queries.**
+Both ask whether the connected control is currently required, using the same state as `required()`.
+This includes conditional required rules, Angular required directives, and `requiredTrue` obligations,
+even when the current value is valid. It is a semantic check, not a claim that both functions were registered.
+
+For other functions, the active binding determines what can be answered:
+
+| Binding | Other validator functions |
+| --- | --- |
+| `[formNode]` | Checks direct references in the node's configured validators, including async validators. |
+| `[formControl]`, `[formControlName]`, `[(ngModel)]` | Checks direct synchronous and asynchronous Angular validator registrations. |
+| `[formField]` | Returns `undefined`: Angular Signal Forms has no general public reference query. |
+
+The result means:
+
+- `true`: the known rule is active, or the exact function is registered.
+- `false`: the known rule is inactive, or a supported reference query found no match.
+- `undefined`: no binding, a non-function argument, or an unsupported reference query.
+
+<CodeBlock language="ts" title="control-validator-state.ts">{validatorQueriesSource}</CodeBlock>
+
+Only the two required exports receive this equivalence. Results of factories such as `required('Message')`,
+`requiredIf(...)`, or `Validators.min(3)` follow exact-reference semantics: keep the function that
+you registered instead of creating another one for the query. A function from the wrong forms
+library normally returns false on a source that supports reference queries. `Validators.requiredTrue`
+is also an ordinary reference query; it is not equivalent to the two required exports.
+
+Direct-reference checks report registration even if a conditional validator is currently inactive.
+For the active required state, query one of the required exports or use `required()` directly.
+By default, compositions are not resolved and validators are not executed by the query.
+**With `[formNode]`, pass `{ resolve: true }` to inspect the final validator references
+returned by synchronous compositions**, following the node's own
+[`hasValidator` resolution semantics](../guides/validation.md).
+Resolution may execute synchronous validators; it shares their evaluation with validation and
+tracks reactive composition dependencies. Async validators can be found without starting their work.
+
+Angular Reactive Forms and template-driven bindings retain direct-reference behavior even with
+`resolve: true`: Angular does not publicly expose the contents of composed validators.
+For `[formField]`, arbitrary reference queries still return `undefined`.
+The two required exports always use the semantic required-state check, regardless of this option.
+Angular directive instances and strings such as `'required'` return `undefined`.
+
+`hasError()`, `getError()`, and `hasValidator()` memoize their queries in bounded caches.
+The current internal limits are 20 entries for each error query and 32 for validator queries,
+shared with the node implementations. Limits apply per function and instance, not per application.
+Entries are created on demand; repeated calls with the same arguments do not consume extra slots.
+Repeated calls reuse the computation, and unchanged results avoid recomputing dependent consumers.
+Error queries are keyed by kind; validator queries use the function reference and the normalized
+`resolve` boolean, so fresh options objects reuse the same query.
+`getError()` compares errors by reference and always returns the current matching object from `errors()`.
+
+Queries track changes in `computed()`, `effect()`, and templates, including binding replacement.
+Angular control events refresh them; silent changes to synchronous or asynchronous registrations
+are reconciled after rendering using public validator references. Call `updateValueAndValidity()`
+after modifying Angular validators as usual to update validation results. Merely querying async
+registrations does not start asynchronous validation.
 
 ### markAsTouched()
 

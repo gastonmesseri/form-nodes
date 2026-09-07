@@ -1,10 +1,14 @@
+import { Validators } from '@angular/forms';
 import { APP_ID, DestroyRef, ElementRef, computed, inject, type Signal } from '@angular/core';
 
+import { required } from '../validation/validators/required';
+import { computedFunction } from '../utils/computed-function';
 import { injectNgModelControlStateAdapter } from './adapters/ng-model';
+import { injectFormControlStateAdapter } from './adapters/form-control';
 import { injectFormNodeControlStateAdapter } from './adapters/form-node';
 import { injectFormFieldControlStateAdapter } from './adapters/form-field';
-import { injectFormControlStateAdapter } from './adapters/form-control';
 import { injectFormControlNameStateAdapter } from './adapters/form-control-name';
+import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
 
 /** Binding APIs that can supply a universal {@link ControlState} state facade. */
 export type ControlStateSource = 'formNode' | 'formField' | 'formControl' | 'formControlName' | 'ngModel';
@@ -77,7 +81,8 @@ export type ControlState<TValue = unknown> = {
    * Queries only errors() and does not traverse child paths or explicitly trigger validation.
    * @example
    * const showRequired = computed(() => state.touched() && state.hasError('required'));
-   * @reactive Tracks the current binding's normalized errors in computed(), effect(), and templates.
+   * @reactive Memoizes each error kind in a bounded cache and tracks the current binding's errors.
+   * Unchanged results do not propagate to dependent computations.
    * @param kind Error kind as exposed by errors(); names are not translated between forms APIs.
    */
   hasError(kind: string): boolean;
@@ -87,10 +92,41 @@ export type ControlState<TValue = unknown> = {
    * Queries only errors() and does not traverse child paths or explicitly trigger validation.
    * @example
    * const minimumLengthError = computed(() => state.getError('minlength'));
-   * @reactive Tracks the current binding's normalized errors in computed(), effect(), and templates.
+   * @reactive Memoizes each error kind in a bounded cache and tracks the current binding's errors.
+   * Unchanged results do not propagate to dependent computations; error objects use reference equality.
    * @param kind Error kind as exposed by errors(); Angular uses minlength, Form Nodes uses minLength.
    */
   getError(kind: string): ControlStateError | undefined;
+  /**
+   * Queries a known rule or a validator function reference on the active binding.
+   * The exported Form Nodes `required` and Angular `Validators.required` are equivalent semantic
+   * queries: both return required(), including conditional rules and requiredTrue obligations.
+   * Other functions use direct registration identity: Form Nodes checks its configured validators;
+   * Reactive Forms and ngModel check synchronous and asynchronous validator references.
+   * Angular Signal Forms cannot answer arbitrary reference queries and returns undefined.
+   *
+   * Returns undefined for non-functions or when disconnected. A supported reference query returns
+   * false when absent, including functions from another forms library. Factories such as
+   * required('Message') or Validators.min(3) produce distinct functions; retain the registered reference.
+   * By default, does not execute validators or resolve compositions. With [formNode],
+   * { resolve: true } delegates to the node's resolved query, which may run synchronous validators
+   * and tracks composition dependencies using the shared validation evaluation. It does not start
+   * async validation. Angular bindings retain reference semantics because public composition
+   * resolution is unavailable. The two required-export queries are unchanged by this option.
+   * No Angular internals are inspected.
+   *
+   * @example
+   * const isRequired = computed(() => state.hasValidator(Validators.required));
+   * const hasRule = computed(() => state.hasValidator(myRegisteredValidator));
+   * const hasResolvedRule = computed(() => state.hasValidator(myLeafValidator, { resolve: true }));
+   * @reactive Memoizes by validator reference and normalized resolve boolean in a bounded cache.
+   * Unchanged results do not propagate to dependent computations. Tracks the active binding and its rules. Angular control events update queries;
+   * silent registration changes are reconciled after rendering. Use updateValueAndValidity()
+   * after changing Angular validators as usual. Equivalent required queries track required().
+   * @param validator A known required export or the original validator function reference.
+   * @param options Resolve synchronous compositions for [formNode] only; defaults to false.
+   */
+  hasValidator(validator: unknown, options?: { resolve?: boolean }): boolean | undefined;
   /** Marks the bound control touched. Does nothing when no supported binding is connected. */
   markAsTouched(): void;
 };
@@ -147,6 +183,18 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
   ];
   const active = computed(() => adapters.find(adapter => adapter.connected()) ?? null);
   const errors = computed(() => active()?.errors() ?? []);
+  const hasError = computedFunction((kind: string) => {
+    return errors().some(error => error.kind === kind);
+  }, { max: ERROR_QUERY_CACHE_SIZE });
+  const getError = computedFunction((kind: string) => {
+    return errors().find(error => error.kind === kind);
+  }, { max: ERROR_QUERY_CACHE_SIZE });
+  const hasValidator = computedFunction((validator: unknown, resolve: boolean) => {
+    const adapter = active();
+    if (!adapter || typeof validator !== 'function') return undefined;
+    if (validator === required || validator === Validators.required) return adapter.required();
+    return adapter.hasValidator?.(validator, { resolve });
+  }, { max: VALIDATOR_QUERY_CACHE_SIZE });
 
   return {
     connected: computed(() => active() !== null),
@@ -168,11 +216,10 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
     readonly: computed(() => active()?.readonly() ?? false),
     required: computed(() => active()?.required() ?? false),
     touched: computed(() => active()?.touched() ?? false),
-    hasError(kind) {
-      return errors().some(error => error.kind === kind);
-    },
-    getError(kind) {
-      return errors().find(error => error.kind === kind);
+    hasError,
+    getError,
+    hasValidator(validator, options) {
+      return hasValidator(validator, options?.resolve === true);
     },
     markAsTouched() {
       active()?.markAsTouched();

@@ -1,5 +1,5 @@
-import { NG_VALIDATORS, NgControl, RequiredValidator, Validators, type AbstractControl } from '@angular/forms';
 import { DestroyRef, Injector, afterEveryRender, booleanAttribute, computed, inject, signal } from '@angular/core';
+import { NG_VALIDATORS, NgControl, RequiredValidator, Validators, type AbstractControl, type ValidatorFn, type AsyncValidatorFn } from '@angular/forms';
 
 import type { ControlStateSource } from '../form-node-state';
 import type { ControlStateAdapter } from '../form-node-state-adapter';
@@ -31,7 +31,7 @@ export const injectAbstractControlStateAdapter = <TValue>(
   let snapshot: readonly unknown[] = [];
   let subscription: { unsubscribe(): void } | undefined;
   const capture = (current: AbstractControl): readonly unknown[] => {
-    return [current.value, current.disabled, current.dirty, current.errors, current.invalid, current.pending, current.touched, isRequired(current), ...validators.flatMap(validator => [validator, readValidatorConstraint(validator)?.value])];
+    return [current.value, current.disabled, current.dirty, current.errors, current.invalid, current.pending, current.touched, current.validator, current.asyncValidator, isRequired(current), ...validators.flatMap(validator => [validator, readValidatorConstraint(validator)?.value])];
   };
   const currentControl = () => {
     revision();
@@ -98,6 +98,10 @@ export const injectAbstractControlStateAdapter = <TValue>(
     readonly: computed(() => false),
     required: computed(() => isRequired(currentControl())),
     touched: computed(() => currentControl().touched),
+    hasValidator(validator) {
+      const current = currentControl();
+      return current.hasValidator(validator as ValidatorFn) || current.hasAsyncValidator(validator as AsyncValidatorFn);
+    },
     markAsTouched() {
       currentControl().markAsTouched();
     },
