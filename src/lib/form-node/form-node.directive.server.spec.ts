@@ -135,6 +135,6 @@ describe('FormNode server rendering', () => {
 
     const html = await render(App);
 
-    expect(html).toContain(`<span>Marco</span><span>${syncInputs !== false}</span>`);
+    expect(html).toContain(`<span>Marco</span><span>${syncInputs === 'always'}</span>`);
   });
 });

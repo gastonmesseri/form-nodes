@@ -130,12 +130,12 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
    * selects `disabledReasons`, but an explicit input list still filters each name independently:
    * `['disabled']` never implicitly includes `disabledReasons`.
    *
-   * Initial validators with known built-in metadata select `required`, `min`, `max`, `minLength`,
-   * `maxLength`, and `pattern`. Inspecting declarations does not execute validators. Selected
-   * reactive constraints and conditional validators keep updating, including their inactive or
-   * empty values. Arbitrary validator compositions and validators added later do not add new
-   * only-declared selections; use always mode or an input list to synchronize those constraints.
-   * Removing an initially selected constraint updates that input to its neutral value.
+   * Validators never select inputs in only-declared mode, including initially registered
+   * built-in validators. To synchronize `required`, `min`, `max`, `minLength`, `maxLength`, or
+   * `pattern`, use always mode or an explicit input list such as `['required', 'minLength']`.
+   * With those selections, reactive constraints and conditional validators keep updating;
+   * removing a constraint updates its input to the neutral value. Node validation runs normally
+   * regardless of whether constraint inputs are synchronized.
    *
    * Supported public input names are `disabled`, `disabledReasons`, `dirty`, `errors`, `hidden`,
    * `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`, `readonly`,

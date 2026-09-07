@@ -31,7 +31,7 @@ writes that depend on Angular internals. It applies to the input contract used b
 | Value | Behavior |
 | --- | --- |
 | `false` or `null` | Do not synchronize optional inputs. |
-| `true` or `'only-declared'` | Synchronize initial `disabled`, `readonly`, and `hidden` declarations and initial built-in validator constraints. |
+| `true` or `'only-declared'` | Synchronize initial `disabled`, `readonly`, and `hidden` declarations only; validator constraints are excluded. |
 | `'always'` | Synchronize every matching supported input, including derived state. |
 | `['disabled', 'dirty']` | Always synchronize exactly these inputs, regardless of initial declarations. |
 | `{ mode: 'always', inputs: [...] }` | Same behavior as the array shorthand. |
@@ -49,13 +49,13 @@ Treat configuration objects and arrays as fixed declarations; to change a select
 new binding or rebind to a node with different options.
 
 `disabledReasons` follows an initial `disabled` declaration. A declaration with a false value still
-counts. Initial validators with known metadata enable `required`, `min`, `max`, `minLength`,
-`maxLength`, and `pattern`; their reactive values and conditional activation keep updating.
-Arbitrary validator compositions and validators added later require `'always'` to discover new
-constraint inputs. Removing an initially declared constraint clears its previously synchronized value.
+counts. Validators never select inputs in this mode, even when registered initially. To synchronize
+`required`, `min`, `max`, `minLength`, `maxLength`, or `pattern`, use `'always'` or an explicit input
+list such as `['required', 'minLength']`. Those selections track reactive and conditional constraints
+and clear removed constraints to neutral values. Validation runs normally in every mode.
 
 Derived `dirty`, `touched`, `invalid`, `pending`, `errors`, and the generated `name` are synchronized
-only in `'always'` mode. Component inputs not selected by the mode retain their own values or
+in `'always'` mode or through an explicit input list. Component inputs not selected by the mode retain their own values or
 explicit template bindings. Full synchronization may replace authored template input values.
 
 Set this option on `field()`, `form()`, `group()`, or `array()` to override a provider for that node's

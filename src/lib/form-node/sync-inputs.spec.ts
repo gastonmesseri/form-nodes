@@ -34,7 +34,7 @@ class Control {
 
   hidden = input(true);
 
-  required = input(true);
+  required = input(false);
 
   min = input<unknown>(77);
 
@@ -123,19 +123,39 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
     const node = createRoot(kind, { syncInputs: mode, disabled: () => disabled() });
     const { fixture, control } = bind(node);
     expect(control.disabled()).toBe(false);
-    expect(control.required()).toBe(true);
+    expect(control.required()).toBe(false);
+    expect(node.$api.required()).toBe(true);
     expect(control.readonly()).toBe(true);
     expect(control.hidden()).toBe(true);
     expect(control.dirty()).toBe(true);
     expect(control.pending()).toBe(true);
     expect(control.name()).toBe('owned');
-    if (kind === 'array') expect(control.minLength()).toBe(2);
+    if (kind === 'array') expect(control.minLength()).toBe(8);
     disabled.set(true);
     fixture.detectChanges();
     expect(control.disabled()).toBe(true);
     disabled.set(false);
     fixture.detectChanges();
     expect(control.disabled()).toBe(false);
+  });
+
+  it('keeps validator state separate from constraint inputs through edits and removal', () => {
+    const node = createRoot(kind, { syncInputs: true, disabled: false });
+    const parent = form({ nested: form({ child: node }) });
+    const { fixture, control } = bind(node);
+    expect(node.$api.required()).toBe(true);
+    expect(control.required()).toBe(false);
+    if (kind === 'field' || kind === 'array') {
+      expect(node.$api.invalid()).toBe(true);
+      expect(parent.invalid()).toBe(true);
+    }
+    node.$api.setValidators([]);
+    fixture.detectChanges();
+    expect(node.$api.required()).toBe(false);
+    expect(node.$api.valid()).toBe(true);
+    expect(parent.valid()).toBe(true);
+    expect(control.required()).toBe(false);
+    expect(control.minLength()).toBe(8);
   });
 
   it.each(([
@@ -166,12 +186,14 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
     const node = createRoot(kind, {
       disabled: false,
       readonly: false,
-      syncInputs: { mode: 'only-declared', inputs: ['disabled', 'dirty'] },
+      syncInputs: { mode: 'only-declared', inputs: ['disabled', 'dirty', 'required'] },
     });
     const { fixture, control } = bind(node);
     expect(control.disabled()).toBe(false);
     expect(control.dirty()).toBe(true);
     expect(control.readonly()).toBe(true);
+    expect(control.required()).toBe(false);
+    expect(node.$api.required()).toBe(true);
     node.$api.disable();
     fixture.detectChanges();
     expect(control.disabled()).toBe(true);
@@ -208,27 +230,32 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
 });
 
 describe('declared constraints and synchronization scopes', () => {
-  it('tracks conditional and reactive initial constraints without running validators during construction', () => {
+  it.each(([true, 'always', ['required', 'minLength', 'maxLength', 'pattern']] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('tracks constraints only when their inputs are selected: %j', ({ syncInputs }) => {
     const enabled = signal(false);
     const minimum = signal(2);
     const custom = vi.fn(() => null);
-    const name = field('a', [requiredIf(() => enabled()), minLength(() => minimum()), maxLength(10), pattern(/a/), custom], { syncInputs: true });
+    const name = field('a', [requiredIf(() => enabled()), minLength(() => minimum()), maxLength(10), pattern(/a/), custom], { syncInputs });
     expect(custom).not.toHaveBeenCalled();
     const { fixture, control } = bind(name);
     expect(control.required()).toBe(false);
-    expect(control.minLength()).toBe(2);
+    expect(control.minLength()).toBe(syncInputs === true ? 8 : 2);
     expect(control.maxLength()).toBe(10);
-    expect(control.pattern()).toEqual([/a/]);
+    expect(control.pattern()).toEqual(syncInputs === true ? ['owned'] : [/a/]);
     enabled.set(true);
     minimum.set(4);
     fixture.detectChanges();
-    expect(control.required()).toBe(true);
-    expect(control.minLength()).toBe(4);
+    expect(name.required()).toBe(true);
+    expect(name.minLength()).toBe(4);
+    expect(name.hasError('minLength')).toBe(true);
+    expect(custom).toHaveBeenCalled();
+    expect(control.required()).toBe(syncInputs !== true);
+    expect(control.minLength()).toBe(syncInputs === true ? 8 : 4);
     name.setValidators([]);
     fixture.detectChanges();
     expect(control.required()).toBe(false);
-    expect(control.minLength()).toBeUndefined();
-    expect(control.pattern()).toEqual([]);
+    expect(name.valid()).toBe(true);
+    expect(control.minLength()).toBe(syncInputs === true ? 8 : undefined);
+    expect(control.pattern()).toEqual(syncInputs === true ? ['owned'] : []);
   });
 
   it('does not infer declarations from later validators, state mutations, or parent options', () => {
@@ -249,23 +276,23 @@ describe('declared constraints and synchronization scopes', () => {
     expect(control.minLength()).toBe(3);
   });
 
-  it('supports numeric initial metadata and shared factory defaults in cloned array templates', () => {
+  it('excludes validator constraints with only-declared factory defaults in cloned array templates', () => {
     const factories = createFormPrimitives({ syncInputs: true });
     const rows = factories.array({ age: factories.field(2, [min(1), max(4)], { disabled: false }) }, { initialValue: 1 });
     const first = rows.at(0)!.age;
     const { fixture, control } = bind(first);
-    expect(control.min()).toBe(1);
-    expect(control.max()).toBe(4);
+    expect(control.min()).toBe(77);
+    expect(control.max()).toBe(99);
     expect(control.disabled()).toBe(false);
     const next = rows.push();
     fixture.componentInstance.node.set(next.age);
     fixture.detectChanges();
-    expect(control.min()).toBe(1);
-    expect(control.max()).toBe(4);
+    expect(control.min()).toBe(77);
+    expect(control.max()).toBe(99);
     const optedOut = factories.field('', { syncInputs: null });
     fixture.componentInstance.node.set(optedOut);
     fixture.detectChanges();
-    expect(control.min()).toBe(1);
+    expect(control.min()).toBe(77);
   });
 
   it('replaces global and provider selections with node options on rebinding', () => {

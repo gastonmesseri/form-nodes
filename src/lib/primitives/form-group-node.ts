@@ -295,7 +295,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       this.getChildKeys().forEach(key => (this.children[key] as unknown as InternalNode).$api._setParent(this.node, String(key)));
     });
     markAsNode(this.node);
-    registerNodeInputConfig(this.node, this.options, validators, () => this.metadata());
+    registerNodeInputConfig(this.node, this.options, () => this.metadata());
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {

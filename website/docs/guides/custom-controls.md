@@ -70,14 +70,15 @@ This concerns the state and constraint inputs used by Angular's `FormValueContro
 `markAsTouched()`, the `touch` output, focus, reset, and normal node validation still work.
 
 Opt in per node with `syncInputs: true` (equivalent to `'only-declared'`). This example synchronizes
-`disabled`, `required`, and `minLength` because they are declared in the initial node definition:
+`disabled` because it is an explicit node option. The validators still validate the node, but
+`required` and `minLength` inputs keep their component values:
 
 <CodeBlock language="ts" title="Text control and profile component">{syncInputsSource}</CodeBlock>
 
-The initial declaration selects an input, not a fixed value. Reactive conditions and constraints
-keep updating. Explicit `disabled: false` still selects disabled synchronization. Constraints use
-known metadata on the initially registered validators; arbitrary compositions and later-added
-validators require `'always'`. Initial disabled declarations also select `disabledReasons`.
+Initial `disabled`, `readonly`, and `hidden` options select their corresponding inputs, whose
+values keep updating reactively. Explicit `disabled: false` still selects disabled synchronization;
+it also selects `disabledReasons`. Validators never select inputs in this mode. Use `'always'`
+or an explicit list such as `['required', 'minLength']` to synchronize validator constraints.
 
 Use `syncInputs: 'always'` to synchronize all supported inputs, including `dirty`, `touched`,
 `invalid`, `pending`, `errors`, and generated `name`. These are derived states, so `'only-declared'`

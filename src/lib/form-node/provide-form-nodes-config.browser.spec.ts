@@ -316,7 +316,7 @@ describe('custom-control input configuration', () => {
       const node = fixture.componentInstance.node;
       const control = fixture.debugElement.children[0]!.componentInstance as ValueControl;
       expect(control.disabled()).toBe(syncInputs === false);
-      expect(control.required()).toBe(syncInputs !== false);
+      expect(control.required()).toBe(syncInputs === 'always');
       expect(control.readOnly()).toBe(syncInputs !== 'always');
       control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
       control.touch.emit();

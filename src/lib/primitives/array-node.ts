@@ -282,7 +282,7 @@ export class ArrayNode<TItem extends Node> {
     this.node = this.createNode();
     untracked(() => this.reparentItems());
     markAsNode(this.node);
-    registerNodeInputConfig(this.node, this.options, validators, () => this.metadata());
+    registerNodeInputConfig(this.node, this.options, () => this.metadata());
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {

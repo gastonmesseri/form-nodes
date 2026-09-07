@@ -3038,14 +3038,15 @@ Resolution is the bound node's captured option, then the nearest explicit provid
 setting captured by the connection, then false. A parent node's option does not configure descendants.
 
 Only-declared selects initial disabled (including disabledReasons), readonly, and hidden options
-whose values are not undefined. False declarations count. It selects constraints from known metadata
-on initially registered validators: required, min/max including dates, minLength/maxLength, and
-pattern. This metadata inspection does not execute validators. Conditional metadata retains its
-selection while inactive and updates reactively. Arbitrary compositions and validators installed
-later require always to select additional inputs; removal of initially declared constraints clears
-their synchronized values. Initial template declarations and factory defaults survive cloning.
+whose values are not undefined. False declarations count. Validators never select inputs in this
+mode, including initially registered built-in validators and reactive or conditional constraints.
+Use always mode or an explicit input list for required, min/max including dates, minLength/maxLength,
+and pattern. Those modes continue tracking constraint changes and clear removed constraints to
+neutral values. Validation itself is unaffected by input selection. Initial template declarations
+and factory defaults survive cloning. This selective mode is a Form Nodes extension: Angular
+v22.1.5's control_custom.ts synchronizes supported state bindings without this declaration filter.
 
-Dirty, touched, invalid, pending, errors, and generated name require always. Metadata constraints
+Dirty, touched, invalid, pending, errors, and generated name require always mode or an explicit input list. Metadata constraints
 are available for directly bound aggregate nodes as well as fields. Native-control writes and CVA
 setDisabledState stay enabled. Value/checked models, node models, touch/focus/reset hooks, validation,
 and state propagation are independent of optional input synchronization. Value/checked transport requires actual models and uses public `set()` and `subscribe()` APIs.
