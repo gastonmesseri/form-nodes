@@ -155,6 +155,9 @@ it in the component injection context and read its signals directly:
 **The same state implementation works with `[formNode]`, `[formField]`, `[formControl]`,
 `[formControlName]`, and `[(ngModel)]`.** This makes the hook suitable for reusable custom controls
 whose callers use different Angular forms APIs; no manual state adapter selection is needed.
+Use `hasError(kind)` and `getError(kind)` to query the same normalized errors across those bindings.
+The latter returns the first full error object or `undefined`; names are preserved, including
+Angular `minlength` versus Form Nodes `minLength`.
 `connected()` reports whether a supported binding is present, and `source()` identifies the active
 adapter without changing the component's API.
 

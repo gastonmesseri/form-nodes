@@ -3145,3 +3145,27 @@ Recognizing direct requiredTrue as required metadata deliberately extends Angula
 bridge; the hook describes checkbox obligations as well as empty-value requirements. Node-level
 required and validation behavior is unchanged. Strongest-bound reduction is this facade's policy
 when multiple standard validator instances contribute to its single numeric signals.
+
+
+### Error queries on the common control-state facade
+
+`useFormNodeState().hasError(kind)` and `getError(kind)` query the shared normalized `errors()`
+signal for every supported binding. Matching is exact and case-sensitive; names are not translated
+between forms APIs. `hasError` checks entry presence and `getError` returns the first matching
+object by identity, or undefined. Neither query walks descendant paths, collects additional errors,
+or explicitly triggers validation. Signal tracking follows the current binding, async error updates,
+control replacement, and cleanup; silent Angular control changes follow the existing render snapshot.
+Methods can be destructured because they do not depend on their receiver. No binding means false
+and undefined. Error payloads are read-only in the public type, with unknown additional properties.
+
+This intentionally differs from Angular AbstractControl: its getError returns the raw payload
+(or null when there is no error map), and hasError checks payload truthiness. The common facade
+returns the complete normalized object and reports presence even for false, zero, or null payloads.
+This follows the existing Form Nodes kind-based query semantics across all sources. It does not
+change node validation, error propagation, adapter normalization, or required metadata.
+
+Reference: Angular v22.1.5, commit 468b65b74566537456c192ac4281795c5a1e1a5e, re-resolved from tags.
+Inspected packages/forms/src/model/abstract_model.ts (getError, hasError),
+packages/forms/signals/src/api/control.ts, and packages/forms/signals/test/node/field_node.spec.ts
+(error-list behavior). Tests exercise field and aggregate Form Nodes, Angular Signal Forms,
+Reactive Forms, template-driven forms, asynchronous completion, rebinding, and disconnection.

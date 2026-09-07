@@ -16,7 +16,9 @@ import { FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators, type C
       (input)="onInput($event)"
       (blur)="onTouched()"
     />
-    @if (state.touched() && state.invalid()) {
+    @if (state.touched() && state.hasError('minlength')) {
+      <p>Use at least {{ state.getError('minlength')?.['requiredLength'] }} characters.</p>
+    } @else if (state.touched() && state.invalid()) {
       <p>Please check your input.</p>
     }
   `,

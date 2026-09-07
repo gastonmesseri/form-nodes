@@ -23,6 +23,8 @@ provide backward-compatible fixes.
 
 ### Added
 
+- `useFormNodeState()` exposes reactive `hasError(kind)` and `getError(kind)` queries for every supported binding, returning normalized error presence and the first matching error object without traversing child paths.
+
 - `useFormNodeState()` recognizes direct Angular `Validators.requiredTrue` and exposes numeric, length, and pattern constraints declared through standard Angular validator directives, including dynamic changes while valid.
 
 - Each `provideFormNodesConfig()` option accepts `null` to reset only that option: no automatic classes, input synchronization disabled, or an empty provider message catalog with normal fallback. Omitted options and `undefined` still inherit.

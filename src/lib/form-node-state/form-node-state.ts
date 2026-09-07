@@ -23,7 +23,7 @@ export type ControlStateDisabledReason = {
 /**
  * Read-only state of the form binding attached to a custom-control component.
  *
- * Every member is a signal and remains safe to read when the component is not bound. The current
+ * State properties are signals; query and interaction methods remain safe when the component is not bound. The current
  * implementation supplies state from every supported Angular forms binding through one stable
  * custom-control API.
  */
@@ -71,6 +71,26 @@ export type ControlState<TValue = unknown> = {
   readonly required: Signal<boolean>;
   /** Whether the user has interacted with and left the bound control. */
   readonly touched: Signal<boolean>;
+  /**
+   * Whether the current normalized error list contains an exact, case-sensitive kind.
+   * Returns false when absent or disconnected, regardless of an error payload's truthiness.
+   * Queries only errors() and does not traverse child paths or explicitly trigger validation.
+   * @example
+   * const showRequired = computed(() => state.touched() && state.hasError('required'));
+   * @reactive Tracks the current binding's normalized errors in computed(), effect(), and templates.
+   * @param kind Error kind as exposed by errors(); names are not translated between forms APIs.
+   */
+  hasError(kind: string): boolean;
+  /**
+   * Returns the first normalized error with an exact, case-sensitive kind, or undefined when
+   * absent or disconnected. Returns the same object as errors(), including kind and details.
+   * Queries only errors() and does not traverse child paths or explicitly trigger validation.
+   * @example
+   * const minimumLengthError = computed(() => state.getError('minlength'));
+   * @reactive Tracks the current binding's normalized errors in computed(), effect(), and templates.
+   * @param kind Error kind as exposed by errors(); Angular uses minlength, Form Nodes uses minLength.
+   */
+  getError(kind: string): ControlStateError | undefined;
   /** Marks the bound control touched. Does nothing when no supported binding is connected. */
   markAsTouched(): void;
 };
@@ -126,6 +146,7 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
     injectNgModelControlStateAdapter<TValue>(),
   ];
   const active = computed(() => adapters.find(adapter => adapter.connected()) ?? null);
+  const errors = computed(() => active()?.errors() ?? []);
 
   return {
     connected: computed(() => active() !== null),
@@ -134,7 +155,7 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
     disabled: computed(() => active()?.disabled() ?? false),
     disabledReasons: computed(() => active()?.disabledReasons() ?? []),
     dirty: computed(() => active()?.dirty() ?? false),
-    errors: computed(() => active()?.errors() ?? []),
+    errors,
     hidden: computed(() => active()?.hidden() ?? false),
     invalid: computed(() => active()?.invalid() ?? false),
     max: computed(() => active()?.max()),
@@ -147,6 +168,12 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
     readonly: computed(() => active()?.readonly() ?? false),
     required: computed(() => active()?.required() ?? false),
     touched: computed(() => active()?.touched() ?? false),
+    hasError(kind) {
+      return errors().some(error => error.kind === kind);
+    },
+    getError(kind) {
+      return errors().find(error => error.kind === kind);
+    },
     markAsTouched() {
       active()?.markAsTouched();
     },

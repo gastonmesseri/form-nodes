@@ -97,6 +97,7 @@ No provider or adapter selection is required.
 | Read value or validation | `value()`, `errors()`, `invalid()`, `pending()` | [Value and validation properties](#value-and-validation-properties) |
 | Mirror UI state | `disabled()`, `readonly()`, `hidden()`, `required()` | [Interaction and availability properties](#interaction-and-availability-properties) |
 | Apply native constraints | `min()`, `max()`, lengths, `pattern()` | [Constraint properties](#constraint-properties) |
+| Check or inspect an error | `hasError(kind)`, `getError(kind)` | [Error queries](#haserrorkind) |
 | Report blur interaction | `markAsTouched()` | [Method reference](#method-reference) |
 | Understand source selection | Adapter priority | [Selection and lifecycle](#selection-and-lifecycle) |
 
@@ -525,6 +526,50 @@ Returns a generated or declared control name when the active binding exposes one
 ```
 
 ## Method reference
+
+### hasError(kind)
+
+**Signature:** `hasError(kind: string): boolean`
+
+Returns true when `errors()` contains an entry with that exact, case-sensitive `kind`.
+**Works with every supported binding** and tracks changes when called in a template, `computed()`,
+or `effect()`. It returns false when the error is absent or the component is disconnected.
+
+```ts
+showRequiredError = computed(() =>
+  this.formNodeState.touched() && this.formNodeState.hasError('required')
+);
+```
+
+This checks an existing error, not whether a validator is configured. Use `required()` to decide
+whether to show a required asterisk even when the value is valid.
+
+### getError(kind)
+
+**Signature:** `getError(kind: string): ControlStateError | undefined`
+
+Returns the **first matching normalized error object**, including `kind` and its details, or
+`undefined` when absent or disconnected. It is the same object found in `errors()`; treat it as
+read-only. Additional payload properties have type `unknown` and can be narrowed before using them.
+
+```ts
+minimumLengthError = computed(() => this.formNodeState.getError('minlength'));
+// Angular error example: { kind: 'minlength', requiredLength: 3, actualLength: 1 }
+```
+
+Both queries observe only the current `errors()` list. They do not walk child paths, gather extra
+descendant errors, or explicitly run validation. Multiple errors of the same kind retain their
+existing order. Error names are preserved: Angular uses `minlength`, while Form Nodes uses
+`minLength`. Read `errors()` to see the names supplied by the active forms API.
+
+Unlike `AbstractControl.getError()`, this method returns the full normalized object rather than
+just Angular's payload. Unlike Angular's payload-truthiness check, `hasError()` returns true for
+an existing normalized entry even if its original payload was false, zero, or null. This gives
+all five supported bindings the same query semantics.
+
+Queries follow control replacement and disconnection. Angular control events update them normally;
+silent Angular changes are reconciled after rendering, just like `errors()`. See the
+[complete custom-control example](#constraint-properties) for template use with error details.
 
 ### markAsTouched()
 

@@ -41,6 +41,19 @@ const injectedControlState = useFormNodeState<string | null>();
 const boundValue: string | null | undefined = formNodeState.value();
 const boundErrors: readonly ControlStateError[] = injectedControlState.errors();
 const boundErrorKind: string | undefined = boundErrors[0]?.kind;
+const queriedError = injectedControlState.getError('required');
+const hasRequiredError = injectedControlState.hasError('required');
+type _StateErrorQuery = Expect<Equal<typeof queriedError, ControlStateError | undefined>>;
+type _StateHasErrorQuery = Expect<Equal<typeof hasRequiredError, boolean>>;
+// @ts-expect-error Error kinds must be strings.
+injectedControlState.getError(1);
+// @ts-expect-error Error kinds must be strings.
+injectedControlState.hasError(null);
+if (queriedError) {
+  // @ts-expect-error Normalized errors are read-only.
+  queriedError.kind = 'changed';
+}
+
 
 void [markAsAsyncValidator, createReactiveWatch, createNodeDefinitionFactory, appendMetadataContributions, boundValue, boundErrorKind, configuredForms];
 
