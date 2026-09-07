@@ -103,13 +103,13 @@ options override inherited settings for their own binding, not descendants. See 
 ## Separate input/output pairs
 
 Components with `value`/`valueChange` or `checked`/`checkedChange` pairs require
-**`bindValuePairs: true`**. This experimental option enables value writes, change/touch outputs,
+**`bindInputOutputPairs: true`**. This experimental option enables value writes, change/touch outputs,
 optional focus/reset hooks, and an optional writable node reference. Signal and decorator inputs
 and public aliases are supported. Models and CVAs do not require this option.
 
 <CodeBlock language="ts" title="Paired text input and profile component">{pairedControlSource}</CodeBlock>
 
-Use `syncInputs` separately to select state inputs. For example, `{ bindValuePairs: true,
+Use `syncInputs` separately to select state inputs. For example, `{ bindInputOutputPairs: true,
 syncInputs: ['disabled'] }` connects the pair plus disabled state. Neither `syncInputs: 'all'` nor
 an empty list activates a pair. Targets signal-controls and cva exclude paired controls.
 
@@ -119,8 +119,8 @@ writable node reference. Existing input values remain unchanged. Returning to an
 resynchronizes its current value. Values, debounce, validation, and dirty/touched transitions
 follow normal node behavior while connected. Use initialized inputs rather than required inputs.
 
-`bindValuePairs` inherits independently from `syncInputs` through node/factory, provider, and global
-configuration. See [pair configuration and rebinding](../reference/provide-form-nodes-config.md#bind-value-pairs).
+`bindInputOutputPairs` inherits independently from `syncInputs` through node/factory, provider, and global
+configuration. See [pair configuration and rebinding](../reference/provide-form-nodes-config.md#bind-input-output-pairs).
 
 ## ControlValueAccessor
 

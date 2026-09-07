@@ -5,7 +5,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideFormNodesConfig({
       syncInputs: 'signal-controls',
-      bindValuePairs: false,
+      bindInputOutputPairs: false,
     }),
   ],
 };

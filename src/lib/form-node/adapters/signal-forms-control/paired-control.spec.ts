@@ -66,15 +66,15 @@ const bind = (initial: Node) => {
 };
 
 const modes = ([false, 'declared', 'all', 'signal-controls', [], ['disabled'], { inputs: 'all' }, { inputs: 'declared' }, { inputs: ['disabled'], target: 'signal-controls' }] satisfies SyncInputs[])
-  .flatMap(syncInputs => [undefined, false, null, true].map(bindValuePairs => ({ syncInputs, bindValuePairs })));
+  .flatMap(syncInputs => [undefined, false, null, true].map(bindInputOutputPairs => ({ syncInputs, bindInputOutputPairs })));
 
 describe.each(['field', 'form'] as const)('%s experimental paired control', (kind) => {
-  it.each(modes)('gates value, validation and interaction with %j', ({ syncInputs, bindValuePairs }) => {
+  it.each(modes)('gates value, validation and interaction with %j', ({ syncInputs, bindInputOutputPairs }) => {
     const node = kind === 'field'
-      ? field('initial', [required], { syncInputs, bindValuePairs })
-      : form({ name: field('initial', [required]) }, { syncInputs, bindValuePairs });
+      ? field('initial', [required], { syncInputs, bindInputOutputPairs })
+      : form({ name: field('initial', [required]) }, { syncInputs, bindInputOutputPairs });
     const initial = node();
-    const enabled = bindValuePairs === true;
+    const enabled = bindInputOutputPairs === true;
     const { fixture, control } = bind(node);
     expect(control.data()).toEqual(enabled ? initial : 'owned');
     expect(node.$api.dirty()).toBe(false);
@@ -95,10 +95,10 @@ describe.each(['field', 'form'] as const)('%s experimental paired control', (kin
   });
 
   it('pauses the complete pair connection and restores it on rebinding', () => {
-    const createNode = (bindValuePairs: boolean) => {
+    const createNode = (bindInputOutputPairs: boolean) => {
       return kind === 'field'
-        ? field('initial', { bindValuePairs, syncInputs: 'all' })
-        : form({ name: field('initial') }, { bindValuePairs, syncInputs: 'all' });
+        ? field('initial', { bindInputOutputPairs, syncInputs: 'all' })
+        : form({ name: field('initial') }, { bindInputOutputPairs, syncInputs: 'all' });
     };
     const active = createNode(true);
     const inactive = createNode(false);
@@ -137,9 +137,9 @@ describe.each(['field', 'form'] as const)('%s experimental paired control', (kin
     expect(active.$api.dirty()).toBe(false);
   });
 
-  it.each([false, null] as const)('pauses on a replacement with %s and resynchronizes when returning to the enabled node', (bindValuePairs) => {
-    const enabled = kind === 'field' ? field('initial', { bindValuePairs: true }) : form({ name: field('initial') }, { bindValuePairs: true });
-    const disabled = kind === 'field' ? field('off', { bindValuePairs }) : form({ name: field('off') }, { bindValuePairs });
+  it.each([false, null] as const)('pauses on a replacement with %s and resynchronizes when returning to the enabled node', (bindInputOutputPairs) => {
+    const enabled = kind === 'field' ? field('initial', { bindInputOutputPairs: true }) : form({ name: field('initial') }, { bindInputOutputPairs: true });
+    const disabled = kind === 'field' ? field('off', { bindInputOutputPairs }) : form({ name: field('off') }, { bindInputOutputPairs });
     const { fixture, control } = bind(enabled);
     expect(control.disabled()).toBe(true);
     fixture.componentInstance.node.set(disabled);
@@ -162,7 +162,7 @@ describe.each(['field', 'form'] as const)('%s experimental paired control', (kin
 });
 
 describe('decorator checkbox pairs', () => {
-  it.each([false, true])('connects classic input/output properties only with bindValuePairs=%s', (bindValuePairs) => {
+  it.each([false, true])('connects classic input/output properties only with bindInputOutputPairs=%s', (bindInputOutputPairs) => {
     @Component({ selector: 'classic-checkbox', template: '' })
     class Checkbox {
       // eslint-disable-next-line @angular-eslint/prefer-signals -- Cover interoperability with existing decorator-based controls.
@@ -175,46 +175,46 @@ describe('decorator checkbox pairs', () => {
       imports: [FormNode, Checkbox],
     })
     class Host {
-      active = field.strict(true, { bindValuePairs });
+      active = field.strict(true, { bindInputOutputPairs });
     }
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const control = fixture.debugElement.children[0]!.componentInstance as Checkbox;
-    expect(control.checked).toBe(bindValuePairs);
+    expect(control.checked).toBe(bindInputOutputPairs);
     control.checkedChange.emit(false);
     fixture.detectChanges();
-    expect(fixture.componentInstance.active()).toBe(!bindValuePairs);
+    expect(fixture.componentInstance.active()).toBe(!bindInputOutputPairs);
     fixture.componentInstance.active.set(true);
     fixture.detectChanges();
-    expect(control.checked).toBe(bindValuePairs);
+    expect(control.checked).toBe(bindInputOutputPairs);
   });
 });
 
 describe('paired control configuration', () => {
   it('inherits pair configuration independently from input selections and snapshots global fallback', () => {
-    cleanups.push(configureGlobalFormNodes({ bindValuePairs: true, syncInputs: 'all' }));
+    cleanups.push(configureGlobalFormNodes({ bindInputOutputPairs: true, syncInputs: 'all' }));
     TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: false })] });
     const { fixture, control } = bind(field('global pair'));
     expect(control.data()).toBe('global pair');
     expect(control.disabled()).toBe(true);
-    cleanups.push(configureGlobalFormNodes({ bindValuePairs: false }));
+    cleanups.push(configureGlobalFormNodes({ bindInputOutputPairs: false }));
     fixture.componentInstance.node.set(field('captured pair'));
     fixture.detectChanges();
     expect(control.data()).toBe('captured pair');
     fixture.destroy();
     TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ bindValuePairs: true })] });
+    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ bindInputOutputPairs: true })] });
     const provided = bind(field('provider pair', { syncInputs: ['disabled'] }));
     expect(provided.control.data()).toBe('provider pair');
     expect(provided.control.disabled()).toBe(false);
-    provided.fixture.componentInstance.node.set(field('explicit off', { bindValuePairs: null, syncInputs: 'all' }));
+    provided.fixture.componentInstance.node.set(field('explicit off', { bindInputOutputPairs: null, syncInputs: 'all' }));
     provided.fixture.detectChanges();
     expect(provided.control.data()).toBe('provider pair');
     expect(provided.control.node()).toBeNull();
   });
 
   it('preserves independent factory defaults through dynamic array template cloning', () => {
-    const factories = createFormPrimitives({ bindValuePairs: true, syncInputs: ['disabled'] });
+    const factories = createFormPrimitives({ bindInputOutputPairs: true, syncInputs: ['disabled'] });
     const rows = factories.array({ name: factories.field('default') });
     const first = rows.push().name;
     const { fixture, control } = bind(first);
@@ -225,7 +225,7 @@ describe('paired control configuration', () => {
     control.changed.emit('next');
     expect(rows.at(1)!.name()).toBe('next');
     expect(first()).toBe('default');
-    const optedOut = factories.field('off', { bindValuePairs: null, syncInputs: undefined });
+    const optedOut = factories.field('off', { bindInputOutputPairs: null, syncInputs: undefined });
     fixture.componentInstance.node.set(optedOut);
     fixture.detectChanges();
     control.changed.emit('ignored');
@@ -233,18 +233,18 @@ describe('paired control configuration', () => {
   });
 
   it('uses global and provider selections with explicit node opt-out', () => {
-    cleanups.push(configureGlobalFormNodes({ bindValuePairs: true }));
+    cleanups.push(configureGlobalFormNodes({ bindInputOutputPairs: true }));
     const first = bind(field('global'));
     expect(first.control.data()).toBe('global');
     first.fixture.destroy();
     TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ bindValuePairs: false })] });
+    TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ bindInputOutputPairs: false })] });
     const { fixture, control } = bind(field('provider off'));
     expect(control.data()).toBe('owned');
-    fixture.componentInstance.node.set(field('node override', { bindValuePairs: true }));
+    fixture.componentInstance.node.set(field('node override', { bindInputOutputPairs: true }));
     fixture.detectChanges();
     expect(control.data()).toBe('node override');
-    fixture.componentInstance.node.set(field('explicit off', { bindValuePairs: null }));
+    fixture.componentInstance.node.set(field('explicit off', { bindInputOutputPairs: null }));
     fixture.detectChanges();
     control.changed.emit('ignored');
     expect(fixture.componentInstance.node()()).toBe('explicit off');
@@ -252,7 +252,7 @@ describe('paired control configuration', () => {
 
   it('propagates nested aggregate edits and programmatic resets through its parent form', () => {
     const parent = form({
-      profile: form({ name: field('initial', [required]) }, { bindValuePairs: true }),
+      profile: form({ name: field('initial', [required]) }, { bindInputOutputPairs: true }),
     });
     const { fixture, control } = bind(parent.profile);
     expect(control.data()).toEqual({ name: 'initial' });
@@ -273,7 +273,7 @@ describe('paired control configuration', () => {
   });
 
   it('preserves pending control values and commits debounced input on touch', () => {
-    const name = field('initial', { bindValuePairs: true, debounce: 'blur' });
+    const name = field('initial', { bindInputOutputPairs: true, debounce: 'blur' });
     const { fixture, control } = bind(name);
     control.changed.emit('pending');
     fixture.detectChanges();

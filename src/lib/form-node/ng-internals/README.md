@@ -11,7 +11,7 @@ component definition or input-signal node. There are two independent opt-ins:
   control. Defaults to false. Presets are declared, all, and signal-controls; lists select exact
   inputs, and `{ inputs, target }` separates selection from adapter filtering. Declared excludes
   validators. Empty lists write nothing and never enable values.
-- `bindValuePairs`: enables separate value/valueChange or checked/checkedChange input/output pairs.
+- `bindInputOutputPairs`: enables separate value/valueChange or checked/checkedChange input/output pairs.
   Defaults to false. Controls value and state writes, change/touch processing, optional focus/reset
   hooks, and the writable node reference. SyncInputs separately selects an active pair's state inputs.
 

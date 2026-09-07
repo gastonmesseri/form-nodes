@@ -31,7 +31,7 @@ Form Nodes interface, base class, or registration provider.
 | --- | --- | --- |
 | Signal Forms value control | `value = model<T>()` | Fields, forms, and arrays |
 | Signal Forms checkbox control | `checked = model<boolean>()` | Boolean fields |
-| Separate input/output control | `value`/`valueChange` or `checked`/`checkedChange` | Experimental; requires `bindValuePairs: true` |
+| Separate input/output control | `value`/`valueChange` or `checked`/`checkedChange` | Experimental; requires `bindInputOutputPairs: true` |
 | Reactive Forms / Forms API | `ControlValueAccessor` through `NG_VALUE_ACCESSOR` | Fields and compatible aggregate values |
 | Native form element | `input`, `select`, or `textarea` | Scalar fields |
 
@@ -64,7 +64,7 @@ state/constraint input writes require `syncInputs`.
 Binding precedence is deterministic when a component exposes more than one mechanism:
 
 1. `ControlValueAccessor`
-2. An automatically discovered model or input/output pair (pairs require `bindValuePairs: true`)
+2. An automatically discovered model or input/output pair (pairs require `bindInputOutputPairs: true`)
 3. Native element handling
 
 ## Signal model controls
@@ -93,9 +93,9 @@ export class Rating {
 ```
 
 Model value binding uses public `set()` and `subscribe()` APIs. Separate `value`/`valueChange`
-or `checked`/`checkedChange` input/output properties require experimental `bindValuePairs: true`.
+or `checked`/`checkedChange` input/output properties require experimental `bindInputOutputPairs: true`.
 Use syncInputs independently to select state inputs. An empty list never enables a pair. False/null
-for bindValuePairs pauses value and state writes, change/touch processing, and optional component
+for bindInputOutputPairs pauses value and state writes, change/touch processing, and optional component
 focus/reset hooks. See the [complete paired-control example](./custom-controls.md#separate-input-output-pairs).
 
 :::caution Do not require the control model input

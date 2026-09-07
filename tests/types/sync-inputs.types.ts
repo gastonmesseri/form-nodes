@@ -28,10 +28,10 @@ createFormPrimitives({ syncInputs: signalControls });
 provideFormNodesConfig({ syncInputs: signalControls });
 configureGlobalFormNodes({ syncInputs: signalControls });
 
-field('', { bindValuePairs: true, syncInputs: { inputs: 'declared', target: 'cva' } });
-form({}, { bindValuePairs: null });
-group({}, { bindValuePairs: false });
-array(field(''), { bindValuePairs: true });
-createFormPrimitives({ bindValuePairs: true });
-provideFormNodesConfig({ bindValuePairs: true });
-configureGlobalFormNodes({ bindValuePairs: true });
+field('', { bindInputOutputPairs: true, syncInputs: { inputs: 'declared', target: 'cva' } });
+form({}, { bindInputOutputPairs: null });
+group({}, { bindInputOutputPairs: false });
+array(field(''), { bindInputOutputPairs: true });
+createFormPrimitives({ bindInputOutputPairs: true });
+provideFormNodesConfig({ bindInputOutputPairs: true });
+configureGlobalFormNodes({ bindInputOutputPairs: true });

@@ -152,7 +152,7 @@ Rebinding or destroying a directive removes its previous error ownership and foc
 When an element exposes several compatible control mechanisms, `[formNode]` uses this precedence:
 
 1. `ControlValueAccessor`.
-2. An automatically discovered model or input/output pair; pairs require experimental `bindValuePairs: true`.
+2. An automatically discovered model or input/output pair; pairs require experimental `bindInputOutputPairs: true`.
 3. Native element handling.
 
 Angular's accessor-selection rules still apply within the CVA category: a custom accessor takes

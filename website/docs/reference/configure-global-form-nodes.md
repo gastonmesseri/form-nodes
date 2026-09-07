@@ -19,7 +19,7 @@ input synchronization. Angular providers override each option independently. The
 configureGlobalFormNodes(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined) | null | undefined;
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
-  bindValuePairs?: boolean | null | undefined; // Experimental; default: false
+  bindInputOutputPairs?: boolean | null | undefined; // Experimental; default: false
   syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[]
     | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' } | null | undefined; // Experimental
 }): () => void;
@@ -48,7 +48,7 @@ form options.
 ## Independent options and precedence
 
 For each binding option, resolution is: **nearest explicit Angular provider → global setting →
-library default**. A node's explicit `syncInputs` or `bindValuePairs` option takes precedence over every provider. For messages, validator and form-tree overrides retain higher precedence;
+library default**. A node's explicit `syncInputs` or `bindInputOutputPairs` option takes precedence over every provider. For messages, validator and form-tree overrides retain higher precedence;
 global messages remain the fallback after catalogs captured by nodes from Angular providers.
 
 | Option | Global behavior | `null` resets to |
@@ -56,7 +56,7 @@ global messages remain the fallback after catalogs captured by nodes from Angula
 | `validatorMessages` | Static or reactive fallback catalog | Empty catalog, leaving built-in messages as the final fallback |
 | `classes` | Class map captured by new bindings | No automatic classes |
 | `syncInputs` | Input selection for new connections: false, declared, all, signal-controls, a list, or `{ inputs, target }` | `false` |
-| `bindValuePairs` | Enables complete paired value connections for new bindings | `false` |
+| `bindInputOutputPairs` | Enables complete paired value connections for new bindings | `false` |
 
 Omitting an option or passing `undefined` preserves the current global setting. Multiple calls
 update only the supplied options. Explicit catalogs and class maps replace their previous maps;
@@ -70,7 +70,7 @@ force built-in English text.
 Both binding options are **experimental and disabled by default**. Use `syncInputs: 'signal-controls'`
 for all state inputs on actual model controls, or `{ inputs: ['disabled'], target: 'cva' }` for
 selected CVA inputs. The selected adapter determines the target even when a component offers both
-contracts. SyncInputs never enables paired value binding; use `bindValuePairs: true` independently.
+contracts. SyncInputs never enables paired value binding; use `bindInputOutputPairs: true` independently.
 False/null disables either option without changing the other. Value models and standard CVAs always
 remain connected. See [input selection and paired binding](./provide-form-nodes-config.md#custom-control-inputs).
 

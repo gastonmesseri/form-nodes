@@ -308,7 +308,7 @@ configures Angular `[formField]` independently, so both providers can share an i
 Components exposing `value = model<T>()`, `checked = model<boolean>()`,
 or a CVA are normally discovered automatically. Separate `value`/`valueChange` and
 `checked`/`checkedChange` pairs are recognized too, but their value transport requires
-experimental `bindValuePairs: true` (including `[]` for value transport without optional state writes).
+experimental `bindInputOutputPairs: true` (including `[]` for value transport without optional state writes).
 
 For `FormValueControl`, value binding through `model()` works without experimental options.
 Full automatic state/constraint input synchronization requires experimental `syncInputs: 'all'`;

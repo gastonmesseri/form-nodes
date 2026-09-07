@@ -8,7 +8,7 @@ export type SyncInputs = false | 'declared' | 'all' | 'signal-controls' | readon
 export type SyncInputName = 'disabled' | 'disabledReasons' | 'dirty' | 'errors' | 'hidden' | 'invalid' | 'max' | 'maxLength' | 'min' | 'minLength' | 'name' | 'pattern' | 'pending' | 'readonly' | 'required' | 'touched';
 
 type NodeInputConfig = {
-  bindValuePairs: boolean | null | undefined;
+  bindInputOutputPairs: boolean | null | undefined;
   mode: SyncInputs | null | undefined;
   declared: ReadonlySet<string>;
   metadata: () => MetadataContributions;
@@ -18,7 +18,7 @@ const configurations = new WeakMap<Node, NodeInputConfig>();
 
 export const registerNodeInputConfig = (
   node: Node,
-  options: { bindValuePairs?: boolean | null | undefined; syncInputs?: SyncInputs | null | undefined; disabled?: unknown; readonly?: unknown; hidden?: unknown } | undefined,
+  options: { bindInputOutputPairs?: boolean | null | undefined; syncInputs?: SyncInputs | null | undefined; disabled?: unknown; readonly?: unknown; hidden?: unknown } | undefined,
   metadata: () => MetadataContributions,
 ) => {
   const declared = new Set<string>();
@@ -26,7 +26,7 @@ export const registerNodeInputConfig = (
     if (options?.[name] !== undefined) declared.add(name);
   }
   if (declared.has('disabled')) declared.add('disabledReasons');
-  configurations.set(node, { bindValuePairs: options?.bindValuePairs, mode: options?.syncInputs, declared, metadata });
+  configurations.set(node, { bindInputOutputPairs: options?.bindInputOutputPairs, mode: options?.syncInputs, declared, metadata });
 };
 
 export const getNodeInputConfig = (node: Node) => configurations.get(node)!;

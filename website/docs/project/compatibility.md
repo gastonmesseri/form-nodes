@@ -44,7 +44,7 @@ has been removed; see the [migration instructions](./migrations.md#removing-the-
 For Angular `[formField]`, the form model is created by Angular Signal Forms itself.
 
 Custom controls can use `model()` or `ControlValueAccessor` on either major. Separate
-input/output value pairs require experimental `bindValuePairs: true`; see
+input/output value pairs require experimental `bindInputOutputPairs: true`; see
 [paired controls](../guides/custom-controls.md#separate-input-output-pairs).
 The optional `FormNodeUiControl`, `FormNodeValueControl`, and `FormNodeCheckboxControl` contracts
 belong to Form Nodes and remain consistent across versions. Form Nodes' internal state rules

@@ -78,7 +78,7 @@ control. Both accessor discovery paths use the same CVA adapter. `form-node-ng-c
 remains the Angular compatibility facade outside the adapters.
 
 Within `signal-forms-control/`, `model-transport.ts` connects through public model operations.
-`paired-transport.ts` connects paired inputs and outputs, with the complete pair connection gated by `bindValuePairs`
+`paired-transport.ts` connects paired inputs and outputs, with the complete pair connection gated by `bindInputOutputPairs`
 in `custom-control-adapter.ts`. Optional state/constraint writes use the separate shared
 input synchronizer. The Angular input-writing implementation remains isolated in
 `form-node/ng-internals/component-input-writer.ts`.

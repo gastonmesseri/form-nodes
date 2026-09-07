@@ -12,7 +12,7 @@ canonical release record.
 
 ### Changed
 
-- **Breaking behavior/API change:** `bindValuePairs: true` now independently enables separate value/valueChange and checked/checkedChange connections. False/null pauses the complete pair connection, including state writes, touch/focus/reset hooks, and writable node access. SyncInputs no longer enables values; empty lists do nothing. Models, CVAs, and native controls retain their standard connections.
+- **Breaking behavior/API change:** `bindInputOutputPairs: true` now independently enables separate value/valueChange and checked/checkedChange connections. False/null pauses the complete pair connection, including state writes, touch/focus/reset hooks, and writable node access. SyncInputs no longer enables values; empty lists do nothing. Models, CVAs, and native controls retain their standard connections.
 
 - **Breaking behavior/API change:** experimental `syncInputs` now selects only state/constraint inputs: false, 'declared', 'all', 'signal-controls', exact lists, or `{ inputs, target }`. Targets are all, signal-controls, and cva; CVA precedence is preserved on hybrid components. True and the earlier presets/mode objects are replaced by explicit selections. Declared includes initial disabled/readonly/hidden options, excluding validators. Both binding options default to false and inherit independently through nodes, factory defaults, providers, and global configuration. Validation is unchanged.
 

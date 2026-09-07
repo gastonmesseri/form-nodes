@@ -19,7 +19,7 @@ provideFormNodesConfig(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages) | null | undefined;
   syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[]
     | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' } | null | undefined; // Experimental; default: false
-  bindValuePairs?: boolean | null | undefined; // Experimental; default: false
+  bindInputOutputPairs?: boolean | null | undefined; // Experimental; default: false
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
 }): Provider[];
 ```
@@ -29,7 +29,7 @@ provideFormNodesConfig(config: {
 **Experimental: writes component inputs through Angular internals. Default: `false`.**
 
 This option copies node state and constraints into matching inputs on the selected custom control.
-It never enables value binding. Use [`bindValuePairs`](#bind-value-pairs) separately for paired
+It never enables value binding. Use [`bindInputOutputPairs`](#bind-input-output-pairs) separately for paired
 inputs and outputs. Node validation continues independently of both options.
 
 | Selection | Inputs synchronized |
@@ -65,7 +65,7 @@ declaration. An active paired input/output control only matches target `'all'`.
 
 This configuration supplies model controls with all supported state and constraints. CVAs keep
 their standard value, touch, and disabled callbacks without additional input writes. Native controls
-keep their normal DOM behavior. Paired controls remain inactive because `bindValuePairs` is false.
+keep their normal DOM behavior. Paired controls remain inactive because `bindInputOutputPairs` is false.
 
 To narrow the selection further:
 
@@ -100,11 +100,11 @@ node's options. Inputs no longer selected retain their last values rather than r
 For state access without experimental writes, use a model with `useFormNodeState()` and render its
 signals. See [custom controls](../guides/custom-controls.md).
 
-## `bindValuePairs` {#bind-value-pairs}
+## `bindInputOutputPairs` {#bind-input-output-pairs}
 
 **Experimental: writes value inputs through Angular internals. Default: `false`.**
 
-Set `bindValuePairs: true` to connect a recognized `value`/`valueChange` or
+Set `bindInputOutputPairs: true` to connect a recognized `value`/`valueChange` or
 `checked`/`checkedChange` input/output pair. Both signal and decorator inputs and public aliases
 are supported. CVAs and actual value/checked models take precedence and work without this opt-in.
 
@@ -118,13 +118,13 @@ Input synchronization and value binding are separate decisions:
 
 ```ts
 // Value and interaction only; no state-input writes.
-{ bindValuePairs: true, syncInputs: false }
+{ bindInputOutputPairs: true, syncInputs: false }
 
 // Value and interaction, plus exactly these state inputs.
-{ bindValuePairs: true, syncInputs: ['disabled', 'required'] }
+{ bindInputOutputPairs: true, syncInputs: ['disabled', 'required'] }
 
 // The pair stays inactive even though input synchronization is configured.
-{ bindValuePairs: false, syncInputs: 'all' }
+{ bindInputOutputPairs: false, syncInputs: 'all' }
 ```
 
 Pairs follow normal dirty/touched, validation, propagation, and pending/committed debounce rules.
@@ -221,7 +221,7 @@ then the library defaults. Message catalogs follow their normal fallback chain:
   `{ classes: {} }` clears only the inherited classes.
 - Omit `syncInputs` to preserve the inherited setting. Set false, a named preset, a list, or an inputs/target object to override it.
   With no provider, this option uses the global setting, which defaults to `false`.
-- Omit `bindValuePairs` to preserve its independent inherited value. True enables pairs; false/null disables them.
+- Omit `bindInputOutputPairs` to preserve its independent inherited value. True enables pairs; false/null disables them.
 - `{}` registers no providers. An option set to `undefined` also inherits.
 - `{ validatorMessages: {} }` supplies an empty catalog without changing classes or synchronization.
 
@@ -230,7 +230,7 @@ null bypasses global defaults. An empty provider message catalog still permits g
 
 | Option set to `null` | Result |
 | --- | --- |
-| `bindValuePairs` | Paired value and interaction binding disabled. |
+| `bindInputOutputPairs` | Paired value and interaction binding disabled. |
 | `classes` | No automatic classes; equivalent to an empty map. |
 | `syncInputs` | Synchronization disabled (`false`). |
 | `validatorMessages` | Empty provider catalog, with normal message fallback. |

@@ -5,11 +5,11 @@ import { createPairedTransport } from './paired-transport';
 import { connectControlInputs } from '../sync-control-inputs';
 import type { FormNodeControl } from '../../form-node-control';
 import type { ControlAdapterConnection } from '../control-adapter';
-import { FORM_NODE_BIND_VALUE_PAIRS } from '../../provide-form-nodes-config';
 import type { InternalNode, Node, NodeValue } from '../../../types/node.type';
 import { getNodeInputConfig } from '../../../configuration/node-input-config';
-import { getGlobalBindValuePairs } from '../../../configuration/configure-global-form-nodes';
+import { FORM_NODE_BIND_INPUT_OUTPUT_PAIRS } from '../../provide-form-nodes-config';
 import { registerExternalValidationErrors } from '../../../validation/external-validation-errors';
+import { getGlobalBindInputOutputPairs } from '../../../configuration/configure-global-form-nodes';
 
 /** Connects a provided signal-based custom control to a field, form, or array node. */
 export const connectCustomControlAdapter = <TNode extends Node>(
@@ -21,10 +21,10 @@ export const connectCustomControlAdapter = <TNode extends Node>(
   const directModel = findModelTransport(control);
   const experimental = directModel === undefined;
   const model = directModel === undefined ? createPairedTransport(control, injector, usesControlState) : directModel;
-  const inheritedPairs = injector.get(FORM_NODE_BIND_VALUE_PAIRS, null) ?? getGlobalBindValuePairs();
+  const inheritedPairs = injector.get(FORM_NODE_BIND_INPUT_OUTPUT_PAIRS, null) ?? getGlobalBindInputOutputPairs();
   const enabled = () => {
     if (!experimental) return true;
-    const ownPairs = getNodeInputConfig(node()).bindValuePairs;
+    const ownPairs = getNodeInputConfig(node()).bindInputOutputPairs;
     return ownPairs === undefined ? inheritedPairs : ownPairs === true;
   };
   let lastWrittenNode: TNode | undefined;

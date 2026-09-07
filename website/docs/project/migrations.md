@@ -314,9 +314,9 @@ options, each defaulting to false and inheriting independently.
 | `syncInputs: 'only-signal-controls'` | `syncInputs: 'signal-controls'` |
 | `{ mode: 'always', inputs: [...] }` | `{ inputs: [...] }` |
 | `{ mode: 'only-declared', inputs: [...] }` | Use `{ inputs: 'declared' }` for all declarations, or explicitly list the desired declared inputs. |
-| `syncInputs: []` to enable paired values | `bindValuePairs: true` with syncInputs false/omitted |
+| `syncInputs: []` to enable paired values | `bindInputOutputPairs: true` with syncInputs false/omitted |
 
-Add `bindValuePairs: true` wherever a separate value/valueChange or checked/checkedChange pair
+Add `bindInputOutputPairs: true` wherever a separate value/valueChange or checked/checkedChange pair
 previously relied on syncInputs to connect. Keep syncInputs separately for the desired state inputs.
 False/null now pauses the entire pair connection, including component focus/reset hooks and writable
 node access. Returning to an enabled node resynchronizes its current value.

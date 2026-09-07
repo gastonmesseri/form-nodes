@@ -216,7 +216,7 @@ export class ProfileEditor {
 ```
 
 The binding supports native controls, `ControlValueAccessor`, Angular-compatible signal models,
-and input/output control pairs (the latter require experimental `bindValuePairs: true`). Its public query type exposes `node()`, `errors()`, `element`,
+and input/output control pairs (the latter require experimental `bindInputOutputPairs: true`). Its public query type exposes `node()`, `errors()`, `element`,
 `injector`, `focus()`, `flush()`, and `reset()`.
 
 Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNode` import supports native controls, custom controls, and native form roots.

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from '../validation/validators/required';
-import { configureGlobalFormNodes, getGlobalFormNodeClasses, getGlobalSyncInputs, getGlobalBindValuePairs } from './configure-global-form-nodes';
+import { configureGlobalFormNodes, getGlobalFormNodeClasses, getGlobalSyncInputs, getGlobalBindInputOutputPairs } from './configure-global-form-nodes';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => cleanups.splice(0).reverse().forEach(cleanup => cleanup()));
@@ -66,19 +66,19 @@ describe('global Form Nodes configuration', () => {
   });
 
   it('restores pair defaults independently of input selections', () => {
-    const first = configure({ bindValuePairs: true, syncInputs: 'signal-controls' });
-    const second = configure({ bindValuePairs: false });
-    const noop = configure({ bindValuePairs: undefined });
-    expect(getGlobalBindValuePairs()).toBe(false);
+    const first = configure({ bindInputOutputPairs: true, syncInputs: 'signal-controls' });
+    const second = configure({ bindInputOutputPairs: false });
+    const noop = configure({ bindInputOutputPairs: undefined });
+    expect(getGlobalBindInputOutputPairs()).toBe(false);
     expect(getGlobalSyncInputs()).toBe('signal-controls');
     noop();
     second();
-    expect(getGlobalBindValuePairs()).toBe(true);
-    const cleared = configure({ bindValuePairs: null });
-    expect(getGlobalBindValuePairs()).toBe(false);
+    expect(getGlobalBindInputOutputPairs()).toBe(true);
+    const cleared = configure({ bindInputOutputPairs: null });
+    expect(getGlobalBindInputOutputPairs()).toBe(false);
     first();
     cleared();
-    expect(getGlobalBindValuePairs()).toBe(false);
+    expect(getGlobalBindInputOutputPairs()).toBe(false);
     expect(getGlobalSyncInputs()).toBe(false);
   });
 

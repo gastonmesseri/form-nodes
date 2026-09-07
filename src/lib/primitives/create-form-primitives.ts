@@ -37,7 +37,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
   const defaultNullable = options.nullable ?? true;
   const defaultNodeOptions = {
     syncInputs: options.syncInputs,
-    bindValuePairs: options.bindValuePairs,
+    bindInputOutputPairs: options.bindInputOutputPairs,
     inheritInjector: options.inheritInjector,
     adoptBindingInjector: options.adoptBindingInjector,
   };
@@ -47,9 +47,9 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       syncInputs: (nodeOptions as FieldOptions | undefined)?.syncInputs === undefined
         ? defaultNodeOptions.syncInputs
         : (nodeOptions as FieldOptions).syncInputs,
-      bindValuePairs: (nodeOptions as FieldOptions | undefined)?.bindValuePairs === undefined
-        ? defaultNodeOptions.bindValuePairs
-        : (nodeOptions as FieldOptions).bindValuePairs,
+      bindInputOutputPairs: (nodeOptions as FieldOptions | undefined)?.bindInputOutputPairs === undefined
+        ? defaultNodeOptions.bindInputOutputPairs
+        : (nodeOptions as FieldOptions).bindInputOutputPairs,
       inheritInjector: (nodeOptions as FieldOptions | undefined)?.inheritInjector ?? defaultNodeOptions.inheritInjector,
       adoptBindingInjector: (nodeOptions as FieldOptions | undefined)?.adoptBindingInjector ?? defaultNodeOptions.adoptBindingInjector,
     } as TOptions;

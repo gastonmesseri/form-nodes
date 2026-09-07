@@ -11,7 +11,7 @@ export type FieldOptions<TValue = any> = {
    *
    * Reactively copies node state and constraints into matching custom-control inputs. This is
    * one-way node-to-component synchronization; it does not enable value binding, execute
-   * validators, or alter node state. Use `bindValuePairs` separately for input/output value pairs.
+   * validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs.
    *
    * Selections:
    * - `false` or `null`: no additional input writes, even if inherited configuration enables them.
@@ -39,7 +39,7 @@ export type FieldOptions<TValue = any> = {
    * change/touch callbacks, and setDisabledState independently of this option. Selecting a CVA's
    * disabled input may write it in addition to calling setDisabledState. Model values and their
    * touch/focus/reset hooks remain connected in every mode. Pair controls must first be enabled
-   * with bindValuePairs; only target all can synchronize their optional state inputs.
+   * with bindInputOutputPairs; only target all can synchronize their optional state inputs.
    *
    * Each option resolves independently: node option (including factory defaults), nearest explicit
    * provider, global fallback, then false. Omission/undefined inherits; null/false disables. Objects
@@ -82,7 +82,7 @@ export type FieldOptions<TValue = any> = {
    * Model/CVA/native connections and validation continue normally.
    *
    * This option does not select optional state inputs. Use syncInputs separately; for example,
-   * bindValuePairs true with syncInputs false connects only value and interaction. Neither all nor
+   * bindInputOutputPairs true with syncInputs false connects only value and interaction. Neither all nor
    * an empty syncInputs list enables a pair. Active pairs accept syncInputs selections targeting all;
    * targets signal-controls and cva exclude them.
    *
@@ -97,14 +97,14 @@ export type FieldOptions<TValue = any> = {
    *
    * @example Enable paired value binding independently of state inputs.
    * ```ts
-   * field('', { bindValuePairs: true, syncInputs: false });
-   * configureGlobalFormNodes({ bindValuePairs: true });
+   * field('', { bindInputOutputPairs: true, syncInputs: false });
+   * configureGlobalFormNodes({ bindInputOutputPairs: true });
    * ```
    *
    * @experimental Pair input writes depend on Angular internals.
-   * @see {@link https://gastonmesseri.github.io/form-nodes/reference/provide-form-nodes-config#bind-value-pairs | Paired control configuration}
+   * @see {@link https://gastonmesseri.github.io/form-nodes/reference/provide-form-nodes-config#bind-input-output-pairs | Paired control configuration}
    */
-  bindValuePairs?: boolean | null | undefined;
+  bindInputOutputPairs?: boolean | null | undefined;
   /**
    * Equality for the exposed value. Defaults to `Object.is`. Equivalent values retain the previous
    * public value for consumers and validators while internal storage and controls accept new writes.

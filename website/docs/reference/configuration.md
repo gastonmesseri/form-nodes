@@ -42,11 +42,11 @@ node or ancestor.
 
 ## Node options
 
-`syncInputs` and `bindValuePairs` are **independent experimental binding options** accepted by every
+`syncInputs` and `bindInputOutputPairs` are **independent experimental binding options** accepted by every
 primitive and `createFormPrimitives()` defaults. They affect the bound node, not descendants, and
 default to false. SyncInputs accepts false, `'declared'`, `'all'`, `'signal-controls'`, exact input
 lists, or `{ inputs, target }`. It only selects state/constraint writes; it never enables values.
-BindValuePairs true connects paired value/checked inputs and outputs, including interaction hooks.
+BindInputOutputPairs true connects paired value/checked inputs and outputs, including interaction hooks.
 Null disables either option and undefined inherits. See [input selections and pair connections](./provide-form-nodes-config.md#custom-control-inputs).
 
 The call-site types are designed for discovery in IntelliSense. Small accepted unions—such as
@@ -304,7 +304,7 @@ failing.
 
 ### Process-wide fallback
 
-`configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, `syncInputs`, and `bindValuePairs`.
+`configureGlobalFormNodes()` accepts `validatorMessages`, `classes`, `syncInputs`, and `bindInputOutputPairs`.
 Each option is a fallback below its nearest explicit Angular provider. Omitted options preserve
 previous global settings; `null` resets that global option to the library default.
 Configure binding defaults before bootstrap: existing bindings retain their class maps and
@@ -379,9 +379,9 @@ provideFormNodesConfig({
 });
 ```
 
-The `classes`, `syncInputs`, and `bindValuePairs` options affect rendered bindings, not node state or validation.
+The `classes`, `syncInputs`, and `bindInputOutputPairs` options affect rendered bindings, not node state or validation.
 Each option inherits independently. Providing `classes` replaces only the class map; providing
-`syncInputs` changes only state-input synchronization; `bindValuePairs` enables paired value and interaction binding. Omitting an option preserves its inherited
+`syncInputs` changes only state-input synchronization; `bindInputOutputPairs` enables paired value and interaction binding. Omitting an option preserves its inherited
 provider. Set an option to `null` to reset it: no classes, synchronization disabled, or an empty
 provider message catalog with normal fallback. Class maps are not merged automatically. See
 [Provider scope](./provide-form-nodes-config.md#provider-scope) for examples.

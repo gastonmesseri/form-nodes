@@ -158,16 +158,16 @@ export class AotPairedCheckbox {
   `,
 })
 export class AotPairedControlHost {
-  name = signal(field.strict('node text', { bindValuePairs: true }));
-  active = signal(field.strict(true, { bindValuePairs: true }));
+  name = signal(field.strict('node text', { bindInputOutputPairs: true }));
+  active = signal(field.strict(true, { bindInputOutputPairs: true }));
 
   pause() {
-    this.name.set(field.strict('paused text', { bindValuePairs: false }));
-    this.active.set(field.strict(true, { bindValuePairs: null }));
+    this.name.set(field.strict('paused text', { bindInputOutputPairs: false }));
+    this.active.set(field.strict(true, { bindInputOutputPairs: null }));
   }
 
   resume() {
-    this.name.set(field.strict('resumed', { bindValuePairs: true }));
-    this.active.set(field.strict(true, { bindValuePairs: true }));
+    this.name.set(field.strict('resumed', { bindInputOutputPairs: true }));
+    this.active.set(field.strict(true, { bindInputOutputPairs: true }));
   }
 }

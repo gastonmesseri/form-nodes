@@ -9,7 +9,7 @@ See Angular's [custom controls guide](https://angular.dev/guide/forms/signals/cu
 touch, focus, and reset connections work without experimental options.
 
 `paired-transport.ts` handles separate value/valueChange and checked/checkedChange pairs.
-`bindValuePairs` gates their complete connection: values, interaction hooks, node reference, and
+`bindInputOutputPairs` gates their complete connection: values, interaction hooks, node reference, and
 any optional input writes. False/null leaves pairs recognized but inactive. Rebinding can pause
 and resume the connection; existing component input values remain unchanged while inactive.
 
