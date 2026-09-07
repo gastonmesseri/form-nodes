@@ -53,7 +53,9 @@
   })
 
 
-- [NEXT] [ ] Check if it is possible to make it work with Angular 21 (and its relevant typescript version, check if our used typescript features are valid)
+- [NEXT] [ ] Check if useNgControl hook in DL works
+
+- [NEXT] Support at least node version v20.19.4 (the one installed in DL)
 
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
@@ -322,6 +324,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Later
 
+- [ ] Implement Angular 21 support if prioritized after the [compatibility audit](docs/angular-21-compatibility.md): adapt Signal Forms exports/types and rule calls, resolve `$field` metadata/touch/reset differences, build with the oldest supported Angular toolchain, and verify both majors before widening peers. Feasibility was assessed; support has not been implemented.
+
 - Optionally extend `ControlState` with interaction-reporting methods beyond `markAsTouched()` only
   when every supported binding source exposes a public operation with equivalent semantics. Keep
   value changes and form-owned operations such as reset, disable, and enable outside this facade.
@@ -379,6 +383,10 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 
 ## Completed
+
+- [x] Prepare isolated Angular 21.2.22 / TypeScript 5.9.3 and Angular 22.1.5 / TypeScript 6.0.3 package consumers with pinned lockfiles, strict template/declaration checks, and three runtime smoke tests. CI builds one shared tarball; Angular 22 is required and Angular 21 reports experimental failures. Preserve `$field` and the current supported peer range. See `tests/compatibility/README.md` for commands and promotion requirements.
+
+- [x] Check Angular 21 and TypeScript compatibility. Angular 21.2.22 / TypeScript 5.9.3 passes 1,152 runtime tests but fails 53 tests and the package build because of Signal Forms API differences. TypeScript 5.9.3 passes the existing public inference tests against current Angular declarations; specification checks additionally need `DOM.Iterable`. Keep Angular 22 support unchanged. See [the audit](docs/angular-21-compatibility.md) for pinned source references, commands, results, and remaining work.
 
 - [x] Simplify the custom-controls guide to basic component integration and move detailed contracts to `custom-controls-advanced`, with sidebar navigation and updated links.
 

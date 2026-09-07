@@ -1,7 +1,7 @@
 {
   "name": "form-nodes",
   "version": "0.1.0",
-  "description": "Small, typed, signal-based form primitives for Angular.",
+  "description": "Easy, small, typed, signal-based form primitives for Angular.",
   "license": "MIT",
   "type": "module",
   "workspaces": [
@@ -21,7 +21,8 @@
     "test:templates": "node scripts/test-template-types.mjs",
     "test:types": "tsc -p tsconfig.type-tests.json --noEmit && node scripts/test-shorthand-type-performance.mjs",
     "test:watch": "vitest",
-    "typecheck": "npm run lint && tsc -p tsconfig.spec.json --noEmit && npm run test:types && npm run test:templates"
+    "typecheck": "npm run lint && tsc -p tsconfig.spec.json --noEmit && npm run test:types && npm run test:templates",
+    "test:compatibility": "node scripts/test-angular-compatibility.mjs"
   },
   "peerDependencies": {
     "@angular/core": "^22.0.0",
