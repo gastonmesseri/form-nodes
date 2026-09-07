@@ -290,18 +290,41 @@ describe('FormNode NgControl reset compatibility', () => {
     fixture.destroy();
   });
 
-  it('rejects unsupported state ownership options before changing the node', () => {
-    const node = field.strict('initial');
-    const { fixture, control } = bind(node);
-    node.markAsTouched();
-    for (const options of [{ onlySelf: true }, { overwriteDefaultValue: true }]) {
-      expect(() => control.reset('new', options)).toThrow('does not support onlySelf or overwriteDefaultValue');
-      expect(node()).toBe('initial');
-      expect(node.touched()).toBe(true);
+  it.each(['field', 'nested form'] as const)('warns and completes reset when unsupported ownership options are supplied on a %s', (kind) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const name = field.strict('initial');
+    const node = kind === 'field' ? name : form({ name });
+    const root = form({ node });
+    const { fixture, cva, control } = bind(node);
+    try {
+      for (const options of [{ onlySelf: true }, { overwriteDefaultValue: true }, { onlySelf: true, overwriteDefaultValue: true }]) {
+        name.setControlValue('edited');
+        name.markAsTouched();
+        control.setErrors({ parsing: true });
+        fixture.detectChanges();
+        cva.events.length = 0;
+        warn.mockClear();
+        control.reset(kind === 'field' ? 'new' : { name: 'new' }, { ...options, emitEvent: false });
+        expect(warn).toHaveBeenCalledExactlyOnceWith('formNode: reset() ignores onlySelf and overwriteDefaultValue; node ancestors remain reactive and reset has no stored default value.');
+        expect(name()).toBe('new');
+        expect(root()).toEqual({ node: kind === 'field' ? 'new' : { name: 'new' } });
+        expect(root.pristine()).toBe(true);
+        expect(root.untouched()).toBe(true);
+        expect(root.valid()).toBe(true);
+        fixture.detectChanges();
+        expect(cva.events).toEqual([]);
+        name.set('later');
+        control.reset();
+        expect(name()).toBe('later');
+        expect(warn).toHaveBeenCalledOnce();
+      }
+      warn.mockClear();
+      control.reset(undefined, { onlySelf: false, overwriteDefaultValue: false });
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      fixture.destroy();
+      warn.mockRestore();
     }
-    control.reset('supported', { onlySelf: false, overwriteDefaultValue: false });
-    expect(node()).toBe('supported');
-    fixture.destroy();
   });
 
   it.each(['field', 'nested form'] as const)('keeps async ownership on a %s while cancelling only obsolete work', async (kind) => {
