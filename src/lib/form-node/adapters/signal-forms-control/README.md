@@ -2,7 +2,9 @@
 
 This folder connects `[formNode]` to components compatible with Angular's **FormValueControl**
 (`value = model(...)`) and **FormCheckboxControl** (`checked = model(...)`) contracts. Detection
-uses runtime inputs/outputs and model operations; an explicit implements declaration is not required.
+requires a declared signal input and matching change output pointing to the same model property,
+plus public callable/set/subscribe operations. Aliases are resolved through metadata; internal
+signals are not selected. An explicit implements declaration is not required.
 See Angular's [custom controls guide](https://angular.dev/guide/forms/signals/custom-controls).
 
 `model-transport.ts` connects models through public operations. Model value, node reference,

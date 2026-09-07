@@ -46,17 +46,17 @@ export type ControlState<TValue = unknown> = {
   readonly hidden: Signal<boolean>;
   /** Whether the bound control is invalid. */
   readonly invalid: Signal<boolean>;
-  /** Effective maximum numeric or date constraint. */
+  /** Effective maximum numeric or date constraint. Angular control bindings read the host MaxValidator input. */
   readonly max: Signal<number | Date | undefined>;
-  /** Effective maximum-length constraint. */
+  /** Effective maximum-length constraint, including the host Angular MaxLengthValidator input. */
   readonly maxLength: Signal<number | undefined>;
-  /** Effective minimum numeric or date constraint. */
+  /** Effective minimum numeric or date constraint. Angular control bindings read the host MinValidator input. */
   readonly min: Signal<number | Date | undefined>;
-  /** Effective minimum-length constraint. */
+  /** Effective minimum-length constraint, including the host Angular MinLengthValidator input. */
   readonly minLength: Signal<number | undefined>;
   /** Generated name associated with the binding, or `undefined` when disconnected. */
   readonly name: Signal<string | undefined>;
-  /** Effective regular-expression patterns. */
+  /** Effective regular-expression patterns. Angular PatternValidator strings are anchored; RegExp objects retain their flags and identity. */
   readonly pattern: Signal<readonly RegExp[]>;
   /** Whether validation is currently pending. */
   readonly pending: Signal<boolean>;
@@ -64,9 +64,9 @@ export type ControlState<TValue = unknown> = {
   readonly readonly: Signal<boolean>;
   /**
    * Whether the bound control requires a non-empty value. For Reactive Forms and ngModel,
-   * recognizes directly registered Angular Validators.required and an active Angular required
+   * recognizes directly registered Angular Validators.required / Validators.requiredTrue and an active required
    * directive on the same host. Reads rule presence even when the current value is valid or
-   * disabled. Other constraints and arbitrary composed validators are not inferred.
+   * disabled. Arbitrary composed validators are not inspected or executed.
    */
   readonly required: Signal<boolean>;
   /** Whether the user has interacted with and left the bound control. */
@@ -86,8 +86,9 @@ export type ControlState<TValue = unknown> = {
  *
  * This is a state integration utility; retain the value contract required by the chosen forms API,
  * such as a value model or ControlValueAccessor. Metadata unavailable from a source uses neutral
- * defaults. Reactive Forms and ngModel expose required through Angular Validators.required or an
- * active Angular required directive; other constraint metadata retains neutral defaults.
+ * defaults. Reactive Forms and ngModel recognize Angular Validators.required / requiredTrue and
+ * standard validator directives on the host. Numeric, length, and pattern metadata comes from
+ * those directives; parameters hidden inside validator functions are not inferred.
  *
  * This hook must be called while constructing a custom Angular component and from an Angular
  * injection context. It reads the forms binding attached to that component's host element. Do not

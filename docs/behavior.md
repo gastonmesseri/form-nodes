@@ -2689,7 +2689,7 @@ that should be rewritten to `_value`.
 
 `useFormNodeState<TValue>()` returns a read-only `ControlState<TValue>` facade from a custom-control component's injection context. Each source adapter lives in its own file and owns the complete translation from its source into the common signal model, including source-specific defaults and normalization. The main facade only selects the first connected adapter and forwards its signals; it contains no source-specific state mapping. Its explicit precedence is `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, then `ngModel`. The `[formNode]` adapter rendezvous through the shared host element without injecting `_FormNode` during component construction. The `[formField]` adapter resolves Angular's public same-host `FORM_FIELD` token after rendering and forwards its `FieldState` signals. The `[formControl]`, `formControlName`, and `ngModel` adapters resolve their concrete same-host `NgControl` after rendering, avoiding CVA construction cycles, observe the public `AbstractControl.events` stream, and reconcile directive/control identity and silent state changes after each browser render. Replacing a bound `FormControl` unsubscribes the previous control. Silent `{ emitEvent: false }` mutations become visible on the next render rather than synchronously. Every adapter cleans up through `DestroyRef`.
 
-The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'`. Every state member is a signal. Angular Signal Forms supplies the complete state surface, while `AbstractControl` sources supply value, disabled, dirty, touched, invalid, pending, normalized errors, and directive names where applicable. State unavailable from `AbstractControl`—such as readonly, hidden, disabled reasons, and constraint metadata—keeps the same neutral defaults used while disconnected. Reactive Forms `ValidationErrors` record entries become individual `{ kind, ...details }` objects; `true` becomes `{ kind }`, while primitive payloads use `{ kind, value }`. Errors never expose Angular's `fieldTree` or `formField` references. Disabled reasons are normalized to source-neutral `{ message? }` objects instead of exposing Form Nodes `sourceNode` or Angular `fieldTree` references. Unnamed active reasons are preserved as `{}`; only `[]` means that no reason is known.
+The implemented sources are `'formNode'`, `'formField'`, `'formControl'`, `'formControlName'`, and `'ngModel'`. Every state member is a signal. Angular Signal Forms supplies the complete state surface, while `AbstractControl` sources supply value, disabled, dirty, touched, invalid, pending, normalized errors, and directive names where applicable. State unavailable from `AbstractControl`—such as readonly, hidden, and disabled reasons—keeps the same neutral defaults used while disconnected. Reactive Forms `ValidationErrors` record entries become individual `{ kind, ...details }` objects; `true` becomes `{ kind }`, while primitive payloads use `{ kind, value }`. Errors never expose Angular's `fieldTree` or `formField` references. Disabled reasons are normalized to source-neutral `{ message? }` objects instead of exposing Form Nodes `sourceNode` or Angular `fieldTree` references. Unnamed active reasons are preserved as `{}`; only `[]` means that no reason is known.
 
 Render-discovered adapters remain safely disconnected during server rendering and connect during the first browser render, including hydration. Their neutral signals make this transition safe. `[formNode]` uses its synchronous host registry and can already be connected during server rendering.
 
@@ -3096,13 +3096,12 @@ binding option introduces subtree inheritance.
 
 ### Required state from Angular AbstractControl bindings
 
-`useFormNodeState().required()` recognizes directly registered `Validators.required` and enabled
+`useFormNodeState().required()` recognizes directly registered `Validators.required` / `Validators.requiredTrue` and enabled
 Angular `RequiredValidator` instances supplied through same-host `NG_VALIDATORS`, including the
 checkbox subclass. Directive inputs use Angular's public `booleanAttribute()` normalization, so
 an empty attribute is true and false or the string 'false' is false. These sources are combined
 with OR; a valid value or disabled control does not erase the rule. No validator functions are
-executed to discover metadata, and arbitrary error payloads, composed wrappers, or direct
-`Validators.requiredTrue` registrations do not imply this flag.
+executed to discover metadata, and arbitrary error payloads or composed wrappers do not imply this flag.
 
 Control events update the state; required presence participates in the post-render snapshot so
 silent changes and directive toggles still invalidate it even when value, errors, and status are
@@ -3117,3 +3116,32 @@ and `packages/forms/signals/test/web/reactive_fvc.spec.ts` and `template_fvc.spe
 The direct-reference check matches Angular's required metadata bridge. This hook additionally
 recognizes the standard required directive through its public instance and input rather than
 probing Angular's private validator arrays or executing validation.
+
+
+### Declared model and validator metadata
+
+Model discovery now resolves the public value/valueChange or checked/checkedChange pair through
+`reflectComponentType()`. The input must be signal-based and both sides must refer to the same
+class property exposing callable/set/subscribe operations. Aliases use that property rather than
+assuming the public input name is the member name. Undeclared internal signals and separate
+input/output properties cannot become direct model transports; separate pairs retain their
+experimental opt-in. Field and form connections retain value, interaction, and rebind semantics.
+
+Angular AbstractControl adapters now collect standard MinValidator, MaxValidator,
+MinLengthValidator, MaxLengthValidator, and PatternValidator inputs from same-host NG_VALIDATORS.
+Public inputs join the post-render snapshot so constraints change even without different errors
+or status. Numeric bounds parse floating strings; length bounds parse integer strings while
+numeric inputs retain their values. Null, undefined, and NaN have neutral metadata. Zero is valid.
+String patterns get missing anchors, empty patterns are omitted, and RegExp objects are preserved.
+Multiple lower bounds use the maximum, upper bounds use the minimum, and patterns accumulate.
+Disabling a control retains its declared metadata. No validator is executed for introspection,
+and parameters inside factory/composed validators remain unavailable. Angular's standard min/max
+directives apply only to number-input hosts; custom tags do not acquire them from attributes alone.
+
+Reference remains Angular v22.1.5, commit 468b65b74566537456c192ac4281795c5a1e1a5e, re-resolved
+from release tags. Additional inspected sources: packages/core/src/render3/instructions/control.ts,
+packages/forms/src/directives/validators.ts, and packages/forms/src/validators.ts.
+Recognizing direct requiredTrue as required metadata deliberately extends Angular's required-only
+bridge; the hook describes checkbox obligations as well as empty-value requirements. Node-level
+required and validation behavior is unchanged. Strongest-bound reduction is this facade's policy
+when multiple standard validator instances contribute to its single numeric signals.

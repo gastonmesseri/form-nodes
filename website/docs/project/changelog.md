@@ -24,6 +24,8 @@ canonical release record.
 
 ### Added
 
+- `useFormNodeState()` recognizes direct Angular `Validators.requiredTrue` and exposes numeric, length, and pattern constraints declared through standard Angular validator directives, including dynamic changes while valid.
+
 - Each `provideFormNodesConfig()` option accepts `null` to reset only that option: no automatic classes, input synchronization disabled, or an empty provider message catalog with normal fallback. Omitted options and `undefined` still inherit.
 
 - `provideFormNodesConfig({ validatorMessages })` accepts a message catalog object directly as well as an injectable factory. Both forms retain reactive message callbacks and the same message precedence.
@@ -31,6 +33,8 @@ canonical release record.
 - `validators({ resolve: true })` and `hasValidator(validator, { resolve: true })` inspect final validator references reached through synchronous compositions, share validation evaluation, and react to composition dependencies. Default queries retain direct-registration semantics; async validators are listed without starting their work.
 
 ### Fixed
+
+- Custom-control model binding resolves public aliases and requires input/output metadata for the same model property, preventing internal signals from being selected as value models.
 
 - `useFormNodeState().required()` now detects Angular `Validators.required` and active required directives with `[formControl]`, `[formControlName]`, and `[(ngModel)]`, including dynamic and silent updates even when the value is valid.
 

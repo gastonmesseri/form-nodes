@@ -171,3 +171,35 @@ export class AotPairedControlHost {
     this.active.set(field.strict(true, { bindInputOutputPairs: true }));
   }
 }
+
+@Component({
+  selector: 'aot-aliased-model-control',
+  template: '',
+})
+export class AotAliasedModelControl {
+  value = signal('internal');
+
+  actualValue = model<unknown>(null, { alias: 'value' });
+}
+
+@Component({
+  selector: 'aot-aliased-checkbox-control',
+  template: '',
+})
+export class AotAliasedCheckboxControl {
+  checked = signal(false);
+
+  selection = model(false, { alias: 'checked' });
+}
+
+@Component({
+  selector: 'aot-aliased-model-host',
+  imports: [FormNode, AotAliasedModelControl, AotAliasedCheckboxControl],
+  template: `
+    <aot-aliased-model-control [formNode]="profile" />
+    <aot-aliased-checkbox-control [formNode]="profile.accepted" />
+  `,
+})
+export class AotAliasedModelHost {
+  profile = form({ name: field('Ada'), accepted: field(false) });
+}

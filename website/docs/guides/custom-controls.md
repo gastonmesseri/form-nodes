@@ -43,7 +43,10 @@ to its native input, renders validation messages, and reports blur. The parent e
 
 <CodeBlock language="ts" title="Text input and profile editor">{formNodeStateSource}</CodeBlock>
 
-`[formNode]` discovers the value model automatically. Updating `value` from the component
+`[formNode]` discovers the value model automatically. Detection requires a declared signal input
+and matching change output that refer to the same model property. Public aliases are supported,
+such as `actualValue = model('', { alias: 'value' })`. An internal `value = signal('')` is not a
+value model and is left untouched. Updating `value` from the component
 sends the user's input to the field; updating the field updates the component. No custom
 provider, base class, or Form Nodes interface is required.
 

@@ -16,12 +16,8 @@ const hasControlBinding = (candidate: ComponentCandidate, name: 'value' | 'check
   const input = mirror.inputs.find(({ templateName }) => templateName === name);
   const output = mirror.outputs.find(({ templateName }) => templateName === `${name}Change`);
   if (!input || !output) return false;
-  const inputValue = candidate[input.propName];
-  const isModel = typeof inputValue === 'function'
-    && typeof (inputValue as { set?: unknown }).set === 'function'
-    && typeof (inputValue as { subscribe?: unknown }).subscribe === 'function';
   const emitter = candidate[output.propName] as { subscribe?: unknown } | undefined;
-  return isModel || typeof emitter?.subscribe === 'function';
+  return typeof emitter?.subscribe === 'function';
 };
 
 /** Discovers an Angular Signal Forms compatible component hosted on an element. */

@@ -116,6 +116,21 @@ describe.each(['formControl', 'formControlName', 'ngModel'] as const)('useFormNo
     expect(component.showAsterisk()).toBe(false);
   });
 
+  it('recognizes requiredTrue as required metadata independently of validation success', async () => {
+    const { component, control } = await bind(source);
+    control.setValue(true);
+    control.addValidators(Validators.requiredTrue);
+    control.updateValueAndValidity();
+    expect(component.showAsterisk()).toBe(true);
+    expect(component.state.errors()).toEqual([]);
+    control.setValue(false);
+    expect(component.showAsterisk()).toBe(true);
+    expect(component.state.invalid()).toBe(true);
+    control.removeValidators(Validators.requiredTrue);
+    control.updateValueAndValidity();
+    expect(component.showAsterisk()).toBe(false);
+  });
+
   it('does not execute custom validators or infer required from an error payload', async () => {
     const { render, component, control } = await bind(source);
     const validate = vi.fn(() => ({ required: true }));

@@ -8,7 +8,7 @@ import { FormField, disabled, hidden, readonly as readonlyRule, required, min, m
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { injectFormFieldControlStateAdapter } from './form-field';
-import { registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
+import { registerSignalInputForJit, registerSignalOutputForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({ selector: 'form-field-adapter-control', template: '', standalone: true })
 class FormFieldAdapterControl {
@@ -97,7 +97,8 @@ class DisabledReasonHost {
   });
 }
 
-registerSignalModelForJit(FormFieldAdapterControl, 'value');
+registerSignalInputForJit(FormFieldAdapterControl, 'value', 'value');
+registerSignalOutputForJit(FormFieldAdapterControl, 'valueChange');
 
 const createControlState = async <THost>(host: Type<THost>) => {
   const fixture = TestBed.createComponent(host);

@@ -3,6 +3,7 @@ title: useFormNodeState()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import constraintSource from '!!raw-loader!../../examples/form-node-state-constraints.typecheck.ts';
 import formNodeStateComponentSource from '!!raw-loader!../../examples/form-node-state-component.typecheck.ts';
 import formNodeSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
 import formFieldSource from '!!raw-loader!../../examples/form-node-state-form-field.typecheck.ts';
@@ -28,7 +29,8 @@ use Form Nodes primitives.
 
 Keep the value contract required by each forms API, such as a model or `ControlValueAccessor`.
 State metadata depends on the source: Reactive Forms and `ngModel` expose common control state,
-including required-rule detection. Other constraint metadata uses neutral defaults in this hook.
+including required-rule detection and constraints declared through standard Angular validator
+directives. Constraints hidden inside validator functions cannot be inferred.
 
 :::
 
@@ -399,7 +401,7 @@ Reports whether the effective validation rules require a non-empty value.
 
 - `[formNode]` reads the node's required metadata; `[formField]` reads Angular Signal Forms state.
 - `[formControl]`, `[formControlName]`, and `[(ngModel)]` recognize a directly registered
-  `Validators.required` or an active Angular `required` / `[required]` validator directive on the
+  `Validators.required` / `Validators.requiredTrue` or an active Angular `required` / `[required]` validator directive on the
   same host. An empty `required` attribute enables it; `[required]="false"` disables the directive.
 
 The flag stays true when the value satisfies the rule and while the control is disabled. Removing
@@ -407,9 +409,8 @@ one required source leaves it true if another remains active. Call `updateValueA
 changing Angular validators as usual. Normal control events update the hook; silent changes
 (`emitEvent: false`) and directive input changes are reconciled after the next render.
 
-The hook does not run validators to discover rules or infer required from error payloads. Wrapped
-or composed validators, and directly registered `Validators.requiredTrue`, are not recognized as
-`Validators.required`. Angular's checkbox required directive is recognized through its public
+The hook does not run validators to discover rules or infer required from error payloads. Wrapped or composed validators are not inspected. Direct `Validators.requiredTrue` registration
+also counts as required, so an acceptance checkbox can display the same indicator. Angular's checkbox required directive is recognized through its public
 `RequiredValidator` contract. A disconnected hook returns false.
 
 ```html
@@ -431,6 +432,35 @@ Reports whether the user interacted with and left the control.
 ```
 
 ### Constraint properties
+
+**Reactive Forms and `ngModel` expose constraints from standard Angular validator directives on
+the same host**, even when the current value is valid. No experimental configuration is needed.
+
+| State signal | Angular directive input |
+| --- | --- |
+| `min()` / `max()` | `min` / `max` on `input[type=number]` hosts |
+| `minLength()` / `maxLength()` | `minlength` / `maxlength` |
+| `pattern()` | `pattern` |
+
+Angular's numeric directive selectors require an actual number-input host; adding `min` or `max`
+to an arbitrary custom-component tag does not install those directives. Length and pattern
+selectors support custom-control hosts directly. Import `ReactiveFormsModule` or `FormsModule`
+in the template that declares the binding and validators.
+
+Directive input changes are reconciled after rendering. Absent or invalid numeric bounds return
+`undefined`; zero remains a valid bound. Numeric strings use Angular's parsing rules. An empty
+pattern produces `[]`; string patterns receive missing `^` / `$` anchors, while `RegExp` objects
+retain their identity and flags. If multiple directives contribute, lower bounds use the largest
+value, upper bounds the smallest, and all patterns are retained. Disabled controls retain declared
+constraints; disconnected controls return neutral values.
+
+Functions such as `Validators.min(3)` and `Validators.minLength(2)` do not expose their parameters
+publicly. The hook does not execute validators or inspect private fields to discover them.
+
+This reusable control reads required and length metadata from its caller's Reactive Forms binding.
+Comments identify the suggested files; imports are shared by this combined example.
+
+<CodeBlock language="ts" title="Custom control and Reactive Forms editor">{constraintSource}</CodeBlock>
 
 #### min {#form-node-state-min}
 

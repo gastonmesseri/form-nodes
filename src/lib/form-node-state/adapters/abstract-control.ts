@@ -3,6 +3,7 @@ import { DestroyRef, Injector, afterEveryRender, booleanAttribute, computed, inj
 
 import type { ControlStateSource } from '../form-node-state';
 import type { ControlStateAdapter } from '../form-node-state-adapter';
+import { readValidatorConstraint, resolveValidatorConstraints } from './validator-constraints';
 
 type AbstractControlSource = Extract<ControlStateSource, 'formControl' | 'formControlName' | 'ngModel'>;
 
@@ -22,15 +23,15 @@ export const injectAbstractControlStateAdapter = <TValue>(
   const control = signal<AbstractControl | null>(null);
   const name = signal<string | undefined>(undefined);
   const revision = signal(0);
-  let requiredDirectives: readonly RequiredValidator[] = [];
+  let validators: readonly unknown[] = [];
   const isRequired = (current: AbstractControl): boolean => {
-    return current.hasValidator(Validators.required)
-      || requiredDirectives.some(directive => booleanAttribute(directive.required));
+    return current.hasValidator(Validators.required) || current.hasValidator(Validators.requiredTrue)
+      || validators.some(directive => directive instanceof RequiredValidator && booleanAttribute(directive.required));
   };
   let snapshot: readonly unknown[] = [];
   let subscription: { unsubscribe(): void } | undefined;
   const capture = (current: AbstractControl): readonly unknown[] => {
-    return [current.value, current.disabled, current.dirty, current.errors, current.invalid, current.pending, current.touched, isRequired(current)];
+    return [current.value, current.disabled, current.dirty, current.errors, current.invalid, current.pending, current.touched, isRequired(current), ...validators.flatMap(validator => [validator, readValidatorConstraint(validator)?.value])];
   };
   const currentControl = () => {
     revision();
@@ -41,15 +42,12 @@ export const injectAbstractControlStateAdapter = <TValue>(
     const directive = injector.get(NgControl, null, { optional: true, self: true });
     const acceptedDirective = directive && accepts(directive) ? directive : null;
     const nextControl = acceptedDirective?.control ?? null;
-    requiredDirectives = nextControl
-      ? (injector.get(NG_VALIDATORS, null, { optional: true, self: true }) ?? [])
-        .filter((validator): validator is RequiredValidator => validator instanceof RequiredValidator)
-      : [];
+    validators = nextControl ? injector.get(NG_VALIDATORS, null, { optional: true, self: true }) ?? [] : [];
     name.set(acceptedDirective ? resolveName(acceptedDirective) : undefined);
     if (nextControl === control()) {
       if (!nextControl) return;
       const nextSnapshot = capture(nextControl);
-      if (nextSnapshot.some((value, index) => !Object.is(value, snapshot[index]))) {
+      if (nextSnapshot.length !== snapshot.length || nextSnapshot.some((value, index) => !Object.is(value, snapshot[index]))) {
         snapshot = nextSnapshot;
         revision.update(value => value + 1);
       }
@@ -70,6 +68,12 @@ export const injectAbstractControlStateAdapter = <TValue>(
     control.set(null);
   });
 
+  const constraints = computed(() => {
+    revision();
+    control();
+    return resolveValidatorConstraints(validators);
+  });
+
   return {
     source,
     connected: computed(() => control() !== null),
@@ -84,12 +88,12 @@ export const injectAbstractControlStateAdapter = <TValue>(
     }),
     hidden: computed(() => false),
     invalid: computed(() => currentControl().invalid),
-    max: computed(() => undefined),
-    maxLength: computed(() => undefined),
-    min: computed(() => undefined),
-    minLength: computed(() => undefined),
+    max: computed(() => constraints().max),
+    maxLength: computed(() => constraints().maxLength),
+    min: computed(() => constraints().min),
+    minLength: computed(() => constraints().minLength),
     name: computed(() => name()),
-    pattern: computed(() => []),
+    pattern: computed(() => constraints().pattern),
     pending: computed(() => currentControl().pending),
     readonly: computed(() => false),
     required: computed(() => isRequired(currentControl())),
