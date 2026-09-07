@@ -47,6 +47,10 @@ to its native input, renders validation messages, and reports blur. The parent e
 sends the user's input to the field; updating the field updates the component. No custom
 provider, base class, or Form Nodes interface is required.
 
+**`useFormNodeState()` supports `[formNode]`, `[formField]`, `[formControl]`, `[formControlName]`,
+and `[(ngModel)]`: implement state UI once for every supported binding.** Keep the value contract
+required by the caller's forms API. See [source-specific state support](../reference/form-node-state.md).
+
 `useFormNodeState()` reads state; it does not apply attributes to the DOM or populate the
 component's own `disabled = input()` properties. An existing control that reads those properties
 must adopt the hook in its implementation, receive explicit bindings, or opt into experimental

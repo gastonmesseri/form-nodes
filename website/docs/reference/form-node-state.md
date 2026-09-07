@@ -13,8 +13,24 @@ import ngModelSource from '!!raw-loader!../../examples/form-node-state-ng-model.
 # useFormNodeState()
 
 `useFormNodeState()` gives a custom-control component one stable, signal-based view of the
-form binding attached to its host. The component can consume the same interface whether its caller
-uses `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`.
+form binding attached to its host.
+
+:::tip One state implementation for every supported binding
+
+**Supports `[formNode]`, `[formField]`, `[formControl]`, `[formControlName]`, and `[(ngModel)]`.**
+
+**Implement your custom control's state UI once, regardless of which supported binding the caller uses.**
+The hook automatically selects the binding on the component host. Read the same `disabled()`,
+`touched()`, `dirty()`, `pending()`, and `errors()` signals, and call the same `markAsTouched()` method.
+This makes it a reusable way to implement state in custom controls shared across Form Nodes,
+Angular Signal Forms, Reactive Forms, and template-driven forms. Angular forms do not need to
+use Form Nodes primitives.
+
+Keep the value contract required by each forms API, such as a model or `ControlValueAccessor`.
+State metadata depends on the source: Reactive Forms and `ngModel` expose common control state,
+but required and constraint metadata use neutral defaults in this hook.
+
+:::
 
 :::info Optional convenience utility
 

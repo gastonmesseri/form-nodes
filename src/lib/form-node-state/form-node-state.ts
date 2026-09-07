@@ -73,6 +73,16 @@ export type ControlState<TValue = unknown> = {
 /**
  * Returns a source-neutral, read-only view of the form state bound to a custom Angular component.
  *
+ * **Works with `[formNode]`, `[formField]`, `[formControl]`, `[formControlName]`, and `[(ngModel)]`.**
+ * **Implement your custom control's state UI once, regardless of which supported binding its caller uses.**
+ * The hook automatically selects the host binding and exposes the same signal-based interface for
+ * disabled, touched, dirty, pending, errors, and other state. `markAsTouched()` also targets that binding.
+ * No manual adapter selection is needed, and Angular forms do not need to use Form Nodes primitives.
+ *
+ * This is a state integration utility; retain the value contract required by the chosen forms API,
+ * such as a value model or ControlValueAccessor. Metadata unavailable from a source uses neutral
+ * defaults; Reactive Forms and ngModel do not expose required or constraint metadata through this hook.
+ *
  * This hook must be called while constructing a custom Angular component and from an Angular
  * injection context. It reads the forms binding attached to that component's host element. Do not
  * call it from ordinary application functions, services, directives, or outside dependency

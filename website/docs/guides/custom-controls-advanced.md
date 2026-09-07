@@ -152,7 +152,9 @@ it in the component injection context and read its signals directly:
 
 <CodeBlock language="ts">{formNodeStateSource}</CodeBlock>
 
-The facade recognizes `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, and `ngModel`.
+**The same state implementation works with `[formNode]`, `[formField]`, `[formControl]`,
+`[formControlName]`, and `[(ngModel)]`.** This makes the hook suitable for reusable custom controls
+whose callers use different Angular forms APIs; no manual state adapter selection is needed.
 `connected()` reports whether a supported binding is present, and `source()` identifies the active
 adapter without changing the component's API.
 
