@@ -10,7 +10,6 @@ import type { ObjectNodeDefinitions } from './form.type';
 import { assertArrayObjectTemplate } from './array.utils';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { computedFunction } from '../utils/computed-function';
-import { registerAngularField } from '../interop/angular-field';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
@@ -54,8 +53,6 @@ export class ArrayNode<TItem extends Node> {
   equal: (previous: ArrayValue<TItem>, next: ArrayValue<TItem>) => boolean = Object.is;
 
   usedDefinitions = new WeakSet<object>();
-
-  preparedSchemaItem: TItem | undefined;
 
   usesTrackBy: boolean;
 
@@ -269,7 +266,6 @@ export class ArrayNode<TItem extends Node> {
     untracked(() => this.reparentItems());
     markAsNode(this.node);
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
-    registerAngularField(this.node);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {
       this.refreshInjector();
@@ -465,19 +461,7 @@ export class ArrayNode<TItem extends Node> {
     });
   }
 
-  getSchemaSample(): TItem {
-    // Reserve the schema sample for the next createItem() call so it becomes a real array item.
-    this.preparedSchemaItem ??= this.instantiateItem();
-    return this.preparedSchemaItem;
-  }
-
   createItem(): TItem {
-    const item = this.preparedSchemaItem ?? this.instantiateItem();
-    this.preparedSchemaItem = undefined;
-    return item;
-  }
-
-  instantiateItem(): TItem {
     const itemFactory = this.itemFactory;
     const definition = itemFactory();
     this.trackDefinition(definition, true);
@@ -659,7 +643,6 @@ export class ArrayNode<TItem extends Node> {
       _controlValue: publicApi.controlValue,
       _setControlValue: (value: ArraySet<TItem> | null | undefined) => this.controlValueBuffer.set(this.normalizeArrayValue(value)),
       _flushControlValueOnBlur: publicApi.flush,
-      _getSchemaSample: () => this.getSchemaSample(),
       _clone: this.createClone(),
       _setParent: (parent: Node | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => this.refreshInjector(),

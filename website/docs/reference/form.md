@@ -441,7 +441,6 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
 | [`api`](#api) | Complete form API unless a declared child named `api` takes precedence. |
 | [`$api`](#api-1) | Guaranteed collision-safe form API. |
-| [`$field`](#field-adapter) | Opaque terminal adapter for Angular's `[formField]` directive. |
 | **Dynamic children** | |
 | [`add(key, definition)`](#add) | Attaches and returns one runtime child with its exact inferred node type. |
 | [`add(definitions)`](#add) | Atomically attaches and returns several runtime children. |
@@ -494,7 +493,7 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`submit()`](#submit) | Runs the configured submission workflow and returns its outcome. |
 
 Every declared child name takes precedence over ordinary API and native callable member names. The
-reserved names `$api` and `$field` cannot be used as child keys, so those access paths remain stable.
+reserved names `$api` cannot be used as child keys, so those access paths remain stable.
 
 ```ts
 const profile = form({
@@ -736,19 +735,6 @@ profile.api(); // 'public-profile-api'
 profile.reset(); // 'reset label'
 profile.$api.reset();
 ```
-
-#### $field adapter {#field-adapter}
-
-**Signature:** `readonly $field: any`
-
-Returns the opaque terminal adapter used by Angular's `[formField]` directive.
-
-```html
-<input [formField]="profile.username.$field" />
-```
-
-Select the intended Form Nodes node first and use `$field` only as the binding value. Programmatic form
-operations belong to the Form Nodes form API.
 
 ### Validation properties
 
@@ -1126,7 +1112,7 @@ profile.get('preferences') === added.preferences; // true
 profile.children['preferences'] === added.preferences; // true
 ```
 
-Keys must be new, definitions must be detached, and `$api` and `$field` are reserved. The object
+Keys must be new, definitions must be detached, and `$api` is reserved. The object
 form is atomic: validation completes before any supplied child is attached. Keep the returned node
 for its exact type, or retrieve it later with `get()` or `children[key]`. Array values become
 fields; declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application

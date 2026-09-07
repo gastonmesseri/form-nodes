@@ -50,6 +50,9 @@ See the [Angular Material](../integrations/angular-material.md) and
 
 ## Go further
 
+The optional `FormNodeValueControl<T>` and `FormNodeCheckboxControl` types can document a
+component's contract consistently on Angular 21 and 22. Runtime discovery does not require them.
+
 The [advanced custom-controls guide](./custom-controls-advanced.md) covers input/output pairs,
 object and array values, optional state inputs and hooks, wrapper components, Angular
 `[formField]`, and detailed CVA integration, including validation and parsing errors.

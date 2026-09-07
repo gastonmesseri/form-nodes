@@ -76,6 +76,22 @@ example.name(); // 'profile'
 example.apply(); // 'value'
 ```
 
+## Angular compatibility
+
+The package supports Angular `^21.2.22 || ^22.1.5` and builds with Angular 21.2.22 / TypeScript 5.9.3.
+Angular 22 `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`) remains the behavioral authority.
+The reference was re-resolved for this change; `api/control.ts`, `directive/form_field.ts`,
+`directive/control_custom.ts`, `field/state.ts`, and `test/node/field_node.spec.ts` were inspected
+alongside Angular 21 `v21.2.22` (`4c0bc4345a41ab48d8361e0bff18191da9c8c065`).
+
+Form Nodes custom-control contracts now declare their own optional inputs, value/checked models,
+touch output, and focus/reset methods. They use Angular core signal types, without inheriting the
+version-specific Signal Forms UI interface. Runtime discovery and state propagation remain unchanged.
+The former `$field` adapter and its schema samples are removed; `$api` is the sole reserved child key.
+`provideFormNodeConfig()` configures only `[formNode]`, using a token independent of Angular's config.
+`useControlState()` retains all adapters, including external Angular Signal Forms; tests create real
+Angular forms and use their native operations instead of converting Form Nodes trees.
+
 ## Design guarantees
 
 - The library provides small, typed, signal-based `field()`, `group()`, `form()`, and `array()` primitives.
@@ -764,7 +780,7 @@ interaction state, while hiding native function members and omitting primitive-s
 New children immediately receive their parent, key, path, nearest form, structural root, inherited state, debounce,
 and injector. They participate in aggregate value, errors, validation status, pending, touched,
 dirty, focus, reset, and control operations as soon as the structural version changes. Duplicate
-keys and reserved `$api` or `$field` keys throw before any entry in a batch is attached. A node that
+keys and reserved `$api` keys throw before any entry in a batch is attached. A node that
 already has a parent is rejected rather than silently stolen from another tree.
 
 An implicit field returned by `add()` is an ordinary live field. Removing it releases its parent,
@@ -2258,162 +2274,9 @@ submission-owning form.
 
 ## Control binding with `[formNode]`
 
-### Angular Signal Forms `FieldTree` adapter
-
-Every node exposes a lazy `$field` property whose runtime value is the corresponding official
-Angular Signal Forms `FieldTree`. A single Angular tree is created for the complete root and all
-descendant adapters navigate that same tree internally.
-
-This enables Angular's own directive without replacing the library model:
-
-```html
-<input [formField]="myForm.name.$field">
-```
-
-Committed values synchronize bidirectionally. Disabled, readonly, hidden, required, validation,
-touched, and dirty state are mirrored so Angular controls observe the library node as their source
-of form state, while control-originated value and interaction changes update the library node.
-Control-originated values are routed through the bound node's internal control-value channel rather
-than assigned to the complete root. Consequently `controlValue()` reflects the immediate rendered
-value, numeric and blur debounce delay only the committed node value, `flush()` commits pending
-input, and a programmatic `set()` cancels pending control input without being treated as a dirty
-control edit.
-If a bound Angular control and the library node both change before adapter synchronization runs, a
-real control edit takes deterministic precedence, regardless of which of the two synchronous
-operations happened first. When no control-state edit occurred, the node remains authoritative.
-This explicit user-input priority prevents a queued control edit from being overwritten merely by
-effect scheduling; synchronization converges in one control-channel write without feedback loops.
-`$field` is reserved as collision-safe interop syntax and remains a supported, stable adapter. Its
-public type is deliberately erased to `any`. Angular's AOT strict-template checker calls the bound
-field and inspects its writable `value`, so narrower opaque types reject valid `[formField]`
-templates. The erased type avoids publishing a typed Angular `Field` or `FieldTree` contract and
-therefore provides no discoverable adapter API in IntelliSense. Consumers select the Form Nodes node
-first and use `$field` only as the terminal template-binding adapter.
-
-At leaf bindings, control interaction flows back into Form Nodes: input-driven dirty state and
-blur-driven touched state update the library node, while node calls can independently set or clear
-either flag without resetting the other. Availability is
-intentionally directional: disabled, readonly, hidden, and required are derived schema state in
-Angular, so the library node is their source and `[formField]` reflects them into Angular and the
-control. Angular does not expose reverse setters for those states.
-
-Parsing failures produced by Angular native controls, `transformedValue()` custom controls, and
-CVA validation are registered as binding-owned external errors on the corresponding Form Nodes node. A
-failed parse leaves the last committed Form Nodes value unchanged but makes the node and its ancestors
-invalid; the error appears in `errors()`, `allErrors()`, `getError()`, and submission validation.
-Each binding owns its errors independently, so multiple controls can contribute separate parse
-errors without replacing Form Nodes validator errors. A binding contribution is removed when parsing
-recovers, the node resets, or the binding is destroyed or rebound. The exposed Form Nodes error retains
-Angular's error data except its internal `fieldTree` and `formField` references, and identifies the
-originating control through `formNode`.
-
-Form Nodes validator constraints are also published into the Angular field metadata consumed by
-`[formField]`: numeric and date `min`/`max`, `minLength`, `maxLength`, and active patterns. These
-sources remain reactive, including activation and removal. The adapter contributes metadata only;
-it does not install Angular validators, so Form Nodes remains the validator owner and each failed
-constraint produces one error rather than a duplicate from each engine.
-
-Angular then applies the metadata according to its normal control contract. Custom controls with
-matching inputs receive the values directly. Native controls receive `min`, `max`, `minLength`, and
-`maxLength` only where Angular 22.1.4 considers those properties applicable, including its date
-serialization. Angular 22.1.4 exposes pattern metadata to custom controls but does not write it to
-the native `pattern` property; the adapter deliberately retains that Angular behavior. Every
-pattern materialized when the adapter is created receives its own Angular metadata contribution,
-and one slot is reserved when the initial list is empty so a normal reactive pattern can activate
-later. Activating more simultaneous patterns than the initial slot count is recorded as a later
-compatibility enhancement because Angular schemas have a fixed rule structure after creation.
-
-Interaction synchronization applies to the complete current tree, not only bound leaves. A
-touched or dirty descendant makes its Angular and library ancestors touched or dirty through their
-normal aggregation rules. Marking an aggregate as touched propagates to descendants unless
-`skipDescendants` is requested; marking an aggregate dirty affects only that aggregate. Reset
-clears both flags throughout the subtree. Disabled, readonly, and hidden nodes temporarily report
-untouched and pristine on both sides while retaining their underlying flags, which become visible
-again when the node returns to an interactive state.
-
-Dynamic array changes reconcile the adapter after creation. `push()`, `insert()`, `removeAt()`,
-`clear()`, `set()`, `reset()`, `move()`, `moveUp()`, `moveDown()`, `swap()`, and `trackBy`
-reconciliation add, remove, or remap requested Angular paths without replacing the root `$field`.
-The adapter does not eagerly mirror every array descendant: a node is connected when application
-code or a template reads its `$field`. Retained connected Form Nodes items preserve their identity and
-interaction state while their `$field` path follows the new index. Synchronization for a removed
-connected node is destroyed before Angular removes the corresponding field, avoiding reads from an
-Angular orphan field. A newly rendered descendant receives value, interaction, availability,
-validation, constraint, binding, and parse-error synchronization when its `$field` is evaluated.
-Angular tracks object array entries by identity and primitive or nested-array entries by index, as
-in Angular 22.1.4. The adapter still remaps each current Angular path to the authoritative Form Nodes item
-connected node after either kind of update.
-
-Every live Angular `FormFieldBinding` is also registered as a control binding on its original
-library node. Calling `focus()` on a field therefore works identically for `[formNode]` and
-`[formField]`; aggregate focus can discover adapted descendant controls as well. When several
-controls bind the same node, the first connected control in DOM order is focused rather than the
-first one registered. Angular's binding-level `focus()` is invoked, preserving a custom control's
-own focus implementation and `FocusOptions`. Destroyed bindings unregister automatically, and a
-`FormField` rebound to another `$field` moves its focus registration without leaving a stale entry.
-
-Reset is intentionally node-owned. A library `reset()` updates Angular's value and raw control
-value, clears Angular parsing state, and invokes every native, custom-control, or CVA reset hook in
-the affected subtree. It also retains Form Nodes semantics for explicit values, external errors,
-interaction state, and pending debounce. The adapter does not treat Angular's internal field-state
-`reset()` as a second entry point: `$field` is opaque application infrastructure, and consumers
-reset through the Form Nodes node API instead.
-
-The public `$field` type is deliberately erased to `any`. Angular's AOT strict-template checker
-calls the bound field and inspects its `value` state for native and custom-control compatibility,
-so `never`, `Field<never>`, or a callable returning `never` rejects otherwise valid `[formField]`
-templates. The erased type avoids presenting Angular's field-state API as a supported application
-surface. This is an intentional terminal-adapter boundary rather than a type-safe bridge: consumers
-must select a Form Nodes node before `$field` and perform every programmatic operation through that node.
-
-Angular 22.1.4 `FormRoot` handles submission but does not listen for the native `reset` event. A
-native `<form>` containing `$field`-backed controls should use `[formNode]` on the form root when it
-needs Form Nodes reset behavior; the root directive resets the library tree, and the adapter then
-resets all Angular `FormField` controls.
-
-This is the recommended composition even when every rendered control uses `[formField]`:
-`<form [formNode]="myForm">` remains the sole form root, and descendants bind terminal adapters as
-`[formField]="myForm.name.$field"`. The two engines must not install competing root directives on
-the same native form. `[formNode]` applies `novalidate`, prevents native navigation, delegates
-submit and reset to the Form Nodes tree, and therefore includes adapted parse errors in submission
-validity. Invalid-submit UI remains application policy; for example,
-`onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus()` focuses the first
-reported bound error target and safely does nothing when that target has no rendered binding.
-
-Independent interaction clearing uses the runtime `FieldNode.markAsUntouched()` and
-`FieldNode.markAsPristine()` methods present in Angular 22.1.4. Angular omits those methods from its
-public `FieldState` type even though its implementation exposes them, so this access remains
-isolated in the adapter, regression-tested, and listed in the Angular upgrade checklist. Using the
-public `reset()` as a substitute would incorrectly clear both flags and invoke binding reset hooks.
-
-Adapter creation is lazy. Declaring and using nodes outside Angular dependency injection remains
-safe as long as `$field` is not requested. In normal component field initializers, the current
-injector is captured automatically. Code creating nodes outside an injection context must pass an
-explicit `injector` option before using `$field`; otherwise access throws a descriptive error.
-
-The implementation was derived from Angular Signal Forms 22.1.4 at commit
-`898380974d49cf7976e9d89cc74a0801a26ce7b1`, specifically
-`packages/forms/signals/src/api/structure.ts`, `api/types.ts`,
-`field/structure.ts`, `directive/form_field.ts`,
-`packages/forms/signals/test/node/field_node.spec.ts`,
-`packages/forms/signals/test/web/form_field.spec.ts`, and
-`packages/forms/signals/test/web/orphan_repro.spec.ts`. A real Angular `FieldTree` is
-required because `[formField]` resolves Angular's private `FieldNode`; a structurally compatible
-object is insufficient.
-
-Angular's public `FormFieldBinding` does not expose binding-specific parsing errors. The adapter
-therefore reads the runtime `FormField.parseErrors` signal, which Angular marks internal, rather
-than reading the complete field error state and creating a reactive cycle with Form Nodes validators. This
-isolated dependency is covered by native and custom-control tests and recorded in the Angular
-upgrade checklist. The governing Angular 22.1.4 sources are
-`packages/forms/signals/src/directive/form_field.ts`,
-`packages/forms/signals/src/field/validation.ts`, and
-`packages/forms/signals/test/node/parse_errors.spec.ts`.
-
-Constraint interoperability was derived from Angular 22.1.4
-`packages/forms/signals/src/api/rules/metadata.ts`, the numeric, date, length, and pattern rules in
-`packages/forms/signals/src/api/rules/validation/`, and the native/custom binding implementations
-under `packages/forms/signals/src/directive/`.
+Form Nodes binds its own nodes through `[formNode]`. The `$field` adapter has been removed.
+`useControlState()` still observes independently created Angular Signal Forms through `[formField]`;
+it does not create or synchronize a second Angular form tree for Form Nodes nodes.
 
 `FormNode` binds a field node to a native form control, and binds field, group, form, or array nodes
 to an explicitly provided signal custom control or a component that implements Angular's
@@ -2446,8 +2309,7 @@ The directive currently provides these behaviors:
 - Native controls receive a stable generated `name` in the form `${APP_ID}.formN.path.to.field`. Bindings for the same field share the same name, which preserves radio grouping, while fields in different root trees receive different names. Because the path is reactive, names follow array items when their indexes change. An explicitly authored native `name` is replaced by the generated field name, matching Angular Signal Forms.
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - A reused radio input re-evaluates its authored `value` after every Angular render, so changing the option represented by an existing DOM node immediately recalculates its checked state without requiring a model change.
-- `provideFormNodeConfig({ classes })` installs reactive classes on every concrete `[formNode]` binding and every Angular `[formField]` binding backed by a Form Nodes node's `$field`. Predicates receive the public `FormNodeBinding`, including its host `element`, and track only the signals they read. Unrelated Angular `FieldTree` bindings are ignored. The provider installs Angular's Signal Forms class configuration internally; because Angular's configuration token is not multi, it must not be combined with `provideSignalFormsConfig({ classes })` in the same injector. `ANGULAR_FORMS_STATUS_CLASSES` is an optional Angular Forms compatibility preset providing `ng-valid`/`ng-invalid`, `ng-pending`, `ng-pristine`/`ng-dirty`, and `ng-untouched`/`ng-touched`; these classes are not installed unless the preset is configured.
-- An application that uses Angular's `provideSignalFormsConfig({ classes })` instead receives the normal Angular behavior for `$field`-backed controls without an additional bridge: `$field` is a real `FieldTree`, so Angular invokes those predicates with its `FormFieldBinding`. This Angular provider can cover both adapted and native Angular field trees, while `provideFormNodeConfig()` shares Form Nodes `FormNodeBinding` predicates across `[formNode]` and adapted `[formField]`. Only one may configure classes in a given injector because both ultimately provide Angular's same non-multi configuration token.
+- `provideFormNodeConfig({ classes })` configures reactive classes for `[formNode]` bindings only. Its token is independent of Angular Signal Forms configuration; both providers can coexist. `ANGULAR_FORMS_STATUS_CLASSES` remains opt-in.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - A wrapper component may consume an input whose template name is exactly `formNode` and delegate that node to an inner `[formNode]` control. The outer directive becomes pass-through: it performs no synchronization, validation, CSS-class work, hidden-field warning, or focus registration. Only the delegated inner control is a binding. This is automatic and requires no provider. An aliased property is valid as long as its public template input name is `formNode`.
 - Component wrappers are detected automatically from Angular's public component metadata. A directive that consumes or re-exports `formNode`, including a host directive, must add `providers: [provideFormNodePassThrough()]` because Angular exposes no equivalent public runtime reflection API for directive inputs. The provider affects only the injector on that host element.
@@ -2732,8 +2594,7 @@ The package exposes an `_FormNode` symbol solely because Angular's AOT compiler 
 
 ### Automatic CSS classes
 
-`provideFormNodeConfig()` can configure reactive CSS classes for every `[formNode]` binding and
-every `$field`-backed Angular `[formField]` binding below the provider:
+`provideFormNodeConfig()` can configure reactive CSS classes for every `[formNode]` binding below the provider:
 
 ```ts
 bootstrapApplication(App, {

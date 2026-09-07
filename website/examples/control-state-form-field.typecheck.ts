@@ -1,7 +1,7 @@
-import { Component, model } from '@angular/core';
-import { FormField, type FormValueControl } from '@angular/forms/signals';
+import { Component, model, signal } from '@angular/core';
+import { FormField, form, required, type FormValueControl } from '@angular/forms/signals';
 
-import { field, form, useControlState, required, type ControlStateError } from 'form-nodes';
+import { useControlState, type ControlStateError } from 'form-nodes';
 
 // Custom control component
 
@@ -23,8 +23,8 @@ import { field, form, useControlState, required, type ControlStateError } from '
     }
   `,
 })
-export class DatePicker implements FormValueControl<string | null> {
-  value = model<string | null>(null);
+export class DatePicker implements FormValueControl<string> {
+  value = model('');
 
   controlState = useControlState();
 
@@ -38,10 +38,12 @@ export class DatePicker implements FormValueControl<string | null> {
 
 @Component({
   imports: [DatePicker, FormField],
-  template: `<app-date-picker [formField]="profile.birthDate.$field" />`,
+  template: `<app-date-picker [formField]="profile.birthDate" />`,
 })
 export class ProfileEditor {
-  profile = form({
-    birthDate: field<string | null>(null, [required])
+  value = signal({ birthDate: '' });
+
+  profile = form(this.value, (path) => {
+    required(path.birthDate);
   });
 }

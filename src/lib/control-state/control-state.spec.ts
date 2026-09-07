@@ -2,8 +2,8 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { FormField } from '@angular/forms/signals';
-import { Component, forwardRef, model } from '@angular/core';
+import { FormField, form as createAngularForm } from '@angular/forms/signals';
+import { Component, forwardRef, model, signal } from '@angular/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators, type ControlValueAccessor } from '@angular/forms';
@@ -310,12 +310,12 @@ describe('useControlState', () => {
     }
 
     @Component({
-      template: `<signal-forms-control-state [formField]="name.$field" />`,
+      template: `<signal-forms-control-state [formField]="name" />`,
       standalone: true,
       imports: [SignalFormsControlState, FormField],
     })
     class Host {
-      name = field.strict('Marco');
+      name = createAngularForm(signal('Marco'));
     }
 
     const fixture = TestBed.createComponent(Host);

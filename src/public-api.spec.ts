@@ -647,7 +647,6 @@ describe('types', () => {
 
     expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.value).toEqualTypeOf<Signal<any> | undefined>();
     expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.disabled).toEqualTypeOf<Signal<boolean> | undefined>();
-    expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.$field).toEqualTypeOf<any>();
 
     if (false) {
       // @ts-expect-error native callable members remain hidden

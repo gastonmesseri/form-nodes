@@ -4,8 +4,7 @@ title: provideFormNodeConfig()
 
 # provideFormNodeConfig()
 
-Configures reactive CSS classes for descendant `[formNode]` bindings and `$field`-backed Angular
-`[formField]` bindings.
+Configures reactive CSS classes for descendant `[formNode]` bindings.
 
 ## Signature
 
@@ -41,7 +40,7 @@ provider wins; class maps from ancestor providers are not merged automatically.
 No classes are configured by default. [`ANGULAR_FORMS_STATUS_CLASSES`](./angular-forms-status-classes.md) supplies `ng-valid`,
 `ng-invalid`, `ng-pending`, `ng-pristine`, `ng-dirty`, `ng-untouched`, and `ng-touched`.
 
-Do not combine this provider with `provideSignalFormsConfig({ classes })` in the same injector:
-Angular's class configuration token is not multi, so the last provider replaces the first.
+This provider can coexist with Angular's `provideSignalFormsConfig({ classes })`. They use
+independent tokens and configure their respective binding directives.
 
 See [Configuration](./configuration.md#binding-configuration) and [`[formNode]`](./form-node-binding.md#automatic-css-classes).

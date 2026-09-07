@@ -52,10 +52,16 @@
 
   })
 
+- [NEXT] [ ] Lo de connectSignalControlInputs, quiza podria ser perjudicial para mis custom components que implementan inputs llamadas como [disabled] o [readonly]
+  - consider doing this maybe optional in a provider or something? in a global configuration for angular?
+  - que todavia soporte eso si lo de value y checked model()s
+  - Does angular check if the component has implemented FormValueControl, or how does angular know if it should pass the inputs?
 
 - [NEXT] [ ] Check if useNgControl hook in DL works
 
 - [NEXT] Support at least node version v20.19.4 (the one installed in DL)
+
+- [NEXT] Support angular 21, and research versioning of the library to be in line with angular libraries
 
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
@@ -126,7 +132,6 @@
 
 - [ ] Maybe: Consider naming useControlState to useFieldState() getting aligned with most recent angular standards (formField) (or useFormFieldState())
 
-- [ ] Maybe: Consider removing support for myForm.name.$field (maybe right now with useControlState() we don't need to support that)
 
 - [ ] Maybe: In the folder tests/types maybe structure each file with JS Comments like if we do something like it('should do....')
 
@@ -290,7 +295,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [ ] Compare node creation, parent/root ownership, paths and keys, removed/orphan nodes, array identity and reconciliation, and structural model changes.
   - [ ] Compare committed value and control-value flow, programmatic versus control-originated writes, equality rules, reset semantics, and debounce inheritance, blur behavior, cancellation, and flushing.
   - [ ] Compare touched, dirty, hidden, readonly, disabled reasons, required state, interaction propagation, and which ancestors or descendants each operation affects.
-  - [ ] Re-check that Angular's runtime `FieldNode` still implements `markAsUntouched()` and
+  - [x] Retired after adapter removal: re-check that Angular's runtime `FieldNode` still implements `markAsUntouched()` and
     `markAsPristine()`. Angular 22.1.4 omits them from the public `FieldState` interface even though
     the adapter needs their independent behavior to avoid using the broader `reset()` operation.
   - [ ] Compare synchronous and asynchronous validation, laziness and reactive dependencies, pending propagation, cancellation and stale results, error ownership and aggregation, validator metadata, and native constraint metadata.
@@ -298,7 +303,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [ ] Re-audit every intentional difference recorded in `docs/behavior.md`; update, remove, or add differences and regression tests as Angular changes.
 - `[formNode]` and control interoperability
   - [ ] Compare Angular `FormField`, form-root binding, binding selection, pass-through wrappers, the control-creation hook, directive exports, and supported host elements.
-  - [ ] Re-check the runtime `FormField.parseErrors` signal used by the opaque `$field` adapter.
+  - [x] Retired after adapter removal: re-check the runtime `FormField.parseErrors` signal used by the opaque `$field` adapter.
     Angular 22.1.4 marks it internal and omits it from `FormFieldBinding`, while no public binding API
     exposes parsing errors without also reading the complete validation state.
   - [ ] Verify native `input`, `select`, `textarea`, checkbox, radio, multi-select, number, range, date, month, time, week, and datetime-local value parsing and serialization.
@@ -324,22 +329,12 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Later
 
-- [ ] Implement Angular 21 support if prioritized after the [compatibility audit](docs/angular-21-compatibility.md): adapt Signal Forms exports/types and rule calls, resolve `$field` metadata/touch/reset differences, build with the oldest supported Angular toolchain, and verify both majors before widening peers. Feasibility was assessed; support has not been implemented.
 
 - Optionally extend `ControlState` with interaction-reporting methods beyond `markAsTouched()` only
   when every supported binding source exposes a public operation with equivalent semantics. Keep
   value changes and form-owned operations such as reset, disable, and enable outside this facade.
 - Reconsider whether `array()` should expose `patch()`; its positional semantics may be confusing and the same updates can be expressed explicitly through item nodes or other array operations.
-- Reconsider mirroring Form Nodes asynchronous-validation `pending` into Angular field state only if
-  Angular provides a supported external-state mechanism. Form Nodes must remain the validator owner and
-  validators must never execute twice merely to reproduce Angular's lifecycle.
-- Reconsider exposing Form Nodes submission state to Angular controls only if a concrete control use case
-  appears. Submission remains owned by `[formNode]`; the `$field` adapter must not reproduce or
-  combine with Angular `FormRoot` by default.
-- Revisit `$field` pattern-slot growth if a field can activate more simultaneous pattern
-  contributions after adapter creation than were materialized initially. Angular schemas register
-  a fixed number of metadata rules; the adapter currently mirrors every initially materialized
-  pattern and reserves one slot for the common initially inactive reactive-pattern case.
+
 
 
 ## Ideas
@@ -384,12 +379,13 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Resolve the proposal to remove `myForm.name.$field`: remove the adapter while retaining `useControlState()` support for external Angular forms.
+- [x] Implement Angular 21 support after the [compatibility audit](docs/angular-21-compatibility.md), using the oldest supported build toolchain and requiring both verified Angular majors.
+- [x] Retire adapter follow-ups for mirroring asynchronous pending state, exposing submission state, and growing pattern metadata slots. Removing `$field` eliminates those bridge-specific concerns; Form Nodes retains ownership of validation and submission.
+- [x] Remove `$field` and the Angular tree bridge while preserving `[formNode]` and all `useControlState()` sources. Build with Angular 21.2.22 / TypeScript 5.9.3, require both 21.2.22 and 22.1.5 consumers, and publish Form Nodes-owned custom-control contracts. Angular 22 behavioral reference remains `v22.1.5` (`468b65b`); Angular 21 source is `v21.2.22` (`4c0bc43`).
 - [x] Prepare isolated Angular 21.2.22 / TypeScript 5.9.3 and Angular 22.1.5 / TypeScript 6.0.3 package consumers with pinned lockfiles, strict template/declaration checks, and three runtime smoke tests. CI builds one shared tarball; Angular 22 is required and Angular 21 reports experimental failures. Preserve `$field` and the current supported peer range. See `tests/compatibility/README.md` for commands and promotion requirements.
-
 - [x] Check Angular 21 and TypeScript compatibility. Angular 21.2.22 / TypeScript 5.9.3 passes 1,152 runtime tests but fails 53 tests and the package build because of Signal Forms API differences. TypeScript 5.9.3 passes the existing public inference tests against current Angular declarations; specification checks additionally need `DOM.Iterable`. Keep Angular 22 support unchanged. See [the audit](docs/angular-21-compatibility.md) for pinned source references, commands, results, and remaining work.
-
 - [x] Simplify the custom-controls guide to basic component integration and move detailed contracts to `custom-controls-advanced`, with sidebar navigation and updated links.
-
 - [x] Restrict all library console warnings to Angular development mode through the internal `warnInDevMode()` helper. Unknown keys/indexes, unsupported reset options, failed input synchronization, and hidden-node diagnostics remain nonfatal and silent in production. Cover the helper without DI and real operations in the production Chromium process.
 - [x] Complete the remaining `NgControl` compatibility contract for `[formNode]`, one step at a time.
   - Start in `src/lib/form-node/form-node-ng-control.ts`; integration tests live in `form-node-ng-control.spec.ts` and `form-node.directive.browser.spec.ts`.

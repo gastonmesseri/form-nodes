@@ -60,93 +60,6 @@ Select values are reapplied when options change, including asynchronously render
 
 Invalid native numeric or date input produces a `parse` error while retaining the last valid model value and the user's raw text. A later valid input, programmatic update, reset, rebind, or binding destruction clears the binding-owned parse error.
 
-Form Nodes validation is also visible through Angular's field state. The adapter preserves the complete
-error payload—including `message`, constraint data, and custom properties—and maps an explicit Form Nodes
-`targetNode` to the corresponding Angular field path. Angular-originated parse errors are not fed
-back into that same Angular state a second time.
-
-## Dynamic arrays with formField
-
-The same `$field` adapter follows dynamic `array()` operations without eagerly adapting the complete
-collection. When Angular renders an item and evaluates its `$field`, that node receives its field
-path, validators, constraints, availability, touched and dirty synchronization, and control
-binding. Removing a connected item disposes its synchronization; moving, swapping, or reconciling
-a retained `trackBy` item keeps the Form Nodes node and its state while updating its Angular path.
-
-```ts
-myForm = form({
-  people: array({
-    id: field(0),
-    displayName: field('', [minLength(2)]),
-  }),
-});
-
-myForm.people.push({ id: 1, displayName: 'Ada' });
-myForm.people.push({ id: 2, displayName: 'Grace' });
-myForm.people.move(0, 1);
-```
-
-```html
-@for (person of myForm.people; track person) {
-  <input [formField]="person.displayName.$field">
-}
-```
-
-Form Nodes remains the source of collection identity and operations. Use `array()` methods rather than
-trying to mutate the opaque Angular `$field`.
-
-## Native form root with formField controls
-
-Use Form Nodes' `[formNode]` binding on the native `<form>`, even when individual controls use Angular's
-`[formField]`. This keeps submission and reset owned by the same Form Nodes form tree:
-
-```ts
-import { Component } from '@angular/core';
-import { FormField } from '@angular/forms/signals';
-
-import { FormNode, field, form, required } from 'form-nodes';
-
-@Component({
-  imports: [FormNode, FormField],
-  template: `
-    <form [formNode]="myForm">
-      <input [formField]="myForm.displayName.$field" />
-      <button type="submit">Save</button>
-      <button type="reset">Reset</button>
-    </form>
-  `,
-})
-export class ProfileEditor {
-  myForm = form({
-    displayName: field('', [required]),
-  }, {
-    submission: {
-      action: (_form, value) => saveProfile(value),
-      onInvalid: invalidForm => invalidForm.allErrors()[0]?.targetNode.$api.focus(),
-    },
-  });
-}
-```
-
-`[formNode]` applies `novalidate`, prevents native navigation, delegates submit to
-`myForm.submit()`, and delegates native reset to `myForm.reset()`. Errors produced through an
-adapted `[formField]` control participate in the same validity and submission checks. The optional
-`onInvalid` callback above focuses the first reported error target; `$api` is appropriate here
-because generic error targets do not expose a statically known concrete node type. `focus()` is a
-no-op when that node has no rendered binding.
-
-The Angular `FormField` import is required for the controls only. Controls inside the form may mix
-`[formNode]` and `[formField]` when an integration needs both styles.
-
-:::warning Keep one form-root owner
-
-When Form Nodes owns submission and reset, bind the native `<form>` with `[formNode]` only. Mixing two
-root directives on the same element creates competing lifecycle and submission ownership.
-
-:::
-
-Date-like controls can change native validity without emitting an input event. Browser bindings monitor those transitions; the mechanism is CSP nonce-aware and is not installed during server rendering.
-
 ## Querying the binding
 
 Export the directive and query it with Angular's signal-based `viewChild()`:
@@ -202,19 +115,10 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-The configuration applies to `[formNode]` and `$field`-backed Angular `[formField]` bindings below
-that injector. Register it in a route, component, or NgModule `providers` array for a narrower
-scope. The nearest provider wins, and each predicate tracks only the signals it reads. Ordinary
-Angular field trees are ignored.
-
-This provider configures Angular's Signal Forms classes internally for adapted controls. Do not
-combine it with `provideSignalFormsConfig({ classes })` in the same injector because Angular uses a
-single, non-multi configuration token and the last provider would replace the other.
-
-An existing `provideSignalFormsConfig({ classes })` also applies naturally to `$field`-backed
-`[formField]` controls. Keep it when predicates are written against Angular's `FormFieldBinding` and
-should also cover native Angular field trees. Use `provideFormNodeConfig()` when predicates are
-written against `FormNodeBinding` and should be shared with `[formNode]`.
+The configuration applies to `[formNode]` bindings below that injector. Register it in a route,
+component, or NgModule for a narrower scope. The nearest provider wins, and each predicate tracks
+only the signals it reads. Angular's `provideSignalFormsConfig()` independently configures
+Angular `[formField]` controls; both providers can coexist.
 
 Use the optional preset when application styles or a UI library expect Angular Forms status
 classes. `[formNode]` does not require the preset:

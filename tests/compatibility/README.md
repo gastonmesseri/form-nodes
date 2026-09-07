@@ -7,7 +7,7 @@ Angular packages or resolve Form Nodes through source paths.
 | Consumer | Angular | TypeScript | Policy |
 | --- | --- | --- | --- |
 | `angular-22` | 22.1.5 | 6.0.3 | Required |
-| `angular-21` | 21.2.22 | 5.9.3 | Experimental; expected to fail while the current Signal Forms integration remains incompatible |
+| `angular-21` | 21.2.22 | 5.9.3 | Required |
 
 Use Node.js 22.22.3 for the same environment as CI. The versions above are selected test points,
 not proof of compatibility with every earlier minor or patch in either major.
@@ -45,33 +45,20 @@ Use the actual filename printed by `npm pack` if the package version changes. A 
 6. Removes the temporary directory. Compiler/runtime failures produce a nonzero exit; both are
    attempted so logs expose separate declaration and runtime blockers.
 
-Angular 22 installs with strict peer checks. The Angular 21 diagnostic intentionally uses
-`--legacy-peer-deps` only inside its temporary directory, because the current package declares
-Angular 22 peers. This makes underlying compiler/runtime failures observable instead of stopping
-at npm's peer conflict. It is not a supported application installation method. This probe can never
-prove peer compatibility until that bypass is removed.
+Both consumers install with strict peer checks. A failure in either consumer fails the CI workflow.
+The library is built once using Angular 21.2.22 and TypeScript 5.9.3; that identical tarball is then
+checked with both Angular versions. Node.js 22.22.3 is the development baseline (`.nvmrc`).
 
-## CI and promotion to supported status
+## CI and release verification
 
-`.github/workflows/angular-compatibility.yml` builds one package with the current Angular 22
-repository toolchain, uploads its tarball, and passes the identical artifact to both jobs.
-Angular 22 failures fail the workflow. The Angular 21 check uses `continue-on-error`; its actual
-outcome is written to the workflow summary, including failures. It is not an expected-failure
-assertion and will report success if the probe begins passing.
+`.github/workflows/angular-compatibility.yml` uploads the shared archive and checks both consumers.
+This supplements the full type, runtime coverage, browser, production AOT, SSR/hydration, and
+executable-documentation checks. The Node runtime smoke tests load Angular's JIT compiler for
+partially compiled package code; strict Angular template checking runs separately with `ngc` and
+`noEmit`. They do not replace production linking or browser tests.
 
-This workflow is compatibility infrastructure, not the full release test suite. It does not run
-browser interaction, production linking, hydration, the complete behavioral suite, or inference
-performance tests. The Node runtime loads Angular's JIT compiler for partially compiled package
-code; strict Angular template checking runs separately with `ngc` and `noEmit`.
-
-Before promoting Angular 21:
-
-- Resolve the blockers in `docs/angular-21-compatibility.md`. `$field` is retained by this change.
-- Build the distributed artifact with the oldest supported Angular compiler and TypeScript 5.9.
-- Verify the claimed minimum Angular versions, supported Node versions, and both majors' complete
-  release checks, including real applications consuming the linked package in production.
-- Update peer ranges, use strict peer installation in both consumers, and remove the experimental
-  workflow policy together. Keep lockfiles aligned with the selected version matrix.
+The former `$field` adapter has been removed. Bind Form Nodes through `[formNode]`.
+`useControlState()` continues to observe independently created Angular Signal Forms controls.
 
 To refresh a consumer lockfile after deliberately updating its pinned dependencies:
 
