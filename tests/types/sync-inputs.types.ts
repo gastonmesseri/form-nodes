@@ -18,3 +18,12 @@ provideFormNodesConfig({ syncInputs: ['value'] });
 configureGlobalFormNodes({ syncInputs: { mode: 'always', inputs: ['checked'] } });
 // @ts-expect-error An explicit selection requires a named mode.
 field('', { syncInputs: { mode: true, inputs } });
+
+const signalControls = 'only-signal-controls' satisfies SyncInputs;
+field('', { syncInputs: signalControls });
+form({}, { syncInputs: signalControls });
+group({}, { syncInputs: signalControls });
+array(field(''), { syncInputs: signalControls });
+createFormPrimitives({ syncInputs: signalControls });
+provideFormNodesConfig({ syncInputs: signalControls });
+configureGlobalFormNodes({ syncInputs: signalControls });

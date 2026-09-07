@@ -5,6 +5,7 @@ title: provideFormNodesConfig()
 # provideFormNodesConfig()
 
 import CodeBlock from '@theme/CodeBlock';
+import signalControlConfigSource from '!!raw-loader!../../examples/signal-control-sync-config.typecheck.ts';
 import appConfigSource from '!!raw-loader!../../examples/validator-messages-app-config.typecheck.ts';
 import applicationConfigSource from '!!raw-loader!../../examples/shared-module-application-config.typecheck.ts';
 import sharedConfigSource from '!!raw-loader!../../examples/shared-module-shared-config.typecheck.ts';
@@ -16,7 +17,7 @@ Configures validator messages, custom-control input synchronization, and reactiv
 ```ts
 provideFormNodesConfig(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages) | null | undefined;
-  syncInputs?: boolean | 'only-declared' | 'always' | readonly SyncInputName[]
+  syncInputs?: boolean | 'only-declared' | 'always' | 'only-signal-controls' | readonly SyncInputName[]
     | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined; // Experimental; default: false
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
 }): Provider[];
@@ -33,6 +34,7 @@ writes that depend on Angular internals. It applies to the input contract used b
 | `false` or `null` | Do not synchronize optional inputs. |
 | `true` or `'only-declared'` | Synchronize initial `disabled`, `readonly`, and `hidden` declarations only; validator constraints are excluded. |
 | `'always'` | Synchronize every matching supported input, including derived state. |
+| `'only-signal-controls'` | Synchronize every supported input, including constraints, only for a selected Signal Forms model control. No optional CVA writes or paired input/output transport. |
 | `['disabled', 'dirty']` | Always synchronize exactly these inputs, regardless of initial declarations. |
 | `{ mode: 'always', inputs: [...] }` | Same behavior as the array shorthand. |
 | `{ mode: 'only-declared', inputs: [...] }` | Synchronize only listed inputs that were also initially declared. |
@@ -47,6 +49,22 @@ Selections are exact: `['disabled']` does not also select `disabledReasons`. Exp
 inherited selections; they do not merge. Unselected inputs retain their current component values.
 Treat configuration objects and arrays as fixed declarations; to change a selection, configure a
 new binding or rebind to a node with different options.
+
+### Restrict synchronization to Signal Forms controls
+
+<CodeBlock language="ts" title="app.config.ts">{signalControlConfigSource}</CodeBlock>
+
+`'only-signal-controls'` behaves like `'always'` for a selected `signal-forms-control` adapter with
+`value = model()` or `checked = model()`, including validator constraints. Detection uses the
+runtime model structure; an explicit `implements FormValueControl` or `FormCheckboxControl`
+declaration is not required. This mode remains experimental because input writes use Angular internals.
+
+A CVA keeps its standard value, touch, and disabled connection without optional input writes,
+even if that component also exposes a model: CVA selection takes precedence. Native controls keep
+their normal behavior. Separate `value`/`valueChange` or `checked`/`checkedChange` pairs stay
+inactive in this mode. Node options still override providers and global configuration on rebinding.
+
+### Declaration-based selection
 
 `disabledReasons` follows an initial `disabled` declaration. A declaration with a false value still
 counts. Validators never select inputs in this mode, even when registered initially. To synchronize
@@ -72,9 +90,9 @@ for a complete component example.
 ### Experimental input/output value pairs
 
 Enabled `syncInputs` also connects separate `value`/`valueChange` and `checked`/`checkedChange`
-pairs. Every enabled mode, list, or mode/inputs object opts into this value transport. Lists filter
+pairs. Every enabled mode except `'only-signal-controls'`, list, or mode/inputs object opts into this value transport. Lists filter
 only optional state inputs, so `[]` connects the value pair without optional state writes.
-`false` and `null` pause pair writes and ignore its change/touch outputs. Rebinding to an enabled
+`false`, `null`, and `'only-signal-controls'` pause pair writes and ignore its change/touch outputs. Rebinding to an enabled
 node resynchronizes its current control value. This transport uses Angular's internal input writer;
 actual models and CVAs remain available without it. See [the complete example](../guides/custom-controls.md#separate-input-output-pairs).
 

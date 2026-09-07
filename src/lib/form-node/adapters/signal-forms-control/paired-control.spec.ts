@@ -54,7 +54,7 @@ const bind = (initial: Node) => {
   return { fixture, control: fixture.debugElement.children[0]!.componentInstance as PairedControl };
 };
 
-const modes: (SyncInputs | null | undefined)[] = [undefined, false, null, true, 'only-declared', 'always', [], ['disabled'], { mode: 'always', inputs: [] }, { mode: 'only-declared', inputs: ['disabled'] }];
+const modes: (SyncInputs | null | undefined)[] = [undefined, false, null, 'only-signal-controls', true, 'only-declared', 'always', [], ['disabled'], { mode: 'always', inputs: [] }, { mode: 'only-declared', inputs: ['disabled'] }];
 
 describe.each(['field', 'form'] as const)('%s experimental paired control', (kind) => {
   it.each(modes.map(syncInputs => ({ syncInputs })))('gates value, validation and interaction with $syncInputs', ({ syncInputs }) => {
@@ -62,7 +62,7 @@ describe.each(['field', 'form'] as const)('%s experimental paired control', (kin
       ? field('initial', [required], { syncInputs })
       : form({ name: field('initial', [required]) }, { syncInputs });
     const initial = node();
-    const enabled = syncInputs !== undefined && syncInputs !== false && syncInputs !== null;
+    const enabled = syncInputs !== undefined && syncInputs !== false && syncInputs !== null && syncInputs !== 'only-signal-controls';
     const { fixture, control } = bind(node);
     expect(control.data()).toEqual(enabled ? initial : 'owned');
     expect(node.$api.dirty()).toBe(false);
@@ -82,9 +82,9 @@ describe.each(['field', 'form'] as const)('%s experimental paired control', (kin
     expect(node.$api.valid()).toBe(!enabled);
   });
 
-  it('pauses on an opted-out replacement and resynchronizes when returning to the enabled node', () => {
+  it.each([false, 'only-signal-controls'] as const)('pauses on a replacement with %s and resynchronizes when returning to the enabled node', (syncInputs) => {
     const enabled = kind === 'field' ? field('initial', { syncInputs: [] }) : form({ name: field('initial') }, { syncInputs: [] });
-    const disabled = kind === 'field' ? field('off', { syncInputs: false }) : form({ name: field('off') }, { syncInputs: false });
+    const disabled = kind === 'field' ? field('off', { syncInputs }) : form({ name: field('off') }, { syncInputs });
     const { fixture, control } = bind(enabled);
     expect(control.disabled()).toBe(true);
     fixture.componentInstance.node.set(disabled);

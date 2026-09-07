@@ -12,7 +12,7 @@ canonical release record.
 
 ### Changed
 
-- **Breaking behavior change:** separate `value`/`valueChange` and `checked`/`checkedChange` controls require enabled experimental `syncInputs`. Modes, lists, and mode/inputs objects enable their value transport; empty lists select no optional state inputs. False/null pause paired writes and ignore change/touch outputs; rebinding to an enabled node resynchronizes its control value. Actual models and CVAs remain connected without this opt-in.
+- **Breaking behavior change:** separate `value`/`valueChange` and `checked`/`checkedChange` controls require enabled experimental `syncInputs`. Modes other than `'only-signal-controls'`, lists, and mode/inputs objects enable their value transport; empty lists select no optional state inputs. False/null pause paired writes and ignore change/touch outputs; rebinding to an enabled node resynchronizes its control value. Actual models and CVAs remain connected without this opt-in.
 
 - **Breaking behavior/API change:** optional custom-control input synchronization is experimental and off by default. `syncInputs` replaces `syncControlInputs` and is available on every primitive, factory defaults, providers, and global configuration. True means `'only-declared'`, which selects explicit disabled/readonly/hidden options (and disabledReasons with disabled), excluding all validator-derived constraints. Use `'always'` or explicit input lists to synchronize constraints; validation itself is unchanged. Null disables it. Node options affect only their own binding; native controls, value/checked models, and interaction hooks keep working.
 
@@ -23,6 +23,8 @@ canonical release record.
 - **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.
 
 ### Added
+
+- Experimental `syncInputs: 'only-signal-controls'` synchronizes all supported state and constraint inputs only for a selected `value`/`checked` model control. CVAs retain standard interoperability without additional input writes, including components that also expose a model. Separate input/output pairs remain inactive. Available on nodes, factory defaults, providers, and global configuration.
 
 - Experimental `syncInputs` accepts typed input lists (always synchronize exactly those inputs) or `{ mode, inputs }` selections on nodes, factory defaults, providers, and global configuration. Only-declared mode intersects the list with initial declarations; empty lists disable optional writes. Exported `SyncInputs` and `SyncInputName` types support reusable configuration.
 

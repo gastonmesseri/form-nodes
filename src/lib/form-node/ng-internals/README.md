@@ -43,7 +43,7 @@ bindings; the application or component then owns the inputs listed above.
 Actual `value = model()` and `checked = model()` controls use public model APIs, and CVAs use
 their standard contract. Separate `value`/`valueChange` and `checked`/`checkedChange` pairs require
 enabled experimental `syncInputs` because their value writes use this internal input writer.
-Every enabled mode, list, or mode/inputs object enables paired value transport. Empty lists enable
+Every enabled mode except `'only-signal-controls'`, list, or mode/inputs object enables paired value transport. Empty lists enable
 only value transport, without optional state writes. False/null pause pair writes and ignore its
 change/touch outputs; rebinding to an enabled node resynchronizes its control value.
 
@@ -70,3 +70,7 @@ Explicit input lists such as `syncInputs: ['disabled', 'dirty']` use always mode
 those public inputs. The `{ mode, inputs }` form can instead filter initial declarations with
 `mode: 'only-declared'`. Empty lists perform no optional input writes. These selections remain
 experimental and do not affect public model transport.
+
+`syncInputs: 'only-signal-controls'` enables these experimental writes only for a selected
+`value`/`checked` model control, including constraints. It excludes CVAs (even those exposing a
+model) and paired input/output controls. Native control behavior is unaffected.

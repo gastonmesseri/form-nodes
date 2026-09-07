@@ -2,7 +2,7 @@ import type { Node } from '../types/node.type';
 import type { MetadataContributions } from '../metadata/metadata';
 
 /** @experimental Optional custom-control input synchronization, independent of value models. */
-export type SyncInputs = boolean | 'only-declared' | 'always' | readonly SyncInputName[] | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] };
+export type SyncInputs = boolean | 'only-declared' | 'always' | 'only-signal-controls' | readonly SyncInputName[] | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] };
 
 /** @experimental Supported custom-control state and constraint inputs; excludes value and checked models. */
 export type SyncInputName = 'disabled' | 'disabledReasons' | 'dirty' | 'errors' | 'hidden' | 'invalid' | 'max' | 'maxLength' | 'min' | 'minLength' | 'name' | 'pattern' | 'pending' | 'readonly' | 'required' | 'touched';

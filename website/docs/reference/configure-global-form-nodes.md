@@ -19,7 +19,7 @@ input synchronization. Angular providers override each option independently. The
 configureGlobalFormNodes(config: {
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined) | null | undefined;
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
-  syncInputs?: boolean | 'only-declared' | 'always' | readonly SyncInputName[]
+  syncInputs?: boolean | 'only-declared' | 'always' | 'only-signal-controls' | readonly SyncInputName[]
     | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined; // Experimental
 }): () => void;
 ```
@@ -66,10 +66,11 @@ empty provider catalog; normal message fallback still includes the global catalo
 force built-in English text.
 
 Input synchronization is **experimental and disabled by default**. `true` means `'only-declared'`;
-use `'always'` for every supported state input. Pass `['disabled', 'dirty']` to always synchronize
+use `'always'` for every supported state input, or `'only-signal-controls'` to do so only for
+selected value/checked model controls, excluding CVAs and paired input/output controls. Pass `['disabled', 'dirty']` to always synchronize
 only those inputs, or `{ mode: 'only-declared', inputs: ['disabled'] }` to restrict the initial declarations. See [Modes and node overrides](./provide-form-nodes-config.md#custom-control-inputs).
 Value/checked models remain connected in every mode. Separate input/output value pairs require
-enabled experimental `syncInputs`; even `[]` enables their value transport while selecting no
+enabled experimental `syncInputs` other than `'only-signal-controls'`; even `[]` enables their value transport while selecting no
 optional state inputs. See [paired controls](../guides/custom-controls.md#separate-input-output-pairs).
 
 ## Reactive messages and binding snapshots

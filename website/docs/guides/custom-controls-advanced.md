@@ -94,7 +94,7 @@ export class Rating {
 
 Model value binding uses public `set()` and `subscribe()` APIs. Separate `value`/`valueChange`
 or `checked`/`checkedChange` input/output properties require enabled experimental `syncInputs`.
-Any enabled mode or selection enables the pair; lists filter only optional state inputs.
+Any enabled mode except `'only-signal-controls'`, or an explicit selection, enables the pair; lists filter only optional state inputs.
 `syncInputs: []` therefore enables value transport alone. False or null pauses pair writes and
 ignores change/touch outputs through this transport. See the [complete paired-control example](./custom-controls.md#separate-input-output-pairs).
 
@@ -130,7 +130,7 @@ A value emitted by the control marks the directly bound aggregate node dirty and
 reconciles the complete value through its children. The descendants are not individually marked
 dirty solely because the aggregate control changed them.
 
-Optional standard state inputs—such as `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `min`, `max`, `name`, `pending`, `readonly`, `required`, and `touched`—receive node state only with experimental `syncInputs: 'always'` or when selected by `'only-declared'`. Optional `touch`, `focus()`, and `reset()` hooks integrate with interaction and reset behavior.
+Optional standard state inputs—such as `errors`, `disabled`, `dirty`, `hidden`, `invalid`, `min`, `max`, `name`, `pending`, `readonly`, `required`, and `touched`—receive node state only with experimental `syncInputs: 'always'` or when selected by another experimental mode. `'only-signal-controls'` synchronizes every supported input on a model control while excluding CVAs and paired input/output controls. Optional `touch`, `focus()`, and `reset()` hooks integrate with interaction and reset behavior.
 
 The complete recognized state surface is `errors`, `disabled`, `disabledReasons`, `dirty`,
 `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`,

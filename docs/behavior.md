@@ -3031,11 +3031,20 @@ binding, touch, reset, validation, and injector ownership retain their existing 
 ## Experimental custom-control input synchronization
 
 `syncInputs` replaces `syncControlInputs` and is marked `@experimental` on all option declarations.
-It accepts boolean, 'only-declared', 'always', null, or undefined on field/form/group/array options,
+It accepts boolean, 'only-declared', 'always', 'only-signal-controls', null, or undefined on field/form/group/array options,
 createFormPrimitives defaults, Angular providers, and global configuration. It defaults to false;
 null opts out, undefined inherits, true aliases only-declared, and always writes all supported inputs.
 Resolution is the bound node's captured option, then the nearest explicit provider, then the global
 setting captured by the connection, then false. A parent node's option does not configure descendants.
+
+Only-signal-controls selects all supported inputs (including reactive validator constraints) only
+when the selected custom-control adapter finds an actual value or checked model. It uses the
+runtime callable/set/subscribe contract, not a TypeScript interface declaration. CVAs take precedence
+and receive no optional writes in this mode, even if they expose models. Native controls retain
+normal DOM synchronization. Separate input/output pairs remain inactive, including change/touch
+outputs; rebinding to another enabled mode restores their current value. Node/provider/global
+precedence remains unchanged. This adapter restriction is an intentional extension of Angular
+v22.1.5's custom/CVA binding behavior; Angular does not expose this selective configuration mode.
 
 Only-declared selects initial disabled (including disabledReasons), readonly, and hidden options
 whose values are not undefined. False declarations count. Validators never select inputs in this
@@ -3050,7 +3059,7 @@ Dirty, touched, invalid, pending, errors, and generated name require always mode
 are available for directly bound aggregate nodes as well as fields. Native-control writes and CVA
 setDisabledState stay enabled. Value/checked models, node models, touch/focus/reset hooks, validation,
 and state propagation are independent of optional input synchronization. Value/checked transport requires actual models and uses public `set()` and `subscribe()` APIs.
-Separate input/output pairs connect only when syncInputs is enabled; false/null pause their value transport.
+Separate input/output pairs connect only when syncInputs is enabled and is not only-signal-controls; false/null and only-signal-controls pause their value transport.
 
 Optional input writes are disabled without evaluating their node-state readers. A rebound control
 uses the replacement node's mode and declarations; unselected inputs retain their last component
@@ -3098,7 +3107,7 @@ Separate value/valueChange and checked/checkedChange input/output properties use
 component input writer only while the effective syncInputs setting is enabled. Discovery uses
 public component metadata and recognizes signal and decorator pairs and public aliases. Actual
 models take precedence over pairs; CVA selection still takes precedence over signal controls.
-All enabled modes, arrays, and mode/inputs objects enable paired value transport, including empty
+All enabled modes except only-signal-controls, arrays, and mode/inputs objects enable paired value transport, including empty
 lists: lists select optional state inputs only. False/null pause input writes and ignore paired
 change/touch outputs. The component retains its previous input value. Rebinding to an enabled node
 writes its current control value again, even when equal to the value last written before pausing.

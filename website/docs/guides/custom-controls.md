@@ -80,6 +80,11 @@ values keep updating reactively. Explicit `disabled: false` still selects disabl
 it also selects `disabledReasons`. Validators never select inputs in this mode. Use `'always'`
 or an explicit list such as `['required', 'minLength']` to synchronize validator constraints.
 
+Use `syncInputs: 'only-signal-controls'` to synchronize all supported inputs, including validator
+constraints, only on controls connected through a `value` or `checked` model. CVAs receive only
+their standard connection, and separate input/output pairs remain inactive. See the
+[complete provider example](../reference/provide-form-nodes-config.md#restrict-synchronization-to-signal-forms-controls).
+
 Use `syncInputs: 'always'` to synchronize all supported inputs, including `dirty`, `touched`,
 `invalid`, `pending`, `errors`, and generated `name`. These are derived states, so `'only-declared'`
 does not select them. A selected input receives node state even when its value is false or empty;
@@ -119,7 +124,7 @@ the effective `syncInputs` setting is enabled**. This supports both `input()`/`o
 classic `@Input()`/`@Output()` properties, including public aliases. Unlike `model()`, writing a
 separate value input requires Angular internals, so this integration is experimental.
 
-Any enabled mode, input list, or mode/inputs object enables paired value transport. Lists select
+Any enabled mode except `'only-signal-controls'`, input list, or mode/inputs object enables paired value transport. Lists select
 only optional state inputs: `syncInputs: []` connects the value pair without copying any optional
 state inputs. The equivalent explicit form is `{ mode: 'always', inputs: [] }`.
 
@@ -129,7 +134,7 @@ For state input writes as well, use `true`/`'only-declared'`, `'always'`, or a s
 `['disabled']`. The same option works in factory defaults, providers, and global configuration,
 with node options taking precedence.
 
-With `false` or `null` (including the default), the component keeps its current input value;
+With `false`, `null` (including the default), or `'only-signal-controls'`, the component keeps its current input value;
 its change/touch outputs do not update the node through this transport. If the binding switches
 to an enabled node, its current control value is written again. Programmatic values, debounced
 input, validation, and dirty/touched transitions follow the usual node behavior while connected.

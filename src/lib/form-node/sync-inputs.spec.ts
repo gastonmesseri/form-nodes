@@ -206,6 +206,32 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
     expect(control.name()).toBe('owned');
   });
 
+  it('inherits signal-control-only synchronization and honors node overrides on rebinding', () => {
+    cleanups.push(configureGlobalFormNodes({ syncInputs: 'only-signal-controls' }));
+    const initial = createRoot(kind);
+    const parent = form({ nested: form({ child: initial }) });
+    const { fixture, control } = bind(initial);
+    expect(control.required()).toBe(true);
+    expect(control.disabled()).toBe(false);
+    expect(control.dirty()).toBe(false);
+    initial.$api.markAsDirty();
+    fixture.detectChanges();
+    expect(control.dirty()).toBe(true);
+    expect(parent.dirty()).toBe(true);
+    const optedOut = createRoot(kind, { syncInputs: false, disabled: true });
+    fixture.componentInstance.node.set(optedOut);
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(false);
+    const replacement = createRoot(kind, { syncInputs: 'only-signal-controls', disabled: true });
+    fixture.componentInstance.node.set(replacement);
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(true);
+    replacement.$api.enable();
+    fixture.detectChanges();
+    expect(control.disabled()).toBe(false);
+    expect(control.value()).toEqual(replacement());
+  });
+
   it('lets node options override providers and updates selection when the bound node changes', () => {
     TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] });
     const original = createRoot(kind, { syncInputs: false });
@@ -230,7 +256,7 @@ describe.each(['field', 'form', 'group', 'array'])('%s experimental input synchr
 });
 
 describe('declared constraints and synchronization scopes', () => {
-  it.each(([true, 'always', ['required', 'minLength', 'maxLength', 'pattern']] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('tracks constraints only when their inputs are selected: %j', ({ syncInputs }) => {
+  it.each(([true, 'always', 'only-signal-controls', ['required', 'minLength', 'maxLength', 'pattern']] satisfies SyncInputs[]).map(syncInputs => ({ syncInputs })))('tracks constraints only when their inputs are selected: %j', ({ syncInputs }) => {
     const enabled = signal(false);
     const minimum = signal(2);
     const custom = vi.fn(() => null);

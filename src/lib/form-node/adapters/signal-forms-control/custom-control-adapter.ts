@@ -26,7 +26,7 @@ export const connectCustomControlAdapter = <TNode extends Node>(
     if (!experimental) return true;
     const ownMode = getNodeInputConfig(node()).mode;
     const mode = ownMode === undefined ? inheritedMode : ownMode;
-    return mode !== false && mode !== null;
+    return mode !== false && mode !== null && mode !== 'only-signal-controls';
   };
   let lastWrittenNode: TNode | undefined;
   const nodeInput = control.node as WritableSignal<TNode | null> | undefined;
@@ -34,7 +34,7 @@ export const connectCustomControlAdapter = <TNode extends Node>(
   const noErrors = signal<readonly []>([]);
   let writingControlValue = false;
 
-  const { inputNames } = connectControlInputs(control, node, injector, usesControlState);
+  const { inputNames } = connectControlInputs(control, node, injector, usesControlState, !experimental);
 
   const valueSubscription = model.subscribe((value) => {
     if (enabled() && !writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);

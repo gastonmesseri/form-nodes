@@ -49,6 +49,7 @@ export const connectControlInputs = <TNode extends Node>(
   node: () => TNode,
   injector: Injector,
   usesControlState = false,
+  signalModelControl = false,
 ): SignalControlInputConnection => {
   const appId = injector.get(APP_ID);
   const inheritedMode = injector.get(FORM_NODE_SYNC_INPUTS, null) ?? getGlobalSyncInputs();
@@ -74,7 +75,10 @@ export const connectControlInputs = <TNode extends Node>(
   effect(() => {
     const currentNode = node();
     const config = getNodeInputConfig(currentNode);
-    const mode = config.mode === undefined ? inheritedMode : config.mode;
+    const configuredMode = config.mode === undefined ? inheritedMode : config.mode;
+    const mode = configuredMode === 'only-signal-controls'
+      ? (signalModelControl ? 'always' : false)
+      : configuredMode;
     if (mode === false || mode === null) return;
     const selection = typeof mode === 'object'
       ? ('inputs' in mode ? mode : { mode: 'always' as const, inputs: mode })

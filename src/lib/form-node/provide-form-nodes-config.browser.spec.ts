@@ -46,19 +46,28 @@ class CheckboxControl {
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CvaControl), multi: true }],
 })
 class CvaControl implements ControlValueAccessor {
+  value = model<unknown>('owned');
+
+  rendered: unknown;
+
+  change: (value: unknown) => void = () => {};
+
+  touch: () => void = () => {};
+
   readonly = input(true);
 
   disabled = false;
 
-  writeValue(_value: unknown) {}
+  writeValue(value: unknown) { this.rendered = value; }
 
-  registerOnChange(_callback: (value: unknown) => void) {}
+  registerOnChange(callback: (value: unknown) => void) { this.change = callback; }
 
-  registerOnTouched(_callback: () => void) {}
+  registerOnTouched(callback: () => void) { this.touch = callback; }
 
   setDisabledState(value: boolean) { this.disabled = value; }
 }
 
+registerSignalModelForJit(CvaControl, 'value');
 registerSignalModelForJit(ValueControl, 'value');
 registerSignalInputForJit(ValueControl, 'disabled', 'disabled');
 registerSignalInputForJit(ValueControl, 'required', 'required');
@@ -301,7 +310,7 @@ describe('custom-control input configuration', () => {
       expect(control.required()).toBe(false);
     });
 
-    it.each([false, true, 'only-declared', 'always'] as const)('keeps value and touch binding with mode %s', (syncInputs) => {
+    it.each([false, true, 'only-declared', 'always', 'only-signal-controls'] as const)('keeps value and touch binding with mode %s', (syncInputs) => {
       @Component({
         template: '<config-value-control [formNode]="node" />',
         imports: [FormNode, ValueControl],
@@ -316,8 +325,8 @@ describe('custom-control input configuration', () => {
       const node = fixture.componentInstance.node;
       const control = fixture.debugElement.children[0]!.componentInstance as ValueControl;
       expect(control.disabled()).toBe(syncInputs === false);
-      expect(control.required()).toBe(syncInputs === 'always');
-      expect(control.readOnly()).toBe(syncInputs !== 'always');
+      expect(control.required()).toBe(syncInputs === 'always' || syncInputs === 'only-signal-controls');
+      expect(control.readOnly()).toBe(syncInputs !== 'always' && syncInputs !== 'only-signal-controls');
       control.value.set(kind === 'field' ? 'Marco' : { name: 'Marco' });
       control.touch.emit();
       fixture.detectChanges();
@@ -330,6 +339,65 @@ describe('custom-control input configuration', () => {
       fixture.detectChanges();
       expect(control.disabled()).toBe(syncInputs === false);
     });
+  });
+
+  it.each(['field', 'form'] as const)('restricts signal-only provider writes while keeping native and hybrid CVA %s bindings', (kind) => {
+    @Component({
+      template: `
+        <config-value-control [formNode]="node" />
+        <config-cva-control [formNode]="node" />
+        <config-checkbox-control [formNode]="active" />
+        <input [formNode]="native">
+      `,
+      imports: [FormNode, ValueControl, CvaControl, CheckboxControl],
+      providers: [provideFormNodesConfig({ syncInputs: 'only-signal-controls' })],
+    })
+    class Host {
+      profile = form({ nested: form({ name: field('Mark', [required]) }, [required]) });
+      node = kind === 'field' ? this.profile.nested.name : this.profile.nested;
+      active = field.strict(true);
+      native = field('Native', [required]);
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const [valueHost, cvaHost, checkboxHost, nativeHost] = fixture.debugElement.children;
+    const value = valueHost!.componentInstance as ValueControl;
+    const cva = cvaHost!.componentInstance as CvaControl;
+    const checkbox = checkboxHost!.componentInstance as CheckboxControl;
+    const native = nativeHost!.nativeElement as HTMLInputElement;
+    expect(value.required()).toBe(true);
+    expect(value.readOnly()).toBe(false);
+    expect(cva.readonly()).toBe(true);
+    expect(cva.value()).toBe('owned');
+    expect(cva.rendered).toEqual(host.node());
+    expect(checkbox.checked()).toBe(true);
+    expect(checkbox.disabled()).toBe(false);
+    expect(native.value).toBe('Native');
+    expect(native.required).toBe(true);
+    cva.change(kind === 'field' ? 'Edited' : { name: 'Edited' });
+    cva.touch();
+    checkbox.checked.set(false);
+    fixture.detectChanges();
+    expect(host.profile.nested.name()).toBe('Edited');
+    expect(host.profile.touched()).toBe(true);
+    expect(host.active()).toBe(false);
+    expect(value.value()).toEqual(host.node());
+    host.node.$api.disable();
+    host.active.disable();
+    host.native.disable();
+    fixture.detectChanges();
+    expect(cva.disabled).toBe(true);
+    expect(checkbox.disabled()).toBe(true);
+    expect(native.disabled).toBe(true);
+    host.node.$api.enable();
+    if (kind === 'field') host.profile.nested.name.reset('Reset');
+    else host.profile.nested.reset({ name: 'Reset' });
+    fixture.detectChanges();
+    expect(cva.disabled).toBe(false);
+    expect(cva.rendered).toEqual(host.node());
+    expect(cva.readonly()).toBe(true);
+    expect(value.resets).toBe(1);
   });
 
   it('allows a nearer provider to enable inputs and preserves native and CVA disabled behavior', () => {

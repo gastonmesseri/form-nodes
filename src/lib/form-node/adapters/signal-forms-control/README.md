@@ -9,9 +9,13 @@ not required. `model-transport.ts` connects values through public model operatio
 
 This adapter also supports paired `value`/`valueChange` or `checked`/`checkedChange` inputs and
 outputs through `paired-transport.ts`. That compatibility requires experimental `syncInputs`
-to be enabled. Optional state and constraint input writes use the shared
+to be enabled with a mode other than `'only-signal-controls'`. Optional state and constraint input writes use the shared
 [`sync-control-inputs.ts`](../sync-control-inputs.ts) and are also gated by `syncInputs`.
 Model value connections remain available with `syncInputs: false`.
 
 ControlValueAccessor and native DOM controls have separate adapters in
 [`control-value-accessor/`](../control-value-accessor/) and [`native-control/`](../native-control/).
+
+With `syncInputs: 'only-signal-controls'`, model controls receive all supported optional state
+and constraint inputs. Paired input/output controls remain inactive, and selecting the CVA
+adapter takes precedence even if the component also exposes a model.

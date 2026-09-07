@@ -117,6 +117,10 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
    * Modes and selections:
    * - `false` or `null`: disable optional input writes and paired value transport, even if inherited settings enable them.
    * - `true` or `'only-declared'`: synchronize inputs selected by the node's initial declarations.
+   * - `'only-signal-controls'`: synchronize all supported inputs only when the selected adapter
+   *   connects a `value` or `checked` model. Includes validator constraints. CVAs (even with a
+   *   model) receive no optional input writes; separate input/output pairs stay disconnected.
+   *   Detection uses the runtime model shape, not an `implements` declaration.
    * - `'always'`: synchronize every supported input exposed by the component, whether or not its
    *   state or constraint was declared initially. This means reactive synchronization, not polling.
    * - `['disabled', 'dirty']`: always synchronize exactly those inputs; equivalent to
@@ -166,7 +170,8 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
    * mode; they cannot be selected here. The optional node model, touch/focus/reset hooks, native
    * control binding, and CVA `setDisabledState()` keep working for the standard model/CVA paths.
    * Separate `value`/`valueChange` and `checked`/`checkedChange` pairs connect only when the effective
-   * setting is enabled (any mode, list, or mode/inputs object, including empty lists). Their value
+   * setting is enabled, except for `'only-signal-controls'` (lists and mode/inputs objects, including
+   * empty lists, enable pairs). Their value
    * writes use Angular internals. Lists filter optional state inputs, not this value channel.
    * False/null pause pair writes and ignore its change/touch outputs. Rebinding to an enabled node
    * resynchronizes its current control value. Use initial input values rather than required inputs.
@@ -187,7 +192,7 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
    * @see {@link https://gastonmesseri.github.io/form-nodes/reference/provide-form-nodes-config#custom-control-inputs | Full syncInputs reference}
    * @see {@link https://gastonmesseri.github.io/form-nodes/guides/custom-controls#create-a-signal-model-control | Value models and useFormNodeState without experimental input writes}
    */
-  syncInputs?: boolean | 'only-declared' | 'always' | readonly SyncInputName[] | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined;
+  syncInputs?: boolean | 'only-declared' | 'always' | 'only-signal-controls' | readonly SyncInputName[] | { mode: 'only-declared' | 'always'; inputs: readonly SyncInputName[] } | null | undefined;
   /** Default nullability for fields created by this primitive set. Defaults to `true`. */
   nullable?: TNullable;
   /** Default built-in validator messages for nodes created by these factories. */
