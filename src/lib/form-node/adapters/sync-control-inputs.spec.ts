@@ -10,11 +10,11 @@ import { form } from '../../primitives/form';
 import { field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
+import { connectControlInputs } from './sync-control-inputs';
 import { pattern } from '../../validation/validators/pattern';
 import { required } from '../../validation/validators/required';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
-import { connectSignalControlInputs } from './signal-control-inputs';
 import { provideFormNodesConfig } from '../provide-form-nodes-config';
 import type { ValidationError } from '../../validation/validation.type';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
@@ -23,7 +23,7 @@ import { isInputSignal, warnFailedInputWrite, writeComponentInput, writeInputSig
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('connectSignalControlInputs', () => {
+describe('connectControlInputs', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideFormNodesConfig({ syncInputs: 'always' })] }));
   afterEach(() => TestBed.resetTestingModule());
 
@@ -40,7 +40,7 @@ describe('connectSignalControlInputs', () => {
     for (const name of ['disabled', 'readonly', 'errors']) registerSignalInputForJit(Control, name, name);
     const fixture = TestBed.createComponent(Control);
     const profile = form({ name: field('', [required]) });
-    const connection = connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector);
+    const connection = connectControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector);
     TestBed.flushEffects();
     expect([...connection.inputNames]).toEqual(['disabled', 'readonly', 'errors']);
     expect(fixture.componentInstance.disabled()).toBe(true);
@@ -87,7 +87,7 @@ describe('connectSignalControlInputs', () => {
     const fixture = TestBed.createComponent(AllStateControl);
     const expectedPattern = /^[a-z]+$/;
     const profile = form({ name: field.strict('abc', [required, min(1), max(10), minLength(2), maxLength(5), pattern(expectedPattern)] as never) });
-    const connection = connectSignalControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector.get(Injector));
+    const connection = connectControlInputs(fixture.componentInstance, () => profile.name, fixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
 
     expect(connection.inputNames).toContain('disabled');
@@ -130,7 +130,7 @@ describe('connectSignalControlInputs', () => {
     registerSignalModelForJit(ModelOnlyControl, 'value');
     const modelFixture = TestBed.createComponent(ModelOnlyControl);
     const name = field.strict('');
-    const modelConnection = connectSignalControlInputs(modelFixture.componentInstance, () => name, modelFixture.debugElement.injector.get(Injector));
+    const modelConnection = connectControlInputs(modelFixture.componentInstance, () => name, modelFixture.debugElement.injector.get(Injector));
     expect(modelConnection.inputNames).toEqual(new Set(['value']));
 
     @Component({
@@ -148,7 +148,7 @@ describe('connectSignalControlInputs', () => {
     registerSignalInputForJit(NonSignalInputControl, 'dirty', 'dirty');
     const invalidFixture = TestBed.createComponent(NonSignalInputControl);
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const invalidConnection = connectSignalControlInputs(invalidFixture.componentInstance as never, () => name, invalidFixture.debugElement.injector.get(Injector));
+    const invalidConnection = connectControlInputs(invalidFixture.componentInstance as never, () => name, invalidFixture.debugElement.injector.get(Injector));
     TestBed.flushEffects();
     expect(invalidConnection.inputNames).toEqual(new Set(['value', 'disabled', 'dirty']));
     expect(invalidFixture.componentInstance.disabled).toBe(false);
@@ -260,7 +260,7 @@ describe('connectSignalControlInputs', () => {
     const injector = TestBed.inject(Injector);
 
     expect(writeComponentInput(unreadableComponent, 'disabled', true, injector)).toBe(false);
-    expect(connectSignalControlInputs(unreadableComponent, () => name, injector).inputNames).toEqual(new Set());
+    expect(connectControlInputs(unreadableComponent, () => name, injector).inputNames).toEqual(new Set());
 
     @Component({ selector: 'fragile-state-control', template: '', standalone: true })
     class FragileStateControl {
@@ -314,7 +314,7 @@ describe('connectSignalControlInputs', () => {
     const control = { disabled };
     const name = field.strict('');
 
-    connectSignalControlInputs(control, () => name, TestBed.inject(Injector));
+    connectControlInputs(control, () => name, TestBed.inject(Injector));
     TestBed.flushEffects();
     name.disable();
     TestBed.flushEffects();

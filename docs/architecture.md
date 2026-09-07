@@ -8,7 +8,6 @@ Organize implementation code by responsibility directly under `src/lib/`:
 | `validation/` | Validator execution, messages, metadata, and built-in `validators/`. |
 | `form-node/` | The `[formNode]` directive and its control integration. |
 | `form-node-state/` | Shared `useFormNodeState()` access and source-specific `adapters/`. |
-| `interop/` | The Angular Signal Forms adapter used by `$field`. |
 | `metadata/` | Node metadata storage and access. |
 | `types/` | Contracts shared across features. Keep feature-specific types with their feature. |
 | `utils/` | General helpers and infrastructure shared across features. |
@@ -58,9 +57,47 @@ Assemble callable nodes with `Object.defineProperties()` and the descriptors of 
 object. This shared pattern also handles function properties such as the array's `length` signal
 and form children named `name` or `length`, which `Object.assign()` cannot overwrite directly.
 
+## FormNode control adapters
+
+`form-node/form-node.directive.ts` coordinates binding ownership, control-state registration,
+focus, CSS classes, and native form submission/reset. Control-specific connections live in
+`form-node/adapters/`:
+
+| Module | Responsibility |
+| --- | --- |
+| `control-adapter.ts` | Shared binding context and connection result. |
+| `resolve-control-adapter.ts` | Select the connection for the host. |
+| `native/` | Native input events, value parsing/rendering, composition, radio/select updates, and browser validity. |
+| `cva/` | ControlValueAccessor callbacks, disabled state, accessor selection, and host validators. |
+| `custom/` | Custom-control discovery, model connections, and experimental paired input/output connections. |
+| `sync-control-inputs.ts` | Experimental state/constraint input synchronization shared by CVA and custom controls. |
+
+The resolver preserves the existing precedence: an accessor supplied by `NgControl`, then an
+accessor selected from `NG_VALUE_ACCESSOR`, then a recognized custom control, then a native
+control. Both accessor discovery paths use the same CVA adapter. `form-node-ng-control.ts`
+remains the Angular compatibility facade outside the adapters.
+
+Within `custom/`, `model-transport.ts` connects through public model operations.
+`paired-transport.ts` connects paired inputs and outputs, with activity gated by `syncInputs`
+in `custom-control-adapter.ts`. Optional state/constraint writes use the separate shared
+input synchronizer. The Angular input-writing implementation remains isolated in
+`form-node/angular-internals/component-input-writer.ts`.
+
+Adapters read the current node through the binding, so rebinding does not require replacing
+the adapter. Effects, subscriptions, and DOM listeners use the host injector's lifetime.
+`native/sync-native-control-state.ts` applies native attributes and accessibility state after
+selection, skipping properties already handled as custom inputs. The directive retains
+node-binding registration and injector leases. Native `<form>` hosts follow the directive's
+submission/reset path instead of selecting a value adapter.
+
+These modules are internal implementation boundaries, not a public adapter registration API.
+The separation follows the native/CVA/custom responsibilities inspected in Angular Signal
+Forms v22.1.5 (`468b65b74566537456c192ac4281795c5a1e1a5e`), while preserving Form Nodes' existing
+public contracts and experimental opt-in behavior.
+
 ## Helpers
 
-- Keep a companion utility file beside its implementation: `form-group-node.utils.ts` beside `form-group-node.ts`, and `form-node.utils.ts` beside `form-node.directive.ts`.
+- Keep a companion utility file beside its implementation: `form-group-node.utils.ts` beside `form-group-node.ts`.
 - Put other feature-specific helpers in that feature's `utils/` directory. For example, `primitives/utils/create-control-value-buffer.ts` serves the primitive implementations.
 - Use `lib/utils/` when a helper is general-purpose or supports multiple features. Choose ownership from its responsibility and consumers, not its filename alone.
 - Add folders when they clarify a responsibility; avoid extra layers or one folder per file merely for symmetry.

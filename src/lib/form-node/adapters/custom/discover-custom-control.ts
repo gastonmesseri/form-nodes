@@ -1,6 +1,6 @@
 import { getDebugNode, reflectComponentType, type Type } from '@angular/core';
 
-import type { FormNodeControl } from '../form-node-control';
+import type { FormNodeControl } from '../../form-node-control';
 
 type ComponentCandidate = Record<PropertyKey, unknown> & { constructor: Type<unknown> };
 
@@ -25,7 +25,7 @@ const hasControlBinding = (candidate: ComponentCandidate, name: 'value' | 'check
 };
 
 /** Discovers an Angular Signal Forms compatible component hosted on an element. */
-export const discoverSignalControl = (element: HTMLElement): FormNodeControl | null => {
+export const discoverCustomControl = (element: HTMLElement): FormNodeControl | null => {
   const candidate = getComponentCandidate(element);
   if (!candidate) return null;
   if (hasControlBinding(candidate, 'value') || hasControlBinding(candidate, 'checked')) return candidate as unknown as FormNodeControl;

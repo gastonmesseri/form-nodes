@@ -1,7 +1,7 @@
 import { untracked } from '@angular/core';
 
-import { isNil } from '../../utils/is-nil';
-import type { ValidationError } from '../../validation/validation.type';
+import { isNil } from '../../../utils/is-nil';
+import type { ValidationError } from '../../../validation/validation.type';
 
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
@@ -127,4 +127,28 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
     default:
       element.value = isNil(value) ? '' : String(value);
   }
+};
+
+export const elementAcceptsMinMax = (element: HTMLElement): element is HTMLInputElement => {
+  if (element.tagName !== 'INPUT') return false;
+  const type = (element as HTMLInputElement).type;
+  return type === 'number' || type === 'range' || type === 'date' || type === 'month';
+};
+
+export const isTextualFormElement = (element: HTMLElement): element is HTMLInputElement | HTMLTextAreaElement => {
+  return element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
+};
+
+export const formatNativeLimit = (value: unknown, type: string): unknown => {
+  if (!(value instanceof Date) || (type !== 'date' && type !== 'month')) return value;
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+  if (type === 'month') return `${year}-${month}`;
+  const day = String(value.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const formatNativePattern = (patterns: readonly RegExp[]): string => {
+  if (patterns.length <= 1) return patterns[0]?.source ?? '';
+  return `${patterns.map(pattern => `(?=(?:${pattern.source})$)`).join('')}.*`;
 };

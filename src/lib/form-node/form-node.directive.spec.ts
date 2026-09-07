@@ -27,7 +27,7 @@ import { provideFormNodePassThrough } from './form-node-pass-through';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from './provide-form-nodes-config';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
-import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
+import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './adapters/native/native-control-value';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
 

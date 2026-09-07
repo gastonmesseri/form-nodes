@@ -6,15 +6,15 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Component, EventEmitter, Input, Output, input, output, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { form } from '../primitives/form';
-import { field } from '../primitives/field';
-import type { Node } from '../types/node.type';
-import { FormNode } from './form-node.directive';
-import { required } from '../validation/validators/required';
-import { provideFormNodesConfig } from './provide-form-nodes-config';
-import type { SyncInputs } from '../configuration/node-input-config';
-import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
-import { registerSignalInputForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
+import { form } from '../../../primitives/form';
+import { field } from '../../../primitives/field';
+import type { Node } from '../../../types/node.type';
+import { FormNode } from '../../form-node.directive';
+import { required } from '../../../validation/validators/required';
+import { provideFormNodesConfig } from '../../provide-form-nodes-config';
+import type { SyncInputs } from '../../../configuration/node-input-config';
+import { configureGlobalFormNodes } from '../../../configuration/configure-global-form-nodes';
+import { registerSignalInputForJit, registerSignalOutputForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({ selector: 'paired-control', template: '' })
 class PairedControl {

@@ -6,15 +6,15 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { Component, Injector, model, output, runInInjectionContext, signal } from '@angular/core';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { connectSignalControl } from './signal-control';
-import { field, type Field } from '../primitives/field';
-import { required } from '../validation/validators/required';
-import { registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
+import { field, type Field } from '../../../primitives/field';
+import { required } from '../../../validation/validators/required';
+import { connectCustomControlAdapter } from './custom-control-adapter';
+import { registerSignalModelForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('connectSignalControl', () => {
+describe('connectCustomControlAdapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
 
@@ -30,7 +30,7 @@ describe('connectSignalControl', () => {
       focus,
     }));
     const name = field.strict('David', [required]);
-    const connection = connectSignalControl(control, () => name, injector);
+    const connection = connectCustomControlAdapter(control, () => name, injector);
     TestBed.flushEffects();
 
     expect(control.value()).toBe('David');
@@ -58,7 +58,7 @@ describe('connectSignalControl', () => {
     const node = signal<Field<boolean> | null>(null);
     const injector = TestBed.inject(Injector);
     const control = runInInjectionContext(injector, () => ({ checked: model(false), node }));
-    const connection = connectSignalControl(control, () => active(), injector);
+    const connection = connectCustomControlAdapter(control, () => active(), injector);
     TestBed.flushEffects();
 
     expect(connection.focus).toBeUndefined();
@@ -79,7 +79,7 @@ describe('connectSignalControl', () => {
     registerSignalModelForJit(Control, 'value');
     const fixture = TestBed.createComponent(Control);
     Object.assign(fixture.componentInstance, { value: 'plain input' });
-    expect(() => connectSignalControl(fixture.componentInstance as never, () => field(''), fixture.debugElement.injector)).toThrow('matching input-output pair');
+    expect(() => connectCustomControlAdapter(fixture.componentInstance as never, () => field(''), fixture.debugElement.injector)).toThrow('matching input-output pair');
   });
 
   it('keeps paired output updates available when an incompatible input writer fails', () => {
@@ -95,7 +95,7 @@ describe('connectSignalControl', () => {
     const name = field('node', { syncInputs: true });
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
-      connectSignalControl(fixture.componentInstance as never, () => name, fixture.debugElement.injector);
+      connectCustomControlAdapter(fixture.componentInstance as never, () => name, fixture.debugElement.injector);
       TestBed.flushEffects();
       expect(fixture.componentInstance.value).toBe('owned');
       expect(warning).toHaveBeenCalledOnce();
@@ -111,7 +111,7 @@ describe('connectSignalControl', () => {
   it('rejects an invalid signal-control shape', () => {
     const injector = TestBed.inject(Injector);
     const name = field.strict('');
-    expect(() => connectSignalControl({ checked: undefined } as never, () => name, injector)).toThrowError(
+    expect(() => connectCustomControlAdapter({ checked: undefined } as never, () => name, injector)).toThrowError(
       'formNode: a custom control requires a \'value\' or \'checked\' model, or a matching input-output pair',
     );
   });
