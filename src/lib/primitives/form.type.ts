@@ -428,8 +428,9 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   /** Readonly map of declared children, or a DynamicNode record for an empty declaration. Runtime entries include added nodes. */
   readonly children: keyof TNodes extends never ? Readonly<Record<string, DynamicNode>> : FormChildren<TNodes, TParent>;
   /**
+   * **Dynamically added nodes are excluded by default.** Pass `{ includeDynamic: true }` to visit them.
+   *
    * Visits a snapshot of declared immediate children in object-entry order without recursion.
-   * Dynamically added nodes are excluded by default, matching the declared-child callback union.
    * Empty declarations visit no children and give the callback a never child type.
    * Additions during iteration are deferred; removed snapshot entries are still visited.
    * Callback errors propagate and stop iteration.
@@ -445,7 +446,9 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    */
   forEachChild(callback: (child: FormChildren<TNodes, TParent>[keyof TNodes], key: string) => void, options?: { includeDynamic?: false }): void;
   /**
-   * Includes children added with add() when includeDynamic is true. A runtime boolean uses
+   * **Dynamically added nodes are excluded unless `includeDynamic` is `true`.**
+   *
+   * Includes children added with `add()` when enabled. A runtime boolean uses
    * DynamicNode callbacks because added nodes may be visited. Empty declarations require true
    * to visit their added children.
    * @reactive Tracks structure changes and reactive reads performed by the callback.
