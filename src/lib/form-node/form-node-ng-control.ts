@@ -13,7 +13,7 @@ import { registerExternalValidationErrors } from '../validation/external-validat
 
 const controlErrorPayload = Symbol('controlErrorPayload');
 
-type NgControlState = ReturnType<FormNodeNgControl['readState']>;
+type NgControlState = ReturnType<FormNodeNgControl['_readState']>;
 
 const toValidationErrors = (node: Node): ValidationErrors | null => {
   const errors = node.$api.errors();
@@ -21,125 +21,171 @@ const toValidationErrors = (node: Node): ValidationErrors | null => {
   return arrayToObject(errors, error => [error.kind, controlErrorPayload in error ? error[controlErrorPayload] : error]);
 };
 
+/** Combined Angular compatibility surface. Underscored members are adapter implementation details. */
 export class FormNodeNgControl {
   readonly control = this as unknown as AbstractControl;
 
   valueAccessor: ControlValueAccessor | null = null;
 
-  valueEmitter = new EventEmitter<unknown>();
+  _valueEmitter = new EventEmitter<unknown>();
 
-  statusEmitter = new EventEmitter<FormControlStatus>();
+  _statusEmitter = new EventEmitter<FormControlStatus>();
 
-  eventEmitter = new EventEmitter<ControlEvent>();
+  _eventEmitter = new EventEmitter<ControlEvent>();
 
-  valueChanges: AbstractControl<unknown>['valueChanges'] = this.valueEmitter.asObservable();
+  valueChanges: AbstractControl<unknown>['valueChanges'] = this._valueEmitter.asObservable();
 
-  statusChanges: AbstractControl['statusChanges'] = this.statusEmitter.asObservable();
+  statusChanges: AbstractControl['statusChanges'] = this._statusEmitter.asObservable();
 
-  events: AbstractControl['events'] = this.eventEmitter.asObservable();
+  events: AbstractControl['events'] = this._eventEmitter.asObservable();
 
-  manualErrors = signal<ValidationErrors | null>(null, { equal: shallowEqual });
+  _manualErrors = signal<ValidationErrors | null>(null, { equal: shallowEqual });
 
-  registeredErrorNode: Node | undefined;
+  _registeredErrorNode: Node | undefined;
 
-  removeErrorSource: (() => void) | undefined;
+  _removeErrorSource: (() => void) | undefined;
 
-  silentStatus: NgControlState | undefined;
+  _silentStatus: NgControlState | undefined;
 
   _silentReset: NgControlState | undefined;
 
-  destroyed = false;
+  _destroyed = false;
 
-  manualErrorSource = computed<readonly ValidationError.WithOptionalTargetNode<Node>[]>(() => {
-    return Object.entries(this.manualErrors() ?? {}).map(([kind, context]) => ({
+  _manualErrorSource = computed<readonly ValidationError.WithOptionalTargetNode<Node>[]>(() => {
+    return Object.entries(this._manualErrors() ?? {}).map(([kind, context]) => ({
       kind,
       context,
       message: typeof context?.message === 'string' ? context.message : undefined,
-      ...(this.binding ? { formNode: this.binding } : {}),
+      ...(this._binding ? { formNode: this._binding } : {}),
       [controlErrorPayload]: context,
     }));
   });
 
-  constructor(readonly getNode: () => Node, injector: Injector, readonly binding?: FormNodeBinding<Node>) {
+  constructor(
+    readonly _getNode: () => Node,
+    injector: Injector,
+    readonly _binding?: FormNodeBinding<Node>
+  ) {
     let previous: NgControlState | undefined;
     effect(() => {
-      const node = this.getNode();
-      untracked(() => this.releasePreviousErrors(node));
-      const current = this.readState();
+      const node = this._getNode();
+      untracked(() => this._releasePreviousErrors(node));
+      const current = this._readState();
       // A replacement node starts a new observation, keeping existing subscriptions connected.
       const baseline = this._silentReset ?? previous;
       this._silentReset = undefined;
       const last = baseline?.node === current.node ? baseline : undefined;
       previous = current;
-      const silentStatus = this.silentStatus;
-      this.silentStatus = undefined;
+      const silentStatus = this._silentStatus;
+      this._silentStatus = undefined;
       untracked(() => {
         if (!last || !Object.is(last.value, current.value)) {
-          this.valueEmitter.emit(current.value);
-          this.eventEmitter.emit(new ValueChangeEvent(current.value, this.control));
+          this._valueEmitter.emit(current.value);
+          this._eventEmitter.emit(new ValueChangeEvent(current.value, this.control));
         }
         // Error details and pending work can change without changing the status string.
-        if (!this.sameValidationState(last, current) && !this.sameValidationState(silentStatus, current)) {
-          this.statusEmitter.emit(current.status);
-          this.eventEmitter.emit(new StatusChangeEvent(current.status, this.control));
+        if (!this._sameValidationState(last, current) && !this._sameValidationState(silentStatus, current)) {
+          this._statusEmitter.emit(current.status);
+          this._eventEmitter.emit(new StatusChangeEvent(current.status, this.control));
         }
         if (!last || last.touched !== current.touched) {
-          this.eventEmitter.emit(new TouchedChangeEvent(current.touched, this.control));
+          this._eventEmitter.emit(new TouchedChangeEvent(current.touched, this.control));
         }
         if (!last || last.pristine !== current.pristine) {
-          this.eventEmitter.emit(new PristineChangeEvent(current.pristine, this.control));
+          this._eventEmitter.emit(new PristineChangeEvent(current.pristine, this.control));
         }
       });
     }, { injector });
     injector.get(DestroyRef).onDestroy(() => {
-      this.destroyed = true;
-      untracked(() => this.releasePreviousErrors(undefined));
-      this.valueEmitter.complete();
-      this.statusEmitter.complete();
-      this.eventEmitter.complete();
+      this._destroyed = true;
+      untracked(() => this._releasePreviousErrors(undefined));
+      this._valueEmitter.complete();
+      this._statusEmitter.complete();
+      this._eventEmitter.complete();
     });
   }
+
+  get value(): unknown { return (this._getNode() as InternalNode).$api._controlValue(); }
+
+  /** Structural key in the node's parent; roots and detached nodes have no name. */
+  get name(): string | number | null { return this._getNode().$api.keyInParent(); }
+
+  /** Structural path from the current node root, copied for Angular's mutable array contract. */
+  get path(): string[] { return [...this._getNode().$api.path()]; }
+
+  get valid(): boolean { return this._getNode().$api.valid(); }
+
+  get invalid(): boolean { return this._getNode().$api.invalid(); }
+
+  get pending(): boolean { return this._getNode().$api.pending(); }
+
+  get disabled(): boolean { return this._getNode().$api.disabled(); }
+
+  get enabled(): boolean { return this._getNode().$api.enabled(); }
+
+  get errors(): ValidationErrors | null { return toValidationErrors(this._getNode()); }
+
+  get pristine(): boolean { return this._getNode().$api.pristine(); }
+
+  get dirty(): boolean { return this._getNode().$api.dirty(); }
+
+  get touched(): boolean { return this._getNode().$api.touched(); }
+
+  get untouched(): boolean { return this._getNode().$api.untouched(); }
+
+  get status(): FormControlStatus {
+    if (this.disabled) return 'DISABLED';
+    if (this.valid) return 'VALID';
+    if (this.invalid) return 'INVALID';
+    return 'PENDING';
+  }
+
+  /** No transferable Angular validator function is exposed; read errors and required metadata. */
+  get validator(): ValidatorFn | null { return null; }
+
+  /** Async execution belongs to the node; observe pending, errors, and statusChanges instead. */
+  get asyncValidator(): AsyncValidatorFn | null { return null; }
 
   /**
    * Resets the bound subtree through the node API. Undefined preserves committed values.
    * Notification suppression applies only to this adapter's synchronous reset result.
    */
   reset(value?: unknown, options: { emitEvent?: boolean; onlySelf?: boolean; overwriteDefaultValue?: boolean } = {}) {
-    if (this.destroyed) return;
+    if (this._destroyed) return;
     if (options.onlySelf || options.overwriteDefaultValue) {
       console.warn('formNode: reset() ignores onlySelf and overwriteDefaultValue; node ancestors remain reactive and reset has no stored default value.');
     }
     untracked(() => {
-      const node = this.getNode();
-      this.releasePreviousErrors(node);
+      const node = this._getNode();
+      this._releasePreviousErrors(node);
       if (value === undefined) node.$api.reset();
       else node.$api.reset(value);
-      this.silentStatus = undefined;
-      if (options.emitEvent === false) this._silentReset = this.readState();
-      else this.eventEmitter.emit(new FormResetEvent(this.control));
+      this._silentStatus = undefined;
+      if (options.emitEvent === false) this._silentReset = this._readState();
+      else this._eventEmitter.emit(new FormResetEvent(this.control));
     });
   }
 
   /** Replaces only this binding's imperative errors; configured validators remain independent. */
   setErrors(errors: ValidationErrors | null, options: { emitEvent?: boolean } = {}) {
-    if (this.destroyed) return;
+    if (this._destroyed) return;
     untracked(() => {
-      const node = this.getNode();
-      this.releasePreviousErrors(node);
+      const node = this._getNode();
+      this._releasePreviousErrors(node);
       const nodeErrors = node.$api.errors();
       // CVAs sometimes spread control.errors into setErrors(). Do not retain validator-owned errors.
       const entries = Object.entries(errors ?? {}).filter(([kind, value]) => {
         return !nodeErrors.some(error => error.kind === kind && error === value);
       });
-      if (!this.removeErrorSource && entries.length > 0) {
-        this.registeredErrorNode = node;
-        this.removeErrorSource = registerExternalValidationErrors(node, this, this.manualErrorSource, {
-          onReset: () => this.manualErrors.set(null),
+      if (!this._removeErrorSource && entries.length > 0) {
+        this._registeredErrorNode = node;
+        this._removeErrorSource = registerExternalValidationErrors(node, this, this._manualErrorSource, {
+          onReset: () => this._manualErrors.set(null),
         });
       }
-      this.manualErrors.set(entries.length > 0 ? Object.fromEntries(entries) : null);
+      this._manualErrors.set(entries.length > 0 ? Object.fromEntries(entries) : null);
       // Silence this adapter's status notification, while the node and its parents still update.
-      this.silentStatus = options.emitEvent === false ? this.readState() : undefined;
+      this._silentStatus = options.emitEvent === false ? this._readState() : undefined;
     });
   }
 
@@ -148,7 +194,7 @@ export class FormNodeNgControl {
    * @reactive Tracks the selected node's errors and changes along the path.
    */
   getError(errorCode: string, path?: string | (string | number)[]): unknown {
-    const node = path ? this.findErrorNode(path) : this.getNode();
+    const node = path ? this._findErrorNode(path) : this._getNode();
     const errors = node ? toValidationErrors(node) : null;
     if (!errors) return null;
     return Object.hasOwn(errors, errorCode) ? errors[errorCode] : undefined;
@@ -159,10 +205,10 @@ export class FormNodeNgControl {
     return !!this.getError(errorCode, path);
   }
 
-  findErrorNode(path: string | (string | number)[]): Node | undefined {
+  _findErrorNode(path: string | (string | number)[]): Node | undefined {
     const segments = typeof path === 'string' ? path.split('.') : path;
     if (segments.length === 0) return undefined;
-    let node: Node | undefined = this.getNode();
+    let node: Node | undefined = this._getNode();
     for (const segment of segments) {
       if (!node) return undefined;
       const kind = node.$api.nodeType();
@@ -183,20 +229,20 @@ export class FormNodeNgControl {
     return node;
   }
 
-  releasePreviousErrors(node: Node | undefined) {
-    if (this.registeredErrorNode === node) return;
-    this.removeErrorSource?.();
-    this.removeErrorSource = undefined;
-    this.registeredErrorNode = undefined;
-    this.manualErrors.set(null);
+  _releasePreviousErrors(node: Node | undefined) {
+    if (this._registeredErrorNode === node) return;
+    this._removeErrorSource?.();
+    this._removeErrorSource = undefined;
+    this._registeredErrorNode = undefined;
+    this._manualErrors.set(null);
   }
 
-  sameValidationState(left: NgControlState | undefined, right: NgControlState): boolean {
+  _sameValidationState(left: NgControlState | undefined, right: NgControlState): boolean {
     return left?.node === right.node && left.status === right.status && left.errors === right.errors && left.pending === right.pending;
   }
 
-  readState() {
-    const node = this.getNode();
+  _readState() {
+    const node = this._getNode();
     return {
       node,
       value: this.value,
@@ -208,49 +254,8 @@ export class FormNodeNgControl {
     };
   }
 
-  get value(): unknown { return (this.getNode() as InternalNode).$api._controlValue(); }
-
-  /** Structural key in the node's parent; roots and detached nodes have no name. */
-  get name(): string | number | null { return this.getNode().$api.keyInParent(); }
-
-  /** Structural path from the current node root, copied for Angular's mutable array contract. */
-  get path(): string[] { return [...this.getNode().$api.path()]; }
-
-  get valid(): boolean { return this.getNode().$api.valid(); }
-
-  get invalid(): boolean { return this.getNode().$api.invalid(); }
-
-  get pending(): boolean { return this.getNode().$api.pending(); }
-
-  get disabled(): boolean { return this.getNode().$api.disabled(); }
-
-  get enabled(): boolean { return this.getNode().$api.enabled(); }
-
-  get errors(): ValidationErrors | null { return toValidationErrors(this.getNode()); }
-
-  get pristine(): boolean { return this.getNode().$api.pristine(); }
-
-  get dirty(): boolean { return this.getNode().$api.dirty(); }
-
-  get touched(): boolean { return this.getNode().$api.touched(); }
-
-  get untouched(): boolean { return this.getNode().$api.untouched(); }
-
-  get status(): FormControlStatus {
-    if (this.disabled) return 'DISABLED';
-    if (this.valid) return 'VALID';
-    if (this.invalid) return 'INVALID';
-    return 'PENDING';
-  }
-
-  /** No transferable Angular validator function is exposed; read errors and required metadata. */
-  get validator(): ValidatorFn | null { return null; }
-
-  /** Async execution belongs to the node; observe pending, errors, and statusChanges instead. */
-  get asyncValidator(): AsyncValidatorFn | null { return null; }
-
   hasValidator(validator: ValidatorFn): boolean {
-    return validator === Validators.required && this.getNode().$api.required();
+    return validator === Validators.required && this._getNode().$api.required();
   }
 
   /**

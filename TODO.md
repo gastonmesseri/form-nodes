@@ -52,61 +52,11 @@
 
   })
 
-/**
- * // implemented (ng control has them exposed publicly)
- * value
- * valid
- * invalid
- * disabled
- * pending
- * enabled
- * errors
- * pristine
- * dirty
- * touched
- * untouched
- * status
- * control
- * valueAccessor
- * statusChanges
- * valueChanges
- * getError
- * hasError
- * name
- * path
- * reset
- *
- * // not implemented (ng control has them exposed publicly)
- * // maybe we should implement them? maybe just a dummy value to avoid failing? maybe implement for full contract?
- * validator
- * asyncValidator
- * viewToModelUpdate
- */
-
- - ensure that components that implement ngControl through the useNgControl hook, also work
-
- - Los metodos que no sean publicos de FormNodeNgControl, mejor prefijarlos con _ para distinguirlos de los que el contrato de NgControl espera (ya sea el contrato publico o privado, esos asegurarse que esten ahi sin _)
-
-- en DL los componentes se suscriben a ngControl?.control?.statusChanges (y no a ngControl?.statusChanges), asegurarse de que esto funciona
-
 - [NEXT] [ ] Ensure that ALL console.warn are only shown in development mode, or at least not on production builds (maybe create a helper function for this?)
 
 - [NEXT] [ ] Rename ng-forms folder (root) to form-nodes
 
 - [NEXT] In the custom-controls page, simplify the page to the basics, and create another page create custom-controls-advanced, that contains all the details that i think right now are not that relevant to a user who just want to know how to easily integrate a custom component.
-
-- [NEXT] [ ] Complete the remaining `NgControl` compatibility contract for `[formNode]`, one step at a time.
-  - Start in `src/lib/form-node/form-node-ng-control.ts`; integration tests live in `form-node-ng-control.spec.ts` and `form-node.directive.browser.spec.ts`.
-  - Already implemented: current value/validation/interaction state, `control`, `valueAccessor`, observable `valueChanges`/`statusChanges`/`events`, binding-owned `setErrors()`, and `getError()`/`hasError()` with relative descendant paths. Preserve rebinding, cleanup, original imperative error payloads, and reactive queries across structural changes and public equality filtering.
-  - [x] Delivered `name` and `path`; see Completed for the structural identity contract and verification.
-  - [x] Delivered node-owned `reset()` compatibility; see Completed for values, interaction, pending work, errors, and notification semantics.
-  - [x] Audited `validator` and `asyncValidator`: both expose no transferable Angular functions (`null`), while node validation remains authoritative. See Completed for the supported observation contract.
-  - [x] Audit `viewToModelUpdate()` and `updateValueAndValidity()`: keep directive-only `ngModelChange` emission unsupported, use registered CVA callbacks for input, and retain Signal Forms no-op refresh semantics. See Completed for evidence and integration coverage.
-  - [ ] Previous reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Resolve the latest Angular 22 maintenance release before continuing; inspect Signal Forms interop and relevant Reactive Forms implementation/tests. Keep the node API authoritative and document intentional compatibility differences.
-  - [ ] Update `docs/behavior.md`, the custom-controls website guide, and both unreleased changelogs for each delivered behavior change. Run focused integration tests and the required typecheck, build, coverage, browser, and documentation checks.
-  - [ ] `hasValidator()` currently recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
-
-- Verify components that obtain the adapter through a `useNgControl` hook, and distinguish internal adapter helpers from Angular contract members (see the notes above).
 
 - [NEXT] [ ] Implement hasError and hasValidator methods into my primitive nodes
 
@@ -436,6 +386,21 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 
 ## Completed
+
+- [x] Complete the remaining `NgControl` compatibility contract for `[formNode]`, one step at a time.
+  - Start in `src/lib/form-node/form-node-ng-control.ts`; integration tests live in `form-node-ng-control.spec.ts` and `form-node.directive.browser.spec.ts`.
+  - Already implemented: current value/validation/interaction state, `control`, `valueAccessor`, observable `valueChanges`/`statusChanges`/`events`, binding-owned `setErrors()`, and `getError()`/`hasError()` with relative descendant paths. Preserve rebinding, cleanup, original imperative error payloads, and reactive queries across structural changes and public equality filtering.
+  - [x] Delivered `name` and `path`; see Completed for the structural identity contract and verification.
+  - [x] Delivered node-owned `reset()` compatibility; see Completed for values, interaction, pending work, errors, and notification semantics.
+  - [x] Audited `validator` and `asyncValidator`: both expose no transferable Angular functions (`null`), while node validation remains authoritative. See Completed for the supported observation contract.
+  - [x] Audit `viewToModelUpdate()` and `updateValueAndValidity()`: keep directive-only `ngModelChange` emission unsupported, use registered CVA callbacks for input, and retain Signal Forms no-op refresh semantics. See Completed for evidence and integration coverage.
+  - [x] Verified reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Re-resolved the latest Angular 22 maintenance release and inspected Signal Forms interop and relevant Reactive Forms implementation/tests. Node ownership and intentional differences are documented.
+  - [x] Updated behavior and consumer documentation, plus both unreleased changelogs for delivered behavior changes. Focused integration, typecheck/lint, build, coverage, browser, and documentation checks passed. Internal refactors and audit-only work do not add changelog noise.
+  - [x] `hasValidator()` recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
+
+  - [x] Verified CVAs that obtain the adapter through a deferred `useNgControl` hook. All 16 internal runtime members use `_`; all 27 unprefixed members match Angular names. Existing integration tests verify rebinding, cleanup, notifications, errors, and required metadata.
+  - [x] Original naming requirement: prefix Form Nodes implementation details with `_`, while retaining Angular names for implemented contract members.
+  - [x] Original DL subscription requirement: `ngControl.control.statusChanges` works alongside `ngControl.statusChanges`; both refer to the same stable observable.
 
 - [x] IMPLEMENT REQUIRED SUPPORT FOR ANGULAR REQUIRED, FOR EXISTING CUSTOM COMPONENTS THAT CHECK angular old validators.required to display the mark
 - [x] Choose `form-nodes` as the library name and unscoped npm package.

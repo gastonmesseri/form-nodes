@@ -2462,6 +2462,13 @@ The directive currently provides these behaviors:
 - Model-to-view `writeValue()` calls are guarded against reentrant `onChange` callbacks. A legacy CVA that invokes its registered change callback from inside `writeValue()` therefore cannot mark the field dirty, write the value back, or create a feedback loop.
 - When several Angular accessors match, selection follows Angular's precedence: one custom accessor, then one specialized built-in accessor, then the default accessor. Multiple accessors within the selected category are rejected as ambiguous.
 - Synchronous validators provided by a CVA through `NG_VALIDATORS` participate in the field's real validation state. Their Angular validation key becomes `error.kind`, and `registerOnValidatorChange()` invalidates the reactive result. These binding-owned errors are suppressed with the field's other errors while it is disabled, readonly, or hidden and are removed when the binding is destroyed or changes field.
+- Runtime helpers and storage on the injected `FormNodeNgControl` adapter use `_` prefixes,
+  including node/binding access, emitters, error ownership, observation snapshots, cleanup, and
+  descendant lookup. They are not consumer APIs. Implemented Angular contract members retain
+  their Angular names; this internal naming change does not alter values, validation, notification,
+  or lifecycle behavior. The member audit used Angular `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`),
+  re-resolved as the latest stable Angular 22 release, inspecting `NgControl`,
+  `AbstractControlDirective`, `AbstractControl`, and Signal Forms' `InteropNgControl`.
 - The injected `NgControl` and its `control` expose stable `valueChanges` and `statusChanges`
   observables. `control.events` emits Angular `ValueChangeEvent`, `StatusChangeEvent`,
   `TouchedChangeEvent`, and `PristineChangeEvent` instances with the adapter as `source`. Values
