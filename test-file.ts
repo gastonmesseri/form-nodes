@@ -92,6 +92,9 @@ myForm.company;
 myForm.someDate.value();
 myForm.somethingInstance
 myForm.someNesting.test()
+
+myForm.validators()[0]
+
 // const a = myForm.company()
 // myForm.company.
 

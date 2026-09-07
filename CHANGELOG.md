@@ -18,6 +18,8 @@ consumer migration guide.
   `getError()` and `hasError()` expose these error payloads and support relative descendant paths.
   Injected `NgControl.name` and `path` now follow the bound node’s structural location through
   array moves, detachment, reattachment, and rebinding.
+  CVAs can reset the bound subtree through `NgControl.reset()` or `control.reset()`, preserving
+  node reset semantics and supporting local notification suppression with `{ emitEvent: false }`.
 - `useControlState().value()` with `[formNode]` now reports the latest committed value even when
   node equality retains an older public value. Pending debounce input remains separate.
 - Asynchronous validators preserve pending work when a computed dependency compares equal, while

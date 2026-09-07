@@ -2,7 +2,7 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FormField, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
-import { NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
+import { FormResetEvent, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { CSP_NONCE, Component, EventEmitter, Injector, Input, Output, ViewEncapsulation, forwardRef, inject, input, model, output, signal, type OnDestroy } from '@angular/core';
 
@@ -10,6 +10,7 @@ import { form } from '../primitives/form';
 import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { group } from '../primitives/group';
+import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
@@ -109,6 +110,100 @@ describe('FormNode in Chromium', () => {
     fixture.detectChanges();
     expect(input.value).toBe('2026-09-08');
     expect(profile.valid()).toBe(true);
+    fixture.destroy();
+  });
+
+  it('lets a CVA reset through a deferred useNgControl hook, including silent resets and pending input', () => {
+    const useNgControl = () => {
+      const injector = inject(Injector);
+      return () => injector.get(NgControl, null, { self: true })!;
+    };
+    @Component({
+      selector: 'reset-cva',
+      template: `<input #input [value]="text()" (input)="inputValue(input.value)" (blur)="touch()" />`,
+      providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ResetCva), multi: true }],
+    })
+    class ResetCva implements ControlValueAccessor {
+      resolveNgControl = useNgControl();
+
+      control!: AbstractControl;
+
+      text = signal('');
+
+      values: unknown[] = [];
+
+      resets = 0;
+
+      change: (value: string) => void = () => {};
+
+      touch: () => void = () => {};
+
+      ngAfterContentInit() {
+        this.control = this.resolveNgControl().control!;
+        this.control.valueChanges.subscribe(value => this.values.push(value));
+        this.control.events.subscribe((event) => {
+          if (event instanceof FormResetEvent) this.resets++;
+        });
+      }
+
+      inputValue(value: string) {
+        this.text.set(value);
+        this.change(value);
+      }
+
+      writeValue(value: string) { this.text.set(value); }
+
+      registerOnChange(callback: (value: string) => void) { this.change = callback; }
+
+      registerOnTouched(callback: () => void) { this.touch = callback; }
+    }
+    @Component({
+      template: `<reset-cva [formNode]="active()" />`,
+      imports: [FormNode, ResetCva],
+    })
+    class Host {
+      profile = form({ name: field.strict('committed', [required], { debounce: 'blur' }) });
+
+      active = signal<Node>(this.profile.name);
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const cva = fixture.debugElement.children[0]!.componentInstance as ResetCva;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    input.value = 'buffered';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+    expect(host.profile.name()).toBe('committed');
+    expect(host.profile.name.debouncing()).toBe(true);
+    cva.control.setErrors({ parsing: true });
+    cva.values.length = 0;
+    cva.control.reset(undefined, { emitEvent: false });
+    fixture.detectChanges();
+    expect(input.value).toBe('committed');
+    expect(cva.values).toEqual([]);
+    expect(cva.resets).toBe(0);
+    expect(host.profile.pristine()).toBe(true);
+    expect(host.profile.untouched()).toBe(true);
+    expect(host.profile.valid()).toBe(true);
+    dispatch(input, 'blur');
+    fixture.detectChanges();
+    expect(host.profile.name()).toBe('committed');
+    cva.resolveNgControl().reset('');
+    fixture.detectChanges();
+    expect(input.value).toBe('');
+    expect(cva.resets).toBe(1);
+    expect(cva.values).toEqual(['']);
+    expect(host.profile.invalid()).toBe(true);
+    expect(host.profile.untouched()).toBe(true);
+    const replacement = field.strict('replacement');
+    host.active.set(replacement);
+    fixture.detectChanges();
+    cva.control.reset('new');
+    fixture.detectChanges();
+    expect(input.value).toBe('new');
+    expect(replacement()).toBe('new');
+    expect(host.profile.name()).toBe('');
     fixture.destroy();
   });
 

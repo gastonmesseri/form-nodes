@@ -72,14 +72,14 @@
  * valueChanges
  * getError
  * hasError
- * 
- * // not implemented (ng control has them exposed publicly)
- * // maybe we should implement them? maybe just a dummy value to avoid failing? maybe implement for full contract?
- * asyncValidator
  * name
  * path
  * reset
+ *
+ * // not implemented (ng control has them exposed publicly)
+ * // maybe we should implement them? maybe just a dummy value to avoid failing? maybe implement for full contract?
  * validator
+ * asyncValidator
  * viewToModelUpdate
  */
 
@@ -89,11 +89,13 @@
 
 - en DL los componentes se suscriben a ngControl?.control?.statusChanges (y no a ngControl?.statusChanges), asegurarse de que esto funciona
 
+- [NEXT] In the custom-controls page, simplify the page to the basics, and create another page create custom-controls-advanced, that contains all the details that i think right now are not that relevant to a user who just want to know how to easily integrate a custom component.
+
 - [NEXT] [ ] Complete the remaining `NgControl` compatibility contract for `[formNode]`, one step at a time.
   - Start in `src/lib/form-node/form-node-ng-control.ts`; integration tests live in `form-node-ng-control.spec.ts` and `form-node.directive.browser.spec.ts`.
   - Already implemented: current value/validation/interaction state, `control`, `valueAccessor`, observable `valueChanges`/`statusChanges`/`events`, binding-owned `setErrors()`, and `getError()`/`hasError()` with relative descendant paths. Preserve rebinding, cleanup, original imperative error payloads, and reactive queries across structural changes and public equality filtering.
   - [x] Delivered `name` and `path`; see Completed for the structural identity contract and verification.
-  - [ ] Audit and implement meaningful `reset()` compatibility, including values, interaction state, pending work, binding-owned errors, and notification options, using the existing node reset behavior.
+  - [x] Delivered node-owned `reset()` compatibility; see Completed for values, interaction, pending work, errors, and notification semantics.
   - [ ] Audit `validator` and `asyncValidator`: decide how existing components can inspect or invoke them without duplicating validation execution, losing reactive dependencies, or changing asynchronous validation ownership. Use `null` only when it accurately represents the supported contract.
   - [ ] Audit `viewToModelUpdate()` and the existing no-op `updateValueAndValidity()` against concrete CVA requirements; define supported behavior instead of adding dummy methods merely to avoid exceptions.
   - `hasValidator()` currently recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
@@ -997,6 +999,7 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Choose `[formNode]` as the node-binding directive name.
 - [x] Bind aggregate forms to native `<form [formNode]="form">` elements.
 - [x] Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
+  - [x] Support adapter `reset()` through the current node API, including subtree interaction/errors, pending input cancellation, existing async ownership, rebinding, local `emitEvent` suppression, and `FormResetEvent`. Document raw values, preserved committed values, and rejected isolated-parent/default-value options. Cover deferred `useNgControl` reset in browser tests; Angular reference `v22.1.5` (`468b65b`).
   - [x] Define reactive `NgControl.name` and `path` from node structure for roots, nested groups/forms, array items, detached subtrees, reattachment, and binding replacement. Keep the combined runtime control identity while documenting Angular’s directive-only type contract; cover deferred `useNgControl` lookup in browser tests. Angular reference re-resolved to `v22.1.5` (`468b65b`).
   - [x] Support binding-owned `NgControl.control.setErrors()` for CVA parsing errors, preserving other validators and cleaning up on reset, rebinding, and destruction.
   - [x] Add observable value, validation, and interaction state for CVAs that obtain `NgControl` in `ngAfterViewInit`, including rebinding and destruction cleanup.

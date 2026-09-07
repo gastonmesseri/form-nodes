@@ -410,6 +410,39 @@ one runtime object for `ngControl` and `ngControl.control`, so both have the sam
 A local `useNgControl` helper can capture the host injector during construction and resolve
 `NgControl` in a lifecycle hook, following the same deferred lookup as the example above.
 
+### Resetting from an existing CVA
+
+`ngControl.reset()` and `ngControl.control.reset()` reset the currently bound node and its
+subtree. With no value, or with `undefined`, reset preserves the latest committed values,
+discards buffered input, and clears dirty/touched state. An explicit value uses the node's
+`reset(value)` behavior: provide complete form values; arrays reconcile their items using the
+configured identity rules. Reset clears binding-owned parsing errors throughout the reset
+subtree and writes the reset values back to controls, even when public value equality retains
+an older value. Sibling state is preserved and ancestors recompute normally.
+
+Configured validators remain active. Reset cancels pending control debounce. It does not
+unconditionally restart or cancel asynchronous validation: unchanged dependencies keep their
+current work, while changed dependencies cancel obsolete work through the node's validation
+pipeline. Asynchronous results can still arrive after reset.
+
+To suppress this adapter's reset notifications, use
+`ngControl.control.reset(undefined, { emitEvent: false })`, or supply a value in the first argument.
+This silences the synchronous reset result on its `valueChanges`, `statusChanges`, and `events`;
+other bindings and ancestor adapters still observe their node changes. Later writes and
+asynchronous validation results remain observable. Without suppression, the adapter emits a
+synchronous `FormResetEvent` with itself as `source`; value, status, and interaction changes
+retain their usual scheduled, coalesced notifications. A reset with unchanged state still emits
+the reset event. Calling the node API directly does not synthesize this adapter reset event.
+
+This is a Signal Forms reset contract, with intentional differences from Reactive Forms:
+
+- No-argument reset preserves current committed values, rather than returning to null or an initial value.
+- Values are raw node values. `{ value, disabled }` is ordinary data, not an Angular `FormControlState` wrapper; reset preserves disabled configuration.
+- `onlySelf: true` and `overwriteDefaultValue: true` throw before changing state. Reactive ancestors cannot be isolated, and the node has no stored reset default.
+- `undefined` means no replacement value on this adapter. Use the node API when explicitly assigning `undefined` is required.
+
+### Inspecting errors and observing state
+
 Both surfaces also support `getError(code, path?)` and `hasError(code, path?)`. For example,
 after the date control below reports an invalid date:
 

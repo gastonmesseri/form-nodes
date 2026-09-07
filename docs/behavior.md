@@ -2468,6 +2468,39 @@ The directive currently provides these behaviors:
   follow `_controlValue()`, including pending debounce input and writes suppressed by public equality.
   Status precedence remains disabled, valid, invalid, then pending. Error details are the node's own
   errors indexed by `kind`; aggregate validity and interaction still include descendants.
+- `NgControl.reset(value?)` and `NgControl.control.reset(value?, options?)` delegate to the
+  currently bound node's reset. Omitted/undefined values preserve current committed data;
+  explicit values use the existing node reset semantics (complete form values, array
+  reconciliation, literal null/falsy/object field values). Angular `{ value, disabled }` wrappers
+  are not interpreted; disabled configuration is unchanged. Reset clears subtree interaction
+  and binding-owned errors, cancels control debounce, and resynchronizes control rendering even
+  under public equality. Siblings retain their state and ancestors recompute. Configured
+  validators stay installed. Unchanged asynchronous dependencies retain pending work; changed
+  dependencies cancel obsolete work through the existing node pipeline, without adapter-owned
+  execution. Reset after binding replacement affects only the current node; after destruction
+  it is inert. Calls are untracked.
+  `{ emitEvent: false }` uses the synchronous reset snapshot as this adapter's next observation
+  baseline, suppressing its value/status/interaction notifications without hiding subsequent
+  writes, later asynchronous results, or replacement-node initialization. Other bindings and
+  ancestor adapters retain their own notifications. Unsuppressed adapter reset emits a synchronous
+  `FormResetEvent` after node reset, including when state is unchanged. Existing scheduled,
+  coalesced state-change notifications follow; unchanged value/status do not force emissions.
+  Direct node reset does not generate an adapter `FormResetEvent`. Angular's directive type
+  accepts only the value; use `control.reset()` for notification options. `onlySelf: true` and
+  `overwriteDefaultValue: true` throw before mutation because reactive node parents cannot be
+  isolated and nodes have no stored reset default. Both options accept false/omission.
+  Unlike the node API, adapter `reset(undefined)` means no replacement value, matching Angular's
+  directive forwarding and Signal Forms reset argument handling.
+  Reference re-resolved to latest stable Angular 22 `v22.1.5`, commit
+  `468b65b74566537456c192ac4281795c5a1e1a5e`: inspected Signal Forms
+  `packages/forms/signals/src/field/node.ts` (`reset`/`_reset`),
+  `packages/forms/signals/test/node/field_node.spec.ts` (falsy values, descendant interaction,
+  pending asynchronous and blur debounce), and `src/controls/interop_ng_control.ts` (reset TODO);
+  Reactive Forms `packages/forms/src/directives/abstract_control_directive.ts`,
+  `packages/forms/src/model/form_control.ts`, `form_group.ts`, `form_array.ts`, and
+  `packages/forms/test/form_control_spec.ts` (default values, wrappers, reset notifications).
+  The differences above intentionally preserve node ownership rather than recreate Reactive
+  Forms' defaults, isolated parent updates, synchronous state streams, or validator lifecycle.
 - The injected `NgControl.name` reads the node's structural `keyInParent()` (`string`, numeric
   array index, or `null` for roots/detached nodes). `path` returns a fresh mutable copy of the
   node's string-segment path from its current structural root. Groups and nested forms contribute
