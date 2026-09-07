@@ -28,7 +28,7 @@ use Form Nodes primitives.
 
 Keep the value contract required by each forms API, such as a model or `ControlValueAccessor`.
 State metadata depends on the source: Reactive Forms and `ngModel` expose common control state,
-but required and constraint metadata use neutral defaults in this hook.
+including required-rule detection. Other constraint metadata uses neutral defaults in this hook.
 
 :::
 
@@ -394,6 +394,23 @@ Reports whether editing should be prevented without disabling interaction.
 **Signature:** `required: Signal<boolean>`
 
 Reports whether the effective validation rules require a non-empty value.
+
+**Works with every supported binding, including Angular Reactive Forms and `[(ngModel)]`.**
+
+- `[formNode]` reads the node's required metadata; `[formField]` reads Angular Signal Forms state.
+- `[formControl]`, `[formControlName]`, and `[(ngModel)]` recognize a directly registered
+  `Validators.required` or an active Angular `required` / `[required]` validator directive on the
+  same host. An empty `required` attribute enables it; `[required]="false"` disables the directive.
+
+The flag stays true when the value satisfies the rule and while the control is disabled. Removing
+one required source leaves it true if another remains active. Call `updateValueAndValidity()` after
+changing Angular validators as usual. Normal control events update the hook; silent changes
+(`emitEvent: false`) and directive input changes are reconciled after the next render.
+
+The hook does not run validators to discover rules or infer required from error payloads. Wrapped
+or composed validators, and directly registered `Validators.requiredTrue`, are not recognized as
+`Validators.required`. Angular's checkbox required directive is recognized through its public
+`RequiredValidator` contract. A disconnected hook returns false.
 
 ```html
 @if (formNodeState.required()) {

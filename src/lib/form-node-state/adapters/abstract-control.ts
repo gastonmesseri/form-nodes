@@ -1,5 +1,5 @@
-import { NgControl, type AbstractControl } from '@angular/forms';
-import { DestroyRef, Injector, afterEveryRender, computed, inject, signal } from '@angular/core';
+import { NG_VALIDATORS, NgControl, RequiredValidator, Validators, type AbstractControl } from '@angular/forms';
+import { DestroyRef, Injector, afterEveryRender, booleanAttribute, computed, inject, signal } from '@angular/core';
 
 import type { ControlStateSource } from '../form-node-state';
 import type { ControlStateAdapter } from '../form-node-state-adapter';
@@ -22,10 +22,15 @@ export const injectAbstractControlStateAdapter = <TValue>(
   const control = signal<AbstractControl | null>(null);
   const name = signal<string | undefined>(undefined);
   const revision = signal(0);
+  let requiredDirectives: readonly RequiredValidator[] = [];
+  const isRequired = (current: AbstractControl): boolean => {
+    return current.hasValidator(Validators.required)
+      || requiredDirectives.some(directive => booleanAttribute(directive.required));
+  };
   let snapshot: readonly unknown[] = [];
   let subscription: { unsubscribe(): void } | undefined;
   const capture = (current: AbstractControl): readonly unknown[] => {
-    return [current.value, current.disabled, current.dirty, current.errors, current.invalid, current.pending, current.touched];
+    return [current.value, current.disabled, current.dirty, current.errors, current.invalid, current.pending, current.touched, isRequired(current)];
   };
   const currentControl = () => {
     revision();
@@ -36,6 +41,10 @@ export const injectAbstractControlStateAdapter = <TValue>(
     const directive = injector.get(NgControl, null, { optional: true, self: true });
     const acceptedDirective = directive && accepts(directive) ? directive : null;
     const nextControl = acceptedDirective?.control ?? null;
+    requiredDirectives = nextControl
+      ? (injector.get(NG_VALIDATORS, null, { optional: true, self: true }) ?? [])
+        .filter((validator): validator is RequiredValidator => validator instanceof RequiredValidator)
+      : [];
     name.set(acceptedDirective ? resolveName(acceptedDirective) : undefined);
     if (nextControl === control()) {
       if (!nextControl) return;
@@ -83,7 +92,7 @@ export const injectAbstractControlStateAdapter = <TValue>(
     pattern: computed(() => []),
     pending: computed(() => currentControl().pending),
     readonly: computed(() => false),
-    required: computed(() => false),
+    required: computed(() => isRequired(currentControl())),
     touched: computed(() => currentControl().touched),
     markAsTouched() {
       currentControl().markAsTouched();

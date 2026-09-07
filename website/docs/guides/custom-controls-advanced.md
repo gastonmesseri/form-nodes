@@ -161,8 +161,9 @@ adapter without changing the component's API.
 The Reactive Forms and template-driven adapters observe the public `AbstractControl.events` stream
 and reconcile the current directive control after rendering. They therefore follow a replaced
 `FormControl` and pick up `{ emitEvent: false }` mutations on the next render. They provide value,
-disabled, dirty, touched, invalid, pending, errors, and names declared by `formControlName` or
-`ngModel`. Properties these APIs do not expose, including readonly, hidden, disabled reasons, and
+disabled, dirty, touched, invalid, pending, errors, required-rule detection, and names declared by `formControlName` or
+`ngModel`. Required detection recognizes directly registered `Validators.required` and an active
+Angular required directive on the host, including changes while the value is valid. Properties these APIs do not expose, including readonly, hidden, disabled reasons, and
 constraint metadata, retain their safe neutral defaults. `[formField]` instead exposes Angular
 Signal Forms state, including constraints, required, readonly, hidden, and disabled reasons.
 

@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest';
 import { effect } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { AbstractControl } from '@angular/forms';
 import type { ComponentFixture } from '@angular/core/testing';
+import { Validators, type AbstractControl } from '@angular/forms';
 
 import type { ControlStateSource } from '../../src/lib/form-node-state/form-node-state';
 import type { ControlStateAdapter } from '../../src/lib/form-node-state/form-node-state-adapter';
@@ -22,6 +22,38 @@ export const runAbstractControlAdapterContract = (
     const { state } = await create();
     expect(state.source).toBe(source);
     expect(state.connected()).toBe(true);
+  });
+
+  it('tracks required rules independently of errors, including silent changes', async () => {
+    const { control, fixture, state } = await create();
+    control.setValue('Ada');
+    expect(state.required()).toBe(false);
+    control.addValidators(Validators.required);
+    control.updateValueAndValidity();
+    expect(state.required()).toBe(true);
+    expect(state.errors()).toEqual([]);
+    control.disable();
+    expect(state.required()).toBe(true);
+    control.enable();
+    control.removeValidators(Validators.required);
+    control.updateValueAndValidity({ emitEvent: false });
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    TestBed.tick();
+    await fixture.whenStable();
+    expect(state.required()).toBe(false);
+    control.addValidators(Validators.required);
+    control.updateValueAndValidity({ emitEvent: false });
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    TestBed.tick();
+    await fixture.whenStable();
+    expect(state.required()).toBe(true);
+    control.clearValidators();
+    control.updateValueAndValidity();
+    expect(state.required()).toBe(false);
+    control.setErrors({ required: true });
+    expect(state.required()).toBe(false);
   });
 
   it('tracks value changes', async () => {
@@ -148,7 +180,6 @@ export const runAbstractControlAdapterContract = (
     expect(state.name()).toBe(expectedName);
     expect(state.pattern()).toEqual([]);
     expect(state.readonly()).toBe(false);
-    expect(state.required()).toBe(false);
   });
 
   it('disconnects when its component is destroyed', async () => {

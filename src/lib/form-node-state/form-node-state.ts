@@ -62,7 +62,12 @@ export type ControlState<TValue = unknown> = {
   readonly pending: Signal<boolean>;
   /** Whether the bound control is readonly. */
   readonly readonly: Signal<boolean>;
-  /** Whether the bound control requires a non-empty value. */
+  /**
+   * Whether the bound control requires a non-empty value. For Reactive Forms and ngModel,
+   * recognizes directly registered Angular Validators.required and an active Angular required
+   * directive on the same host. Reads rule presence even when the current value is valid or
+   * disabled. Other constraints and arbitrary composed validators are not inferred.
+   */
   readonly required: Signal<boolean>;
   /** Whether the user has interacted with and left the bound control. */
   readonly touched: Signal<boolean>;
@@ -81,7 +86,8 @@ export type ControlState<TValue = unknown> = {
  *
  * This is a state integration utility; retain the value contract required by the chosen forms API,
  * such as a value model or ControlValueAccessor. Metadata unavailable from a source uses neutral
- * defaults; Reactive Forms and ngModel do not expose required or constraint metadata through this hook.
+ * defaults. Reactive Forms and ngModel expose required through Angular Validators.required or an
+ * active Angular required directive; other constraint metadata retains neutral defaults.
  *
  * This hook must be called while constructing a custom Angular component and from an Angular
  * injection context. It reads the forms binding attached to that component's host element. Do not

@@ -3092,3 +3092,28 @@ filters, declared-only selection, and complete pair suspension are intentional F
 A proposed form/group/array option tentatively called globalOptions would configure that node and
 its descendants. It is not implemented; naming, precedence, and inheritance remain open. Neither
 binding option introduces subtree inheritance.
+
+
+### Required state from Angular AbstractControl bindings
+
+`useFormNodeState().required()` recognizes directly registered `Validators.required` and enabled
+Angular `RequiredValidator` instances supplied through same-host `NG_VALIDATORS`, including the
+checkbox subclass. Directive inputs use Angular's public `booleanAttribute()` normalization, so
+an empty attribute is true and false or the string 'false' is false. These sources are combined
+with OR; a valid value or disabled control does not erase the rule. No validator functions are
+executed to discover metadata, and arbitrary error payloads, composed wrappers, or direct
+`Validators.requiredTrue` registrations do not imply this flag.
+
+Control events update the state; required presence participates in the post-render snapshot so
+silent changes and directive toggles still invalidate it even when value, errors, and status are
+unchanged. Rebinding releases the old subscription and follows the replacement. Disconnection
+returns the facade's neutral false. Form Nodes `node.required()` and the Signal Forms adapter
+retain their own existing metadata semantics.
+
+Reference: Angular v22.1.5 (`468b65b74566537456c192ac4281795c5a1e1a5e`), resolved from release tags.
+Inspected `packages/forms/src/model/abstract_model.ts` (`hasValidator`, `_updateHasRequiredValidator`),
+`packages/forms/src/directives/validators.ts` (`RequiredValidator`, `CheckboxRequiredValidator`),
+and `packages/forms/signals/test/web/reactive_fvc.spec.ts` and `template_fvc.spec.ts`.
+The direct-reference check matches Angular's required metadata bridge. This hook additionally
+recognizes the standard required directive through its public instance and input rather than
+probing Angular's private validator arrays or executing validation.

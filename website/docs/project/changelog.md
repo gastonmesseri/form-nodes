@@ -32,6 +32,8 @@ canonical release record.
 
 ### Fixed
 
+- `useFormNodeState().required()` now detects Angular `Validators.required` and active required directives with `[formControl]`, `[formControlName]`, and `[(ngModel)]`, including dynamic and silent updates even when the value is valid.
+
 - Empty `form({})` and `group({})` declarations now infer `DynamicNode[]` for `Object.values(children)`, supporting records populated with `add()`. Nonempty declarations retain their concrete child unions; `get(key)` still accounts for missing children.
 
 ## 1.1.0 — 2026-09-07
