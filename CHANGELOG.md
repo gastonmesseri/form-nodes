@@ -21,6 +21,8 @@ consumer migration guide.
   CVAs can reset the bound subtree through `NgControl.reset()` or `control.reset()`, preserving
   node reset semantics and supporting local notification suppression with `{ emitEvent: false }`.
   Unsupported `onlySelf` and `overwriteDefaultValue` reset options warn and are ignored instead of interrupting reset.
+  `validator` and `asyncValidator` now explicitly return `null` on both adapter surfaces: no Angular
+  validator functions are exported; node validation remains observable through errors, pending, and status.
 - `useControlState().value()` with `[formNode]` now reports the latest committed value even when
   node equality retains an older public value. Pending debounce input remains separate.
 - Asynchronous validators preserve pending work when a computed dependency compares equal, while

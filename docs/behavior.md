@@ -2468,6 +2468,32 @@ The directive currently provides these behaviors:
   follow `_controlValue()`, including pending debounce input and writes suppressed by public equality.
   Status precedence remains disabled, valid, invalid, then pending. Error details are the node's own
   errors indexed by `kind`; aggregate validity and interaction still include descendants.
+- `NgControl.validator`, `NgControl.asyncValidator`, and both corresponding `control` properties
+  are read-only and return `null`: the combined adapter exposes no transferable Angular
+  `ValidatorFn`/`AsyncValidatorFn`. This deliberately does not describe whether the node has
+  configured rules, binding-owned `NG_VALIDATORS`, imperative errors, or pending asynchronous
+  validation. Property reads neither execute rules nor change dependencies, errors, interaction,
+  or cancellation. Node validation stays authoritative across reactive changes, replacement of
+  validators, binding replacement, and destruction. Binding-owned synchronous callbacks remain
+  memoized in their existing connection and respond to `registerOnValidatorChange()`; they are
+  not exported for duplicate execution. Reading errors and subscribing to status remain supported.
+  `hasValidator(Validators.required)` retains its metadata mapping, including `requiredIf`;
+  arbitrary Angular validator identities and invoking/copying/assigning Angular validator
+  functions are unsupported. Use node APIs to configure rules and adapter state to observe them.
+  A cached-error function would incorrectly claim to validate its supplied `AbstractControl`,
+  while exporting node callbacks would bypass reactive contexts and async ownership; neither is
+  part of this compatibility contract. The directive and control therefore share the same view,
+  unlike Reactive Forms' independently composed directive and control functions.
+  Latest stable Angular 22 re-resolved as `v22.1.5`, commit
+  `468b65b74566537456c192ac4281795c5a1e1a5e`. Inspected
+  `packages/forms/src/directives/abstract_control_directive.ts` (composed-function getters),
+  `packages/forms/src/model/abstract_model.ts` (function getters/setters and validation execution),
+  `packages/forms/test/directives_spec.ts` (composition and invocation),
+  `packages/forms/test/form_control_spec.ts` (replacement, clearing, and async functions),
+  `packages/forms/signals/src/controls/interop_ng_control.ts` (no function export), and
+  `packages/forms/signals/test/web/interop.spec.ts` (legacy validator errors and change callbacks).
+  Integration tests cover reactive field and nested-form rules, async cancellation without extra
+  execution, and a browser CVA with deferred `useNgControl` lookup and `NG_VALIDATORS`.
 - `NgControl.reset(value?)` and `NgControl.control.reset(value?, options?)` delegate to the
   currently bound node's reset. Omitted/undefined values preserve current committed data;
   explicit values use the existing node reset semantics (complete form values, array

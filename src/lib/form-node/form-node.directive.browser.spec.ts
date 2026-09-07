@@ -2,7 +2,7 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FormField, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
-import { FormResetEvent, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
+import { FormResetEvent, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { CSP_NONCE, Component, EventEmitter, Injector, Input, Output, ViewEncapsulation, forwardRef, inject, input, model, output, signal, type OnDestroy } from '@angular/core';
 
@@ -111,6 +111,92 @@ describe('FormNode in Chromium', () => {
     expect(input.value).toBe('2026-09-08');
     expect(profile.valid()).toBe(true);
     fixture.destroy();
+  });
+
+  it('keeps CVA validators active when a useNgControl consumer inspects the function boundary', () => {
+    const useNgControl = () => {
+      const injector = inject(Injector);
+      return () => injector.get(NgControl, null, { self: true })!;
+    };
+    @Component({
+      selector: 'validator-boundary-cva',
+      template: `<span [attr.data-status]="ngControl?.status">{{ ngControl?.errors?.['cvaRule']?.kind }}</span>`,
+      providers: [
+        { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ValidatorCva), multi: true },
+        { provide: NG_VALIDATORS, useExisting: forwardRef(() => ValidatorCva), multi: true },
+      ],
+    })
+    class ValidatorCva implements ControlValueAccessor {
+      resolveNgControl = useNgControl();
+
+      ngControl: NgControl | undefined;
+
+      validationCalls = 0;
+
+      reject = true;
+
+      validatorChange: () => void = () => {};
+
+      ngAfterContentInit() { this.ngControl = this.resolveNgControl(); }
+
+      writeValue(_value: unknown) {}
+
+      registerOnChange(_callback: (value: unknown) => void) {}
+
+      registerOnTouched(_callback: () => void) {}
+
+      registerOnValidatorChange(callback: () => void) { this.validatorChange = callback; }
+
+      validate(control: AbstractControl): ValidationErrors | null {
+        this.validationCalls++;
+        return this.reject && control.value === 'blocked' ? { cvaRule: true } : null;
+      }
+    }
+    @Component({
+      template: `<validator-boundary-cva [formNode]="active()" />`,
+      imports: [FormNode, ValidatorCva],
+    })
+    class Host {
+      profile = form({ name: field.strict('blocked') });
+
+      active = signal<Node>(this.profile.name);
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const host = fixture.componentInstance;
+    const cva = fixture.debugElement.children[0]!.componentInstance as ValidatorCva;
+    const ngControl = cva.resolveNgControl();
+    const span = fixture.nativeElement.querySelector('span') as HTMLSpanElement;
+    expect(span.getAttribute('data-status')).toBe('INVALID');
+    expect(span.textContent).toBe('cvaRule');
+    expect(host.profile.invalid()).toBe(true);
+    const calls = cva.validationCalls;
+    expect(ngControl.validator).toBeNull();
+    expect(ngControl.asyncValidator).toBeNull();
+    expect(ngControl.control!.validator).toBeNull();
+    expect(ngControl.control!.asyncValidator).toBeNull();
+    expect(cva.validationCalls).toBe(calls);
+    cva.reject = false;
+    cva.validatorChange();
+    fixture.detectChanges();
+    expect(cva.validationCalls).toBe(calls + 1);
+    expect(host.profile.valid()).toBe(true);
+    expect(span.getAttribute('data-status')).toBe('VALID');
+    cva.reject = true;
+    cva.validatorChange();
+    fixture.detectChanges();
+    expect(host.profile.invalid()).toBe(true);
+    const replacement = field.strict('allowed');
+    host.active.set(replacement);
+    fixture.detectChanges();
+    expect(host.profile.valid()).toBe(true);
+    expect(ngControl.errors).toBeNull();
+    replacement.set('blocked');
+    fixture.detectChanges();
+    expect(ngControl.errors?.['cvaRule']).toBeDefined();
+    expect(ngControl.validator).toBeNull();
+    fixture.destroy();
+    expect(replacement.valid()).toBe(true);
   });
 
   it('lets a CVA reset through a deferred useNgControl hook, including silent resets and pending input', () => {
