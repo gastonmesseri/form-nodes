@@ -9,8 +9,8 @@ import runtimeSource from '!!raw-loader!../../examples/global-form-nodes-configu
 
 # configureGlobalFormNodes()
 
-Configures process-wide defaults for validator messages, automatic classes, and custom-control
-input synchronization. Angular providers override each option independently. The exported
+Configures process-wide defaults for validator messages and automatic classes. Optional
+experimental control integration is documented at the end of this page. Angular providers override each option independently. The exported
 `GlobalFormNodesConfig` type describes these options.
 
 ## Signature
@@ -48,31 +48,22 @@ form options.
 ## Independent options and precedence
 
 For each binding option, resolution is: **nearest explicit Angular provider → global setting →
-library default**. A node's explicit `syncInputs` or `bindInputOutputPairs` option takes precedence over every provider. For messages, validator and form-tree overrides retain higher precedence;
+library default**. For messages, validator and form-tree overrides retain higher precedence;
 global messages remain the fallback after catalogs captured by nodes from Angular providers.
 
 | Option | Global behavior | `null` resets to |
 | --- | --- | --- |
 | `validatorMessages` | Static or reactive fallback catalog | Empty catalog, leaving built-in messages as the final fallback |
 | `classes` | Class map captured by new bindings | No automatic classes |
-| `syncInputs` | Input selection for new connections: false, declared, all, signal-controls, a list, or `{ inputs, target }` | `false` |
-| `bindInputOutputPairs` | Enables complete paired value connections for new bindings | `false` |
 
 Omitting an option or passing `undefined` preserves the current global setting. Multiple calls
 update only the supplied options. Explicit catalogs and class maps replace their previous maps;
 they do not merge entries automatically.
 
-A provider with `classes: null` or `syncInputs: null` explicitly selects the library default,
+A provider with `classes: null` explicitly selects the library default,
 bypassing the global value for that option. A provider with `validatorMessages: null` supplies an
 empty provider catalog; normal message fallback still includes the global catalog. It does not
 force built-in English text.
-
-Both binding options are **experimental and disabled by default**. Use `syncInputs: 'signal-controls'`
-for all state inputs on actual model controls, or `{ inputs: ['disabled'], target: 'cva' }` for
-selected CVA inputs. The selected adapter determines the target even when a component offers both
-contracts. SyncInputs never enables paired value binding; use `bindInputOutputPairs: true` independently.
-False/null disables either option without changing the other. Value models and standard CVAs always
-remain connected. See [input selection and paired binding](./provide-form-nodes-config.md#custom-control-inputs).
 
 ## Reactive messages and binding snapshots
 
@@ -83,8 +74,7 @@ Selected message callbacks can also read signals. Replacing or restoring global 
 existing failing nodes, including nodes declared outside Angular DI.
 
 Class predicates remain reactive after a binding captures their map. Changing the global class
-map or synchronization option later affects new bindings or control connections; it does not
-reconfigure existing ones. Configure those defaults before bootstrap. Native-control state,
+map later affects new bindings; it does not reconfigure existing ones. Configure those defaults before bootstrap. Native-control state,
 value/checked binding, touch, focus, and reset behavior retain their existing rules.
 
 ## Restoring temporary configuration
@@ -100,3 +90,32 @@ This executable example checks partial updates, reactive messages, resets, and r
 
 See [Configuration](./configuration.md#process-wide-fallback) and
 [Validator messages](../guides/validator-messages.md).
+
+## 🧪 `syncInputs` (experimental) {#sync-inputs}
+
+**Disabled by default.** This optional setting writes node state and constraints into matching
+component inputs through Angular internals. Standard value models and CVAs work without it.
+
+Use `syncInputs: 'signal-controls'` for all supported state inputs on actual model controls, or
+`{ inputs: ['disabled'], target: 'cva' }` for selected CVA inputs. The selected adapter determines
+the target even when a component offers both contracts. This option never enables paired value binding.
+
+See [the complete input selections and behavior](./provide-form-nodes-config.md#custom-control-inputs).
+
+## 🧪 `bindInputOutputPairs` (experimental) {#bind-input-output-pairs}
+
+**Disabled by default.** Set `bindInputOutputPairs: true` to connect separate `value`/`valueChange`
+or `checked`/`checkedChange` pairs. These value writes use Angular internals. Value models and
+standard CVAs remain connected independently of this setting.
+
+See [paired binding and its lifecycle](./provide-form-nodes-config.md#bind-input-output-pairs).
+
+### Scope of experimental defaults
+
+Each option resolves independently: explicit node option → nearest explicit Angular provider →
+global setting → library default (`false`). False or `null` disables that option without changing
+the other. A provider with `null` explicitly disables it even when the global setting enables it.
+
+Omission or `undefined` preserves the current global setting. Changing or restoring these global
+options affects future bindings or control connections; it does not reconfigure existing ones.
+Configure them before bootstrap when opting in.

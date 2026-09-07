@@ -14,7 +14,7 @@ Start with [Custom controls](./custom-controls.md) for a minimal component integ
 This page covers alternative control contracts, state inputs and hooks, Angular forms
 state observation, detailed CVA behavior, wrappers, and compatibility boundaries.
 
-:::tip Experimental state input synchronization
+:::tip 🧪 Experimental state input synchronization
 
 Optional state and constraint inputs are not synchronized by default. Opt in with `syncInputs: 'declared'`
 for initial declarations or `'all'` for all supported inputs. Value/checked models still work

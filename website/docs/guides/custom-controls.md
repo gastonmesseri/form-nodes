@@ -62,7 +62,7 @@ Initialize the value model with a default, such as `model('')`, instead of `mode
 The bound field supplies its value during setup. For a checkbox-style component, expose
 `checked = model(false)` instead of `value`.
 
-## Keep control of your component's inputs
+## 🧪 Keep control of your component's inputs {#keep-control-of-your-components-inputs}
 
 Optional custom-control input synchronization is **experimental and disabled by default**.
 This concerns the state and constraint inputs used by Angular's `FormValueControl` and
@@ -83,7 +83,7 @@ precedence even when they also expose a model; this preset does not write their 
 Use `'all'` for all inputs on any active custom-control adapter, including CVAs and enabled pairs.
 Native controls and standard CVA disabled callbacks remain connected in every mode.
 
-### Select inputs and target controls
+### 🧪 Select inputs and target controls {#select-inputs-and-target-controls}
 
 Lists select exactly those inputs. Objects separate the input selection from its target:
 
@@ -100,7 +100,7 @@ Options work independently on nodes, factory defaults, providers, and global con
 options override inherited settings for their own binding, not descendants. See the
 [full configuration reference](../reference/provide-form-nodes-config.md#custom-control-inputs).
 
-## Separate input/output pairs
+## 🧪 Separate input/output pairs (experimental) {#separate-input-output-pairs}
 
 Components with `value`/`valueChange` or `checked`/`checkedChange` pairs require
 **`bindInputOutputPairs: true`**. This experimental option enables value writes, change/touch outputs,

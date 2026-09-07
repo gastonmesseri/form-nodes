@@ -4,7 +4,7 @@ title: Migration guides
 
 # Migration guides
 
-## Unreleased: experimental input synchronization
+## 🧪 Unreleased: experimental input synchronization {#unreleased-experimental-input-synchronization}
 
 Rename `syncControlInputs` to `syncInputs`. Optional custom-control input synchronization is now
 **disabled by default**. To preserve the old full synchronization, explicitly pass

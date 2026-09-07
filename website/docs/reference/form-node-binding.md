@@ -431,7 +431,7 @@ See [Control binding](../guides/control-binding.md), [Custom controls](../guides
 and [Form submission](../guides/submission.md).
 
 
-## Custom-control input synchronization
+## 🧪 Custom-control input synchronization (experimental) {#custom-control-input-synchronization}
 
 Optional custom-control input synchronization is experimental and disabled by default.
 Use `syncInputs: 'declared'` for initial declarations or `'all'` for all supported state inputs.
