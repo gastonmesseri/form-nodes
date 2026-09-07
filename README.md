@@ -471,8 +471,8 @@ covers the propagation rules and how configured state interacts with imperative 
 
 ## Dynamic arrays
 
-An object template creates independent item nodes. Render `items()` and track each node so its
-controls remain associated with the same item when the collection changes:
+An object template creates independent item nodes. Iterate the array node directly and track each
+item node so its controls remain associated with the same item when the collection changes:
 
 <!-- example: readme-dynamic-array.typecheck.ts -->
 ```ts
@@ -484,7 +484,7 @@ import { array, email, field, form, FormNode, required } from 'form-nodes';
   selector: 'app-contacts',
   imports: [FormNode],
   template: `
-    @for (contact of myForm.contacts.items(); track contact; let index = $index) {
+    @for (contact of myForm.contacts; track contact; let index = $index) {
       <fieldset>
         <legend>Contact {{ index + 1 }}</legend>
         <label>Name <input [formNode]="contact.name" /></label>

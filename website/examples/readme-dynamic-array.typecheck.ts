@@ -6,7 +6,7 @@ import { array, email, field, form, FormNode, required } from 'form-nodes';
   selector: 'app-contacts',
   imports: [FormNode],
   template: `
-    @for (contact of myForm.contacts.items(); track contact; let index = $index) {
+    @for (contact of myForm.contacts; track contact; let index = $index) {
       <fieldset>
         <legend>Contact {{ index + 1 }}</legend>
         <label>Name <input [formNode]="contact.name" /></label>
