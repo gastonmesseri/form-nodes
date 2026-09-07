@@ -78,7 +78,7 @@ example.apply(); // 'value'
 
 ## Angular compatibility
 
-The package supports Angular `^21.2.22 || ^22.1.5` and builds with Angular 21.2.22 / TypeScript 5.9.3.
+The package supports Angular `^21.0.7 || ^22.1.5` and builds with Angular 21.0.7 / TypeScript 5.9.3.
 Angular 22 `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`) remains the behavioral authority.
 The reference was re-resolved for this change; `api/control.ts`, `directive/form_field.ts`,
 `directive/control_custom.ts`, `field/state.ts`, and `test/node/field_node.spec.ts` were inspected
@@ -91,6 +91,10 @@ The former `$field` adapter and its schema samples are removed; `$api` is the so
 `provideFormNodeConfig()` configures only `[formNode]`, using a token independent of Angular's config.
 `useControlState()` retains all adapters, including external Angular Signal Forms; tests create real
 Angular forms and use their native operations instead of converting Form Nodes trees.
+Angular 21 `v21.0.7` (`8fd585cc0b4a7fc70ecb306c0c7b17f15393d0bf`) was additionally inspected
+at `api/form_field_directive.ts` and `api/rules/validation/validation_errors.ts`.
+Angular 21.0.7 is the minimum: it introduces `FormField` and `FORM_FIELD`. Error normalization
+accepts Angular versions both with and without the optional `formField` error property.
 
 ## Design guarantees
 

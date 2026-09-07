@@ -152,3 +152,23 @@ The Angular 21 workspace also passed `npm run test:package`, `npm run docs:typec
 (including 21 executable documentation examples), and `npm run docs:build`.
 Angular 22 source checks ran in an isolated temporary copy; the repository's development
 dependencies remain on Angular 21. Browser binaries were installed before successful runs.
+
+## Minimum-version expansion (2026-09-07)
+
+The supported range is now `^21.0.7 || ^22.1.5`. Angular `v21.0.7`
+(`8fd585cc0b4a7fc70ecb306c0c7b17f15393d0bf`) introduces `FormField` and `FORM_FIELD`.
+Its validation-error declaration has `fieldTree` but no optional `formField` property.
+The adapter accepts that older declaration while continuing to omit Angular binding references
+from normalized errors. Angular 22 `v22.1.5` remains the behavioral authority.
+
+The minimum build toolchain is Angular 21.0.7, ng-packagr 21.0.0, TypeScript 5.9.3, and Node.js
+22.22.3. Tests use the library's own validation-error contract and checkbox template syntax
+supported by Angular 21.0.7; no tests are skipped to enable compatibility.
+
+Both Angular 21.0.7 and Angular 22.1.5 passed type checks, 1,174 unit tests with the required
+coverage thresholds, and 47 browser plus 2 production AOT tests, including SSR/hydration fixtures.
+The same Angular 21.0.7-built archive passed strict installation, one template/declaration
+fixture, and three runtime tests in each of Angular 21.0.7, 21.2.18, and 22.1.5.
+The repository also passed the package-consumer check and documentation type/build checks.
+CI's pinned Angular 21 consumer now uses the minimum 21.0.7; the 21.2.18 consumer was checked
+in an isolated temporary copy.

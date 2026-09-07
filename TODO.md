@@ -61,6 +61,8 @@
 
 - [NEXT] Support at least node version v20.19.4 (the one installed in DL)
 
+- [NEXT] Add CI support in 
+
 - [NEXT] Support angular 21, and research versioning of the library to be in line with angular libraries
 
 - [NEXT] [ ] Create package for npm
@@ -127,6 +129,8 @@
           },
         ]);
       });
+
+- [NEXT] Remove usage of void xxxx; it seems the project does that to pass ESLint with unused variables;
 
 - [ ] Audit: Review what can we take away from internalApi in primitives (maybe some properties/methods are not needed to be in internalApi)
 
@@ -378,6 +382,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 
 ## Completed
+
+- [x] Lower the Angular 21 minimum to 21.0.7 with TypeScript 5.9.3. Preserve error normalization across Signal Forms versions, build with the minimum toolchain, and verify the same tarball in Angular 21.0.7, 21.2.18, and 22.1.5 consumers.
 
 - [x] Resolve the proposal to remove `myForm.name.$field`: remove the adapter while retaining `useControlState()` support for external Angular forms.
 - [x] Implement Angular 21 support after the [compatibility audit](docs/angular-21-compatibility.md), using the oldest supported build toolchain and requiring both verified Angular majors.
