@@ -6,6 +6,7 @@ import type { FormApi } from '../primitives/form.type';
 import type { ArrayApi } from '../primitives/array.type';
 import { isNode } from '../primitives/utils/node-marker';
 import { arrayToObject } from '../utils/array-to-object';
+import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import type { InternalNode, Node, Nodes } from '../types/node.type';
 import type { ValidationError } from '../validation/validation.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
@@ -153,7 +154,7 @@ export class FormNodeNgControl {
   reset(value?: unknown, options: { emitEvent?: boolean; onlySelf?: boolean; overwriteDefaultValue?: boolean } = {}) {
     if (this._destroyed) return;
     if (options.onlySelf || options.overwriteDefaultValue) {
-      console.warn('formNode: reset() ignores onlySelf and overwriteDefaultValue; node ancestors remain reactive and reset has no stored default value.');
+      warnInDevMode('formNode: reset() ignores onlySelf and overwriteDefaultValue; node ancestors remain reactive and reset has no stored default value.');
     }
     untracked(() => {
       const node = this._getNode();

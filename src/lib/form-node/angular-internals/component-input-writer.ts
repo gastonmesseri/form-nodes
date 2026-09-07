@@ -1,5 +1,7 @@
 import { ChangeDetectorRef, reflectComponentType, untracked, type Injector, type Type } from '@angular/core';
 
+import { warnInDevMode } from '../../utils/warn-in-dev-mode';
+
 type InputSignalNodeLike = {
   transformFn?: (value: unknown) => unknown;
   applyValueToInputSignal(node: InputSignalNodeLike, value: unknown): void;
@@ -38,7 +40,7 @@ export const warnFailedInputWrite = (control: object, name: string, usesControlS
   } catch {
     // Keep the generic control name when the instance cannot be inspected safely.
   }
-  console.warn(
+  warnInDevMode(
     `formNode: could not synchronize the '${name}' input on ${controlName} because its Angular input internals are incompatible. `
     + `The control remains connected, but this input may be stale.${usesControlState ? '' : ' Prefer useControlState() to consume bound state without writable state inputs;'} `
     + 'a ControlValueAccessor is also an option for value and disabled interoperability.',

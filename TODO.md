@@ -52,21 +52,19 @@
 
   })
 
-- [NEXT] [ ] Ensure that ALL console.warn are only shown in development mode, or at least not on production builds (maybe create a helper function for this?)
 
-- [NEXT] [ ] Rename ng-forms folder (root) to form-nodes
+- [NEXT] [ ] Check if useNgControl hook in DL works
 
-- [NEXT] In the custom-controls page, simplify the page to the basics, and create another page create custom-controls-advanced, that contains all the details that i think right now are not that relevant to a user who just want to know how to easily integrate a custom component.
-
-- [NEXT] [ ] Implement hasError and hasValidator methods into my primitive nodes
-
-- [NEXT] [ ] Check if it is possible to make it work with Angular 21 (and its relevant typescript version, check if our used typescript features are valid)
-
-- [NEXT] [ ] Make it evident in the README.md that it is an angular library, maybe an angular logo next to the library logo?
+- [NEXT] Support at least node version v20.19.4 (the one installed in DL)
 
 - [NEXT] [ ] Create package for npm
   - [ ] Check with chatgpt, how to improve as max as possible a nice package.json metadata for this project (after naming library)
   - DO AS MUCH AS POSSIBLE TO INDEX IN NPM GITHUB AND GOOGLE
+
+- [NEXT] [ ] Implement hasError and hasValidator methods into my primitive nodes
+
+- [NEXT] [ ] Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
+  - [ ] maybe other ones that are not required, min(), max(), etc
 
 - [NEXT] [ ] Improve submit options api (right now is nested i think)
   - [ ] Consider the following (changing submission api):
@@ -89,9 +87,6 @@
 
 - [ ] [IMPORTANT]: decide watch patch does in an array, and also what does the patch does in an array if called from a parent form()
   - consider possibilities and help me deciding, what does it make sense?
-
-- [NEXT] [ ] Make our required() handling to be compatible with angular material (ensure angular material detects our required() handling to display the required mark)
-  - [ ] maybe other ones that are not required, min(), max(), etc
 
 - [NEXT] [ ] Consider hiding from the node the controlValue and setControlValue properties, and maybe just exposing them in the ".api" to avoid cluttering for the consumer
   - [ ] controlValue and setControlValue feel more like an internal thing
@@ -329,6 +324,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Later
 
+- [ ] Implement Angular 21 support if prioritized after the [compatibility audit](docs/angular-21-compatibility.md): adapt Signal Forms exports/types and rule calls, resolve `$field` metadata/touch/reset differences, build with the oldest supported Angular toolchain, and verify both majors before widening peers. Feasibility was assessed; support has not been implemented.
+
 - Optionally extend `ControlState` with interaction-reporting methods beyond `markAsTouched()` only
   when every supported binding source exposes a public operation with equivalent semantics. Keep
   value changes and form-owned operations such as reset, disable, and enable outside this facade.
@@ -387,6 +384,13 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 
 ## Completed
 
+- [x] Prepare isolated Angular 21.2.22 / TypeScript 5.9.3 and Angular 22.1.5 / TypeScript 6.0.3 package consumers with pinned lockfiles, strict template/declaration checks, and three runtime smoke tests. CI builds one shared tarball; Angular 22 is required and Angular 21 reports experimental failures. Preserve `$field` and the current supported peer range. See `tests/compatibility/README.md` for commands and promotion requirements.
+
+- [x] Check Angular 21 and TypeScript compatibility. Angular 21.2.22 / TypeScript 5.9.3 passes 1,152 runtime tests but fails 53 tests and the package build because of Signal Forms API differences. TypeScript 5.9.3 passes the existing public inference tests against current Angular declarations; specification checks additionally need `DOM.Iterable`. Keep Angular 22 support unchanged. See [the audit](docs/angular-21-compatibility.md) for pinned source references, commands, results, and remaining work.
+
+- [x] Simplify the custom-controls guide to basic component integration and move detailed contracts to `custom-controls-advanced`, with sidebar navigation and updated links.
+
+- [x] Restrict all library console warnings to Angular development mode through the internal `warnInDevMode()` helper. Unknown keys/indexes, unsupported reset options, failed input synchronization, and hidden-node diagnostics remain nonfatal and silent in production. Cover the helper without DI and real operations in the production Chromium process.
 - [x] Complete the remaining `NgControl` compatibility contract for `[formNode]`, one step at a time.
   - Start in `src/lib/form-node/form-node-ng-control.ts`; integration tests live in `form-node-ng-control.spec.ts` and `form-node.directive.browser.spec.ts`.
   - Already implemented: current value/validation/interaction state, `control`, `valueAccessor`, observable `valueChanges`/`statusChanges`/`events`, binding-owned `setErrors()`, and `getError()`/`hasError()` with relative descendant paths. Preserve rebinding, cleanup, original imperative error payloads, and reactive queries across structural changes and public equality filtering.
@@ -397,11 +401,9 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
   - [x] Verified reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Re-resolved the latest Angular 22 maintenance release and inspected Signal Forms interop and relevant Reactive Forms implementation/tests. Node ownership and intentional differences are documented.
   - [x] Updated behavior and consumer documentation, plus both unreleased changelogs for delivered behavior changes. Focused integration, typecheck/lint, build, coverage, browser, and documentation checks passed. Internal refactors and audit-only work do not add changelog noise.
   - [x] `hasValidator()` recognizes Angular's `Validators.required` through node required metadata, including reactive `requiredIf`; specific CVA tests already cover both. Do not claim arbitrary Angular validator identity support without a defined mapping.
-
   - [x] Verified CVAs that obtain the adapter through a deferred `useNgControl` hook. All 16 internal runtime members use `_`; all 27 unprefixed members match Angular names. Existing integration tests verify rebinding, cleanup, notifications, errors, and required metadata.
   - [x] Original naming requirement: prefix Form Nodes implementation details with `_`, while retaining Angular names for implemented contract members.
   - [x] Original DL subscription requirement: `ngControl.control.statusChanges` works alongside `ngControl.statusChanges`; both refer to the same stable observable.
-
 - [x] IMPLEMENT REQUIRED SUPPORT FOR ANGULAR REQUIRED, FOR EXISTING CUSTOM COMPONENTS THAT CHECK angular old validators.required to display the mark
 - [x] Choose `form-nodes` as the library name and unscoped npm package.
   - Considered a shared library-family scope, Angular-themed scoped names, and a generic tools scope; selected the unscoped name instead.
@@ -1061,3 +1063,5 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Create repo to pass custom lintern rules in dlab
 - [x] Allow defining global options
   - [x] example: createFormUtils({ ... globaloptionshere }) // Returns { form, field, array, group, etc... }
+- [x] Rename ng-forms folder (root) to form-nodes
+

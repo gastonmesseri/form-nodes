@@ -1226,7 +1226,7 @@ address.set({
 address(); // { city: 'London', country: 'UK' }
 ```
 
-Unknown runtime keys are ignored with a warning.
+Unknown runtime keys are ignored with a warning in development mode.
 
 #### update()
 
@@ -1274,7 +1274,7 @@ address.patch({
 address.coordinates(); // { latitude: 47.3769, longitude: -0.1276 }
 ```
 
-Unknown runtime keys are ignored with a warning.
+Unknown runtime keys are ignored with a warning in development mode.
 
 #### reset()
 

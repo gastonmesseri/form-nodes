@@ -338,7 +338,7 @@ Test the component's own Angular contract independently, then add one integratio
   the corresponding node signals change.
 - Optional `focus()` and `reset()` hooks should run from the public node operations.
 
-See [Custom controls](./custom-controls.md) for every supported integration shape.
+See [Advanced custom controls](./custom-controls-advanced.md) for every supported integration shape.
 
 ## What not to test
 

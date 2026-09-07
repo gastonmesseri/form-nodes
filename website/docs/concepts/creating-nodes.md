@@ -276,8 +276,8 @@ profile.patch({
 ```
 
 Incorrect value types, missing complete-value properties, and unknown patch keys are compile-time
-errors. Validators receive the inferred value type too. Runtime warnings protect against unknown
-keys that enter through unsafe casts or untyped external data.
+errors. Validators receive the inferred value type too. Unknown runtime keys entering through unsafe casts or untyped external data are ignored,
+with warnings in development mode.
 
 When named controls genuinely enter or leave at runtime, use `add()`, direct property access, and `remove()` on a
 form or group. Initially declared children remain fixed and precisely typed; runtime names are

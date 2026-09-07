@@ -594,7 +594,7 @@ myForm.people.patch([
 ]);
 ```
 
-Sparse patch entries are skipped, extra indexes are ignored with a warning, and existing nodes are
+Sparse patch entries are skipped, extra indexes are ignored with a warning in development mode, and existing nodes are
 not recreated. Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying
 it to `reset(value)` clears the array.
 
@@ -1693,7 +1693,7 @@ users();
 **Signature:** `patch(value: readonly ItemPatch[]): void`
 
 Partially updates existing nodes by index without resizing the array. Sparse entries are skipped,
-and entries beyond the current length are ignored with a warning.
+and entries beyond the current length are ignored with a warning in development mode.
 
 ```ts
 const users = array({
