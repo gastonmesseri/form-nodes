@@ -1,3 +1,5 @@
+import type { Signal } from '@angular/core';
+
 import type { Equal, Expect } from './assert.types';
 import { array, asyncValidator, field, form, group, required, type DynamicNode } from '../../src/public-api';
 
@@ -19,3 +21,21 @@ for (const node of [profile, profile.name, profile.address, profile.rows]) {
 declare const dynamic: DynamicNode;
 dynamic.hasError('required');
 dynamic.hasValidator(required);
+
+const declaredValidators: Signal<ReturnType<typeof profile.name.validators>> = profile.name.validators;
+const resolvedName = profile.name.validators({ resolve: true });
+const registeredName = profile.name.validators();
+type _SameValidatorType = Expect<Equal<typeof resolvedName, typeof registeredName>>;
+for (const node of [profile, profile.name, profile.address, profile.rows]) {
+  node.validators({});
+  node.validators({ resolve: false });
+  node.validators({ resolve: true });
+  const resolvedPresence = node.hasValidator(required, { resolve: true });
+  type _ResolvedPresence = Expect<Equal<typeof resolvedPresence, boolean>>;
+  // @ts-expect-error Resolution must be a boolean.
+  node.validators({ resolve: 'yes' });
+  // @ts-expect-error Resolution must be a boolean.
+  node.hasValidator(required, { resolve: 'yes' });
+}
+profile.address.hasValidator(ownGroupValidator, { resolve: true });
+dynamic.hasValidator(required, { resolve: true });

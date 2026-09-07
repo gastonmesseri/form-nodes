@@ -252,7 +252,13 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    */
   reset(...args: [] | [value: TValue]): void;
   /** Current normalized validators assigned directly to this field, in declaration order. */
-  validators: Signal<Validators<TValue>>;
+  validators: Signal<Validators<TValue>> & {
+    /**
+     * Resolves returned synchronous compositions; async validators remain unexecuted references.
+     * @reactive Tracks composition dependencies and shares synchronous validation evaluation.
+     */
+    (options: { resolve?: boolean }): Validators<TValue>;
+  };
   /** Replaces this field's validators and immediately validates the current exposed value. */
   setValidators(validators: ValidatorSource<TValue, Field<TValue>>): void;
   /**
@@ -303,10 +309,10 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
   hasError(kind: string): boolean;
   /**
    * Whether the same validator function is directly registered on this node, including async validators.
-   * Does not run validators or inspect validators returned by a composing function.
-   * @reactive Memoizes by function identity and tracks setValidators() changes.
+   * By default, does not run validators. Set resolve to true to inspect resolved leaf references.
+   * @reactive Memoizes by function identity and resolution mode; resolved queries track composition dependencies.
    */
-  hasValidator(validator: (context: any) => unknown): boolean;
+  hasValidator(validator: (context: any) => unknown, options?: { resolve?: boolean }): boolean;
   /** Strictest minimum value contributed by active numeric or date validators, or `null` when absent. */
   min: Signal<NonNullable<TValue> | null>;
   /** Strictest maximum value contributed by active numeric or date validators, or `null` when absent. */

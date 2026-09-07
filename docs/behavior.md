@@ -2858,13 +2858,13 @@ All primitive nodes, their public API aliases, and dynamically retrieved nodes e
 `hasError(kind)` and `hasValidator(validator)`. `hasError` checks the current local `errors()` by
 kind, not descendant `allErrors()`. It includes async and external errors when they appear there,
 and follows existing disabled/hidden filtering and async completion/cancellation semantics.
-`hasValidator` checks the normalized directly registered list by function reference, including
+`hasValidator` without resolution checks the normalized directly registered list by function reference, including
 async functions. It does not execute validators, inspect composed return values, search children,
 or inspect external control validators. Passing, disabled, pending, and conditionally skipped
 validators remain registered until `setValidators()` replaces them.
 
 Both queries memoize with a bounded 20-argument cache and track the underlying error/list signal.
-Callbacks in reactive consumers observe boolean transitions; neither query mutates state.
+Callbacks in reactive consumers observe boolean transitions; neither query imperatively changes node state.
 Factory instances compare by identity, so retain the original function for later lookup.
 Child-name collisions retain the ordinary `$api` escape hatch.
 
@@ -2891,3 +2891,35 @@ their concrete child union. This is determined statically and applies to nested 
 factories; adding or removing runtime children does not change the chosen type. `get(key)` remains
 optional, direct dynamic properties remain unsupported, and `add()` retains its exact return type.
 The value shape, iteration order, snapshots, tracking, and all runtime behavior remain unchanged.
+
+## Explicit validator resolution queries
+
+`validators` keeps its `Signal<Validators<T>>` identity and no-argument registered-list read, and
+adds a `{ resolve?: boolean }` call overload. `hasValidator` accepts the same optional second
+argument. Omitted or false resolution never runs validators. True resolution follows returned
+synchronous functions and function arrays recursively and returns only final function references,
+with declaration order and duplicates preserved. Successful functions, including functions returning
+null, undefined, or arrays without functions, remain leaves. This does not infer active constraints,
+unwrap functions called internally by wrappers, search descendants, or inspect external controls.
+Factories are still compared by exact returned-function identity.
+
+The synchronous runner records leaf references alongside its errors and metadata. A shared lazy
+computed evaluation serves normal validation and explicit resolution; reading either order does
+not repeat validators until a tracked dependency or interaction boundary changes. Resolved presence
+queries memoize by validator identity and normalized boolean resolution mode, rather than options
+object identity. Registered-list reads track only registration; resolved reads also track the node
+value and whatever dependencies validator execution actually reads.
+
+Explicit inspection resolves even noninteractive nodes on demand, without changing their ordinary
+suppressed errors, validity, or interaction state. Normal validation still skips hidden, disabled,
+and readonly nodes. Registered async validators are included without executing, cancelling, or
+restarting async work. Nested async validators, circular/deep compositions, thrown exceptions, and
+mixed error/function arrays retain the synchronous runner's existing rejection behavior.
+
+Reference reviewed: latest Angular 22 maintenance tag `v22.1.5`, commit
+`468b65b74566537456c192ac4281795c5a1e1a5e`. Inspected
+`packages/forms/signals/src/field/validation.ts`, its node validation-status and hidden/readonly
+API tests, and `packages/forms/signals/src/controls/interop_ng_control.ts`. Angular's interop
+hasValidator only special-cases required metadata and offers no general resolved-validator list.
+Explicit resolution is a Form Nodes API extension; on-demand evaluation for inspection does not
+change Angular-comparable normal validation suppression or parent aggregation rules.

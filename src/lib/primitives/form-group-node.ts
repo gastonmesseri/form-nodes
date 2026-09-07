@@ -8,6 +8,7 @@ import { isNode, markAsNode } from './utils/node-marker';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { mapObjectValues } from '../utils/map-object-values';
 import { computedFunction } from '../utils/computed-function';
+import { createValidatorQuery } from '../validation/validator-query';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
@@ -105,8 +106,9 @@ export class FormGroupNode<TNodes extends Nodes> {
     return this.errors().some(error => error.kind === kind);
   }, { max: 20 });
 
-  hasValidator = computedFunction((validator: (context: any) => unknown) => {
-    return this.validators().some(candidate => candidate === validator);
+  hasValidator = computedFunction((validator: (context: any) => unknown, resolve: boolean) => {
+    const validators = resolve ? this.validatorResolution().resolvedValidators : this.validators();
+    return validators.some(candidate => candidate === validator);
   }, { max: 20 });
 
   path = computed((): readonly string[] => {
@@ -190,10 +192,16 @@ export class FormGroupNode<TNodes extends Nodes> {
     return this.selfSubmitting() || this.parent()?.$api.submitting() === true;
   });
 
+  validatorResolution = computed(() => {
+    // Invalidate on interaction boundaries just as ordinary synchronous validation does.
+    this.nonInteractive();
+    return runSyncValidators(this.context, this.validators(), this.node);
+  });
+
   syncValidation = computed(() => {
     return this.nonInteractive()
       ? { errors: [], metadata: this.emptySyncMetadata }
-      : runSyncValidators(this.context, this.validators(), this.node);
+      : this.validatorResolution();
   });
 
   syncErrors = computed(() => this.syncValidation().errors);
@@ -517,7 +525,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       update: (updater: (value: FormValue<TNodes>) => FormSet<TNodes>) => untracked(() => this.set(updater(this.exposedValue()))),
       patch: (value: FormPatch<TNodes>) => this.patch(value),
       reset: (...args: [] | [value: FormSet<TNodes>]) => this.reset(...args),
-      validators: this.validators.asReadonly(),
+      validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
       setValidators: (next: ValidatorSource<FormValue<TNodes>>) => this.setValidators(next),
       errors: this.errors,
       allErrors: this.allErrors,
@@ -525,7 +533,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       invalid: this.invalid,
       getError: this.getError,
       hasError: this.hasError,
-      hasValidator: this.hasValidator,
+      hasValidator: (validator: (context: any) => unknown, options?: { resolve?: boolean }) => this.hasValidator(validator, options?.resolve === true),
       required: this.required,
       pending: this.pending,
       submitting: this.submitting,

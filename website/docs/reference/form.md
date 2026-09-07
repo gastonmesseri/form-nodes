@@ -753,7 +753,7 @@ profile.$api.reset();
 
 #### validators()
 
-**Signature:** `validators: Signal<Validators<FormValue>>`
+**Signature:** `validators: Signal<Validators<FormValue>> & { (options: { resolve?: boolean }): Validators<FormValue> }`
 
 Contains the normalized validators owned directly by the form, in declaration order.
 
@@ -1575,16 +1575,22 @@ For arbitrary dynamic types, use `get(key)` inside its callback or retain the re
 `getError(kind) !== undefined`. It does not search descendants or `allErrors()`. Synchronous,
 asynchronous, and bound-control errors are included when present in `errors()`.
 
-`hasValidator(validator): boolean` checks the directly registered validator list by function
+`hasValidator(validator, options?: { resolve?: boolean }): boolean` checks the directly registered validator list by function
 identity, including async validators. Retain a factory's returned function to query it later.
 A registered validator remains present while passing, disabled, or skipped by a condition.
-Validators returned by a composing function and external control validators are not searched.
+By default, returned compositions are not expanded. With `{ resolve: true }`, this checks the same
+leaf references as `validators({ resolve: true })`, reusing synchronous validation evaluation.
+This can execute synchronous validators; async validators are listed without starting their work.
+External control validators and descendants are not searched. See
+[Inspect resolved validators](../guides/validation.md#inspect-resolved-validators) for conditional
+branches, successful leaves, interaction-state suppression, and exceptions.
 
 <CodeBlock language="ts">{validationQueriesSource}</CodeBlock>
 
 Both queries participate in reactive tracking when read inside `computed()` or `effect()` and
 memoize their boolean result by argument. `hasError()` follows error changes; `hasValidator()`
-follows `setValidators()` without executing the validator. Neither query changes node state.
+follows `setValidators()` and, with resolution enabled, dependencies read by synchronous validators.
+The default registration query does not execute validators.
 For a child named `hasError` or `hasValidator`, use the parent's `$api` to call that operation.
 
 ## Empty declarations as dynamic records

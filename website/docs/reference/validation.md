@@ -242,7 +242,9 @@ Every node exposes its validation state directly:
 | `invalid()` | This node or a descendant currently has an error |
 | `pending()` | Async validation is unresolved on this node or a descendant |
 | `debouncing()` | Async validation is waiting for its delay |
-| `validators()` | Normalized readonly validator collection |
+| `validators()` | Normalized readonly collection of directly registered validators |
+| `validators({ resolve: true })` | Final references reached through synchronous compositions |
+| `hasValidator(validator, { resolve: true })` | Whether that exact reference occurs in the resolved list |
 
 `unknown` means no error currently makes the node invalid, but an asynchronous result is still
 pending. It does not refer to the TypeScript value type.
@@ -301,3 +303,13 @@ normalized current collection with `validators()`.
 - [Built-in validators](./built-in-validators.md) — available rules and constraints
 - [Node API](./node-api.md) — shared validation properties and methods
 - [Errors and validation status](../guides/errors-and-status.md) — displaying and typing errors
+
+### Validator inspection and resolution
+
+`validators` remains an Angular `Signal` of directly registered functions. Its options overload and
+`hasValidator` accept `{ resolve?: boolean }`, defaulting to false. Resolved inspection shares
+synchronous validation evaluation and follows returned functions, preserving order and duplicates.
+It lists registered async validators without executing their async work. Successful leaves remain
+present; this is not an active-constraint query. See
+[Inspect resolved validators](../guides/validation.md#inspect-resolved-validators) for complete
+examples and the behavior of wrappers, disabled nodes, and invalid compositions.

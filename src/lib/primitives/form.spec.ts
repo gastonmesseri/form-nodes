@@ -25,6 +25,147 @@ const nodeTypeOf = (node: Node): NodeType => {
   return node.$api.nodeType();
 };
 
+describe('resolved validator queries', () => {
+  it('resolves each aggregate locally across nested forms, groups, arrays, and API collisions', () => {
+    const enabled = signal(true);
+    const leaf = () => ({ kind: 'local' });
+    const alternate = () => null;
+    const composed = () => enabled() ? leaf : alternate;
+    const profile = form({
+      nested: form({ name: field('Marco') }, { validators: composed }),
+      address: group({ city: field('Zurich') }, { validators: composed }),
+      rows: array({ name: field('') }, { initialValue: 1, validators: composed }),
+    });
+    for (const node of [profile.nested, profile.address, profile.rows]) {
+      expect(node.validators()).toEqual([composed]);
+      expect(node.validators({ resolve: true })).toEqual([leaf]);
+      expect(node.hasValidator(leaf, { resolve: true })).toBe(true);
+    }
+    expect(profile.validators({ resolve: true })).toEqual([]);
+    expect(profile.hasValidator(leaf, { resolve: true })).toBe(false);
+    expect(profile.allErrors()).toHaveLength(3);
+    enabled.set(false);
+    for (const node of [profile.nested, profile.address, profile.rows]) {
+      expect(node.validators({ resolve: true })).toEqual([alternate]);
+      expect(node.hasValidator(leaf, { resolve: true })).toBe(false);
+    }
+    expect(profile.allErrors()).toEqual([]);
+    const collision = form({ validators: field('child'), hasValidator: field('child') }, { validators: composed });
+    expect(collision.validators()).toBe('child');
+    expect(collision.$api.validators({ resolve: true })).toEqual([alternate]);
+    expect(collision.$api.hasValidator(alternate, { resolve: true })).toBe(true);
+  });
+
+  it('shares synchronous evaluation, tracks branches, and preserves order and duplicates', () => {
+    const enabled = signal(true);
+    const leaf = vi.fn(() => ({ kind: 'policy' }));
+    const alternate = vi.fn(() => null);
+    const composed = vi.fn(() => enabled() ? [leaf, leaf] : alternate);
+    const node = form({ name: field('Marco') }, { validators: composed });
+    expect(isSignal(node.validators)).toBe(true);
+    expect(node.validators()).toEqual([composed]);
+    expect(node.validators({ resolve: false })).toEqual([composed]);
+    expect(node.validators({})).toEqual([composed]);
+    expect(node.hasValidator(composed)).toBe(true);
+    expect(composed).not.toHaveBeenCalled();
+    const present = computed(() => node.hasValidator(leaf, { resolve: true }));
+    expect(present()).toBe(true);
+    const resolved = node.validators({ resolve: true });
+    expect(resolved).toEqual([leaf, leaf]);
+    expect(node.validators({ resolve: true })).toBe(resolved);
+    expect(node.hasValidator(composed, { resolve: true })).toBe(false);
+    expect(node.errors()).toHaveLength(2);
+    expect(composed).toHaveBeenCalledTimes(1);
+    expect(leaf).toHaveBeenCalledTimes(2);
+    enabled.set(false);
+    expect(present()).toBe(false);
+    expect(node.validators({ resolve: true })).toEqual([alternate]);
+    expect(node.errors()).toEqual([]);
+    expect(composed).toHaveBeenCalledTimes(2);
+    expect(alternate).toHaveBeenCalledTimes(1);
+    enabled.set(true);
+    expect(node.errors()).toHaveLength(2);
+    expect(present()).toBe(true);
+    expect(node.validators({ resolve: true })).toEqual([leaf, leaf]);
+    expect(composed).toHaveBeenCalledTimes(3);
+    expect(leaf).toHaveBeenCalledTimes(4);
+    node.setValidators(alternate);
+    expect(present()).toBe(false);
+    expect(node.validators()).toEqual([alternate]);
+    expect(node.validators({ resolve: true })).toEqual([alternate]);
+    expect(node.dirty()).toBe(false);
+    expect(node.touched()).toBe(false);
+  });
+
+  it('keeps successful leaves and opaque wrappers instead of inferring their internal calls', () => {
+    const leaf = vi.fn(() => null);
+    const wrapper = () => leaf();
+    const composed = () => [wrapper, () => [], () => undefined];
+    const node = form({ name: field('Marco') }, { validators: composed });
+    const resolved = node.validators({ resolve: true });
+    expect(resolved).toHaveLength(3);
+    expect(resolved[0]).toBe(wrapper);
+    expect(node.hasValidator(leaf, { resolve: true })).toBe(false);
+    expect(node.hasValidator(wrapper, { resolve: true })).toBe(true);
+    expect(leaf).toHaveBeenCalledTimes(1);
+    expect(node.errors()).toEqual([]);
+  });
+
+  it.each(['disabled', 'hidden', 'readonly'] as const)('resolves a %s node without changing suppressed errors or interaction state', (state) => {
+    const leaf = vi.fn(() => ({ kind: 'policy' }));
+    const composed = vi.fn(() => leaf);
+    const node = form({ name: field('Marco') }, { validators: composed, [state]: true });
+    expect(node.errors()).toEqual([]);
+    expect(node.validators()).toEqual([composed]);
+    expect(composed).not.toHaveBeenCalled();
+    expect(node.validators({ resolve: true })).toEqual([leaf]);
+    expect(node.hasValidator(leaf, { resolve: true })).toBe(true);
+    expect(composed).toHaveBeenCalledTimes(1);
+    expect(node.errors()).toEqual([]);
+    expect(node.valid()).toBe(true);
+    expect(node.dirty()).toBe(false);
+    expect(node.touched()).toBe(false);
+    if (state === 'disabled') node.enable();
+    else if (state === 'hidden') node.show();
+    else node.markAsWritable();
+    expect(node.errors()).toHaveLength(1);
+    expect(node.validators({ resolve: true })).toEqual([leaf]);
+    expect(composed).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not start registered async work when explicitly resolving a disabled node', () => {
+    const run = vi.fn(async () => null);
+    const remote = asyncValidator(run);
+    const node = form({ name: field('Marco') }, { validators: remote, disabled: true });
+    expect(node.validators({ resolve: true })).toEqual([remote]);
+    expect(node.hasValidator(remote, { resolve: true })).toBe(true);
+    expect(run).not.toHaveBeenCalled();
+    expect(node.pending()).toBe(false);
+    expect(node.errors()).toEqual([]);
+  });
+
+  it('lists async references without starting or restarting asynchronous validation', async () => {
+    const run = vi.fn(async () => null);
+    const remote = asyncValidator(run);
+    const leaf = () => null;
+    const composed = () => leaf;
+    const node = form({ name: field('Marco') }, { validators: [composed, remote] });
+    const previousPending = node.pending();
+    const previousCalls = run.mock.calls.length;
+    expect(node.validators({ resolve: true })).toEqual([leaf, remote]);
+    expect(node.hasValidator(remote, { resolve: true })).toBe(true);
+    expect(node.hasValidator(remote)).toBe(true);
+    expect(run).toHaveBeenCalledTimes(previousCalls);
+    expect(node.pending()).toBe(previousPending);
+    await vi.waitFor(() => expect(node.pending()).toBe(false));
+    const callsAfterCompletion = run.mock.calls.length;
+    expect(callsAfterCompletion).toBeGreaterThanOrEqual(previousCalls);
+    expect(callsAfterCompletion).toBeGreaterThan(0);
+    expect(node.validators({ resolve: true })).toEqual([leaf, remote]);
+    expect(run).toHaveBeenCalledTimes(callsAfterCompletion);
+  });
+});
+
 describe('form', () => {
   it('enumerates an initially empty record through add, updates, and removal', () => {
     const parent = form({ record: form({}) });

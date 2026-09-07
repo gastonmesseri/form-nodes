@@ -10,6 +10,10 @@ canonical release record.
 
 ## Unreleased
 
+### Added
+
+- `validators({ resolve: true })` and `hasValidator(validator, { resolve: true })` inspect final validator references reached through synchronous compositions, share validation evaluation, and react to composition dependencies. Default queries retain direct-registration semantics; async validators are listed without starting their work.
+
 ### Fixed
 
 - Empty `form({})` and `group({})` declarations now infer `DynamicNode` for `forEachChild()` callbacks and `DynamicNode[]` for `Object.values(children)`, supporting records populated with `add()`. Nonempty declarations retain their concrete child unions; `get(key)` still accounts for missing children.

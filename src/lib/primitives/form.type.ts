@@ -485,7 +485,13 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    */
   reset(...args: [] | [value: FormSet<TNodes>]): void;
   /** Current normalized validators assigned directly to this form, in declaration order. */
-  validators: Signal<Validators<FormValue<TNodes>>>;
+  validators: Signal<Validators<FormValue<TNodes>>> & {
+    /**
+     * Resolves returned synchronous compositions; async validators remain unexecuted references.
+     * @reactive Tracks composition dependencies and shares synchronous validation evaluation.
+     */
+    (options: { resolve?: boolean }): Validators<FormValue<TNodes>>;
+  };
   /** Replaces validators owned by this form and immediately validates its current aggregate value. */
   setValidators(validators: ValidatorSource<FormValue<TNodes>, Form<TNodes, TParent>>): void;
   /**
@@ -535,10 +541,10 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   hasError(kind: string): boolean;
   /**
    * Whether the same validator function is directly registered on this node, including async validators.
-   * Does not run validators or inspect validators returned by a composing function.
-   * @reactive Memoizes by function identity and tracks setValidators() changes.
+   * By default, does not run validators. Set resolve to true to inspect resolved leaf references.
+   * @reactive Memoizes by function identity and resolution mode; resolved queries track composition dependencies.
    */
-  hasValidator(validator: (context: any) => unknown): boolean;
+  hasValidator(validator: (context: any) => unknown, options?: { resolve?: boolean }): boolean;
   /** Whether active validation metadata marks this form itself as required. */
   required: Signal<boolean>;
   /** Whether asynchronous validation is active on this form or any descendant. */

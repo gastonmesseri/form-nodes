@@ -4,6 +4,9 @@ title: Validation
 
 # Validation
 
+import CodeBlock from '@theme/CodeBlock';
+import validatorResolutionSource from '!!raw-loader!../../examples/validator-resolution.example.ts';
+
 The [executable validation example](../examples/executable-examples.mdx#validation-ownership) checks
 field and form error ownership through both failing and valid states.
 
@@ -21,7 +24,8 @@ const myForm = form({
 ```
 
 Validators may be a single validator or an array. `null` and `undefined` array entries are ignored.
-The normalized `validators()` signal always returns only the effective validator functions.
+The `validators()` signal returns the normalized list of directly registered functions. It does not
+execute those functions or expand returned compositions by default.
 
 ## Reading validation state
 
@@ -173,3 +177,35 @@ name.required();
 See [Built-in validators](../reference/built-in-validators.md) and [Validator messages](./validator-messages.md).
 For reusable helpers, context types, result shapes, and conditional composition, see the
 [`validator()` reference](../reference/validator.md).
+
+## Inspect resolved validators
+
+Use `validators({ resolve: true })` to inspect the final function references reached through
+synchronous compositions. Use `hasValidator(validator, { resolve: true })` to query the same list.
+Omitting the options, or passing `{ resolve: false }`, keeps the directly registered list.
+`validators` remains an Angular `Signal` whose ordinary call returns that registered list.
+
+<CodeBlock language="ts">{validatorResolutionSource}</CodeBlock>
+
+Resolution follows returned functions and arrays of functions recursively, preserving declaration
+order and duplicates. A composing function is replaced by the leaves it returns. A function
+returning errors, `null`, `undefined`, or an empty array is itself a leaf and remains in the list,
+even when successful or conditionally skipped. This API describes resolved references, not which
+constraints are active; for example, use `required()` for active required metadata.
+
+Resolution cannot discover calls hidden inside a wrapper. `() => required` exposes `required`,
+whereas `context => required(context)` exposes only the wrapper. Factory-created validators still
+compare by reference: retain the returned function when you need to query it later.
+
+Resolving executes synchronous validator functions with the node's normal validation context.
+Queries and synchronous validation share a cached evaluation, including errors and metadata, so
+reading both does not duplicate executions for unchanged dependencies. Signals read during that
+evaluation participate in tracking. Resolved queries can therefore surface the same exceptions as
+validation, including invalid or circular compositions.
+
+An explicit resolved query also evaluates a disabled, hidden, or readonly node on demand. It does
+not enable validation for that node: its reported errors, validity, and interaction state retain
+the normal suppression rules. Ordinary queries do not execute validators. Directly registered
+async validators remain references in the resolved list; inspection does not start or restart their
+async work. Returning an async validator from a synchronous composition remains unsupported.
+Neither mode searches descendants or validators belonging to external controls.

@@ -6,6 +6,7 @@ import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { computedFunction } from '../utils/computed-function';
 import type { Field, FieldApi, FieldOptions } from './field.type';
+import { createValidatorQuery } from '../validation/validator-query';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
@@ -94,8 +95,9 @@ export class FieldNode<TValue> {
     return this.errors().some(error => error.kind === kind);
   }, { max: 20 });
 
-  hasValidator = computedFunction((validator: (context: any) => unknown) => {
-    return this.validators().some(candidate => candidate === validator);
+  hasValidator = computedFunction((validator: (context: any) => unknown, resolve: boolean) => {
+    const validators = resolve ? this.validatorResolution().resolvedValidators : this.validators();
+    return validators.some(candidate => candidate === validator);
   }, { max: 20 });
 
   path = computed((): readonly string[] => {
@@ -158,10 +160,16 @@ export class FieldNode<TValue> {
 
   submitting = computed(() => this.parent()?.$api.submitting() === true);
 
+  validatorResolution = computed(() => {
+    // Invalidate on interaction boundaries just as ordinary synchronous validation does.
+    this.nonInteractive();
+    return runSyncValidators(this.context, this.validators(), this.node);
+  });
+
   syncValidation = computed(() => {
     return this.nonInteractive()
       ? { errors: [], metadata: this.emptySyncMetadata }
-      : runSyncValidators(this.context, this.validators(), this.node);
+      : this.validatorResolution();
   });
 
   syncErrors = computed(() => this.syncValidation().errors);
@@ -408,7 +416,7 @@ export class FieldNode<TValue> {
       flush: () => this.commitControlValue(),
       focus: (options?: FocusOptions) => this.getControlBindingForFocus()?.focus(options),
       reset: (...args: [] | [value: TValue]) => this.reset(...args),
-      validators: this.validators.asReadonly(),
+      validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
       setValidators: (next: ValidatorSource<TValue, Field<TValue>>) => this.setValidators(next),
       errors: this.errors,
       allErrors: this.errors,
@@ -416,7 +424,7 @@ export class FieldNode<TValue> {
       invalid: this.invalid,
       getError: this.getError,
       hasError: this.hasError,
-      hasValidator: this.hasValidator,
+      hasValidator: (validator: (context: any) => unknown, options?: { resolve?: boolean }) => this.hasValidator(validator, options?.resolve === true),
       min: this.min,
       max: this.max,
       minLength: this.minLength,

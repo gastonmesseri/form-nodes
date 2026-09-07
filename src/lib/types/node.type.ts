@@ -141,10 +141,10 @@ export type NodeApi = {
    */
   hasError(kind: string): boolean;
   /**
-   * Whether this exact validator is directly registered.
-   * @reactive Tracks validator list changes.
+   * Whether this exact validator is directly registered, or resolved when resolve is true.
+   * @reactive Tracks registration changes and, with resolve, synchronous composition dependencies.
    */
-  hasValidator(validator: (context: any) => unknown): boolean;
+  hasValidator(validator: (context: any) => unknown, options?: { resolve?: boolean }): boolean;
   /** Whether active validation metadata currently marks this node as required. */
   required: Signal<boolean>;
   /** Whether asynchronous validation is active on this node or any descendant. */

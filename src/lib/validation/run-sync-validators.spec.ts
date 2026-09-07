@@ -53,6 +53,7 @@ describe('runSyncValidators', () => {
     /* eslint-enable prefer-const */
     const fieldNode = field('David', [circular]);
 
+    expect(() => fieldNode.validators({ resolve: true })).toThrow('Circular synchronous validator composition detected.');
     expect(() => fieldNode.errors()).toThrow('Circular synchronous validator composition detected.');
   });
 
@@ -64,13 +65,14 @@ describe('runSyncValidators', () => {
     }
     const fieldNode = field('David', [nested]);
 
+    expect(() => fieldNode.hasValidator(required, { resolve: true })).toThrow('Synchronous validator composition exceeded 100 levels.');
     expect(() => fieldNode.errors()).toThrow('Synchronous validator composition exceeded 100 levels.');
   });
 
   it('rejects an asynchronous validator returned by a synchronous validator', () => {
     const fieldNode = field('David', [() => asyncValidator(async () => null)]);
 
-    expect(() => fieldNode.errors()).toThrow(
+    expect(() => fieldNode.validators({ resolve: true })).toThrow(
       'A synchronous validator cannot return an asyncValidator(); add it directly to the validators array.',
     );
   });
@@ -92,7 +94,7 @@ describe('runSyncValidators', () => {
     const mixed = () => [required, { kind: 'mixed' }] as unknown as ComposableValidationResult<string | null>;
     const fieldNode = field('David', [mixed]);
 
-    expect(() => fieldNode.errors()).toThrow(
+    expect(() => fieldNode.validators({ resolve: true })).toThrow(
       'Synchronous validator composition cannot mix validators and validation errors in the same array.',
     );
   });
