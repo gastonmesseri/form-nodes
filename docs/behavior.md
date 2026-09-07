@@ -2462,6 +2462,69 @@ The directive currently provides these behaviors:
 - Model-to-view `writeValue()` calls are guarded against reentrant `onChange` callbacks. A legacy CVA that invokes its registered change callback from inside `writeValue()` therefore cannot mark the field dirty, write the value back, or create a feedback loop.
 - When several Angular accessors match, selection follows Angular's precedence: one custom accessor, then one specialized built-in accessor, then the default accessor. Multiple accessors within the selected category are rejected as ambiguous.
 - Synchronous validators provided by a CVA through `NG_VALIDATORS` participate in the field's real validation state. Their Angular validation key becomes `error.kind`, and `registerOnValidatorChange()` invalidates the reactive result. These binding-owned errors are suppressed with the field's other errors while it is disabled, readonly, or hidden and are removed when the binding is destroyed or changes field.
+- The injected `NgControl` and its `control` expose stable `valueChanges` and `statusChanges`
+  observables. `control.events` emits Angular `ValueChangeEvent`, `StatusChangeEvent`,
+  `TouchedChangeEvent`, and `PristineChangeEvent` instances with the adapter as `source`. Values
+  follow `_controlValue()`, including pending debounce input and writes suppressed by public equality.
+  Status precedence remains disabled, valid, invalid, then pending. Error details are the node's own
+  errors indexed by `kind`; aggregate validity and interaction still include descendants.
+- `NgControl.control.setErrors(errors, { emitEvent? })` lets a CVA contribute control-originated
+  errors, including parsing failures, to the bound node. Each binding owns one source in the existing
+  external-error registry. Calls replace that source; `null` and `{}` clear it without clearing
+  configured validators, asynchronous errors, or another binding's errors. Ancestor validity and
+  submission checks use the combined node state. This operation does not write values, mark dirty
+  or touched, or cancel an independent asynchronous validation run.
+- Imperative Angular error keys become node error kinds. The original payload is retained in
+  `context`, a string `payload.message` is exposed as `message`, and errors carry the current
+  `targetNode` and `formNode`. The NgControl view unwraps these payloads back to their original shape;
+  validator-originated node errors retain the existing complete-object projection. Spreading the
+  currently exposed validator error objects into `setErrors()` does not adopt those objects as
+  imperative errors. Components should submit only their own errors. Repeating a source with the
+  same keys and payload references does not produce a feedback notification.
+- Imperative errors persist across value writes and validation runs until the control clears or
+  replaces them; reset clears them, and rebinding or destruction unregisters them. Non-interactive
+  nodes suppress these errors consistently with other external errors. A CVA may clear its source
+  in `writeValue()` after a programmatic value change. This is an intentional extension of Angular
+  `v22.1.5`: Signal Forms' lightweight InteropNgControl omits `setErrors()`, and its
+  `signals/compat/src/signal_form_control/signal_form_control.ts` rejects it. Classic Reactive Forms
+  replaces manual errors on revalidation (`packages/forms/src/model/abstract_model.ts` and the
+  `setErrors` tests in `packages/forms/test/form_control_spec.ts`). Control-owned source lifetime
+  preserves parsing errors independently of valid model values and reactive validator execution.
+- `emitEvent: false` suppresses this adapter's resulting status notification during effect
+  synchronization. It does not silence node signals, ancestor propagation, or another binding's
+  adapter. A subsequent independent validation or disabled-state change still emits. Sources update
+  untracked, including when a subscription reports another error; destroyed bindings ignore late
+  `setErrors()` callbacks.
+- Same-host `NgControl` lookup and `startWith(control.status)` work in both
+  `ngAfterContentInit()` and `ngAfterViewInit()`. An independent Angular `FormControl` inside the
+  component retains Angular's own semantics: `enable()` revalidates and replaces manually assigned
+  errors, including when already enabled; `disable()` clears errors. Copying adapter errors with
+  `setErrors()` before `enable()` therefore needs an internal validator that returns those external
+  errors, or the component must copy errors after enabling. Form Nodes does not intercept mutations
+  on that independent control. Verified against Angular `v22.1.5`
+  `packages/forms/src/model/abstract_model.ts` (`enable`, `disable`, `updateValueAndValidity`)
+  and `packages/forms/test/form_control_spec.ts` (`setErrors`, `disabled errors`).
+- The observation effect publishes an initial snapshot, then emits for changes in value, status,
+  errors, pending, touched, and pristine. Status notifications also cover error-detail and pending
+  changes without a different status string. Getters are immediately current; stream emissions occur
+  during Angular effect synchronization and may coalesce multiple writes. Late subscribers receive
+  future emissions without replay, so consumers read getters for their initial state. Subscriber
+  callbacks run untracked. No duplicate `FormControl` or validation engine is maintained.
+- Rebinding keeps the injected adapter and subscriptions stable, publishes the replacement's complete
+  snapshot, and drops the previous node's reactive dependencies. Binding destruction removes the
+  observation effect and completes the streams. This bridge serves state inspection, subscriptions, and binding-owned `setErrors()`;
+  other Reactive Forms mutation and tree-traversal APIs are not provided. CVA changes still enter through the
+  registered change/touch callbacks, and programmatic operations belong to the node API.
+- Angular reference: latest stable tag `v22.1.5`, commit
+  `468b65b74566537456c192ac4281795c5a1e1a5e`, resolved from remote tags. Inspected
+  `packages/forms/signals/src/controls/interop_ng_control.ts` and
+  `packages/forms/signals/test/web/interop.spec.ts` for the readonly CVA view and buffered values;
+  `packages/forms/signals/compat/src/signal_form_control/signal_form_control.ts` and
+  `packages/forms/signals/test/node/compat/signal_form_control.spec.ts` for effect-driven streams,
+  untracked callbacks, and state-event classes; and
+  `packages/forms/test/reactive_integration_spec.ts` for classic event payloads. Form Nodes
+  deliberately extends Angular's lightweight interop view with observable state, using the compat
+  layer's effect timing, and additionally notifies error-detail changes even when status is unchanged.
 - `NG_ASYNC_VALIDATORS` are not adapted by this CVA compatibility layer. Asynchronous validation belongs to the node's `asyncValidator()` pipeline, which owns cancellation, pending state, debounce, and stale-result handling explicitly.
 - Exporting the directive as `#binding="formNode"` provides the typed public binding API. `node` is the single reactive reference to the current bound node. `focus()`, `flush()`, and `reset()` operate on this concrete binding or its current node. The binding also exposes its host `element`, host `injector`, and a reactive `errors` signal.
 - `binding.errors()` contains every error of the current node that is not owned by a concrete control, plus only the control-specific errors whose `formNode` is that binding. When two controls bind the same field, a native parse error from one control therefore remains absent from the other binding's errors even though the field aggregates both errors. Rebinding updates `node` and `errors` together, and binding-produced errors use the directive itself as their stable `formNode` identity.

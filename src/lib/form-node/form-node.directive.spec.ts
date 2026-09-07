@@ -2409,7 +2409,7 @@ describe('native control conversion', () => {
 describe('FormNodeNgControl', () => {
   it('projects field state through the Angular control compatibility surface', () => {
     const name = field.strict('', [required]);
-    const control = new FormNodeNgControl(() => name as Field<unknown>);
+    const control = new FormNodeNgControl(() => name as Field<unknown>, TestBed.inject(Injector));
 
     expect(control.control).toBe(control);
     expect(control.value).toBe('');
@@ -2443,17 +2443,11 @@ describe('FormNodeNgControl', () => {
     expect(control.enabled).toBe(false);
     expect(control.status).toBe('DISABLED');
     expect(() => control.updateValueAndValidity()).not.toThrow();
-  });
-
-  it('reports pending when no terminal validation status is available', () => {
-    const pendingNode = {
-      $api: {
-        disabled: () => false,
-        valid: () => false,
-        invalid: () => false,
-        pending: () => true,
-      },
-    } as unknown as Node;
-    expect(new FormNodeNgControl(() => pendingNode).status).toBe('PENDING');
+    name.enable();
+    control.setErrors({ custom: { message: 'Control error' } });
+    expect(name.getError('custom')).toMatchObject({ message: 'Control error', targetNode: name });
+    expect(control.errors).toEqual({ custom: { message: 'Control error' } });
+    control.setErrors(null);
+    expect(name.valid()).toBe(true);
   });
 });

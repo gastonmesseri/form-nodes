@@ -52,6 +52,44 @@
 
   })
 
+- [NEXT] [ ] IMPLEMENT REQUIRED SUPPORT FOR ANGULAR REQUIRED, FOR EXISTING CUSTOM COMPONENTS THAT CHECK angular old validators.required to display the mark
+
+- eso de FormNodeNgControl hasValidator que hace exactamente? veo que solo comprueba required, es un poco raro, me explicas?
+
+
+/**
+ * // implemented (ng control has them exposed publicly)
+ * value
+ * valid
+ * invalid
+ * disabled
+ * pending
+ * enabled
+ * errors
+ * pristine
+ * dirty
+ * touched
+ * untouched
+ * status
+ * control
+ * valueAccessor
+ * statusChanges
+ * valueChanges
+ * 
+ * // not implemented (ng control has them exposed publicly)
+ * // maybe we should implement them? maybe just a dummy value to avoid failing? maybe implement for full contract?
+ * asyncValidator
+ * getError
+ * hasError
+ * name
+ * path
+ * reset
+ * validator
+ * viewToModelUpdate
+ */
+
+- [NEXT] [ ] Check if it is possible to make it work with Angular 21 (and its relevant typescript version, check if our used typescript features are valid)
+
 - [NEXT] [ ] Make it evident in the README.md that it is an angular library, maybe an angular logo next to the library logo?
 
 - [NEXT] [ ] Create package for npm
@@ -953,6 +991,8 @@ Run this checklist for every Angular update. Keep it in `TODO.md` permanently an
 - [x] Choose `[formNode]` as the node-binding directive name.
 - [x] Bind aggregate forms to native `<form [formNode]="form">` elements.
 - [x] Support Angular `ControlValueAccessor` custom controls and expose compatible `NgControl` integration.
+  - [x] Support binding-owned `NgControl.control.setErrors()` for CVA parsing errors, preserving other validators and cleaning up on reset, rebinding, and destruction.
+  - [x] Add observable value, validation, and interaction state for CVAs that obtain `NgControl` in `ngAfterViewInit`, including rebinding and destruction cleanup.
 - [x] Automatically support Angular `FormValueControl` and `FormCheckboxControl`, retaining `provideFormNodeControl()` as the explicit fallback.
 - [x] Remove the explicit signal-control provider after narrowing zero-configuration signal-control discovery to Angular components.
 - [x] Synchronize applicable native and signal-control state such as disabled, readonly, required, invalid, touched, and dirty.
