@@ -39,6 +39,8 @@ consumer migration guide.
 
 ### Added
 
+- `provideFormNodeConfig({ syncControlInputs: false })` lets custom components and consumer templates own state and constraint inputs while retaining value/checked synchronization, interaction hooks, native controls, and CVA disabled-state callbacks. Automatic input synchronization remains enabled by default.
+
 - `field()`, `form()`, `group()`, and `array()` accept shallow, deep, or custom equality for exposed values,
   validation, update callbacks, and submission. Public parents compose exposed child values;
   internal writes, reset, controls, and debounce remain independent. Equality is evaluated lazily,
