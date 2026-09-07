@@ -88,7 +88,7 @@ Form Nodes custom-control contracts now declare their own optional inputs, value
 touch output, and focus/reset methods. They use Angular core signal types, without inheriting the
 version-specific Signal Forms UI interface. Runtime discovery and state propagation remain unchanged.
 The former `$field` adapter and its schema samples are removed; `$api` is the sole reserved child key.
-`provideFormNodeConfig()` configures only `[formNode]`, using a token independent of Angular's config.
+The binding options in `provideFormNodesConfig()` configure only `[formNode]`, using a token independent of Angular's config. Its `validatorMessages` option separately configures node messages.
 `useFormNodeState()` retains all adapters, including external Angular Signal Forms; tests create real
 Angular forms and use their native operations instead of converting Form Nodes trees.
 Angular 21 `v21.0.7` (`8fd585cc0b4a7fc70ecb306c0c7b17f15393d0bf`) was additionally inspected
@@ -1519,7 +1519,7 @@ Built-in messages resolve from lowest to highest priority as follows:
 
 1. The English message included with the library.
 2. The process-wide catalog installed by `configureGlobalValidatorMessages()`.
-3. The closest Angular catalog captured from `provideValidatorMessages()`.
+3. The closest Angular catalog captured from `provideFormNodesConfig()`.
 4. The closest fallback catalog from the node's `createFormPrimitives()` factory set.
 5. The closest ancestor form or array `validatorMessages` option.
 6. The validator's own `message` option.
@@ -1550,13 +1550,15 @@ Configure an Angular application or route once with a factory that may use `inje
 ```ts
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideValidatorMessages(() => {
-      const translations = inject(TranslationService);
+    provideFormNodesConfig({
+      validatorMessages: () => {
+        const translations = inject(TranslationService);
 
-      return {
-        required: () => translations.translate('validation.required'),
-        min: ({ min }) => translations.translate('validation.min', { min }),
-      };
+        return {
+          required: () => translations.translate('validation.required'),
+          min: ({ min }) => translations.translate('validation.min', { min }),
+        };
+      },
     }),
   ],
 };
@@ -2319,7 +2321,7 @@ The directive currently provides these behaviors:
 - Native controls receive a stable generated `name` in the form `${APP_ID}.formN.path.to.field`. Bindings for the same field share the same name, which preserves radio grouping, while fields in different root trees receive different names. Because the path is reactive, names follow array items when their indexes change. An explicitly authored native `name` is replaced by the generated field name, matching Angular Signal Forms.
 - Changes to native select options reapply the field value, including options rendered after the initial binding.
 - A reused radio input re-evaluates its authored `value` after every Angular render, so changing the option represented by an existing DOM node immediately recalculates its checked state without requiring a model change.
-- `provideFormNodeConfig({ classes })` configures reactive classes for `[formNode]` bindings only. Its token is independent of Angular Signal Forms configuration; both providers can coexist. `ANGULAR_FORMS_STATUS_CLASSES` remains opt-in.
+- `provideFormNodesConfig({ classes })` configures reactive classes for `[formNode]` bindings only. Its token is independent of Angular Signal Forms configuration; both providers can coexist. `ANGULAR_FORMS_STATUS_CLASSES` remains opt-in.
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - A wrapper component may consume an input whose template name is exactly `formNode` and delegate that node to an inner `[formNode]` control. The outer directive becomes pass-through: it performs no synchronization, validation, CSS-class work, hidden-field warning, or focus registration. Only the delegated inner control is a binding. This is automatic and requires no provider. An aliased property is valid as long as its public template input name is `formNode`.
 - Component wrappers are detected automatically from Angular's public component metadata. A directive that consumes or re-exports `formNode`, including a host directive, must add `providers: [provideFormNodePassThrough()]` because Angular exposes no equivalent public runtime reflection API for directive inputs. The provider affects only the injector on that host element.
@@ -2603,12 +2605,12 @@ The package exposes an `_FormNode` symbol solely because Angular's AOT compiler 
 
 ### Automatic CSS classes
 
-`provideFormNodeConfig()` can configure reactive CSS classes for every `[formNode]` binding below the provider:
+`provideFormNodesConfig()` can configure reactive CSS classes for every `[formNode]` binding below the provider:
 
 ```ts
 bootstrapApplication(App, {
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: {
         'is-invalid': binding => binding.node().$api.invalid(),
         'is-touched': binding => binding.node().$api.touched(),
@@ -2763,7 +2765,7 @@ warning paths in the separate production Chromium process.
 
 ## Optional custom-control state inputs
 
-`provideFormNodeConfig({ syncControlInputs: false })` disables matching state and constraint
+`provideFormNodesConfig({ syncControlInputs: false })` disables matching state and constraint
 input writes by `[formNode]` for custom signal controls, input-output pairs, and CVA components.
 The default is true. The nearest whole configuration wins; omitted properties use defaults.
 Configuration is resolved at connection time, and the choice persists through node rebinding.
@@ -2934,3 +2936,28 @@ API tests, and `packages/forms/signals/src/controls/interop_ng_control.ts`. Angu
 hasValidator only special-cases required metadata and offers no general resolved-validator list.
 Explicit resolution is a Form Nodes API extension; on-demand evaluation for inspection does not
 change Angular-comparable normal validation suppression or parent aggregation rules.
+
+## Unified Angular configuration provider
+
+`provideFormNodesConfig({ validatorMessages, classes, syncControlInputs })` and `FormNodesConfig`
+replace the two previous provider functions and the singular config type. The helper returns
+ordinary `Provider[]`, supporting application, route, NgModule, and component injectors.
+
+Messages and binding configuration use independent tokens. Omitting a section preserves its
+inherited provider. Providing `classes` or `syncControlInputs` replaces the binding section as a
+whole: omitted classes mean none, and omitted synchronization defaults to true. An empty config
+registers nothing; `{ classes: {} }` explicitly clears inherited classes and restores synchronization.
+Providing a message catalog does not merge it with a parent injector's catalog.
+
+The message factory executes once on first provider resolution in an injection context. Selected
+message callbacks remain reactive; the factory itself is not a computed callback. Nodes capture
+provider messages at creation, through their explicit injector or current injection context.
+Later binding adoption does not replace that catalog. Existing node-local and ancestor-node
+message fallback, global fallback, and built-in defaults retain their precedence. No provider is
+required for synchronous node operations or explicitly triggered asynchronous validation outside DI.
+
+Reference inspected: Angular `v22.1.5`, commit
+`468b65b74566537456c192ac4281795c5a1e1a5e`, `packages/forms/signals/src/api/di.ts` and
+`packages/forms/signals/test/web/form_field.spec.ts` configuration tests. Angular's binding provider
+also returns ordinary providers. Form Nodes intentionally adds its own message catalog section;
+Angular's configuration tokens remain independent.

@@ -18,8 +18,7 @@ fallback validator-message catalog.
 | --- | --- | --- | --- |
 | Validator call | `{ message }` | That validator instance | Message functions are reactive |
 | Node or subtree | `field()`, `form()`, `array()`, and `group()` options | The declared node; selected options inherit | Function sources are reactive |
-| Angular injector | `provideValidatorMessages()` | Nodes created in that injector scope | Selected message functions are reactive |
-| Angular injector | `provideFormNodeConfig()` | Descendant `[formNode]` | Class predicates are reactive |
+| Angular injector | `provideFormNodesConfig()` | Messages for nodes created in that scope; descendant `[formNode]` bindings | Selected message functions and class predicates are reactive |
 | Factory set | `createFormPrimitives()` | Nodes created through that set | Catalog sources are reactive; node options override shared defaults |
 | JavaScript process | `configureGlobalValidatorMessages()` | Fallback for every node | Catalog sources and selected messages are reactive |
 
@@ -237,7 +236,7 @@ Message resolution uses the first definition that returns a message:
 1. The validator's local `message` option.
 2. The closest form or array `validatorMessages` catalog, walking toward the root.
 3. The closest `createFormPrimitives()` validator-message default, walking toward the root.
-4. The closest captured `provideValidatorMessages()` catalog, walking toward the root.
+4. The closest captured `provideFormNodesConfig()` catalog, walking toward the root.
 5. `configureGlobalValidatorMessages()`.
 6. The built-in English message.
 
@@ -248,22 +247,23 @@ catalog therefore overrides individual keys without having to repeat every messa
 
 Register provider configuration in `app.config.ts` and pass that `ApplicationConfig` to
 `bootstrapApplication(AppComponent, appConfig)` for a standalone Angular application. See the
-[complete provider example](./provide-validator-messages.md#example):
+[complete provider example](./provide-form-nodes-config.md#validator-messages):
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
-import { provideFormNodeConfig, provideValidatorMessages } from '@ngblocks/form-nodes';
+
+import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideValidatorMessages(() => {
-      const translations = inject(TranslationService);
+    provideFormNodesConfig({
+      validatorMessages: () => {
+        const translations = inject(TranslationService);
 
-      return {
-        required: () => translations.translate('validation.required'),
-      };
-    }),
-    provideFormNodeConfig({
+        return {
+          required: () => translations.translate('validation.required'),
+        };
+      },
       classes: {
         'is-invalid': binding => binding.node().invalid(),
       },
@@ -272,13 +272,13 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`provideValidatorMessages()` can also be registered in a route or another environment injector.
+`provideFormNodesConfig()` can also be registered in a route, an NgModule, or a component.
 Nodes capture the nearest applicable catalog when created. Angular provider catalogs are not
 merged automatically: a missing entry can continue to a different catalog captured by an ancestor
 node, then to the global and built-in fallbacks. Use a closer provider for a route, feature, or SSR
 request scope and include every override required by that injector scope.
 
-For an NgModule application, place the same provider calls in the module's `providers` array.
+For an NgModule application, place the same provider call in the module's `providers` array.
 
 ### Form-tree scope
 
@@ -327,14 +327,14 @@ See [Validator messages and i18n](../guides/validator-messages.md).
 
 A shared NgModule can re-export `FormNode` while configuration stays in the application providers,
 or install its own config through `SharedModule.providers`. See
-[Using FormNode through SharedModule](./provide-form-node-config.md#using-formnode-through-sharedmodule)
+[Using FormNode through SharedModule](./provide-form-nodes-config.md#using-formnode-through-sharedmodule)
 for complete examples and an explanation of eager, lazy, and standalone injector scopes.
 
-`provideFormNodeConfig()` configures custom-control input synchronization and automatic CSS classes for `[formNode]` bindings below the
+`provideFormNodesConfig()` configures custom-control input synchronization and automatic CSS classes for `[formNode]` bindings below the
 closest Angular provider. Predicates run independently in reactive contexts:
 
 ```ts
-provideFormNodeConfig({
+provideFormNodesConfig({
   classes: {
     'is-touched': binding => binding.node().touched(),
     'is-invalid': binding => binding.node().invalid(),
@@ -346,9 +346,9 @@ Use `ANGULAR_FORMS_STATUS_CLASSES` to opt into the familiar `ng-valid`, `ng-inva
 `ng-touched`, `ng-untouched`, `ng-dirty`, and `ng-pristine` classes:
 
 ```ts
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
-provideFormNodeConfig({
+provideFormNodesConfig({
   classes: ANGULAR_FORMS_STATUS_CLASSES,
 });
 ```
@@ -358,7 +358,7 @@ those class names. It is not required for `[formNode]` binding itself. Spread th
 object to add custom classes:
 
 ```ts
-provideFormNodeConfig({
+provideFormNodesConfig({
   classes: {
     ...ANGULAR_FORMS_STATUS_CLASSES,
     'is-readonly': binding => binding.node().readonly(),
@@ -366,9 +366,10 @@ provideFormNodeConfig({
 });
 ```
 
-This provider affects rendered bindings, not node state or validation. A closer
-`provideFormNodeConfig()` supplies that binding scope's complete config; class maps are not merged
-automatically.
+The `classes` and `syncControlInputs` options affect rendered bindings, not node state or validation.
+Providing either replaces that scope's binding section; class maps are not merged automatically.
+A provider containing only `validatorMessages` preserves inherited binding options. See
+[Provider scope](./provide-form-nodes-config.md#provider-scope) for the independent sections.
 
 Angular's `provideSignalFormsConfig()` independently configures Angular `[formField]` controls.
 The two providers use separate tokens and can coexist in the same injector. See
@@ -418,7 +419,7 @@ export class ProfileEditor {
 | Debounce | Closest node option; otherwise nearest configured ancestor; otherwise immediate |
 | Disabled / readonly / hidden | Union of local imperative, local configured, and every inherited cause |
 | Validators | Exact node only; `setValidators()` replaces that node's list |
-| Binding CSS classes | Closest `provideFormNodeConfig()`; no automatic class-map merge |
+| Binding CSS classes | Closest `provideFormNodesConfig()`; no automatic class-map merge |
 | Nullability | Exact field declaration only |
 | Submission | Exact form declaration only |
 | Array identity | Exact array's `trackBy` only |
@@ -429,8 +430,8 @@ For runtime symptoms caused by configuration, see [Troubleshooting](../help/trou
 ## Custom-control input synchronization
 
 Automatic synchronization of custom-control state inputs is enabled by default.
-Use `provideFormNodeConfig({ syncControlInputs: false })` when your component or template
+Use `provideFormNodesConfig({ syncControlInputs: false })` when your component or template
 should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
 Native controls and CVA `setDisabledState()` remain connected.
 See [the simple example](../guides/custom-controls.md#keep-control-of-your-components-inputs)
-and [all configuration details](./provide-form-node-config.md#custom-control-inputs).
+and [all configuration details](./provide-form-nodes-config.md#custom-control-inputs).

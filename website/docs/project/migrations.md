@@ -4,6 +4,36 @@ title: Migration guides
 
 # Migration guides
 
+## Unreleased: unified configuration provider
+
+Use `provideFormNodesConfig()` for both validator messages and binding configuration:
+
+| Previous API | Replacement |
+| --- | --- |
+| `provideValidatorMessages(factory)` | `provideFormNodesConfig({ validatorMessages: factory })` |
+| `provideFormNodeConfig(options)` | `provideFormNodesConfig(options)` |
+| `FormNodeConfig` | `FormNodesConfig` |
+
+The old exports are removed. Combine both sections in one call per injector scope:
+
+```ts
+provideFormNodesConfig({
+  validatorMessages: () => ({ required: 'Please complete this field.' }),
+  classes: ANGULAR_FORMS_STATUS_CLASSES,
+  syncControlInputs: false,
+});
+```
+
+The function returns `Provider[]`, so it supports component providers as well as application,
+route, and NgModule providers. Keep injectable factories inside `validatorMessages`.
+Messages are still captured when nodes are created; binding an existing node does not replace them.
+
+Omitted sections inherit independently. A messages-only configuration preserves inherited binding
+options, and a bindings-only configuration preserves inherited messages. Providing either binding
+option replaces the binding section, as before. An empty `{}` now registers no providers; use
+`{ classes: {} }` to clear inherited classes and restore default input synchronization.
+See [Configuration provider](../reference/provide-form-nodes-config.md).
+
 ## Unreleased: opt in to dynamic child iteration
 
 `forEachChild(callback)` now visits only initially declared children. To preserve the previous
@@ -92,9 +122,9 @@ Import `FormNode` from `@ngblocks/form-nodes` in the component's `imports`. Remo
 import when no independently created Angular form uses it. Bind native form roots with
 `[formNode]="profile"` to retain Form Nodes submission and reset handling.
 
-`provideFormNodeConfig()` now configures `[formNode]` only. Angular's `provideSignalFormsConfig()`
+`provideFormNodesConfig()` now configures `[formNode]` only. Angular's `provideSignalFormsConfig()`
 configures its own `[formField]` controls independently; both providers can coexist. If classes
-previously came from Angular's provider on an adapted control, move them to `provideFormNodeConfig()`
+previously came from Angular's provider on an adapted control, move them to `provideFormNodesConfig()`
 and read state with `binding.node()` instead of `binding.state()`.
 
 `useFormNodeState()` remains available for all supported forms APIs. Use Angular's `form()` and

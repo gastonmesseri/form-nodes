@@ -5,7 +5,8 @@ import { min } from './validators/min';
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { required } from './validators/required';
-import { configureGlobalValidatorMessages, provideValidatorMessages } from './validator-messages';
+import { provideFormNodesConfig } from '../form-node/form-node-config';
+import { configureGlobalValidatorMessages } from './validator-messages';
 
 describe('validator messages', () => {
   const restoreConfigurations: (() => void)[] = [];
@@ -25,9 +26,11 @@ describe('validator messages', () => {
     const LANGUAGE = new InjectionToken<Signal<'en' | 'es'>>('Language');
     const injector = createEnvironmentInjector([
       { provide: LANGUAGE, useValue: language.asReadonly() },
-      provideValidatorMessages(() => {
-        const currentLanguage = inject(LANGUAGE);
-        return { required: () => `provider:${currentLanguage()}` };
+      provideFormNodesConfig({
+        validatorMessages: () => {
+          const currentLanguage = inject(LANGUAGE);
+          return { required: () => `provider:${currentLanguage()}` };
+        },
       }),
     ], Injector.NULL as never);
 

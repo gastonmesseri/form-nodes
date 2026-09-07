@@ -17,7 +17,7 @@ state observation, detailed CVA behavior, wrappers, and compatibility boundaries
 :::tip Optional state input synchronization
 If your application already binds `disabled`, `readonly`, or other state inputs, you can
 [disable automatic input synchronization](./custom-controls.md#keep-control-of-your-components-inputs)
-with `provideFormNodeConfig({ syncControlInputs: false })`. Value/checked models still work.
+with `provideFormNodesConfig({ syncControlInputs: false })`. Value/checked models still work.
 :::
 
 ## Angular API compatibility

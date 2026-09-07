@@ -205,7 +205,7 @@ Message catalogs use nearest-wins precedence:
 1. Validator-local `message`.
 2. Closest form or array `validatorMessages` catalog.
 3. Closest `createFormPrimitives()` validator-message default.
-4. Closest `provideValidatorMessages()` provider.
+4. Closest `provideFormNodesConfig()` provider.
 5. `configureGlobalValidatorMessages()`.
 6. Built-in English message.
 

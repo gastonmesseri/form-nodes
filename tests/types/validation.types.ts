@@ -1,5 +1,5 @@
 import type { Equal, Expect, HasKey } from './assert.types';
-import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideValidatorMessages, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
+import { array, asyncValidator, between, configureGlobalValidatorMessages, dateBetween, email, equalTo, field, form, integer, maxDate, maxLength, maxWords, min, minDate, minLength, minWords, oneOf, pattern, provideFormNodesConfig, required, requiredIf, uniqueItems, url, validator, type AsyncValidatorContext, type BuiltInValidationError, type ValidationErrorMap, type ValidatorContext, type ValidatorMessages, type ValidatorOptions } from '../../src/public-api';
 
 type _NoExampleCustomError = Expect<Equal<HasKey<ValidationErrorMap, 'unavailableUsername'>, false>>;
 
@@ -107,7 +107,7 @@ const validatorMessages: ValidatorMessages = {
 };
 validatorMessages.required = 'Required';
 const restoreValidatorMessages = configureGlobalValidatorMessages(() => validatorMessages);
-const validatorMessageProviders = provideValidatorMessages(() => validatorMessages);
+const validatorMessageProviders = provideFormNodesConfig({ validatorMessages: () => validatorMessages });
 const builtInError: BuiltInValidationError = { kind: 'min', min: 2, actual: 1 };
 void [validatorOptions, reactiveValidatorOptions, customErrorOptions, restoreValidatorMessages, validatorMessageProviders, builtInError];
 

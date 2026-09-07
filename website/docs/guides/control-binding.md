@@ -112,7 +112,7 @@ profile.focus();
 
 If your application uses a shared NgModule, it can import and re-export `FormNode`. Configure
 bindings in either the application providers or `SharedModule.providers`, according to who owns
-the convention. See [Using FormNode through SharedModule](../reference/provide-form-node-config.md#using-formnode-through-sharedmodule)
+the convention. See [Using FormNode through SharedModule](../reference/provide-form-nodes-config.md#using-formnode-through-sharedmodule)
 for complete examples of both approaches and their injector scopes.
 
 Configure reactive classes once in the standalone application providers:
@@ -120,11 +120,11 @@ Configure reactive classes once in the standalone application providers:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: {
         'is-invalid': binding => binding.node().$api.invalid(),
         'is-touched': binding => binding.node().$api.touched(),
@@ -147,11 +147,11 @@ classes. `[formNode]` does not require the preset:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFormNodeConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES }),
+    provideFormNodesConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES }),
   ],
 };
 ```

@@ -438,7 +438,7 @@ required({ message: 'Please enter your name.' });
 minLength(2, { message: 'Use at least two characters.' });
 ```
 
-For shared messages, configure `provideValidatorMessages()` in Angular's `app.config.ts` or
+For shared messages, set `validatorMessages` in `provideFormNodesConfig()` in Angular's `app.config.ts` or
 `AppModule.providers`. This is also the appropriate scope for injected translations or SSR
 request-specific messages.
 

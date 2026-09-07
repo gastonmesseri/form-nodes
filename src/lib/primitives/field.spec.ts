@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createWatch } from '@angular/core/primitives/signals';
-import { computed, Injector, isSignal, signal, type Signal } from '@angular/core';
+import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
@@ -23,8 +23,31 @@ import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { dateBetween } from '../validation/validators/date-between';
+import { provideFormNodesConfig } from '../form-node/form-node-config';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
+
+it('inherits message providers through unified configuration without requiring a binding', () => {
+  const parent = Injector.create({ providers: provideFormNodesConfig({
+    validatorMessages: () => ({ required: 'Parent message' }),
+  }) });
+  const bindingsOnly = Injector.create({ parent, providers: provideFormNodesConfig({ classes: {} }) });
+  const messagesOnly = Injector.create({ parent, providers: provideFormNodesConfig({
+    validatorMessages: () => ({ required: 'Local message' }),
+  }) });
+  const node = runInInjectionContext(bindingsOnly, () => field('', [required]));
+  const localNode = runInInjectionContext(messagesOnly, () => field('', [required]));
+  expect(node.getError('required')?.message).toBe('Parent message');
+  expect(localNode.getError('required')?.message).toBe('Local message');
+  node.set('Marco');
+  expect(node.errors()).toEqual([]);
+  node.reset('');
+  expect(node.getError('required')?.message).toBe('Parent message');
+  expect(field('', [required]).getError('required')?.message).toBe('This field is required.');
+  messagesOnly.destroy();
+  bindingsOnly.destroy();
+  parent.destroy();
+});
 
 describe('resolved validator queries', () => {
   it('shares synchronous evaluation, tracks branches, and preserves order and duplicates', () => {

@@ -1,4 +1,4 @@
-import { InjectionToken, assertInInjectionContext, inject, makeEnvironmentProviders, signal, type EnvironmentProviders, type Injector } from '@angular/core';
+import { InjectionToken, assertInInjectionContext, inject, signal, type Injector } from '@angular/core';
 
 import type { Node } from '../types/node.type';
 import type { BuiltInValidationErrorMap, ValidationError } from './validation.type';
@@ -25,7 +25,7 @@ type ValidatorMessageResolver = <TKind extends keyof BuiltInValidationErrorMap>(
   parameters: ValidatorMessageParameters<TKind>,
 ) => string | undefined;
 
-const VALIDATOR_MESSAGES = new InjectionToken<ValidatorMessages>('ValidatorMessages');
+export const VALIDATOR_MESSAGES = new InjectionToken<ValidatorMessages>('ValidatorMessages');
 const globalValidatorMessages = signal<ValidatorMessagesSource>({});
 const nodeValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
 const nodeDefaultValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
@@ -79,18 +79,6 @@ export const configureGlobalValidatorMessages = (
   return () => {
     if (globalValidatorMessages() === messages) globalValidatorMessages.set(previousMessages);
   };
-};
-
-/**
- * Provides an application- or route-scoped validator message catalog through Angular DI.
- *
- * The factory runs in an injection context and may inject a translation service. Message functions
- * returned by it are evaluated reactively while their validators are failing.
- *
- * @param factory Factory returning a partial validator message catalog.
- */
-export const provideValidatorMessages = (factory: () => ValidatorMessages): EnvironmentProviders => {
-  return makeEnvironmentProviders([{ provide: VALIDATOR_MESSAGES, useFactory: factory }]);
 };
 
 export const registerNodeValidatorMessages = (

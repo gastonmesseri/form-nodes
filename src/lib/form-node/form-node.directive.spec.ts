@@ -25,7 +25,7 @@ import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { provideFormNodePassThrough } from './form-node-pass-through';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from './form-node-config';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from './form-node-config';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './utils/native-control';
 
@@ -194,7 +194,7 @@ describe('FormNode', () => {
       template: `<input [formNode]="name">`,
       standalone: true,
       imports: [FormNode],
-      providers: [provideFormNodeConfig({
+      providers: [provideFormNodesConfig({
         classes: {
           'form-invalid': invalidPredicate,
           'form-touched': touchedPredicate,
@@ -247,7 +247,7 @@ describe('FormNode', () => {
       template: `<input [formNode]="name">`,
       standalone: true,
       imports: [FormNode],
-      providers: [provideFormNodeConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES })],
+      providers: [provideFormNodesConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES })],
     })
     class Host {
       name = field.strict('', [required]);

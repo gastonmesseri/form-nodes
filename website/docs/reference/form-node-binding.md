@@ -36,7 +36,7 @@ and linker infrastructure.
 | --- | --- | --- |
 | Query or inspect one concrete binding | `FormNode<TNode>`, `FormNodeBinding<TNode>` | [Binding instance](#binding-instance) |
 | Inject the binding on its host | `FORM_NODE` | [`FORM_NODE` reference](./form-node-token.md) |
-| Apply reactive CSS classes | `provideFormNodeConfig()` | [Automatic CSS classes](#automatic-css-classes) |
+| Apply reactive CSS classes | `provideFormNodesConfig()` | [Automatic CSS classes](#automatic-css-classes) |
 | Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
 | Bind submit and reset on `<form>` | The same `FormNode` import | [Native form submission](#native-form-submission) |
 
@@ -232,17 +232,17 @@ injector ownership. A node can then remain in use or bind somewhere else.
 
 ## Automatic CSS classes
 
-For the common application-wide setup, register `provideFormNodeConfig()` in the standalone
+For the common application-wide setup, register `provideFormNodesConfig()` in the standalone
 application configuration. Its predicates apply to `[formNode]` controls:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: {
         'is-invalid': binding => binding.node().$api.invalid(),
         'is-touched': binding => binding.node().$api.touched(),
@@ -277,11 +277,11 @@ default, so applications that do not need Angular-compatible CSS incur no class-
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
@@ -292,7 +292,7 @@ The preset is an ordinary class map. Spread it when Angular-compatible classes a
 classes should coexist:
 
 ```ts
-provideFormNodeConfig({
+provideFormNodesConfig({
   classes: {
     ...ANGULAR_FORMS_STATUS_CLASSES,
     'has-visible-error': binding => binding.node().invalid() && binding.node().touched(),
@@ -303,7 +303,7 @@ provideFormNodeConfig({
 These classes reflect state only. Adding or removing them does not change validation, interaction
 state, or submission behavior.
 
-`provideFormNodeConfig()` configures `[formNode]` only. Angular's `provideSignalFormsConfig()`
+The binding options in `provideFormNodesConfig()` configure `[formNode]` only; its `validatorMessages` option configures node messages. Angular's `provideSignalFormsConfig()`
 configures Angular `[formField]` independently, so both providers can share an injector.
 
 ## Custom-control components
@@ -429,11 +429,11 @@ and [Form submission](../guides/submission.md).
 ## Custom-control input synchronization
 
 Automatic synchronization of custom-control state inputs is enabled by default.
-Use `provideFormNodeConfig({ syncControlInputs: false })` when your component or template
+Use `provideFormNodesConfig({ syncControlInputs: false })` when your component or template
 should own inputs such as `disabled`, `readonly`, or `name`; value/checked bindings keep working.
 Native controls and CVA `setDisabledState()` remain connected.
 See [the simple example](../guides/custom-controls.md#keep-control-of-your-components-inputs)
-and [all configuration details](./provide-form-node-config.md#custom-control-inputs).
+and [all configuration details](./provide-form-nodes-config.md#custom-control-inputs).
 
 
 ## Direct NgControl accessors

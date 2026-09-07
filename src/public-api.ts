@@ -31,7 +31,7 @@ export { FORM_NODE, FormNode, _FormNode } from './lib/form-node/form-node.direct
 export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/types/observable-like.type';
 export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/primitives/group';
 export type { DisabledReason, DisabledStateSource, DynamicNode, FormNodeValue, MarkAsTouchedOptions, Node, NodeApi } from './lib/types/node.type';
-export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig, type FormNodeConfig } from './lib/form-node/form-node-config';
+export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig, type FormNodesConfig } from './lib/form-node/form-node-config';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/validation/async-validator';
 export {
   type FormFactory,
@@ -52,7 +52,6 @@ export {
 } from './lib/form-node-state/form-node-state';
 export {
   type ValidatorMessages,
-  provideValidatorMessages,
   type ValidatorMessageParameters,
   configureGlobalValidatorMessages,
 } from './lib/validation/validator-messages';

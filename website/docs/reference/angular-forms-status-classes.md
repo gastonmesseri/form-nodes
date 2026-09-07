@@ -11,7 +11,7 @@ expect Angular Forms status classes. It is an ordinary object, not a provider by
 
 ```ts
 const ANGULAR_FORMS_STATUS_CLASSES:
-  NonNullable<FormNodeConfig['classes']>;
+  NonNullable<FormNodesConfig['classes']>;
 ```
 
 ## Usage
@@ -19,11 +19,11 @@ const ANGULAR_FORMS_STATUS_CLASSES:
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
@@ -48,7 +48,7 @@ No automatic status classes are installed by default.
 ## Extend the preset
 
 ```ts
-provideFormNodeConfig({
+provideFormNodesConfig({
   classes: {
     ...ANGULAR_FORMS_STATUS_CLASSES,
     'is-readonly': binding => binding.node().readonly(),
@@ -58,8 +58,8 @@ provideFormNodeConfig({
 });
 ```
 
-Each predicate tracks its dependencies independently. Through `provideFormNodeConfig()`, the map
+Each predicate tracks its dependencies independently. Through `provideFormNodesConfig()`, the map
 applies to descendant `[formNode]` bindings.
 
-See [`provideFormNodeConfig()`](./provide-form-node-config.md) and
+See [`provideFormNodesConfig()`](./provide-form-nodes-config.md) and
 [`[formNode]`](./form-node-binding.md#automatic-css-classes).

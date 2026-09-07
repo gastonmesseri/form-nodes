@@ -1,19 +1,22 @@
 import { Component, NgModule } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 
-import { field, form, required, FormNode, ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { field, form, required, FormNode, ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
+// shared.module.ts
 @NgModule({
   imports: [FormNode],
   exports: [FormNode],
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
+      validatorMessages: () => ({ required: 'Please enter your name.' }),
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
 })
 export class SharedModule {}
 
+// app.component.ts
 @Component({
   selector: 'app-root',
   template: `
@@ -23,7 +26,7 @@ export class SharedModule {}
     </label>
 
     @if (profile.name.touched() && profile.name.hasError('required')) {
-      <p>Name is required.</p>
+      <p>{{ profile.name.getError('required')?.message }}</p>
     }
 
     <p>Current name: {{ profile.name() }}</p>
@@ -37,4 +40,5 @@ export class AppComponent {
   });
 }
 
+// main.ts
 bootstrapApplication(AppComponent).catch(error => console.error(error));

@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { describe, expect, it, vi } from 'vitest';
-import { computed, Injector, isSignal, signal, type Signal } from '@angular/core';
+import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal } from '@angular/core';
 
 import { form } from './form';
 import { field } from './field';
@@ -17,6 +17,7 @@ import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
+import { provideFormNodesConfig } from '../form-node/form-node-config';
 import type { InternalNode, Node, NodeType } from '../types/node.type';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
@@ -24,6 +25,28 @@ type Context<TValue> = { readonly value: Signal<TValue> };
 const nodeTypeOf = (node: Node): NodeType => {
   return node.$api.nodeType();
 };
+
+it('inherits message providers through unified configuration without requiring a binding', () => {
+  const parent = Injector.create({ providers: provideFormNodesConfig({
+    validatorMessages: () => ({ required: 'Parent message' }),
+  }) });
+  const bindingsOnly = Injector.create({ parent, providers: provideFormNodesConfig({ classes: {} }) });
+  const messagesOnly = Injector.create({ parent, providers: provideFormNodesConfig({
+    validatorMessages: () => ({ required: 'Local message' }),
+  }) });
+  const node = runInInjectionContext(bindingsOnly, () => form({ nested: form({ name: field('', [required]) }) }));
+  const localNode = runInInjectionContext(messagesOnly, () => form({ nested: form({ name: field('', [required]) }) }));
+  expect(node.nested.name.getError('required')?.message).toBe('Parent message');
+  expect(localNode.nested.name.getError('required')?.message).toBe('Local message');
+  node.nested.name.set('Marco');
+  expect(node.nested.name.errors()).toEqual([]);
+  node.nested.name.reset('');
+  expect(node.nested.name.getError('required')?.message).toBe('Parent message');
+  expect(field('', [required]).getError('required')?.message).toBe('This field is required.');
+  messagesOnly.destroy();
+  bindingsOnly.destroy();
+  parent.destroy();
+});
 
 describe('resolved validator queries', () => {
   it('resolves each aggregate locally across nested forms, groups, arrays, and API collisions', () => {

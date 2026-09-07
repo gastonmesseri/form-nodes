@@ -1,6 +1,6 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, createFormPrimitives, field, form, group, required, provideFormNodeConfig, type FormNodeValue } from '@ngblocks/form-nodes';
+import { FormNode, array, createFormPrimitives, field, form, group, required, provideFormNodesConfig, type FormNodeValue } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -12,7 +12,7 @@ class Company {
   selector: 'package-consumer',
   standalone: true,
   imports: [FormNode],
-  providers: [provideFormNodeConfig({ syncControlInputs: false })],
+  providers: [provideFormNodesConfig({ syncControlInputs: false })],
   template: `
     <form [formNode]="profile">
       <input #nameBinding="formNode" [formNode]="profile.name">

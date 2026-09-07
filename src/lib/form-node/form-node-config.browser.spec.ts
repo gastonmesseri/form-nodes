@@ -9,7 +9,7 @@ import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
-import { provideFormNodeConfig } from './form-node-config';
+import { provideFormNodesConfig } from './form-node-config';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
@@ -75,7 +75,7 @@ describe('custom-control input configuration', () => {
         <config-checkbox-control [formNode]="profile.active" />
       `,
       imports: [FormNode, ValueControl, CheckboxControl],
-      providers: [provideFormNodeConfig({ syncControlInputs: false })],
+      providers: [provideFormNodesConfig({ syncControlInputs: false })],
     })
     class Host {
       profile = form({ name: field('Mark'), active: field(false) });
@@ -137,7 +137,7 @@ describe('custom-control input configuration', () => {
       selector: 'config-opt-in',
       template: '<config-value-control [formNode]="name" />',
       imports: [FormNode, ValueControl],
-      providers: [provideFormNodeConfig({ syncControlInputs: true })],
+      providers: [provideFormNodesConfig({ syncControlInputs: true })],
     })
     class OptIn {
       name = field('Mark');
@@ -151,7 +151,7 @@ describe('custom-control input configuration', () => {
         <input [formNode]="profile.name">
       `,
       imports: [FormNode, ValueControl, CvaControl, OptIn],
-      providers: [provideFormNodeConfig({ syncControlInputs: false })],
+      providers: [provideFormNodesConfig({ syncControlInputs: false })],
     })
     class Host {
       profile = form({ name: field('Mark') });

@@ -61,7 +61,7 @@ This option leaves the node's state unchanged. If the node is disabled, its form
 disabled even when the component's input says otherwise. Use `useFormNodeState()` when the
 component needs to read node state explicitly.
 
-The setting defaults to `true`. You can also place `provideFormNodeConfig()` in a component's
+The setting defaults to `true`. You can also place `provideFormNodesConfig()` in a component's
 `providers` to configure an injector scope; a nearer provider can set `syncControlInputs: true`
 to restore automatic input synchronization.
 
@@ -70,7 +70,7 @@ Touch, focus, reset, and value/checked bindings stay connected. The option only 
 Form Nodes' automatic custom-control state and constraint inputs; it does not configure
 Angular's own `[formField]`, `formControl`, or `ngModel` directives.
 
-See [the configuration reference](../reference/provide-form-node-config.md#custom-control-inputs)
+See [the configuration reference](../reference/provide-form-nodes-config.md#custom-control-inputs)
 for the complete input list and provider inheritance rules.
 
 ## ControlValueAccessor

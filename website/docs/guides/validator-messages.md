@@ -15,8 +15,8 @@ For all node and binding options—not only messages—see the
 
 | Intended scope | API and recommended location |
 | --- | --- |
-| Standalone Angular application | `provideValidatorMessages()` in `app.config.ts`, passed to `bootstrapApplication` |
-| NgModule application | `provideValidatorMessages()` in `AppModule.providers` |
+| Standalone Angular application | `provideFormNodesConfig()` in `app.config.ts`, passed to `bootstrapApplication` |
+| NgModule application | `provideFormNodesConfig()` in `AppModule.providers` |
 | Shared process-wide fallback, including nodes outside DI | `configureGlobalValidatorMessages()` in `main.ts`, before bootstrapping |
 | Larger message catalog | Export the data from a separate file and import it at the chosen configuration point |
 
@@ -26,7 +26,7 @@ Do not repeat global setup in component constructors or lifecycle hooks. A stati
 application initializer or side-effect-only import.
 
 See the complete [global startup example](../reference/configure-global-validator-messages.md#where-to-call-it)
-and [application provider example](../reference/provide-validator-messages.md#example).
+and [application provider example](../reference/provide-form-nodes-config.md#validator-messages).
 
 ## Precedence
 
@@ -35,7 +35,7 @@ The closest definition wins:
 1. Validator-local `message` option.
 2. Closest form or array `validatorMessages` catalog.
 3. Closest `createFormPrimitives()` validator-message default.
-4. Closest Angular `provideValidatorMessages()` catalog.
+4. Closest Angular `provideFormNodesConfig()` catalog.
 5. Process-wide `configureGlobalValidatorMessages()` catalog.
 6. Built-in English message.
 
@@ -63,17 +63,19 @@ Configure translated defaults once in an application, route, or environment inje
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
-import { provideValidatorMessages } from '@ngblocks/form-nodes';
+import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideValidatorMessages(() => {
-      const translations = inject(TranslationService);
+    provideFormNodesConfig({
+      validatorMessages: () => {
+        const translations = inject(TranslationService);
 
-      return {
-        required: () => translations.translate('validation.required'),
-        min: ({ min, actual }) => translations.translate('validation.min', { min, actual }),
-      };
+        return {
+          required: () => translations.translate('validation.required'),
+          min: ({ min, actual }) => translations.translate('validation.min', { min, actual }),
+        };
+      },
     }),
   ],
 };

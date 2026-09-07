@@ -9,24 +9,26 @@ Register application defaults through Angular dependency injection instead of re
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
 
-import { provideValidatorMessages } from '@ngblocks/form-nodes';
+import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideValidatorMessages(() => {
-      const translations = inject(TranslationService);
+    provideFormNodesConfig({
+      validatorMessages: () => {
+        const translations = inject(TranslationService);
 
-      return {
-        required: () => translations.text('validation.required'),
-        minLength: ({ minLength }) => translations.text(
-          'validation.minLength',
-          { minLength },
-        ),
-        between: ({ min, max }) => translations.text(
-          'validation.between',
-          { min, max },
-        ),
-      };
+        return {
+          required: () => translations.text('validation.required'),
+          minLength: ({ minLength }) => translations.text(
+            'validation.minLength',
+            { minLength },
+          ),
+          between: ({ min, max }) => translations.text(
+            'validation.between',
+            { min, max },
+          ),
+        };
+      },
     }),
   ],
 };

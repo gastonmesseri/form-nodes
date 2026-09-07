@@ -1,5 +1,7 @@
+import type { Provider } from '@angular/core';
+
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNode, createFormPrimitives, field, useFormNodeState, provideFormNodeConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
+import { FormNode, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
 
 const name = field.strict('David');
 const configuredForms: FormPrimitives<false> = createFormPrimitives({ nullable: false } satisfies FormPrimitivesOptions<false>);
@@ -20,7 +22,7 @@ nameDirective.focus();
 // @ts-expect-error internal implementation helpers are not public
 import { appendMetadataContributions, createNodeDefinitionFactory, createReactiveWatch, markAsAsyncValidator } from '../../src/public-api';
 
-provideFormNodeConfig({
+provideFormNodesConfig({
   classes: {
     invalid: (binding: FormNodeBinding) => binding.node().$api.invalid(),
   },
@@ -32,7 +34,7 @@ const classConfig = {
   },
 };
 classConfig.classes.touched = () => true;
-provideFormNodeConfig(classConfig);
+provideFormNodesConfig(classConfig);
 
 declare const formNodeState: ControlState<string | null>;
 const injectedControlState = useFormNodeState<string | null>();
@@ -41,3 +43,16 @@ const boundErrors: readonly ControlStateError[] = injectedControlState.errors();
 const boundErrorKind: string | undefined = boundErrors[0]?.kind;
 
 void [markAsAsyncValidator, createReactiveWatch, createNodeDefinitionFactory, appendMetadataContributions, boundValue, boundErrorKind, configuredForms];
+
+const combinedConfig: FormNodesConfig = {
+  validatorMessages: () => ({
+    required: 'Required',
+    minLength: ({ minLength }) => `At least ${minLength} characters`,
+  }),
+  syncControlInputs: false,
+  classes: classConfig.classes,
+};
+const combinedProviders: Provider[] = provideFormNodesConfig(combinedConfig);
+void combinedProviders;
+// @ts-expect-error Message configuration accepts an injectable factory, not a static catalog.
+provideFormNodesConfig({ validatorMessages: { required: 'Required' } });

@@ -31,9 +31,9 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Run Promise- or Observable-based validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
 | Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
 | Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
-| Configure validator messages through Angular DI | `provideValidatorMessages()` | [`provideValidatorMessages()`](./provide-validator-messages.md) |
+| Configure validator messages through Angular DI | `provideFormNodesConfig()` | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) |
 | Configure process-wide validator messages | `configureGlobalValidatorMessages()` | [`configureGlobalValidatorMessages()`](./configure-global-validator-messages.md) |
-| Add reactive status classes to every binding | `provideFormNodeConfig()` | [`provideFormNodeConfig()`](./provide-form-node-config.md) |
+| Add reactive status classes to every binding | `provideFormNodesConfig()` | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) |
 | Inspect the API shared by all nodes | `Node`, `DynamicNode`, and `NodeApi` | [Node API](./node-api.md) |
 | Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
 | Use Angular Material controls | `FormNode` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
@@ -165,7 +165,7 @@ Message configuration follows this precedence, from highest to lowest:
 1. Validator-local `message`.
 2. Closest form or array `validatorMessages` catalog.
 3. Closest `createFormPrimitives()` validator-message default.
-4. Closest `provideValidatorMessages()` provider.
+4. Closest `provideFormNodesConfig()` provider.
 5. `configureGlobalValidatorMessages()`.
 6. Built-in English message.
 
@@ -182,13 +182,15 @@ const restoreMessages = configureGlobalValidatorMessages({
 restoreMessages();
 ```
 
-In an Angular application, use `provideValidatorMessages()` when the catalog should follow an
+In an Angular application, use `provideFormNodesConfig()` when the catalog should follow an
 application, route, environment injector, or SSR request scope:
 
 ```ts
-provideValidatorMessages(() => ({
-  required: () => translations().required,
-}));
+provideFormNodesConfig({
+  validatorMessages: () => ({
+    required: () => translations().required,
+  }),
+});
 ```
 
 ## Angular integration
@@ -221,7 +223,7 @@ Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token
 
 | API | Purpose |
 | --- | --- |
-| `provideFormNodeConfig()` | Configures reactive CSS classes for descendant `[formNode]`. |
+| `provideFormNodesConfig()` | Configures validator messages, custom-control inputs, and reactive CSS classes. |
 | [`ANGULAR_FORMS_STATUS_CLASSES`](./angular-forms-status-classes.md) | Optional Angular Forms-compatible validity and interaction class preset. |
 | [`provideFormNodePassThrough()`](./provide-form-node-pass-through.md) | Marks a directive or host directive that delegates `formNode`. |
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
@@ -238,11 +240,11 @@ Configure binding classes once in the application providers for the common appli
 ```ts
 import type { ApplicationConfig } from '@angular/core';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],

@@ -55,13 +55,13 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodeConfig, required } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodesConfig, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-primeng-profile-editor',
   imports: [FormNode, ButtonModule, SelectModule, CheckboxModule, DatePickerModule, InputTextModule],
   providers: [
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
@@ -158,7 +158,7 @@ import { providePrimeNG } from 'primeng/config';
 import type { ApplicationConfig } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodeConfig } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -168,7 +168,7 @@ export const appConfig: ApplicationConfig = {
         preset: Aura,
       },
     }),
-    provideFormNodeConfig({
+    provideFormNodesConfig({
       classes: ANGULAR_FORMS_STATUS_CLASSES,
     }),
   ],
@@ -176,7 +176,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 This makes the classes available to every `[formNode]` binding created below the application
-injector. If only one feature uses PrimeNG styling, put the same `provideFormNodeConfig(...)` call
+injector. If only one feature uses PrimeNG styling, put the same `provideFormNodesConfig(...)` call
 in that route's or component's `providers` array instead. The complete component example above
 demonstrates that narrower component scope.
 

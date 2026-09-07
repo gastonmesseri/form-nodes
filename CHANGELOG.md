@@ -11,6 +11,8 @@ provide backward-compatible fixes.
 
 ### Changed
 
+- **Breaking API change:** `provideFormNodesConfig({ validatorMessages, classes, syncControlInputs })` replaces `provideValidatorMessages()` and `provideFormNodeConfig()`; `FormNodesConfig` replaces `FormNodeConfig`. Message factories retain injection and reactive message support, and the unified provider also works in component providers. Omitted message or binding sections preserve their inherited providers; an empty configuration is a no-op.
+
 - **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.
 
 ### Added

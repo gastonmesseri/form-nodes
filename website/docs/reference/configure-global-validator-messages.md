@@ -44,7 +44,7 @@ A static catalog needs no application initializer. Avoid configuring it in compo
 configuration timing explicit and avoids repeating setup as components are created.
 
 For **application-scoped Angular messages**, prefer
-[`provideValidatorMessages()` in `app.config.ts`](./provide-validator-messages.md#example).
+[`provideFormNodesConfig()` in `app.config.ts`](./provide-form-nodes-config.md#validator-messages).
 Use `AppModule.providers` for an NgModule application. The provider factory can inject translation
 services and keeps the catalog scoped to its Angular injector. Registering a global setter inside
 an Angular initializer would not make its state application-scoped.
@@ -81,7 +81,7 @@ const restoreMessages = configureGlobalValidatorMessages(() => ({
 ```
 
 Signals read by the source and by the selected message callback are tracked while validation
-fails. Prefer [`provideValidatorMessages()`](./provide-validator-messages.md) for concurrent SSR
+fails. Prefer [`provideFormNodesConfig()`](./provide-form-nodes-config.md) for concurrent SSR
 requests because module-level state is shared between requests.
 
 See [Validator messages](../guides/validator-messages.md) and [Configuration](./configuration.md#process-wide-fallback).

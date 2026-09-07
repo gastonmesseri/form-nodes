@@ -14,7 +14,7 @@ import type { Node } from '../types/node.type';
 import { FormNode } from './form-node.directive';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
-import { provideFormNodeConfig } from './form-node-config';
+import { provideFormNodesConfig } from './form-node-config';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { useFormNodeState } from '../form-node-state/form-node-state';
@@ -446,7 +446,7 @@ describe('FormNode in Chromium', () => {
       template: `<input class="node" [formNode]="profile.name"><external-angular-control [formField]="angularProfile.name" />`,
       imports: [FormNode, FormField, ExternalControl],
       providers: [
-        provideFormNodeConfig({ classes: { 'node-invalid': binding => binding.node().$api.invalid() } }),
+        provideFormNodesConfig({ classes: { 'node-invalid': binding => binding.node().$api.invalid() } }),
         provideSignalFormsConfig({ classes: { 'angular-invalid': binding => binding.state().invalid() } }),
       ],
     })

@@ -18,7 +18,7 @@ The matching custom-component inputs are:
 - Constraints: `required`, `min`, `max`, `minLength`, `maxLength`, and `pattern`.
 - Control name: `name`.
 
-Set `provideFormNodeConfig({ syncControlInputs: false })` to disable this optional synchronization.
+Set `provideFormNodesConfig({ syncControlInputs: false })` to disable this optional synchronization.
 This does not disable the state itself or the following functionality:
 
 - Two-way value binding through `value = model<T>()` and checkbox binding through
