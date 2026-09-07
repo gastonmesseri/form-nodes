@@ -43,7 +43,7 @@ one supported Angular contract:
 - `ControlValueAccessor` registered through `NG_VALUE_ACCESSOR`.
 - An automatically discovered signal-control component.
 
-See [Custom controls](../guides/custom-controls.md) for the supported shapes and precedence.
+See [Advanced custom controls](../guides/custom-controls-advanced.md) for the supported shapes and precedence.
 
 ## The node value has not changed after typing
 

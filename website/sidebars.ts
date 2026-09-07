@@ -48,6 +48,7 @@ const sidebars: SidebarsConfig = {
         'guides/dynamic-arrays',
         'guides/control-binding',
         'guides/custom-controls',
+        'guides/custom-controls-advanced',
         'guides/submission',
         'guides/validator-messages',
         'guides/testing',

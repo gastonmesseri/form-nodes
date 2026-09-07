@@ -234,7 +234,7 @@ export class ProfileComponent {
 }
 ```
 
-See [Custom controls](../guides/custom-controls.md#use-angulars-own-formfield-directive) for the
+See [Advanced custom controls](../guides/custom-controls-advanced.md#use-angulars-own-formfield-directive) for the
 standalone and NgModule import options and the complete synchronization behavior.
 
 Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNode` import supports native controls, custom controls, and native form roots.

@@ -200,19 +200,19 @@ For example, a compatible Kendo or NG-ZORRO control uses the same binding shape:
 
 This is a contract-based compatibility expectation, not a claim that every component in every
 suite is a form control. Check that the particular component supports `ngModel`, reactive forms,
-or `ControlValueAccessor`; display-only components do not have a value contract to bind. Components
-with unusual integration requirements can use the explicit custom-control provider described in
-the custom-controls guide.
+or `ControlValueAccessor`; display-only components do not have a value contract to bind.
+For components with unusual integration requirements, see the
+[advanced custom-controls guide](../guides/custom-controls-advanced.md).
 
-The [Custom controls](../guides/custom-controls.md) guide documents the complete compatibility
+The [Advanced custom controls](../guides/custom-controls-advanced.md) guide documents the complete compatibility
 matrix, state inputs, hooks, precedence, and limitations.
 
 ## Related guides and reference
 
 - [Control binding](../guides/control-binding.md) details native value conversion, constraints,
   focus, status classes, SSR, and hydration.
-- [Custom controls](../guides/custom-controls.md) covers `model()`, input/output pairs,
-  `ControlValueAccessor`, and component discovery.
+- [Custom controls](../guides/custom-controls.md) introduces signal model components and
+  existing `ControlValueAccessor` controls.
 - [Node API](../reference/node-api.md#binding-api) lists the public API available from a
   `viewChild()` binding.
 - [Build a custom rating control](../cookbook/custom-rating-control.md) is a focused end-to-end
