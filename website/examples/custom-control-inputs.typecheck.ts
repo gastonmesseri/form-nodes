@@ -1,6 +1,5 @@
-import { Component, input, model, signal, type ApplicationConfig } from '@angular/core';
-
 import { field, form, FormNode, provideFormNodesConfig } from '@ngblocks/form-nodes';
+import { Component, input, model, signal, type ApplicationConfig } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [provideFormNodesConfig({ syncControlInputs: false })],

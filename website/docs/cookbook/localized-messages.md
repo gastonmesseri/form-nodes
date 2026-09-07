@@ -8,7 +8,6 @@ Register application defaults through Angular dependency injection instead of re
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
-
 import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {

@@ -241,7 +241,6 @@ Configure binding classes once in the application providers for the common appli
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
-
 import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {

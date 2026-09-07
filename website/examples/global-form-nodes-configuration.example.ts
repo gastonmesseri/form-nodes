@@ -1,5 +1,4 @@
 import { signal } from '@angular/core';
-
 import { field, form, required, configureGlobalFormNodes } from '@ngblocks/form-nodes';
 
 const message = signal('Please enter your name.');

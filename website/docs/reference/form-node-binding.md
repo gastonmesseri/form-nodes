@@ -9,7 +9,6 @@ available. The same symbol is also the public generic type returned by binding q
 
 ```ts
 import { Component, viewChild } from '@angular/core';
-
 import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
@@ -237,7 +236,6 @@ application configuration. Its predicates apply to `[formNode]` controls:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
-
 import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
@@ -276,7 +274,6 @@ default, so applications that do not need Angular-compatible CSS incur no class-
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
-
 import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
@@ -318,7 +315,6 @@ does not expose arbitrary directive or host-directive instances. Use a component
 
 ```ts
 import { Component, input, model, output } from '@angular/core';
-
 import { FormNode, field, form, type FormNodeValueControl } from '@ngblocks/form-nodes';
 
 @Component({
@@ -394,7 +390,6 @@ Use `FormNode` as the single root binding. Its controls may use either `[formNod
 
 ```ts
 import { Component } from '@angular/core';
-
 import { FormNode, field, form } from '@ngblocks/form-nodes';
 
 @Component({

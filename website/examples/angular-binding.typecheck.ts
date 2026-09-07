@@ -1,5 +1,4 @@
 import { Component, viewChild } from '@angular/core';
-
 import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({

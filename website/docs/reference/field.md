@@ -1248,7 +1248,6 @@ username.visible(); // true
 
 ```ts
 import { Component } from '@angular/core';
-
 import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({

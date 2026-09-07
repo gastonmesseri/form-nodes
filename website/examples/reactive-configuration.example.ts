@@ -1,5 +1,4 @@
 import { signal } from '@angular/core';
-
 import { configureGlobalFormNodes, field, form, required } from '@ngblocks/form-nodes';
 
 const locale = signal<'en' | 'es'>('en');

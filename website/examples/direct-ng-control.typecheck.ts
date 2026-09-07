@@ -1,6 +1,5 @@
 import { NgControl } from '@angular/forms';
 import { Component, inject, signal } from '@angular/core';
-
 import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 // Minimal illustration of a hook that assigns its accessor directly.

@@ -8,7 +8,6 @@ Define and bind the form in an Angular component:
 
 ```ts
 import { Component } from '@angular/core';
-
 import { email, FormNode, field, form, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({

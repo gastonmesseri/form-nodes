@@ -1,6 +1,5 @@
-import { computed, isSignal, type Signal } from '@angular/core';
-
 import { field, form } from '@ngblocks/form-nodes';
+import { computed, isSignal, type Signal } from '@angular/core';
 
 const uppercase = (source: Signal<string | null>) => computed(() => source()?.toUpperCase() ?? '');
 const profile = form({ name: field('Marco') });

@@ -1,6 +1,5 @@
 import { Component, NgModule } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-
 import { field, form, required, FormNode, ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 // shared.module.ts

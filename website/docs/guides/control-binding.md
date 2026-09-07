@@ -119,7 +119,6 @@ Configure reactive classes once in the standalone application providers:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
-
 import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
@@ -146,7 +145,6 @@ classes. `[formNode]` does not require the preset:
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
-
 import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {

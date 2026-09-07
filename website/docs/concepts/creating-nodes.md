@@ -303,7 +303,6 @@ In an Angular application, the form is commonly a component property:
 
 ```ts
 import { Component } from '@angular/core';
-
 import { field, FormNode, form } from '@ngblocks/form-nodes';
 
 @Component({

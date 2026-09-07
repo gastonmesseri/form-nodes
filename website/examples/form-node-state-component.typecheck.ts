@@ -1,6 +1,5 @@
-import { Component, computed, model } from '@angular/core';
-
 import { useFormNodeState } from '@ngblocks/form-nodes';
+import { Component, computed, model } from '@angular/core';
 
 @Component({
   selector: 'my-control-component',

@@ -30,7 +30,6 @@ package paths.
 
 ```ts
 import { describe, expect, it } from 'vitest';
-
 import { field, form } from '@ngblocks/form-nodes';
 
 describe('profile form', () => {
@@ -64,7 +63,6 @@ Assert both the failing state and recovery:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-
 import { field, form, min, required } from '@ngblocks/form-nodes';
 
 describe('account validation', () => {
@@ -102,7 +100,6 @@ Control the promise yourself instead of relying on network access or arbitrary d
 
 ```ts
 import { describe, expect, it, vi } from 'vitest';
-
 import { asyncValidator, field, form } from '@ngblocks/form-nodes';
 
 describe('username validation', () => {
@@ -140,9 +137,8 @@ one. See [Async validation](./async-validation.md).
 Control-originated values expose an immediate `controlValue()` and a delayed committed node value:
 
 ```ts
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { field, form } from '@ngblocks/form-nodes';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => vi.useRealTimers());
 
@@ -178,7 +174,6 @@ complete values arrive in a different order:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-
 import { array, field } from '@ngblocks/form-nodes';
 
 describe('people array', () => {
@@ -221,7 +216,6 @@ Call `submit()` directly when testing validation policy and action state:
 
 ```ts
 import { describe, expect, it, vi } from 'vitest';
-
 import { field, form, required } from '@ngblocks/form-nodes';
 
 describe('profile submission', () => {
@@ -258,9 +252,8 @@ as production code:
 
 ```ts
 import { Component } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
-
+import { TestBed } from '@angular/core/testing';
 import { field, FormNode, form } from '@ngblocks/form-nodes';
 
 describe('profile input', () => {

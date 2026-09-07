@@ -111,9 +111,8 @@ node or introducing a `FormControl`:
 ```ts
 import { Component } from '@angular/core';
 import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-
 import { field, FormNode, form } from '@ngblocks/form-nodes';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
   imports: [FormNode, MatFormFieldModule, MatSelectModule],
@@ -148,7 +147,6 @@ that `[formNode]` recognizes:
 ```ts
 import { Component } from '@angular/core';
 import { SelectModule } from 'primeng/select';
-
 import { field, FormNode, form } from '@ngblocks/form-nodes';
 
 @Component({

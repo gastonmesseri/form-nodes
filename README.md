@@ -42,7 +42,6 @@
 <!-- example: quick-start.typecheck.ts -->
 ```ts
 import { Component } from '@angular/core';
-
 import { form, field, required, FormNode } from '@ngblocks/form-nodes';
 
 @Component({
@@ -144,7 +143,6 @@ service call.
 <!-- example: readme-first-form.typecheck.ts -->
 ```ts
 import { Component, signal } from '@angular/core';
-
 import { email, field, form, FormNode, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({
@@ -527,7 +525,6 @@ item node so its controls remain associated with the same item when the collecti
 <!-- example: readme-dynamic-array.typecheck.ts -->
 ```ts
 import { Component } from '@angular/core';
-
 import { array, email, field, form, FormNode, required } from '@ngblocks/form-nodes';
 
 @Component({

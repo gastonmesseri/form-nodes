@@ -48,10 +48,11 @@
 
 ## Import style
 
-- Separate third-party imports from project imports with exactly one blank line.
+- In source code, separate third-party imports from project imports with exactly one blank line. The website example convention below is an exception.
 - Keep third-party imports in the first group and project imports in the second group.
 - Sort imports within each group by ascending length of the complete import line, from shortest to longest.
 - Keep every import on a single line. Do not use multiline imports, including imports with several named symbols.
+- In website documentation examples, including `website/examples/` and code blocks under `website/docs/`, keep consecutive imports together without blank lines. Put package imports (including Angular and `@ngblocks/form-nodes`) before local relative or absolute-path imports such as `./validator-message-catalog`. Retain ascending line-length order within those categories. Do not combine imports across comments marking different hypothetical files.
 
 ## Type API style
 

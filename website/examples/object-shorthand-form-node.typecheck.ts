@@ -1,5 +1,4 @@
 import { Component, model } from '@angular/core';
-
 import { FormNode, form } from '@ngblocks/form-nodes';
 
 type CompanyValue = {

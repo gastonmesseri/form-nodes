@@ -9,7 +9,6 @@ stale-result protection. The component keeps the pending and error UI next to th
 
 ```ts
 import { Component } from '@angular/core';
-
 import { asyncValidator, field, form, FormNode, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({

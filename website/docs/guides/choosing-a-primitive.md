@@ -248,7 +248,6 @@ example: the select reads and writes one `string[]` value, so no item nodes are 
 
 ```ts
 import { Component } from '@angular/core';
-
 import { field, form, FormNode } from '@ngblocks/form-nodes';
 
 @Component({

@@ -250,7 +250,6 @@ Register provider configuration in `app.config.ts` and pass that `ApplicationCon
 
 ```ts
 import { ApplicationConfig, inject } from '@angular/core';
-
 import { provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {

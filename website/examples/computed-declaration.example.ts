@@ -1,5 +1,4 @@
 import { computed, signal } from '@angular/core';
-
 import { array, field, form, required } from '@ngblocks/form-nodes';
 
 const initialName = signal('Marco');

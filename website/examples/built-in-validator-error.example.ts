@@ -1,5 +1,4 @@
 import { signal } from '@angular/core';
-
 import { field, min } from '../../src/public-api';
 
 const errorKind = signal('minimumAge');

@@ -1,5 +1,4 @@
 import { computed } from '@angular/core';
-
 import { field, form, minLength, required } from '@ngblocks/form-nodes';
 
 const minimumNameLength = minLength(3);

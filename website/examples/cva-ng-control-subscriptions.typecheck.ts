@@ -1,9 +1,8 @@
 import { startWith } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormNode, field, form, required } from '@ngblocks/form-nodes';
 import { Component, DestroyRef, Injector, forwardRef, inject, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, NgControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
-
-import { FormNode, field, form, required } from '@ngblocks/form-nodes';
 
 // An existing CVA can keep its Angular Forms integration unchanged.
 @Component({

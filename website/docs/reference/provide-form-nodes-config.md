@@ -50,7 +50,6 @@ No classes are enabled by default. Set `classes: null` to restore that default i
 
 ```ts title="app.config.ts"
 import type { ApplicationConfig } from '@angular/core';
-
 import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
