@@ -270,6 +270,7 @@ export class ArrayNode<TItem extends Node> {
       this.syncErrors,
       () => this.node,
       () => !this.nonInteractive(),
+      () => this.asyncValidationWatchRef?.flushInitial(),
     );
 
     this.usesTrackBy = this.options?.trackBy !== undefined;
@@ -434,7 +435,9 @@ export class ArrayNode<TItem extends Node> {
       cleanup: this.asyncValidation.cancel,
       destroy: this.asyncValidation.destroy,
     };
-    this.asyncValidationWatchRef = createReactiveWatch(this.asyncValidationWatchTarget, null);
+    // Mixed sources must not run synchronous guards before a consumer assigns its class form.
+    const hasSynchronousValidators = this.validators().some(validator => !isAsyncValidator(validator));
+    this.asyncValidationWatchRef = createReactiveWatch(this.asyncValidationWatchTarget, null, hasSynchronousValidators);
     watchNodeInjector(this.node, injector => this.asyncValidationWatchRef?.setInjector(injector));
   }
 

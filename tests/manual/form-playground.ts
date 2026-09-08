@@ -1,7 +1,6 @@
 import { computed, signal } from '@angular/core';
 
-import { FormNode } from '../../dist/types/ngblocks-form-nodes';
-import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
+import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNode, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string }
 const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
@@ -116,10 +115,21 @@ const myFormTyped = form({
   // listB: field<number[]>([]),
 });
 
+class MyComponentTestSelfRef {
+  myForm = form({
+    valueType: field<number>(null, [required]),
+    value: field<string>(null, [() => {
+      const valueType = this.myForm.valueType();
+      return { kind: '' };
+    }]),
+  });
+}
+
 myFormTyped.forEachChild(child => child.set(null));
 myFormTyped.forEachChild(child => child.set(''), { includeDynamic: true });
 
-Object.values(myFormTyped.children).forEach(child => child.set(2))
+// Both the string and numeric children accept null.
+Object.values(myFormTyped.children).forEach(child => child.set(null))
 
 const myDynamicGroup = group({});
 const myNonDynamicGroup = group({
@@ -455,3 +465,96 @@ class MyCompon {
     }),
   });
 }
+
+const myFieldo = field('', { });
+
+const matchedId = (ids: any[], valueType: any) => validator<string | null>(({ value }) => {
+  const id = ids.find(e => e === value());
+  return !id && valueType > 3 ? { kind: 'unmatched' } : null;
+});
+
+const getSomeError = (a: any, b: any) => ({ kind: 'something' });
+
+class MyComponentForSelfReference {
+  ids = signal(['1', '2', '3']);
+
+  myForm = form({
+    somo: field('', [
+      // ctx => ctx.field().parent()
+    ]),
+    valueType: field<number>(null, [required]),
+    value: field<string>(null, [
+      required,
+      () => matchedId(this.ids(), this.myForm.valueType()),
+      () => this.myForm.valueType() ? { kind: '' } : null,
+      () => ({ kind: '', message: '' }),
+      () => ({ kind: '' }),
+    ]),
+    value2: field<string>(null, [
+      required,
+      () => matchedId(this.ids(), this.myForm.valueType()),
+      () => this.myForm.valueType() ? { kind: '' } : null,
+      () => ({ kind: '', message: '' }),
+      () => ({ kind: '' }),
+      () => ({ kind: '', message: '' }),
+    ]),
+    value3: field<string>(null, [
+      required,
+      () => this.myForm.valueType() ? { kind: '' } : null,
+      () => ({ kind: '' }),
+      () => ({ kind: '', message: '' }),
+      () => matchedId(this.ids(), this.myForm.valueType()),
+    ]),
+    value4: field<string>(null, [
+      required,
+      () => this.myForm.valueType() ? { kind: '' } : null,
+      () => ({ kind: '' }),
+      () => ({ kind: '', message: '' }),
+      () => matchedId(this.ids(), this.myForm.valueType()),
+      validator(() => this.ids() && this.myForm.valueType() ? { kind: 'something' } : null),
+      validator(() => getSomeError(this.ids(), this.myForm.valueType())),
+    ]),
+    value5: field<string>(null, [
+      required,
+      () => this.myForm.valueType() ? { kind: '' } : null,
+      () => ({ kind: '' }),
+      () => ({ kind: '', message: '' }),
+      () => matchedId(this.ids(), this.myForm.valueType()),
+      validator(() => getSomeError(this.ids(), this.myForm.valueType())),
+      validator(() => matchedId(this.ids(), this.myForm.valueType())),
+      asyncValidator(async () => ({ kind: '' })),
+      asyncValidator(async () => {
+        return matchedId(this.ids(), this.myForm.valueType()) ? { kind: '' } : null;
+      }),
+      validator(() => this.ids() && this.myForm.valueType() ? { kind: 'something' } : null),
+    ]),
+    some: field('', () => {
+      if (this.myForm.valueType()) return { kind: '' };
+      return null;
+    }),
+    some1: field('', () => this.myForm.valueType() ? { kind: '' } : null),
+    some2: field('', [
+      () => {
+        if (this.myForm.valueType()) return { kind: '' };
+        return null;
+      }
+    ]),
+    some3: field('', [
+      () => this.myForm.valueType() ? { kind: '' } : null,
+    ]),
+    some4: field<string>(null, () => {
+      const valueType = this.myForm.valueType();
+      const ids = this.ids();
+      return [required, matchedId(ids, valueType)];
+    }),
+    some5: field('', {
+      validators: [
+        required,
+        () => matchedId(this.ids(), this.myForm.valueType()),
+        () => this.myForm.valueType() ? { kind: '' } : null,
+      ],
+    })
+  });
+}
+
+// It should autocomplete also the follosing: field('', { /** This object keys should be autocompleted */ })

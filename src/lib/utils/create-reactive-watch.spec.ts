@@ -9,6 +9,36 @@ const settle = async (): Promise<void> => {
 };
 
 describe('createReactiveWatch', () => {
+  it('flushes initial setup once without flushing later notifications or rerunning its stale startup task', async () => {
+    const value = signal(0);
+    const run = vi.fn((deferCallbacks?: boolean) => ({ value: value(), deferCallbacks }));
+    const cleanup = vi.fn();
+    const watch = createReactiveWatch({ run, cleanup }, null, true);
+    expect(run).not.toHaveBeenCalled();
+    watch.flushInitial();
+    expect(run).toHaveLastReturnedWith({ value: 0, deferCallbacks: true });
+    value.set(1);
+    watch.flushInitial();
+    expect(run).toHaveBeenCalledTimes(1);
+    await settle();
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(run).toHaveLastReturnedWith({ value: 1, deferCallbacks: false });
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    watch.destroy();
+  });
+
+  it('does not start a deferred watch after its owner is destroyed', async () => {
+    const injector = Injector.create({ providers: [] });
+    const run = vi.fn();
+    const destroy = vi.fn();
+    const watch = createReactiveWatch({ run, cleanup: () => {}, destroy }, injector, true);
+    injector.destroy();
+    watch.flushInitial();
+    await settle();
+    expect(run).not.toHaveBeenCalled();
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
   it('tracks reactive reads, coalesces notifications, and runs cleanup before rerunning', async () => {
     const value = signal(0);
     const events: string[] = [];

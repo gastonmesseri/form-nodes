@@ -51,28 +51,16 @@ type PositionalArrayOptions<TValue, TArray extends Node = ArrayNodeType<Node>> =
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
  * `array()`, or shorthand object. The supplied definition remains an independent node and is not
  * inserted directly into this array.
- * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function array<TDefinition extends ArrayTemplate>(
   template: TDefinition & ArrayTemplateInput<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-): ArrayNodeType<NormalizedNode<TDefinition>>;
-/**
- * Creates an array node from a template and validators.
- *
- * ```ts
- * const names = array(field(''), [minLength(1)]);
- * ```
- *
- * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
- * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
- * @param validators Reactive validator source for the complete array value.
- * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
- */
-export function array<TDefinition extends ArrayTemplate>(
-  template: TDefinition & ArrayTemplateInput<TDefinition>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | NoInfer<ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>>]
+    | [
+      validators: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined,
+      options: NoInfer<ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined
+    ]
 ): ArrayNodeType<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a declarative node template and positional initial contents.
@@ -84,31 +72,17 @@ export function array<TDefinition extends ArrayTemplate>(
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
  * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the template defaults.
- * @param options Additional array configuration.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function array<TDefinition extends ArrayTemplate>(
   template: TDefinition & ArrayTemplateInput<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-): ArrayNodeType<NormalizedNode<TDefinition>>;
-/**
- * Creates an array node from a template, positional initial contents, and validators.
- *
- * ```ts
- * const names = array(field(''), ['Marco'], [minLength(1)]);
- * ```
- *
- * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
- * `array()`, or shorthand object; the supplied definition itself is not inserted into the array.
- * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the template defaults.
- * @param validators Reactive validator source for the complete array value.
- * @param options Additional array configuration.
- */
-export function array<TDefinition extends ArrayTemplate>(
-  template: TDefinition & ArrayTemplateInput<TDefinition>,
-  initial: NoInfer<ArrayInitial<TDefinition>>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | NoInfer<PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>>]
+    | [
+      validators: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined,
+      options: NoInfer<PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined
+    ]
 ): ArrayNodeType<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a node-definition factory.
@@ -124,28 +98,16 @@ export function array<TDefinition extends ArrayTemplate>(
  * @param factory Creates the declarative shape for each item. Use a factory when construction
  * should be deferred or customized. Every call must return a fresh `field()`, `form()`, `array()`,
  * or shorthand object; returning the same definition twice throws.
- * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count; it defaults to `[]`.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function array<TDefinition extends ArrayTemplate>(
   factory: ArrayFactory<TDefinition>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-): ArrayNodeType<NormalizedNode<TDefinition>>;
-/**
- * Creates an array node from a factory and validators.
- *
- * ```ts
- * const names = array(() => field(''), [minLength(1)]);
- * ```
- *
- * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
- * Returning the same definition from multiple calls throws.
- * @param validators Reactive validator source for the complete array value.
- * @param options Array configuration. `initialValue` accepts either an array of item values or a non-negative initial item count.
- */
-export function array<TDefinition extends ArrayTemplate>(
-  factory: ArrayFactory<TDefinition>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-  options?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | NoInfer<ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>>]
+    | [
+      validators: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined,
+      options: NoInfer<ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined
+    ]
 ): ArrayNodeType<NormalizedNode<TDefinition>>;
 /**
  * Creates an array node from a factory and positional initial contents.
@@ -157,31 +119,17 @@ export function array<TDefinition extends ArrayTemplate>(
  * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
  * Returning the same definition from multiple calls throws.
  * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
- * @param options Additional array configuration.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function array<TDefinition extends ArrayTemplate>(
   factory: ArrayFactory<TDefinition>,
   initial: NoInfer<ArrayInitial<TDefinition>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-): ArrayNodeType<NormalizedNode<TDefinition>>;
-/**
- * Creates an array node from a factory, positional initial contents, and validators.
- *
- * ```ts
- * const names = array(() => field(''), 2, [minLength(1)]);
- * ```
- *
- * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
- * Returning the same definition from multiple calls throws.
- * @param initial **Initial contents:** either an array of item values or a non-negative integer specifying how many items to create from the factory defaults.
- * @param validators Reactive validator source for the complete array value.
- * @param options Additional array configuration.
- */
-export function array<TDefinition extends ArrayTemplate>(
-  factory: ArrayFactory<TDefinition>,
-  initial: NoInfer<ArrayInitial<TDefinition>>,
-  validators: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
-  options?: PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | NoInfer<PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>>]
+    | [
+      validators: NoInfer<ValidatorSource<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined,
+      options: NoInfer<PositionalArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>> | undefined
+    ]
 ): ArrayNodeType<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends ArrayTemplate>(
   source: ArraySource<TDefinition>,

@@ -1554,20 +1554,20 @@ their usual behavior, including descendant propagation.
 
 If a child is named `forEachChild`, use `$api.forEachChild()` to access the operation.
 
-## 📐 Declared child types in Object.values {#declared-child-types-in-objectvalues}
+## 📐 Runtime child map and enumeration {#declared-child-types-in-objectvalues}
 
-`Object.values(node.children)` infers the union of the declared child node types, without
-`undefined`. Mixed fields, groups, forms, and arrays retain their concrete types.
+`children` exposes every runtime child. Declared properties such as `children.name` retain their
+exact types. Unknown names such as `children.nonExisting` and `children[key]` use `DynamicNode`;
+with TypeScript's `noUncheckedIndexedAccess`, these lookups also include `undefined`, allowing
+`children.nonExisting?.value()`. Missing names return `undefined` at runtime. `get(key)` always
+includes `undefined` in its return type, independently of that compiler option.
+
+`Object.values(node.children)` includes dynamically added nodes, so its inferred element type
+includes `DynamicNode` and may retain concrete declared-node alternatives. Use `forEachChild()`
+for the exact union of declared child types. Pass `{ includeDynamic: true }` to that method for
+all-child iteration with `DynamicNode` callbacks.
 
 <CodeBlock language="ts">{childrenUnionSource}</CodeBlock>
-
-The map's TypeScript keys describe the initial declaration only. For an unknown or dynamically
-added key, use `get(key)` or retain the exact node returned by `add()`.
-
-**Static approximation:** `add()` still inserts children into the runtime map, and `Object.values()`
-still includes them. Their types are not reflected in the declared union. In contrast,
-`forEachChild()` excludes them by default, matching its declared-child union. Use
-`forEachChild(callback, { includeDynamic: true })` for all children with `DynamicNode` typing.
 
 ## 🚨 Query errors and registered validators {#query-errors-and-registered-validators}
 
@@ -1599,7 +1599,7 @@ With `form({})` or `group({})`, the empty declaration acts as a dynamic record f
 `Object.values(node.children)` is `DynamicNode[]`. Use
 `forEachChild(callback, { includeDynamic: true })` to visit added children with a `DynamicNode`
 callback. Without that option there are no declared children to visit, and the callback's child
-type is `never`. This also applies to nested empty groups and forms. Nonempty declarations retain
+type is `DynamicNode`, so expressions such as `child.set('')` compile. This also applies to nested empty groups and forms. Nonempty declarations retain
 their concrete child union for default iteration.
 
 <CodeBlock language="ts">{emptyChildRecordSource}</CodeBlock>

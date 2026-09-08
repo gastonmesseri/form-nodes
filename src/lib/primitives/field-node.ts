@@ -256,6 +256,7 @@ export class FieldNode<TValue> {
       () => this.syncErrors(),
       () => this.node,
       () => !this.nonInteractive(),
+      () => this.asyncValidationWatchRef?.flushInitial(),
     );
 
     this.node = this.createNode();
@@ -329,7 +330,9 @@ export class FieldNode<TValue> {
       cleanup: this.asyncValidation.cancel,
       destroy: this.asyncValidation.destroy,
     };
-    this.asyncValidationWatchRef = createReactiveWatch(this.asyncValidationWatchTarget, null);
+    // Mixed sources must not run synchronous guards before a consumer assigns its class form.
+    const hasSynchronousValidators = this.validators().some(validator => !isAsyncValidator(validator));
+    this.asyncValidationWatchRef = createReactiveWatch(this.asyncValidationWatchTarget, null, hasSynchronousValidators);
     watchNodeInjector(this.node, injector => this.asyncValidationWatchRef?.setInjector(injector));
   }
 

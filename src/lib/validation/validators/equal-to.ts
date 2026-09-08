@@ -30,7 +30,23 @@ import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/vali
  * @param expected Static expected value or a reactive function returning it.
  * @param options Optional static message string, or an object containing a static or reactive message.
  */
-export const equalTo = <TValue>(
+export function equalTo<TValue = never>(
+  expected: NoInfer<TValue> | (() => NoInfer<TValue>),
+  options?: string | ({
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
+  }) & {
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
+  },
+): Validator<TValue | null | undefined>;
+/** Infers the constraint value type when no consuming node provides a context. */
+export function equalTo<TValue>(
   expected: TValue | (() => TValue),
   options?: string | ({
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
@@ -44,7 +60,22 @@ export const equalTo = <TValue>(
     /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
     when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
   },
-): Validator<TValue | null | undefined> => {
+): Validator<TValue | null | undefined>;
+export function equalTo<TValue>(
+  expected: TValue | (() => TValue),
+  options?: string | ({
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
+  }) & {
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
+  },
+): Validator<TValue | null | undefined> {
   const message = resolveValidatorMessageOption(options);
   const validator: Validator<TValue | null | undefined> = ({ value }) => {
     const expectedValue = typeof expected === 'function' ? (expected as () => TValue)() : expected;
@@ -53,4 +84,4 @@ export const equalTo = <TValue>(
       : { kind: 'equalTo', message: resolveValidatorMessage('equalTo', {}, message, defaultEqualToMessage) };
   };
   return applyValidatorWhen(validator, options);
-};
+}

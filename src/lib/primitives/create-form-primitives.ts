@@ -112,7 +112,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       ? configuredValidatorsOrOptions
       : resolvedOptions?.validators ?? [];
     return registerDefaults(createFormGroupNode(definitions, validatorSource, resolvedOptions, 'form', normalizeDefinition));
-  }) as FormPrimitives<TNullable>['form'];
+  }) as unknown as FormPrimitives<TNullable>['form'];
 
   const configuredGroup = ((
     definitions: ObjectNodeDefinitions,
@@ -132,7 +132,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       ? configuredValidatorsOrOptions
       : resolvedOptions?.validators ?? [];
     return registerDefaults(createFormGroupNode(definitions, validatorSource, resolvedOptions, 'group', normalizeDefinition));
-  }) as FormPrimitives<TNullable>['group'];
+  }) as unknown as FormPrimitives<TNullable>['group'];
 
   const normalizeArrayDefinition = (definition: unknown): unknown => {
     if (isNode(definition)) return definition;
@@ -156,7 +156,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     const optionsIndex = hasInitial ? (thirdIsValidators ? 2 : 1) : (secondIsValidators ? 1 : 0);
     args[optionsIndex] = mergeNodeOptions(args[optionsIndex] as object | undefined);
     return registerDefaults((array as (...arrayArgs: any[]) => Node)(configuredSource, ...args));
-  }) as FormPrimitives<TNullable>['array'];
+  }) as unknown as FormPrimitives<TNullable>['array'];
 
   return {
     field: configuredField,

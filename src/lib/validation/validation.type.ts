@@ -410,7 +410,23 @@ export type ComposableValidationResult<TValue, TField extends Node = ValidatorNo
 /** Readonly normalized collection of composable validators for a node value. */
 export type Validators<TValue, TField extends Node = ValidatorNode> = readonly ComposableValidator<TValue, TField>[];
 
-/** One validator or a readonly list in which `null` and `undefined` represent no validator. */
+// A shared first branch keeps contextual return typing stable across repeated instantiations.
+export type DeferredValidator = () => any;
+
+/**
+ * One validator or a readonly list in which `null` and `undefined` represent no validator.
+ *
+ * Parameterless callbacks have an intentionally unchecked return type so a class initializer
+ * can reference its own form without a return annotation. Context-taking validators retain
+ * their checked context and result, including when authored through `validator()`.
+ * The runner still accepts only synchronous validation results or synchronous compositions.
+ * Overloaded functions callable without arguments also match the unchecked callback branch.
+ */
 export type ValidatorSource<TValue, TField extends Node = ValidatorNode> =
+  | DeferredValidator
   | ComposableValidator<TValue, TField>
-  | readonly (ComposableValidator<TValue, TField> | ValidationSuccess)[];
+  // Tuple contextual typing avoids comparing a deferred callback's return with sibling entries.
+  | readonly [
+    validator?: DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess,
+    ...validators: (DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess)[]
+  ];

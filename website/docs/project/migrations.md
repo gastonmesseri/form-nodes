@@ -72,12 +72,23 @@ node.forEachChild(callback, { includeDynamic: true });
 
 The opted-in callback receives `DynamicNode`, so update callbacks that assumed only declared
 child types. A runtime boolean also requires a `DynamicNode` callback. Empty forms and groups
-need the option to visit any children; their default callback child type is `never`.
+need the option to visit any children; their default callback child type is `DynamicNode`.
 `Object.values(node.children)` continues to include added nodes and retains its existing types.
+
+## 📐 Unreleased: runtime child map types {#unreleased-runtime-child-map-types}
+
+`children` again accepts arbitrary string keys, so `node.children.nonExisting?.value()` is valid.
+Known properties retain their exact types. Enable `noUncheckedIndexedAccess` to have missing
+index-signature keys typed as optional, or use `get(key)`, which is always optional.
+
+Enumeration now includes `DynamicNode` in its element type because added children may differ
+from the initial declaration. Use `forEachChild()` for the precise declared-child union, or
+`forEachChild(callback, { includeDynamic: true })` for all runtime children.
 
 ## 📐 1.1.0: declared-child map types {#110-declared-child-map-types}
 
-`children` now exposes only initially declared keys in TypeScript. Replace dynamic
+In version 1.1.0, `children` exposed only initially declared keys in TypeScript. This restriction
+is superseded by the unreleased runtime-map change above. Replace dynamic
 `node.children[key]` access with `node.get(key)`, which returns `DynamicNode | undefined`,
 or retain the precisely typed node returned by `add()`.
 

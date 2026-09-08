@@ -963,6 +963,53 @@ field('', {
 });
 ```
 
+A class property may reference its own node or form from a deferred synchronous validator,
+including sibling value reads through `this.myForm`, without a callback return annotation.
+Primitive configuration arguments do not participate in inference of the declared value/model;
+unified argument tuples preserve the positional-validator and options forms without circular
+overload inference. Inference barriers wrap validator and options alternatives separately, keeping
+option-object property completion available for all primitives and configured factories. Both
+block and expression callbacks support direct results and returned arrays of synchronous validators.
+Validator-source arrays use contextual tuples so the compiler does not
+compare a deferred callback's return against other array entries while inferring the owner.
+
+The deliberate type-checking tradeoff is confined to parameterless callbacks supplied as validator sources
+or passed to the callback signatures of `validator()` and `asyncValidator()`,
+whose accepted return type is `any`. This also admits overloaded functions with a zero-argument
+signature, and does not check a deferred validator's value compatibility with its consumer.
+Use context-taking callbacks for checked authoring and the called form of overloaded factories such as
+`uniqueItems()` for checked value compatibility. Context-taking callbacks retain their checked contracts
+both directly and through the helpers. `ComposableValidator`, `ValidationResult`, and the parameterized
+asynchronous configuration retain their checked contracts. Contextual helper overloads prevent callback
+results from participating in inference; fallback overloads still infer explicitly annotated standalone contexts. The
+runtime result/composition protocol is unchanged; arbitrary values and unmarked asynchronous
+callbacks are not newly supported. Field values, node kinds, child names, and aggregate models
+remain precisely typed, including explicit nullability and configured primitive defaults.
+
+Nodes with mixed synchronous and asynchronous validators defer the first asynchronous watcher run to a microtask so synchronous guards, `when`, and
+`params` callbacks are not evaluated during construction. Reading asynchronous errors or pending state
+flushes that initial setup synchronously, while deferring the asynchronous callback itself until the
+microtask. Subsequent reads do not flush later scheduled revalidation. Synchronous failures still suppress
+asynchronous execution, and pending/error aggregation and weak injector ownership remain unchanged.
+
+Synchronous validator callbacks remain lazy: read the class property inside the callback, after
+assignment, rather than evaluating the reference while constructing its arguments. External and
+sibling signals read during validation invalidate the same computed validation result; they do
+not mark fields dirty or touched.
+
+This existing dependency behavior was checked against Angular `v22.1.5`
+(`468b65b74566537456c192ac4281795c5a1e1a5e`), the latest stable Angular 22 tag inspected:
+`packages/forms/signals/src/api/rules/validation/validate.ts`,
+`packages/forms/signals/src/field/validation.ts`,
+`packages/forms/signals/test/node/api/validators/max_length.spec.ts` (dynamic sibling constraint),
+and `packages/forms/signals/test/node/field_node.spec.ts` (conditionally required sibling).
+The mixed-validator startup regression was also checked against
+`packages/forms/signals/src/api/rules/validation/validate_async.ts` (the synchronous-validity gate) and
+`packages/forms/signals/test/node/validation_status.spec.ts` (asynchronous status and parent aggregation).
+The same release tag was re-resolved for this change.
+Angular declares rules against a separate model/schema; this class-initializer inference pattern
+and returned-validator composition belong to Form Nodes' public API.
+
 Signals read by either the outer or returned validators are dependencies of the same synchronous validation `computed()`. Nested composition is supported, and every level receives the same context object. `null` and `undefined` entries in a returned validator array are ignored, which allows concise conditional entries such as `() => [required, enabled() ? minLength(2) : null]`. After empty entries are removed, an array must contain either only validators or only validation errors; mixing validators and errors in one returned array throws because its intended evaluation order would be ambiguous. Circular composition throws an English runtime error, and resolution is limited to 100 returned-validator levels to protect against chains that continually allocate new functions.
 
 An `asyncValidator()` cannot be returned by a synchronous validator. Asynchronous validators must be placed directly in the validators array so their watcher lifecycle, debounce, cancellation, pending state, and dependency discovery can be established without executing arbitrary synchronous validators for classification:
@@ -2842,7 +2889,7 @@ nodes from the current snapshot. Callback exceptions propagate and stop iteratio
 Iteration tracks the structure version and the callback's own signal reads, but does not read
 child values or alter validation, state, or ownership by itself. Callback operations retain their
 normal propagation rules. An empty declaration performs no default callbacks even after add();
-its default child type is never. Opting in visits its added children as DynamicNode. The children
+its default callback child type is DynamicNode. Opting in visits its added children as DynamicNode. The children
 map and Object.values(children) still include all runtime children with their existing types.
 
 Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`,
@@ -2853,20 +2900,27 @@ API decisions; they do not reproduce an Angular public method. The latest mainte
 rechecked for this change. Filtering uses the existing dynamic-key ownership classification;
 attachment, removal, aggregate values, validation, and descendant state propagation are unchanged.
 
-## Declared-child map typing
+## Runtime child map typing
 
-The public `children` map is typed from the initial declaration only. `Object.values(children)`
-therefore infers a union of the declared child node types without `undefined`; mixed fields,
-groups, forms, and arrays retain their concrete types. `children.name` remains precisely typed.
-Unknown string keys are accessed through `get(key): DynamicNode | undefined`, or through the exact
-node returned by `add()`. `DynamicFormChildren` remains available as an explicit runtime-map type.
+The public `children` map combines precisely typed declared properties with a readonly string
+index signature of `DynamicNode`. Known keys such as `children.name` keep their exact node and
+parent types. Arbitrary keys such as `children.nonExisting` or `children[key]` are supported;
+with `noUncheckedIndexedAccess`, their type includes `undefined`. `get(key)` always returns
+`DynamicNode | undefined`, independently of that compiler option. `DynamicFormChildren` remains
+available as an explicit map type whose index signature always includes `undefined`.
 
-This is a deliberate static approximation: runtime maps and enumeration still include added
-children, even when their types are absent from the declared union. The union is not a guarantee
-about every runtime entry after `add()`. `forEachChild()` uses the declared union only for default
-iteration, which excludes added nodes. Its includeDynamic option provides all-child iteration
-with DynamicNode callbacks. The map's runtime enumeration, attachment, removal, validation, and
-state propagation rules are unchanged.
+`Object.values(children)` includes `DynamicNode` in its inferred element type and may retain
+concrete declared-node alternatives. It no longer promises only the declared child union, since
+runtime enumeration includes added nodes. Use `forEachChild()` without dynamic inclusion for
+that exact declared-child union; `{ includeDynamic: true }` visits all immediate children with
+`DynamicNode` callbacks. Adding and removing children does not widen known properties or expose
+unknown names directly on the form or group itself. Runtime contents, validation, and state
+propagation are unchanged.
+
+Reference inspected: Angular `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`),
+`packages/forms/signals/src/field/structure.ts` (`children()`) and
+`packages/forms/signals/test/node/field_node.spec.ts` (removed children). This dictionary's
+public TypeScript shape and the declared-child iteration distinction are Form Nodes API choices.
 
 ## Error and validator presence queries
 
@@ -2902,12 +2956,16 @@ widens the callback to DynamicNode, matching the additional nodes that can be vi
 
 When the declared child key set is empty, forms and groups expose `children` as a readonly
 string-keyed `DynamicNode` map. This yields `DynamicNode[]` for `Object.values(children)`, without
-`undefined`. Default forEachChild iteration visits no declared children and has a never callback
+`undefined`. Default forEachChild iteration visits no declared children and has a DynamicNode callback
 child type; `{ includeDynamic: true }` visits added children with a DynamicNode callback.
 Nonempty declarations preserve their concrete child union for default iteration. This is determined statically and applies to nested nodes and configured
 factories; adding or removing runtime children does not change the chosen type. `get(key)` remains
 optional, direct dynamic properties remain unsupported, and `add()` retains its exact return type.
 The value shape, map enumeration, lookup, and attachment behavior remain unchanged.
+Reference rechecked: Angular `v22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`),
+`packages/forms/signals/src/field/structure.ts` (`children()`) and
+`packages/forms/signals/test/node/field_node.spec.ts` (empty-object aggregation).
+The `DynamicNode` fallback and declared-versus-added iteration selection are Form Nodes public API choices.
 
 ## Explicit validator resolution queries
 

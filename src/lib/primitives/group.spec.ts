@@ -34,15 +34,19 @@ describe('group', () => {
     expect(parent()).toEqual({ record: { name: 'Lia' } });
   });
 
-  it('keeps dynamic entries in children at runtime while enumeration types use the declaration', () => {
+  it('exposes missing, added, and removed children through the runtime map', () => {
     const parent = form({ branch: group({ name: field('Marco'), age: field(30) }) });
     const branch = parent.branch;
     expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
+    expect(branch.children.active?.value()).toBeUndefined();
     const active = branch.add('active', field(true));
-    expect(Reflect.get(branch.children, 'active')).toBe(active);
+    expect(branch.children.active).toBe(active);
+    expect(branch.children.active?.value()).toBe(true);
+    expect(branch.$api.children.active).toBe(active);
     expect(Object.values(branch.children)).toEqual([branch.name, branch.age, active]);
     expect(branch.get('active')).toBe(active);
     branch.remove('active');
+    expect(branch.children.active?.value()).toBeUndefined();
     expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
     expect(branch.get('active')).toBeUndefined();
   });

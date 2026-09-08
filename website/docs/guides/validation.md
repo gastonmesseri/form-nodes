@@ -6,6 +6,8 @@ title: Validation
 
 import CodeBlock from '@theme/CodeBlock';
 import validatorResolutionSource from '!!raw-loader!../../examples/validator-resolution.example.ts';
+import selfReferencingHelpersSource from '!!raw-loader!../../examples/self-referencing-validation-helpers.typecheck.ts';
+import selfReferencingValidationSource from '!!raw-loader!../../examples/self-referencing-validation.example.ts';
 
 The [executable validation example](../examples/executable-examples.mdx#validation-ownership) checks
 field and form error ownership through both failing and valid states.
@@ -121,6 +123,39 @@ const myForm = form({
   confirmation: field('', [equalTo(() => password())]),
 });
 ```
+
+## 🔗 Referencing the form from its own validators {#self-referencing-validators}
+
+A validator declared on a class property can read `this.myForm`, including sibling fields,
+without a return annotation or an explicit form type. Block and expression callbacks may return
+errors directly, a validator, or an array of synchronous validators. Both positional validators and the
+`validators` option support this pattern, including strict fields and configured primitives.
+Editors also suggest configuration keys when you start an options object such as `field('', {})`.
+
+This signup form checks that both passwords match. Changing the password revalidates its
+confirmation. Keep the sibling read inside the callback so it runs after `myForm` is assigned.
+
+<CodeBlock language="ts" title="self-referencing-validation.example.ts">{selfReferencingValidationSource}</CodeBlock>
+
+The same syntax works inside `validator()` and the callback signature of `asyncValidator()`:
+
+<CodeBlock language="ts" title="self-referencing-validation-helpers.typecheck.ts">{selfReferencingHelpersSource}</CodeBlock>
+
+Parameterless callbacks have an intentionally unchecked return type, both as direct sources and
+inside these helpers. Context-taking callbacks retain checked context and result types. The
+runtime contract still applies: synchronous callbacks return errors, successful results, or
+synchronous validators; asynchronous callbacks return Promise-like or Observable-like results.
+An asynchronous callback must return the validation result, not merely test whether a validator
+function exists.
+
+Mixing synchronous and asynchronous rules is safe during class initialization. Initial asynchronous
+setup waits until construction finishes, or until you read validation state. Synchronous errors
+prevent asynchronous execution, including unconditional errors such as `() => ({ kind: '' })`.
+
+This exception includes overloaded functions callable without arguments. For example,
+`uniqueItems()` returns a validator whose array-value compatibility is checked, while passing
+`uniqueItems` directly can match the unchecked parameterless branch. A deferred callback's
+returned validator is likewise not checked against the consuming field's value type.
 
 ## ✅ Conditional validators {#conditional-validators}
 

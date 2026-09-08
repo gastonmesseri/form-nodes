@@ -50,6 +50,13 @@ validator source. They differ only in how reactive dependencies are selected.
 | Callback | Signals read by `validate` and `when` | A concise validator with obvious dependencies |
 | Parameterized | Signals read by `params` and `when`; `validate` is untracked | A stable, explicit request snapshot |
 
+Parameterless callbacks in the callback signature can reference their class form without return
+annotations. Their accepted return type is intentionally unchecked, but they must still return
+Promise-like or Observable-like validation results. Context-taking callbacks and the parameterized
+configuration keep their checked return contracts. Explicitly annotated standalone callback
+contexts still infer the value type. See
+[Self-referencing validators](../guides/validation.md#self-referencing-validators).
+
 ### 🔸 Value type and inference {#value-type-and-inference}
 
 An `asyncValidator()` declared separately has no consuming node from which TypeScript can infer
@@ -455,6 +462,11 @@ the structural contract, but Form Nodes does not require RxJS.
 properties and methods. Add it directly to a `validators` source.
 
 ## 🔌 Execution lifecycle {#execution-lifecycle}
+
+For mixed synchronous and asynchronous validators, initial setup is deferred until construction finishes, so guards and asynchronous
+callbacks can safely reference a class form being declared. Reading errors or pending state performs
+the initial setup immediately and schedules the asynchronous callback. Synchronous errors suppress
+asynchronous execution. Later reactive changes retain their scheduled revalidation behavior.
 
 ### 🔸 Scheduling and status {#scheduling-and-status}
 

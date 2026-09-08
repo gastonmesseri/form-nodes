@@ -3,5 +3,5 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["tests/types/**/*.ts"]
+  "include": ["tests/types/**/*.ts", "tests/manual/form-playground.ts"]
 }

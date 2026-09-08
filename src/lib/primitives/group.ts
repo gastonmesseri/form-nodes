@@ -30,30 +30,16 @@ type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDe
  * created, with the complete declaration path included in the error.
  *
  * @param definitions Initially declared child-node definitions.
- * @param options Group configuration.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
-  options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
-): Group<NormalizedNodes<TDefinitions>>;
-/**
- * Creates an object-shaped structural node with positional validators and optional configuration.
- *
- * ```ts
- * const address = group(
- *   { city: field('') },
- *   [addressValidator],
- * );
- * ```
- *
- * @param definitions Initially declared child-node definitions.
- * @param validators Validators for the complete group value.
- * @param options Group configuration.
- */
-export function group<TDefinitions extends ObjectNodeDefinitions>(
-  definitions: TDefinitions & GroupDefinitions<TDefinitions>,
-  validators?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
-  options?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>> | NoInfer<GroupOptions<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>>]
+    | [
+      validators: NoInfer<ValidatorSource<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>> | undefined,
+      options: NoInfer<GroupOptions<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>> | undefined
+    ]
 ): Group<NormalizedNodes<TDefinitions>>;
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,

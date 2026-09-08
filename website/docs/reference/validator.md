@@ -76,7 +76,7 @@ field created with `field.strict()`.
 
 ```ts
 validator<TValue, TField extends Node = Node>(
-  validate: ComposableValidator<TValue, ValidatorOwner<TField>>,
+  validate: NoInfer<(() => any) | ComposableValidator<TValue, ValidatorOwner<TField>>>,
 ): ComposableValidator<TValue, TField>;
 ```
 
@@ -84,6 +84,12 @@ validator<TValue, TField extends Node = Node>(
 the original `validate` function by identity. `TField` is inferred from the consuming primitive
 when the helper is inline. `ValidatorOwner` gives a standalone helper the common node union
 when no concrete owner is supplied. Omit helper type arguments to infer both types inline.
+
+Parameterless callbacks can reference their class form, including returning another synchronous
+validator, without a return annotation. Their accepted return type is intentionally unchecked;
+callbacks receiving a context still check their results. A fallback overload retains inference
+from explicitly annotated standalone callback contexts. See
+[Self-referencing validators](../guides/validation.md#self-referencing-validators).
 
 ### 🔸 Value type and inference {#value-type-and-inference}
 

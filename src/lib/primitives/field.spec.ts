@@ -2599,3 +2599,92 @@ describe('field', () => {
     expect(fieldNode.valid()).toBe(false);
   });
 });
+
+it('tracks a class field referenced by its own composed validator', () => {
+  const allowed = signal(['Acme']);
+  const run = vi.fn();
+  const matches = (items: string[], current: string | null) => {
+    return validator<string | null>(() => {
+      run(current);
+      return items.includes(current ?? '') ? null : { kind: 'unmatched' };
+    });
+  };
+
+  class Model {
+    entry = field<string>('Acme', [() => {
+      return matches(allowed(), this.entry());
+    }]);
+  }
+
+  const model = new Model();
+  expect(run).not.toHaveBeenCalled();
+  expect(model.entry.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(1);
+  expect(model.entry.pending()).toBe(false);
+  expect(model.entry.errors()).toEqual([]);
+  expect(run).toHaveBeenCalledTimes(1);
+  allowed.set(['Other']);
+  expect(model.entry.hasError('unmatched')).toBe(true);
+  expect(run).toHaveBeenCalledTimes(2);
+  model.entry.set('Other');
+  expect(model.entry.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(3);
+  expect(model.entry.dirty()).toBe(false);
+  model.entry.markAsTouched();
+  model.entry.reset('Acme');
+  expect(model.entry.touched()).toBe(false);
+  expect(model.entry.hasError('unmatched')).toBe(true);
+  expect(run).toHaveBeenCalledTimes(4);
+});
+
+it('defers mixed self-referencing helpers and resumes asynchronous validation after synchronous errors clear', async () => {
+  const run = vi.fn();
+  const syncRun = vi.fn();
+  class Model {
+    ids = signal(['1']);
+
+    value = field('1', [
+      validator(() => {
+        syncRun();
+        return this.value() === 'blocked' ? { kind: 'blocked' } : null;
+      }),
+      asyncValidator(async () => {
+        const value = this.value();
+        const ids = this.ids();
+        run(value, ids);
+        return value !== null && ids.includes(value) ? null : { kind: 'unmatched' };
+      }),
+    ]);
+  }
+  const model = new Model();
+  expect(syncRun).not.toHaveBeenCalled();
+  expect(run).not.toHaveBeenCalled();
+  expect(model.value.pending()).toBe(true);
+  expect(syncRun).toHaveBeenCalledTimes(1);
+  expect(run).not.toHaveBeenCalled();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(model.value.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(1);
+  model.value.set('blocked');
+  await Promise.resolve();
+  expect(model.value.errors()).toMatchObject([{ kind: 'blocked' }]);
+  expect(model.value.pending()).toBe(false);
+  model.ids.set([]);
+  await Promise.resolve();
+  expect(run).toHaveBeenCalledTimes(1);
+  model.value.set('1');
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(run).toHaveBeenCalledTimes(2);
+  expect(model.value.errors()).toMatchObject([{ kind: 'unmatched' }]);
+  model.ids.set(['1']);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(run).toHaveBeenCalledTimes(3);
+  expect(model.value.errors()).toEqual([]);
+  expect(model.value.pending()).toBe(false);
+  expect(model.value.valid()).toBe(true);
+  expect(model.value.dirty()).toBe(false);
+  expect(model.value.touched()).toBe(false);
+});

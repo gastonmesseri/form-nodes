@@ -338,15 +338,19 @@ describe('form', () => {
     await vi.waitFor(() => expect(error()).toBe(false));
   });
 
-  it('keeps dynamic entries in children at runtime while enumeration types use the declaration', () => {
+  it('exposes missing, added, and removed children through the runtime map', () => {
     const parent = form({ branch: form({ name: field('Marco'), age: field(30) }) });
     const branch = parent.branch;
     expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
+    expect(branch.children.active?.value()).toBeUndefined();
     const active = branch.add('active', field(true));
-    expect(Reflect.get(branch.children, 'active')).toBe(active);
+    expect(branch.children.active).toBe(active);
+    expect(branch.children.active?.value()).toBe(true);
+    expect(branch.$api.children.active).toBe(active);
     expect(Object.values(branch.children)).toEqual([branch.name, branch.age, active]);
     expect(branch.get('active')).toBe(active);
     branch.remove('active');
+    expect(branch.children.active?.value()).toBeUndefined();
     expect(Object.values(branch.children)).toEqual([branch.name, branch.age]);
     expect(branch.get('active')).toBeUndefined();
   });
@@ -4548,4 +4552,363 @@ describe('form', () => {
     expect(profile.untouched()).toBe(true);
     expect(profile.name.untouched()).toBe(true);
   });
+});
+
+it.each([false, true])('tracks class form self-references with nested form: %s', (nested) => {
+  const run = vi.fn();
+  const allowedOption = (items: { name: string; valueType: number }[], valueType: number | null) => {
+    return validator<string | null>(({ value }) => {
+      run(valueType, value());
+      return items.some(item => item.name === value() && item.valueType === valueType)
+        ? null : { kind: 'unmatched' };
+    });
+  };
+
+  class Model {
+    availableOptions = signal([{ name: 'alpha', valueType: 1 }]);
+
+    myForm = form({
+      valueType: field<number>(null, [required]),
+      value: field<string>(null, [required, () => {
+        return allowedOption(this.availableOptions(), this.myForm.valueType());
+      }]),
+    });
+  }
+
+  const model = new Model();
+  const parent = nested ? form({ payment: model.myForm }) : model.myForm;
+  expect(run).not.toHaveBeenCalled();
+  expect(parent.invalid()).toBe(true);
+  expect(model.myForm.value.hasError('unmatched')).toBe(true);
+  expect(run).toHaveBeenCalledTimes(1);
+  model.myForm.patch({ valueType: 1, value: 'alpha' });
+  expect(parent.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(2);
+  expect(model.myForm()).toEqual({ valueType: 1, value: 'alpha' });
+  expect(parent.pending()).toBe(false);
+  expect(parent.dirty()).toBe(false);
+  model.myForm.valueType.set(2);
+  expect(parent.invalid()).toBe(true);
+  expect(model.myForm.value.hasError('unmatched')).toBe(true);
+  expect(parent.allErrors().map(error => error.kind)).toEqual(['unmatched']);
+  expect(run).toHaveBeenCalledTimes(3);
+  model.availableOptions.set([{ name: 'alpha', valueType: 2 }]);
+  expect(parent.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(4);
+  model.myForm.value.markAsTouched();
+  model.myForm.reset({ valueType: null, value: null });
+  expect(parent.touched()).toBe(false);
+  expect(parent.invalid()).toBe(true);
+  expect(model.myForm.value.hasError('required')).toBe(true);
+  expect(model.myForm.value.hasError('unmatched')).toBe(true);
+  expect(run).toHaveBeenCalledTimes(5);
+});
+
+it('infers and reactively evaluates a form referenced by its own validator', () => {
+  const run = vi.fn();
+  const allowed = signal(['Acme']);
+
+  class Model {
+    myForm = form({ name: field('') }, [() => {
+      run();
+      return allowed().includes(this.myForm.name() ?? '') ? null : { kind: 'unmatched' };
+    }]);
+  }
+
+  const model = new Model();
+  const parent = form({ payment: model.myForm });
+  expect(run).not.toHaveBeenCalled();
+  expect(parent.invalid()).toBe(true);
+  expect(model.myForm.hasError('unmatched')).toBe(true);
+  expect(model.myForm.name.errors()).toEqual([]);
+  expect(run).toHaveBeenCalledTimes(1);
+  model.myForm.name.set('Acme');
+  expect(parent.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(2);
+  allowed.set(['Other']);
+  expect(parent.invalid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(3);
+  expect(parent.pending()).toBe(false);
+  expect(parent.dirty()).toBe(false);
+  model.myForm.name.markAsTouched();
+  model.myForm.reset({ name: 'Other' });
+  expect(parent.valid()).toBe(true);
+  expect(parent.touched()).toBe(false);
+  expect(run).toHaveBeenCalledTimes(4);
+});
+
+it('reactively evaluates every parameterless self-reference declaration shape together', () => {
+  const run = vi.fn();
+  const matchedId = (ids: string[], valueType: number | null) => {
+    return validator<string | null>(({ value }) => {
+      run(value());
+      const id = ids.find(entry => entry === value());
+      return !id && valueType !== null && valueType > 3 ? { kind: 'unmatched' } : null;
+    });
+  };
+
+  class Model {
+    mySignal = signal(['1', '2', '3']);
+
+    myForm = form({
+      valueType: field<number>(null, [required]),
+      value: field<string>(null, [
+        required,
+        () => matchedId(this.mySignal(), this.myForm.valueType()),
+        () => this.myForm.valueType() ? { kind: '' } : null,
+      ]),
+      some: field('', () => {
+        if (this.myForm.valueType()) return { kind: '' };
+        return null;
+      }),
+      some1: field('', () => this.myForm.valueType() ? { kind: '' } : null),
+      some2: field('', [() => {
+        if (this.myForm.valueType()) return { kind: '' };
+        return null;
+      }]),
+      some3: field('', [() => this.myForm.valueType() ? { kind: '' } : null]),
+      some4: field<string>(null, () => {
+        const valueType = this.myForm.valueType();
+        const ids = this.mySignal();
+        return [required, matchedId(ids, valueType)];
+      }),
+      some5: field('', {
+        validators: [
+          required,
+          () => matchedId(this.mySignal(), this.myForm.valueType()),
+          () => this.myForm.valueType() ? { kind: '' } : null,
+        ],
+      }),
+    });
+  }
+
+  const model = new Model();
+  expect(run).not.toHaveBeenCalled();
+  expect(model.myForm.allErrors().map(error => error.kind)).toEqual(['required', 'required', 'required', 'required']);
+  expect(run).toHaveBeenCalledTimes(3);
+  expect(model.myForm.some4.required()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(3);
+  model.myForm.valueType.set(4);
+  expect(model.myForm.value.errors().map(error => error.kind)).toEqual(['required', 'unmatched', '']);
+  for (const node of [model.myForm.some, model.myForm.some1, model.myForm.some2, model.myForm.some3]) {
+    expect(node.errors().map(error => error.kind)).toEqual(['']);
+  }
+  expect(model.myForm.some4.errors().map(error => error.kind)).toEqual(['required', 'unmatched']);
+  expect(model.myForm.some5.errors().map(error => error.kind)).toEqual(['required', 'unmatched', '']);
+  expect(run).toHaveBeenCalledTimes(6);
+  model.myForm.patch({ value: '1', some4: '1', some5: '1' });
+  model.myForm.allErrors();
+  expect(model.myForm.some4.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(9);
+  model.mySignal.set([]);
+  expect(model.myForm.allErrors().filter(error => error.kind === 'unmatched')).toHaveLength(3);
+  expect(run).toHaveBeenCalledTimes(12);
+  model.myForm.valueType.set(0);
+  expect(model.myForm.allErrors()).toEqual([]);
+  expect(model.myForm.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(15);
+  expect(model.myForm.pending()).toBe(false);
+  expect(model.myForm.dirty()).toBe(false);
+  expect(model.myForm.touched()).toBe(false);
+});
+
+it.each([false, true])('preserves mixed self-referencing errors and skips async helpers with injection context: %s', async (insideInjectionContext) => {
+  const asyncRun = vi.fn();
+  const matchedId = (ids: any[], valueType: any) => {
+    return validator<string | null>(({ value }) => {
+      const id = ids.find(entry => entry === value());
+      return !id && valueType > 3 ? { kind: 'unmatched' } : null;
+    });
+  };
+
+  const getSomeError = vi.fn((_a: any, _b: any) => ({ kind: 'something' }));
+
+  class CompleteSelfReference {
+    ids = signal(['1', '2', '3']);
+
+    myForm = form({
+      valueType: field<number>(null, [required]),
+      value: field<string>(null, [
+        required,
+        () => matchedId(this.ids(), this.myForm.valueType()),
+        () => this.myForm.valueType() ? { kind: '' } : null,
+        () => ({ kind: '', message: '' }),
+        () => ({ kind: '' }),
+      ]),
+      value2: field<string>(null, [
+        required,
+        () => matchedId(this.ids(), this.myForm.valueType()),
+        () => this.myForm.valueType() ? { kind: '' } : null,
+        () => ({ kind: '', message: '' }),
+        () => ({ kind: '' }),
+        () => ({ kind: '', message: '' }),
+      ]),
+      value3: field<string>(null, [
+        required,
+        () => this.myForm.valueType() ? { kind: '' } : null,
+        () => ({ kind: '' }),
+        () => ({ kind: '', message: '' }),
+        () => matchedId(this.ids(), this.myForm.valueType()),
+      ]),
+      value4: field<string>(null, [
+        required,
+        () => this.myForm.valueType() ? { kind: '' } : null,
+        () => ({ kind: '' }),
+        () => ({ kind: '', message: '' }),
+        () => matchedId(this.ids(), this.myForm.valueType()),
+        validator(() => getSomeError(this.ids(), this.myForm.valueType())),
+      ]),
+      value5: field<string>(null, [
+        required,
+        () => this.myForm.valueType() ? { kind: '' } : null,
+        () => ({ kind: '' }),
+        () => ({ kind: '', message: '' }),
+        () => matchedId(this.ids(), this.myForm.valueType()),
+        validator(() => getSomeError(this.ids(), this.myForm.valueType())),
+        validator(() => matchedId(this.ids(), this.myForm.valueType())),
+        asyncValidator(async () => { asyncRun(); return { kind: '' }; }),
+        asyncValidator(async () => {
+          asyncRun();
+          return matchedId(this.ids(), this.myForm.valueType()) ? { kind: '' } : null;
+        }),
+      ]),
+      some: field('', () => {
+        if (this.myForm.valueType()) return { kind: '' };
+        return null;
+      }),
+      some1: field('', () => this.myForm.valueType() ? { kind: '' } : null),
+      some2: field('', [() => {
+        if (this.myForm.valueType()) return { kind: '' };
+        return null;
+      }]),
+      some3: field('', [() => this.myForm.valueType() ? { kind: '' } : null]),
+      some4: field<string>(null, () => {
+        const valueType = this.myForm.valueType();
+        const ids = this.ids();
+        return [required, matchedId(ids, valueType)];
+      }),
+      some5: field('', {
+        validators: [
+          required,
+          () => matchedId(this.ids(), this.myForm.valueType()),
+          () => this.myForm.valueType() ? { kind: '' } : null,
+        ],
+      }),
+    });
+  }
+  const injector = Injector.create({ providers: [] });
+  const model = insideInjectionContext
+    ? runInInjectionContext(injector, () => new CompleteSelfReference())
+    : new CompleteSelfReference();
+  const fields = [model.myForm.value, model.myForm.value2, model.myForm.value3, model.myForm.value4, model.myForm.value5];
+  expect(model.myForm.valid()).toBe(false);
+  for (const node of fields) {
+    expect(node.hasError('required')).toBe(true);
+    expect(node.errors()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: '', message: '' }),
+      expect.objectContaining({ kind: '' }),
+    ]));
+  }
+  expect(getSomeError).toHaveBeenCalledTimes(2);
+  model.myForm.valueType.set(4);
+  model.myForm.patch({ value: '1', value2: '1', value3: '1', value4: '1', value5: '1' });
+  for (const node of fields) {
+    expect(node.hasError('required')).toBe(false);
+    expect(node.hasError('unmatched')).toBe(false);
+  }
+  expect(getSomeError).toHaveBeenCalledTimes(4);
+  model.ids.set([]);
+  for (const node of fields) expect(node.hasError('unmatched')).toBe(true);
+  expect(model.myForm.value5.errors().filter(error => error.kind === 'unmatched')).toHaveLength(2);
+  expect(getSomeError).toHaveBeenCalledTimes(6);
+  expect(model.myForm.value4.hasError('something')).toBe(true);
+  expect(model.myForm.value5.hasError('something')).toBe(true);
+  expect(model.myForm.pending()).toBe(false);
+  expect(model.myForm.invalid()).toBe(true);
+  expect(model.myForm.dirty()).toBe(false);
+  expect(model.myForm.touched()).toBe(false);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(asyncRun).not.toHaveBeenCalled();
+  injector.destroy();
+});
+
+it.each([false, true])('tracks sibling and external signals in parameterless async helpers with nested form: %s', async (nested) => {
+  const run = vi.fn();
+  class Model {
+    ids = signal(['1']);
+
+    myForm = form({
+      valueType: field(4),
+      details: form({
+        value: field('1', [asyncValidator(async () => {
+          const ids = this.ids();
+          const valueType = this.myForm.valueType();
+          run(ids, valueType);
+          return valueType !== null && valueType > 3 && !ids.includes('1') ? { kind: 'unmatched' } : null;
+        })]),
+      }),
+    });
+  }
+  const model = new Model();
+  const root = nested ? form({ child: model.myForm }) : model.myForm;
+  const value = model.myForm.details.value;
+  expect(root.pending()).toBe(true);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(run).toHaveBeenCalledTimes(1);
+  expect(value.errors()).toEqual([]);
+  expect(root.valid()).toBe(true);
+  model.ids.set([]);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(run).toHaveBeenCalledTimes(2);
+  expect(value.errors()).toMatchObject([{ kind: 'unmatched' }]);
+  expect(root.invalid()).toBe(true);
+  model.myForm.valueType.set(0);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(run).toHaveBeenCalledTimes(3);
+  expect(value.errors()).toEqual([]);
+  expect(root.pending()).toBe(false);
+  expect(root.valid()).toBe(true);
+  expect(root.dirty()).toBe(false);
+  expect(root.touched()).toBe(false);
+});
+
+it('defers self-referencing synchronous guards on asynchronous aggregate nodes', async () => {
+  const syncRun = vi.fn();
+  const asyncRun = vi.fn();
+  class Model {
+    myForm = form({
+      blocked: field.strict(false),
+      details: form({ name: field('1') }, [
+        validator(() => { syncRun(); return this.myForm.blocked() ? { kind: 'blocked' } : null; }),
+        asyncValidator(async () => { asyncRun(); return this.myForm.blocked() ? { kind: 'blocked' } : null; }),
+      ]),
+      settings: group({ name: field('1') }, [
+        validator(() => { syncRun(); return this.myForm.blocked() ? { kind: 'blocked' } : null; }),
+        asyncValidator(async () => { asyncRun(); return this.myForm.blocked() ? { kind: 'blocked' } : null; }),
+      ]),
+      rows: array({ name: field('1') }, [
+        validator(() => { syncRun(); return this.myForm.blocked() ? { kind: 'blocked' } : null; }),
+        asyncValidator(async () => { asyncRun(); return this.myForm.blocked() ? { kind: 'blocked' } : null; }),
+      ]),
+    });
+  }
+  const model = new Model();
+  expect(syncRun).not.toHaveBeenCalled();
+  expect(asyncRun).not.toHaveBeenCalled();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(syncRun).toHaveBeenCalledTimes(3);
+  expect(asyncRun).toHaveBeenCalledTimes(3);
+  expect(model.myForm.valid()).toBe(true);
+  model.myForm.blocked.set(true);
+  await Promise.resolve();
+  expect(model.myForm.allErrors().map(error => error.kind)).toEqual(['blocked', 'blocked', 'blocked']);
+  expect(syncRun).toHaveBeenCalledTimes(6);
+  expect(asyncRun).toHaveBeenCalledTimes(3);
+  expect(model.myForm.pending()).toBe(false);
+  expect(model.myForm.invalid()).toBe(true);
 });

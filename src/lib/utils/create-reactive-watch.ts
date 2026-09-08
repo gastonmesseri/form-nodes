@@ -2,7 +2,7 @@ import { DestroyRef, Injector, assertInInjectionContext, inject } from '@angular
 import { SIGNAL, createWatch, consumerPollProducersForChange, type Watch } from '@angular/core/primitives/signals';
 
 export type ReactiveWatchTarget = {
-  run(): void;
+  run(deferCallbacks?: boolean): void;
   cleanup(): void;
   destroy?(): void;
 };
@@ -14,6 +14,7 @@ export type TrackedRunner = {
 };
 
 export type ReactiveWatchRef = {
+  flushInitial(): void;
   destroy(): void;
   setInjector(injector: Injector | undefined): void;
 };
@@ -37,20 +38,27 @@ const getCurrentInjector = (): Injector | undefined => {
 export const createReactiveWatch = (
   target: ReactiveWatchTarget,
   injector?: Injector | null,
+  deferInitialRun = false,
 ): ReactiveWatchRef => {
   const targetRef = new WeakRef(target);
   let scheduled = false;
+  let scheduleVersion = 0;
+  let initialized = false;
+  let flushingInitial = false;
   const watch = createWatch(
     (onCleanup) => {
+      initialized = true;
       const currentTarget = targetRef.deref();
       if (!currentTarget) return;
       onCleanup(() => targetRef.deref()?.cleanup());
-      currentTarget.run();
+      currentTarget.run(deferInitialRun ? flushingInitial : undefined);
     },
     (currentWatch) => {
       if (scheduled) return;
       scheduled = true;
+      const version = ++scheduleVersion;
       queueMicrotask(() => {
+        if (version !== scheduleVersion) return;
         scheduled = false;
         currentWatch.run();
       });
@@ -79,8 +87,21 @@ export const createReactiveWatch = (
     });
   };
   setInjector(injector === null ? undefined : injector ?? getCurrentInjector());
-  watch.run();
-  return { destroy, setInjector };
+  const flushInitial = () => {
+    if (initialized || destroyed) return;
+    // Invalidate the queued startup so later notifications run after the deferred callbacks.
+    scheduleVersion++;
+    scheduled = false;
+    flushingInitial = true;
+    try {
+      watch.run();
+    } finally {
+      flushingInitial = false;
+    }
+  };
+  if (deferInitialRun) watch.notify();
+  else watch.run();
+  return { destroy, setInjector, flushInitial };
 };
 
 export const createTrackedRunner = (target: TrackedRunnerTarget): TrackedRunner => {

@@ -32,29 +32,16 @@ type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDef
  * created, with the complete declaration path included in the error.
  *
  * @param definitions Initially declared child-node definitions.
- * @param options Form configuration.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
-  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
-): Form<NormalizedNodes<TDefinitions>>;
-/**
- * Creates a root form with positional validators and optional configuration.
- *
- * ```ts
- * const profile = form({
- *   name: field('')
- * }, [profileValidator]);
- * ```
- *
- * @param definitions Fixed child-node definitions.
- * @param validators Validators for the complete form value.
- * @param options Form configuration.
- */
-export function form<TDefinitions extends ObjectNodeDefinitions>(
-  definitions: TDefinitions & FormDefinitions<TDefinitions>,
-  validators?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
-  options?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>> | NoInfer<FormOptions<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>>]
+    | [
+      validators: NoInfer<ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>> | undefined,
+      options: NoInfer<FormOptions<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>> | undefined
+    ]
 ): Form<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,

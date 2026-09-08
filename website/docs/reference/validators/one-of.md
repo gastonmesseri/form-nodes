@@ -25,6 +25,10 @@ oneOf(allowedValues, options)
 Reactive constraint arguments use a zero-argument function. The function may read signals and,
 where supported, return `undefined` to disable the constraint temporarily.
 
+When declared inside a primitive call, this helper can use the consuming node's value type.
+A literal constraint may cover only part of a field's union without narrowing the field itself.
+Standalone declarations continue to infer their value type from the supplied constraint.
+
 ## 📖 Usage and behavior {#usage-and-behavior}
 
 Requires a non-empty value to equal one of the allowed values:

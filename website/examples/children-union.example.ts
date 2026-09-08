@@ -7,25 +7,27 @@ const profile = form({
   },
 });
 
-const children = Object.values(profile.contact.children);
-// Inferred element type: the union of contact.name and contact.age node types.
-const values: (string | number | null)[] = children.map(child => child());
+profile.contact.children.name(); // 'Marco'
+profile.contact.children.nonExisting?.value(); // undefined
 
-if (values.length !== 2 || values[0] !== 'Marco' || values[1] !== 30) {
-  throw new Error('Declared children must retain their value union during enumeration.');
+// Default iteration preserves the declared name-or-age node union.
+const declaredValues: (string | number | null)[] = [];
+profile.contact.forEachChild(child => declaredValues.push(child()));
+if (declaredValues.length !== 2 || declaredValues[0] !== 'Marco' || declaredValues[1] !== 30) {
+  throw new Error('Declared-child iteration must retain its concrete value union.');
 }
 
 const active = profile.contact.add('active', field(true));
-active(); // true
+profile.contact.children.active?.value(); // true
 
-// Runtime enumeration includes active, even though the static union excludes its type.
-if (Object.values(profile.contact.children).length !== 3 || profile.contact.get('active') !== active) {
-  throw new Error('Dynamic children must remain present in the runtime map.');
+// Runtime enumeration includes added children; its element type includes DynamicNode.
+const children = Object.values(profile.contact.children);
+if (children.length !== 3 || profile.contact.children.active !== active) {
+  throw new Error('The runtime child map must expose added nodes.');
 }
 
-// Opt in to DynamicNode callbacks when iterating over added children.
-const currentValues: unknown[] = [];
-profile.contact.forEachChild(child => currentValues.push(child()), { includeDynamic: true });
-if (currentValues[2] !== true) {
-  throw new Error('Dynamic iteration must include added children.');
+profile.contact.remove('active');
+profile.contact.children.active?.value(); // undefined
+if (profile.contact.children.active !== undefined || Object.values(profile.contact.children).length !== 2) {
+  throw new Error('Removed nodes must disappear from runtime lookups and enumeration.');
 }

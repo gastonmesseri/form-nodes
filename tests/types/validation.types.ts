@@ -69,9 +69,9 @@ form({ password: field('secret'), confirmation }, {
     : { kind: 'passwordMismatch', targetNode: confirmation },
 });
 // @ts-expect-error A validator target must be a Form Nodes node.
-field('', [() => ({ kind: 'invalidTarget', targetNode: 'name' })]);
+field('', [validator((_context) => ({ kind: 'invalidTarget', targetNode: 'name' }))]);
 // @ts-expect-error formNode is reserved for errors produced by concrete control bindings.
-field('', [() => ({ kind: 'invalidBindingOwner', formNode: {} })]);
+field('', [validator((_context) => ({ kind: 'invalidBindingOwner', formNode: {} }))]);
 
 const atLeastOneItem = validator<readonly (string | null)[]>(({ value }) => {
   return value().length > 0 ? null : { kind: 'emptyArray' };
@@ -187,7 +187,7 @@ field(42, [minWords(2)]);
 field('42', [between(1, 100)]);
 
 // @ts-expect-error uniqueItems validators require array values
-field('', [uniqueItems]);
+field('', [uniqueItems()]);
 
 // @ts-expect-error date strings only support explicit UTC or local parsing
 minDate('2026-08-24', { parseAs: 'browser' });
@@ -199,7 +199,7 @@ dateBetween('2026-01-01', '2026-12-31', { parseAs: 'browser' });
 pattern(/^[a-z]+$/, { debounce: 300 });
 
 // @ts-expect-error synchronous validators must return a supported validation result
-validator<string>(() => 'invalid');
+validator<string>((_context) => 'invalid');
 
 // @ts-expect-error a non-nullable validator cannot observe a field that is nullable by default
 field(1, [positive]);

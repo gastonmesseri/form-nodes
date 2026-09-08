@@ -50,9 +50,15 @@ The `validators` option accepts one validator or a readonly array. Array entries
 `undefined`, which are ignored.
 
 ```ts
+type DeferredValidator = () => any;
+
 type ValidatorSource<TValue> =
+  | DeferredValidator
   | ComposableValidator<TValue>
-  | readonly (ComposableValidator<TValue> | null | undefined)[];
+  | readonly [
+    validator?: DeferredValidator | ComposableValidator<TValue> | null | undefined,
+    ...validators: (DeferredValidator | ComposableValidator<TValue> | null | undefined)[],
+  ];
 ```
 
 ```ts
@@ -62,6 +68,15 @@ const myForm = form({
   }),
 });
 ```
+
+Parameterless source callbacks can reference the form being initialized, such as
+`() => equalTo(this.myForm.password())`, without return annotations.
+Their return type is intentionally unchecked, including overloaded functions callable without
+arguments. This also applies to parameterless callbacks passed to `validator()` and the callback
+signature of `asyncValidator()`. Use context-taking callbacks for checked reusable rules and call
+overloaded factories such as `uniqueItems()` when you need value-compatibility checking. The
+supported runtime results are unchanged. See
+[Self-referencing validators](../guides/validation.md#self-referencing-validators) for a complete example.
 
 The shorthand positional validator argument is equivalent:
 

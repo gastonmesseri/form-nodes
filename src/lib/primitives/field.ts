@@ -8,6 +8,8 @@ export type { Field, FieldApi, FieldOptions } from './field.type';
 type NullableFieldOptions<TValue> = FieldOptions<TValue | null>;
 type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
 
+// Keep inference barriers on each argument alternative so option keys remain visible to editors.
+
 /**
  * Creates a nullable field whose future value type is not yet known.
  *
@@ -21,27 +23,16 @@ type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
  * generic such as `field<string>(null)` when the eventual value type is known.
  *
  * @param value Initial committed value.
- * @param options Field configuration.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function field(
   value: null,
-  options?: NullableFieldOptions<unknown>,
-): Field<unknown>;
-/**
- * Creates a field inferred as `Field<unknown>` from `null`, with positional validators.
- *
- * ```ts
- * const name = field(null, [required]);
- * ```
- *
- * @param value Initial committed value.
- * @param validators Validators for the field value.
- * @param options Field configuration.
- */
-export function field(
-  value: null,
-  validators: ValidatorSource<unknown, Field<unknown>>,
-  options?: NullableFieldOptions<unknown>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, Field<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
+    | [
+      validators: NoInfer<ValidatorSource<unknown, Field<unknown>>> | undefined,
+      options: NoInfer<NullableFieldOptions<unknown>> | undefined
+    ]
 ): Field<unknown>;
 /**
  * Creates a nullable field whose future value type is not yet known from an `undefined` initial value.
@@ -53,38 +44,26 @@ export function field(
  * Use an explicit generic such as `field<string>(undefined)` when the eventual value type is known.
  *
  * @param value Initial committed value. An explicit `undefined` is preserved.
- * @param options Field configuration.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function field(
   value: undefined,
-  options?: NullableFieldOptions<unknown>,
-): Field<unknown>;
-/**
- * Creates a field inferred as `Field<unknown>` from `undefined`, with positional validators.
- *
- * ```ts
- * const name = field(undefined, [required]);
- * ```
- *
- * @param value Initial committed value. An explicit `undefined` is preserved.
- * @param validators Validators for the field value.
- * @param options Field configuration.
- */
-export function field(
-  value: undefined,
-  validators: ValidatorSource<unknown, Field<unknown>>,
-  options?: NullableFieldOptions<unknown>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, Field<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
+    | [
+      validators: NoInfer<ValidatorSource<unknown, Field<unknown>>> | undefined,
+      options: NoInfer<NullableFieldOptions<unknown>> | undefined
+    ]
 ): Field<unknown>;
 /** Creates a nullable field that preserves an explicitly typed `undefined` initial value. */
 export function field<TValue>(
   value: undefined,
-  options?: FieldOptions<NoInfer<TValue | null | undefined>>,
-): Field<TValue | null | undefined>;
-/** Creates a nullable field with validators that preserves an explicitly typed `undefined` initial value. */
-export function field<TValue>(
-  value: undefined,
-  validators: ValidatorSource<NoInfer<TValue | null | undefined>, Field<NoInfer<TValue | null | undefined>>>,
-  options?: FieldOptions<NoInfer<TValue | null | undefined>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
+    | [
+      validators: NoInfer<ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>>> | undefined,
+      options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
+    ]
 ): Field<TValue | null | undefined>;
 /**
  * Creates a nullable field from an initial value and optional configuration.
@@ -99,29 +78,18 @@ export function field<TValue>(
  * Use `field.strict()` when the field must remain non-nullable.
  *
  * @param value Initial committed value.
- * @param options Field configuration.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators.
  */
 export function field<TValue>(
   value: TValue | null,
-  options?: NullableFieldOptions<NoInfer<TValue>>,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, Field<TValue | null>>> | NoInfer<NullableFieldOptions<TValue>>]
+    | [
+      validators: NoInfer<ValidatorSource<TValue | null, Field<TValue | null>>> | undefined,
+      options: NoInfer<NullableFieldOptions<TValue>> | undefined
+    ]
 ): Field<TValue | null>;
 export function field<TValue>(): Field<TValue | null>;
-/**
- * Creates a nullable field from an initial value, positional validators, and optional configuration.
- *
- * ```ts
- * const name = field('', [required]);
- * ```
- *
- * @param value Initial committed value.
- * @param validators Validators for the field value.
- * @param options Field configuration.
- */
-export function field<TValue>(
-  value: TValue | null,
-  validators?: ValidatorSource<NoInfer<TValue | null>, Field<NoInfer<TValue | null>>>,
-  options?: NullableFieldOptions<NoInfer<TValue>>,
-): Field<TValue | null>;
 export function field<TValue>(
   value?: TValue,
   validatorsOrOptions?: ValidatorSource<NoInfer<TValue>, Field<NoInfer<TValue>>> | FieldOptions<NoInfer<TValue>>,
@@ -148,21 +116,16 @@ export namespace field {
    * ```
    *
    * @param value Initial committed value.
-   * @param options Field configuration.
+   * @param args Validators or node configuration, optionally followed by configuration for positional validators.
    */
-  export function strict<TValue extends {}>(value: TValue, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
-  /**
-   * Creates a non-nullable field with positional validators.
-   *
-   * ```ts
-   * const name = field.strict('Marco', [required]);
-   * ```
-   *
-   * @param value Initial committed value.
-   * @param validators Validators for the field value.
-   * @param options Field configuration.
-   */
-  export function strict<TValue extends {}>(value: TValue, validators: ValidatorSource<NoInfer<TValue>, Field<NoInfer<TValue>>>, options?: NonNullableFieldOptions<NoInfer<TValue>>): Field<TValue>;
+  export function strict<TValue extends {}>(value: TValue,
+    ...args:
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue, Field<TValue>>> | NoInfer<NonNullableFieldOptions<TValue>>]
+      | [
+        validators: NoInfer<ValidatorSource<TValue, Field<TValue>>> | undefined,
+        options: NoInfer<NonNullableFieldOptions<TValue>> | undefined
+      ]
+  ): Field<TValue>;
   export function strict<TValue extends {}>(
     value: TValue,
     validatorsOrOptions?: ValidatorSource<NoInfer<TValue>, Field<NoInfer<TValue>>> | NonNullableFieldOptions<NoInfer<TValue>>,
@@ -195,26 +158,33 @@ export namespace field {
    * ```
    *
    * @param value Initial committed value.
-   * @param options Field configuration.
+   * @param args Validators or node configuration, optionally followed by configuration for positional validators.
    */
-  export function nullable(value: null | undefined, options?: NullableFieldOptions<unknown>): Field<unknown>;
-  export function nullable<TValue>(value: undefined, options?: FieldOptions<NoInfer<TValue | null | undefined>>): Field<TValue | null | undefined>;
-  export function nullable<TValue>(value: TValue | null, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
+  export function nullable(value: null | undefined,
+    ...args:
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, Field<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
+      | [
+        validators: NoInfer<ValidatorSource<unknown, Field<unknown>>> | undefined,
+        options: NoInfer<NullableFieldOptions<unknown>> | undefined
+      ]
+  ): Field<unknown>;
+  export function nullable<TValue>(value: undefined,
+    ...args:
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
+      | [
+        validators: NoInfer<ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>>> | undefined,
+        options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
+      ]
+  ): Field<TValue | null | undefined>;
+  export function nullable<TValue>(value: TValue | null,
+    ...args:
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, Field<TValue | null>>> | NoInfer<NullableFieldOptions<TValue>>]
+      | [
+        validators: NoInfer<ValidatorSource<TValue | null, Field<TValue | null>>> | undefined,
+        options: NoInfer<NullableFieldOptions<TValue>> | undefined
+      ]
+  ): Field<TValue | null>;
   export function nullable<TValue>(): Field<TValue | null>;
-  /**
-   * Creates a nullable field with positional validators.
-   *
-   * ```ts
-   * const nickname = field.nullable('', [required]);
-   * ```
-   *
-   * @param value Initial committed value.
-   * @param validators Validators for the nullable field value.
-   * @param options Field configuration.
-   */
-  export function nullable(value: null | undefined, validators: ValidatorSource<unknown, Field<unknown>>, options?: NullableFieldOptions<unknown>): Field<unknown>;
-  export function nullable<TValue>(value: undefined, validators: ValidatorSource<NoInfer<TValue | null | undefined>, Field<NoInfer<TValue | null | undefined>>>, options?: FieldOptions<NoInfer<TValue | null | undefined>>): Field<TValue | null | undefined>;
-  export function nullable<TValue>(value: TValue | null, validators: ValidatorSource<NoInfer<TValue | null>, Field<NoInfer<TValue | null>>>, options?: NullableFieldOptions<NoInfer<TValue>>): Field<TValue | null>;
   export function nullable<TValue>(
     value?: TValue | null,
     validatorsOrOptions?: ValidatorSource<NoInfer<TValue | null>, Field<NoInfer<TValue | null>>> | NullableFieldOptions<NoInfer<TValue>>,

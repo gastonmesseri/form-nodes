@@ -161,18 +161,18 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
     nodeType(): 'group';
     /** Replaces this group's validators while preserving its node type in inline callbacks. */
     setValidators(validators: ValidatorSource<GroupValue<TNodes>, Group<TNodes, TParent>>): void;
-    /** Readonly map of declared children, or a DynamicNode record for an empty declaration. Runtime entries include added nodes. */
-    readonly children: keyof TNodes extends never ? Readonly<Record<string, DynamicNode>> : GroupChildren<TNodes, TParent>;
+    /** Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode. */
+    readonly children: GroupChildren<TNodes, TParent> & Readonly<Record<string, DynamicNode>>;
     /**
      * **Dynamically added nodes are excluded by default.** Pass `{ includeDynamic: true }` to visit them.
      *
      * Visits a snapshot of declared immediate children in object-entry order without recursion.
-     * The callback type is the declared-child union, or never for an empty declaration.
+     * The callback type is the declared-child union, or DynamicNode for an empty declaration.
      * Additions during iteration are deferred; removed snapshot entries are still visited.
      * Callback errors propagate and stop iteration.
      * @reactive Tracks child additions and removals, plus signals read by the callback.
      */
-    forEachChild(callback: (child: GroupChildren<TNodes, TParent>[keyof TNodes], key: string) => void, options?: { includeDynamic?: false }): void;
+    forEachChild(callback: (child: keyof TNodes extends never ? DynamicNode : GroupChildren<TNodes, TParent>[keyof TNodes], key: string) => void, options?: { includeDynamic?: false }): void;
     /**
      * **Dynamically added nodes are excluded unless `includeDynamic` is `true`.**
      *

@@ -8,8 +8,12 @@ for (const record of records) {
   const children = Object.values(record.children);
   type _Children = Expect<Equal<typeof children, DynamicNode[]>>;
   record.forEachChild(child => {
-    type _EmptyDeclared = Expect<Equal<typeof child, never>>;
+    type _EmptyDeclared = Expect<Equal<typeof child, DynamicNode>>;
+    child.set('');
   });
+  record.forEachChild(child => child.set(''), {});
+  record.forEachChild(child => child.set(''), { includeDynamic: false });
+  record.$api.forEachChild(child => child.set(''));
   record.forEachChild((child, key) => {
     type _Child = Expect<Equal<typeof child, DynamicNode>>;
     type _Key = Expect<Equal<typeof key, string>>;

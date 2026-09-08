@@ -6,6 +6,12 @@ const profile = form({
 const name = profile.answers.add('name', field('Marco'));
 const age = profile.answers.add('age', field(18));
 
+// The default callback is typed as DynamicNode but does not visit added children.
+profile.answers.forEachChild(child => child.set(''));
+if (name() !== 'Marco' || age() !== 18) {
+  throw new Error('Default iteration must exclude dynamically added children.');
+}
+
 // Empty declarations expose dynamic children; iteration opts in explicitly.
 const children = Object.values(profile.answers.children); // DynamicNode[]
 profile.answers.forEachChild(child => {

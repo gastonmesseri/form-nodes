@@ -1,5 +1,5 @@
 import type { Node } from '../types/node.type';
-import type { ComposableValidator, ValidatorOwner } from './validation.type';
+import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './validation.type';
 
 /**
  * Gives a reusable synchronous validator a fully typed authoring context.
@@ -11,6 +11,8 @@ import type { ComposableValidator, ValidatorOwner } from './validation.type';
  *
  * Inline use also infers the concrete node for `context.node()` and its `context.field()` alias.
  * Omit helper type arguments to infer both the value and owner from the consuming primitive.
+ * Parameterless callbacks accept unchecked returns to support class form self-references.
+ * Callbacks receiving a context retain checked synchronous results and composition types.
  *
  * `TValue` is the exact value observed by the validator. Because `field()` is nullable by default,
  * its standalone validators normally use a type such as `number | null`. Omit `null` only for a
@@ -53,6 +55,9 @@ import type { ComposableValidator, ValidatorOwner } from './validation.type';
  * @param validate Synchronous validation function to type and reuse.
  * @returns The same validation function, without a runtime wrapper.
  */
-export const validator = <TValue, TField extends Node = Node>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField> => {
+export function validator<TValue, TField extends Node = Node>(validate: NoInfer<DeferredValidator | ComposableValidator<TValue, ValidatorOwner<TField>>>): ComposableValidator<TValue, TField>;
+/** Infers the value from an explicitly typed callback when no consuming node provides a context. */
+export function validator<TValue, TField extends Node = Node>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField>;
+export function validator<TValue, TField extends Node = Node>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField> {
   return validate as unknown as ComposableValidator<TValue, TField>;
-};
+}

@@ -1,4 +1,4 @@
-import { signal, untracked } from '@angular/core';
+import { computed, signal, untracked } from '@angular/core';
 
 import type { Node } from '../types/node.type';
 import { shallowEqual } from '../utils/shallow-equal';
@@ -29,6 +29,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
   getSyncErrors: () => readonly ValidationError[],
   getTargetNode: () => TNode,
   isActive: () => boolean,
+  ensureStarted: () => void,
 ) => {
   const errors = signal<readonly ValidationError.WithTargetNode<TNode>[]>([]);
   const pending = signal(false);
@@ -93,8 +94,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
     pending.set(false);
   };
 
-  const validate = () => {
-    const deferInitialInvocation = firstValidation;
+  const validate = (deferCallbacks = firstValidation) => {
     firstValidation = false;
     const source = getValidators();
     const validators = source.filter(isAsyncValidator) as AsyncValidator<TValue>[];
@@ -155,7 +155,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
         ? wait(debounce, controller.signal)
         : null;
       if (!discoversDependencies && debounce > 0) await wait(debounce, controller.signal);
-      else if (deferInitialInvocation) await Promise.resolve();
+      else if (deferCallbacks) await Promise.resolve();
       if (controller.signal.aborted || currentExecution !== execution) {
         controllers.delete(controller);
         return;
@@ -196,5 +196,14 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
     trackedValidators.clear();
   };
 
-  return { errors: errors.asReadonly(), pending: pending.asReadonly(), cancel, destroy, validate };
+  const observedErrors = computed(() => {
+    untracked(ensureStarted);
+    return errors();
+  });
+  const observedPending = computed(() => {
+    untracked(ensureStarted);
+    return pending();
+  });
+
+  return { errors: observedErrors, pending: observedPending, cancel, destroy, validate };
 };

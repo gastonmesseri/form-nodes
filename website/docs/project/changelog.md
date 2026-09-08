@@ -12,6 +12,10 @@ canonical release record.
 
 ### 🔸 Changed {#changed}
 
+- Empty `form({})` and `group({})` declarations now type `forEachChild()` callbacks as `DynamicNode`, so operations such as `child.set('')` compile. Visiting added children still requires `includeDynamic: true`; nonempty declarations retain their concrete child union.
+
+- Parameterless validator callbacks, including inline `validator()` and `asyncValidator()` callbacks, can reference their own class form without return annotations, preserving field and aggregate inference across primitive options, positional validators, and configured factories. Their return type is intentionally unchecked (including zero-argument overloads); context-taking callbacks and parameterized asynchronous validators keep their checked contracts. Option-object keys remain available in editor completion for all primitives. Initial setup for mixed synchronous and asynchronous rules is deferred so they can safely read the form after its class property is assigned; synchronous errors still suppress asynchronous execution.
+
 - Validator queries on nodes and `useFormNodeState()` retain up to 32 reference/resolve combinations to reduce cache eviction when querying many rules; error queries retain their 20-entry limits.
 
 - **Breaking behavior/API change:** `bindInputOutputPairs: true` now independently enables separate value/valueChange and checked/checkedChange connections. False/null pauses the complete pair connection, including state writes, touch/focus/reset hooks, and writable node access. SyncInputs no longer enables values; empty lists do nothing. Models, CVAs, and native controls retain their standard connections.
@@ -22,7 +26,7 @@ canonical release record.
 
 - **Breaking API change:** `provideFormNodesConfig({ validatorMessages, classes, syncInputs })` replaces `provideValidatorMessages()` and `provideFormNodeConfig()`; `FormNodesConfig` replaces `FormNodeConfig`. Message factories retain injection and reactive message support, and the unified provider also works in component providers. All options inherit independently; configuring input synchronization preserves inherited classes, and configuring or clearing classes preserves synchronization. Explicit class maps replace rather than merge with inherited maps; an empty configuration is a no-op.
 
-- **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks have a `never` child type. `Object.values(children)` is unchanged.
+- **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks use `DynamicNode`.
 
 ### 🔸 Added {#added}
 
@@ -44,7 +48,7 @@ canonical release record.
 
 - `useFormNodeState().required()` now detects Angular `Validators.required` and active required directives with `[formControl]`, `[formControlName]`, and `[(ngModel)]`, including dynamic and silent updates even when the value is valid.
 
-- Empty `form({})` and `group({})` declarations now infer `DynamicNode[]` for `Object.values(children)`, supporting records populated with `add()`. Nonempty declarations retain their concrete child unions; `get(key)` still accounts for missing children.
+- Form and group `children` maps accept arbitrary runtime keys while preserving exact declared-property types. With `noUncheckedIndexedAccess`, missing-key lookups are optional. `Object.values(children)` includes `DynamicNode` in its element type to account for added children; use `forEachChild()` for the precise declared-child union.
 
 ## 📦 1.1.0 — 2026-09-07 {#110--2026-09-07}
 

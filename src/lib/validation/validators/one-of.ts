@@ -33,7 +33,23 @@ import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/vali
  * @param allowedValues Static allowed values or a reactive function returning them.
  * @param options Optional static message string, or an object containing a static or reactive message.
  */
-export const oneOf = <TValue>(
+export function oneOf<TValue = never>(
+  allowedValues: readonly NoInfer<TValue>[] | (() => readonly NoInfer<TValue>[] | undefined),
+  options?: string | ({
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
+  }) & {
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
+  },
+): Validator<TValue | null | undefined>;
+/** Infers the constraint value type when no consuming node provides a context. */
+export function oneOf<TValue>(
   allowedValues: readonly TValue[] | (() => readonly TValue[] | undefined),
   options?: string | ({
     /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
@@ -47,7 +63,22 @@ export const oneOf = <TValue>(
     /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
     when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
   },
-): Validator<TValue | null | undefined> => {
+): Validator<TValue | null | undefined>;
+export function oneOf<TValue>(
+  allowedValues: readonly TValue[] | (() => readonly TValue[] | undefined),
+  options?: string | ({
+    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    message?: string | (() => string | undefined);
+    error?: never;
+  } | {
+    message?: never;
+    /** Custom error or errors returned instead of the built-in error. */
+    error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
+  }) & {
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
+    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
+  },
+): Validator<TValue | null | undefined> {
   const message = resolveValidatorMessageOption(options);
   const validator: Validator<TValue | null | undefined> = ({ value }) => {
     const currentValue = value();
@@ -62,4 +93,4 @@ export const oneOf = <TValue>(
     };
   };
   return applyValidatorWhen(validator, options);
-};
+}
