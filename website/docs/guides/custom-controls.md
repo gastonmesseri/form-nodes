@@ -3,6 +3,7 @@ title: Custom controls
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import customEventOrderSource from '!!raw-loader!../../examples/custom-control-event-order.typecheck.ts';
 import pairedControlSource from '!!raw-loader!../../examples/paired-control-inputs.typecheck.ts';
 import selectedInputsSource from '!!raw-loader!../../examples/selected-control-inputs.typecheck.ts';
 import syncInputsSource from '!!raw-loader!../../examples/experimental-sync-inputs.typecheck.ts';
@@ -164,3 +165,31 @@ object and array values, optional state inputs and hooks, wrapper components, An
 - [`useFormNodeState()`](../reference/form-node-state.md) documents the available state signals.
 - [Control binding](./control-binding.md) covers native elements and shared binding behavior.
 - [Advanced custom controls](./custom-controls-advanced.md) documents the full compatibility contract.
+
+## Reading node state inside output handlers {#output-handler-order}
+
+With immediate updates, `[formNode]` processes a custom control's `valueChange` or `checkedChange`
+before your template handler for that output. The node value, parent value, dirty state, and
+synchronous validation are already updated. A `touch` handler likewise sees the updated touched
+state and any value committed by blur debounce. This applies to models (including aliases) and
+[enabled input/output pairs](#keep-control-of-your-components-inputs).
+
+<CodeBlock language="ts" title="description-editor.component.ts">{customEventOrderSource}</CodeBlock>
+
+Debounce still delays the committed value; `controlValue()` exposes pending control input.
+Programmatic writes to a component model can emit its output too, so `valueChange` alone does not
+identify user interaction. Construction-time emissions before binding initialization are not user
+interaction and do not have this ordering guarantee.
+
+For a CVA, call the registered `onChange` callback before emitting a separate event whose consumers
+need the updated node. Call `onTouched` before emitting a corresponding interaction event. Form Nodes
+updates synchronously within those callbacks (subject to configured debounce); it cannot update
+from a value that the CVA has not delivered yet. The same limitation applies to Reactive Forms.
+
+Directly injecting `FORM_NODE` (or the binding directive itself) during the custom component's
+construction forces early binding creation before that component is available. This reentrant
+case retains initialization-time subscriptions and the previous output ordering: use the output's
+`$event` for its emitted value, since the node may still have its previous value inside the handler.
+Prefer `useFormNodeState()` for observing binding state without forcing binding construction.
+Injecting `NgControl` does not have this limitation. The token still resolves to the concrete
+binding instance; its identity is preserved.

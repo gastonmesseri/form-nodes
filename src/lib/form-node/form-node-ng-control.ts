@@ -72,7 +72,7 @@ export class FormNodeNgControl {
   constructor(
     readonly _getNode: () => AnyNode,
     injector: Injector,
-    readonly _binding?: FormNodeBinding<AnyNode>
+    public _binding?: FormNodeBinding<AnyNode>
   ) {
     let previous: NgControlState | undefined;
     effect(() => {

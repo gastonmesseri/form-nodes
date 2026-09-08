@@ -53,3 +53,9 @@ model node; use the node API when code does not care which rendered control is i
 Most components can use `#binding="formNode"` with `viewChild()` instead of injection.
 
 See [`[formNode]`](./form-node-binding.md) and [Node API](./node-api.md).
+
+When a custom component injects this token during construction, its output subscriptions retain
+initialization-time ordering to avoid a circular dependency. Inside `valueChange`, `checkedChange`,
+or `touch` handlers, node state may therefore still reflect the previous value or interaction.
+Use `$event` for the emitted value, or prefer `useFormNodeState()` when observing state is sufficient.
+See [custom output ordering](../guides/custom-controls.md#output-handler-order).

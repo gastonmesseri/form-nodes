@@ -3,7 +3,7 @@ import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2,
 
 import { shallowEqual } from '../utils/shallow-equal';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
-import { FormNodeNgControl } from './form-node-ng-control';
+import type { FormNodeNgControl } from './form-node-ng-control';
 import { FORM_NODE_CLASSES } from './provide-form-nodes-config';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import { registerNodeBindingInjector } from '../utils/node-injector';
@@ -16,7 +16,9 @@ import { registerControlStateBinding } from '../form-node-state/adapters/form-no
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
 import { prepareNativeControlEvents } from './adapters/native-control/native-control-events';
 import { syncNativeControlState } from './adapters/native-control/sync-native-control-state';
+import { prepareCustomControlEvents } from './adapters/signal-forms-control/custom-control-events';
 import { componentAcceptsFormNode } from './adapters/signal-forms-control/discover-custom-control';
+import { FORM_NODE_INTEROP, createFormNodeInterop, injectFormNodeNgControl } from './form-node-interop';
 
 /** Public injection token for the nearest `[formNode]` binding. */
 export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE');
@@ -26,7 +28,8 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE
   standalone: true,
   providers: [
     { provide: FORM_NODE, useExisting: forwardRef(() => _FormNode) },
-    { provide: NgControl, useFactory: () => inject(_FormNode)._ngControl },
+    { provide: FORM_NODE_INTEROP, useFactory: () => createFormNodeInterop(inject(Injector)) },
+    { provide: NgControl, useFactory: injectFormNodeNgControl },
   ],
   host: {
     '(submit)': '_submitNativeForm($event)',
@@ -45,7 +48,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
-  private interopNgControl: FormNodeNgControl | undefined;
+  private interop = inject(FORM_NODE_INTEROP);
 
   private nativeForm = this.element.tagName === 'FORM';
 
@@ -59,6 +62,8 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   private connectNativeEvents = prepareNativeControlEvents(this.element, this.renderer, this.destroyRef);
 
+  private customEvents = this.explicitPassThrough ? undefined : prepareCustomControlEvents(this.element, this.injector);
+
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /** Current bound field, exposed as a signal for custom integrations. */
@@ -71,6 +76,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   }, { equal: shallowEqual });
 
   constructor() {
+    this.interop.connect(this);
     this.destroyRef.onDestroy(() => {
       this.formNodeStateCleanup?.();
       this.bindingInjectorCleanups.forEach(cleanup => cleanup());
@@ -94,14 +100,16 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     }
     if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) {
       this.connectNativeEvents();
+      this.customEvents?.disconnect();
       return;
     }
     const context: ControlAdapterContext<TNode> = {
       binding: this,
+      customEvents: this.customEvents,
       renderer: this.renderer,
       getNgControl: () => this._ngControl,
     };
-    const connection = resolveControlAdapter(context, this.interopNgControl?.valueAccessor);
+    const connection = resolveControlAdapter(context, this.interop.peek()?.valueAccessor);
     this.connectNativeEvents(connection.nativeEvents);
     this.focuser = connection.focus ?? this.focuser;
     this.formNodeStateCleanup = registerControlStateBinding(this.element, this);
@@ -172,7 +180,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   /** Observable `NgControl` view exposed only through Angular dependency injection. */
   get _ngControl(): FormNodeNgControl {
-    return (this.interopNgControl ??= new FormNodeNgControl(() => this._field, this.injector, this));
+    return this.interop.get();
   }
 
   private warnWhenHidden() {

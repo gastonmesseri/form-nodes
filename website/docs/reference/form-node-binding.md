@@ -416,7 +416,8 @@ pending value. With `debounce: 'blur'`, the committed value and touched state ar
 the last valid node value and exposes a parse error before the handler runs.
 
 These DOM handlers do not run for programmatic node updates. Custom controls using a CVA, model,
-or value/output pair retain their own value transport and event timing. Native value listeners
+or value/output pair retain their own value transport. For custom output ordering, see
+[Reading node state inside output handlers](../guides/custom-controls.md#output-handler-order). Native value listeners
 are active only for the native adapter on `input`, `textarea`, and `select`; custom component
 outputs named `input`, `change`, or `blur` do not become native value or touch callbacks.
 Importing `FormNodeDirective` alone remains sufficient.

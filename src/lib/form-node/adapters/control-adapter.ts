@@ -3,11 +3,13 @@ import type { Renderer2 } from '@angular/core';
 import type { AnyNode } from '../../types/node.type';
 import type { FormNodeNgControl } from '../form-node-ng-control';
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
+import type { CustomControlEvents } from './signal-forms-control/custom-control-events';
 
 /** Shared host services; adapters own their transport state and injector-scoped cleanup. */
 export type ControlAdapterContext<TNode extends AnyNode = AnyNode> = {
   binding: FormNodeBinding<TNode>;
   renderer: Renderer2;
+  customEvents?: CustomControlEvents | undefined;
   getNgControl(): FormNodeNgControl;
 };
 

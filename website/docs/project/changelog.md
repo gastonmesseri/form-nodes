@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Fixed
+
+- Custom signal controls and enabled input/output pairs now update node values, parent values, synchronous validation, and touched state before consumer `valueChange`, `checkedChange`, and `touch` template handlers run. Debounce and consumer resets remain respected, including controls that inject `NgControl`; CVA and pass-through transports retain their ownership. Direct constructor injection of `FORM_NODE` retains its previous subscription timing to avoid a dependency cycle.
+
 ## 📦 3.0.2 — 2026-09-09 {#302--2026-09-09}
 
 ### Fixed

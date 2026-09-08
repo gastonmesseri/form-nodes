@@ -10,6 +10,7 @@ import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { warnFailedInputWrite } from './ng-internals/component-input-writer';
+import { assertCustomEventOrder } from '../../../tests/helpers/assert-custom-event-order';
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
@@ -167,5 +168,23 @@ it('isolates native listeners from CVA and model transports in production AOT', 
   expect(host.profile.customCva.touched()).toBe(true);
   expect(host.profile.customModel.touched()).toBe(true);
   expect(host.profile.passThrough.untouched()).toBe(true);
+  fixture.destroy();
+});
+
+it('commits custom value, checked, pair and touch outputs before consumer handlers in production AOT', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+  assertCustomEventOrder(TestBed.createComponent(module.CustomEventOrderHost));
+});
+
+it('preserves direct FORM_NODE constructor injection in production AOT', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+  const fixture = TestBed.createComponent(module.DirectBindingHost);
+  fixture.detectChanges();
+  const element = fixture.debugElement.query(By.directive(module.DirectBindingControl));
+  const control = element.componentInstance as InstanceType<typeof module.DirectBindingControl>;
+  expect(control.binding.node()).toBe(fixture.componentInstance.name);
+  control.value.set('updated');
+  expect(fixture.componentInstance.observed).toBe('initial');
+  expect(fixture.componentInstance.name()).toBe('updated');
   fixture.destroy();
 });

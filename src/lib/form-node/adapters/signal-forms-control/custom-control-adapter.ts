@@ -4,6 +4,7 @@ import { findModelTransport } from './model-transport';
 import { createPairedTransport } from './paired-transport';
 import { connectControlInputs } from '../sync-control-inputs';
 import type { FormNodeControl } from '../../form-node-control';
+import type { CustomControlEvents } from './custom-control-events';
 import type { ControlAdapterConnection } from '../control-adapter';
 import { getNodeInputConfig } from '../../../configuration/node-input-config';
 import type { InternalNode, AnyNode, NodeValue } from '../../../types/node.type';
@@ -17,10 +18,12 @@ export const connectCustomControlAdapter = <TNode extends AnyNode>(
   node: () => TNode,
   injector: Injector,
   usesControlState = false,
+  preparedEvents?: CustomControlEvents,
 ): ControlAdapterConnection => {
+  const events = preparedEvents?.control === control ? preparedEvents : undefined;
   const directModel = findModelTransport(control);
   const experimental = directModel === undefined;
-  const model = directModel === undefined ? createPairedTransport(control, injector, usesControlState) : directModel;
+  const model = events === undefined ? (directModel === undefined ? createPairedTransport(control, injector, usesControlState) : directModel) : events.model;
   const inheritedPairs = injector.get(FORM_NODE_BIND_INPUT_OUTPUT_PAIRS, null) ?? getGlobalBindInputOutputPairs();
   const enabled = () => {
     if (!experimental) return true;
@@ -35,18 +38,22 @@ export const connectCustomControlAdapter = <TNode extends AnyNode>(
 
   const { inputNames } = connectControlInputs(control, node, injector, usesControlState, experimental ? 'pairs' : 'signal-controls', enabled);
 
-  const valueSubscription = model.subscribe((value) => {
+  const onValue = (value: unknown) => {
     if (enabled() && !writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);
-  });
-  const touchSubscription = control.touch?.subscribe(() => {
+  };
+  const onTouch = () => {
     if (!enabled()) return;
     const currentNode = node() as unknown as InternalNode;
     currentNode.$api.markAsTouched();
     currentNode.$api._flushControlValueOnBlur();
-  });
+  };
+  const valueSubscription = events ? undefined : model.subscribe(onValue);
+  const touchSubscription = events ? undefined : control.touch?.subscribe(onTouch);
+  events?.connect(onValue, onTouch);
 
   injector.get(DestroyRef).onDestroy(() => {
-    valueSubscription.unsubscribe();
+    events?.disconnect();
+    valueSubscription?.unsubscribe();
     touchSubscription?.unsubscribe();
     nodeInput?.set(null);
   });
