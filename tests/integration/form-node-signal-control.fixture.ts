@@ -203,3 +203,6 @@ export class AotAliasedCheckboxControl {
 export class AotAliasedModelHost {
   profile = form({ name: field('Ada'), accepted: field(false) });
 }
+
+export { NativeEventOrderHost } from './native-event-order.fixture';
+export { IsolatedCva, IsolatedModel, NativeEventIsolationHost } from './native-event-isolation.fixture';

@@ -2758,6 +2758,35 @@ The predicate receives the same stable `FormNodeBinding` exposed by the template
 
 This behavior follows Angular Signal Forms as inspected in Angular `22.1.4`, commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, specifically `FormField.errors`, `FormField.focus()`, `FormField.reset()`, and `FormField.installClassBindingEffect()` in `packages/forms/signals/src/directive/form_field.ts`, the public `FormFieldBinding` in `packages/forms/signals/src/api/types.ts`, and the binding coverage in `packages/forms/signals/test/web/form_field.spec.ts`.
 
+### Native event ordering
+
+Native `input`, `change`, `blur`, `compositionstart`, and `compositionend` listeners are prepared
+with public `Renderer2.listen()` during directive construction, before consumer template listeners
+are registered. Only `input`, `textarea`, and `select` elements receive these listeners. During
+initialization, the selected native adapter supplies their callbacks; selecting a CVA, custom
+control, or pass-through binding removes the prepared listeners instead. Non-native custom hosts
+never receive these listeners, and the dispatcher never subscribes to Angular outputs with the same
+names. Destruction disconnects listeners and clears their callbacks. This preserves a single
+standalone `FormNodeDirective` import without adding a second selector-based directive or relying
+on Angular's private control creation APIs.
+
+Immediate updates expose the newly parsed field value, parent composition, dirty state, and
+synchronous validation inside the consumer handler. Blur exposes the updated touched state and
+flushes blur debounce before that handler. Timed debounce and IME buffering retain their existing
+semantics; parse failures expose errors while retaining the last valid value. Consumer resets are
+not subsequently overwritten by a late transport listener. Rebinding resolves the current node.
+Custom adapter transports remain responsible for their own output/CVA timing.
+
+Reference inspected: Angular `22.1.x`, commit `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`,
+`packages/forms/signals/src/directive/control_native.ts`, `control_custom.ts`, `control_cva.ts`,
+`form_field.ts`, and `packages/forms/signals/test/web/form_field.spec.ts`. Angular selects one
+transport before registering its native DOM listeners or custom callbacks through internal
+`ControlDirectiveHost` APIs. Reactive Forms' `packages/forms/src/directives/default_value_accessor.ts`
+registers input and composition through host metadata on a selector-specific accessor;
+`packages/forms/src/directives/shared.ts` commits change-mode input synchronously. Form Nodes
+preserves early native listener ordering using public APIs, with temporary constructor-time
+registrations on native hosts until initialization resolves the transport.
+
 ### Native parse errors
 
 Native controls parse their raw UI state before calling `setControlValue()`. If the browser reports

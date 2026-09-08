@@ -2,6 +2,9 @@
 title: "[formNode] directive"
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-handler.typecheck.ts';
+
 # [formNode] directive {#formnode-directive}
 
 `FormNodeDirective` is the standalone Angular directive imported by components to make `[formNode]`
@@ -396,6 +399,27 @@ automatically. A directive or host directive doing the same must install
 })
 export class FormNodeWrapperDirective {}
 ```
+
+## Native interaction handlers {#native-interaction-handlers}
+
+For native inputs, textareas, and selects, `[formNode]` processes `input`, `change`, `blur`,
+and composition events before your Angular template handler for the same event. With immediate
+updates, reading the node in `(input)` returns the newly parsed value; dirty state, synchronous
+validation, and the parent form value are already updated. This also applies to a native textarea
+with `matInput` when it uses the native binding adapter.
+
+<CodeBlock language="ts" title="description-editor.component.ts">{nativeInputHandlerSource}</CodeBlock>
+
+A configured debounce still delays the committed value: use `controlValue()` to read the parsed
+pending value. With `debounce: 'blur'`, the committed value and touched state are updated before
+`(blur)` runs. IME composition keeps input buffered until composition ends. Failed parsing keeps
+the last valid node value and exposes a parse error before the handler runs.
+
+These DOM handlers do not run for programmatic node updates. Custom controls using a CVA, model,
+or value/output pair retain their own value transport and event timing. Native value listeners
+are active only for the native adapter on `input`, `textarea`, and `select`; custom component
+outputs named `input`, `change`, or `blur` do not become native value or touch callbacks.
+Importing `FormNodeDirective` alone remains sufficient.
 
 ## 📨 Native form submission {#native-form-submission}
 

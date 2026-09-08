@@ -11,8 +11,18 @@ export type ControlAdapterContext<TNode extends AnyNode = AnyNode> = {
   getNgControl(): FormNodeNgControl;
 };
 
+/** Native transport callbacks connected only when the native adapter is selected. */
+export type NativeControlEvents = {
+  input(): void;
+  change(): void;
+  blur(): void;
+  compositionstart(): void;
+  compositionend(): void;
+};
+
 /** Capabilities returned after a control transport has been connected. */
 export type ControlAdapterConnection = {
+  nativeEvents?: NativeControlEvents;
   focus?: (options?: FocusOptions) => void;
   inputNames: ReadonlySet<string>;
 };

@@ -9,7 +9,7 @@ import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from '.
 import { isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control-value';
 
 /** Owns native events, parsing errors, composition, and DOM value synchronization. */
-export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, renderer }: ControlAdapterContext<TNode>, control: NativeFormNodeControl): ControlAdapterConnection => {
+export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding }: ControlAdapterContext<TNode>, control: NativeFormNodeControl): ControlAdapterConnection => {
   const injector = binding.injector;
   const destroyRef = injector.get(DestroyRef);
   const cspNonce = injector.get(CSP_NONCE, null);
@@ -41,24 +41,6 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
     parseErrors.set(result.error ? [result.error] : []);
     if ('value' in result) field.setControlValue(result.value as NodeValue<TNode>);
   };
-  const unlistenInput = renderer.listen(control, 'input', commit);
-  const unlistenChange = renderer.listen(control, 'change', commit);
-  const unlistenBlur = renderer.listen(control, 'blur', () => {
-    binding.node().$api.markAsTouched();
-    (binding.node() as unknown as InternalNode).$api._flushControlValueOnBlur();
-  });
-  const unlistenCompositionStart = renderer.listen(control, 'compositionstart', () => { composing = true; });
-  const unlistenCompositionEnd = renderer.listen(control, 'compositionend', () => {
-    composing = false;
-    commit();
-  });
-  destroyRef.onDestroy(() => {
-    unlistenInput();
-    unlistenChange();
-    unlistenBlur();
-    unlistenCompositionStart();
-    unlistenCompositionEnd();
-  });
   effect((onCleanup) => {
     const field = getNativeField();
     onCleanup(registerExternalValidationErrors(field, parsingOwner, bindingParseErrors, {
@@ -87,5 +69,20 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
     observer.observe(control, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
     destroyRef.onDestroy(() => observer.disconnect());
   }
-  return { inputNames: new Set() };
+  return {
+    inputNames: new Set(),
+    nativeEvents: {
+      input: commit,
+      change: commit,
+      blur() {
+        binding.node().$api.markAsTouched();
+        (binding.node() as unknown as InternalNode).$api._flushControlValueOnBlur();
+      },
+      compositionstart() { composing = true; },
+      compositionend() {
+        composing = false;
+        commit();
+      },
+    },
+  };
 };

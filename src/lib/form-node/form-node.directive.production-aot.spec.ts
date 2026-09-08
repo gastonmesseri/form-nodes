@@ -1,4 +1,5 @@
 import '@angular/compiler';
+import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { Injector, enableProdMode, getDebugNode } from '@angular/core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -103,5 +104,68 @@ it('binds aliased value and checked models using production metadata without wri
   fixture.detectChanges();
   expect(fixture.componentInstance.profile.accepted()).toBe(false);
   expect(fixture.componentInstance.profile.dirty()).toBe(true);
+  fixture.destroy();
+});
+
+it('processes native input, change, composition and blur before consumer handlers in production AOT', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+  const fixture = TestBed.createComponent(module.NativeEventOrderHost);
+  fixture.detectChanges();
+  const host = fixture.componentInstance;
+  const text = fixture.nativeElement.querySelector('#text') as HTMLTextAreaElement;
+  text.value = 'entered';
+  text.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(host.observations[0]).toMatchObject({ value: 'entered', parentValue: { text: 'entered' }, dirty: true, valid: true, parentValid: true });
+  const select = fixture.nativeElement.querySelector('#choice') as HTMLSelectElement;
+  select.value = 'b';
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(host.observations[1]).toMatchObject({ value: 'b', parentValue: { choice: 'b' } });
+  const deferred = fixture.nativeElement.querySelector('#deferred') as HTMLTextAreaElement;
+  deferred.value = 'pending';
+  deferred.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(host.observations[2]).toMatchObject({ value: 'initial', controlValue: 'pending' });
+  deferred.dispatchEvent(new Event('blur'));
+  expect(host.observations[3]).toMatchObject({ value: 'pending', parentValue: { deferred: 'pending' }, touched: true });
+  text.dispatchEvent(new Event('compositionstart'));
+  text.value = 'composed';
+  text.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(host.observations[4]).toMatchObject({ value: 'entered' });
+  text.dispatchEvent(new Event('compositionend'));
+  expect(host.observations[5]).toMatchObject({ value: 'composed', parentValue: { text: 'composed' } });
+  fixture.destroy();
+});
+
+it('isolates native listeners from CVA and model transports in production AOT', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+  const fixture = TestBed.createComponent(module.NativeEventIsolationHost);
+  fixture.detectChanges();
+  const host = fixture.componentInstance;
+  for (const element of fixture.nativeElement.querySelectorAll('input')) {
+    element.value = 'native';
+    for (const name of ['input', 'change', 'blur', 'compositionstart', 'compositionend']) {
+      element.dispatchEvent(new Event(name, { bubbles: true }));
+    }
+  }
+  const cvas = fixture.debugElement.queryAll(By.directive(module.IsolatedCva)).map(element => element.injector.get(module.IsolatedCva));
+  const custom = fixture.debugElement.query(By.directive(module.IsolatedModel)).componentInstance as InstanceType<typeof module.IsolatedModel>;
+  for (const control of [...cvas, custom]) {
+    control.input.emit('output');
+    control.change.emit('output');
+    control.blur.emit('output');
+  }
+  expect(host.profile()).toEqual({ nativeCva: 'initial', customCva: 'initial', customModel: 'initial', passThrough: 'initial' });
+  expect(host.profile.pristine()).toBe(true);
+  expect(host.profile.untouched()).toBe(true);
+  cvas[0]!.onChange('native CVA');
+  cvas[1]!.onChange('custom CVA');
+  custom.value.set('model');
+  expect(host.profile()).toEqual({ nativeCva: 'native CVA', customCva: 'custom CVA', customModel: 'model', passThrough: 'initial' });
+  cvas[0]!.onTouched();
+  cvas[1]!.onTouched();
+  custom.touch.emit();
+  expect(host.profile.nativeCva.touched()).toBe(true);
+  expect(host.profile.customCva.touched()).toBe(true);
+  expect(host.profile.customModel.touched()).toBe(true);
+  expect(host.profile.passThrough.untouched()).toBe(true);
   fixture.destroy();
 });

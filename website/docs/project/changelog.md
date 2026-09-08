@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Fixed
+
+- Native `[formNode]` bindings now process user input before template event handlers, so handlers can read the updated node value, parent value, and synchronous validation. Blur handlers observe the updated touched state; configured debounce and IME buffering remain respected, and resets inside handlers are no longer overwritten by a late input update. Native value listeners remain isolated from CVAs, custom controls, and pass-through bindings, including custom outputs with DOM event names.
+
 ## 📦 3.0.1 — 2026-09-09 {#301--2026-09-09}
 
 ### Fixed

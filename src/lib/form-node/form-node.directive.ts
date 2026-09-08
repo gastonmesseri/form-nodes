@@ -14,6 +14,7 @@ import type { InternalNode, InternalNodeApi, AnyNode } from '../types/node.type'
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 import { registerControlStateBinding } from '../form-node-state/adapters/form-node';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
+import { prepareNativeControlEvents } from './adapters/native-control/native-control-events';
 import { syncNativeControlState } from './adapters/native-control/sync-native-control-state';
 import { componentAcceptsFormNode } from './adapters/signal-forms-control/discover-custom-control';
 
@@ -56,6 +57,8 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   private configuredClasses = inject(FORM_NODE_CLASSES, { optional: true }) ?? getGlobalFormNodeClasses();
 
+  private connectNativeEvents = prepareNativeControlEvents(this.element, this.renderer, this.destroyRef);
+
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /** Current bound field, exposed as a signal for custom integrations. */
@@ -89,13 +92,17 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
       this.renderer.setAttribute(this.element, 'novalidate', '');
       return;
     }
-    if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) return;
+    if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) {
+      this.connectNativeEvents();
+      return;
+    }
     const context: ControlAdapterContext<TNode> = {
       binding: this,
       renderer: this.renderer,
       getNgControl: () => this._ngControl,
     };
     const connection = resolveControlAdapter(context, this.interopNgControl?.valueAccessor);
+    this.connectNativeEvents(connection.nativeEvents);
     this.focuser = connection.focus ?? this.focuser;
     this.formNodeStateCleanup = registerControlStateBinding(this.element, this);
     syncNativeControlState(context, connection.inputNames);
