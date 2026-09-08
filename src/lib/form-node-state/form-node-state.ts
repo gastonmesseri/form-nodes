@@ -70,7 +70,8 @@ export type ControlState<TValue = unknown> = {
    * Whether the bound control requires a non-empty value. For Reactive Forms and ngModel,
    * recognizes directly registered Angular Validators.required / Validators.requiredTrue and an active required
    * directive on the same host. Reads rule presence even when the current value is valid or
-   * disabled. Arbitrary composed validators are not inspected or executed.
+   * disabled. Also true while the bound control has an own normalized error with kind `required`,
+   * on any supported source. Arbitrary composed validators are not executed to discover this state.
    */
   readonly required: Signal<boolean>;
   /** Whether the user has interacted with and left the bound control. */
@@ -100,7 +101,7 @@ export type ControlState<TValue = unknown> = {
   /**
    * Queries a known rule or a validator function reference on the active binding.
    * The exported Form Nodes `required` and Angular `Validators.required` are equivalent semantic
-   * queries: both return required(), including conditional rules and requiredTrue obligations.
+   * queries: both return required(), including conditional rules, requiredTrue obligations, and active own required errors.
    * Other functions use direct registration identity: Form Nodes checks its configured validators;
    * Reactive Forms and ngModel check synchronous and asynchronous validator references.
    * Angular Signal Forms cannot answer arbitrary reference queries and returns undefined.
@@ -189,10 +190,11 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
   const getError = computedFunction((kind: string) => {
     return errors().find(error => error.kind === kind);
   }, { max: ERROR_QUERY_CACHE_SIZE });
+  const requiredState = computed(() => (active()?.required() ?? false) || hasError('required'));
   const hasValidator = computedFunction((validator: unknown, resolve: boolean) => {
     const adapter = active();
     if (!adapter || typeof validator !== 'function') return undefined;
-    if (validator === required || validator === Validators.required) return adapter.required();
+    if (validator === required || validator === Validators.required) return requiredState();
     return adapter.hasValidator?.(validator, { resolve });
   }, { max: VALIDATOR_QUERY_CACHE_SIZE });
 
@@ -214,7 +216,7 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
     pattern: computed(() => active()?.pattern() ?? []),
     pending: computed(() => active()?.pending() ?? false),
     readonly: computed(() => active()?.readonly() ?? false),
-    required: computed(() => active()?.required() ?? false),
+    required: requiredState,
     touched: computed(() => active()?.touched() ?? false),
     hasError,
     getError,

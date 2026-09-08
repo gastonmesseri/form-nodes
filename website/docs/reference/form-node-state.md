@@ -398,7 +398,8 @@ Reports whether editing should be prevented without disabling interaction.
 
 **Signature:** `required: Signal<boolean>`
 
-Reports whether the effective validation rules require a non-empty value.
+Returns true when a required rule is detected **or the bound control currently has an own error
+whose normalized `kind` is exactly `'required'`**.
 
 **Works with every supported binding, including Angular Reactive Forms and `[(ngModel)]`.**
 
@@ -407,12 +408,18 @@ Reports whether the effective validation rules require a non-empty value.
   `Validators.required` / `Validators.requiredTrue` or an active Angular `required` / `[required]` validator directive on the
   same host. An empty `required` attribute enables it; `[required]="false"` disables the directive.
 
-The flag stays true when the value satisfies the rule and while the control is disabled. Removing
+A detected required rule keeps the flag true when the value satisfies it and while the control is disabled. Removing
 one required source leaves it true if another remains active. Call `updateValueAndValidity()` after
 changing Angular validators as usual. Normal control events update the hook; silent changes
 (`emitEvent: false`) and directive input changes are reconciled after the next render.
 
-The hook does not run validators to discover rules or infer required from error payloads. Wrapped or composed validators are not inspected. Direct `Validators.requiredTrue` registration
+The error fallback works with every supported binding, including custom, composed, asynchronous,
+and manually assigned errors. It reads only the existing own errors, not descendant errors.
+For Angular error maps, the `required` key counts regardless of its payload, consistently with
+`hasError('required')`. When that error disappears, the flag becomes false unless a required rule
+is also detected. This means an error-only indicator can disappear once the value is valid.
+
+The hook does not execute validators to discover rules. Wrapped or composed validators are not inspected. Direct `Validators.requiredTrue` registration
 also counts as required, so an acceptance checkbox can display the same indicator. Angular's checkbox required directive is recognized through its public
 `RequiredValidator` contract. A disconnected hook returns false.
 
@@ -579,7 +586,7 @@ silent Angular changes are reconciled after rendering, just like `errors()`. See
 
 **The exported Form Nodes `required` and Angular `Validators.required` are equivalent queries.**
 Both ask whether the connected control is currently required, using the same state as `required()`.
-This includes conditional required rules, Angular required directives, and `requiredTrue` obligations,
+This includes active own `required` errors, conditional required rules, Angular required directives, and `requiredTrue` obligations,
 even when the current value is valid. It is a semantic check, not a claim that both functions were registered.
 
 For other functions, the active binding determines what can be answered:

@@ -9,6 +9,10 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+### Changed
+
+- `useFormNodeState().required()` and its equivalent required-validator queries now also recognize an active own `required` error on every supported binding. Custom, composed, asynchronous, and manual errors can drive the required indicator without a directly registered required validator; the fallback clears when the error disappears.
+
 ## [3.0.0] - 2026-09-08
 
 ### Changed

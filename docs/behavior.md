@@ -3241,13 +3241,20 @@ Angular `RequiredValidator` instances supplied through same-host `NG_VALIDATORS`
 checkbox subclass. Directive inputs use Angular's public `booleanAttribute()` normalization, so
 an empty attribute is true and false or the string 'false' is false. These sources are combined
 with OR; a valid value or disabled control does not erase the rule. No validator functions are
-executed to discover metadata, and arbitrary error payloads or composed wrappers do not imply this flag.
+executed to discover metadata. The facade also reports required while its existing normalized own
+errors contain the exact kind `required`, including custom, composed, async, and manual errors.
+This fallback applies to all supported sources and counts Angular error keys regardless of their
+payload, matching `hasError`. It does not aggregate descendant errors; it clears when the error
+clears unless metadata still supplies required state. The two semantic `hasValidator(required)`
+queries use this same result.
 
 Control events update the state; required presence participates in the post-render snapshot so
 silent changes and directive toggles still invalidate it even when value, errors, and status are
 unchanged. Rebinding releases the old subscription and follows the replacement. Disconnection
 returns the facade's neutral false. Form Nodes `node.required()` and the Signal Forms adapter
-retain their own existing metadata semantics.
+retain their existing underlying semantics; the facade adds the error fallback without modifying
+the observed Angular control. Error-only required state can disappear after successful validation
+or when disabling an Angular control clears its errors.
 
 Reference: Angular v22.1.5 (`468b65b74566537456c192ac4281795c5a1e1a5e`), resolved from release tags.
 Inspected `packages/forms/src/model/abstract_model.ts` (`hasValidator`, `_updateHasRequiredValidator`),
@@ -3381,3 +3388,11 @@ The existing least-recently-used eviction keeps cache ownership bounded; consume
 evicted computations until their dependencies are updated or they become unreachable.
 These are internal sizing choices, not Angular behavior requirements. The Angular v22.1.5
 computed implementation and equality tests inspected above remain the behavioral reference.
+
+
+Required error fallback reference: Angular `22.1.x` at
+`ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`, inspected
+`packages/forms/signals/src/field/node.ts`, `src/api/rules/validation/required.ts`, and
+`test/node/api/validators/required.spec.ts` under `packages/forms/signals`.
+Angular distinguishes REQUIRED metadata from validation errors. The common facade's own-error
+fallback intentionally extends that metadata-only behavior; it does not register validators.

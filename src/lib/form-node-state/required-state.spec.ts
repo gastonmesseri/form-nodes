@@ -2,12 +2,15 @@
 
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { Component, computed, forwardRef, signal } from '@angular/core';
+import { Component, computed, forwardRef, signal, model } from '@angular/core';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { FormField, form as angularForm, validate } from '@angular/forms/signals';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, NgControl, ReactiveFormsModule, Validators, type ControlValueAccessor } from '@angular/forms';
 
 import { useFormNodeState } from './form-node-state';
+import { field, form, FormNodeDirective, required } from '../../public-api';
+import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({
   selector: 'required-state-control',
@@ -116,6 +119,53 @@ describe.each(['formControl', 'formControlName', 'ngModel'] as const)('useFormNo
     expect(component.showAsterisk()).toBe(false);
   });
 
+  it('tracks manual required errors, silent removal, disabled state, and disconnection', async () => {
+    const { fixture, render, component, control } = await bind(source);
+    control.setErrors({ required: { message: 'Enter a value.' } });
+    expect(component.showAsterisk()).toBe(true);
+    expect(component.state.invalid()).toBe(true);
+    control.setErrors({ other: true }, { emitEvent: false });
+    await render();
+    expect(component.showAsterisk()).toBe(false);
+    expect(component.state.invalid()).toBe(true);
+    control.setErrors({ required: false });
+    expect(component.showAsterisk()).toBe(true);
+    control.disable();
+    expect(component.showAsterisk()).toBe(false);
+    expect(component.state.errors()).toEqual([]);
+    control.enable();
+    control.setErrors({ required: true });
+    expect(component.showAsterisk()).toBe(true);
+    fixture.destroy();
+    expect(component.showAsterisk()).toBe(false);
+    expect(component.state.connected()).toBe(false);
+  });
+
+  it('tracks asynchronous required errors and clears the fallback while validation is pending', async () => {
+    const { component, control } = await bind(source);
+    let resolve!: (errors: { required: true } | null) => void;
+    const validate = vi.fn(() => new Promise<{ required: true } | null>((done) => { resolve = done; }));
+    control.setAsyncValidators(validate);
+    control.updateValueAndValidity();
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(component.state.pending()).toBe(true);
+    expect(component.showAsterisk()).toBe(false);
+    resolve({ required: true });
+    await Promise.resolve();
+    expect(component.state.pending()).toBe(false);
+    expect(component.showAsterisk()).toBe(true);
+    expect(component.state.hasValidator(Validators.required)).toBe(true);
+    control.setValue('Grace');
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(component.state.pending()).toBe(true);
+    expect(component.showAsterisk()).toBe(false);
+    resolve(null);
+    await Promise.resolve();
+    expect(component.state.pending()).toBe(false);
+    expect(component.state.invalid()).toBe(false);
+    expect(component.showAsterisk()).toBe(false);
+  });
+
   it('recognizes requiredTrue as required metadata independently of validation success', async () => {
     const { component, control } = await bind(source);
     control.setValue(true);
@@ -131,16 +181,24 @@ describe.each(['formControl', 'formControlName', 'ngModel'] as const)('useFormNo
     expect(component.showAsterisk()).toBe(false);
   });
 
-  it('does not execute custom validators or infer required from an error payload', async () => {
+  it('observes custom required errors without executing validators during state reads', async () => {
     const { render, component, control } = await bind(source);
-    const validate = vi.fn(() => ({ required: true }));
+    const validate = vi.fn((current: { value: unknown }) => current.value === '' ? { required: true } : null);
+    control.setValue('');
     control.setValidators(validate);
     control.updateValueAndValidity();
     const calls = validate.mock.calls.length;
     await render();
     expect(component.state.errors()).toEqual([{ kind: 'required' }]);
-    expect(component.showAsterisk()).toBe(false);
+    expect(component.showAsterisk()).toBe(true);
+    expect(component.state.hasValidator(Validators.required)).toBe(true);
     expect(validate).toHaveBeenCalledTimes(calls);
+    control.setValue('Grace');
+    expect(component.showAsterisk()).toBe(false);
+    expect(component.state.hasValidator(Validators.required)).toBe(false);
+    expect(component.state.errors()).toEqual([]);
+    expect(component.state.invalid()).toBe(false);
+    expect(validate).toHaveBeenCalledTimes(calls + 1);
   });
 });
 
@@ -176,4 +234,70 @@ it('recognizes the Angular checkbox required directive', async () => {
   fixture.detectChanges();
   await fixture.whenStable();
   expect(component.showAsterisk()).toBe(false);
+});
+
+@Component({ selector: 'required-signal-control', template: '' })
+class RequiredSignalControl {
+  value = model<unknown>(null);
+
+  state = useFormNodeState();
+}
+registerSignalModelForJit(RequiredSignalControl, 'value', 'value');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+
+it.each(['formNode', 'formField'] as const)('recognizes existing required errors on %s without a declared required rule', (source) => {
+  @Component({ template: '', imports: [RequiredSignalControl, FormNodeDirective, FormField] })
+  class SignalHost {
+    missing = signal(true);
+
+    value = signal('');
+
+    local = field('', [() => this.missing() ? { kind: 'required' } : null]);
+
+    angular = angularForm(this.value, (path) => {
+      validate(path, () => this.missing() ? { kind: 'required' } : null);
+    });
+  }
+  TestBed.overrideComponent(SignalHost, { set: {
+    template: source === 'formNode'
+      ? '<required-signal-control [formNode]="local" />'
+      : '<required-signal-control [formField]="angular" />',
+  } });
+  const fixture = TestBed.createComponent(SignalHost);
+  fixture.detectChanges();
+  const state = (fixture.debugElement.children[0]!.componentInstance as RequiredSignalControl).state;
+  expect(state.source()).toBe(source);
+  expect(state.required()).toBe(true);
+  expect(state.hasValidator(required)).toBe(true);
+  expect(state.hasValidator(Validators.required)).toBe(true);
+  if (source === 'formField') expect(fixture.componentInstance.angular().required()).toBe(false);
+  fixture.componentInstance.missing.set(false);
+  fixture.detectChanges();
+  expect(state.required()).toBe(false);
+  expect(state.hasValidator(required)).toBe(false);
+  expect(state.errors()).toEqual([]);
+  fixture.destroy();
+  expect(state.required()).toBe(false);
+});
+
+it('uses only the bound form own errors, excluding errors from descendants', () => {
+  @Component({ template: '<required-signal-control [formNode]="node" />', imports: [RequiredSignalControl, FormNodeDirective] })
+  class FormHost {
+    profile = form({
+      name: field('', [() => ({ kind: 'required' })]),
+      nested: form({ name: field('') }),
+    });
+
+    node = this.profile;
+  }
+  const fixture = TestBed.createComponent(FormHost);
+  fixture.detectChanges();
+  const state = (fixture.debugElement.children[0]!.componentInstance as RequiredSignalControl).state;
+  expect(state.invalid()).toBe(true);
+  expect(state.required()).toBe(false);
+  fixture.componentInstance.profile.setValidators(() => ({ kind: 'required' }));
+  expect(state.required()).toBe(true);
+  fixture.componentInstance.profile.setValidators([]);
+  expect(state.required()).toBe(false);
+  expect(state.invalid()).toBe(true);
 });
