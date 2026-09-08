@@ -54,7 +54,7 @@ class Host {
   angularField = angularForm(signal('Ada'), path => angularRequired(path, { when: () => this.required() }));
 }
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());

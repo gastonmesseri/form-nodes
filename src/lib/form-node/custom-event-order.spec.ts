@@ -11,7 +11,7 @@ import { assertCustomEventOrder, assertDirectBindingEventOrder } from '../../../
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 import { CustomEventOrderHost, DirectBindingControl, DirectBindingHost, DirectDirectiveControl, DirectPairControl, OrderedValueControl, OrderedCheckboxControl, OrderedPairControl } from '../../../tests/integration/custom-event-order.fixture';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 registerSignalModelForJit(DirectBindingControl, 'value');
 registerSignalModelForJit(DirectDirectiveControl, 'checked');
 registerSignalInputForJit(DirectPairControl, 'value', 'value');

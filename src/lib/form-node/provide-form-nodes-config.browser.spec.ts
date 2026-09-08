@@ -14,7 +14,7 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 import { provideFormNodesConfig, type FormNodesConfig } from './provide-form-nodes-config';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 @Component({ selector: 'config-value-control', template: '' })
 class ValueControl {

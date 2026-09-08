@@ -32,16 +32,16 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE
     { provide: NgControl, useFactory: injectFormNodeNgControl },
   ],
   host: {
-    '(valueChange)': '_handleCustomEvent("valueChange", $event)',
-    '(checkedChange)': '_handleCustomEvent("checkedChange", $event)',
-    '(touch)': '_handleCustomEvent("touch", $event)',
-    '(submit)': '_submitNativeForm($event)',
-    '(reset)': '_resetNativeForm($event)',
+    '(valueChange)': 'handleCustomEvent("valueChange", $event)',
+    '(checkedChange)': 'handleCustomEvent("checkedChange", $event)',
+    '(touch)': 'handleCustomEvent("touch", $event)',
+    '(submit)': 'submitNativeForm($event)',
+    '(reset)': 'resetNativeForm($event)',
   },
   exportAs: 'formNode',
 })
 export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBinding<TNode>, OnInit {
-  _formNodeInput = input.required<TNode>({ alias: 'formNode' });
+  formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
   injector = inject(Injector);
 
@@ -70,7 +70,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /** Current bound field, exposed as a signal for custom integrations. */
-  node = computed<TNode>(() => this._field);
+  node = computed<TNode>(() => this.field);
 
   /** Errors visible to this binding, excluding errors owned by another binding. */
   errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]> = computed(() => {
@@ -109,7 +109,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     const context: ControlAdapterContext<TNode> = {
       binding: this,
       renderer: this.renderer,
-      getNgControl: () => this._ngControl,
+      getNgControl: () => this.ngControl,
     };
     const connection = resolveControlAdapter(context, this.interop.peek()?.valueAccessor);
     this.connectNativeEvents(connection.nativeEvents);
@@ -123,13 +123,13 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   }
 
   /** Dispatches declared custom outputs before consumer template listeners. */
-  _handleCustomEvent(name: keyof CustomControlEvents, value: unknown) {
+  handleCustomEvent(name: keyof CustomControlEvents, value: unknown) {
     if (value instanceof Event && value.type === name && value.currentTarget === this.element) return;
     this.customEvents?.[name]?.(value);
   }
 
   /** Handles submission only when this binding is hosted by a native form. */
-  _submitNativeForm(event: Event) {
+  submitNativeForm(event: Event) {
     if (!this.nativeForm) return;
     event.preventDefault();
     const api = this.requireObjectNode();
@@ -142,14 +142,14 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   }
 
   /** Handles reset only when this binding is hosted by a native form. */
-  _resetNativeForm(event: Event) {
+  resetNativeForm(event: Event) {
     if (!this.nativeForm) return;
     event.preventDefault();
     this.requireObjectNode().reset();
   }
 
   private requireObjectNode(): InternalNodeApi {
-    const api = (this._field as unknown as InternalNode).$api;
+    const api = (this.field as unknown as InternalNode).$api;
     if (api.nodeType() !== 'form' && api.nodeType() !== 'group') {
       throw new Error('formNode: a native form requires a form() or group() node');
     }
@@ -178,8 +178,8 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   }
 
   /** Field, form, or array node bound to the host control. */
-  get _field(): TNode {
-    const node = this._formNodeInput();
+  get field(): TNode {
+    const node = this.formNodeInput();
     // eslint-disable-next-line @angular-eslint/no-uncalled-signals -- Validate the callable node itself before invoking it.
     if (typeof node !== 'function' || typeof (node as unknown as InternalNode).$api?._controlValue !== 'function') {
       throw new Error('formNode: a field, form, or array node is required');
@@ -188,7 +188,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   }
 
   /** Observable `NgControl` view exposed only through Angular dependency injection. */
-  get _ngControl(): FormNodeNgControl {
+  get ngControl(): FormNodeNgControl {
     return this.interop.get();
   }
 
@@ -217,11 +217,11 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   }
 
   flush() {
-    this._field.$api.flush();
+    this.field.$api.flush();
   }
 
   reset() {
-    this._field.$api.reset();
+    this.field.$api.reset();
   }
 }
 

@@ -39,7 +39,7 @@ class PairedControl {
   reset() { this.resets++; }
 }
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 registerSignalInputForJit(PairedControl, 'value', 'data');
 registerSignalInputForJit(PairedControl, 'disabled', 'disabled');
 registerSignalOutputForJit(PairedControl, 'valueChange', 'changed');

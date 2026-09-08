@@ -20,7 +20,7 @@ import { provideFormNodesConfig } from './provide-form-nodes-config';
 import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 

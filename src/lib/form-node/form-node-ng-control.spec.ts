@@ -20,7 +20,7 @@ import { requiredIf } from '../validation/validators/required-if';
 import type { AsyncValidatorContext, ValidationResult } from '../validation/validation.type';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 

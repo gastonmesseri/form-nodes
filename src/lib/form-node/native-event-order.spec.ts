@@ -11,7 +11,7 @@ import { NativeEventOrderHost } from '../../../tests/integration/native-event-or
 import { IsolatedCva, IsolatedModel, NativeEventIsolationHost } from '../../../tests/integration/native-event-isolation.fixture';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 registerSignalModelForJit(IsolatedModel, 'value');
 for (const component of [IsolatedCva, IsolatedModel]) {
   for (const name of ['input', 'change', 'blur']) registerSignalOutputForJit(component, name);

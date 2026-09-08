@@ -16,7 +16,7 @@ import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOut
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 @Component({ selector: 'aliased-model-control', template: '' })
 class AliasedControl {

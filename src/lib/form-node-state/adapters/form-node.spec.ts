@@ -70,7 +70,7 @@ class PendingHost {
   })]);
 }
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 registerSignalModelForJit(FormNodeAdapterControl, 'value');
 
 const createControlState = <THost>(host: Type<THost>) => {

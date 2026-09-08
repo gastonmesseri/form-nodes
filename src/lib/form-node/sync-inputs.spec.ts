@@ -61,7 +61,7 @@ class Control {
   touch = output<void>();
 }
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 registerSignalModelForJit(Control, 'value');
 registerSignalOutputForJit(Control, 'touch', 'touch');
 for (const name of ['disabled', 'readonly', 'hidden', 'required', 'min', 'max', 'minLength', 'maxLength', 'pattern', 'dirty', 'touched', 'invalid', 'pending', 'errors', 'name']) {

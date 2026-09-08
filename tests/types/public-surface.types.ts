@@ -10,7 +10,7 @@ declare const nameDirective: FormNodeDirective<typeof name>;
 
 type _BindingNode = Expect<Equal<ReturnType<typeof nameBinding.node>, typeof name>>;
 type _DirectiveNode = Expect<Equal<ReturnType<typeof nameDirective.node>, typeof name>>;
-type _NoDirectiveInput = Expect<Equal<HasKey<typeof nameDirective, '_formNodeInput'>, false>>;
+type _NoDirectiveInput = Expect<Equal<HasKey<typeof nameDirective, 'formNodeInput'>, false>>;
 type _NoDirectiveNgControl = Expect<Equal<HasKey<typeof nameDirective, '_ngControl'>, false>>;
 
 nameBinding.errors()[0]?.targetNode.set('Daniel');

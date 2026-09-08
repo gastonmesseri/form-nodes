@@ -15,7 +15,7 @@ import { asyncValidator } from '../validation/async-validator';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 import { useLegacyNgControl, useFormControlState } from '../../../tests/helpers/legacy-ng-control-hook';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());

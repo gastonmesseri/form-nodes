@@ -8,7 +8,7 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { field, form, FormNodesModule, FormNodeDirective } from '../public-api';
 import { registerSignalInputForJit } from '../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 @Component({
   selector: 'form-nodes-module-test',

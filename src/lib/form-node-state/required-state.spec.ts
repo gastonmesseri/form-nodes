@@ -243,7 +243,7 @@ class RequiredSignalControl {
   state = useFormNodeState();
 }
 registerSignalModelForJit(RequiredSignalControl, 'value', 'value');
-registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
 it.each(['formNode', 'formField'] as const)('recognizes existing required errors on %s without a declared required rule', (source) => {
   @Component({ template: '', imports: [RequiredSignalControl, FormNodeDirective, FormField] })
