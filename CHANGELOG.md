@@ -9,7 +9,9 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
-### Changed
+## [3.0.1] - 2026-09-09
+
+### Fixed
 
 - `useFormNodeState().required()` and its equivalent required-validator queries now also recognize an active own `required` error on every supported binding. Custom, composed, asynchronous, and manual errors can drive the required indicator without a directly registered required validator; the fallback clears when the error disappears.
 
@@ -224,7 +226,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.1...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -232,3 +234,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [2.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.1.0...v2.0.0
 
 [3.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v2.0.0...v3.0.0
+
+[3.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.0...v3.0.1
