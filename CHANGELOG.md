@@ -9,6 +9,8 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-09-09
+
 ### Fixed
 
 - Native `[formNode]` bindings now process user input before template event handlers, so handlers can read the updated node value, parent value, and synchronous validation. Blur handlers observe the updated touched state; configured debounce and IME buffering remain respected, and resets inside handlers are no longer overwritten by a late input update. Native value listeners remain isolated from CVAs, custom controls, and pass-through bindings, including custom outputs with DOM event names.
@@ -230,7 +232,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.2...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -240,3 +242,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v2.0.0...v3.0.0
 
 [3.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.0...v3.0.1
+
+[3.0.2]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.1...v3.0.2
