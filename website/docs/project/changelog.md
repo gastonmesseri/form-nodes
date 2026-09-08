@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.1.0 — 2026-09-09 {#310--2026-09-09}
+
 ### Added
 
 - Added typed `formNodeControlValueChange` and `formNodeValueChange` outputs to `[formNode]` for immediate control values and committed values after debounce or flush. Native controls, CVAs, signal controls, and enabled input/output pairs share this contract; programmatic node writes and cancelled or obsolete pending notifications do not emit. Duplicate native parsed values do not repeat notifications or restart debounce.

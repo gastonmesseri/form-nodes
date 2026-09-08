@@ -9,6 +9,8 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-09-09
+
 ### Added
 
 - Added typed `formNodeControlValueChange` and `formNodeValueChange` outputs to `[formNode]` for immediate control values and committed values after debounce or flush. Native controls, CVAs, signal controls, and enabled input/output pairs share this contract; programmatic node writes and cancelled or obsolete pending notifications do not emit. Duplicate native parsed values do not repeat notifications or restart debounce.
@@ -242,7 +244,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.2...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.1.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -254,3 +256,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.0...v3.0.1
 
 [3.0.2]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.1...v3.0.2
+
+[3.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.2...v3.1.0
