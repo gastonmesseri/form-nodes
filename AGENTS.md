@@ -44,7 +44,8 @@
 - Separate class members with a blank line.
 - In internal implementation classes such as `FieldNode` and `ArrayNode`, prefer plain member names without `private`, `readonly`, or `_` prefixes. Keep the caller's intended access contract explicit; callers use `getNode()` to retrieve the existing node. Constructor parameter properties may use `public` to store their arguments concisely.
 - In primitive factories, declare writable signals as members and group them immediately before `getError`, after non-signal members and before the computed block. Seed local state synchronously inside `untracked()` before creating the context, setting up validation, or publishing/registering the node; read configuration and normalize validators outside that block. Temporary `undefined as TValue` storage is allowed for generic field value signals only during construction; seed both committed and control values before any readers. Aggregate values remain computed from their children. Preserve this order when adding eager helpers or callbacks.
-- End every completed change handoff with a suggested English Conventional Commit message that summarizes the delivered change.
+- Follow the repository's commit style: write a capitalized English imperative subject that completes "This commit will...", such as "Prepare 3.0.2 release" or "Isolate native event handling from custom adapters". Do not use Conventional Commit prefixes such as `chore:`, `fix:`, or `feat:`. Apply this style to both commits you create and suggested commit messages.
+- End every completed change handoff with a suggested commit message in that style that summarizes the delivered change.
 
 ## Import style
 
