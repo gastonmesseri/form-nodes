@@ -17,6 +17,10 @@ provide backward-compatible fixes.
 
 - Added `isFormNode(value)` to recognize field, form, group, and array nodes and narrow unknown values to `AnyNode` without evaluating them.
 
+### Fixed
+
+- Generic node APIs now expose optional `message` and binding metadata on errors returned by `errors()`, `allErrors()`, and `getError()`, matching concrete node error types.
+
 ## [2.0.0] - 2026-09-08
 
 ### Changed

@@ -1,5 +1,5 @@
 import type { Equal, Expect } from './assert.types';
-import { array, field, form, group, isFormNode, type AnyNode, type FieldNode, type FormNode, type GroupNode, type ArrayNode } from '../../src/public-api';
+import { array, field, form, group, isFormNode, type AnyNode, type DynamicNode, type FieldNode, type FormNode, type GroupNode, type ArrayNode } from '../../src/public-api';
 
 const profile = form({
   name: field.strict('Marco'),
@@ -88,3 +88,16 @@ type InferredFormChildren<TNode> = TNode extends FormNode<infer TChildren> ? TCh
 type InferredGroupChildren<TNode> = TNode extends GroupNode<infer TChildren> ? TChildren : never;
 type _FormChildren = Expect<Equal<InferredFormChildren<typeof details>, { name: typeof name }>>;
 type _GroupChildren = Expect<Equal<InferredGroupChildren<typeof address>, { city: FieldNode<string | null> }>>;
+
+// Generic infrastructure retains optional error metadata across every access path.
+declare const sharedNode: DynamicNode;
+const directMessages = sharedNode.errors().map(error => error.message);
+const commonMessages = nodes[0]!.$api.errors().map(error => error.message);
+const descendantMessages = sharedNode.allErrors().map(error => error.message);
+const specificMessage = sharedNode.getError('required')?.message;
+type _DirectMessages = Expect<Equal<typeof directMessages, (string | undefined)[]>>;
+type _CommonMessages = Expect<Equal<typeof commonMessages, (string | undefined)[]>>;
+type _DescendantMessages = Expect<Equal<typeof descendantMessages, (string | undefined)[]>>;
+type _SpecificMessage = Expect<Equal<typeof specificMessage, string | undefined>>;
+type _SpecificKind = Expect<Equal<NonNullable<ReturnType<typeof sharedNode.getError<'required'>>>['kind'], 'required'>>;
+sharedNode.errors()[0]?.formNode?.focus();

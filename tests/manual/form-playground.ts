@@ -589,6 +589,7 @@ class MyComponentForSelfReference {
 }
 
 // It should autocomplete also the follosing: field('', { /** This object keys should be autocompleted */ })
+
 const myAnyNodeTyped: AnyNode = {} as any;
 myAnyNodeTyped.$api;
 const myFieldNodeTyped: FieldNode = {} as any;

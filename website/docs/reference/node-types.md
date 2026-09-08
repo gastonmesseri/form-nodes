@@ -178,6 +178,10 @@ type only when the component needs that category's operations.
 | [`FormNodeBinding<TNode>`](./form-node-binding.md) | A rendered binding with its host element and node signal |
 | [`FormNodeDirective<TNode>`](./form-node-binding.md) | The public directive instance view; its value is used in Angular imports and queries |
 
+All node views expose optional `message` (`string | undefined`) and binding-specific `formNode`
+on errors returned by `errors()`, `allErrors()`, and `getError()`. This includes `AnyNode.$api`
+and the direct `DynamicNode` API. A message can be absent on a custom error.
+
 Error entries and `getError()` results retain the selected node category in `targetNode`,
 including when generic arguments are omitted.
 

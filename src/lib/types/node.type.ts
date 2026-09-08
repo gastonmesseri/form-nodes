@@ -5,6 +5,7 @@ import type { GroupApi } from '../primitives/group.type';
 import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
+import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type MarkAsTouchedOptions = {
   /** When true, marks only the current node and leaves its descendants untouched. */
@@ -118,7 +119,7 @@ export type NodeApi = {
    * // [{ kind: 'required', message: 'Value is required.', targetNode: node }]
    * ```
    */
-  errors: Signal<readonly { readonly kind: string; readonly targetNode: AnyNode }[]>;
+  errors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
   /**
    * Validation errors from this node and its complete subtree in structural order.
    *
@@ -128,13 +129,13 @@ export type NodeApi = {
    * // [{ kind: 'required', message: 'Value is required.', targetNode: node }]
    * ```
    */
-  allErrors: Signal<readonly { readonly kind: string; readonly targetNode: AnyNode }[]>;
+  allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
   /**
    * Returns the first error belonging directly to this node and matching `kind`.
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: AnyNode }) | undefined;
+  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<AnyNode> & { readonly kind: TKind }) | undefined;
   /**
    * Whether this node's own errors include the kind; does not search descendants.
    * @reactive Tracks current errors.

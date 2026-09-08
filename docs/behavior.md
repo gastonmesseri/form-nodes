@@ -17,6 +17,14 @@ checked: `22.1.x` at `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41` (`api/types.ts` 
 `test/web/assertions.spec.ts` under `packages/forms/signals`).
 These type names change no runtime state, validation, propagation, or factory inference.
 
+Generic node error typing uses `ValidationErrorWithTargetNode<AnyNode>` for `NodeApi.errors`,
+`allErrors`, and `getError`. Consumers retain the optional `message` (`string | undefined`)
+and binding-specific `formNode`, including through `AnyNode.$api` and `DynamicNode`.
+Messages remain optional; this type correction does not create or resolve additional messages.
+Angular 22 reference: `22.1.x` at `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`,
+`packages/forms/signals/src/api/rules/validation/validation_errors.ts` and
+`packages/forms/signals/test/node/api/validators/validation_errors.spec.ts`.
+
 When child names are unknown, `AnyNode` consumers must use `$api` for state and operations:
 children can shadow both direct API members and the `api` alias. `DynamicNode` exposes direct
 common state and operations for declarations known not to shadow that surface. It is not a
