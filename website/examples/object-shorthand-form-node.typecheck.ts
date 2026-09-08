@@ -1,5 +1,5 @@
 import { Component, model } from '@angular/core';
-import { FormNode, form } from '@ngblocks/form-nodes';
+import { FormNodeDirective, form } from '@ngblocks/form-nodes';
 
 type CompanyValue = {
   companyId: number | null;
@@ -15,7 +15,7 @@ export class CompanySelector {
 }
 
 @Component({
-  imports: [FormNode, CompanySelector],
+  imports: [FormNodeDirective, CompanySelector],
   template: `<app-company-selector [formNode]="profile.company" />`,
 })
 export class ProfileEditor {

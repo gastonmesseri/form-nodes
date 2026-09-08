@@ -1,4 +1,4 @@
-import type { Node } from '../../types/node.type';
+import type { AnyNode } from '../../types/node.type';
 
 const nodeMarker = Symbol('form-node');
 
@@ -7,6 +7,6 @@ export const markAsNode = <TNode extends object>(node: TNode): TNode => {
   return node;
 };
 
-export const isNode = (value: unknown): value is Node => {
+export const isNode = (value: unknown): value is AnyNode => {
   return typeof value === 'function' && nodeMarker in value;
 };

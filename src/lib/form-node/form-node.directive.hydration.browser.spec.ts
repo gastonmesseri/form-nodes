@@ -4,11 +4,11 @@ import { ApplicationRef, Component, destroyPlatform } from '@angular/core';
 import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
 
 import { field } from '../primitives/field';
-import { FormNode } from './form-node.directive';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 declare const __FORM_NODE_HYDRATION_HTML__: string;
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
@@ -18,7 +18,7 @@ declare const __FORM_NODE_SIGNAL_CONTROL_HYDRATION_HTML__: string;
   selector: 'form-node-hydration-app',
   template: '<input data-age type="text" [formNode]="age"><span data-value>{{ age() }}</span>',
   standalone: true,
-  imports: [FormNode],
+  imports: [FormNodeDirective],
 })
 class HydrationApp {
   readonly age = field.strict(23, [required]);
@@ -35,7 +35,7 @@ const installServerDom = (encodedHtml: string, selector: string): { host: HTMLEl
   return { host, nodes };
 };
 
-describe('FormNode hydration in Chromium', () => {
+describe('FormNodeDirective hydration in Chromium', () => {
   it('claims the server-rendered control and connects state and events', async () => {
     destroyPlatform();
     const error = vi.spyOn(console, 'error');

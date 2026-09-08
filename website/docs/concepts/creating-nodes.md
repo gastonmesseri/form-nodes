@@ -32,7 +32,7 @@ const myForm = form({
 });
 ```
 
-Fields are nullable by default. `myForm.name` is therefore `Field<string | null>`, even though its initial value is a string. Opt out when null is not a valid business value:
+Fields are nullable by default. `myForm.name` is therefore `FieldNode<string | null>`, even though its initial value is a string. Opt out when null is not a valid business value:
 
 ```ts
 const name = field.strict('');
@@ -51,7 +51,7 @@ const nickname = field<string>();
 ```
 
 If the initial value is the literal `null` and no generic supplies the eventual type, the field is
-inferred as `Field<unknown>`:
+inferred as `FieldNode<unknown>`:
 
 ```ts
 const myForm = form({
@@ -61,7 +61,7 @@ const myForm = form({
 });
 ```
 
-The first form is intentionally safer than `Field<any>`: it accepts later values, but consumers
+The first form is intentionally safer than `FieldNode<any>`: it accepts later values, but consumers
 must narrow a read before using it. Prefer the explicit generic when the domain type is known.
 
 A standalone field is fully supported, but a form tree provides the typed parent, path, aggregate value, and state propagation used by most applications.
@@ -303,11 +303,11 @@ In an Angular application, the form is commonly a component property:
 
 ```ts
 import { Component } from '@angular/core';
-import { field, FormNode, form } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <label>
       Name

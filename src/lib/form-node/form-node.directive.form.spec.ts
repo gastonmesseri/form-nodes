@@ -9,21 +9,21 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { group } from '../primitives/group';
-import { FormNode } from './form-node.directive';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('FormNode on a native form', () => {
+describe('FormNodeDirective on a native form', () => {
   it('binds a group without submission behavior and preserves touch and reset behavior', () => {
     @Component({
       template: `<form [formNode]="address"><input [formNode]="address.city"></form>`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly address = group({ city: field('Zurich', { debounce: 'blur' }) });
@@ -58,7 +58,7 @@ describe('FormNode on a native form', () => {
     @Component({
       template: `<form [formNode]="name"></form>`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field('Marco');
@@ -75,7 +75,7 @@ describe('FormNode on a native form', () => {
     @Component({
       template: `<form [formNode]="profile"><button type="submit">Save</button></form>`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly profile = form({ name: field('Marco') }, { onSubmit: action });
@@ -100,7 +100,7 @@ describe('FormNode on a native form', () => {
     @Component({
       template: `<form [formNode]="profile"><input [formNode]="profile.name"></form>`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly profile = form({ name: field('', [required]) }, { onSubmit: action });

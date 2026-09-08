@@ -1,4 +1,4 @@
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './validation.type';
 
 /**
@@ -57,9 +57,9 @@ import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './v
  * @param validate Synchronous validation function to type and reuse.
  * @returns The same validation function, without a runtime wrapper.
  */
-export function validator<TValue, TField extends Node = Node>(validate: NoInfer<DeferredValidator | ComposableValidator<TValue, ValidatorOwner<TField>>>): ComposableValidator<TValue, TField>;
+export function validator<TValue, TField extends AnyNode = AnyNode>(validate: NoInfer<DeferredValidator | ComposableValidator<TValue, ValidatorOwner<TField>>>): ComposableValidator<TValue, TField>;
 /** Infers the value from an explicitly typed callback when no consuming node provides a context. */
-export function validator<TValue, TField extends Node = Node>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField>;
-export function validator<TValue, TField extends Node = Node>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField> {
+export function validator<TValue, TField extends AnyNode = AnyNode>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField>;
+export function validator<TValue, TField extends AnyNode = AnyNode>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>): ComposableValidator<TValue, TField> {
   return validate as unknown as ComposableValidator<TValue, TField>;
 }

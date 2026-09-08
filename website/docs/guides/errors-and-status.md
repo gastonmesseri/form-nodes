@@ -104,7 +104,7 @@ Validators preserve declaration order. Async results become visible as they comp
 
 ## 🚨 Binding-filtered errors {#binding-filtered-errors}
 
-A `FormNode` binding's `errors()` includes:
+A `FormNodeDirective` binding's `errors()` includes:
 
 - Node errors that are not owned by one concrete control.
 - Binding-owned errors whose `formNode` is that exact binding.

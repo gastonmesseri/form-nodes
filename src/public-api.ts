@@ -3,6 +3,8 @@ export { group } from './lib/primitives/group';
 export { field } from './lib/primitives/field';
 export { array } from './lib/primitives/array';
 export { isFormNode } from './lib/primitives/is-form-node';
+export { FormNodesModule } from './lib/form-nodes.module';
+export type { AnyFieldNode, AnyGroupNode, AnyFormNode, AnyArrayNode } from './lib/types/any-node.type';
 export { max } from './lib/validation/validators/max';
 export { min } from './lib/validation/validators/min';
 export { url } from './lib/validation/validators/url';
@@ -25,14 +27,14 @@ export { minLength } from './lib/validation/validators/min-length';
 export { dateBetween } from './lib/validation/validators/date-between';
 export { uniqueItems } from './lib/validation/validators/unique-items';
 export type { FormNodeBinding } from './lib/types/form-node-binding.type';
-export type { Field, FieldApi, FieldOptions } from './lib/primitives/field';
+export type { FieldNode, FieldApi, FieldOptions } from './lib/primitives/field';
 export type { ValidatorOptions } from './lib/validation/utils/validator-options';
 export { provideFormNodePassThrough } from './lib/form-node/form-node-pass-through';
-export { FORM_NODE, FormNode, _FormNode } from './lib/form-node/form-node.directive';
+export { FORM_NODE, FormNodeDirective, _FormNode } from './lib/form-node/form-node.directive';
 export type { ObservableLike, ObserverLike, SubscriptionLike } from './lib/types/observable-like.type';
-export type { Group, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/primitives/group';
+export type { GroupNode, GroupApi, GroupOptions, GroupPatch, GroupSet, GroupValue } from './lib/primitives/group';
 export { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig, type FormNodesConfig } from './lib/form-node/provide-form-nodes-config';
-export type { DisabledReason, DisabledStateSource, DynamicNode, FormNodeValue, MarkAsTouchedOptions, Node, NodeApi } from './lib/types/node.type';
+export type { DisabledReason, DisabledStateSource, DynamicNode, FormNodeValue, MarkAsTouchedOptions, AnyNode, NodeApi } from './lib/types/node.type';
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorConfig, ParameterizedAsyncValidatorOptions } from './lib/validation/async-validator';
 export {
   type FormFactory,
@@ -73,7 +75,7 @@ export type {
   ArrayItemWithParent,
 } from './lib/primitives/array';
 export type {
-  Form,
+  FormNode,
   FormApi,
   FormSet,
   AddedNode,

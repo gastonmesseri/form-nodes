@@ -38,8 +38,8 @@ explicitDefaultForms.field(''); // Field<string | null>
 
 <CodeBlock language="ts" title="create-form-primitives.typecheck.ts">{createFormPrimitivesSource}</CodeBlock>
 
-Here, `field('')` and the `city: ''` shorthand both produce `Field<string>`. A local
-`field.nullable('')` declaration still produces `Field<string | null>`.
+Here, `field('')` and the `city: ''` shorthand both produce `FieldNode<string>`. A local
+`field.nullable('')` declaration still produces `FieldNode<string | null>`.
 
 ## 💬 Configure validator messages {#configure-validator-messages}
 
@@ -94,7 +94,7 @@ field.nullable('');                   // Field<string | null>
 `field.nullable()` and `field.strict()` always override the configured default, so local
 exceptions remain concise in either direction.
 
-Omitting the value or passing `null` or `undefined` produces `Field<unknown>` because there is no
+Omitting the value or passing `null` or `undefined` produces `FieldNode<unknown>` because there is no
 concrete initial value from which to infer a future type. An omitted value starts at `null`, while
 an explicit `undefined` is preserved:
 

@@ -1,4 +1,4 @@
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import type { MetadataKey } from '../metadata/metadata';
 import { isNode } from '../primitives/utils/node-marker';
 import { runWithValidatorMessages } from './validator-messages';
@@ -11,7 +11,7 @@ import type { AsyncValidatorState, ComposableValidationResult, ComposableValidat
 
 const maximumCompositionDepth = 100;
 
-export type SyncValidation<TNode extends Node, TValue> = {
+export type SyncValidation<TNode extends AnyNode, TValue> = {
   readonly errors: readonly ValidationErrorWithTargetNode<TNode>[];
   readonly metadata: ValidatorMetadata;
   readonly resolvedValidators: Validators<TValue>;
@@ -68,7 +68,7 @@ const resolveComposableValidator = <TValue>(
   resolvedValidators: ComposableValidator<TValue>[],
 ): ValidationResult => resolveComposableResult(validator, context, new Set(), 0, metadata, resolvedValidators);
 
-export const runSyncValidators = <TValue, TNode extends Node & { $api: AsyncValidatorState }>(
+export const runSyncValidators = <TValue, TNode extends AnyNode & { $api: AsyncValidatorState }>(
   context: FieldContext<TValue>,
   validators: Validators<TValue>,
   targetNode: TNode,

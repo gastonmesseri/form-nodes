@@ -712,6 +712,6 @@ registry. Always use `connected()` when behavior depends on an active source.
 ## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Custom controls](../guides/custom-controls.md)
-- [`FormNode` binding API](./form-node-binding.md)
+- [`FormNodeDirective` binding API](./form-node-binding.md)
 - [Control binding](../guides/control-binding.md)
 - [API overview](./api-overview.md)

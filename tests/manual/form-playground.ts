@@ -1,6 +1,6 @@
 import { computed, signal } from '@angular/core';
 
-import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNode, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
+import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNodeDirective, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string }
 const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
@@ -196,7 +196,7 @@ myForm.sons1.insert(1)
 
 myForm.sons1[0]?.getError('required');
 
-const directiveInstance: FormNode<typeof myForm.age> = {} as any;
+const directiveInstance: FormNodeDirective<typeof myForm.age> = {} as any;
 const nodeFromDirective = directiveInstance.node();
 // directiveInstance.
 

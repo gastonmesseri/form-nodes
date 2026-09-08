@@ -1,11 +1,11 @@
 import type { InputSignal, InputSignalWithTransform, ModelSignal, OutputRef, WritableSignal } from '@angular/core';
 
-import type { Field } from '../primitives/field';
-import type { Node, DisabledReason } from '../types/node.type';
+import type { FieldNode } from '../primitives/field';
+import type { AnyNode, DisabledReason } from '../types/node.type';
 import type { ValidationError } from '../validation/validation.type';
 
 /** Optional state inputs and interaction hooks recognized by `[formNode]` on Angular 21 and 22. */
-export type FormNodeUiControl<TValue, TNode extends Node = Field<TValue>> = {
+export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>> = {
   /** Node disabled state. */
   disabled?: InputSignal<boolean> | InputSignalWithTransform<boolean, unknown>;
 
@@ -68,7 +68,7 @@ export type FormNodeUiControl<TValue, TNode extends Node = Field<TValue>> = {
 };
 
 /** A custom control exposing a `value` model for `[formNode]`. */
-export type FormNodeValueControl<TValue, TNode extends Node = Field<TValue>> = FormNodeUiControl<TValue, TNode> & {
+export type FormNodeValueControl<TValue, TNode extends AnyNode = FieldNode<TValue>> = FormNodeUiControl<TValue, TNode> & {
   /** The rendered value, including pending debounced input. */
   value: ModelSignal<TValue>;
   /** Reserved for checkbox controls. */
@@ -76,7 +76,7 @@ export type FormNodeValueControl<TValue, TNode extends Node = Field<TValue>> = F
 };
 
 /** A custom control exposing a boolean `checked` model for `[formNode]`. */
-export type FormNodeCheckboxControl<TNode extends Node = Field<boolean>> = FormNodeUiControl<boolean, TNode> & {
+export type FormNodeCheckboxControl<TNode extends AnyNode = FieldNode<boolean>> = FormNodeUiControl<boolean, TNode> & {
   /** The rendered checked state. */
   checked: ModelSignal<boolean>;
   /** Reserved for value controls. */
@@ -84,4 +84,4 @@ export type FormNodeCheckboxControl<TNode extends Node = Field<boolean>> = FormN
 };
 
 /** Either a value control or, for boolean values, a checkbox control recognized by `[formNode]`. */
-export type FormNodeControl<TValue = any, TNode extends Node = Field<TValue>> = FormNodeValueControl<TValue, TNode> | ([TValue] extends [boolean] ? FormNodeCheckboxControl<TNode> : never);
+export type FormNodeControl<TValue = any, TNode extends AnyNode = FieldNode<TValue>> = FormNodeValueControl<TValue, TNode> | ([TValue] extends [boolean] ? FormNodeCheckboxControl<TNode> : never);

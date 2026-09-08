@@ -1,6 +1,6 @@
 import { APP_ID, effect, reflectComponentType, untracked, type Injector, type Type } from '@angular/core';
 
-import type { Node } from '../../types/node.type';
+import type { AnyNode } from '../../types/node.type';
 import { readMetadata } from '../../metadata/metadata';
 import { getFormNodeName } from '../utils/form-node-name';
 import { FORM_NODE_SYNC_INPUTS } from '../provide-form-nodes-config';
@@ -20,7 +20,7 @@ const inputNamesToSync = [
 
 type ControlInput = typeof inputNamesToSync[number];
 
-const readBindingValue = (node: Node, name: ControlInput, appId: string) => {
+const readBindingValue = (node: AnyNode, name: ControlInput, appId: string) => {
   const metadata = getNodeInputConfig(node).metadata;
   const readers = {
     disabled: () => node.$api.disabled(),
@@ -44,7 +44,7 @@ const readBindingValue = (node: Node, name: ControlInput, appId: string) => {
 };
 
 /** @experimental Opt-in synchronization of matching custom-control inputs through Angular internals. */
-export const connectControlInputs = <TNode extends Node>(
+export const connectControlInputs = <TNode extends AnyNode>(
   control: object,
   node: () => TNode,
   injector: Injector,

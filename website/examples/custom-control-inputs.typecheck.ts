@@ -1,5 +1,5 @@
-import { field, form, FormNode, provideFormNodesConfig } from '@ngblocks/form-nodes';
 import { Component, input, model, signal, type ApplicationConfig } from '@angular/core';
+import { field, form, FormNodeDirective, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 export const appConfig: ApplicationConfig = {
   providers: [provideFormNodesConfig({ syncInputs: false })],
@@ -21,7 +21,7 @@ export class TextControl {
 }
 
 @Component({
-  imports: [FormNode, TextControl],
+  imports: [FormNodeDirective, TextControl],
   template: `
     <app-text-control [formNode]="profile.name" [disabled]="saving()" [readonly]="locked()" />
   `,

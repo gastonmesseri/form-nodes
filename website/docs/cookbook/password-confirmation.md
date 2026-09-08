@@ -9,11 +9,11 @@ bindings in one component makes the complete interaction visible:
 
 ```ts
 import { Component } from '@angular/core';
-import { equalTo, field, form, FormNode } from '@ngblocks/form-nodes';
+import { equalTo, field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-password-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input type="password" [formNode]="myForm.password" />
     <input type="password" [formNode]="myForm.confirmation" />

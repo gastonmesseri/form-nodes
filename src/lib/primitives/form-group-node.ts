@@ -29,18 +29,18 @@ import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import type { DynamicNode, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, Nodes } from '../types/node.type';
+import type { DynamicNode, InternalNode, MarkAsTouchedOptions, AnyNode, NodeControlBinding, Nodes } from '../types/node.type';
 import type { FieldContext, ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from './utils/disabled-reasons';
-import type { Form, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinitions } from './form.type';
+import type { FormNode, FormApi, FormChildren, FormOptions, FormPatch, FormSet, FormValue, NormalizedNodes, ObjectNodeDefinitions } from './form.type';
 
 export function createFormGroupNode<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions,
   validatorSource: ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, any>,
   options: FormOptions<FormValue<NormalizedNodes<TDefinitions>>, any> | undefined,
   nodeType: 'form' | 'group',
-  normalizeDefinition: (definition: unknown) => Node = normalizeObjectDefinition,
-): Node {
+  normalizeDefinition: (definition: unknown) => AnyNode = normalizeObjectDefinition,
+): AnyNode {
   return new FormGroupNode<NormalizedNodes<TDefinitions>>(definitions, validatorSource, options, nodeType, normalizeDefinition).getNode();
 }
 
@@ -50,11 +50,11 @@ export function createFormGroupNode<TDefinitions extends ObjectNodeDefinitions>(
  * the public API exposes `submit()`; groups inherit their owning form and submission state.
  */
 export class FormGroupNode<TNodes extends Nodes> {
-  node: Form<TNodes>;
+  node: FormNode<TNodes>;
 
   children: TNodes;
 
-  childrenRecord: Record<string, Node>;
+  childrenRecord: Record<string, AnyNode>;
 
   dynamicKeys = new Set<string>();
 
@@ -74,13 +74,13 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   metadata: ReturnType<typeof createNodeMetadata>;
 
-  asyncValidation: ReturnType<typeof createAsyncValidation<FormValue<TNodes>, Form<TNodes>>>;
+  asyncValidation: ReturnType<typeof createAsyncValidation<FormValue<TNodes>, FormNode<TNodes>>>;
 
   asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
 
   asyncValidationWatchRef: ReactiveWatchRef | null = null;
 
-  parent = signal<Node | null>(null);
+  parent = signal<AnyNode | null>(null);
 
   keyInParent = signal<string | number | null>(null);
 
@@ -249,7 +249,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     public initialValidatorSource: ValidatorSource<FormValue<TNodes>, any>,
     public options: FormOptions<FormValue<TNodes>, any> | undefined,
     public nodeType: 'form' | 'group',
-    public normalizeDefinition: (definition: unknown) => Node,
+    public normalizeDefinition: (definition: unknown) => AnyNode,
   ) {
     const validators = normalizeValidatorSource(this.initialValidatorSource);
     this.cloneOptions = this.options === undefined ? undefined : { ...this.options };
@@ -372,7 +372,7 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   assertDetachedDefinition(definition: unknown) {
     if (isNode(definition)) {
-      if ((definition as Node & { $api: { parent(): Node | null } }).$api.parent() === null) return;
+      if ((definition as AnyNode & { $api: { parent(): AnyNode | null } }).$api.parent() === null) return;
       throw new Error(`${this.nodeType}: a dynamic child must not already have a parent`);
     }
     if (definition !== null && typeof definition === 'object' && isPlainObject(definition)) {
@@ -395,7 +395,7 @@ export class FormGroupNode<TNodes extends Nodes> {
   patch(value: FormPatch<TNodes>) {
     this.controlValueBuffer?.cancel();
     (Object.keys(value) as (keyof TNodes)[]).forEach((key) => {
-      const control = this.children[key] as Node | undefined;
+      const control = this.children[key] as AnyNode | undefined;
       if (control === undefined) {
         warnInDevMode(`form: unknown key "${String(key)}" ignored on patch`);
         return;
@@ -476,7 +476,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     watchNodeInjector(this.node, injector => this.asyncValidationWatchRef?.setInjector(injector));
   }
 
-  setParent(parent: Node | null, key?: string) {
+  setParent(parent: AnyNode | null, key?: string) {
     this.parent.set(parent);
     this.keyInParent.set(parent ? key ?? null : null);
     this.refreshInjector();
@@ -514,10 +514,10 @@ export class FormGroupNode<TNodes extends Nodes> {
     };
   }
 
-  createNode(): Form<TNodes> {
+  createNode(): FormNode<TNodes> {
     const publicApi = {
       nodeType: () => this.nodeType,
-      children: this.children as FormChildren<TNodes, Node>,
+      children: this.children as FormChildren<TNodes, AnyNode>,
       forEachChild: (callback: (child: DynamicNode, key: string) => void, options?: { includeDynamic?: boolean }) => this.forEachChild(callback, options),
       get: (key: string) => this.childrenRecord[key] as DynamicNode | undefined,
       add: ((...args: [string | ObjectNodeDefinitions, unknown?]) => this.add(...args)) as FormApi<TNodes>['add'],
@@ -581,7 +581,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       _setControlValue: this.controlValueBuffer.set,
       _flushControlValueOnBlur: publicApi.flush,
       _clone: this.createClone(),
-      _setParent: (parent: Node | null, key?: string) => this.setParent(parent, key),
+      _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => this.refreshInjector(),
       _registerControlBinding: (binding: NodeControlBinding) => this.registerControlBinding(binding),
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),
@@ -591,6 +591,6 @@ export class FormGroupNode<TNodes extends Nodes> {
     return Object.defineProperties(
       this.exposedValue,
       Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, ...this.children, $api: internalApi }),
-    ) as Form<TNodes>;
+    ) as FormNode<TNodes>;
   }
 }

@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { array, email, field, form, FormNode, required } from '@ngblocks/form-nodes';
+import { array, email, field, form, FormNodeDirective, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-contacts',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     @for (contact of myForm.contacts; track contact; let index = $index) {
       <fieldset>

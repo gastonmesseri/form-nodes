@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
 import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
-import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Component, signal } from '@angular/core';
+import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { beforeAll, afterAll, afterEach, describe, it, expect, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import type { Node } from '../types/node.type';
-import { FormNode } from './form-node.directive';
+import type { AnyNode } from '../types/node.type';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
-import { useLegacyNgControl, useFormControlState } from '../../../tests/helpers/legacy-ng-control-hook';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
+import { useLegacyNgControl, useFormControlState } from '../../../tests/helpers/legacy-ng-control-hook';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());
@@ -39,13 +39,13 @@ class HookControl {
 
 @Component({
   template: '<hook-control [formNode]="node()" />',
-  imports: [FormNode, HookControl],
+  imports: [FormNodeDirective, HookControl],
 })
 class Host {
-  node = signal<Node>(field(''));
+  node = signal<AnyNode>(field(''));
 }
 
-const bind = (node: Node) => {
+const bind = (node: AnyNode) => {
   const fixture = TestBed.createComponent(Host);
   fixture.componentInstance.node.set(node);
   fixture.detectChanges();

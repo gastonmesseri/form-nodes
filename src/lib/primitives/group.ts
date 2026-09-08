@@ -1,10 +1,10 @@
 import { createFormGroupNode } from './form-group-node';
 import type { ValidatorSource } from '../validation/validation.type';
 import { isValidatorSource } from '../validation/utils/validator-source';
-import type { Group, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
 import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { GroupNode, GroupOptions, GroupValue, NormalizedNodes } from './group.type';
 
-export type { Group, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
+export type { GroupNode, GroupApi, GroupChildren, GroupOptions, GroupPatch, GroupRoot, GroupSet, GroupValue, NormalizedNode, NormalizedNodes } from './group.type';
 
 type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 
@@ -35,24 +35,24 @@ type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDe
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
   ...args:
-    | [validatorsOrOptions?: NoInfer<ValidatorSource<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>> | NoInfer<GroupOptions<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>>]
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<GroupValue<NormalizedNodes<TDefinitions>>, GroupNode<NormalizedNodes<TDefinitions>>>> | NoInfer<GroupOptions<GroupValue<NormalizedNodes<TDefinitions>>, GroupNode<NormalizedNodes<TDefinitions>>>>]
     | [
-      validators: NoInfer<ValidatorSource<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>> | undefined,
-      options: NoInfer<GroupOptions<GroupValue<NormalizedNodes<TDefinitions>>, Group<NormalizedNodes<TDefinitions>>>> | undefined
+      validators: NoInfer<ValidatorSource<GroupValue<NormalizedNodes<TDefinitions>>, GroupNode<NormalizedNodes<TDefinitions>>>> | undefined,
+      options: NoInfer<GroupOptions<GroupValue<NormalizedNodes<TDefinitions>>, GroupNode<NormalizedNodes<TDefinitions>>>> | undefined
     ]
-): Group<NormalizedNodes<TDefinitions>>;
+): GroupNode<NormalizedNodes<TDefinitions>>;
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,
-  validatorsOrOptions?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>> | GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
-  separateOptions?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, Group<NormalizedNodes<TDefinitions>>>,
-): Group<NormalizedNodes<TDefinitions>> {
+  validatorsOrOptions?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, GroupNode<NormalizedNodes<TDefinitions>>> | GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, GroupNode<NormalizedNodes<TDefinitions>>>,
+  separateOptions?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, GroupNode<NormalizedNodes<TDefinitions>>>,
+): GroupNode<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = GroupValue<TNodes>;
-  const resolvedOptions = isValidatorSource<TValue, Group<TNodes>>(validatorsOrOptions) || validatorsOrOptions === undefined
+  const resolvedOptions = isValidatorSource<TValue, GroupNode<TNodes>>(validatorsOrOptions) || validatorsOrOptions === undefined
     ? separateOptions
     : validatorsOrOptions;
-  const validatorSource = isValidatorSource<TValue, Group<TNodes>>(validatorsOrOptions)
+  const validatorSource = isValidatorSource<TValue, GroupNode<TNodes>>(validatorsOrOptions)
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
-  return createFormGroupNode<TDefinitions>(definitions, validatorSource, resolvedOptions, 'group') as Group<TNodes>;
+  return createFormGroupNode<TDefinitions>(definitions, validatorSource, resolvedOptions, 'group') as GroupNode<TNodes>;
 }

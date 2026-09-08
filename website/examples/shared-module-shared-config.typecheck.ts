@@ -1,11 +1,11 @@
 import { Component, NgModule } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { field, form, required, FormNode, ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
+import { field, form, required, FormNodeDirective, ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 // shared.module.ts
 @NgModule({
-  imports: [FormNode],
-  exports: [FormNode],
+  imports: [FormNodeDirective],
+  exports: [FormNodeDirective],
   providers: [
     provideFormNodesConfig({
       validatorMessages: { required: 'Please enter your name.' },

@@ -10,17 +10,17 @@ import { form } from '../primitives/form';
 import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { group } from '../primitives/group';
-import type { Node } from '../types/node.type';
-import { FormNode } from './form-node.directive';
+import type { AnyNode } from '../types/node.type';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { provideFormNodesConfig } from './provide-form-nodes-config';
 import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
 
@@ -34,7 +34,7 @@ const dispatch = (element: HTMLElement, type: string) => {
   element.dispatchEvent(new Event(type, { bubbles: true }));
 };
 
-describe('FormNode in Chromium', () => {
+describe('FormNodeDirective in Chromium', () => {
   it('accepts parsing errors from a date CVA through NgControl.control.setErrors', () => {
     @Component({
       selector: 'imperative-date-control',
@@ -74,7 +74,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       selector: 'imperative-date-host',
       template: `<imperative-date-control [formNode]="profile.appointment" />`,
-      imports: [FormNode, DateControl],
+      imports: [FormNodeDirective, DateControl],
     })
     class Host {
       profile = form({ appointment: field<Date | null>(null, [required]) });
@@ -155,12 +155,12 @@ describe('FormNode in Chromium', () => {
     }
     @Component({
       template: `<validator-boundary-cva [formNode]="active()" />`,
-      imports: [FormNode, ValidatorCva],
+      imports: [FormNodeDirective, ValidatorCva],
     })
     class Host {
       profile = form({ name: field.strict('blocked') });
 
-      active = signal<Node>(this.profile.name);
+      active = signal<AnyNode>(this.profile.name);
     }
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
@@ -249,12 +249,12 @@ describe('FormNode in Chromium', () => {
     }
     @Component({
       template: `<reset-cva [formNode]="active()" />`,
-      imports: [FormNode, ResetCva],
+      imports: [FormNodeDirective, ResetCva],
     })
     class Host {
       profile = form({ name: field.strict('committed', [required], { debounce: 'blur' }) });
 
-      active = signal<Node>(this.profile.name);
+      active = signal<AnyNode>(this.profile.name);
     }
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
@@ -322,7 +322,7 @@ describe('FormNode in Chromium', () => {
     }
     @Component({
       template: `<identity-cva name="html-name" [formNode]="active()" />`,
-      imports: [FormNode, IdentityCva],
+      imports: [FormNodeDirective, IdentityCva],
     })
     class Host {
       profile = form({ contacts: array(field.strict(''), { initialValue: 2 }) });
@@ -405,7 +405,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       selector: 'late-ng-control-host',
       template: `<late-ng-control-cva [formNode]="profile.name" />`,
-      imports: [FormNode, LegacyCva],
+      imports: [FormNodeDirective, LegacyCva],
       host: { 'data-lifecycle': hook },
     })
     class Host {
@@ -447,7 +447,7 @@ describe('FormNode in Chromium', () => {
     registerSignalOutputForJit(ExternalControl, 'valueChange', 'value');
     @Component({
       template: `<input class="node" [formNode]="profile.name"><external-angular-control [formField]="angularProfile.name" />`,
-      imports: [FormNode, FormField, ExternalControl],
+      imports: [FormNodeDirective, FormField, ExternalControl],
       providers: [
         provideFormNodesConfig({ classes: { 'node-invalid': binding => binding.node().$api.invalid() } }),
         provideSignalFormsConfig({ classes: { 'angular-invalid': binding => binding.state().invalid() } }),
@@ -499,7 +499,7 @@ describe('FormNode in Chromium', () => {
     registerSignalOutputForJit(EqualityControl, 'valueChange', 'value');
     @Component({
       template: `<equality-form-node-state [formNode]="profile.name" />`,
-      imports: [EqualityControl, FormNode],
+      imports: [EqualityControl, FormNodeDirective],
     })
     class Host {
       profile = form({ name: field.strict<string>('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase() }) });
@@ -542,7 +542,7 @@ describe('FormNode in Chromium', () => {
   it('synchronizes array item controls through formNode independently of array equality', () => {
     @Component({
       template: `@for (person of profile.people.items(); track person) { <input [formNode]="person.name"> }`,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       profile = form({ people: array({ name: field.strict<string>('Marco') }, {
@@ -582,7 +582,7 @@ describe('FormNode in Chromium', () => {
   it('synchronizes current child values through formNode while the form retains its public value', () => {
     @Component({
       template: `<input [formNode]="profile.name">`,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       profile = form({ name: field.strict<string>('Marco') }, {
@@ -622,7 +622,7 @@ describe('FormNode in Chromium', () => {
   it('synchronizes current field writes through formNode while retaining the exposed value', () => {
     @Component({
       template: `<input [formNode]="profile.name">`,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       profile = form({ name: field.strict('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase() }) });
@@ -666,7 +666,7 @@ describe('FormNode in Chromium', () => {
         <input data-implicit [formNode]="profile.implicit">
         <input data-explicit [formNode]="profile.explicit">
       `,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       profile = form({ implicit: 'initial', explicit: field('initial') });
@@ -712,7 +712,7 @@ describe('FormNode in Chromium', () => {
         </form>
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly filters = group({ query: field('', { debounce: 'blur' }) });
@@ -748,7 +748,7 @@ describe('FormNode in Chromium', () => {
         <output data-errors>{{ binding.errors().length }}</output>
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly age = field.strict(23);
@@ -758,7 +758,7 @@ describe('FormNode in Chromium', () => {
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
     const output = fixture.nativeElement.querySelector('[data-errors]') as HTMLOutputElement;
-    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
+    const binding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
 
     expect(output.textContent).toBe('0');
 
@@ -780,7 +780,7 @@ describe('FormNode in Chromium', () => {
         }
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       addresses = array(
@@ -843,7 +843,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-text-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -882,7 +882,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<input [type]="passwordVisible() ? 'text' : 'password'" [formNode]="password">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly password = field.strict('');
@@ -919,7 +919,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<textarea [formNode]="notes"></textarea>`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly notes = field.strict('');
@@ -946,7 +946,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-state-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('', [required]);
@@ -988,7 +988,7 @@ describe('FormNode in Chromium', () => {
         </select>
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly age = field.strict(23);
@@ -1047,7 +1047,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<input type="color" [formNode]="color">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly color = field.strict('#ff0000');
@@ -1072,7 +1072,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<input type="range" [formNode]="amount">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly minimum = signal<number | undefined>(undefined);
@@ -1115,7 +1115,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<input type="datetime-local" [formNode]="appointment">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly appointment = field.strict(initial);
@@ -1144,7 +1144,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-date-model-form-node-host',
       template: `<input type="date" [formNode]="birthday">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly birthday = field.strict(new Date('2024-01-01T12:00:00.000Z'));
@@ -1173,7 +1173,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-date-timestamp-form-node-host',
       template: `<input type="date" [formNode]="birthday">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly birthday = field.strict(initial);
@@ -1213,7 +1213,7 @@ describe('FormNode in Chromium', () => {
         }
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly visible = signal(false);
@@ -1245,7 +1245,7 @@ describe('FormNode in Chromium', () => {
         }
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       selected = field.strict('selected');
@@ -1274,7 +1274,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-debounce-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David', { debounce: 20 });
@@ -1301,7 +1301,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-blur-debounce-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David', { debounce: 'blur' });
@@ -1329,7 +1329,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-parse-form-node-host',
       template: `<input type="text" [formNode]="age">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly age = field.strict(23);
@@ -1373,7 +1373,7 @@ describe('FormNode in Chromium', () => {
         <input data-week type="week" [formNode]="week">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
       providers: [{ provide: CSP_NONCE, useValue: 'test-nonce' }],
     })
     class Host {
@@ -1431,7 +1431,7 @@ describe('FormNode in Chromium', () => {
       template: `<input type="date" [formNode]="date">`,
       standalone: true,
       encapsulation: ViewEncapsulation.ShadowDom,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly date = field.strict('2026-08-29');
@@ -1494,7 +1494,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-cva-form-node-host',
       template: `<browser-cva [formNode]="name" />`,
       standalone: true,
-      imports: [BrowserCva, FormNode],
+      imports: [BrowserCva, FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1563,7 +1563,7 @@ describe('FormNode in Chromium', () => {
         <browser-signal-checkbox-control [formNode]="active" />
       `,
       standalone: true,
-      imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNode],
+      imports: [BrowserSignalValueControl, BrowserSignalCheckboxControl, FormNodeDirective],
     })
     class Host {
       name = field.strict('David', [required]);
@@ -1606,7 +1606,7 @@ describe('FormNode in Chromium', () => {
     expect(valueButton.disabled).toBe(true);
     expect('disabled' in valueHost).toBe(false);
 
-    valueDebugElement.injector.get(FormNode).focus({ preventScroll: true });
+    valueDebugElement.injector.get(FormNodeDirective).focus({ preventScroll: true });
     expect(valueControl.focusOptions).toEqual({ preventScroll: true });
 
     fixture.componentInstance.name.reset();
@@ -1632,7 +1632,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-profile-control-host',
       template: `<browser-profile-control [formNode]="profile" />`,
       standalone: true,
-      imports: [BrowserProfileControl, FormNode],
+      imports: [BrowserProfileControl, FormNodeDirective],
     })
     class Host {
       profile = form({ name: field('David'), age: field(42) });
@@ -1712,7 +1712,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<my-company-selector [formNode]="myForm.company" />`,
       standalone: true,
-      imports: [CompanySelector, FormNode],
+      imports: [CompanySelector, FormNodeDirective],
     })
     class Host {
       myForm = form({
@@ -1855,7 +1855,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<debounced-company-selector [formNode]="myForm.company" />`,
       standalone: true,
-      imports: [CompanySelector, FormNode],
+      imports: [CompanySelector, FormNodeDirective],
     })
     class Host {
       myForm = form({
@@ -1919,7 +1919,7 @@ describe('FormNode in Chromium', () => {
         <rebindable-company-selector [formNode]="selectedCompany()" />
       `,
       standalone: true,
-      imports: [CompanySelector, FormNode],
+      imports: [CompanySelector, FormNodeDirective],
     })
     class Host {
       myForm = form({
@@ -2001,7 +2001,7 @@ describe('FormNode in Chromium', () => {
     @Component({
       template: `<company-cva-selector [formNode]="myForm.company" />`,
       standalone: true,
-      imports: [CompanyCvaSelector, FormNode],
+      imports: [CompanyCvaSelector, FormNodeDirective],
     })
     class Host {
       myForm = form({
@@ -2174,7 +2174,7 @@ describe('FormNode in Chromium', () => {
       selector: 'browser-echoing-cva-host',
       template: `<browser-echoing-cva [formNode]="name" />`,
       standalone: true,
-      imports: [EchoingCva, FormNode],
+      imports: [EchoingCva, FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');

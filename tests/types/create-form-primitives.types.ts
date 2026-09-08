@@ -1,5 +1,5 @@
 import type { Equal, Expect } from './assert.types';
-import { createFormPrimitives, field, type Field, type FormPrimitives } from '../../src/public-api';
+import { createFormPrimitives, field, type FieldNode, type FormPrimitives } from '../../src/public-api';
 
 const nonNullableForms = createFormPrimitives({ nullable: false });
 const nullableForms = createFormPrimitives({ nullable: true });
@@ -19,18 +19,18 @@ const undefinedValue = nonNullableForms.field(undefined);
 const nullValue = nonNullableForms.field(null);
 const omittedNullableName = nonNullableForms.field.nullable<string>();
 
-type _Name = Expect<Equal<typeof name, Field<string>>>;
-type _NullableName = Expect<Equal<typeof nullableName, Field<string | null>>>;
-type _ExplicitName = Expect<Equal<typeof explicitName, Field<string>>>;
-type _EmptyName = Expect<Equal<typeof emptyName, Field<string | null>>>;
-type _ModelNullableName = Expect<Equal<typeof modelNullableName, Field<string | null>>>;
-type _ValidatedName = Expect<Equal<typeof validatedName, Field<string>>>;
-type _ForcedNullableName = Expect<Equal<typeof forcedNullableName, Field<string | null>>>;
-type _ForcedNonNullableName = Expect<Equal<typeof forcedNonNullableName, Field<string>>>;
-type _OmittedValue = Expect<Equal<typeof omittedValue, Field<unknown>>>;
-type _UndefinedValue = Expect<Equal<typeof undefinedValue, Field<unknown>>>;
-type _NullValue = Expect<Equal<typeof nullValue, Field<unknown>>>;
-type _OmittedNullableName = Expect<Equal<typeof omittedNullableName, Field<string | null>>>;
+type _Name = Expect<Equal<typeof name, FieldNode<string>>>;
+type _NullableName = Expect<Equal<typeof nullableName, FieldNode<string | null>>>;
+type _ExplicitName = Expect<Equal<typeof explicitName, FieldNode<string>>>;
+type _EmptyName = Expect<Equal<typeof emptyName, FieldNode<string | null>>>;
+type _ModelNullableName = Expect<Equal<typeof modelNullableName, FieldNode<string | null>>>;
+type _ValidatedName = Expect<Equal<typeof validatedName, FieldNode<string>>>;
+type _ForcedNullableName = Expect<Equal<typeof forcedNullableName, FieldNode<string | null>>>;
+type _ForcedNonNullableName = Expect<Equal<typeof forcedNonNullableName, FieldNode<string>>>;
+type _OmittedValue = Expect<Equal<typeof omittedValue, FieldNode<unknown>>>;
+type _UndefinedValue = Expect<Equal<typeof undefinedValue, FieldNode<unknown>>>;
+type _NullValue = Expect<Equal<typeof nullValue, FieldNode<unknown>>>;
+type _OmittedNullableName = Expect<Equal<typeof omittedNullableName, FieldNode<string | null>>>;
 
 const profile = nonNullableForms.form({
   name: '',

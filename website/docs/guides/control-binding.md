@@ -8,16 +8,16 @@ import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.
 # Control binding {#control-binding}
 
 The [type-checked Angular example](../examples/executable-examples.mdx#angular-binding-and-viewchild)
-covers the standalone directive import, `[formNode]`, `FormNode`, and `viewChild.required()`.
+covers the standalone directive import, `[formNode]`, `FormNodeDirective`, and `viewChild.required()`.
 
-Import `FormNode` and bind a node with `[formNode]`:
+Import `FormNodeDirective` and bind a node with `[formNode]`:
 
 ```ts
 import { Component } from '@angular/core';
-import { FormNode, field } from '@ngblocks/form-nodes';
+import { FormNodeDirective, field } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="name" />`,
 })
 export class Editor {
@@ -81,15 +81,15 @@ Export the directive and query it with Angular's signal-based `viewChild()`:
 
 ```ts
 import { Component, viewChild } from '@angular/core';
-import { FormNode, field } from '@ngblocks/form-nodes';
+import { FormNodeDirective, field } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input #nameBinding="formNode" [formNode]="name" />`,
 })
 export class Editor {
   name = field('');
-  readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
+  readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.name>>('nameBinding');
 
   focusName() {
     this.nameBinding().focus();
@@ -110,9 +110,9 @@ profile.focus();
 
 ## ⚡ Status classes {#status-classes}
 
-If your application uses a shared NgModule, it can import and re-export `FormNode`. Configure
+If your application uses a shared NgModule, it can import and re-export `FormNodeDirective`. Configure
 bindings in either the application providers or `SharedModule.providers`, according to who owns
-the convention. See [Using FormNode through SharedModule](../reference/provide-form-nodes-config.md#using-formnode-through-sharedmodule)
+the convention. See [Using FormNodeDirective through SharedModule](../reference/provide-form-nodes-config.md#using-formnode-through-sharedmodule)
 for complete examples of both approaches and their injector scopes.
 
 Configure reactive classes once in the standalone application providers:
@@ -171,5 +171,5 @@ Initial native and custom-control state renders on the server. Browser-only obse
 See [Custom controls](./custom-controls.md) for component integration.
 For multiple bindings, control-owned error filtering, accessor precedence, and SSR edge cases, see
 [Advanced behavior and edge cases](../advanced/behavior-details.md#multiple-bindings-and-control-owned-errors).
-The [`FormNode` binding reference](../reference/form-node-binding.md) lists its instance API,
+The [`FormNodeDirective` binding reference](../reference/form-node-binding.md) lists its instance API,
 configuration providers, control contracts, pass-through registration, and native form directive.

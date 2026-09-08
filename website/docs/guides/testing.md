@@ -247,19 +247,19 @@ its descendants until that promise settles. See [Form submission](./submission.m
 
 ## 🧪 Test a native [formNode] binding {#test-a-native-formnode-binding}
 
-Use `TestBed` when the behavior starts in the DOM. Import the same standalone `FormNode` directive
+Use `TestBed` when the behavior starts in the DOM. Import the same standalone `FormNodeDirective` directive
 as production code:
 
 ```ts
 import { Component } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { field, FormNode, form } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
 
 describe('profile input', () => {
   it('moves user input into the node and marks it dirty', () => {
     @Component({
-      imports: [FormNode],
+      imports: [FormNodeDirective],
       template: `
         <input [formNode]="profileForm.displayName" />
         <p>{{ profileForm.displayName() }}</p>
@@ -313,7 +313,7 @@ expect(formElement.noValidate).toBe(true);
 expect(saveProfile).toHaveBeenCalled();
 ```
 
-The component needs only `imports: [FormNode]`; the same directive handles the native form and its
+The component needs only `imports: [FormNodeDirective]`; the same directive handles the native form and its
 controls. For reset, verify that the event is prevented, committed values remain unless an explicit
 value is supplied, rendered controls resynchronize, and interaction state clears.
 

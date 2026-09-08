@@ -5,19 +5,35 @@ This document records the behavior currently implemented by the library. It is a
 The package name and public import path are `@ngblocks/form-nodes`. The package rename does not change
 exported symbols, node behavior, or Angular integration contracts.
 
-`isFormNode(value: unknown): value is Node` recognizes every primitive through the existing internal
+The public common node contract is `AnyNode`; concrete model types are `FieldNode<TValue>`,
+`GroupNode<TChildren>`, `FormNode<TChildren>`, and `ArrayNode<TItem>`. The generic category views
+`AnyFieldNode`, `AnyGroupNode`, `AnyFormNode`, and `AnyArrayNode` erase value/child detail while
+retaining category operations, including nested nodes with ancestors of a different category.
+Unknown form/group children do not become statically declared properties: generic consumers
+use `$api` to avoid child-name collisions. `AnyFormNode` refers only to the `form()` primitive.
+These type names change no runtime state, validation, propagation, or factory inference.
+
+`FormNodeDirective` names the standalone `[formNode]` directive and its public binding view.
+`FormNodesModule` imports and exports that directive for standalone and NgModule consumers.
+It adds no providers, global configuration, validation rules, or interaction behavior. There is
+currently no error-display component in the module. This change continues to use the inspected
+Angular `22.1.x` reference at `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`, including Signal Forms
+`src/api/types.ts`, `src/api/assertions.ts`, and `test/web/assertions.spec.ts`; public type names
+and the optional Angular module are this library's design choices.
+
+`isFormNode(value: unknown): value is AnyNode` recognizes every primitive through the existing internal
 node marker, including nested, configured, and detached nodes. It does not call the candidate,
 read signal state, track dependencies, trigger validation, or change interaction or parent state,
 and requires no injection context. Ordinary Angular signals, node API objects, plain objects, and
 unmarked functions return false. The marker is local to a loaded package instance; separately
-loaded copies do not share recognition. Narrowing exposes the shared `Node` contract, not a
+loaded copies do not share recognition. Narrowing exposes the shared `AnyNode` contract, not a
 specific primitive or value type.
 
 The identity-check reference inspected for this helper is Angular maintenance branch `22.1.x`,
 commit `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`:
 `packages/forms/signals/src/api/assertions.ts`, `src/api/symbols.ts`, `src/field/proxy.ts`, and
 `test/web/assertions.spec.ts`. Angular likewise checks a function's internal marker and rejects
-ordinary signals. Form Nodes retains its own marker and `Node` contract rather than recognizing
+ordinary signals. Form Nodes retains its own marker and `AnyNode` contract rather than recognizing
 Angular `FieldTree` values; no state transition or propagation behavior changes.
 
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.5` at commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
@@ -154,10 +170,10 @@ array templates or factories. An explicit `field.strict()` or `field.nullable()`
 node attached to a configured form retains the policy of the factory that originally created it.
 
 In a non-nullable factory set, an untyped `field()`, `field(null)`, or `field(undefined)` returns
-`Field<unknown>` because no concrete initial value exists to infer a future type. An omitted value
+`FieldNode<unknown>` because no concrete initial value exists to infer a future type. An omitted value
 starts at `null`; an explicit `undefined` is preserved. A typed `field<T>()` still requires an
 initial value. Consumers can instead declare `field.nullable<T>()` to start at `null` with type
-`Field<T | null>`.
+`FieldNode<T | null>`.
 
 This initialization convenience belongs to Form Nodes' API. Angular v22.1.5 requires an existing model
 signal in `packages/forms/signals/src/api/structure.ts`, passed through by
@@ -218,8 +234,8 @@ errors: Signal<readonly ValidationError[]>;
 
 The package exports:
 
-- `field()` and the `Field`, `FieldApi`, and `FieldOptions` types.
-- `form()` and the `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormValueContract`, `FormSet`, and
+- `field()` and the `FieldNode`, `FieldApi`, and `FieldOptions` types.
+- `form()` and the `FormNode`, `FormApi`, `FormOptions`, `FormValue`, `FormValueContract`, `FormSet`, and
   `FormPatch` types.
 - `FormNodeValue<TNode>` for extracting the committed value type of any form, group, array, or field.
 - The `ValidationError`, `ValidationResult`, `ValidationSuccess`, `ValidationStatus`, `Validator`, and `Validators` types.
@@ -243,10 +259,10 @@ const age = field<number>(23);
 const optionalName = field<string>();
 ```
 
-Fields are nullable by default. The examples above have types `Field<string | null>`, `Field<number | null>`, and `Field<string | null>`. A field created without a value starts at `null`.
+Fields are nullable by default. The examples above have types `FieldNode<string | null>`, `FieldNode<number | null>`, and `FieldNode<string | null>`. A field created without a value starts at `null`.
 
 A field created from the literal `null` or `undefined` without an explicit generic is inferred as
-`Field<unknown>`. Their runtime values remain distinct: `null` stays `null`, while an explicitly
+`FieldNode<unknown>`. Their runtime values remain distinct: `null` stays `null`, while an explicitly
 provided `undefined` stays `undefined`:
 
 ```ts
@@ -525,7 +541,7 @@ owns an independent submission workflow.
 Inside `form()` and `group()` definitions, strings, numbers, booleans, bigints, symbols, `Date`
 instances, `null`, and `undefined` are shorthand for `field(initialValue)`. Primitive literal types
 are widened in the same way as a direct `field()` call. `null` and `undefined` produce
-`Field<unknown>`, and each shorthand preserves its `null` or `undefined` runtime value. Every array is
+`FieldNode<unknown>`, and each shorthand preserves its `null` or `undefined` runtime value. Every array is
 also an implicit field, including empty arrays, populated arrays, readonly tuples, nested arrays,
 and arrays of plain objects. A mutable empty-array shorthand widens from `never[]` to `unknown[]`,
 while an empty readonly tuple widens to `readonly unknown[]`; consumers can use an explicit
@@ -585,7 +601,7 @@ Changes to any descendant are reflected reactively in every ancestor value.
 - Field value types are inferred from their initial values or explicit generic arguments.
 - Form and group value types are recursively inferred from their descendants.
 - Concise field definitions infer the same widened nullable type as their equivalent `field()` call;
-  literal `null` and `undefined` infer `Field<unknown>`.
+  literal `null` and `undefined` infer `FieldNode<unknown>`.
 - Shorthand objects infer the same values and nested field access as explicit groups.
 - Validators receive a `FieldContext` whose `value` signal contains the inferred node value.
 - `set()` and `reset(value)` require complete values at compile time.
@@ -877,7 +893,7 @@ ValidationErrorWithoutTargetNode
 ValidatorError<TNode>
 ```
 
-Field errors use their `Field<TValue>` as the target type. Form errors use their complete `Form<TNodes>` as the target type. A form, group, or other aggregate validator may explicitly return a descendant in `targetNode` for a cross-field rule. The internal defaulting operation preserves that target; otherwise it assigns the validated node. `formNode` remains reserved for errors produced by concrete rendered bindings.
+Field errors use their `FieldNode<TValue>` as the target type. Form errors use their complete `FormNode<TNodes>` as the target type. A form, group, or other aggregate validator may explicitly return a descendant in `targetNode` for a cross-field rule. The internal defaulting operation preserves that target; otherwise it assigns the validated node. `formNode` remains reserved for errors produced by concrete rendered bindings.
 
 This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but is named `targetNode` to match this library's field-and-form node model. An error produced by a concrete control binding may additionally expose `formNode: FormNodeBinding`. Node validators leave this property absent because their errors belong to the node rather than to one rendered control.
 
@@ -1096,7 +1112,7 @@ inside `params`, while their `validate` callback remains untracked.
 
 Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Validator callbacks access the same reactive path through either `context.path()` or `context.node().api.path()`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
 
-Every API also exposes `parent: Signal<Node | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `Node | null` parent type even after being inserted into a form; access through the form provides the refined type.
+Every API also exposes `parent: Signal<AnyNode | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `AnyNode | null` parent type even after being inserted into a form; access through the form provides the refined type.
 
 Nodes returned by the common validator API's `parent()`, `form()`, and `root()` remain callable, but native JavaScript function members such as `apply`, `bind`, `call`, `name`, and `prototype` are intentionally hidden from the public type and IntelliSense. Exact node return types apply the same hiding while preserving form keys that intentionally use one of those names.
 
@@ -1156,7 +1172,7 @@ reuses its existing `node` signal when synchronous and asynchronous validation s
 
 Structural-root type resolution follows at most ten parent links. This limit affects TypeScript
 inference only: paths within ten levels retain the exact root type, while deeper paths safely fall
-back to `Node`. Runtime traversal remains correct and has no depth limit. Nearest-form inference
+back to `AnyNode`. Runtime traversal remains correct and has no depth limit. Nearest-form inference
 uses the form type exposed by the immediate parent and preserves explicit nested workflow boundaries.
 
 This ownership split is library-specific. Angular 22.1.5 Signal Forms, inspected at tag `22.1.5`
@@ -1895,7 +1911,7 @@ on which that reason originated and can include a user-facing message:
 
 ```ts
 type DisabledReason = {
-  readonly sourceNode: Node;
+  readonly sourceNode: AnyNode;
   readonly message?: string;
 };
 ```
@@ -2339,7 +2355,7 @@ Calling `submit()` on a form without a configured action is non-destructive: it 
 the subtree and resolves to `false`. It does not throw. This keeps an explicit `form()` usable where
 a structural `group()` would also have been sufficient.
 
-`FormNode` also binds this behavior when its `[formNode]` host is a native form:
+`FormNodeDirective` also binds this behavior when its `[formNode]` host is a native form:
 
 ```html
 <form [formNode]="profile">
@@ -2363,7 +2379,7 @@ Submission gating, inherited state, and concurrency were inspected against Angul
 `packages/forms/signals/`. The public API intentionally uses flat form options, a value-first
 callback, and explicit gate names: `'valid'`, `'not-invalid'` (default), and `'all'`.
 Unlike Angular, a missing action returns `false` after touching/flushing rather than throwing;
-returned server-validation errors are not interpreted. Form Nodes uses one `FormNode` directive.
+returned server-validation errors are not interpreted. Form Nodes uses one `FormNodeDirective` directive.
 
 `onSubmitBlocked` runs synchronously and untracked only when the validation gate rejects the
 attempt, including pending validation with `'valid'`. Pending validation is not awaited and does
@@ -2383,13 +2399,13 @@ Form Nodes binds its own nodes through `[formNode]`. The `$field` adapter has be
 `useFormNodeState()` still observes independently created Angular Signal Forms through `[formField]`;
 it does not create or synchronize a second Angular form tree for Form Nodes nodes.
 
-`FormNode` binds a field node to a native form control, and binds field, group, form, or array nodes
+`FormNodeDirective` binds a field node to a native form control, and binds field, group, form, or array nodes
 to an explicitly provided signal custom control or a component that implements Angular's
 `ControlValueAccessor` contract:
 
 ```ts
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input [formNode]="name">
     <select [formNode]="country">
@@ -2640,17 +2656,17 @@ The directive currently provides these behaviors:
 - Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
 - In development, `[formNode]` warns whenever its bound field is hidden while the control remains rendered. The warning identifies the reactive field path, using `<root>` for a standalone root field. `hidden` is form state and does not manipulate DOM visibility: templates should remove hidden controls with `@if`. No warning is installed in production.
 
-### Importing `FormNode`
+### Importing `FormNodeDirective`
 
-Import the capitalized `FormNode` symbol from the package entry point and add it to the component's `imports`. The template binding remains the lower-camel-case `[formNode]` input:
+Import the capitalized `FormNodeDirective` symbol from the package entry point and add it to the component's `imports`. The template binding remains the lower-camel-case `[formNode]` input:
 
 ```ts
 import { Component } from '@angular/core';
 
-import { field, FormNode } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="name">`,
 })
 class ProfileEditor {
@@ -2658,24 +2674,24 @@ class ProfileEditor {
 }
 ```
 
-`FormNode` deliberately serves two TypeScript namespaces: it is the Angular directive value used in `imports`, and it is the clean generic instance type used by queries. Applications should import neither `_FormNode` nor a deep path beneath the package entry point.
+`FormNodeDirective` deliberately serves two TypeScript namespaces: it is the Angular directive value used in `imports`, and it is the clean generic instance type used by queries. Applications should import neither `_FormNode` nor a deep path beneath the package entry point.
 
 ### Querying a binding with `viewChild()`
 
-Assign the directive's `formNode` export to a template reference, then query that reference by name with the signal-based `viewChild.required()` API. Parameterize `FormNode` with the exact node type to preserve the field, form, or array returned by `node()` without exposing Angular lifecycle and input infrastructure:
+Assign the directive's `formNode` export to a template reference, then query that reference by name with the signal-based `viewChild.required()` API. Parameterize `FormNodeDirective` with the exact node type to preserve the field, form, or array returned by `node()` without exposing Angular lifecycle and input infrastructure:
 
 ```ts
 import { Component, viewChild } from '@angular/core';
 
-import { field, FormNode } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input #nameBinding="formNode" [formNode]="name">`,
 })
 class ProfileEditor {
   name = field.strict('');
-  readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('nameBinding');
+  readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.name>>('nameBinding');
 
   focusName() {
     const binding = this.nameBinding();
@@ -2688,9 +2704,9 @@ class ProfileEditor {
 
 The three related names have distinct roles:
 
-- `FormNode` is the imported Angular directive value and its public instance type.
+- `FormNodeDirective` is the imported Angular directive value and its public instance type.
 - `[formNode]` binds a field, form, or array node to the control.
-- `#nameBinding="formNode"` exports that concrete binding to the template; `nameBinding` is the local reference queried by `viewChild.required<FormNode<...>>('nameBinding')`.
+- `#nameBinding="formNode"` exports that concrete binding to the template; `nameBinding` is the local reference queried by `viewChild.required<FormNodeDirective<...>>('nameBinding')`.
 
 The resulting query is a signal. Calling `nameBinding()` returns the binding; calling its `node()` signal returns the currently bound node. The remaining public binding API is `errors`, `element`, `injector`, `focus()`, `flush()`, and `reset()`.
 

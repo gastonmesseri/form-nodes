@@ -1,7 +1,7 @@
 import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { min, form, field, group, array, required, requiredIf, asyncValidator, createFormPrimitives, type Node, type Field, type DynamicNode, type FieldContext, type ValidatorApi, type ValidatorContext, type FormValueContract, type ComposableValidator, type ValidationErrorWithTargetNode } from './public-api';
+import { min, form, field, group, array, required, requiredIf, asyncValidator, createFormPrimitives, type AnyNode, type FieldNode, type DynamicNode, type FieldContext, type ValidatorApi, type ValidatorContext, type FormValueContract, type ComposableValidator, type ValidationErrorWithTargetNode } from './public-api';
 
 describe('types', () => {
   it('exposes configured form primitive factories', () => {
@@ -198,8 +198,8 @@ describe('types', () => {
   });
 
   it('does not expose internal parent mutation through Node', () => {
-    type ExposesSetParent = '_setParent' extends keyof Node['$api'] ? true : false;
-    type ExposesClone = '_clone' extends keyof Node['$api'] ? true : false;
+    type ExposesSetParent = '_setParent' extends keyof AnyNode['$api'] ? true : false;
+    type ExposesClone = '_clone' extends keyof AnyNode['$api'] ? true : false;
 
     expectTypeOf<ExposesSetParent>().toEqualTypeOf<false>();
     expectTypeOf<ExposesClone>().toEqualTypeOf<false>();
@@ -525,13 +525,13 @@ describe('types', () => {
   it('types validators inside field options', () => {
     field.strict('David', {
       validators: [(context) => {
-        expectTypeOf(context).toEqualTypeOf<ValidatorContext<string, ValidatorApi<string>, Field<string>>>();
+        expectTypeOf(context).toEqualTypeOf<ValidatorContext<string, ValidatorApi<string>, FieldNode<string>>>();
         expectTypeOf(context.value()).toEqualTypeOf<string>();
-        expectTypeOf(context.node().api).toEqualTypeOf<Field<string>['api']>();
+        expectTypeOf(context.node().api).toEqualTypeOf<FieldNode<string>['api']>();
         expectTypeOf(context.node().api.value()).toEqualTypeOf<string>();
         expectTypeOf(context.node().api.path()).toEqualTypeOf<readonly string[]>();
-        expectTypeOf(context.field).toEqualTypeOf<Signal<Field<string>>>();
-        expectTypeOf(context.node()).toEqualTypeOf<Field<string>>();
+        expectTypeOf(context.field).toEqualTypeOf<Signal<FieldNode<string>>>();
+        expectTypeOf(context.node()).toEqualTypeOf<FieldNode<string>>();
         expectTypeOf(context.path()).toEqualTypeOf<readonly string[]>();
         expectTypeOf(context.node().disabled()).toEqualTypeOf<boolean>();
         return null;

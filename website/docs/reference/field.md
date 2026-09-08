@@ -47,7 +47,7 @@ const myForm = form({
 | Change or reset its value | `set()`, `update()`, `reset()` | [Method reference](#method-reference) |
 | Inspect errors or constraints | `errors()`, `getError()`, `required()`, `min()` | [Validation properties](#validation-properties) |
 | Manage touched, dirty, or availability | State signals and marker methods | [Interaction](#interaction-properties) and [availability](#availability-properties) |
-| Connect it to an Angular control | `FormNode`, `[formNode]` | [Binding in Angular](#binding-in-angular) |
+| Connect it to an Angular control | `FormNodeDirective`, `[formNode]` | [Binding in Angular](#binding-in-angular) |
 
 ## 📚 Fields can hold arrays and objects {#fields-can-hold-arrays-and-objects}
 
@@ -150,15 +150,15 @@ myForm.unspecified.set(42);
 ```
 
 With an explicit generic, `field<T>(undefined)` includes both the default nullable value and the
-explicit initial value, producing `Field<T | null | undefined>`.
+explicit initial value, producing `FieldNode<T | null | undefined>`.
 
 The same distinction applies to an untyped `field()` from
-`createFormPrimitives({ nullable: false })`: it returns `Field<unknown>` initialized to `null`.
+`createFormPrimitives({ nullable: false })`: it returns `FieldNode<unknown>` initialized to `null`.
 For a known future type without an initial value, use that factory's `field.nullable<T>()`.
 
 <CodeBlock language="ts" title="undefined-field.example.ts">{undefinedFieldSource}</CodeBlock>
 
-Use an explicit generic when the domain type is known. Although `Field<unknown>` accepts `null`,
+Use an explicit generic when the domain type is known. Although `FieldNode<unknown>` accepts `null`,
 TypeScript displays it as `unknown` because `unknown | null` simplifies to `unknown`; reads must be
 narrowed before use and therefore do not acquire `any`-like behavior.
 
@@ -262,7 +262,7 @@ supply a new value when editing structured data.
 
 #### ✅ validators {#field-validators-option}
 
-**Signature:** `validators?: ValidatorSource<TValue, Field<TValue>>`
+**Signature:** `validators?: ValidatorSource<TValue, FieldNode<TValue>>`
 
 Assigns one validator, several validators, or a reactive validator source to this field.
 
@@ -510,7 +510,7 @@ username.nodeType(); // 'field'
 
 #### 🧩 form() {#form}
 
-**Signature:** `form: Signal<Form | null>`
+**Signature:** `form: Signal<FormNode | null>`
 
 Returns the nearest explicit `form()` containing the field, or `null` when the field belongs only
 to a standalone `group()` or `array()`, or is itself standalone. A nested explicit form owns its
@@ -1075,7 +1075,7 @@ Focuses the first `[formNode]` control bound to the field in DOM order. It forwa
 
 #### ✅ setValidators() {#setvalidators}
 
-**Signature:** `setValidators(validators: ValidatorSource<TValue, Field<TValue>>): void`
+**Signature:** `setValidators(validators: ValidatorSource<TValue, FieldNode<TValue>>): void`
 
 Replaces the field's validator source and immediately validates the current committed value. The
 source may itself be reactive.
@@ -1248,11 +1248,11 @@ username.visible(); // true
 
 ```ts
 import { Component } from '@angular/core';
-import { field, form, FormNode } from '@ngblocks/form-nodes';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="myForm.name" />`,
 })
 export class ProfileEditor {

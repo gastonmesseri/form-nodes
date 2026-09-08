@@ -1,12 +1,12 @@
 import type { Provider } from '@angular/core';
 
 import type { Equal, Expect, HasKey } from './assert.types';
-import { FormNode, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, configureGlobalFormNodes, type GlobalFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
+import { FormNodeDirective, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, configureGlobalFormNodes, type GlobalFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
 
 const name = field.strict('David');
 const configuredForms: FormPrimitives<false> = createFormPrimitives({ nullable: false } satisfies FormPrimitivesOptions<false>);
 declare const nameBinding: FormNodeBinding<typeof name>;
-declare const nameDirective: FormNode<typeof name>;
+declare const nameDirective: FormNodeDirective<typeof name>;
 
 type _BindingNode = Expect<Equal<ReturnType<typeof nameBinding.node>, typeof name>>;
 type _DirectiveNode = Expect<Equal<ReturnType<typeof nameDirective.node>, typeof name>>;

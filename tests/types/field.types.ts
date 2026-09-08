@@ -1,4 +1,4 @@
-import { field, type DisabledReason, type FieldApi, type Node } from '../../src/public-api';
+import { field, type DisabledReason, type FieldApi, type AnyNode } from '../../src/public-api';
 
 field('', { debounce: 'blur' });
 field('', { debounce: async abortSignal => { void abortSignal.aborted; } });

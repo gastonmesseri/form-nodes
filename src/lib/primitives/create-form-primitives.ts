@@ -1,8 +1,8 @@
 import { field } from './field';
 import { array } from './array';
 import { isNode } from './utils/node-marker';
-import type { Node } from '../types/node.type';
 import type { FieldOptions } from './field.type';
+import type { AnyNode } from '../types/node.type';
 import { createFormGroupNode } from './form-group-node';
 import { isPlainObject } from '../utils/is-plain-object';
 import type { ValidatorSource } from '../validation/validation.type';
@@ -54,7 +54,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       adoptBindingInjector: (nodeOptions as FieldOptions | undefined)?.adoptBindingInjector ?? defaultNodeOptions.adoptBindingInjector,
     } as TOptions;
   };
-  const registerDefaults = <TNode extends Node>(node: TNode): TNode => {
+  const registerDefaults = <TNode extends AnyNode>(node: TNode): TNode => {
     registerNodeDefaultValidatorMessages(node, options.validatorMessages);
     return node;
   };
@@ -63,8 +63,8 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
     const validatorsOrOptions = args[1] as ValidatorSource<unknown> | FieldOptions<unknown> | undefined;
     const separateOptions = args[2] as FieldOptions<unknown> | undefined;
     const createField = value === null || value === undefined || defaultNullable
-      ? field.nullable as (...args: any[]) => Node
-      : field.strict as (...args: any[]) => Node;
+      ? field.nullable as (...args: any[]) => AnyNode
+      : field.strict as (...args: any[]) => AnyNode;
     if (isValidatorSource(validatorsOrOptions) || validatorsOrOptions === undefined) {
       return registerDefaults(createField(value, validatorsOrOptions, mergeNodeOptions(separateOptions)));
     }
@@ -84,14 +84,14 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       : registerDefaults(field.nullable(value as never, mergeNodeOptions(validatorsOrOptions as object | undefined) as never));
   }) as unknown as FormPrimitives<TNullable>['field']['nullable'];
 
-  const normalizeDefinition = (definition: unknown): Node => {
+  const normalizeDefinition = (definition: unknown): AnyNode => {
     if (isNode(definition)) return definition;
-    if (Array.isArray(definition)) return configuredField(definition as never) as Node;
+    if (Array.isArray(definition)) return configuredField(definition as never) as AnyNode;
     if (definition !== null && typeof definition === 'object') {
-      if (definition instanceof Date) return configuredField(definition as never) as Node;
-      if (isPlainObject(definition)) return configuredGroup(definition as ObjectNodeDefinitions) as Node;
+      if (definition instanceof Date) return configuredField(definition as never) as AnyNode;
+      if (isPlainObject(definition)) return configuredGroup(definition as ObjectNodeDefinitions) as AnyNode;
     }
-    return configuredField(definition as never) as Node;
+    return configuredField(definition as never) as AnyNode;
   };
 
   const configuredForm = ((
@@ -155,7 +155,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       || (Array.isArray(args[0]) && (!secondIsValidators || thirdIsValidators || args[2] !== undefined));
     const optionsIndex = hasInitial ? (thirdIsValidators ? 2 : 1) : (secondIsValidators ? 1 : 0);
     args[optionsIndex] = mergeNodeOptions(args[optionsIndex] as object | undefined);
-    return registerDefaults((array as (...arrayArgs: any[]) => Node)(configuredSource, ...args));
+    return registerDefaults((array as (...arrayArgs: any[]) => AnyNode)(configuredSource, ...args));
   }) as unknown as FormPrimitives<TNullable>['array'];
 
   return {

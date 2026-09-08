@@ -17,7 +17,7 @@ enableProdMode();
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
-describe('FormNode production AOT discovery in Chromium', () => {
+describe('FormNodeDirective production AOT discovery in Chromium', () => {
   it('silences library warnings while preserving ignored-input and reset behavior in production', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {

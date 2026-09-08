@@ -107,7 +107,7 @@ settings(); // { readonly: false, value: 'domain value' }
 Generic code can use `.api` without first narrowing the node kind:
 
 ```ts
-const isNodeValid = (node: Node): boolean => {
+const isNodeValid = (node: AnyNode): boolean => {
   return node.api.valid();
 };
 ```
@@ -185,7 +185,7 @@ properties. This applies to synchronous validators and every `asyncValidator()` 
 
 ### 🔸 Inline node inference {#inline-node-inference}
 
-An inline validator knows the primitive being created. A field validator receives `Field<TValue>`;
+An inline validator knows the primitive being created. A field validator receives `FieldNode<TValue>`;
 a form or group validator retains its declared children; an array validator retains its item type.
 This works for positional validators, `options.validators`, configured primitives, and inline
 `validator()` / `asyncValidator()` helpers. Omit helper type arguments to let the enclosing

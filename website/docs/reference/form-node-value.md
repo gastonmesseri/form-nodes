@@ -36,7 +36,7 @@ value type recursively:
 ## 📐 Signature and scope {#signature-and-scope}
 
 ```ts
-type FormNodeValue<TNode extends Node> = ReturnType<TNode>;
+type FormNodeValue<TNode extends AnyNode> = ReturnType<TNode>;
 ```
 
 Pass the type of an existing node instance. Standalone nodes, nested nodes, and array items are

@@ -1,6 +1,6 @@
 import { Component, input, model } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
-import { FormNode, field, form, useFormNodeState, required, minLength } from '@ngblocks/form-nodes';
+import { FormNodeDirective, field, form, useFormNodeState, required, minLength } from '@ngblocks/form-nodes';
 
 // text-input.component.ts
 @Component({
@@ -39,7 +39,7 @@ export class MyTextInput implements FormValueControl<string> {
 
 // profile-editor.component.ts
 @Component({
-  imports: [FormNode, MyTextInput],
+  imports: [FormNodeDirective, MyTextInput],
   template: `<app-text-input label="Name" [formNode]="profile.name" />`,
 })
 export class ProfileEditor {

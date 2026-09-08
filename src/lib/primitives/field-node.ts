@@ -5,7 +5,6 @@ import { markAsNode } from './utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { computedFunction } from '../utils/computed-function';
-import type { Field, FieldApi, FieldOptions } from './field.type';
 import { createValidatorQuery } from '../validation/validator-query';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
@@ -20,26 +19,27 @@ import { normalizeValidatorSource } from '../validation/utils/validator-source';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
+import type { FieldNode as PublicFieldNode, FieldApi, FieldOptions } from './field.type';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding } from '../types/node.type';
+import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, AnyNode, NodeControlBinding } from '../types/node.type';
 import type { FieldContext, ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from './utils/disabled-reasons';
 import { MAX_DATE_METADATA, MAX_LENGTH_METADATA, MAX_METADATA, MIN_DATE_METADATA, MIN_LENGTH_METADATA, MIN_METADATA, PATTERN_METADATA } from '../validation/constraint-metadata';
 
 export function createFieldNode<TValue>(
   initialValue: TValue,
-  validatorSource: ValidatorSource<TValue, Field<TValue>>,
+  validatorSource: ValidatorSource<TValue, PublicFieldNode<TValue>>,
   options?: FieldOptions<TValue>,
-): Field<TValue> {
+): PublicFieldNode<TValue> {
   return new FieldNode<TValue>(initialValue, validatorSource, options).getNode();
 }
 
 /** Owns a field's state while exposing the existing callable node and API objects. */
 export class FieldNode<TValue> {
-  node: Field<TValue>;
+  node: PublicFieldNode<TValue>;
 
   cloneOptions: FieldOptions<TValue> | undefined;
 
@@ -61,13 +61,13 @@ export class FieldNode<TValue> {
 
   metadata: ReturnType<typeof createNodeMetadata>;
 
-  asyncValidation: ReturnType<typeof createAsyncValidation<TValue, Field<TValue>>>;
+  asyncValidation: ReturnType<typeof createAsyncValidation<TValue, PublicFieldNode<TValue>>>;
 
   asyncValidationWatchTarget: ReactiveWatchTarget | null = null;
 
   asyncValidationWatchRef: ReactiveWatchRef | null = null;
 
-  parent = signal<Node | null>(null);
+  parent = signal<AnyNode | null>(null);
 
   keyInParent = signal<string | number | null>(null);
 
@@ -224,7 +224,7 @@ export class FieldNode<TValue> {
 
   constructor(
     public initialValue: TValue,
-    public initialValidatorSource: ValidatorSource<TValue, Field<TValue>>,
+    public initialValidatorSource: ValidatorSource<TValue, PublicFieldNode<TValue>>,
     public options?: FieldOptions<TValue>,
   ) {
     this.cloneOptions = this.options === undefined ? undefined : { ...this.options };
@@ -318,7 +318,7 @@ export class FieldNode<TValue> {
     if (this.debounceStrategy === 'blur') this.commitControlValue();
   }
 
-  setValidators(next: ValidatorSource<TValue, Field<TValue>>) {
+  setValidators(next: ValidatorSource<TValue, PublicFieldNode<TValue>>) {
     this.validators.set(normalizeValidatorSource(next));
     this.ensureAsyncValidationWatch();
   }
@@ -336,7 +336,7 @@ export class FieldNode<TValue> {
     watchNodeInjector(this.node, injector => this.asyncValidationWatchRef?.setInjector(injector));
   }
 
-  setParent(parent: Node | null, key?: string) {
+  setParent(parent: AnyNode | null, key?: string) {
     this.parent.set(parent);
     this.keyInParent.set(parent ? key ?? null : null);
     refreshNodeInjector(this.node);
@@ -404,7 +404,7 @@ export class FieldNode<TValue> {
     return () => new FieldNode<TValue>(initialValue, initialValidatorSource, cloneOptions).getNode();
   }
 
-  createNode(): Field<TValue> {
+  createNode(): PublicFieldNode<TValue> {
     const publicApi: FieldApi<TValue> = {
       nodeType: () => 'field' as const,
       form: this.form,
@@ -423,7 +423,7 @@ export class FieldNode<TValue> {
       focus: (options?: FocusOptions) => this.getControlBindingForFocus()?.focus(options),
       reset: (...args: [] | [value: TValue]) => this.reset(...args),
       validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
-      setValidators: (next: ValidatorSource<TValue, Field<TValue>>) => this.setValidators(next),
+      setValidators: (next: ValidatorSource<TValue, PublicFieldNode<TValue>>) => this.setValidators(next),
       errors: this.errors,
       allErrors: this.errors,
       valid: this.valid,
@@ -471,7 +471,7 @@ export class FieldNode<TValue> {
       _setControlValue: publicApi.setControlValue,
       _flushControlValueOnBlur: () => this.flushControlValueOnBlur(),
       _clone: this.createClone(),
-      _setParent: (parent: Node | null, key?: string) => this.setParent(parent, key),
+      _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => refreshNodeInjector(this.node),
       _registerControlBinding: (binding: NodeControlBinding) => this.registerControlBinding(binding),
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),
@@ -480,6 +480,6 @@ export class FieldNode<TValue> {
     return Object.defineProperties(
       this.exposedValue,
       Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, $api: internalApi }),
-    ) as Field<TValue>;
+    ) as PublicFieldNode<TValue>;
   }
 }

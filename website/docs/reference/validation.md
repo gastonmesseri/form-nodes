@@ -219,7 +219,7 @@ Import error types directly from `@ngblocks/form-nodes`:
 | `ValidationErrorWithOptionalTargetNode<TNode>` | Error with an optional target and binding reference |
 | `ValidationErrorWithoutTargetNode` | Error without a target or binding reference |
 
-The generic target defaults to `Node` for `ValidatorError` and `unknown` for the other target
+The generic target defaults to `AnyNode` for `ValidatorError` and `unknown` for the other target
 variants. `ValidationResult` describes accepted callback results, including message strings;
 `ValidationError` and its variants describe error objects.
 

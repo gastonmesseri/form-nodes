@@ -1,6 +1,6 @@
 import { Injector, assertInInjectionContext, inject } from '@angular/core';
 
-import type { InternalNode, Node } from '../types/node.type';
+import type { InternalNode, AnyNode } from '../types/node.type';
 
 type NodeInjectorConfig = {
   readonly adoptBinding: boolean;
@@ -8,9 +8,9 @@ type NodeInjectorConfig = {
   readonly own: Injector | undefined;
 };
 
-const configs = new WeakMap<Node, NodeInjectorConfig>();
-const bindingInjectors = new WeakMap<Node, Map<object, Injector>>();
-const listeners = new WeakMap<Node, Set<(injector: Injector | undefined) => void>>();
+const configs = new WeakMap<AnyNode, NodeInjectorConfig>();
+const bindingInjectors = new WeakMap<AnyNode, Map<object, Injector>>();
+const listeners = new WeakMap<AnyNode, Set<(injector: Injector | undefined) => void>>();
 
 const getCurrentInjector = (): Injector | undefined => {
   try {
@@ -22,7 +22,7 @@ const getCurrentInjector = (): Injector | undefined => {
 };
 
 export const registerNodeInjector = (
-  node: Node,
+  node: AnyNode,
   injector: Injector | undefined,
   inherit: boolean,
   adoptBinding: boolean,
@@ -30,8 +30,8 @@ export const registerNodeInjector = (
   configs.set(node, { own: injector ?? getCurrentInjector(), inherit, adoptBinding });
 };
 
-export const resolveNodeInjector = (node: Node): Injector | undefined => {
-  let current: Node | null = node;
+export const resolveNodeInjector = (node: AnyNode): Injector | undefined => {
+  let current: AnyNode | null = node;
   while (current) {
     const config = configs.get(current);
     if (config?.own) return config.own;
@@ -40,13 +40,13 @@ export const resolveNodeInjector = (node: Node): Injector | undefined => {
       if (bindingInjector) return bindingInjector;
     }
     if (config && !config.inherit) return undefined;
-    current = ((current as InternalNode).$api as unknown as { parent: () => Node | null }).parent();
+    current = ((current as InternalNode).$api as unknown as { parent: () => AnyNode | null }).parent();
   }
   return undefined;
 };
 
 export const watchNodeInjector = (
-  node: Node,
+  node: AnyNode,
   listener: (injector: Injector | undefined) => void,
 ): (() => void) => {
   let nodeListeners = listeners.get(node);
@@ -59,11 +59,11 @@ export const watchNodeInjector = (
   return () => { nodeListeners.delete(listener); };
 };
 
-export const refreshNodeInjector = (node: Node) => {
+export const refreshNodeInjector = (node: AnyNode) => {
   listeners.get(node)?.forEach(listener => listener(resolveNodeInjector(node)));
 };
 
-export const registerNodeBindingInjector = (node: Node, injector: Injector): (() => void) => {
+export const registerNodeBindingInjector = (node: AnyNode, injector: Injector): (() => void) => {
   let nodeBindings = bindingInjectors.get(node);
   if (!nodeBindings) {
     nodeBindings = new Map();

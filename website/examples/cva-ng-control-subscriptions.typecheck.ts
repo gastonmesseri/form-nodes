@@ -1,6 +1,6 @@
 import { startWith } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormNode, field, form, required } from '@ngblocks/form-nodes';
+import { FormNodeDirective, field, form, required } from '@ngblocks/form-nodes';
 import { Component, DestroyRef, Injector, forwardRef, inject, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, NgControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 
@@ -46,7 +46,7 @@ export class LegacyTextControl implements ControlValueAccessor {
 }
 
 @Component({
-  imports: [FormNode, LegacyTextControl],
+  imports: [FormNodeDirective, LegacyTextControl],
   template: `<app-legacy-text-control [formNode]="myForm.username" />`,
 })
 export class ProfileEditor {

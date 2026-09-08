@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { field, FormNode, group } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective, group } from '@ngblocks/form-nodes';
 
 declare function loadProducts(filters: { query: string | null; category: string | null }): void;
 
 @Component({
   selector: 'app-product-filters',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <form [formNode]="filters">
       <input [formNode]="filters.query" placeholder="Search products" />

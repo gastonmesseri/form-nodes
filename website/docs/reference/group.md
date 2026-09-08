@@ -139,7 +139,7 @@ address.postcode(); // 8000
 ```
 
 This shorthand is especially convenient and unambiguous for strings, numbers, booleans, dates,
-and arrays used as one control value. Every array becomes a `Field`, regardless of whether it is
+and arrays used as one control value. Every array becomes a `FieldNode`, regardless of whether it is
 empty or what its items contain. Declare `array(...)` explicitly when the items need their own
 nodes, validation, interaction state, or structural operations. An empty `[]` shorthand widens to
 `unknown[]`; use `field<Item[]>([])` when the eventual item type is known.
@@ -170,7 +170,7 @@ const profile = group({
 });
 ```
 
-If a plain `company` object is inferred as a `Group`, `[formNode]` binding still works. Aggregate
+If a plain `company` object is inferred as a `GroupNode`, `[formNode]` binding still works. Aggregate
 nodes can bind to a custom control as one complete value; changes from the control are distributed
 to the group's child nodes:
 
@@ -239,7 +239,7 @@ for the executable example and full contract shared with `form()`.
 
 #### ✅ validators {#group-validators-option}
 
-**Signature:** `validators?: ValidatorSource<GroupValue, Group<TNodes>>`
+**Signature:** `validators?: ValidatorSource<GroupValue, GroupNode<TNodes>>`
 
 Assigns one validator, several validators, or a reactive validator source to the complete group
 value. Validators declared by descendants continue to run independently.
@@ -654,7 +654,7 @@ address.nodeType(); // 'group'
 
 #### 🧩 form() {#form}
 
-**Signature:** `form: Signal<Form | null>`
+**Signature:** `form: Signal<FormNode | null>`
 
 Returns the nearest explicit `form()` containing the group. A standalone or detached group returns
 `null` because it provides structure without owning a form workflow.
@@ -1286,7 +1286,7 @@ address.pristine(); // true
 
 #### ✅ setValidators() {#setvalidators}
 
-**Signature:** `setValidators(validators: ValidatorSource<GroupValue, Group<TNodes>>): void`
+**Signature:** `setValidators(validators: ValidatorSource<GroupValue, GroupNode<TNodes>>): void`
 
 Replaces validators owned by the group and immediately evaluates its current aggregate value.
 Child validators are unchanged.

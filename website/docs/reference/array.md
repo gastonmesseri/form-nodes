@@ -129,7 +129,7 @@ The [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-sho
 compares these template declarations with their explicit equivalents and explains when a nested
 `array()` is required.
 
-An array inside the object template becomes one array-valued `Field`; its length and contents do
+An array inside the object template becomes one array-valued `FieldNode`; its length and contents do
 not affect that decision. Use an explicit nested `array(...)` when its items need independent
 nodes. Use `field(objectValue)` when a plain object is an atomic application value rather than
 nested group structure.
@@ -806,7 +806,7 @@ usernames.nodeType(); // 'array'
 
 #### 🧩 form() {#form}
 
-**Signature:** `form: Signal<Form | null>`
+**Signature:** `form: Signal<FormNode | null>`
 
 Returns the nearest explicit `form()` containing the array. A standalone or detached array returns
 `null` because it does not own a form workflow.
@@ -1408,7 +1408,7 @@ usernames.every(username => username().length >= 3); // true
 
 #### 📚 includes() {#includes}
 
-**Signature:** `includes(item: Node, fromIndex?: number): boolean`
+**Signature:** `includes(item: AnyNode, fromIndex?: number): boolean`
 
 Checks whether the exact node instance is present. It compares node identity, not item values. An
 optional second argument selects the index at which the search begins.
@@ -1425,7 +1425,7 @@ usernames.includes(username, 1); // false
 
 #### 📚 indexOf() {#indexof}
 
-**Signature:** `indexOf(item: Node, fromIndex?: number): number`
+**Signature:** `indexOf(item: AnyNode, fromIndex?: number): number`
 
 Returns the position of an exact node instance, or `-1` if it is absent. An optional second
 argument selects the index at which the search begins.

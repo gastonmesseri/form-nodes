@@ -3,8 +3,8 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
-import { form, type Form, type FormApi } from '../primitives/form';
-import { field, type Field, type FieldApi } from '../primitives/field';
+import { form, type FormNode, type FormApi } from '../primitives/form';
+import { field, type FieldNode, type FieldApi } from '../primitives/field';
 import type { AsyncValidatorContext, FieldContext } from './validation.type';
 import type { ObservableLike, ObserverLike } from '../types/observable-like.type';
 
@@ -364,7 +364,7 @@ describe('asyncValidator', () => {
 
   it('preserves the API of an explicitly typed field node', async () => {
     let receivedApi: FieldApi<string | null> | undefined;
-    const name = field('David', [asyncValidator<string | null, FieldApi<string | null>, Field<string | null>>(async ({ node }) => {
+    const name = field('David', [asyncValidator<string | null, FieldApi<string | null>, FieldNode<string | null>>(async ({ node }) => {
       const api = node().api;
       expectTypeOf(api).toEqualTypeOf<FieldApi<string | null>>();
       receivedApi = api;
@@ -380,7 +380,7 @@ describe('asyncValidator', () => {
     const country = field('CH');
     type CountryFormApi = FormApi<{ country: typeof country }>;
     let receivedApi: CountryFormApi | undefined;
-    const profile = form({ country }, [asyncValidator<{ country: string | null }, CountryFormApi, Form<{ country: typeof country }>>(async ({ node }) => {
+    const profile = form({ country }, [asyncValidator<{ country: string | null }, CountryFormApi, FormNode<{ country: typeof country }>>(async ({ node }) => {
       const api = node().api;
       expectTypeOf(api).toEqualTypeOf<CountryFormApi>();
       receivedApi = api;

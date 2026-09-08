@@ -29,15 +29,15 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | Understand validation across every node | `validators`, errors, and status | [Validation reference](./validation.md) |
 | Author a reusable synchronous rule | `validator()` | [`validator()` reference](./validator.md) |
 | Run Promise- or Observable-based validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
-| Bind a node to an Angular control | `FormNode` and `[formNode]` | [`FormNode` binding API](./form-node-binding.md) |
-| Submit through a native `<form>` | `FormNode` | [Form submission](../guides/submission.md) |
+| Bind a node to an Angular control | `FormNodeDirective` and `[formNode]` | [`FormNodeDirective` binding API](./form-node-binding.md) |
+| Submit through a native `<form>` | `FormNodeDirective` | [Form submission](../guides/submission.md) |
 | Configure validator messages through Angular DI | `provideFormNodesConfig()` | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) |
 | Configure process-wide messages and binding defaults | `configureGlobalFormNodes()` | [`configureGlobalFormNodes()`](./configure-global-form-nodes.md) |
 | Add reactive status classes to every binding | `provideFormNodesConfig()` | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) |
-| Inspect the API shared by all nodes | `Node`, `DynamicNode`, and `NodeApi` | [Node API](./node-api.md) |
+| Inspect the API shared by all nodes | `AnyNode`, `DynamicNode`, and `NodeApi` | [Node API](./node-api.md) |
 | Test a form model or Angular binding | Public node API and, when needed, `TestBed` | [Testing forms](../guides/testing.md) |
-| Use Angular Material controls | `FormNode` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
-| Use PrimeNG controls | `FormNode` with PrimeNG's normal modules | [PrimeNG integration](../integrations/primeng.md) |
+| Use Angular Material controls | `FormNodeDirective` with Material's normal modules | [Angular Material integration](../integrations/angular-material.md) |
+| Use PrimeNG controls | `FormNodeDirective` with PrimeNG's normal modules | [PrimeNG integration](../integrations/primeng.md) |
 
 ## 🧩 Modeling primitives {#modeling-primitives}
 
@@ -57,7 +57,7 @@ const myForm = form({
 An array-valued field is appropriate when one control owns the complete array, such as a
 multi-select. It intentionally has no per-item nodes or structural operations.
 
-Main exports: `field`, `Field`, `FieldApi`, and `FieldOptions`.
+Main exports: `field`, `FieldNode`, `FieldApi`, and `FieldOptions`.
 
 Use `createFormPrimitives({ nullable: false })` to obtain application-scoped factories whose fields and
 shorthands are non-nullable by default. Explicit field options always take precedence.
@@ -73,7 +73,7 @@ and `roles: ['admin']` are concise field definitions. Object literals remain gro
 An array value always becomes a field; only an explicit `array(...)` creates a dynamic collection
 of item nodes. Ordinary functions and non-plain object instances become concise fields too.
 
-Main exports: `form`, `Form`, `FormApi`, `FormOptions`, `FormValue`, `FormNodeValue`, `FormValueContract`, `FormSet`,
+Main exports: `form`, `FormNode`, `FormApi`, `FormOptions`, `FormValue`, `FormNodeValue`, `FormValueContract`, `FormSet`,
 `FormPatch`.
 
 ### 🔸 array() {#array}
@@ -110,7 +110,7 @@ const myForm = form({
 
 Use explicit `group({...}, options)` only when an object branch needs its own aggregate validators,
 state options, or message configuration without becoming a submission workflow. Main exports:
-`group`, `Group`, `GroupApi`, `GroupOptions`, `GroupValue`, `GroupSet`, and `GroupPatch`.
+`group`, `GroupNode`, `GroupApi`, `GroupOptions`, `GroupValue`, `GroupSet`, and `GroupPatch`.
 
 ## ✅ Validation {#validation}
 
@@ -199,11 +199,11 @@ provideFormNodesConfig({
 
 ### 🔸 [formNode] {#formnode}
 
-Import `FormNode` into a standalone component and bind nodes directly:
+Import `FormNodeDirective` into a standalone component and bind nodes directly:
 
 ```ts
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input [formNode]="myForm.displayName" />
   `,
@@ -219,7 +219,7 @@ The binding supports native controls, `ControlValueAccessor`, Angular-compatible
 and input/output control pairs (the latter require experimental `bindInputOutputPairs: true`). Its public query type exposes `node()`, `errors()`, `element`,
 `injector`, `focus()`, `flush()`, and `reset()`.
 
-Main exports: `FormNode`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNode` import supports native controls, custom controls, and native form roots.
+Main exports: `FormNodeDirective`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNodeDirective` import supports native controls, custom controls, and native form roots.
 
 ### 🔸 Custom-control and binding configuration {#custom-control-and-binding-configuration}
 
@@ -282,12 +282,12 @@ collision-safe path is required.
 Use type-only imports when a symbol is used only by TypeScript:
 
 ```ts
-import { field, form, FormNode } from '@ngblocks/form-nodes';
-import type { Field, FormValue, ValidationError } from '@ngblocks/form-nodes';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
+import type { FieldNode, FormValue, ValidationError } from '@ngblocks/form-nodes';
 ```
 
 `_FormNode` is framework infrastructure exported for Angular's compiler and linker. Applications
-must use `FormNode` instead.
+must use `FormNodeDirective` instead.
 
 For behavioral details that are intentionally too specialized for the normal reference flow, see
 [Advanced behavior and edge cases](../advanced/behavior-details.md).

@@ -75,7 +75,7 @@ field created with `field.strict()`.
 ### 🔸 Signature {#signature}
 
 ```ts
-validator<TValue, TField extends Node = Node>(
+validator<TValue, TField extends AnyNode = AnyNode>(
   validate: NoInfer<(() => any) | ComposableValidator<TValue, ValidatorOwner<TField>>>,
 ): ComposableValidator<TValue, TField>;
 ```

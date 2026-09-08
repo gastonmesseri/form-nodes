@@ -1,5 +1,5 @@
 import type { Equal, Expect } from './assert.types';
-import { array, createFormPrimitives, field, form, group, type Node, type FormNodeValue, type FormValue } from '../../src/public-api';
+import { array, createFormPrimitives, field, form, group, type AnyNode, type FormNodeValue, type FormValue } from '../../src/public-api';
 
 const profile = form({
   name: field('Marco'),
@@ -67,7 +67,7 @@ const dynamic = profile.add('age', field(0));
 type _DeclaredValue = Expect<Equal<FormNodeValue<typeof profile>, ProfileValue>>;
 type _DynamicChildValue = Expect<Equal<ReturnType<typeof dynamic>, number | null>>;
 
-type SavedNode<TNode extends Node> = { value: FormNodeValue<TNode> };
+type SavedNode<TNode extends AnyNode> = { value: FormNodeValue<TNode> };
 type _GenericValue = Expect<Equal<SavedNode<typeof profile>['value'], ProfileValue>>;
 
 type _FieldValue = Expect<Equal<FormNodeValue<typeof profile.name>, string | null>>;

@@ -8,9 +8,9 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../../../primitives/form';
 import { field } from '../../../primitives/field';
-import type { Node } from '../../../types/node.type';
-import { FormNode, FORM_NODE } from '../../form-node.directive';
+import type { AnyNode } from '../../../types/node.type';
 import { required } from '../../../validation/validators/required';
+import { FormNodeDirective, FORM_NODE } from '../../form-node.directive';
 import { provideFormNodesConfig } from '../../provide-form-nodes-config';
 import type { SyncInputs } from '../../../configuration/node-input-config';
 import { createFormPrimitives } from '../../../primitives/create-form-primitives';
@@ -28,7 +28,7 @@ class PairedControl {
 
   touch = output<void>();
 
-  node = signal<Node | null>(null);
+  node = signal<AnyNode | null>(null);
 
   focuses = 0;
 
@@ -39,7 +39,7 @@ class PairedControl {
   reset() { this.resets++; }
 }
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 registerSignalInputForJit(PairedControl, 'value', 'data');
 registerSignalInputForJit(PairedControl, 'disabled', 'disabled');
 registerSignalOutputForJit(PairedControl, 'valueChange', 'changed');
@@ -53,8 +53,8 @@ afterEach(() => {
 });
 afterAll(() => TestBed.resetTestEnvironment());
 
-const bind = (initial: Node) => {
-  @Component({ template: '<paired-control [formNode]="node()" [value]="authored()" />', imports: [FormNode, PairedControl] })
+const bind = (initial: AnyNode) => {
+  @Component({ template: '<paired-control [formNode]="node()" [value]="authored()" />', imports: [FormNodeDirective, PairedControl] })
   class Host {
     node = signal(initial);
 
@@ -172,7 +172,7 @@ describe('decorator checkbox pairs', () => {
     }
     @Component({
       template: '<classic-checkbox [formNode]="active" />',
-      imports: [FormNode, Checkbox],
+      imports: [FormNodeDirective, Checkbox],
     })
     class Host {
       active = field.strict(true, { bindInputOutputPairs });

@@ -139,7 +139,7 @@ during construction are supported:
 <app-existing-date-picker [formNode]="myForm.appointment" />
 ```
 
-Import `FormNode` in the parent component. `[formNode]` writes values, registers change and
+Import `FormNodeDirective` in the parent component. `[formNode]` writes values, registers change and
 touch callbacks, and forwards disabled state through the normal CVA contract. These standard
 CVA operations do not require `syncInputs`. Automatically writing additional state or constraint
 inputs on a CVA component remains subject to the same experimental option.

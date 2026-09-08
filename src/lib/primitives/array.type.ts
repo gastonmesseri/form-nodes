@@ -1,13 +1,13 @@
 import type { Signal } from '@angular/core';
 
-import type { Field } from './field.type';
-import type { Group } from './group.type';
-import type { Form, FormOptions } from './form.type';
+import type { FieldNode } from './field.type';
+import type { GroupNode } from './group.type';
+import type { FormNode, FormOptions } from './form.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, NearestForm, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
-export type ArrayOptions<TValue = any, TArray extends Node = ArrayNode<Node>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * One validator or an array of validators for the complete array value, not each item.
    *
@@ -171,37 +171,37 @@ export type ArrayOptions<TValue = any, TArray extends Node = ArrayNode<Node>> = 
     : never;
 };
 
-export type ArrayItemWithParent<TItem extends Node, TParent extends Node> =
-  TItem extends Field<infer TValue, Node> ? Field<TValue, TParent>
-    : TItem extends Form<infer TNodes, Node> ? Form<TNodes, TParent>
-      : TItem extends Group<infer TNodes, Node> ? Group<TNodes, TParent>
-        : TItem extends ArrayNode<infer TNestedItem, Node> ? ArrayNode<TNestedItem, TParent> : TItem;
+export type ArrayItemWithParent<TItem extends AnyNode, TParent extends AnyNode> =
+  TItem extends FieldNode<infer TValue, AnyNode> ? FieldNode<TValue, TParent>
+    : TItem extends FormNode<infer TNodes, AnyNode> ? FormNode<TNodes, TParent>
+      : TItem extends GroupNode<infer TNodes, AnyNode> ? GroupNode<TNodes, TParent>
+        : TItem extends ArrayNode<infer TNestedItem, AnyNode> ? ArrayNode<TNestedItem, TParent> : TItem;
 
 /** Mutable array value produced by an array node, with every item mapped to its readable value. */
-export type ArrayValue<TItem extends Node> =
-  TItem extends Form<infer TNodes, Node>
+export type ArrayValue<TItem extends AnyNode> =
+  TItem extends FormNode<infer TNodes, AnyNode>
     ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
-    : TItem extends Group<infer TNodes, Node>
+    : TItem extends GroupNode<infer TNodes, AnyNode>
       ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
       : NodeValue<TItem>[];
 /** Complete readonly sequence accepted by an array node's `set()`. */
-export type ArraySet<TItem extends Node> = readonly NodeSet<TItem>[];
+export type ArraySet<TItem extends AnyNode> = readonly NodeSet<TItem>[];
 /** Readonly sequence accepted by an array node's `patch()`, mapped through the item patch type. */
-export type ArrayPatch<TItem extends Node> = readonly NodePatch<TItem>[];
+export type ArrayPatch<TItem extends AnyNode> = readonly NodePatch<TItem>[];
 
-export type ArrayRoot<TItem extends Node, TParent extends Node> = Node extends TParent
+export type ArrayRoot<TItem extends AnyNode, TParent extends AnyNode> = AnyNode extends TParent
   ? ArrayNode<TItem, TParent>
   : RootNode<TParent>;
 
-export type ArrayItems<TItem extends Node, TParent extends Node> =
+export type ArrayItems<TItem extends AnyNode, TParent extends AnyNode> =
   readonly ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>[];
 
-export type ArrayIndexes<TItem extends Node, TParent extends Node> = {
+export type ArrayIndexes<TItem extends AnyNode, TParent extends AnyNode> = {
   /** Live item at this index, or `undefined` when the index is outside the current structure. */
   readonly [index: number]: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
 };
 
-export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
+export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
   /** Returns the concrete primitive represented by this node. */
   nodeType(): 'array';
   /**
@@ -288,9 +288,9 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   /** Whether every current item node matches `predicate`. Returns `true` for an empty array. */
   every(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): boolean;
   /** Whether the exact item-node instance occurs at or after `fromIndex`. */
-  includes(item: Node, fromIndex?: number): boolean;
+  includes(item: AnyNode, fromIndex?: number): boolean;
   /** Returns the index of the exact item-node instance, or `-1` when it is absent. */
-  indexOf(item: Node, fromIndex?: number): number;
+  indexOf(item: AnyNode, fromIndex?: number): number;
   /** Iterates over a stable snapshot of the current item nodes in index order. */
   [Symbol.iterator](): IterableIterator<ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>;
   /**
@@ -455,7 +455,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * // [{ kind: 'required', message: 'Name is required.', targetNode: names[0] }]
    * ```
   */
-  allErrors: Signal<readonly ValidationErrorWithTargetNode<Node>[]>;
+  allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
   /** Whether this array and every current item subtree have completed validation without errors. */
   valid: Signal<boolean>;
   /** Whether this array or any current item subtree contributes a validation error. */
@@ -623,7 +623,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
   show(): void;
 };
 
-export type ArrayNode<TItem extends Node, TParent extends Node = Node> =
+export type ArrayNode<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   & Signal<ArrayValue<TItem>>
   & {
     /** Returns the exposed array value, applying configured equality, and participates in signal dependency tracking. */

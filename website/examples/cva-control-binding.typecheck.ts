@@ -1,5 +1,5 @@
-import { field, form, FormNode } from '@ngblocks/form-nodes';
 import { Component, forwardRef, signal } from '@angular/core';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 
 @Component({
@@ -55,7 +55,7 @@ export class TextInputControl implements ControlValueAccessor {
 
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode, TextInputControl],
+  imports: [FormNodeDirective, TextInputControl],
   template: `
     <app-text-input [formNode]="myForm.name" />
     <p>Current name: {{ myForm.name() }}</p>

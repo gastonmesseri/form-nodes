@@ -1,4 +1,4 @@
-import { array, field, form, type Field, type Group } from '@ngblocks/form-nodes';
+import { array, field, form, type FieldNode, type GroupNode } from '@ngblocks/form-nodes';
 
 class Company {
   constructor(readonly name: string) {}
@@ -16,9 +16,9 @@ const profile = form({
   }),
 }, {});
 
-const name: Field<string | null> = profile.name;
-const roles: Field<string[] | null> = profile.roles;
-const address: Group<{ city: Field<string | null> }, typeof profile> = profile.address;
+const name: FieldNode<string | null> = profile.name;
+const roles: FieldNode<string[] | null> = profile.roles;
+const address: GroupNode<{ city: FieldNode<string | null> }, typeof profile> = profile.address;
 
 if (profile.name() !== '' || profile.age() !== 0 || profile.roles()?.[0] !== 'reader') {
   throw new Error('Atomic shorthand values should normalize to fields and preserve their values.');

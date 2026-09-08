@@ -8,12 +8,12 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import { FormNode } from './form-node.directive';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { provideFormNodesConfig } from './provide-form-nodes-config';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());
@@ -35,9 +35,9 @@ describe('unified Form Nodes configuration', () => {
     ];
     expect(factory).not.toHaveBeenCalled();
     @NgModule({
-      imports: [FormNode],
+      imports: [FormNodeDirective],
       providers: location === 'module' ? providers : [],
-      exports: [FormNode],
+      exports: [FormNodeDirective],
     })
     class SharedModule {}
     @Component({
@@ -67,12 +67,12 @@ describe('unified Form Nodes configuration', () => {
 
   it.each(['messages', 'classes', 'sync', 'empty', 'nullClasses', 'nullSync', 'nullMessages'])('inherits omitted options with a %s override', (section) => {
     @NgModule({
-      imports: [FormNode],
+      imports: [FormNodeDirective],
       providers: [provideFormNodesConfig({
         validatorMessages: { required: 'Parent message' },
         classes: { 'parent-invalid': binding => binding.node().$api.invalid() },
       })],
-      exports: [FormNode],
+      exports: [FormNodeDirective],
     })
     class SharedModule {}
     const config = section === 'messages'

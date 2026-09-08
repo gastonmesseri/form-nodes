@@ -10,7 +10,7 @@ import { registerNodeBindingInjector } from '../utils/node-injector';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ControlAdapterContext } from './adapters/control-adapter';
 import { resolveControlAdapter } from './adapters/resolve-control-adapter';
-import type { InternalNode, InternalNodeApi, Node } from '../types/node.type';
+import type { InternalNode, InternalNodeApi, AnyNode } from '../types/node.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 import { registerControlStateBinding } from '../form-node-state/adapters/form-node';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
@@ -18,7 +18,7 @@ import { syncNativeControlState } from './adapters/native-control/sync-native-co
 import { componentAcceptsFormNode } from './adapters/signal-forms-control/discover-custom-control';
 
 /** Public injection token for the nearest `[formNode]` binding. */
-export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
+export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE');
 
 @Directive({
   selector: '[formNode]',
@@ -33,7 +33,7 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<Node>>('FORM_NODE');
   },
   exportAs: 'formNode',
 })
-export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNode>, OnInit {
+export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBinding<TNode>, OnInit {
   _formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
   injector = inject(Injector);
@@ -202,7 +202,7 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
 }
 
 /** Public Angular directive value used in component imports and dependency injection. */
-export const FormNode = _FormNode;
+export const FormNodeDirective = _FormNode;
 
 /** Public instance view exposed by `[formNode]` template references and queries. */
-export type FormNode<TNode extends Node = Node> = FormNodeBinding<TNode>;
+export type FormNodeDirective<TNode extends AnyNode = AnyNode> = FormNodeBinding<TNode>;

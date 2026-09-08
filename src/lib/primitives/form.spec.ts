@@ -17,13 +17,13 @@ import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
-import type { InternalNode, Node, NodeType } from '../types/node.type';
+import type { InternalNode, AnyNode, NodeType } from '../types/node.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
-const nodeTypeOf = (node: Node): NodeType => {
+const nodeTypeOf = (node: AnyNode): NodeType => {
   return node.$api.nodeType();
 };
 
@@ -1262,7 +1262,7 @@ describe('form', () => {
   });
 
   it('tracks interaction state read through validator node aliases', () => {
-    const validate = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const validate = vi.fn((ctx: { node: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().touched() && ctx.field().dirty() ? { kind: 'edited' } : null;
     });
     const model = form({ name: field('initial') }, { validators: validate });
@@ -1281,14 +1281,14 @@ describe('form', () => {
   });
 
   it('tracks node state in async conditions and params and exposes it to error handlers', async () => {
-    const params = vi.fn((ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const params = vi.fn((ctx: { node: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().dirty();
     });
     const states: boolean[] = [];
-    const onError = vi.fn((_error: unknown, ctx: { node: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const onError = vi.fn((_error: unknown, ctx: { node: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().dirty() ? { kind: 'edited' } : null;
     });
-    const validate = vi.fn(async (ctx: { params: boolean; field: Signal<Node & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const validate = vi.fn(async (ctx: { params: boolean; field: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       states.push(ctx.field().dirty());
       throw new Error('Unavailable');
     });
@@ -1332,8 +1332,8 @@ describe('form', () => {
   });
 
   it('exposes a stable readonly validator field signal independently of the node value', () => {
-    const references: Signal<Node>[] = [];
-    const validators = (context: { field: Signal<Node>; node: Signal<Node> }) => {
+    const references: Signal<AnyNode>[] = [];
+    const validators = (context: { field: Signal<AnyNode>; node: Signal<AnyNode> }) => {
       references.push(context.field);
       expect(context.node).toBe(context.field);
       expect(isSignal(context.field)).toBe(true);
@@ -1367,8 +1367,8 @@ describe('form', () => {
 
   it('tracks async validator field identity separately from reading its node value', async () => {
     const readValue = signal(false);
-    const references: Signal<Node>[] = [];
-    const params = vi.fn((context: { field: Signal<Node>; node: Signal<Node> }) => {
+    const references: Signal<AnyNode>[] = [];
+    const params = vi.fn((context: { field: Signal<AnyNode>; node: Signal<AnyNode> }) => {
       references.push(context.field);
       expect(context.node).toBe(context.field);
       return readValue() ? context.field()() : context.field();

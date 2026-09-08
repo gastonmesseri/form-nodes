@@ -4,6 +4,33 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## Unreleased: node types and Angular imports {#node-type-names}
+
+This incompatible API reorganization is intended for the next major release after 2.0.0.
+Update imports and explicit type annotations:
+
+| Previous API | Replacement |
+| --- | --- |
+| `Node` | `AnyNode` |
+| `Field<TValue>` | `FieldNode<TValue>` |
+| `Group<TChildren>` | `GroupNode<TChildren>` |
+| `Form<TChildren>` | `FormNode<TChildren>` |
+| `ArrayNode<TItem>` | Unchanged |
+| `FormNode` directive import or binding type | `FormNodeDirective` |
+
+`FormNode` now names the form model type. In component `imports`, DI, and directive queries,
+use `FormNodeDirective`. `FormNodeBinding<TNode>` remains the generic binding contract.
+`[formNode]`, the `formNode` template export, and `field()`, `group()`, `form()`, and `array()`
+keep their names and runtime behavior. `isFormNode()` now narrows to `AnyNode`.
+
+For components that accept an unspecified node structure, use `AnyFieldNode`, `AnyGroupNode`,
+`AnyFormNode`, or `AnyArrayNode`. `AnyFormNode` means a form specifically; `AnyNode` accepts every
+primitive. See [Choosing a node type](../reference/node-api.md#node-types).
+
+You can import [`FormNodesModule`](../reference/form-nodes-module.md) in components or application
+modules instead of importing `FormNodeDirective` individually. It currently exports that directive
+and does not register configuration providers.
+
 ## 📦 Moving to 2.0.0 {#moving-to-200}
 
 Version `2.0.0` is a major release because it includes incompatible API and behavior changes.
@@ -179,7 +206,7 @@ To:
 <input [formNode]="profile.name" />
 ```
 
-Import `FormNode` from `@ngblocks/form-nodes` in the component's `imports`. Remove Angular's `FormField`
+Import `FormNodeDirective` from `@ngblocks/form-nodes` in the component's `imports`. Remove Angular's `FormField`
 import when no independently created Angular form uses it. Bind native form roots with
 `[formNode]="profile"` to retain Form Nodes submission and reset handling.
 

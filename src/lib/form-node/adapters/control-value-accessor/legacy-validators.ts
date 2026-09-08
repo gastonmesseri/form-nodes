@@ -1,7 +1,7 @@
 import { computed, effect, signal } from '@angular/core';
 import { NG_VALIDATORS, Validators, type Validator, type ValidatorFn, type ValidationErrors } from '@angular/forms';
 
-import type { Node } from '../../../types/node.type';
+import type { AnyNode } from '../../../types/node.type';
 import type { ControlAdapterContext } from '../control-adapter';
 import type { ValidationErrorWithoutTargetNode } from '../../../validation/validation.type';
 import { registerExternalValidationErrors } from '../../../validation/external-validation-errors';
@@ -15,7 +15,7 @@ const toControlErrors = (errors: ValidationErrors | null): readonly ValidationEr
 };
 
 /** Adapts validators supplied by the CVA host to the bound node's external errors. */
-export const connectLegacyValidators = <TNode extends Node>({ binding, getNgControl }: ControlAdapterContext<TNode>) => {
+export const connectLegacyValidators = <TNode extends AnyNode>({ binding, getNgControl }: ControlAdapterContext<TNode>) => {
   const injector = binding.injector;
   const owner = {};
 

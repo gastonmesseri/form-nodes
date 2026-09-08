@@ -1,7 +1,7 @@
 import { CSP_NONCE, DestroyRef, afterEveryRender, computed, effect, signal, untracked } from '@angular/core';
 
-import type { Field } from '../../../primitives/field';
-import type { InternalNode, Node, NodeValue } from '../../../types/node.type';
+import type { FieldNode } from '../../../primitives/field';
+import type { InternalNode, AnyNode, NodeValue } from '../../../types/node.type';
 import type { ControlAdapterContext, ControlAdapterConnection } from '../control-adapter';
 import type { ValidationErrorWithoutTargetNode } from '../../../validation/validation.type';
 import { registerExternalValidationErrors } from '../../../validation/external-validation-errors';
@@ -9,7 +9,7 @@ import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from '.
 import { isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control-value';
 
 /** Owns native events, parsing errors, composition, and DOM value synchronization. */
-export const connectNativeControlAdapter = <TNode extends Node>({ binding, renderer }: ControlAdapterContext<TNode>, control: NativeFormNodeControl): ControlAdapterConnection => {
+export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, renderer }: ControlAdapterContext<TNode>, control: NativeFormNodeControl): ControlAdapterConnection => {
   const injector = binding.injector;
   const destroyRef = injector.get(DestroyRef);
   const cspNonce = injector.get(CSP_NONCE, null);
@@ -17,12 +17,12 @@ export const connectNativeControlAdapter = <TNode extends Node>({ binding, rende
   let composing = false;
   let destroyed = false;
   destroyRef.onDestroy(() => { destroyed = true; });
-  const getNativeField = (): Field<NodeValue<TNode>> => {
-    const node = binding.node() as unknown as Partial<Field<NodeValue<TNode>>>;
+  const getNativeField = (): FieldNode<NodeValue<TNode>> => {
+    const node = binding.node() as unknown as Partial<FieldNode<NodeValue<TNode>>>;
     if (typeof node.setControlValue !== 'function') {
       throw new Error('formNode: native controls require a field node');
     }
-    return node as Field<NodeValue<TNode>>;
+    return node as FieldNode<NodeValue<TNode>>;
   };
 
   const parseErrors = signal<readonly ValidationErrorWithoutTargetNode[]>([]);

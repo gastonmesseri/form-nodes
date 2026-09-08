@@ -1,7 +1,7 @@
 import { reflectComponentType, type ModelSignal, type Type } from '@angular/core';
 
 import type { FormNodeControl } from '../../form-node-control';
-import type { Node, NodeValue } from '../../../types/node.type';
+import type { AnyNode, NodeValue } from '../../../types/node.type';
 
 type ModelCandidate<TValue> = (() => TValue) & {
   set?: (value: TValue) => void;
@@ -9,7 +9,7 @@ type ModelCandidate<TValue> = (() => TValue) & {
 };
 
 /** Resolves the declared public value/checked model, including aliases, through Angular metadata. */
-export const findModelTransport = <TNode extends Node>(control: FormNodeControl<NodeValue<TNode>, TNode>): ModelSignal<NodeValue<TNode>> | undefined => {
+export const findModelTransport = <TNode extends AnyNode>(control: FormNodeControl<NodeValue<TNode>, TNode>): ModelSignal<NodeValue<TNode>> | undefined => {
   const mirror = reflectComponentType(control.constructor as Type<unknown>);
   const record = control as unknown as Record<string, unknown>;
   for (const name of ['value', 'checked'] as const) {

@@ -42,11 +42,11 @@
 <!-- example: quick-start.typecheck.ts -->
 ```ts
 import { Component } from '@angular/core';
-import { form, field, required, FormNode } from '@ngblocks/form-nodes';
+import { form, field, required, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input [formNode]="myForm.username" />
     <p>Hello {{ myForm.username() }}</p>
@@ -143,11 +143,11 @@ service call.
 <!-- example: readme-first-form.typecheck.ts -->
 ```ts
 import { Component, signal } from '@angular/core';
-import { email, field, form, FormNode, minLength, required } from '@ngblocks/form-nodes';
+import { email, field, form, FormNodeDirective, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-registration',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <form [formNode]="myForm">
       <label>
@@ -197,7 +197,7 @@ export class RegistrationComponent {
 A few things to notice:
 
 1. `field()` declares a value and its validators. The form infers the shape of the complete model.
-2. `FormNode` is the directive imported by the component. `[formNode]` connects each input to its
+2. `FormNodeDirective` is the directive imported by the component. `[formNode]` connects each input to its
    node and connects the native `<form>` to the submission workflow.
 3. State is reactive: Angular tracks calls such as `touched()` and `submitting()` in the template.
 4. Blur marks a control touched. Submit marks the form subtree touched, so an invalid attempt also
@@ -209,7 +209,7 @@ Inside the component, `this.myForm.name()` reads the name and `this.myForm()` re
 object. You do not need subscriptions to keep those values current.
 
 For an even smaller introduction, see [Your first form](https://gastonmesseri.github.io/form-nodes/getting-started/first-form).
-For NgModule applications, import and optionally re-export `FormNode` from a shared module.
+For NgModule applications, import and optionally re-export `FormNodeDirective` from a shared module.
 
 ## 🧱 The four building blocks
 
@@ -328,7 +328,7 @@ field<number>(null);     // Field<number | null>, initially null
 ```
 
 Specify a generic when the initial value does not describe the intended type. For example,
-`field<string>(null)` is a nullable string field; `field(null)` infers `Field<unknown>`.
+`field<string>(null)` is a nullable string field; `field(null)` infers `FieldNode<unknown>`.
 Validators such as `required` affect validity, not the TypeScript nullability of the field.
 
 To derive an API payload type from an existing model:
@@ -525,11 +525,11 @@ item node so its controls remain associated with the same item when the collecti
 <!-- example: readme-dynamic-array.typecheck.ts -->
 ```ts
 import { Component } from '@angular/core';
-import { array, email, field, form, FormNode, required } from '@ngblocks/form-nodes';
+import { array, email, field, form, FormNodeDirective, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-contacts',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     @for (contact of myForm.contacts; track contact; let index = $index) {
       <fieldset>

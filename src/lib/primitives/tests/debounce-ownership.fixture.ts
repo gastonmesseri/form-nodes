@@ -6,7 +6,7 @@ import { form } from '../form';
 import { array } from '../array';
 import { field } from '../field';
 import { group } from '../group';
-import type { ControlDebounce, InternalNode, Node } from '../../types/node.type';
+import type { ControlDebounce, InternalNode, AnyNode } from '../../types/node.type';
 
 function deferred() {
   let resolve!: () => void;
@@ -32,7 +32,7 @@ globalThis.setTimeout = ((callback: (...args: any[]) => void, delay?: number, ..
   return timer;
 }) as typeof setTimeout;
 
-function createNode(kind: 'field' | 'array' | 'form' | 'group', debounce: ControlDebounce): Node {
+function createNode(kind: 'field' | 'array' | 'form' | 'group', debounce: ControlDebounce): AnyNode {
   if (kind === 'field') return field('initial', { debounce });
   if (kind === 'array') return array(field('initial'), 1, { debounce });
   if (kind === 'group') return group({ name: field('initial') }, { debounce });

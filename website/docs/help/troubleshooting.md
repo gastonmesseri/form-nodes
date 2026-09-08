@@ -12,13 +12,13 @@ underlying behavior in more detail.
 
 **Symptom:** Angular reports that it cannot bind to `formNode`, or the directive does not run.
 
-**Solution:** import `FormNode` in every standalone component that uses `[formNode]`, or export it
+**Solution:** import `FormNodeDirective` in every standalone component that uses `[formNode]`, or export it
 from an NgModule imported by that component. The same import supports controls and native form
 roots:
 
 ```ts
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <form [formNode]="myForm">
       <input [formNode]="myForm.email" />
@@ -180,7 +180,7 @@ model applies to readonly and hidden state. See
 
 Check these conditions:
 
-1. The native form has `[formNode]="myForm"` and the component imports `FormNode`.
+1. The native form has `[formNode]="myForm"` and the component imports `FormNodeDirective`.
 2. The node was created with `form()`, not `group()`, and has a `onSubmit`. A group binding
    remains functional but intentionally has no action to run.
 3. The submit button has `type="submit"`.

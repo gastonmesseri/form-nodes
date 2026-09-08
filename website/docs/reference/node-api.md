@@ -4,6 +4,7 @@ title: Node API
 
 import CodeBlock from '@theme/CodeBlock';
 import IsFormNodeExample from '!!raw-loader!../../examples/is-form-node.example.ts';
+import NodeTypesExample from '!!raw-loader!../../examples/node-types.typecheck.ts';
 
 # Node API {#node-api}
 
@@ -21,16 +22,45 @@ Use direct members for actions and state on every node: `name.set()`, `items.pus
 `profile.patch()`, and `profile.valid()`. The [Tree navigation and API access](../concepts/tree-and-api.md)
 guide documents `.api` only for name collisions and generic infrastructure.
 
+## Choosing a node type {#node-types}
+
+Import node types from `@ngblocks/form-nodes`. Prefer inferred declarations from `field()`,
+`form()`, `group()`, and `array()` when the application owns the model. For component inputs
+and generic utilities, choose the category that the consumer actually needs:
+
+| Accepted nodes | Unspecified structure | Known structure |
+| --- | --- | --- |
+| Any primitive | `AnyNode` | The inferred node type |
+| Fields | `AnyFieldNode` | `FieldNode<TValue>` |
+| Groups | `AnyGroupNode` | `GroupNode<TChildren>` |
+| Forms | `AnyFormNode` | `FormNode<TChildren>` |
+| Arrays | `AnyArrayNode` | `ArrayNode<TItem>` |
+
+`AnyFormNode` accepts only `form()` nodes. `AnyNode` accepts all four primitives, including
+nested and detached nodes. `TChildren` describes child nodes; `TItem` describes an item node,
+not its raw value. For example, `ArrayNode<FieldNode<number>>` describes numeric field items.
+
+The `Any…` types deliberately erase value or child-structure details. They are not substitutes
+for validating an unknown value before writing it. Use concrete types when those details are
+part of the component's contract. Generic arrays expose their items as `AnyNode`.
+
+`AnyNode`, `AnyFormNode`, and `AnyGroupNode` provide operations through `$api`, without promising
+direct child names or direct operation names that a child could shadow. `AnyFieldNode` and
+`AnyArrayNode` also expose their category's direct operations. `FormNodeDirective` describes
+the Angular binding; `FormNode<TChildren>` describes the form model.
+
+<CodeBlock language="ts" title="node-types.typecheck.ts">{NodeTypesExample}</CodeBlock>
+
 ## Recognizing nodes with `isFormNode()` {#is-form-node}
 
 Import `isFormNode` from `@ngblocks/form-nodes` to check an unknown value before using it as a node.
 
 ```ts
-isFormNode(value: unknown): value is Node
+isFormNode(value: unknown): value is AnyNode
 ```
 
 The helper recognizes `field()`, `form()`, `group()`, and `array()` nodes, including nested nodes
-and nodes created by configured primitives. It narrows the value to the shared `Node` type;
+and nodes created by configured primitives. It narrows the value to the shared `AnyNode` type;
 it does not infer a particular primitive or value type. It also works as an array filter predicate.
 
 <CodeBlock language="ts" title="is-form-node.example.ts">{IsFormNodeExample}</CodeBlock>
@@ -144,7 +174,7 @@ Arrays are iterable and expose `forEach`, `map`, `filter`, `find`, `findIndex`, 
 
 ## 🔌 Binding API {#binding-api}
 
-A `FormNode<TNode>` obtained through `viewChild()` exposes:
+A `FormNodeDirective<TNode>` obtained through `viewChild()` exposes:
 
 | Member | Description |
 | --- | --- |

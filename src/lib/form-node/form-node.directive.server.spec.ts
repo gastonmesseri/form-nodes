@@ -7,11 +7,11 @@ import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 
 import { field } from '../primitives/field';
-import { FormNode } from './form-node.directive';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 @Component({
   selector: 'test-control',
@@ -51,13 +51,13 @@ const render = (component: Parameters<typeof bootstrapApplication>[0]): Promise<
   );
 };
 
-describe('FormNode server rendering', () => {
+describe('FormNodeDirective server rendering', () => {
   it('renders a native input value and node state without browser globals', async () => {
     @Component({
       selector: 'app-root',
       template: '<input [formNode]="name">',
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class App {
       readonly name = field('', [required]);
@@ -76,7 +76,7 @@ describe('FormNode server rendering', () => {
       selector: 'app-root',
       template: '<select [formNode]="country"><option value="ES">Spain</option><option value="CH">Switzerland</option></select>',
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class App {
       readonly country = field('CH');
@@ -93,7 +93,7 @@ describe('FormNode server rendering', () => {
       selector: 'app-root',
       template: '<input type="date" [formNode]="date">',
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class App {
       readonly date = field('2026-08-29');
@@ -110,7 +110,7 @@ describe('FormNode server rendering', () => {
       selector: 'app-root',
       template: '<test-control [formNode]="name" />',
       standalone: true,
-      imports: [TestControl, FormNode],
+      imports: [TestControl, FormNodeDirective],
     })
     class App {
       readonly name = field('Marco', { syncInputs: 'all' });
@@ -127,7 +127,7 @@ describe('FormNode server rendering', () => {
       selector: 'app-root',
       template: '<test-signal-control [formNode]="name" />',
       standalone: true,
-      imports: [TestSignalControl, FormNode],
+      imports: [TestSignalControl, FormNodeDirective],
     })
     class App {
       name = field.strict('Marco', [required], { syncInputs });

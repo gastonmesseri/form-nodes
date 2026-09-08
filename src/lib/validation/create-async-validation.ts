@@ -1,6 +1,6 @@
 import { computed, signal, untracked } from '@angular/core';
 
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import { shallowEqual } from '../utils/shallow-equal';
 import { addDefaultTargetNode } from './utils/add-default-target-node';
 import { createValidatorContext } from './utils/create-validator-context';
@@ -23,7 +23,7 @@ const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => {
   });
 };
 
-export const createAsyncValidation = <TValue, TNode extends Node & { $api: AsyncValidatorState }>(
+export const createAsyncValidation = <TValue, TNode extends AnyNode & { $api: AsyncValidatorState }>(
   context: FieldContext<TValue>,
   getValidators: () => Validators<TValue>,
   getSyncErrors: () => readonly ValidationError[],

@@ -8,11 +8,11 @@ Start with a component-owned form tree. `field()` creates leaf values and `form(
 
 ```ts
 import { Component } from '@angular/core';
-import { field, FormNode, form } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <label>
       Name

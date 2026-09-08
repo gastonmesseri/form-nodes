@@ -1,7 +1,7 @@
 import { isNode } from './utils/node-marker';
 import type { NormalizedNode } from './form';
 import { createArrayNode } from './array-node';
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import type { ValidatorSource } from '../validation/validation.type';
 import { assertArrayObjectTemplate, looksLikeValidatorSource } from './array.utils';
 import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
@@ -10,13 +10,13 @@ import type { ArrayNode as ArrayNodeType, ArrayOptions, ArraySet, ArrayValue } f
 
 export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
 
-type ArrayTemplate = Node | ObjectNodeDefinitions;
+type ArrayTemplate = AnyNode | ObjectNodeDefinitions;
 type ArrayTemplateInput<TDefinition extends ArrayTemplate> =
-  TDefinition extends Node ? TDefinition : ObjectNodeDefinitionInputs<Extract<TDefinition, ObjectNodeDefinitions>>;
+  TDefinition extends AnyNode ? TDefinition : ObjectNodeDefinitionInputs<Extract<TDefinition, ObjectNodeDefinitions>>;
 type ArrayFactory<TDefinition extends ArrayTemplate> = () => TDefinition & ArrayTemplateInput<TDefinition>;
 type ArraySource<TDefinition extends ArrayTemplate> = (TDefinition & ArrayTemplateInput<TDefinition>) | ArrayFactory<TDefinition>;
 type ArrayInitial<TDefinition extends ArrayTemplate> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
-type PositionalArrayOptions<TValue, TArray extends Node = ArrayNodeType<Node>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
+type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNodeType<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
 
 /**
  * Creates a dynamic array by cloning a declarative node template for every item.

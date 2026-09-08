@@ -38,7 +38,7 @@ profile.value(); // { username: '', age: 0, country: 'Switzerland' }
 ```
 
 The expression retains the type inferred by `form()`. `username` and `age` remain their concrete
-`Field` nodes, and `country` remains a `Field<string>` declared with `field.strict<string>()`.
+`FieldNode` nodes, and `country` remains a `FieldNode<string>` declared with `field.strict<string>()`.
 The `Profile` model verifies their aggregate value.
 
 ## 📝 Incompatible values {#incompatible-values}

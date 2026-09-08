@@ -1,4 +1,4 @@
-import { FormNode, field, form, required } from '@ngblocks/form-nodes';
+import { FormNodeDirective, field, form, required } from '@ngblocks/form-nodes';
 import { Component, Injector, forwardRef, inject, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, NgControl, type ControlValueAccessor } from '@angular/forms';
 
@@ -62,7 +62,7 @@ export class DateInput implements ControlValueAccessor {
 }
 
 @Component({
-  imports: [FormNode, DateInput],
+  imports: [FormNodeDirective, DateInput],
   template: `
     <app-date-input [formNode]="myForm.appointment" />
     @for (error of myForm.appointment.errors(); track error) {

@@ -156,11 +156,11 @@ Options are static configuration. Class predicates and selected message callback
 signals they read. Multiple calls in one injector also preserve omitted options; the last explicit
 provider for each option wins.
 
-## 🔌 Using FormNode through SharedModule {#using-formnode-through-sharedmodule}
+## 🔌 Using FormNodeDirective through SharedModule {#using-formnode-through-sharedmodule}
 
-`FormNode` is a standalone directive. A shared NgModule can import it and re-export it so that
-consuming components can import `SharedModule` instead of importing `FormNode` directly.
-Put `FormNode` in the module's `imports` and `exports`, not in `declarations`.
+`FormNodeDirective` is a standalone directive. A shared NgModule can import it and re-export it so that
+consuming components can import `SharedModule` instead of importing `FormNodeDirective` directly.
+Put `FormNodeDirective` in the module's `imports` and `exports`, not in `declarations`.
 
 The following are two alternative, complete application entry points. Each can be used as
 `main.ts` in an Angular application with an `<app-root></app-root>` host in `index.html`.
@@ -172,7 +172,7 @@ file for each section; imports are grouped at the top to keep each combined exam
 ### 🔸 Application-level configuration {#application-level-configuration}
 
 Choose this when the application owns the default configuration and `SharedModule` only makes
-`FormNode` available to templates. Register `provideFormNodesConfig()` once in `app.config.ts` or the
+`FormNodeDirective` available to templates. Register `provideFormNodesConfig()` once in `app.config.ts` or the
 `bootstrapApplication` providers. The example configures a required message and Angular Forms status classes to highlight a
 touched, invalid input.
 
@@ -185,8 +185,8 @@ dependencies belong in the declaring module's `imports`.
 
 ### 🔸 Configuration supplied by SharedModule {#configuration-supplied-by-sharedmodule}
 
-Choose this when importing `SharedModule` should also install your shared FormNode conventions.
-Put `FormNode` in `imports` and `exports`, and call `provideFormNodesConfig()` in
+Choose this when importing `SharedModule` should also install your shared FormNodeDirective conventions.
+Put `FormNodeDirective` in `imports` and `exports`, and call `provideFormNodesConfig()` in
 `providers`, importing the configuration function directly from `@ngblocks/form-nodes`.
 A separate application-level provider and a `forRoot()` method are not required.
 

@@ -2,7 +2,7 @@ import type { FormCheckboxControl, FormValueControl } from '@angular/forms/signa
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model, output, signal, type OnChanges, type SimpleChanges } from '@angular/core';
 
 import { useLegacyNgControl } from '../helpers/legacy-ng-control-hook';
-import { field, form, FormNode, useFormNodeState, provideFormNodesConfig, required, type Field } from '../../src/public-api';
+import { field, form, FormNodeDirective, useFormNodeState, provideFormNodesConfig, required, type FieldNode } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string };
 type CompanyValue = { companyId: number | null; companyName: string | null };
@@ -43,17 +43,17 @@ export class AotSignalCheckboxControl implements FormCheckboxControl {
 @Component({
   standalone: true,
   selector: 'aot-delegating-control',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="formNode()">`,
 })
 export class AotDelegatingControl {
-  readonly formNode = input.required<Field<string>>();
+  readonly formNode = input.required<FieldNode<string>>();
 }
 
 @Component({
   standalone: true,
   selector: 'aot-pass-through-host',
-  imports: [AotDelegatingControl, FormNode],
+  imports: [AotDelegatingControl, FormNodeDirective],
   template: `<aot-delegating-control [formNode]="name" />`,
 })
 export class AotPassThroughHost {
@@ -77,7 +77,7 @@ export class AotCompanySelector implements FormValueControl<CompanyValue> {
   standalone: true,
   selector: 'aot-company-selector-host',
   providers: [provideFormNodesConfig({ syncInputs: 'all' })],
-  imports: [AotCompanySelector, FormNode],
+  imports: [AotCompanySelector, FormNodeDirective],
   template: `<aot-company-selector [formNode]="myForm.company" />`,
 })
 export class AotCompanySelectorHost {
@@ -92,7 +92,7 @@ export class AotCompanySelectorHost {
   standalone: true,
   selector: 'aot-signal-control-host',
   providers: [provideFormNodesConfig({ syncInputs: 'all' })],
-  imports: [AotSignalValueControl, AotSignalCheckboxControl, FormNode],
+  imports: [AotSignalValueControl, AotSignalCheckboxControl, FormNodeDirective],
   template: `
     <aot-signal-value-control [formNode]="name" />
     <aot-signal-checkbox-control [formNode]="active" />
@@ -121,7 +121,7 @@ export class AotDirectHookControl {
 }
 
 @Component({
-  imports: [FormNode, AotDirectHookControl],
+  imports: [FormNodeDirective, AotDirectHookControl],
   template: '<aot-direct-hook-control [formNode]="profile.name" />',
 })
 export class AotDirectHookHost {
@@ -151,7 +151,7 @@ export class AotPairedCheckbox {
 }
 
 @Component({
-  imports: [FormNode, AotPairedText, AotPairedCheckbox],
+  imports: [FormNodeDirective, AotPairedText, AotPairedCheckbox],
   template: `
     <aot-paired-text [formNode]="name()" />
     <aot-paired-checkbox [formNode]="active()" />
@@ -194,7 +194,7 @@ export class AotAliasedCheckboxControl {
 
 @Component({
   selector: 'aot-aliased-model-host',
-  imports: [FormNode, AotAliasedModelControl, AotAliasedCheckboxControl],
+  imports: [FormNodeDirective, AotAliasedModelControl, AotAliasedCheckboxControl],
   template: `
     <aot-aliased-model-control [formNode]="profile" />
     <aot-aliased-checkbox-control [formNode]="profile.accepted" />

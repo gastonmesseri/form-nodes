@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { form } from '../form';
 import { array } from '../array';
 import { field } from '../field';
-import type { Node } from '../../types/node.type';
+import type { AnyNode } from '../../types/node.type';
 import { required } from '../../validation/validators/required';
 import { asyncValidator } from '../../validation/async-validator';
 
 type StateFixture = {
-  readonly root: Node;
-  readonly leaf: Node;
-  readonly descendants: readonly Node[];
+  readonly root: AnyNode;
+  readonly leaf: AnyNode;
+  readonly descendants: readonly AnyNode[];
 };
 
 const stateFixtures: readonly [string, () => StateFixture][] = [
@@ -187,19 +187,19 @@ describe('shared asynchronous aggregate-state invariants', () => {
       let resolve!: () => void;
       const completion = new Promise<void>((done) => { resolve = done; });
       const root = field.strict('value', [asyncValidator(async () => { await completion; })]);
-      return { root: root as Node, resolve };
+      return { root: root as AnyNode, resolve };
     }],
     ['form', () => {
       let resolve!: () => void;
       const completion = new Promise<void>((done) => { resolve = done; });
       const root = form({ value: field.strict('value', [asyncValidator(async () => { await completion; })]) });
-      return { root: root as Node, resolve };
+      return { root: root as AnyNode, resolve };
     }],
     ['array', () => {
       let resolve!: () => void;
       const completion = new Promise<void>((done) => { resolve = done; });
       const root = array(() => field.strict('value', [asyncValidator(async () => { await completion; })]), 1);
-      return { root: root as Node, resolve };
+      return { root: root as AnyNode, resolve };
     }],
   ] as const)('aggregates pending state for %s until descendant validation settles', async (_kind, createFixture) => {
     const { root, resolve } = createFixture();

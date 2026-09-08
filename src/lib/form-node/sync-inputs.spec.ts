@@ -9,10 +9,10 @@ import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { group } from '../primitives/group';
 import { array } from '../primitives/array';
-import type { Node } from '../types/node.type';
-import { FormNode } from './form-node.directive';
+import type { AnyNode } from '../types/node.type';
 import { min } from '../validation/validators/min';
 import { max } from '../validation/validators/max';
+import { FormNodeDirective } from './form-node.directive';
 import { pattern } from '../validation/validators/pattern';
 import { required } from '../validation/validators/required';
 import { minLength } from '../validation/validators/min-length';
@@ -61,7 +61,7 @@ class Control {
   touch = output<void>();
 }
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 registerSignalModelForJit(Control, 'value');
 registerSignalOutputForJit(Control, 'touch', 'touch');
 for (const name of ['disabled', 'readonly', 'hidden', 'required', 'min', 'max', 'minLength', 'maxLength', 'pattern', 'dirty', 'touched', 'invalid', 'pending', 'errors', 'name']) {
@@ -86,8 +86,8 @@ const createRoot = (kind: string, options: Options = {}) => {
   }
 };
 
-const bind = (initial: Node) => {
-  @Component({ template: '<experimental-control [formNode]="node()" />', imports: [FormNode, Control] })
+const bind = (initial: AnyNode) => {
+  @Component({ template: '<experimental-control [formNode]="node()" />', imports: [FormNodeDirective, Control] })
   class Host {
     node = signal(initial);
   }

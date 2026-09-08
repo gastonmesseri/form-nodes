@@ -1,8 +1,8 @@
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import { markAsAsyncValidator, type AsyncValidatorOptions, type ParameterizedAsyncValidatorOptions } from './utils/async-validator-marker';
 import type { DeferredValidator, AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, AsyncValidatorContext, ParameterizedAsyncValidatorContext, ValidationResult, ValidatorOwner, ValidatorReadonlyApi } from './validation.type';
 
-export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi, ValidatorOwner<TField>> & {
+export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi, ValidatorOwner<TField>> & {
   /**
    * Validates one stable params snapshot. Signals read here are not tracked automatically.
    *
@@ -49,7 +49,7 @@ export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends Vali
  *
  * @reactive Tracks signals read by `params` and `when`. Only shallow params changes trigger a new execution.
  */
-export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node>(config: {
+export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(config: {
   /**
    * Reactively derives the explicit dependency snapshot passed to `validate`. Signals read here
    * are tracked. Object and array results are compared shallowly, so validation reruns only when a
@@ -175,7 +175,7 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
  *
  * @reactive Tracks signals read by the validator and `when`; changes cancel stale work and trigger a new execution.
  */
-export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node>(
+export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(
   validator: NoInfer<DeferredValidator | ((context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult)>,
   options?: {
     /**
@@ -224,7 +224,7 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
   },
 ): AsyncValidator<TValue, TField>;
 /** Infers the value from an explicitly typed callback when no consuming node provides a context. */
-export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = Node>(
+export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(
   validator: (context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult,
   options?: {
     /**

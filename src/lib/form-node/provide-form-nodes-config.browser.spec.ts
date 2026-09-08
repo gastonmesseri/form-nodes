@@ -7,14 +7,14 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import type { Node } from '../types/node.type';
-import { FormNode } from './form-node.directive';
+import type { AnyNode } from '../types/node.type';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 import { provideFormNodesConfig, type FormNodesConfig } from './provide-form-nodes-config';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 @Component({ selector: 'config-value-control', template: '' })
 class ValueControl {
@@ -92,13 +92,13 @@ describe('custom-control input configuration', () => {
         <config-value-control [formNode]="current()" [disabled]="saving()" [readonly]="saving()" />
         <config-checkbox-control [formNode]="profile.active" />
       `,
-      imports: [FormNode, ValueControl, CheckboxControl],
+      imports: [FormNodeDirective, ValueControl, CheckboxControl],
       providers: [provideFormNodesConfig({ syncInputs: false })],
     })
     class Host {
       profile = form({ name: field('Mark'), active: field(false) });
 
-      current = signal<Node>(kind === 'field' ? this.profile.name : form({ name: field('Mark') }));
+      current = signal<AnyNode>(kind === 'field' ? this.profile.name : form({ name: field('Mark') }));
 
       saving = signal(true);
     }
@@ -172,7 +172,7 @@ describe('custom-control input configuration', () => {
       };
       @Component({
         template: '<config-value-control [formNode]="node" />',
-        imports: [FormNode, ValueControl],
+        imports: [FormNodeDirective, ValueControl],
         providers: [provideFormNodesConfig(options[option])],
       })
       class Host {
@@ -234,7 +234,7 @@ describe('custom-control input configuration', () => {
       };
       @Component({
         template: '<config-value-control [formNode]="node" />',
-        imports: [FormNode, ValueControl],
+        imports: [FormNodeDirective, ValueControl],
         providers: [provideFormNodesConfig(options[override])],
       })
       class Host {
@@ -284,7 +284,7 @@ describe('custom-control input configuration', () => {
     ] as const)('applies selected public input names and aliases with %j', (selection) => {
       @Component({
         template: '<config-value-control [formNode]="node" />',
-        imports: [FormNode, ValueControl],
+        imports: [FormNodeDirective, ValueControl],
         providers: [provideFormNodesConfig({ syncInputs: selection })],
       })
       class Host {
@@ -313,7 +313,7 @@ describe('custom-control input configuration', () => {
     it.each([false, 'declared', 'all', 'signal-controls'] as const)('keeps value and touch binding with mode %s', (syncInputs) => {
       @Component({
         template: '<config-value-control [formNode]="node" />',
-        imports: [FormNode, ValueControl],
+        imports: [FormNodeDirective, ValueControl],
       })
       class Host {
         node = kind === 'field'
@@ -350,7 +350,7 @@ describe('custom-control input configuration', () => {
         <config-checkbox-control [formNode]="active" />
         <input [formNode]="native">
       `,
-      imports: [FormNode, ValueControl, CvaControl, CheckboxControl],
+      imports: [FormNodeDirective, ValueControl, CvaControl, CheckboxControl],
       providers: [provideFormNodesConfig({ syncInputs: syncSelection })],
     })
     class Host {
@@ -405,7 +405,7 @@ describe('custom-control input configuration', () => {
     @Component({
       selector: 'config-opt-in',
       template: '<config-value-control [formNode]="name" />',
-      imports: [FormNode, ValueControl],
+      imports: [FormNodeDirective, ValueControl],
       providers: [provideFormNodesConfig({ syncInputs: 'all' })],
     })
     class OptIn {
@@ -419,7 +419,7 @@ describe('custom-control input configuration', () => {
         <config-cva-control [formNode]="profile.name" />
         <input [formNode]="profile.name">
       `,
-      imports: [FormNode, ValueControl, CvaControl, OptIn],
+      imports: [FormNodeDirective, ValueControl, CvaControl, OptIn],
       providers: [provideFormNodesConfig({ syncInputs: false })],
     })
     class Host {

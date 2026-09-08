@@ -92,7 +92,7 @@ for inline inference. Without an exact node type, use `ctx.value()` for the type
 ### 🔸 Callback signature {#callback-signature}
 
 ```ts
-asyncValidator<TValue, TApi = AsyncValidatorApi<TValue>, TField extends Node = Node>(
+asyncValidator<TValue, TApi = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(
   validate: (context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult,
   options?: AsyncValidatorOptions<TValue, TApi, ValidatorOwner<TField>>,
 ): AsyncValidator<TValue, TField>;
@@ -117,7 +117,7 @@ const usernameAvailable = asyncValidator(({ value, abortSignal }) => {
 ### 🔸 Parameterized signature {#parameterized-signature}
 
 ```ts
-asyncValidator<TValue, TParams, TApi = AsyncValidatorApi<TValue>, TField extends Node = Node>({
+asyncValidator<TValue, TParams, TApi = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>({
   params,
   validate,
   debounce?,

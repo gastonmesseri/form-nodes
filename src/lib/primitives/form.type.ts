@@ -1,19 +1,19 @@
 import type { Injector, Signal } from '@angular/core';
 
-import type { Field } from './field.type';
-import type { Group } from './group.type';
+import type { FieldNode } from './field.type';
+import type { GroupNode } from './group.type';
 import type { ArrayNode } from './array.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, DynamicNode, Node, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, DynamicNode, AnyNode, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 /** Values inferred as concise `field()` definitions inside an object node. */
 export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | readonly unknown[] | ((...args: any[]) => any);
 
 /** One child definition accepted by `form()` and `group()`. */
-export type ObjectNodeDefinition = Node | FieldShorthand | ObjectNodeDefinitions;
+export type ObjectNodeDefinition = AnyNode | FieldShorthand | ObjectNodeDefinitions;
 
 /** Recursive definitions accepted by `form()` and `group()`. Array values normalize to fields. */
 export interface ObjectNodeDefinitions {
@@ -22,7 +22,7 @@ export interface ObjectNodeDefinitions {
 
 /** Validates one inferred object-node child definition while preserving its original type. */
 export type ObjectNodeDefinitionInput<TDefinition> =
-  TDefinition extends Node ? TDefinition
+  TDefinition extends AnyNode ? TDefinition
     : TDefinition extends FieldShorthand ? TDefinition
       : TDefinition extends ObjectNodeDefinitions ? ObjectNodeDefinitionInputs<TDefinition>
         : TDefinition;
@@ -45,7 +45,7 @@ type WidenFieldShorthand<TValue> =
               : TValue extends symbol ? symbol
                 : TValue;
 
-export type FormOptions<TValue = any, TForm extends Node = Form<any>> = {
+export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
   /**
    * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
    *
@@ -393,11 +393,11 @@ export type FormPatch<TNodes extends Nodes> = {
 };
 
 export type NormalizedNodeWithDefault<TNode, TNullable extends boolean> =
-  [TNode] extends [Node] ? TNode
-    : [TNode] extends [null | undefined] ? Field<unknown>
-      : [TNode] extends [FieldShorthand] ? Field<WidenFieldShorthand<TNode> | (TNullable extends true ? null : never)>
-        : [TNode] extends [ObjectNodeDefinitions] ? Group<NormalizedNodesWithDefault<TNode, TNullable>>
-          : Field<TNode | (TNullable extends true ? null : never)>;
+  [TNode] extends [AnyNode] ? TNode
+    : [TNode] extends [null | undefined] ? FieldNode<unknown>
+      : [TNode] extends [FieldShorthand] ? FieldNode<WidenFieldShorthand<TNode> | (TNullable extends true ? null : never)>
+        : [TNode] extends [ObjectNodeDefinitions] ? GroupNode<NormalizedNodesWithDefault<TNode, TNullable>>
+          : FieldNode<TNode | (TNullable extends true ? null : never)>;
 
 export type NormalizedNode<TNode> = NormalizedNodeWithDefault<TNode, true>;
 
@@ -410,7 +410,7 @@ export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = {
 };
 
 /** Result of attaching a node definition or shorthand dynamically to an object node. */
-export type AddedNode<TDefinition, TParent extends Node> =
+export type AddedNode<TDefinition, TParent extends AnyNode> =
   NodeWithParent<NormalizedNode<TDefinition>, TParent>;
 
 /** Readonly runtime-key map of dynamic and initially declared children. */
@@ -418,11 +418,11 @@ export type DynamicFormChildren = {
   readonly [key: string]: DynamicNode | undefined;
 };
 
-export type FormRoot<TNodes extends Nodes, TParent extends Node> = Node extends TParent
-  ? Form<TNodes, TParent>
+export type FormRoot<TNodes extends Nodes, TParent extends AnyNode> = AnyNode extends TParent
+  ? FormNode<TNodes, TParent>
   : RootNode<TParent>;
 
-export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
+export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   /** Returns the concrete primitive represented by this node. */
   nodeType(): 'form';
   /** Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode. */
@@ -490,7 +490,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * profile.get('age') === age; // true
    * ```
    */
-  add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Form<TNodes, TParent>>;
+  add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, FormNode<TNodes, TParent>>;
   /**
    * Adds several child definitions atomically and returns an exact keyed map of their attached
    * live nodes.
@@ -510,7 +510,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * ```
    */
   add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {
-    readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Form<TNodes, TParent>>;
+    readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], FormNode<TNodes, TParent>>;
   };
   /**
    * Detaches and returns a dynamically added child, or `undefined` when the key is absent.
@@ -521,7 +521,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * This explicit form workflow. Descendants resolve this form until another nested form begins.
    * Unlike `root()`, this signal deliberately does not cross the form's workflow boundary.
    */
-  form: Signal<Form<TNodes, TParent>>;
+  form: Signal<FormNode<TNodes, TParent>>;
   /**
    * Complete structural root containing this form. A root or detached form returns itself.
    * A nested form therefore returns itself from `form()` and its outermost ancestor from `root()`.
@@ -603,7 +603,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
     (options: { resolve?: boolean }): Validators<FormValue<TNodes>>;
   };
   /** Replaces validators owned by this form and immediately validates its current aggregate value. */
-  setValidators(validators: ValidatorSource<FormValue<TNodes>, Form<TNodes, TParent>>): void;
+  setValidators(validators: ValidatorSource<FormValue<TNodes>, FormNode<TNodes, TParent>>): void;
   /**
   * A signal containing the validation errors of **this form node itself, excluding its descendants**.
   *
@@ -615,7 +615,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * // [{ kind: 'profileLocked', message: 'This profile cannot be edited.', targetNode: profile }]
    * ```
   */
-  errors: Signal<readonly ValidationErrorWithTargetNode<Form<TNodes, TParent>>[]>;
+  errors: Signal<readonly ValidationErrorWithTargetNode<FormNode<TNodes, TParent>>[]>;
   /**
   * A signal containing the validation errors of **this form node and its descendants**.
   *
@@ -627,7 +627,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * // [{ kind: 'required', message: 'Name is required.', targetNode: profile.name }]
    * ```
   */
-  allErrors: Signal<readonly ValidationErrorWithTargetNode<Node>[]>;
+  allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
   /** Whether this form and every descendant have completed validation without errors. */
   valid: Signal<boolean>;
   /** Whether this form or any descendant currently contributes a validation error. */
@@ -637,13 +637,13 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<Form<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
+  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<FormNode<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
   /**
    * Returns the first custom error belonging directly to this form and matching `kind`.
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<Form<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<FormNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
   /**
    * Whether this node's own errors contain the given kind. Does not search descendants.
    * @reactive Memoizes by kind and tracks the node's current errors.
@@ -799,25 +799,25 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
   show(): void;
 };
 
-export type NodeWithParent<TNode extends Node, TParent extends Node> =
-  TNode extends Field<infer TValue, Node> ? Field<TValue, TParent>
-    : TNode extends Form<infer TNodes, Node> ? Form<TNodes, TParent>
-      : TNode extends Group<infer TNodes, Node> ? Group<TNodes, TParent>
-        : TNode extends ArrayNode<infer TItem, Node> ? ArrayNode<TItem, TParent> : TNode;
+export type NodeWithParent<TNode extends AnyNode, TParent extends AnyNode> =
+  TNode extends FieldNode<infer TValue, AnyNode> ? FieldNode<TValue, TParent>
+    : TNode extends FormNode<infer TNodes, AnyNode> ? FormNode<TNodes, TParent>
+      : TNode extends GroupNode<infer TNodes, AnyNode> ? GroupNode<TNodes, TParent>
+        : TNode extends ArrayNode<infer TItem, AnyNode> ? ArrayNode<TItem, TParent> : TNode;
 
-export type FormChildren<TNodes extends Nodes, TParent extends Node> = {
-  readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], Form<TNodes, TParent>>;
+export type FormChildren<TNodes extends Nodes, TParent extends AnyNode> = {
+  readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], FormNode<TNodes, TParent>>;
 };
 
-type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
+type FormApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
   /**
    * Complete form API and the recommended access path for application code.
    *
    * When a form declares a child named `api`, this property is that child instead. Use `$api`
    * when collision-safe access to the form API is required.
    */
-  api: TNodes extends { api: infer TApi extends Node }
-    ? NodeWithParent<TApi, Form<TNodes, TParent>>
+  api: TNodes extends { api: infer TApi extends AnyNode }
+    ? NodeWithParent<TApi, FormNode<TNodes, TParent>>
     : FormApi<TNodes, TParent>;
   /**
    * Collision-safe access to the form API.
@@ -830,7 +830,7 @@ type FormApiProperty<TNodes extends Nodes, TParent extends Node> = {
   $api: FormApi<TNodes, TParent>;
 };
 
-export type Form<TNodes extends Nodes, TParent extends Node = Node> =
+export type FormNode<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
   & Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
     /** Returns the form's current aggregate committed value and participates in signal dependency tracking. */

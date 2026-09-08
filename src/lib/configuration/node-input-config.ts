@@ -1,4 +1,4 @@
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import type { MetadataContributions } from '../metadata/metadata';
 
 /** @experimental Optional custom-control input synchronization, independent of value models. */
@@ -14,10 +14,10 @@ type NodeInputConfig = {
   metadata: () => MetadataContributions;
 };
 
-const configurations = new WeakMap<Node, NodeInputConfig>();
+const configurations = new WeakMap<AnyNode, NodeInputConfig>();
 
 export const registerNodeInputConfig = (
-  node: Node,
+  node: AnyNode,
   options: { bindInputOutputPairs?: boolean | null | undefined; syncInputs?: SyncInputs | null | undefined; disabled?: unknown; readonly?: unknown; hidden?: unknown } | undefined,
   metadata: () => MetadataContributions,
 ) => {
@@ -29,4 +29,4 @@ export const registerNodeInputConfig = (
   configurations.set(node, { bindInputOutputPairs: options?.bindInputOutputPairs, mode: options?.syncInputs, declared, metadata });
 };
 
-export const getNodeInputConfig = (node: Node) => configurations.get(node)!;
+export const getNodeInputConfig = (node: AnyNode) => configurations.get(node)!;

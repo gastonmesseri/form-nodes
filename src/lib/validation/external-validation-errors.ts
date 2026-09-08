@@ -1,18 +1,18 @@
 import { signal, untracked, type Signal, type WritableSignal } from '@angular/core';
 
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import type { ValidationErrorWithTargetNode, ValidationErrorWithOptionalTargetNode } from './validation.type';
 
-type ExternalErrorSource<TNode extends Node> = Signal<readonly ValidationErrorWithOptionalTargetNode<TNode>[]>;
+type ExternalErrorSource<TNode extends AnyNode> = Signal<readonly ValidationErrorWithOptionalTargetNode<TNode>[]>;
 type ExternalErrorRegistration = {
-  readonly source: ExternalErrorSource<Node>;
+  readonly source: ExternalErrorSource<AnyNode>;
   readonly onReset?: () => void;
 };
 type ExternalErrorSources = ReadonlyMap<object, ExternalErrorRegistration>;
 
-const registries = new WeakMap<Node, WritableSignal<ExternalErrorSources>>();
+const registries = new WeakMap<AnyNode, WritableSignal<ExternalErrorSources>>();
 
-const getRegistry = (node: Node): WritableSignal<ExternalErrorSources> => {
+const getRegistry = (node: AnyNode): WritableSignal<ExternalErrorSources> => {
   let registry = registries.get(node);
   if (!registry) {
     registry = signal(new Map());
@@ -22,7 +22,7 @@ const getRegistry = (node: Node): WritableSignal<ExternalErrorSources> => {
 };
 
 /** Reads errors contributed by integrations outside the node's configured validators. */
-export const readExternalValidationErrors = <TNode extends Node>(
+export const readExternalValidationErrors = <TNode extends AnyNode>(
   node: TNode,
 ): readonly ValidationErrorWithTargetNode<TNode>[] => {
   return Array.from(getRegistry(node)().values()).flatMap(({ source }) => {
@@ -33,7 +33,7 @@ export const readExternalValidationErrors = <TNode extends Node>(
 };
 
 /** Notifies external validation integrations that their node was reset. */
-export const notifyExternalValidationReset = (node: Node) => {
+export const notifyExternalValidationReset = (node: AnyNode) => {
   Array.from(untracked(getRegistry(node)).values()).forEach(({ onReset }) => onReset?.());
 };
 
@@ -41,7 +41,7 @@ export const notifyExternalValidationReset = (node: Node) => {
  * Registers a reactive external error source for a node and returns its idempotent cleanup.
  * The weak registry does not keep an otherwise unreachable node or its integration owner alive.
  */
-export const registerExternalValidationErrors = <TNode extends Node>(
+export const registerExternalValidationErrors = <TNode extends AnyNode>(
   node: TNode,
   owner: object,
   source: ExternalErrorSource<TNode>,
@@ -50,7 +50,7 @@ export const registerExternalValidationErrors = <TNode extends Node>(
   const registry = getRegistry(node);
   const sources = new Map(untracked(registry));
   const registration: ExternalErrorRegistration = {
-    source: source as ExternalErrorSource<Node>,
+    source: source as ExternalErrorSource<AnyNode>,
     ...(options?.onReset ? { onReset: options.onReset } : {}),
   };
   sources.set(owner, registration);

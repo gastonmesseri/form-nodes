@@ -53,11 +53,11 @@ import { SelectModule } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { DatePickerModule } from 'primeng/datepicker';
-import { ANGULAR_FORMS_STATUS_CLASSES, FormNode, email, field, form, maxDate, provideFormNodesConfig, required } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, FormNodeDirective, email, field, form, maxDate, provideFormNodesConfig, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-primeng-profile-editor',
-  imports: [FormNode, ButtonModule, SelectModule, CheckboxModule, DatePickerModule, InputTextModule],
+  imports: [FormNodeDirective, ButtonModule, SelectModule, CheckboxModule, DatePickerModule, InputTextModule],
   providers: [
     provideFormNodesConfig({
       classes: ANGULAR_FORMS_STATUS_CLASSES,
@@ -132,7 +132,7 @@ ordinary single-date mode.
 
 ## 🔌 How each control connects {#how-each-control-connects}
 
-| PrimeNG control | Connection used by `FormNode` |
+| PrimeNG control | Connection used by `FormNodeDirective` |
 | --- | --- |
 | `<input pInputText>` | Native input events and values |
 | `<p-select>` | Its `ControlValueAccessor` |

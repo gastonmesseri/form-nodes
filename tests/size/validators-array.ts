@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-
-import { FormNode, array, field, form, required } from '@ngblocks/form-nodes';
+import { FormNodeDirective, array, field, form, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'size-app',
   standalone: true,
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <form [formNode]="profile">
       <input [formNode]="profile.name">

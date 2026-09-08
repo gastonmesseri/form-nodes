@@ -12,15 +12,15 @@ import { FormResetEvent, FormControl, NG_VALUE_ACCESSOR, NgControl, PristineChan
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { array } from '../primitives/array';
-import type { Node } from '../types/node.type';
-import { FormNode } from './form-node.directive';
+import type { AnyNode } from '../types/node.type';
+import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { requiredIf } from '../validation/validators/required-if';
 import type { AsyncValidatorContext, ValidationResult } from '../validation/validation.type';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
@@ -76,12 +76,12 @@ class LegacyControl implements ControlValueAccessor {
   }
 }
 
-@Component({ template: `<legacy-state-control [formNode]="active()" />`, imports: [FormNode, LegacyControl] })
+@Component({ template: `<legacy-state-control [formNode]="active()" />`, imports: [FormNodeDirective, LegacyControl] })
 class Host {
-  active = signal<Node>(field.strict(''));
+  active = signal<AnyNode>(field.strict(''));
 }
 
-const bind = (node: Node) => {
+const bind = (node: AnyNode) => {
   const fixture = TestBed.createComponent(Host);
   fixture.componentInstance.active.set(node);
   fixture.detectChanges();
@@ -90,7 +90,7 @@ const bind = (node: Node) => {
   return { fixture, cva, control: cva.ngControl.control! };
 };
 
-describe('FormNode NgControl update compatibility', () => {
+describe('FormNodeDirective NgControl update compatibility', () => {
   it.each(['field', 'nested form'] as const)('preserves the %s CVA input pipeline and does not force or suppress notifications', (kind) => {
     const name = field.strict('committed', kind === 'field' ? { debounce: 'blur' } : {});
     const node = kind === 'field' ? name : form({ details: form({ name }) }, { debounce: 'blur' });
@@ -212,7 +212,7 @@ describe('FormNode NgControl update compatibility', () => {
   });
 });
 
-describe('FormNode NgControl validator function boundary', () => {
+describe('FormNodeDirective NgControl validator function boundary', () => {
   it.each(['field', 'nested form'] as const)('exposes no transferable functions while preserving reactive validation on a %s', (kind) => {
     const message = signal('first');
     const validate = vi.fn(() => ({ kind: 'custom', message: message() }));
@@ -312,7 +312,7 @@ describe('FormNode NgControl validator function boundary', () => {
   });
 });
 
-describe('FormNode NgControl reset compatibility', () => {
+describe('FormNodeDirective NgControl reset compatibility', () => {
   it.each(['field', 'nested form'] as const)('resets a %s subtree while retaining sibling state and configured validation', (kind) => {
     const name = field.strict('initial', [required]);
     const node = kind === 'field' ? name : form({ details: form({ name }) });
@@ -587,7 +587,7 @@ describe('FormNode NgControl reset compatibility', () => {
   });
 });
 
-describe('FormNode NgControl structural identity', () => {
+describe('FormNodeDirective NgControl structural identity', () => {
   it('reports root, group, nested form, array, and literal child keys through the directive', () => {
     const profile = form({
       address: { city: field.strict('Zurich') },
@@ -596,7 +596,7 @@ describe('FormNode NgControl structural identity', () => {
       'city.name': field.strict(''),
       '': field.strict(''),
     });
-    const cases: [Node, string | number | null, string[]][] = [
+    const cases: [AnyNode, string | number | null, string[]][] = [
       [field.strict(''), null, []],
       [profile, null, []],
       [profile.address, 'address', ['address']],
@@ -654,7 +654,7 @@ describe('FormNode NgControl structural identity', () => {
   });
 });
 
-describe('FormNode NgControl required validator compatibility', () => {
+describe('FormNodeDirective NgControl required validator compatibility', () => {
   it('lets a CVA recognize Form Nodes required through Angular Validators.required', () => {
     const profile = form({ name: field.strict('', [required]) });
     const { fixture, cva } = bind(profile.name);
@@ -705,7 +705,7 @@ describe('FormNode NgControl required validator compatibility', () => {
   });
 });
 
-describe('FormNode NgControl error queries', () => {
+describe('FormNodeDirective NgControl error queries', () => {
   it('lets a CVA query validator errors and original imperative payloads through NgControl and control', () => {
     const profile = form({ name: field.strict('', [required]) });
     const { fixture, cva, control } = bind(profile.name);
@@ -823,10 +823,10 @@ describe('FormNode NgControl error queries', () => {
   });
 });
 
-describe('FormNode NgControl subscriptions', () => {
+describe('FormNodeDirective NgControl subscriptions', () => {
   it.each(['field', 'nested form'] as const)('merges imperative errors with validators and propagates a %s to its parent', (kind) => {
     const name = field.strict('', [required]);
-    const node: Node = kind === 'field' ? name : form({ name }, [() => ({ kind: 'formRule' })]);
+    const node: AnyNode = kind === 'field' ? name : form({ name }, [() => ({ kind: 'formRule' })]);
     const root = form({ nested: form({ edited: node }) });
     const { fixture, cva, control } = bind(node);
     const payload = { message: 'Use DD/MM/YYYY', actual: '32/13/2026' };
@@ -1028,8 +1028,8 @@ describe('FormNode NgControl subscriptions', () => {
     first.control.setErrors({ parse: { message: 'First input' } });
     second.control.setErrors({ parse: { message: 'Second input' } });
     expect(name.errors()).toHaveLength(2);
-    const firstBinding = first.fixture.debugElement.children[0]!.injector.get(FormNode);
-    const secondBinding = second.fixture.debugElement.children[0]!.injector.get(FormNode);
+    const firstBinding = first.fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
+    const secondBinding = second.fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
     expect(firstBinding.errors()).toMatchObject([{ message: 'First input' }]);
     expect(secondBinding.errors()).toMatchObject([{ message: 'Second input' }]);
     first.control.setErrors(null);
@@ -1086,7 +1086,7 @@ describe('FormNode NgControl subscriptions', () => {
     @Component({
       selector: 'content-init-state-host',
       template: `<content-init-state-control [formNode]="profile.name" />`,
-      imports: [FormNode, ContentInitControl],
+      imports: [FormNodeDirective, ContentInitControl],
       host: { 'data-error-validator': String(hasErrorValidator) },
     })
     class ContentInitHost {

@@ -10,12 +10,12 @@ import { field } from '../../primitives/field';
 import { max } from '../../validation/validators/max';
 import { min } from '../../validation/validators/min';
 import { pattern } from '../../validation/validators/pattern';
-import { FormNode } from '../../form-node/form-node.directive';
 import { required } from '../../validation/validators/required';
 import { injectFormNodeControlStateAdapter } from './form-node';
 import { asyncValidator } from '../../validation/async-validator';
 import { maxLength } from '../../validation/validators/max-length';
 import { minLength } from '../../validation/validators/min-length';
+import { FormNodeDirective } from '../../form-node/form-node.directive';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({ selector: 'form-node-adapter-control', template: '', standalone: true })
@@ -31,7 +31,7 @@ class FormNodeAdapterControl {
 @Component({
   template: `<form-node-adapter-control [formNode]="name" />`,
   standalone: true,
-  imports: [FormNodeAdapterControl, FormNode],
+  imports: [FormNodeAdapterControl, FormNodeDirective],
 })
 class StringHost {
   minimumLength = signal<number | undefined>(3);
@@ -48,7 +48,7 @@ class StringHost {
 @Component({
   template: `<form-node-adapter-control [formNode]="amount" />`,
   standalone: true,
-  imports: [FormNodeAdapterControl, FormNode],
+  imports: [FormNodeAdapterControl, FormNodeDirective],
 })
 class NumericHost {
   minimum = signal<number | undefined>(1);
@@ -59,7 +59,7 @@ class NumericHost {
 @Component({
   template: `<form-node-adapter-control [formNode]="amount" />`,
   standalone: true,
-  imports: [FormNodeAdapterControl, FormNode],
+  imports: [FormNodeAdapterControl, FormNodeDirective],
 })
 class PendingHost {
   resolveValidation: (() => void) | undefined;
@@ -70,7 +70,7 @@ class PendingHost {
   })]);
 }
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 registerSignalModelForJit(FormNodeAdapterControl, 'value');
 
 const createControlState = <THost>(host: Type<THost>) => {
@@ -87,7 +87,7 @@ describe('formNode form-node-state adapter', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
   afterEach(() => TestBed.resetTestingModule());
 
-  it('connects to a same-host FormNode directive', () => {
+  it('connects to a same-host FormNodeDirective directive', () => {
     const { state } = createControlState(StringHost);
     expect(state.source).toBe('formNode');
     expect(state.connected()).toBe(true);

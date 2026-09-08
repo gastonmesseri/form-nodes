@@ -45,7 +45,7 @@ Use it like a native control:
 ```ts
 @Component({
   selector: 'app-review-editor',
-  imports: [FormNode, RatingControl],
+  imports: [FormNodeDirective, RatingControl],
   template: `
     <app-rating [formNode]="myForm.rating" />
   `,

@@ -10,7 +10,7 @@ host. Use it when a colocated directive or service needs that exact rendered con
 ## 📐 Type {#type}
 
 ```ts
-const FORM_NODE: InjectionToken<FormNodeBinding<Node>>;
+const FORM_NODE: InjectionToken<FormNodeBinding<AnyNode>>;
 ```
 
 ## 🔌 Same-host injection {#same-host-injection}

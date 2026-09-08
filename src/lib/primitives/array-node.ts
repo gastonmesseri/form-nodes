@@ -29,14 +29,14 @@ import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
-import type { InternalNode, MarkAsTouchedOptions, Node, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
+import type { InternalNode, MarkAsTouchedOptions, AnyNode, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
 import type { FieldContext, ValidationStatus, ValidatorContext, ValidatorSource, Validators } from '../validation/validation.type';
 import { createDisabledReason, getInitialDisabledState, readConfiguredDisabledState, type DisabledState } from './utils/disabled-reasons';
 import type { ArrayApi, ArrayItemWithParent, ArrayItems, ArrayNode as ArrayNodeType, ArrayOptions, ArrayPatch, ArraySet, ArrayValue } from './array.type';
 
-type ArrayItemNode<TItem extends Node> = ArrayItemWithParent<TItem, ArrayNodeType<TItem>>;
+type ArrayItemNode<TItem extends AnyNode> = ArrayItemWithParent<TItem, ArrayNodeType<TItem>>;
 
-export function createArrayNode<TItem extends Node>(
+export function createArrayNode<TItem extends AnyNode>(
   itemFactory: () => unknown,
   initial: number | ArraySet<TItem>,
   validatorSource: ValidatorSource<ArrayValue<TItem>, any>,
@@ -46,7 +46,7 @@ export function createArrayNode<TItem extends Node>(
 }
 
 /** Owns a dynamic array's state and operations behind its callable public node. */
-export class ArrayNode<TItem extends Node> {
+export class ArrayNode<TItem extends AnyNode> {
   node: ArrayNodeType<TItem>;
 
   cloneOptions: Omit<ArrayOptions<ArrayValue<TItem>, any>, 'initialValue'> | undefined;
@@ -75,7 +75,7 @@ export class ArrayNode<TItem extends Node> {
 
   asyncValidationWatchRef: ReactiveWatchRef | null = null;
 
-  parent = signal<Node | null>(null);
+  parent = signal<AnyNode | null>(null);
 
   keyInParent = signal<string | number | null>(null);
 
@@ -441,7 +441,7 @@ export class ArrayNode<TItem extends Node> {
     watchNodeInjector(this.node, injector => this.asyncValidationWatchRef?.setInjector(injector));
   }
 
-  setParent(parent: Node | null, key?: string) {
+  setParent(parent: AnyNode | null, key?: string) {
     this.parent.set(parent);
     this.keyInParent.set(parent ? key ?? null : null);
     this.refreshInjector();
@@ -589,7 +589,7 @@ export class ArrayNode<TItem extends Node> {
   createNode(): ArrayNodeType<TItem> {
     const publicApi: ArrayApi<TItem> = {
       nodeType: () => 'array',
-      items: this.items.asReadonly() as Signal<ArrayItems<TItem, Node>>,
+      items: this.items.asReadonly() as Signal<ArrayItems<TItem, AnyNode>>,
       length: this.length,
       form: this.form,
       root: this.root,
@@ -657,7 +657,7 @@ export class ArrayNode<TItem extends Node> {
       visible: this.visible,
       hide: () => this.selfHidden.set(true),
       show: () => this.selfHidden.set(false),
-      [Symbol.iterator]: () => (this.items() as ArrayItems<TItem, Node>)[Symbol.iterator](),
+      [Symbol.iterator]: () => (this.items() as ArrayItems<TItem, AnyNode>)[Symbol.iterator](),
     };
 
     const internalApi = {
@@ -668,7 +668,7 @@ export class ArrayNode<TItem extends Node> {
       _setControlValue: (value: ArraySet<TItem> | null | undefined) => this.controlValueBuffer.set(this.normalizeArrayValue(value)),
       _flushControlValueOnBlur: publicApi.flush,
       _clone: this.createClone(),
-      _setParent: (parent: Node | null, key?: string) => this.setParent(parent, key),
+      _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => this.refreshInjector(),
       _registerControlBinding: (binding: NodeControlBinding) => this.registerControlBinding(binding),
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),

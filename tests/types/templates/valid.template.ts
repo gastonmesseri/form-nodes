@@ -1,11 +1,11 @@
 import { Component, model, viewChild } from '@angular/core';
 import { type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 
-import { array, field, form, FormNode } from '../../../src/public-api';
+import { array, field, form, FormNodeDirective } from '../../../src/public-api';
 
 @Component({
   standalone: true,
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input #binding="formNode" [formNode]="name">
     <input [formNode]="profile.age">
@@ -21,7 +21,7 @@ class ValidFormNodeHost {
   readonly name = field.strict('David');
   readonly profile = form({ age: field.strict(42) });
   readonly dynamicName = this.profile.add('dynamicName', field('Ada'));
-  readonly nameBinding = viewChild.required<FormNode<typeof this.name>>('binding');
+  readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.name>>('binding');
 
   focusName() {
     this.nameBinding().focus();
@@ -67,7 +67,7 @@ class ValidPeopleControl implements FormValueControl<{ name: string | null }[]> 
 
 @Component({
   standalone: true,
-  imports: [ValidValueControl, ValidCheckboxControl, FormNode],
+  imports: [ValidValueControl, ValidCheckboxControl, FormNodeDirective],
   template: `
     <valid-value-control [formNode]="name" />
     <valid-checkbox-control [formNode]="active" />
@@ -80,7 +80,7 @@ class ValidSignalControlHost {
 
 @Component({
   standalone: true,
-  imports: [ValidProfileControl, ValidPeopleControl, FormNode],
+  imports: [ValidProfileControl, ValidPeopleControl, FormNodeDirective],
   template: `
     <valid-profile-control [formNode]="profile" />
     <valid-people-control [formNode]="people" />

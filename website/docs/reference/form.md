@@ -125,7 +125,7 @@ myForm.recentCompanies.nodeType() === 'field'; // true
 
 The equivalent explicit declarations are `field('')`, `field(null)`, `field(2)`,
 `field(new Date())`, and `field(undefined)`. As with those calls, `null` and `undefined` infer
-`Field&lt;unknown&gt;`; other values infer their widened value type plus `null`.
+`FieldNode&lt;unknown&gt;`; other values infer their widened value type plus `null`.
 Use an explicit `field()` when the child needs validators, state options, debounce, or a more
 specific generic than the initial value can provide.
 
@@ -134,11 +134,11 @@ for every normalization category, its explicit equivalent, and the cases that re
 `field()`, `group()`, or `array()`.
 
 Every array value, including an empty array, populated array, readonly tuple, or array of plain
-objects, becomes one `Field`. Its interpretation never depends on its length or first item. To
+objects, becomes one `FieldNode`. Its interpretation never depends on its length or first item. To
 create a dynamic `ArrayNode` with independently addressable item nodes, declare `array(...)`
 explicitly. Use `field([...])` when making the atomic array-value intent visually explicit or when
-the field needs configuration. An empty `[]` shorthand infers `Field<unknown[] | null>` instead of
-the unusably narrow `Field<never[] | null>`; use `field<Item[]>([])` when the item type is known.
+the field needs configuration. An empty `[]` shorthand infers `FieldNode<unknown[] | null>` instead of
+the unusably narrow `FieldNode<never[] | null>`; use `field<Item[]>([])` when the item type is known.
 
 :::info Declaration property rules
 
@@ -170,14 +170,14 @@ const myForm = form({
 });
 ```
 
-If `company` is accidentally written as a plain object instead, it becomes a `Group`, but it can
+If `company` is accidentally written as a plain object instead, it becomes a `GroupNode`, but it can
 still be bound as one value to a custom control with `[formNode]`. Aggregate nodes support control
 binding, so the component's `value` model receives the complete company object and updates are
 distributed to the group's children:
 
 <CodeBlock language="ts">{objectShorthandFormNodeSource}</CodeBlock>
 
-This makes the binding usable, but it does not turn `company` into a `Field`: it still exposes
+This makes the binding usable, but it does not turn `company` into a `FieldNode`: it still exposes
 `companyId` and `companyName` child nodes and uses group validation and state aggregation. Prefer
 `field(defaultCompany)` when the company is conceptually one atomic field value.
 
@@ -248,7 +248,7 @@ complete executable example, operation contract, lazy evaluation, and comparator
 
 #### ✅ validators {#form-validators-option}
 
-**Signature:** `validators?: ValidatorSource<FormValue, Form<TNodes>>`
+**Signature:** `validators?: ValidatorSource<FormValue, FormNode<TNodes>>`
 
 Assigns one validator, several validators, or a reactive validator source to the complete form
 value. Validators declared by descendants remain independent.
@@ -634,7 +634,7 @@ profile.nodeType(); // 'form'
 
 #### 🧩 form() {#form-1}
 
-**Signature:** `form: Signal<Form>`
+**Signature:** `form: Signal<FormNode>`
 
 Returns this explicit form because every `form()` owns a submission workflow boundary. Descendants
 return their nearest explicit form, so a nested form becomes the workflow owner for its subtree.
@@ -1268,7 +1268,7 @@ profile.pristine(); // true
 
 #### ✅ setValidators() {#setvalidators}
 
-**Signature:** `setValidators(validators: ValidatorSource<FormValue, Form<TNodes>>): void`
+**Signature:** `setValidators(validators: ValidatorSource<FormValue, FormNode<TNodes>>): void`
 
 Replaces validators owned by the form and immediately evaluates its current aggregate value. Child
 validators are unchanged.

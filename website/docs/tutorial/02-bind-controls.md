@@ -67,7 +67,7 @@ Bind it exactly like a native input:
 
 ```ts
 @Component({
-  imports: [FormNode, RatingControl],
+  imports: [FormNodeDirective, RatingControl],
   template: `<app-rating [formNode]="myForm.rating" />`,
 })
 export class ReviewEditor {
@@ -95,7 +95,7 @@ field automatically:
 - `setDisabledState()` receives the field's disabled state and applies it to the inner input.
 
 `NG_VALUE_ACCESSOR` is the standard Angular provider for the custom control. The parent only
-imports `FormNode` and the control component; no `ngModel`, `FormControl`, or additional Form Nodes
+imports `FormNodeDirective` and the control component; no `ngModel`, `FormControl`, or additional Form Nodes
 provider is needed. The same component can still be used with Angular's other forms APIs.
 
 See [ControlValueAccessor in the custom-controls guide](../guides/custom-controls.md#controlvalueaccessor)
@@ -111,11 +111,11 @@ node or introducing a `FormControl`:
 ```ts
 import { Component } from '@angular/core';
 import { MatSelectModule } from '@angular/material/select';
-import { field, FormNode, form } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
-  imports: [FormNode, MatFormFieldModule, MatSelectModule],
+  imports: [FormNodeDirective, MatFormFieldModule, MatSelectModule],
   template: `
     <mat-form-field>
       <mat-label>Country</mat-label>
@@ -147,10 +147,10 @@ that `[formNode]` recognizes:
 ```ts
 import { Component } from '@angular/core';
 import { SelectModule } from 'primeng/select';
-import { field, FormNode, form } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective, form } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode, SelectModule],
+  imports: [FormNodeDirective, SelectModule],
   template: `
     <p-select
       [formNode]="myForm.city"

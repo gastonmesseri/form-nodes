@@ -1,9 +1,9 @@
 import { Component, viewChild } from '@angular/core';
-import { field, form, FormNode } from '@ngblocks/form-nodes';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <label>
       Name
@@ -24,7 +24,7 @@ export class ProfileEditor {
     name: field(''),
     age: field<number>(),
   });
-  readonly nameBinding = viewChild.required<FormNode<typeof this.myForm.name>>('nameBinding');
+  readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.myForm.name>>('nameBinding');
 
   focusName() {
     this.nameBinding().focus();

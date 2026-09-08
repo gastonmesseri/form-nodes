@@ -12,21 +12,21 @@ import { form } from '../primitives/form';
 import { field } from '../primitives/field';
 import { array } from '../primitives/array';
 import { group } from '../primitives/group';
-import { useFormNodeState } from './form-node-state';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import { useFormNodeState } from './form-node-state';
 import { pattern } from '../validation/validators/pattern';
-import { FormNode } from '../form-node/form-node.directive';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
+import { FormNodeDirective } from '../form-node/form-node.directive';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import { hasControlStateConsumer, registerControlStateBinding } from './adapters/form-node';
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 // Plain Vitest transpilation does not emit signal-input metadata for the directive.
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
@@ -53,7 +53,7 @@ describe('useFormNodeState', () => {
       state = useFormNodeState();
     }
     registerSignalModelForJit(EqualityStateControl, 'value');
-    @Component({ template: `<equality-state-control [formNode]="target" />`, imports: [EqualityStateControl, FormNode] })
+    @Component({ template: `<equality-state-control [formNode]="target" />`, imports: [EqualityStateControl, FormNodeDirective] })
     class Host {
       target = target;
     }
@@ -116,7 +116,7 @@ describe('useFormNodeState', () => {
     @Component({
       template: `<bound-state-control [formNode]="name" />`,
       standalone: true,
-      imports: [BoundStateControl, FormNode],
+      imports: [BoundStateControl, FormNodeDirective],
     })
     class Host {
       name = field.strict('', [required, minLength(3), maxLength(20), pattern(/^[a-z]+$/i)]);
@@ -190,7 +190,7 @@ describe('useFormNodeState', () => {
     @Component({
       template: `<bound-number-control [formNode]="amount" />`,
       standalone: true,
-      imports: [BoundNumberControl, FormNode],
+      imports: [BoundNumberControl, FormNodeDirective],
     })
     class Host {
       amount = field.strict(5, [min(1), max(10), asyncValidator(() => new Promise<null>(() => {}))]);

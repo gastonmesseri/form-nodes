@@ -10,11 +10,11 @@ import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, NgControl, Reac
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import { useFormNodeState } from './form-node-state';
-import { FormNode } from '../form-node/form-node.directive';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
+import { FormNodeDirective } from '../form-node/form-node.directive';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({
@@ -36,13 +36,13 @@ class ErrorControl implements ControlValueAccessor {
   registerOnTouched() {}
 }
 
-@Component({ template: '', imports: [ErrorControl, FormNode, FormField, FormsModule, ReactiveFormsModule] })
+@Component({ template: '', imports: [ErrorControl, FormNodeDirective, FormField, FormsModule, ReactiveFormsModule] })
 class Host {
   issues = signal<{ kind: string; message: string }[]>([]);
 
   validate = vi.fn(() => this.issues());
 
-  node = signal<Node>(field('Ada', [this.validate]));
+  node = signal<AnyNode>(field('Ada', [this.validate]));
 
   control = new FormControl('Ada');
 
@@ -55,7 +55,7 @@ class Host {
   angularField = angularForm(this.value, path => validate(path, this.validate));
 }
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());

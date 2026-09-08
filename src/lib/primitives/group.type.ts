@@ -1,12 +1,12 @@
 import type { Signal } from '@angular/core';
 
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DynamicNode, NearestForm, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
+import type { DynamicNode, NearestForm, AnyNode, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, ValidationErrorWithTargetNode } from '../validation/validation.type';
 import type { AddedNode, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
-export type GroupOptions<TValue = any, TGroup extends Node = Group<any>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
    * One validator or an array of validators for the complete group value.
    *
@@ -146,21 +146,21 @@ export type NormalizedNode<TNode extends ObjectNodeDefinition> = FormNormalizedN
 
 export type NormalizedNodes<TNodes extends ObjectNodeDefinitions> = FormNormalizedNodes<TNodes>;
 
-export type GroupRoot<TNodes extends Nodes, TParent extends Node> = Node extends TParent
-  ? Group<TNodes, TParent>
+export type GroupRoot<TNodes extends Nodes, TParent extends AnyNode> = AnyNode extends TParent
+  ? GroupNode<TNodes, TParent>
   : RootNode<TParent>;
 
-export type GroupChildren<TNodes extends Nodes, TParent extends Node> = {
-  readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], Group<TNodes, TParent>>;
+export type GroupChildren<TNodes extends Nodes, TParent extends AnyNode> = {
+  readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], GroupNode<TNodes, TParent>>;
 };
 
-export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
+export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
   & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
   & {
     /** Returns the concrete primitive represented by this node. */
     nodeType(): 'group';
     /** Replaces this group's validators while preserving its node type in inline callbacks. */
-    setValidators(validators: ValidatorSource<GroupValue<TNodes>, Group<TNodes, TParent>>): void;
+    setValidators(validators: ValidatorSource<GroupValue<TNodes>, GroupNode<TNodes, TParent>>): void;
     /** Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode. */
     readonly children: GroupChildren<TNodes, TParent> & Readonly<Record<string, DynamicNode>>;
     /**
@@ -194,7 +194,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * filters.get('category') === category; // true
      * ```
      */
-    add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, Group<TNodes, TParent>>;
+    add<TKey extends string, TDefinition>(key: TKey extends keyof TNodes | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): AddedNode<TDefinition, GroupNode<TNodes, TParent>>;
     /**
      * Adds several child definitions atomically and returns an exact keyed map of their attached
      * live nodes.
@@ -217,7 +217,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * ```
      */
     add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {
-      readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], Group<TNodes, TParent>>;
+      readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], GroupNode<TNodes, TParent>>;
     };
     /** Detaches a dynamically added child. Initially declared children cannot be removed. */
     remove(key: string): DynamicNode | undefined;
@@ -240,7 +240,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * // [{ kind: 'unsupportedCountry', message: 'Country is unavailable.', targetNode: address }]
      * ```
      */
-    errors: Signal<readonly ValidationErrorWithTargetNode<Group<TNodes, TParent>>[]>;
+    errors: Signal<readonly ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>>[]>;
     /**
      * Validation errors from this group and its complete subtree in structural order.
      *
@@ -250,19 +250,19 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * // [{ kind: 'required', message: 'City is required.', targetNode: address.city }]
      * ```
      */
-    allErrors: Signal<readonly ValidationErrorWithTargetNode<Node>[]>;
+    allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     /**
      * Returns the first validation error belonging directly to this group and matching `kind`.
      *
      * @reactive Maintains an independent reactive computation for each `kind`.
      */
-    getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<Group<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
+    getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
     /**
      * Returns the first custom error belonging directly to this group and matching `kind`.
      *
      * @reactive Maintains an independent reactive computation for each `kind`.
      */
-    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<Group<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
     /**
      * Aggregated validation phase for this group subtree: `'valid'`, `'invalid'`, or `'unknown'`.
      *
@@ -276,10 +276,10 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
     submitting: Signal<boolean>;
   };
 
-type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
+type GroupApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
   /** Complete group API and the recommended access path for application code. */
-  api: TNodes extends { api: infer TApi extends Node }
-    ? NodeWithParent<TApi, Group<TNodes, TParent>>
+  api: TNodes extends { api: infer TApi extends AnyNode }
+    ? NodeWithParent<TApi, GroupNode<TNodes, TParent>>
     : GroupApi<TNodes, TParent>;
   /**
    * Collision-safe access to the group API.
@@ -289,7 +289,7 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends Node> = {
 };
 
 /** An object-shaped structural node without its own submission workflow. */
-export type Group<TNodes extends Nodes, TParent extends Node = Node> =
+export type GroupNode<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
   & Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
     /** Returns the group's current aggregate committed value and participates in signal dependency tracking. */

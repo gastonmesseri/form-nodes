@@ -441,11 +441,11 @@ A component can accept a `formNode` input and delegate it to an inner control:
 ```ts
 @Component({
   selector: 'app-text-field',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="formNode()" />`,
 })
 export class TextField {
-  readonly formNode = input.required<Field<string>>();
+  readonly formNode = input.required<FieldNode<string>>();
 }
 ```
 

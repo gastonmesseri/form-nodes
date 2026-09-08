@@ -1,7 +1,7 @@
 import type { Signal } from '@angular/core';
 
 import type { Equal, Expect } from './assert.types';
-import { array, asyncValidator, field, form, group, validator, type AsyncValidatorBaseContext, type AsyncValidatorContext, type Field, type ParameterizedAsyncValidatorContext, type ValidatorApi, type ValidatorContext } from '../../src/public-api';
+import { array, asyncValidator, field, form, group, validator, type AsyncValidatorBaseContext, type AsyncValidatorContext, type FieldNode, type ParameterizedAsyncValidatorContext, type ValidatorApi, type ValidatorContext } from '../../src/public-api';
 
 type Root = ReturnType<ValidatorContext<string>['node']>;
 type ValidatorForm = NonNullable<ReturnType<Root['api']['form']>>;

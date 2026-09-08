@@ -3,12 +3,12 @@ import { DestroyRef, effect, untracked } from '@angular/core';
 
 import { connectLegacyValidators } from './legacy-validators';
 import { connectControlInputs } from '../sync-control-inputs';
-import type { InternalNode, Node } from '../../../types/node.type';
+import type { InternalNode, AnyNode } from '../../../types/node.type';
 import { hasControlStateConsumer } from '../../../form-node-state/adapters/form-node';
 import type { ControlAdapterContext, ControlAdapterConnection } from '../control-adapter';
 
 /** Connects either an NG_VALUE_ACCESSOR provider or a directly assigned NgControl accessor. */
-export const connectCvaAdapter = <TNode extends Node>(context: ControlAdapterContext<TNode>, accessor: ControlValueAccessor): ControlAdapterConnection => {
+export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapterContext<TNode>, accessor: ControlValueAccessor): ControlAdapterConnection => {
   const { binding, getNgControl } = context;
   const injector = binding.injector;
   let destroyed = false;

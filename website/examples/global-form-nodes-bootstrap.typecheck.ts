@@ -1,7 +1,7 @@
 // Imports shared by the combined example.
 import { Component } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { field, form, required, FormNode, ANGULAR_FORMS_STATUS_CLASSES, configureGlobalFormNodes } from '@ngblocks/form-nodes';
+import { field, form, required, FormNodeDirective, ANGULAR_FORMS_STATUS_CLASSES, configureGlobalFormNodes } from '@ngblocks/form-nodes';
 import { validatorMessages } from './validator-message-catalog';
 
 // app.component.ts
@@ -13,7 +13,7 @@ import { validatorMessages } from './validator-message-catalog';
       <p>{{ profile.name.getError('required')?.message }}</p>
     }
   `,
-  imports: [FormNode],
+  imports: [FormNodeDirective],
 })
 class AppComponent {
   profile = form({ name: field('', [required]) });

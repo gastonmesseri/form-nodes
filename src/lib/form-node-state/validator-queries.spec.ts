@@ -10,12 +10,12 @@ import { FormControl, FormGroup, FormsModule, NG_VALUE_ACCESSOR, NgControl, Reac
 
 import { form } from '../primitives/form';
 import { field } from '../primitives/field';
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import { useFormNodeState } from './form-node-state';
-import { FormNode } from '../form-node/form-node.directive';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
 import { requiredIf } from '../validation/validators/required-if';
+import { FormNodeDirective } from '../form-node/form-node.directive';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 @Component({
@@ -39,11 +39,11 @@ class ValidatorControl implements ControlValueAccessor {
   registerOnTouched() {}
 }
 
-@Component({ template: '', imports: [ValidatorControl, FormNode, FormField, FormsModule, ReactiveFormsModule] })
+@Component({ template: '', imports: [ValidatorControl, FormNodeDirective, FormField, FormsModule, ReactiveFormsModule] })
 class Host {
   required = signal(false);
 
-  node = signal<Node>(field('Ada', [requiredIf(() => this.required())]));
+  node = signal<AnyNode>(field('Ada', [requiredIf(() => this.required())]));
 
   control = new FormControl('Ada');
 
@@ -54,7 +54,7 @@ class Host {
   angularField = angularForm(signal('Ada'), path => angularRequired(path, { when: () => this.required() }));
 }
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());

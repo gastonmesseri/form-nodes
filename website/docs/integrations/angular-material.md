@@ -22,7 +22,7 @@ for theme and application setup. Form Nodes adds no Material-specific provider.
 ## 🧪 Complete example {#complete-example}
 
 This component binds a native Material input, `mat-select`, `mat-checkbox`, and Material datepicker
-to one form. The same `FormNode` import also handles the native `<form>` submission boundary.
+to one form. The same `FormNodeDirective` import also handles the native `<form>` submission boundary.
 
 ```ts
 import { Component } from '@angular/core';
@@ -33,12 +33,12 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { FormNode, email, field, form, maxDate, required } from '@ngblocks/form-nodes';
+import { FormNodeDirective, email, field, form, maxDate, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-material-profile-editor',
   imports: [
-    FormNode,
+    FormNodeDirective,
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
@@ -109,7 +109,7 @@ The date field uses `Date | null` because `provideNativeDateAdapter()` configure
 
 ## 🔌 How each control connects {#how-each-control-connects}
 
-| Material control | Connection used by `FormNode` |
+| Material control | Connection used by `FormNodeDirective` |
 | --- | --- |
 | `<input matInput>` and `<textarea matInput>` | Native input events and values |
 | `<mat-select>` | Its `ControlValueAccessor` |
@@ -117,7 +117,7 @@ The date field uses `Date | null` because `provideNativeDateAdapter()` configure
 | `input[matDatepicker]` | Material's datepicker value accessor |
 | `<form [formNode]>` | Native submit and reset events |
 
-`FormNode` provides a lightweight `NgControl` view on the host. Material controls that inspect
+`FormNodeDirective` provides a lightweight `NgControl` view on the host. Material controls that inspect
 their injected control can read current value, errors, validity, pending, disabled, touched, and
 dirty state. Material's standard error-state behavior can therefore react to node state.
 
@@ -151,7 +151,7 @@ See [Errors and validation status](../guides/errors-and-status.md).
 
 ## ✅ Required and constraint state {#required-and-constraint-state}
 
-Built-in validators expose constraint metadata through the node. `FormNode` synchronizes supported
+Built-in validators expose constraint metadata through the node. `FormNodeDirective` synchronizes supported
 state such as `required`, `min`, `max`, `minLength`, `maxLength`, and `pattern` with native elements
 and compatible component inputs. This lets Material display required markers and native input
 constraints without duplicating validator configuration in the template.

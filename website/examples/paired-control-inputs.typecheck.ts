@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { field, form, FormNode } from '@ngblocks/form-nodes';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
 // text-input.component.ts
 @Component({
@@ -21,7 +21,7 @@ export class PairedText {
 
 // profile.component.ts
 @Component({
-  imports: [FormNode, PairedText],
+  imports: [FormNodeDirective, PairedText],
   template: `<app-paired-text [formNode]="profile.name" />`,
 })
 export class ProfileComponent {

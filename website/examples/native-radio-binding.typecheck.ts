@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { field, form, FormNode } from '@ngblocks/form-nodes';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-delivery-options',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <fieldset>
       <legend>Delivery method</legend>

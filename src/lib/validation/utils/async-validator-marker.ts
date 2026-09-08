@@ -1,8 +1,8 @@
-import type { Node } from '../../types/node.type';
+import type { AnyNode } from '../../types/node.type';
 import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorNode, ValidatorReadonlyApi } from '../validation.type';
 
 /** Scheduling, activation, and failure-handling options for `asyncValidator()`. */
-export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = {
+export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = {
   /**
    * Delay in milliseconds before each execution. A newer trigger cancels the pending delay.
    *
@@ -49,7 +49,7 @@ export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TVal
 };
 
 /** Options for an async validator whose tracked dependencies are exposed as a typed snapshot. */
-export type ParameterizedAsyncValidatorOptions<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = AsyncValidatorOptions<TValue, TApi, TField> & {
+export type ParameterizedAsyncValidatorOptions<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = AsyncValidatorOptions<TValue, TApi, TField> & {
   /**
    * Reactively derives the explicit dependency snapshot passed to the validator. Signals read by
    * this function are tracked, while object and array results are compared shallowly.

@@ -1,7 +1,7 @@
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 
 import type { FormNodeControl } from '../form-node-control';
-import type { Node, NodeValue } from '../../types/node.type';
+import type { AnyNode, NodeValue } from '../../types/node.type';
 import { connectCvaAdapter } from './control-value-accessor/cva-adapter';
 import { isNativeFormNodeControl } from './native-control/native-control-value';
 import { hasControlStateConsumer } from '../../form-node-state/adapters/form-node';
@@ -12,7 +12,7 @@ import type { ControlAdapterContext, ControlAdapterConnection } from './control-
 import { connectCustomControlAdapter } from './signal-forms-control/custom-control-adapter';
 
 /** Resolves and connects one value transport: direct CVA, provided CVA, custom control, native. */
-export const resolveControlAdapter = <TNode extends Node>(
+export const resolveControlAdapter = <TNode extends AnyNode>(
   context: ControlAdapterContext<TNode>,
   directAccessor: ControlValueAccessor | null | undefined,
 ): ControlAdapterConnection => {

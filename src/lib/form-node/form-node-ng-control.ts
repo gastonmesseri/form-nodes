@@ -7,7 +7,7 @@ import type { ArrayApi } from '../primitives/array.type';
 import { isNode } from '../primitives/utils/node-marker';
 import { arrayToObject } from '../utils/array-to-object';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
-import type { InternalNode, Node, Nodes } from '../types/node.type';
+import type { InternalNode, AnyNode, Nodes } from '../types/node.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ValidationErrorWithOptionalTargetNode } from '../validation/validation.type';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
@@ -16,7 +16,7 @@ const controlErrorPayload = Symbol('controlErrorPayload');
 
 type NgControlState = ReturnType<FormNodeNgControl['_readState']>;
 
-const toValidationErrors = (node: Node): ValidationErrors | null => {
+const toValidationErrors = (node: AnyNode): ValidationErrors | null => {
   const errors = node.$api.errors();
   if (errors.length === 0) return null;
   return arrayToObject(errors, error => [error.kind, controlErrorPayload in error ? error[controlErrorPayload] : error]);
@@ -42,7 +42,7 @@ export class FormNodeNgControl {
 
   _manualErrors = signal<ValidationErrors | null>(null, { equal: shallowEqual });
 
-  _registeredErrorNode: Node | undefined;
+  _registeredErrorNode: AnyNode | undefined;
 
   _removeErrorSource: (() => void) | undefined;
 
@@ -59,7 +59,7 @@ export class FormNodeNgControl {
 
   _status = computed(() => this.status);
 
-  _manualErrorSource = computed<readonly ValidationErrorWithOptionalTargetNode<Node>[]>(() => {
+  _manualErrorSource = computed<readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>(() => {
     return Object.entries(this._manualErrors() ?? {}).map(([kind, context]) => ({
       kind,
       context,
@@ -70,9 +70,9 @@ export class FormNodeNgControl {
   });
 
   constructor(
-    readonly _getNode: () => Node,
+    readonly _getNode: () => AnyNode,
     injector: Injector,
-    readonly _binding?: FormNodeBinding<Node>
+    readonly _binding?: FormNodeBinding<AnyNode>
   ) {
     let previous: NgControlState | undefined;
     effect(() => {
@@ -216,17 +216,17 @@ export class FormNodeNgControl {
     return !!this.getError(errorCode, path);
   }
 
-  _findErrorNode(path: string | (string | number)[]): Node | undefined {
+  _findErrorNode(path: string | (string | number)[]): AnyNode | undefined {
     const segments = typeof path === 'string' ? path.split('.') : path;
     if (segments.length === 0) return undefined;
-    let node: Node | undefined = this._getNode();
+    let node: AnyNode | undefined = this._getNode();
     for (const segment of segments) {
       if (!node) return undefined;
       const kind = node.$api.nodeType();
       if (kind === 'field') return undefined;
       let child: unknown;
       if (kind === 'array') {
-        const items = (node.$api as ArrayApi<Node>).items();
+        const items = (node.$api as ArrayApi<AnyNode>).items();
         const index = typeof segment === 'number' && segment < 0 ? items.length + segment : segment;
         child = Object.hasOwn(items, index) ? items[index as number] : undefined;
       } else {
@@ -240,7 +240,7 @@ export class FormNodeNgControl {
     return node;
   }
 
-  _releasePreviousErrors(node: Node | undefined) {
+  _releasePreviousErrors(node: AnyNode | undefined) {
     if (this._registeredErrorNode === node) return;
     this._removeErrorSource?.();
     this._removeErrorSource = undefined;

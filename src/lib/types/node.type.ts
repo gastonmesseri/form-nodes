@@ -1,8 +1,8 @@
 import type { Signal } from '@angular/core';
 
-import type { Field } from '../primitives/field.type';
 import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
+import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 
@@ -18,7 +18,7 @@ export type DisabledStateSource = boolean | string | (() => boolean | string);
 export type ControlDebounce = number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
 
 /** Identifies one active cause of a node's disabled state. */
-export type DisabledReason<TNode extends Node = Node> = {
+export type DisabledReason<TNode extends AnyNode = AnyNode> = {
   /** Node on which this reason originated. Descendants retain the original source node. */
   readonly sourceNode: TNode;
   /** Optional user-facing explanation supplied by the disabled option or disable(). */
@@ -38,11 +38,11 @@ export type NodeApi = {
   /** Returns the concrete primitive represented by this node. */
   nodeType(): NodeType;
   /** Nearest explicit `form()` containing this node, or `null` when no form workflow owns it. */
-  form: Signal<Node | null>;
+  form: Signal<AnyNode | null>;
   /** Complete root node containing this node. A root node returns itself. */
-  root: Signal<Node>;
+  root: Signal<AnyNode>;
   /** Immediate structural parent of this node, or `null` when it is a root or has been detached. */
-  parent: Signal<Node | null>;
+  parent: Signal<AnyNode | null>;
   /**
    * Property and array-index segments from the complete root to this node. Root nodes use `[]`.
    * Array indexes are represented as strings.
@@ -118,7 +118,7 @@ export type NodeApi = {
    * // [{ kind: 'required', message: 'Value is required.', targetNode: node }]
    * ```
    */
-  errors: Signal<readonly { readonly kind: string; readonly targetNode: Node }[]>;
+  errors: Signal<readonly { readonly kind: string; readonly targetNode: AnyNode }[]>;
   /**
    * Validation errors from this node and its complete subtree in structural order.
    *
@@ -128,13 +128,13 @@ export type NodeApi = {
    * // [{ kind: 'required', message: 'Value is required.', targetNode: node }]
    * ```
    */
-  allErrors: Signal<readonly { readonly kind: string; readonly targetNode: Node }[]>;
+  allErrors: Signal<readonly { readonly kind: string; readonly targetNode: AnyNode }[]>;
   /**
    * Returns the first error belonging directly to this node and matching `kind`.
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: Node }) | undefined;
+  getError<TKind extends string>(kind: TKind): ({ readonly kind: TKind; readonly targetNode: AnyNode }) | undefined;
   /**
    * Whether this node's own errors include the kind; does not search descendants.
    * @reactive Tracks current errors.
@@ -277,7 +277,12 @@ export type NodeApi = {
   show(): void;
 };
 
-export type Node = Signal<any> & {
+/**
+ * Common callable contract for any field, group, form, or array node.
+ * Use `$api` for collision-safe state and operations when the concrete node kind is unknown.
+ * Value types are unspecified; retain the inferred node type when value precision is needed.
+ */
+export type AnyNode = Signal<any> & {
   /** Returns this node's current committed value and participates in signal dependency tracking. */
   (): any;
 } & {
@@ -291,7 +296,7 @@ export type Node = Signal<any> & {
    */
   $api: NodeApi;
 };
-export type PublicNode<TNode extends Node> = Node extends TNode
+export type PublicNode<TNode extends AnyNode> = AnyNode extends TNode
   ? TNode & HiddenFunctionMembers
   : TNode;
 
@@ -303,7 +308,7 @@ export type PublicNode<TNode extends Node> = Node extends TNode
  * statically known node type.
  */
 export type DynamicNode =
-  & PublicNode<Node>
+  & PublicNode<AnyNode>
   & Omit<NodeApi, 'patch'>
   & {
     /** Complete common node API. */
@@ -311,23 +316,23 @@ export type DynamicNode =
   };
 type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown];
 
-export type RootNode<TNode extends Node, TDepth extends readonly unknown[] = RootLookupDepth> =
+export type RootNode<TNode extends AnyNode, TDepth extends readonly unknown[] = RootLookupDepth> =
   TDepth extends readonly [unknown, ...infer TRest]
     ? TNode extends { $api: { parent: Signal<infer TParent | null> } }
-      ? TParent extends Node
-        ? Node extends TParent ? TNode : RootNode<TParent, TRest>
+      ? TParent extends AnyNode
+        ? AnyNode extends TParent ? TNode : RootNode<TParent, TRest>
         : TNode
       : TNode
-    : Node;
+    : AnyNode;
 /** Generic form navigation without asserting unknown child names or hiding valid child collisions. */
-export type NavigationForm = Node & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
+export type NavigationForm = AnyNode & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
 
 /** Complete structural node APIs when an ancestor's exact declaration is unavailable. */
-export type NavigationRoot = Field<any> | NavigationForm | (Node & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> }) | ArrayNode<any>;
+export type NavigationRoot = FieldNode<any> | NavigationForm | (AnyNode & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> }) | ArrayNode<any>;
 
-export type NearestForm<TNode extends Node> = Node extends TNode ? NavigationForm
+export type NearestForm<TNode extends AnyNode> = AnyNode extends TNode ? NavigationForm
   : TNode extends { $api: { form: Signal<infer TForm> } }
-    ? Exclude<TForm, null> extends Node ? Exclude<TForm, null> : never
+    ? Exclude<TForm, null> extends AnyNode ? Exclude<TForm, null> : never
     : never;
 export type NodeType = 'field' | 'group' | 'form' | 'array';
 export type InternalNodeApi = NodeApi & {
@@ -337,15 +342,15 @@ export type InternalNodeApi = NodeApi & {
   _controlValue: Signal<any>;
   _setControlValue(value: any): void;
   _flushControlValueOnBlur(): void;
-  _clone(): Node;
-  _setParent(parent: Node | null, key?: string | number): void;
+  _clone(): AnyNode;
+  _setParent(parent: AnyNode | null, key?: string | number): void;
   _refreshInjector(): void;
   _registerControlBinding(binding: NodeControlBinding): () => void;
   _getControlBindingForFocus(): NodeControlBinding | undefined;
 };
 export type InternalNode = Signal<any> & { $api: InternalNodeApi };
-export type Nodes = Record<string, Node>;
-export type NodeDefinition = Node | NodeDefinitions;
+export type Nodes = Record<string, AnyNode>;
+export type NodeDefinition = AnyNode | NodeDefinitions;
 export interface NodeDefinitions {
   [key: string]: NodeDefinition;
 }
@@ -367,10 +372,10 @@ export interface NodeDefinitions {
  * type ContactsValue = FormNodeValue<typeof profile.contacts>; // { email: string | null }[]
  * ```
  */
-export type FormNodeValue<TNode extends Node> = ReturnType<TNode>;
+export type FormNodeValue<TNode extends AnyNode> = ReturnType<TNode>;
 
 export type NodeValue<TNode> = TNode extends () => infer TValue ? TValue : never;
-export type NodeKeyInParent<TParent extends Node> = Node extends TParent
+export type NodeKeyInParent<TParent extends AnyNode> = AnyNode extends TParent
   ? string | number | null
   : NodeValue<TParent> extends readonly unknown[] ? number | null : string;
 export type NodeSet<TNode> =

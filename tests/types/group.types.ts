@@ -1,6 +1,5 @@
-import { field, form, group, type Node } from '../../src/public-api';
-
 import type { Equal, Expect } from './assert.types';
+import { field, form, group, type AnyNode } from '../../src/public-api';
 
 const address = group({
   city: field('Zurich'),

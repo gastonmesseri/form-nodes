@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 
-import { field, form, FormNode } from '../../../src/public-api';
+import { field, form, FormNodeDirective } from '../../../src/public-api';
 
 @Component({
   standalone: true,
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="profile.mistypedName">`,
 })
 class InvalidDynamicPropertyHost {

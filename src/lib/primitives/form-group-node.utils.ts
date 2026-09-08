@@ -1,7 +1,7 @@
 import { field } from './field';
 import { group } from './group';
 import { isNode } from './utils/node-marker';
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import { isPlainObject } from '../utils/is-plain-object';
 import type { ObjectNodeDefinitions } from './form.type';
 
@@ -70,7 +70,7 @@ export const assertValidObjectDefinition = (
   });
 };
 
-export const normalizeObjectDefinition = (definition: unknown): Node => {
+export const normalizeObjectDefinition = (definition: unknown): AnyNode => {
   if (isNode(definition)) return definition;
   if (Array.isArray(definition)) return field(definition);
   if (definition !== null && typeof definition === 'object') {

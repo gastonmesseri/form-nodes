@@ -149,7 +149,7 @@ assuming the current `HEAD` produced the published package.
 ## 7. Create the GitHub Release
 
 Open [New release](https://github.com/gastonmesseri/form-nodes/releases/new), select the existing
-version tag, and use a title such as `Form Nodes v2.0.0`. Summarize that version's changelog and
+version tag, and use a title such as `FormNode Nodes v2.0.0`. Summarize that version's changelog and
 include installation instructions plus links to npm, the documentation, and the changelog at
 the release tag. Leave **Pre-release** unchecked for a stable version, then publish the release.
 

@@ -5,14 +5,14 @@ import { createPairedTransport } from './paired-transport';
 import { connectControlInputs } from '../sync-control-inputs';
 import type { FormNodeControl } from '../../form-node-control';
 import type { ControlAdapterConnection } from '../control-adapter';
-import type { InternalNode, Node, NodeValue } from '../../../types/node.type';
 import { getNodeInputConfig } from '../../../configuration/node-input-config';
+import type { InternalNode, AnyNode, NodeValue } from '../../../types/node.type';
 import { FORM_NODE_BIND_INPUT_OUTPUT_PAIRS } from '../../provide-form-nodes-config';
 import { registerExternalValidationErrors } from '../../../validation/external-validation-errors';
 import { getGlobalBindInputOutputPairs } from '../../../configuration/configure-global-form-nodes';
 
 /** Connects a provided signal-based custom control to a field, form, or array node. */
-export const connectCustomControlAdapter = <TNode extends Node>(
+export const connectCustomControlAdapter = <TNode extends AnyNode>(
   control: FormNodeControl<NodeValue<TNode>, TNode>,
   node: () => TNode,
   injector: Injector,

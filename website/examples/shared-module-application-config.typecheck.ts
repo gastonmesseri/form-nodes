@@ -1,11 +1,11 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { Component, NgModule, type ApplicationConfig } from '@angular/core';
-import { field, form, required, FormNode, ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
+import { field, form, required, FormNodeDirective, ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
 
 // shared.module.ts
 @NgModule({
-  imports: [FormNode],
-  exports: [FormNode],
+  imports: [FormNodeDirective],
+  exports: [FormNodeDirective],
 })
 export class SharedModule {}
 

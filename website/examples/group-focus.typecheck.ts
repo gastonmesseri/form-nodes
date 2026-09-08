@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { field, FormNode, group } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective, group } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input [formNode]="address.city" />
     <input [formNode]="address.country" />

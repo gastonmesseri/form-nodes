@@ -1,4 +1,4 @@
-import { createFormPrimitives, type Field } from '@ngblocks/form-nodes';
+import { createFormPrimitives, type FieldNode } from '@ngblocks/form-nodes';
 
 const { form, field, array } = createFormPrimitives({
   nullable: false,
@@ -21,9 +21,9 @@ const profile = form({
   }),
 }, {});
 
-const username: Field<string> = profile.username;
-const nickname: Field<string | null> = profile.nickname;
-const reference: Field<string> = profile.reference;
+const username: FieldNode<string> = profile.username;
+const nickname: FieldNode<string | null> = profile.nickname;
+const reference: FieldNode<string> = profile.reference;
 
 profile();
 // Expected output: { username: '', nickname: '', reference: 'REF-1', address: { city: '' }, tags: ['angular'] }

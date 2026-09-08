@@ -4,15 +4,19 @@ title: "[formNode] directive"
 
 # [formNode] directive {#formnode-directive}
 
-`FormNode` is the standalone Angular directive imported by components to make `[formNode]`
+`FormNodeDirective` is the standalone Angular directive imported by components to make `[formNode]`
 available. The same symbol is also the public generic type returned by binding queries.
+
+Import [`FormNodesModule`](./form-nodes-module.md) instead when you prefer one import point
+for the library's Angular template features. `FormNode<TChildren>` is the form model type;
+use `FormNodeDirective<TNode>` or `FormNodeBinding<TNode>` for a rendered binding.
 
 ```ts
 import { Component, viewChild } from '@angular/core';
-import { field, form, FormNode } from '@ngblocks/form-nodes';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input #emailBinding="formNode" [formNode]="myForm.email" />
   `,
@@ -22,7 +26,7 @@ export class EmailEditor {
     email: field(''),
   });
 
-  emailBinding = viewChild.required<FormNode<typeof this.myForm.email>>('emailBinding');
+  emailBinding = viewChild.required<FormNodeDirective<typeof this.myForm.email>>('emailBinding');
 }
 ```
 
@@ -33,19 +37,19 @@ and linker infrastructure.
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
-| Query or inspect one concrete binding | `FormNode<TNode>`, `FormNodeBinding<TNode>` | [Binding instance](#binding-instance) |
+| Query or inspect one concrete binding | `FormNodeDirective<TNode>`, `FormNodeBinding<TNode>` | [Binding instance](#binding-instance) |
 | Inject the binding on its host | `FORM_NODE` | [`FORM_NODE` reference](./form-node-token.md) |
 | Apply reactive CSS classes | `provideFormNodesConfig()` | [Automatic CSS classes](#automatic-css-classes) |
 | Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
-| Bind submit and reset on `<form>` | The same `FormNode` import | [Native form submission](#native-form-submission) |
+| Bind submit and reset on `<form>` | The same `FormNodeDirective` import | [Native form submission](#native-form-submission) |
 
 ## 🔌 Directive input {#directive-input}
 
-Import `FormNode` in the component and bind a Form Nodes node to the required `formNode` input:
+Import `FormNodeDirective` in the component and bind a Form Nodes node to the required `formNode` input:
 
 ```ts
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="myForm.email" />`,
 })
 export class EmailEditor {
@@ -216,7 +220,7 @@ disconnects the previous node, releases its binding ownership, connects the new 
 
 ```ts
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="selectedField()" />`,
 })
 export class DynamicEditor {
@@ -325,7 +329,7 @@ does not expose arbitrary directive or host-directive instances. Use a component
 
 ```ts
 import { Component, input, model, output } from '@angular/core';
-import { FormNode, field, form, type FormNodeValueControl } from '@ngblocks/form-nodes';
+import { FormNodeDirective, field, form, type FormNodeValueControl } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-date-picker',
@@ -351,7 +355,7 @@ export class DatePicker implements FormNodeValueControl<string | null> {
 
 @Component({
   selector: 'app-appointment-editor',
-  imports: [FormNode, DatePicker],
+  imports: [FormNodeDirective, DatePicker],
   template: `
     <app-date-picker [formNode]="appointmentForm.date" />
     <p>Selected date: {{ appointmentForm.date() ?? 'None' }}</p>
@@ -395,15 +399,15 @@ export class FormNodeWrapperDirective {}
 
 ## 📨 Native form submission {#native-form-submission}
 
-Use `FormNode` as the single root binding. Its controls may use either `[formNode]` or Angular's
+Use `FormNodeDirective` as the single root binding. Its controls may use either `[formNode]` or Angular's
 `[formField]` adapter:
 
 ```ts
 import { Component } from '@angular/core';
-import { FormNode, field, form } from '@ngblocks/form-nodes';
+import { FormNodeDirective, field, form } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <form [formNode]="myForm">
       <input [formNode]="myForm.email" />

@@ -1,4 +1,4 @@
-import type { DisabledReason, DisabledStateSource, Node } from '../../types/node.type';
+import type { DisabledReason, DisabledStateSource, AnyNode } from '../../types/node.type';
 
 export type DisabledState = boolean | string;
 
@@ -13,7 +13,7 @@ export const readConfiguredDisabledState = (source?: DisabledStateSource): Disab
 };
 
 /** Converts an active disabled state into its public reason while preserving an optional message. */
-export const createDisabledReason = (state: DisabledState, sourceNode: Node): DisabledReason | undefined => {
+export const createDisabledReason = (state: DisabledState, sourceNode: AnyNode): DisabledReason | undefined => {
   return state === false ? undefined : {
     sourceNode,
     ...(typeof state === 'string' ? { message: state } : {}),

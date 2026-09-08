@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { field, FormNode } from '@ngblocks/form-nodes';
+import { field, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `<input [formNode]="username" />`,
 })
 export class UsernameComponent {

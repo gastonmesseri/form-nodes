@@ -1,20 +1,20 @@
 import { APP_ID, effect } from '@angular/core';
 
-import type { Field } from '../../../primitives/field';
+import type { FieldNode } from '../../../primitives/field';
 import { getFormNodeName } from '../../utils/form-node-name';
-import type { Node, NodeValue } from '../../../types/node.type';
 import type { ControlAdapterContext } from '../control-adapter';
+import type { AnyNode, NodeValue } from '../../../types/node.type';
 import { isNativeFormNodeControl, elementAcceptsMinMax, formatNativeLimit, formatNativePattern, isTextualFormElement } from './native-control-value';
 
 /** Synchronizes host accessibility and native inputs not owned by a custom component. */
-export const syncNativeControlState = <TNode extends Node>({ binding, renderer }: ControlAdapterContext<TNode>, inputNames: ReadonlySet<string>) => {
+export const syncNativeControlState = <TNode extends AnyNode>({ binding, renderer }: ControlAdapterContext<TNode>, inputNames: ReadonlySet<string>) => {
   const { element, injector } = binding;
   const appId = injector.get(APP_ID);
   const nativeControl = isNativeFormNodeControl(element) ? element : null;
 
   effect(() => {
     const node = binding.node();
-    const field = node as unknown as Partial<Field<NodeValue<TNode>>>;
+    const field = node as unknown as Partial<FieldNode<NodeValue<TNode>>>;
     if (nativeControl && !inputNames.has('name')) renderer.setProperty(nativeControl, 'name', getFormNodeName(node, appId));
     if (nativeControl && !inputNames.has('disabled')) renderer.setProperty(nativeControl, 'disabled', node.$api.disabled());
     if (nativeControl && !inputNames.has('readonly') && 'readOnly' in nativeControl) renderer.setProperty(nativeControl, 'readOnly', node.$api.readonly());

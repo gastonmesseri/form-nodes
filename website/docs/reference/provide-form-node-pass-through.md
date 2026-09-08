@@ -21,7 +21,7 @@ provideFormNodePassThrough(): Provider;
   providers: [provideFormNodePassThrough()],
 })
 export class DelegatesFormNode {
-  formNode = input.required<Node>();
+  formNode = input.required<AnyNode>();
 }
 ```
 

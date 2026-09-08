@@ -39,7 +39,7 @@ and delegate to `createFormGroupNode()` in `form-group-node.ts`. That entry cons
 bindings, and callable assembly. The same entry accepts the custom normalizer used by
 `createFormPrimitives()` for initial children, later additions, and clones.
 
-Keep each construction entry beside its class and limit its body to `new …Node(...).getNode()`.
+Keep each construction entry beside its class and limit its body to `new …AnyNode(...).getNode()`.
 Public primitives own overloads, inference, and argument interpretation; configured primitives
 also resolve their defaults before calling these entries. Classes own live node state. Clone
 recipes retain their direct constructor calls and capture only declarative configuration.
@@ -57,7 +57,7 @@ Assemble callable nodes with `Object.defineProperties()` and the descriptors of 
 object. This shared pattern also handles function properties such as the array's `length` signal
 and form children named `name` or `length`, which `Object.assign()` cannot overwrite directly.
 
-## FormNode control adapters
+## FormNodeDirective control adapters
 
 `form-node/form-node.directive.ts` coordinates binding ownership, control-state registration,
 focus, CSS classes, and native form submission/reset. Control-specific connections live in

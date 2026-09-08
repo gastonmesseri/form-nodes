@@ -1,6 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-
-import { FormNode, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -16,7 +15,7 @@ class Company {
 @Component({
   selector: 'package-consumer',
   standalone: true,
-  imports: [FormNode],
+  imports: [FormNodesModule],
   providers: [provideFormNodesConfig({ syncInputs: false })],
   template: `
     <form [formNode]="profile">
@@ -66,7 +65,7 @@ export class PackageConsumer {
   readonly dynamicAgeValue: number | null = this.dynamicAge();
   readonly dynamicNickname: string | null = this.dynamic.nickname();
   readonly dynamicCity: string | null = this.dynamic.location.city();
-  readonly nameBinding = viewChild.required<FormNode<typeof this.profile.name>>('nameBinding');
+  readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.profile.name>>('nameBinding');
 
   focusName() {
     this.nameBinding().focus();

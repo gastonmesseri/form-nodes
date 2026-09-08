@@ -9,13 +9,13 @@ import { DefaultValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, Numb
 
 import { form } from '../primitives/form';
 import { array } from '../primitives/array';
-import type { Node } from '../types/node.type';
-import { FormNode } from './form-node.directive';
+import type { AnyNode } from '../types/node.type';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
-import { field, type Field } from '../primitives/field';
+import { FormNodeDirective } from './form-node.directive';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { pattern } from '../validation/validators/pattern';
+import { field, type FieldNode } from '../primitives/field';
 import { maxDate } from '../validation/validators/max-date';
 import { minDate } from '../validation/validators/min-date';
 import { resolveNodeInjector } from '../utils/node-injector';
@@ -29,7 +29,7 @@ import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from './provide-
 import { registerSignalInputForJit, registerSignalModelForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 import { isNativeFormNodeControl, parseNativeControlValue, readNativeControlValue, writeNativeControlValue } from './adapters/native-control/native-control-value';
 
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 beforeAll(() => {
   TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
@@ -51,7 +51,7 @@ const accessorWithPrototype = (prototype: object): ControlValueAccessor & { writ
   return accessor;
 };
 
-describe('FormNode', () => {
+describe('FormNodeDirective', () => {
   it('temporarily adopts the host injector for async validation', async () => {
     const dependency = signal(0);
     let abortSignal: AbortSignal | undefined;
@@ -64,7 +64,7 @@ describe('FormNode', () => {
 
     @Component({
       template: `<input [formNode]="name">`,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       name = boundName;
@@ -97,7 +97,7 @@ describe('FormNode', () => {
 
     @Component({
       template: `<input [formNode]="name">`,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       name = boundName;
@@ -119,7 +119,7 @@ describe('FormNode', () => {
 
     @Component({
       template: `<input [formNode]="name">`,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       name = boundName;
@@ -137,17 +137,17 @@ describe('FormNode', () => {
     @Component({
       selector: 'delegating-control',
       template: `<input [formNode]="formNode()">`,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class DelegatingControl {
-      readonly formNode = input.required<Field<string>>();
+      readonly formNode = input.required<FieldNode<string>>();
     }
 
     registerSignalInputForJit(DelegatingControl, 'formNode', 'formNode');
 
     @Component({
       template: `<delegating-control [formNode]="name" />`,
-      imports: [DelegatingControl, FormNode],
+      imports: [DelegatingControl, FormNodeDirective],
     })
     class PassThroughHost {
       readonly name = field.strict('initial');
@@ -169,14 +169,14 @@ describe('FormNode', () => {
       providers: [provideFormNodePassThrough()],
     })
     class DelegatesFormNode {
-      readonly formNode = input.required<Field<string>>({ alias: 'formNode' });
+      readonly formNode = input.required<FieldNode<string>>({ alias: 'formNode' });
     }
 
     registerSignalInputForJit(DelegatesFormNode, 'formNode', 'formNode');
 
     @Component({
       template: `<div delegatesFormNode [formNode]="name"></div>`,
-      imports: [DelegatesFormNode, FormNode],
+      imports: [DelegatesFormNode, FormNodeDirective],
     })
     class PassThroughHost {
       readonly name = field.strict('initial');
@@ -196,7 +196,7 @@ describe('FormNode', () => {
     @Component({
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
       providers: [provideFormNodesConfig({
         classes: {
           'form-invalid': invalidPredicate,
@@ -221,7 +221,7 @@ describe('FormNode', () => {
     expect(externalPredicate).toHaveBeenCalledTimes(1);
     const binding = invalidPredicate.mock.calls[0]![0];
     expect(binding.element).toBe(inputElement);
-    expect(binding.injector.get(FormNode)).toBeInstanceOf(FormNode);
+    expect(binding.injector.get(FormNodeDirective)).toBeInstanceOf(FormNodeDirective);
     expect(binding.node()).toBe(fixture.componentInstance.name);
     binding.focus();
     expect(document.activeElement).toBe(inputElement);
@@ -249,7 +249,7 @@ describe('FormNode', () => {
     @Component({
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
       providers: [provideFormNodesConfig({ classes: ANGULAR_FORMS_STATUS_CLASSES })],
     })
     class Host {
@@ -286,7 +286,7 @@ describe('FormNode', () => {
       selector: 'explicit-signal-control-host',
       template: `<explicit-signal-control [formNode]="name" />`,
       standalone: true,
-      imports: [ExplicitSignalControl, FormNode],
+      imports: [ExplicitSignalControl, FormNodeDirective],
     })
     class Host {
       name = field.strict('Marco');
@@ -322,7 +322,7 @@ describe('FormNode', () => {
     @Component({
       template: `<transformed-state-control [formNode]="name" />`,
       standalone: true,
-      imports: [TransformedStateControl, FormNode],
+      imports: [TransformedStateControl, FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('Marco');
@@ -357,12 +357,12 @@ describe('FormNode', () => {
     @Component({
       template: `<rebound-signal-control [formNode]="selected()" />`,
       standalone: true,
-      imports: [ReboundSignalControl, FormNode],
+      imports: [ReboundSignalControl, FormNodeDirective],
     })
     class Host {
       readonly first = field.strict('first');
       readonly second = field.strict('second');
-      readonly selected = signal<Field<string>>(this.first);
+      readonly selected = signal<FieldNode<string>>(this.first);
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -410,7 +410,7 @@ describe('FormNode', () => {
       @Component({
         template: `<rebound-aggregate-control [formNode]="selected()" />`,
         standalone: true,
-        imports: [ReboundAggregateControl, FormNode],
+        imports: [ReboundAggregateControl, FormNodeDirective],
       })
       class Host {
         readonly first = form({ name: field.strict('first') }, { debounce: 100 });
@@ -465,7 +465,7 @@ describe('FormNode', () => {
       @Component({
         template: `<reset-debounce-signal-control [formNode]="name" />`,
         standalone: true,
-        imports: [ResetDebounceSignalControl, FormNode],
+        imports: [ResetDebounceSignalControl, FormNodeDirective],
       })
       class Host {
         readonly name = field.strict('initial', { debounce: 100 });
@@ -510,7 +510,7 @@ describe('FormNode', () => {
     @Component({
       template: `<blur-debounce-signal-control [formNode]="name" />`,
       standalone: true,
-      imports: [BlurDebounceSignalControl, FormNode],
+      imports: [BlurDebounceSignalControl, FormNodeDirective],
     })
     class Host {
       readonly profile = form({ name: field.strict('initial') }, { debounce: 'blur' });
@@ -556,7 +556,7 @@ describe('FormNode', () => {
       selector: 'aggregate-form-control-host',
       template: `<aggregate-form-control [formNode]="profile" />`,
       standalone: true,
-      imports: [AggregateFormControl, FormNode],
+      imports: [AggregateFormControl, FormNodeDirective],
     })
     class Host {
       readonly profile = form({ name: field('David'), age: field(42) });
@@ -609,7 +609,7 @@ describe('FormNode', () => {
     @Component({
       template: `<debounced-aggregate-control [formNode]="profile" />`,
       standalone: true,
-      imports: [DebouncedAggregateControl, FormNode],
+      imports: [DebouncedAggregateControl, FormNodeDirective],
     })
     class Host {
       readonly profile = form({ name: field.strict('David') }, { debounce: 'blur' });
@@ -663,7 +663,7 @@ describe('FormNode', () => {
       selector: 'aggregate-array-control-host',
       template: `<aggregate-array-control [formNode]="people" />`,
       standalone: true,
-      imports: [AggregateArrayControl, FormNode],
+      imports: [AggregateArrayControl, FormNodeDirective],
     })
     class Host {
       readonly people = array({ name: field('') }, [{ name: 'David' }]);
@@ -702,7 +702,7 @@ describe('FormNode', () => {
       selector: 'native-aggregate-form-node-host',
       template: `<input [formNode]="profile">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly profile = form({ name: field('David') });
@@ -718,7 +718,7 @@ describe('FormNode', () => {
       selector: 'text-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -744,7 +744,7 @@ describe('FormNode', () => {
     fixture.detectChanges();
     expect(input.value).toBe('Lia');
 
-    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
+    const binding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
     const focus = vi.spyOn(input, 'focus');
     binding.focus({ preventScroll: true });
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
@@ -779,7 +779,7 @@ describe('FormNode', () => {
         <input data-email [formNode]="profile.account.email">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly profile = form({
@@ -821,7 +821,7 @@ describe('FormNode', () => {
         <input data-second [formNode]="name">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -848,7 +848,7 @@ describe('FormNode', () => {
       selector: 'dynamic-focus-form-node-host',
       template: `<input [formNode]="active()">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly first = field.strict('first');
@@ -878,7 +878,7 @@ describe('FormNode', () => {
       selector: 'nested-form-node-host',
       template: `<input [formNode]="profile.address.city">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly profile = form({
@@ -918,7 +918,7 @@ describe('FormNode', () => {
         <input [formNode]="second">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly first = field.strict('first');
@@ -939,7 +939,7 @@ describe('FormNode', () => {
       selector: 'numeric-parse-form-node-host',
       template: `<input type="text" [formNode]="profile.age">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly profile = form({ age: field.strict(23, min(30)) });
@@ -989,7 +989,7 @@ describe('FormNode', () => {
         <input data-second type="text" [formNode]="age">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly age = field.strict(23);
@@ -999,8 +999,8 @@ describe('FormNode', () => {
     fixture.detectChanges();
     const first = fixture.nativeElement.querySelector('[data-first]') as HTMLInputElement;
     const second = fixture.nativeElement.querySelector('[data-second]') as HTMLInputElement;
-    const firstBinding = fixture.debugElement.children[0]!.injector.get(FormNode);
-    const secondBinding = fixture.debugElement.children[1]!.injector.get(FormNode);
+    const firstBinding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
+    const secondBinding = fixture.debugElement.children[1]!.injector.get(FormNodeDirective);
     const { age } = fixture.componentInstance;
 
     expect(firstBinding.node()).toBe(age);
@@ -1042,7 +1042,7 @@ describe('FormNode', () => {
         <input type="text" [formNode]="age">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly age = field.strict(23, [min(30)]);
@@ -1051,8 +1051,8 @@ describe('FormNode', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const first = fixture.nativeElement.querySelectorAll('input')[0] as HTMLInputElement;
-    const firstBinding = fixture.debugElement.children[0]!.injector.get(FormNode);
-    const secondBinding = fixture.debugElement.children[1]!.injector.get(FormNode);
+    const firstBinding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
+    const secondBinding = fixture.debugElement.children[1]!.injector.get(FormNodeDirective);
 
     expect(firstBinding.errors().map(error => error.kind)).toEqual(['min']);
     expect(secondBinding.errors().map(error => error.kind)).toEqual(['min']);
@@ -1072,18 +1072,18 @@ describe('FormNode', () => {
       selector: 'dynamic-parse-form-node-host',
       template: `<input type="text" [formNode]="selected()">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly first = field.strict(23);
       readonly second = field.strict(42);
-      readonly selected = signal<Field<number>>(this.first);
+      readonly selected = signal<FieldNode<number>>(this.first);
     }
 
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    const binding = fixture.debugElement.children[0]!.injector.get(FormNode);
+    const binding = fixture.debugElement.children[0]!.injector.get(FormNodeDirective);
     const { first, second, selected } = fixture.componentInstance;
 
     input.value = 'invalid';
@@ -1116,7 +1116,7 @@ describe('FormNode', () => {
       selector: 'state-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('', [required]);
@@ -1146,7 +1146,7 @@ describe('FormNode', () => {
       selector: 'hidden-form-node-host',
       template: `<input [formNode]="profile.name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly profile = form({ name: field.strict('David', { hidden: true }) });
@@ -1172,7 +1172,7 @@ describe('FormNode', () => {
       selector: 'reactive-hidden-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly hidden = signal(false);
@@ -1202,7 +1202,7 @@ describe('FormNode', () => {
       selector: 'production-hidden-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David', { hidden: true });
@@ -1232,7 +1232,7 @@ describe('FormNode', () => {
         <input type="month" [formNode]="month">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly minimum = signal<number | undefined>(18);
@@ -1280,7 +1280,7 @@ describe('FormNode', () => {
         <input data-type="datetime-local" type="datetime-local" [formNode]="value">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly value = field.strict(5, [min(1), max(9)]);
@@ -1308,7 +1308,7 @@ describe('FormNode', () => {
         <input data-textual [type]="textualType()" [formNode]="code">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly numericType = signal('number');
@@ -1339,7 +1339,7 @@ describe('FormNode', () => {
         <select [formNode]="value"><option>abc</option></select>
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly value = field.strict('abc', [minLength(2), maxLength(5)]);
@@ -1366,7 +1366,7 @@ describe('FormNode', () => {
         selector: 'debounce-form-node-host',
         template: `<input [formNode]="name">`,
         standalone: true,
-        imports: [FormNode],
+        imports: [FormNodeDirective],
       })
       class Host {
         readonly name = field.strict('David', { debounce: 100 });
@@ -1395,7 +1395,7 @@ describe('FormNode', () => {
       selector: 'blur-debounce-form-node-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('initial', { debounce: 'blur' });
@@ -1425,7 +1425,7 @@ describe('FormNode', () => {
         selector: 'reset-debounce-form-node-host',
         template: `<input [formNode]="profile.name">`,
         standalone: true,
-        imports: [FormNode],
+        imports: [FormNodeDirective],
       })
       class Host {
         readonly profile = form({ name: field.strict('initial') }, { debounce: 100 });
@@ -1470,7 +1470,7 @@ describe('FormNode', () => {
         <input type="checkbox" [formNode]="active">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly age = field.strict(23);
@@ -1498,7 +1498,7 @@ describe('FormNode', () => {
         <input type="radio" name="city" value="Zurich" [formNode]="city">
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly city = field.strict('Zurich');
@@ -1533,7 +1533,7 @@ describe('FormNode', () => {
         <select multiple [formNode]="cities"><option>Madrid</option><option>Zurich</option></select>
       `,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly city = field.strict('Zurich');
@@ -1601,7 +1601,7 @@ describe('FormNode', () => {
       selector: 'cva-form-node-host',
       template: `<test-cva [formNode]="active()" />`,
       standalone: true,
-      imports: [FormNode, TestCva],
+      imports: [FormNodeDirective, TestCva],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1651,7 +1651,7 @@ describe('FormNode', () => {
     fixture.detectChanges();
     expect(cva.name()).toMatch(/\.form\d+$/);
     expect(cva.name()).not.toBe(firstName);
-    expect(fixture.debugElement.children[0]!.injector.get(FormNode).node())
+    expect(fixture.debugElement.children[0]!.injector.get(FormNodeDirective).node())
       .toBe(fixture.componentInstance.alternative);
     expect(fixture.componentInstance.name.valid()).toBe(true);
     expect(fixture.componentInstance.alternative.getError('customCva')?.targetNode)
@@ -1679,7 +1679,7 @@ describe('FormNode', () => {
     @Component({
       template: `<blur-debounce-cva [formNode]="name" />`,
       standalone: true,
-      imports: [BlurDebounceCva, FormNode],
+      imports: [BlurDebounceCva, FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('initial', { debounce: 'blur' });
@@ -1705,7 +1705,7 @@ describe('FormNode', () => {
       selector: 'invalid-form-node-host',
       template: `<div [formNode]="name"></div>`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1737,7 +1737,7 @@ describe('FormNode', () => {
       selector: 'ambiguous-cva-host',
       template: `<ambiguous-cva [formNode]="name" />`,
       standalone: true,
-      imports: [AmbiguousCva, FormNode],
+      imports: [AmbiguousCva, FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1771,7 +1771,7 @@ describe('FormNode', () => {
       selector: 'accessor-priority-host',
       template: `<accessor-priority-control [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, PriorityControl],
+      imports: [FormNodeDirective, PriorityControl],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1801,7 +1801,7 @@ describe('FormNode', () => {
       selector: 'single-default-accessor-host',
       template: `<single-default-accessor [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, SingleAccessorControl],
+      imports: [FormNodeDirective, SingleAccessorControl],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1831,7 +1831,7 @@ describe('FormNode', () => {
       selector: 'single-built-in-accessor-host',
       template: `<single-built-in-accessor [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, SingleAccessorControl],
+      imports: [FormNodeDirective, SingleAccessorControl],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1858,7 +1858,7 @@ describe('FormNode', () => {
       selector: 'duplicate-default-accessor-host',
       template: `<duplicate-default-accessor [formNode]="name" />`,
       standalone: true,
-      imports: [DuplicateAccessorControl, FormNode],
+      imports: [DuplicateAccessorControl, FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1884,7 +1884,7 @@ describe('FormNode', () => {
       selector: 'duplicate-built-in-accessor-host',
       template: `<duplicate-built-in-accessor [formNode]="name" />`,
       standalone: true,
-      imports: [DuplicateAccessorControl, FormNode],
+      imports: [DuplicateAccessorControl, FormNodeDirective],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1899,10 +1899,10 @@ describe('FormNode', () => {
       selector: 'invalid-field-host',
       template: `<input [formNode]="name">`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class Host {
-      name = null as unknown as Node;
+      name = null as unknown as AnyNode;
     }
 
     const fixture = TestBed.createComponent(Host);
@@ -1931,7 +1931,7 @@ describe('FormNode', () => {
       selector: 'minimal-cva-host',
       template: `<minimal-cva [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, MinimalCva],
+      imports: [FormNodeDirective, MinimalCva],
     })
     class Host {
       readonly name = field.strict('David');
@@ -1969,7 +1969,7 @@ describe('FormNode', () => {
       selector: 'echoing-cva-host',
       template: `<echoing-cva [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, EchoingCva],
+      imports: [FormNodeDirective, EchoingCva],
     })
     class Host {
       readonly name = field.strict('David');
@@ -2008,7 +2008,7 @@ describe('FormNode', () => {
     @Component({
       template: `<combined-control [formNode]="name" />`,
       standalone: true,
-      imports: [CombinedControl, FormNode],
+      imports: [CombinedControl, FormNodeDirective],
     })
     class Host {
       name = field.strict('David');
@@ -2033,7 +2033,7 @@ describe('FormNode', () => {
     @Component({
       template: `<input withViewContainer [formNode]="name">`,
       standalone: true,
-      imports: [WithViewContainer, FormNode],
+      imports: [WithViewContainer, FormNodeDirective],
     })
     class Host {
       name = field.strict('David');
@@ -2055,7 +2055,7 @@ describe('FormNode', () => {
     @Component({
       template: `<select [formNode]="country"><option value="ch">Switzerland</option></select>`,
       standalone: true,
-      imports: [FormNode],
+      imports: [FormNodeDirective],
     })
     class DynamicForm {
       country = field.strict('ch');
@@ -2101,7 +2101,7 @@ describe('FormNode', () => {
       selector: 'signal-cva-host',
       template: `<signal-cva [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, SignalCva],
+      imports: [FormNodeDirective, SignalCva],
     })
     class Host {
       readonly name = field.strict('David');
@@ -2140,7 +2140,7 @@ describe('FormNode', () => {
       selector: 'recreated-cva-host',
       template: `@if (visible()) { <recreated-cva [formNode]="name" /> }`,
       standalone: true,
-      imports: [FormNode, RecreatedCva],
+      imports: [FormNodeDirective, RecreatedCva],
     })
     class Host {
       readonly visible = signal(true);
@@ -2195,7 +2195,7 @@ describe('FormNode', () => {
       selector: 'dynamic-validator-host',
       template: `<dynamic-validator-cva [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, DynamicValidatorCva],
+      imports: [FormNodeDirective, DynamicValidatorCva],
     })
     class Host {
       readonly name = field.strict('David');
@@ -2244,7 +2244,7 @@ describe('FormNode', () => {
       selector: 'function-validator-host',
       template: `<function-validator-cva [formNode]="name" />`,
       standalone: true,
-      imports: [FormNode, FunctionValidatorCva],
+      imports: [FormNodeDirective, FunctionValidatorCva],
     })
     class Host {
       readonly name = field.strict('valid');
@@ -2412,7 +2412,7 @@ describe('native control conversion', () => {
 describe('FormNodeNgControl', () => {
   it('projects field state through the Angular control compatibility surface', () => {
     const name = field.strict('', [required]);
-    const control = new FormNodeNgControl(() => name as Field<unknown>, TestBed.inject(Injector));
+    const control = new FormNodeNgControl(() => name as FieldNode<unknown>, TestBed.inject(Injector));
 
     expect(control.control).toBe(control);
     expect(control.value).toBe('');

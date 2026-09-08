@@ -6,7 +6,7 @@ import { Component, Injector, model, output, signal } from '@angular/core';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-import { field, type Field } from '../../../primitives/field';
+import { field, type FieldNode } from '../../../primitives/field';
 import { required } from '../../../validation/validators/required';
 import { connectCustomControlAdapter } from './custom-control-adapter';
 import { registerSignalModelForJit, registerSignalOutputForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
@@ -26,7 +26,7 @@ describe('connectCustomControlAdapter', () => {
     class Control {
       value = model('control');
 
-      node = signal<Field<string> | null>(null);
+      node = signal<FieldNode<string> | null>(null);
 
       touch = output<void>();
 
@@ -60,9 +60,9 @@ describe('connectCustomControlAdapter', () => {
 
   it('supports a checked model and follows dynamically rebound fields', () => {
     const first = field.strict(false);
-    const active = signal<Field<boolean>>(first);
+    const active = signal<FieldNode<boolean>>(first);
     const second = field.strict(true);
-    const node = signal<Field<boolean> | null>(null);
+    const node = signal<FieldNode<boolean> | null>(null);
     const injector = TestBed.inject(Injector);
     @Component({ template: '' })
     class Control {

@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { form, field, required, FormNode } from '@ngblocks/form-nodes';
+import { form, field, required, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-profile-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input [formNode]="myForm.username" />
     <p>Hello {{ myForm.username() }}</p>

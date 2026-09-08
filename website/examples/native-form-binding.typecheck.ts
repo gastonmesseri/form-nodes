@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { FormNode, email, field, form, required } from '@ngblocks/form-nodes';
+import { FormNodeDirective, email, field, form, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-account-editor',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <form [formNode]="accountForm">
       <label>

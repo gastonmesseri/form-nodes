@@ -1,6 +1,6 @@
 import { NgControl } from '@angular/forms';
 import { Component, inject, signal } from '@angular/core';
-import { field, form, FormNode } from '@ngblocks/form-nodes';
+import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
 
 // Minimal illustration of a hook that assigns its accessor directly.
 function useCustomValueAccessor<T>(options: { writeValue(value: T | null): unknown; setDisabledState(disabled: boolean): unknown }) {
@@ -45,7 +45,7 @@ export class HookInput {
 }
 
 @Component({
-  imports: [FormNode, HookInput],
+  imports: [FormNodeDirective, HookInput],
   template: '<app-hook-input [formNode]="profile.name" />',
 })
 export class ProfileComponent {

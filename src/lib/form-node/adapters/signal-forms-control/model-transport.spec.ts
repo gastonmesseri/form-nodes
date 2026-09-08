@@ -8,15 +8,15 @@ import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@ang
 
 import { form } from '../../../primitives/form';
 import { field } from '../../../primitives/field';
-import type { Node } from '../../../types/node.type';
-import { FormNode } from '../../form-node.directive';
 import { findModelTransport } from './model-transport';
+import type { AnyNode } from '../../../types/node.type';
+import { FormNodeDirective } from '../../form-node.directive';
 import { registerSignalInputForJit, registerSignalModelForJit, registerSignalOutputForJit } from '../../../../../tests/helpers/register-signal-input-for-jit';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => TestBed.resetTestingModule());
 afterAll(() => TestBed.resetTestEnvironment());
-registerSignalInputForJit(FormNode, 'formNode', '_formNodeInput');
+registerSignalInputForJit(FormNodeDirective, 'formNode', '_formNodeInput');
 
 @Component({ selector: 'aliased-model-control', template: '' })
 class AliasedControl {
@@ -26,9 +26,9 @@ class AliasedControl {
 }
 registerSignalModelForJit(AliasedControl, 'value', 'actualValue');
 
-@Component({ template: '<aliased-model-control [formNode]="node()" />', imports: [FormNode, AliasedControl] })
+@Component({ template: '<aliased-model-control [formNode]="node()" />', imports: [FormNodeDirective, AliasedControl] })
 class Host {
-  node = signal<Node>(field(''));
+  node = signal<AnyNode>(field(''));
 }
 
 describe('declared model transport', () => {

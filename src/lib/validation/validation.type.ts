@@ -1,13 +1,13 @@
 import type { Signal } from '@angular/core';
 
-import type { Field } from '../primitives/field.type';
 import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
+import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
 import type { ObservableLike } from '../types/observable-like.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, DynamicNode, Node, PublicNode } from '../types/node.type';
+import type { DisabledReason, DynamicNode, AnyNode, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -173,7 +173,7 @@ export type ValidationErrorWithoutTargetNode = ValidationError & {
 };
 
 /** An error returned by a validator, optionally assigned to another node. */
-export type ValidatorError<TNode extends Node = Node> = ValidationError & {
+export type ValidatorError<TNode extends AnyNode = AnyNode> = ValidationError & {
   /**
    * Node that should own this error.
    *
@@ -231,15 +231,15 @@ export type AsyncValidatorState = {
 };
 
 /** Callable form API when the declaration's child keys are not known. */
-type ValidatorForm = PublicNode<Node> & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
+type ValidatorForm = PublicNode<AnyNode> & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
 
 /** Callable group API when the declaration's child keys are not known. */
-type ValidatorGroup = PublicNode<Node> & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> };
+type ValidatorGroup = PublicNode<AnyNode> & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> };
 
-type UntypedValidatorNode = Field<any> | ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode>;
+type UntypedValidatorNode = FieldNode<any> | ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode>;
 
 /** Preserves each primitive's members while specializing its committed-value access paths. */
-type ValidatorValueNode<TValue, TNode extends Node = UntypedValidatorNode> = TNode extends UntypedValidatorNode
+type ValidatorValueNode<TValue, TNode extends AnyNode = UntypedValidatorNode> = TNode extends UntypedValidatorNode
   ? Omit<TNode, 'value' | 'api' | '$api'> & HiddenFunctionMembers<keyof TNode> & {
     (): TValue;
     value: Signal<TValue>;
@@ -341,7 +341,7 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
  * Generic public owners retain TValue on their node value reads. Concrete owners and partial
  * structural owner contracts remain exact; only the common owner exposes every node kind.
  */
-export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends Node = ValidatorNode> = Pick<TApi, 'parent' | 'path'> & {
+export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'parent' | 'path'> & {
   /** Current committed value of the node being validated. */
   readonly value: ValidatorNode extends TField ? TApi['value'] : TField['$api']['value'];
   /**
@@ -357,7 +357,7 @@ export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> =
 };
 
 /** Reactive context shared by asynchronous validator conditions, params, and handlers. */
-export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = ValidatorContext<TValue, TApi, TField>;
+export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = ValidatorContext<TValue, TApi, TField>;
 
 /**
  * Aggregate validation result.
@@ -368,7 +368,7 @@ export type AsyncValidatorBaseContext<TValue, TApi extends ValidatorReadonlyApi<
 export type ValidationStatus = 'valid' | 'invalid' | 'unknown';
 
 /** Reactive node context and cancellation signal provided to an asynchronous validator run. */
-export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = AsyncValidatorBaseContext<TValue, TApi, TField> & {
+export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = AsyncValidatorBaseContext<TValue, TApi, TField> & {
   /**
    * Cancellation signal for this execution.
    *
@@ -379,7 +379,7 @@ export type AsyncValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TVal
 };
 
 /** Asynchronous validator context extended with the current reactive parameter snapshot. */
-export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends Node = ValidatorNode> = AsyncValidatorContext<TValue, TApi, TField> & {
+export type ParameterizedAsyncValidatorContext<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = AsyncValidatorContext<TValue, TApi, TField> & {
   /** Snapshot returned by the validator's reactive `params` function. */
   readonly params: TParams;
 };
@@ -391,23 +391,23 @@ export type AsyncValidationResult = PromiseLike<ValidationResult> | ObservableLi
 export type Validator<TValue> = (context: FieldContext<TValue>) => ValidationResult;
 
 /** Resolves an unspecified helper owner to the common public node API while preserving reuse. */
-export type ValidatorOwner<TNode extends Node> = Node extends TNode ? ValidatorNode : TNode;
+export type ValidatorOwner<TNode extends AnyNode> = AnyNode extends TNode ? ValidatorNode : TNode;
 
 /** Validator marked by `asyncValidator()` for asynchronous scheduling and cancellation. */
-export type AsyncValidator<TValue, TField extends Node = Node> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => ValidationResult;
+export type AsyncValidator<TValue, TField extends AnyNode = AnyNode> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => ValidationResult;
 
 /** Validator that may return errors directly or compose one or more validators dynamically. */
-export type ComposableValidator<TValue, TField extends Node = ValidatorNode> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => ComposableValidationResult<TValue, TField>;
+export type ComposableValidator<TValue, TField extends AnyNode = ValidatorNode> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => ComposableValidationResult<TValue, TField>;
 
 /** Result accepted from a composable validator, including nested validators and successful entries. */
-export type ComposableValidationResult<TValue, TField extends Node = ValidatorNode> =
+export type ComposableValidationResult<TValue, TField extends AnyNode = ValidatorNode> =
   | ValidationResult
   | Validator<TValue>
   | ComposableValidator<TValue, TField>
   | readonly (ComposableValidator<TValue, TField> | ValidationSuccess)[];
 
 /** Readonly normalized collection of composable validators for a node value. */
-export type Validators<TValue, TField extends Node = ValidatorNode> = readonly ComposableValidator<TValue, TField>[];
+export type Validators<TValue, TField extends AnyNode = ValidatorNode> = readonly ComposableValidator<TValue, TField>[];
 
 // A shared first branch keeps contextual return typing stable across repeated instantiations.
 export type DeferredValidator = () => any;
@@ -421,7 +421,7 @@ export type DeferredValidator = () => any;
  * The runner still accepts only synchronous validation results or synchronous compositions.
  * Overloaded functions callable without arguments also match the unchecked callback branch.
  */
-export type ValidatorSource<TValue, TField extends Node = ValidatorNode> =
+export type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> =
   | DeferredValidator
   | ComposableValidator<TValue, TField>
   // Tuple contextual typing avoids comparing a deferred callback's return with sibling entries.

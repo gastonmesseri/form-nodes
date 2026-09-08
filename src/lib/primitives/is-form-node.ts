@@ -1,5 +1,5 @@
 import { isNode } from './utils/node-marker';
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 
 /**
  * Checks whether a value is a field, form, group, or array created by this package instance.
@@ -15,8 +15,8 @@ import type { Node } from '../types/node.type';
  * ```
  *
  * @param value The value to check.
- * @returns Whether the value is a Form Nodes node, narrowing it to `Node`.
+ * @returns Whether the value is a Form Nodes node, narrowing it to `AnyNode`.
  */
-export function isFormNode(value: unknown): value is Node {
+export function isFormNode(value: unknown): value is AnyNode {
   return isNode(value);
 }

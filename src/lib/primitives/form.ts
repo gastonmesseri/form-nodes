@@ -1,9 +1,9 @@
 import { createFormGroupNode } from './form-group-node';
 import type { ValidatorSource } from '../validation/validation.type';
 import { isValidatorSource } from '../validation/utils/validator-source';
-import type { Form, FormOptions, FormValue, NormalizedNodes, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { FormNode, FormOptions, FormValue, NormalizedNodes, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
-export type { AddedNode, DynamicFormChildren, Form, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormValue, FormValueContract, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
+export type { AddedNode, DynamicFormChildren, FormNode, FormApi, FormChildren, FormOptions, FormPatch, FormRoot, FormSet, FormValue, FormValueContract, NodeWithParent, NormalizedNode, NormalizedNodes } from './form.type';
 
 type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 
@@ -37,24 +37,24 @@ type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDef
 export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
   ...args:
-    | [validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>> | NoInfer<FormOptions<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>>]
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, FormNode<NormalizedNodes<TDefinitions>>>> | NoInfer<FormOptions<FormValue<NormalizedNodes<TDefinitions>>, FormNode<NormalizedNodes<TDefinitions>>>>]
     | [
-      validators: NoInfer<ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>> | undefined,
-      options: NoInfer<FormOptions<FormValue<NormalizedNodes<TDefinitions>>, Form<NormalizedNodes<TDefinitions>>>> | undefined
+      validators: NoInfer<ValidatorSource<FormValue<NormalizedNodes<TDefinitions>>, FormNode<NormalizedNodes<TDefinitions>>>> | undefined,
+      options: NoInfer<FormOptions<FormValue<NormalizedNodes<TDefinitions>>, FormNode<NormalizedNodes<TDefinitions>>>> | undefined
     ]
-): Form<NormalizedNodes<TDefinitions>>;
+): FormNode<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & FormDefinitions<TDefinitions>,
-  validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
-  separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, Form<NormalizedNodes<TDefinitions>>>,
-): Form<NormalizedNodes<TDefinitions>> {
+  validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, FormNode<NormalizedNodes<TDefinitions>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, FormNode<NormalizedNodes<TDefinitions>>>,
+  separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, FormNode<NormalizedNodes<TDefinitions>>>,
+): FormNode<NormalizedNodes<TDefinitions>> {
   type TNodes = NormalizedNodes<TDefinitions>;
   type TValue = FormValue<TNodes>;
-  const resolvedOptions = isValidatorSource<TValue, Form<TNodes>>(validatorsOrOptions) || validatorsOrOptions === undefined
+  const resolvedOptions = isValidatorSource<TValue, FormNode<TNodes>>(validatorsOrOptions) || validatorsOrOptions === undefined
     ? separateOptions
     : validatorsOrOptions;
-  const validatorSource = isValidatorSource<TValue, Form<TNodes>>(validatorsOrOptions)
+  const validatorSource = isValidatorSource<TValue, FormNode<TNodes>>(validatorsOrOptions)
     ? validatorsOrOptions
     : resolvedOptions?.validators ?? [];
-  return createFormGroupNode<TDefinitions>(definitions, validatorSource, resolvedOptions, 'form') as Form<TNodes>;
+  return createFormGroupNode<TDefinitions>(definitions, validatorSource, resolvedOptions, 'form') as FormNode<TNodes>;
 }

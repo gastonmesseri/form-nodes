@@ -8,11 +8,11 @@ Define and bind the form in an Angular component:
 
 ```ts
 import { Component } from '@angular/core';
-import { email, FormNode, field, form, minLength, required } from '@ngblocks/form-nodes';
+import { email, FormNodeDirective, field, form, minLength, required } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-registration',
-  imports: [FormNode],
+  imports: [FormNodeDirective],
   template: `
     <input [formNode]="myForm.username" />
     <input type="email" [formNode]="myForm.email" />
@@ -88,23 +88,23 @@ Update a field programmatically with `set()`:
 myForm.username.set('marco');
 ```
 
-`FormNode` is imported by the standalone component so `[formNode]` is available in its template.
+`FormNodeDirective` is imported by the standalone component so `[formNode]` is available in its template.
 Keep the bindings next to the model whenever a compact inline template remains readable.
 
-If your application uses NgModules, you can import and re-export `FormNode` from a shared module instead:
+If your application uses NgModules, you can import and re-export `FormNodeDirective` from a shared module instead:
 
 ```ts
 import { NgModule } from '@angular/core';
-import { FormNode } from '@ngblocks/form-nodes';
+import { FormNodeDirective } from '@ngblocks/form-nodes';
 
 @NgModule({
-  imports: [FormNode],
-  exports: [FormNode],
+  imports: [FormNodeDirective],
+  exports: [FormNodeDirective],
 })
 export class SharedModule {}
 ```
 
-Every NgModule or standalone component that imports `SharedModule` can then use `[formNode]` in its templates. Angular does not provide an application-wide import for template directives through `ApplicationConfig`; standalone components must import `FormNode` themselves, either directly or through a shared NgModule.
+Every NgModule or standalone component that imports `SharedModule` can then use `[formNode]` in its templates. Angular does not provide an application-wide import for template directives through `ApplicationConfig`; standalone components must import `FormNodeDirective` themselves, either directly or through a shared NgModule.
 
 When you are ready to see the same syntax at application scale, continue with the [complete form example](../examples/complex-form.md).
 The [executable first-form example](../examples/executable-examples.mdx#first-form) is compiled and

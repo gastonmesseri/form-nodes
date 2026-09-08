@@ -1,5 +1,5 @@
 import { Component, input, model, signal } from '@angular/core';
-import { field, form, required, minLength, FormNode } from '@ngblocks/form-nodes';
+import { field, form, required, minLength, FormNodeDirective } from '@ngblocks/form-nodes';
 
 // text-control.component.ts
 @Component({
@@ -21,7 +21,7 @@ export class TextControl {
 
 // profile.component.ts
 @Component({
-  imports: [FormNode, TextControl],
+  imports: [FormNodeDirective, TextControl],
   template: `<app-text-control [formNode]="profile.name" />`,
 })
 export class ProfileComponent {

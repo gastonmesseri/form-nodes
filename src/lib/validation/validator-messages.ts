@@ -1,6 +1,6 @@
 import { InjectionToken, assertInInjectionContext, inject, type Injector } from '@angular/core';
 
-import type { Node } from '../types/node.type';
+import type { AnyNode } from '../types/node.type';
 import type { BuiltInValidationErrorMap, ValidationError } from './validation.type';
 import { getGlobalValidatorMessages } from '../configuration/configure-global-form-nodes';
 
@@ -27,9 +27,9 @@ type ValidatorMessageResolver = <TKind extends keyof BuiltInValidationErrorMap>(
 ) => string | undefined;
 
 export const VALIDATOR_MESSAGES = new InjectionToken<ValidatorMessages>('ValidatorMessages');
-const nodeValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
-const nodeDefaultValidatorMessages = new WeakMap<Node, ValidatorMessagesSource>();
-const nodeProvidedValidatorMessages = new WeakMap<Node, ValidatorMessages>();
+const nodeValidatorMessages = new WeakMap<AnyNode, ValidatorMessagesSource>();
+const nodeDefaultValidatorMessages = new WeakMap<AnyNode, ValidatorMessagesSource>();
+const nodeProvidedValidatorMessages = new WeakMap<AnyNode, ValidatorMessages>();
 let activeValidatorMessageResolver: ValidatorMessageResolver | undefined;
 
 const readMessages = (source: ValidatorMessagesSource): ValidatorMessages | undefined => {
@@ -55,12 +55,12 @@ const getCurrentProvidedMessages = (injector?: Injector): ValidatorMessages | un
   return inject(VALIDATOR_MESSAGES, { optional: true }) ?? undefined;
 };
 
-const getParent = (node: Node): Node | null => {
-  return (node as Node & { $api: { parent: () => Node | null } }).$api.parent();
+const getParent = (node: AnyNode): AnyNode | null => {
+  return (node as AnyNode & { $api: { parent: () => AnyNode | null } }).$api.parent();
 };
 
 export const registerNodeValidatorMessages = (
-  node: Node,
+  node: AnyNode,
   messages: ValidatorMessagesSource | undefined,
   injector?: Injector,
 ) => {
@@ -70,15 +70,15 @@ export const registerNodeValidatorMessages = (
 };
 
 export const registerNodeDefaultValidatorMessages = (
-  node: Node,
+  node: AnyNode,
   messages: ValidatorMessagesSource | undefined,
 ) => {
   if (messages !== undefined) nodeDefaultValidatorMessages.set(node, messages);
 };
 
-const createNodeValidatorMessageResolver = (targetNode: Node): ValidatorMessageResolver => {
+const createNodeValidatorMessageResolver = (targetNode: AnyNode): ValidatorMessageResolver => {
   return (kind, parameters) => {
-    let currentNode: Node | null = targetNode;
+    let currentNode: AnyNode | null = targetNode;
     while (currentNode !== null) {
       const source = nodeValidatorMessages.get(currentNode);
       const message = source === undefined ? undefined : resolveFromMessages(readMessages(source), kind, parameters);
@@ -105,7 +105,7 @@ const createNodeValidatorMessageResolver = (targetNode: Node): ValidatorMessageR
   };
 };
 
-export const runWithValidatorMessages = <TResult>(targetNode: Node, callback: () => TResult): TResult => {
+export const runWithValidatorMessages = <TResult>(targetNode: AnyNode, callback: () => TResult): TResult => {
   const previousResolver = activeValidatorMessageResolver;
   activeValidatorMessageResolver = createNodeValidatorMessageResolver(targetNode);
   try {

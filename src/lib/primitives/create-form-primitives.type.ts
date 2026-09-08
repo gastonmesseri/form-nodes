@@ -1,11 +1,11 @@
-import type { Node } from '../types/node.type';
-import type { Field, FieldOptions } from './field.type';
-import type { Group, GroupOptions } from './group.type';
+import type { AnyNode } from '../types/node.type';
+import type { FieldNode, FieldOptions } from './field.type';
+import type { GroupNode, GroupOptions } from './group.type';
 import type { ValidatorSource } from '../validation/validation.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { ArrayNode, ArrayOptions, ArraySet, ArrayValue } from './array.type';
-import type { AddedNode, Form, FormOptions, FormValue, NormalizedNodeWithDefault, NormalizedNodesWithDefault, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
+import type { AddedNode, FormNode, FormOptions, FormValue, NormalizedNodeWithDefault, NormalizedNodesWithDefault, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 type NullableFieldOptions<TValue> = FieldOptions<TValue | null>;
 type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
@@ -14,96 +14,96 @@ interface FieldNullabilityOverrides {
   /** Creates a field that excludes `null`, independently of the configured default. */
   strict<TValue extends {}>(value: TValue,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue, Field<TValue>>> | NoInfer<NonNullableFieldOptions<TValue>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue, FieldNode<TValue>>> | NoInfer<NonNullableFieldOptions<TValue>>]
       | [
-        validators: NoInfer<ValidatorSource<TValue, Field<TValue>>> | undefined,
+        validators: NoInfer<ValidatorSource<TValue, FieldNode<TValue>>> | undefined,
         options: NoInfer<NonNullableFieldOptions<TValue>> | undefined
       ]
-  ): Field<TValue>;
+  ): FieldNode<TValue>;
   /**
    * Creates a field that includes `null`, independently of the configured default.
-   * The package-level `field<T>()` already returns `Field<T | null>` by default; this method is
+   * The package-level `field<T>()` already returns `FieldNode<T | null>` by default; this method is
    * useful for an explicit declaration or for overriding a non-nullable factory default.
    */
   nullable(value: null | undefined,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, Field<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, FieldNode<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
       | [
-        validators: NoInfer<ValidatorSource<unknown, Field<unknown>>> | undefined,
+        validators: NoInfer<ValidatorSource<unknown, FieldNode<unknown>>> | undefined,
         options: NoInfer<NullableFieldOptions<unknown>> | undefined
       ]
-  ): Field<unknown>;
+  ): FieldNode<unknown>;
   nullable<TValue>(value: undefined,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
       | [
-        validators: NoInfer<ValidatorSource<TValue | null | undefined, Field<TValue | null | undefined>>> | undefined,
+        validators: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | undefined,
         options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
       ]
-  ): Field<TValue | null | undefined>;
+  ): FieldNode<TValue | null | undefined>;
   nullable<TValue>(value: TValue | null,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, Field<TValue | null>>> | NoInfer<NullableFieldOptions<TValue>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, FieldNode<TValue | null>>> | NoInfer<NullableFieldOptions<TValue>>]
       | [
-        validators: NoInfer<ValidatorSource<TValue | null, Field<TValue | null>>> | undefined,
+        validators: NoInfer<ValidatorSource<TValue | null, FieldNode<TValue | null>>> | undefined,
         options: NoInfer<NullableFieldOptions<TValue>> | undefined
       ]
-  ): Field<TValue | null>;
-  nullable<TValue>(): Field<TValue | null>;
+  ): FieldNode<TValue | null>;
+  nullable<TValue>(): FieldNode<TValue | null>;
 }
 
 export interface NonNullableFieldFactory extends FieldNullabilityOverrides {
   /** Creates an unknown-valued field initialized to `null` when no initial value is supplied. */
-  (): Field<unknown>;
+  (): FieldNode<unknown>;
   (value: null,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, Field<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, FieldNode<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
       | [
-        validators: NoInfer<ValidatorSource<unknown, Field<unknown>>> | undefined,
+        validators: NoInfer<ValidatorSource<unknown, FieldNode<unknown>>> | undefined,
         options: NoInfer<NullableFieldOptions<unknown>> | undefined
       ]
-  ): Field<unknown>;
+  ): FieldNode<unknown>;
   (value: undefined,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, Field<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<unknown, FieldNode<unknown>>> | NoInfer<NullableFieldOptions<unknown>>]
       | [
-        validators: NoInfer<ValidatorSource<unknown, Field<unknown>>> | undefined,
+        validators: NoInfer<ValidatorSource<unknown, FieldNode<unknown>>> | undefined,
         options: NoInfer<NullableFieldOptions<unknown>> | undefined
       ]
-  ): Field<unknown>;
-  <TValue>(value: TValue): Field<TValue>;
-  <TValue>(value: TValue, validators: NoInfer<ValidatorSource<TValue, Field<TValue>>>): Field<TValue>;
+  ): FieldNode<unknown>;
+  <TValue>(value: TValue): FieldNode<TValue>;
+  <TValue>(value: TValue, validators: NoInfer<ValidatorSource<TValue, FieldNode<TValue>>>): FieldNode<TValue>;
   <TValue extends {}>(value: TValue,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue, Field<TValue>>> | NoInfer<NonNullableFieldOptions<TValue>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue, FieldNode<TValue>>> | NoInfer<NonNullableFieldOptions<TValue>>]
       | [
-        validators: NoInfer<ValidatorSource<TValue, Field<TValue>>> | undefined,
+        validators: NoInfer<ValidatorSource<TValue, FieldNode<TValue>>> | undefined,
         options: NoInfer<NonNullableFieldOptions<TValue>> | undefined
       ]
-  ): Field<TValue>;
+  ): FieldNode<TValue>;
 }
 
 export type FieldFactory<TNullable extends boolean> = ([TNullable] extends [false]
   ? NonNullableFieldFactory
   : typeof import('./field').field) & FieldNullabilityOverrides;
 
-type ConfiguredAddedNode<TDefinition, TParent extends Node, TNullable extends boolean> = AddedNode<NormalizedNodeWithDefault<TDefinition, TNullable>, TParent>;
+type ConfiguredAddedNode<TDefinition, TParent extends AnyNode, TNullable extends boolean> = AddedNode<NormalizedNodeWithDefault<TDefinition, TNullable>, TParent>;
 
 export type ConfiguredForm<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean> = {
-  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
+  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api', never>>): {
-    readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
+    readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   };
-} & Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>;
+} & FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>;
 
 export interface FormFactory<TNullable extends boolean> {
   <TDefinitions extends ObjectNodeDefinitions>(
     definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions>,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | NoInfer<FormOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | NoInfer<FormOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>>]
       | [
-        validators: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined,
-        options: NoInfer<FormOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Form<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined
+        validators: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined,
+        options: NoInfer<FormOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined
       ]
   ): ConfiguredForm<TDefinitions, TNullable>;
 }
@@ -112,29 +112,29 @@ export interface GroupFactory<TNullable extends boolean> {
   <TDefinitions extends ObjectNodeDefinitions>(
     definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions>,
     ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | NoInfer<GroupOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>>>]
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | NoInfer<GroupOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>>]
       | [
-        validators: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined,
-        options: NoInfer<GroupOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined
+        validators: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined,
+        options: NoInfer<GroupOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | undefined
       ]
   ): ConfiguredGroup<TDefinitions, TNullable>;
 }
 
 export type ConfiguredGroup<TDefinitions extends ObjectNodeDefinitions, TNullable extends boolean> = {
-  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
+  add<TKey extends string, TDefinition>(key: TKey extends keyof TDefinitions | '$api' ? never : TKey, definition: ObjectNodeDefinitionInput<TDefinition>): ConfiguredAddedNode<TDefinition, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   add<TAddedDefinitions extends ObjectNodeDefinitions>(definitions: TAddedDefinitions & ObjectNodeDefinitionInputs<TAddedDefinitions> & Partial<Record<keyof TDefinitions | '$api', never>>): {
-    readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
+    readonly [TKey in keyof TAddedDefinitions]: ConfiguredAddedNode<TAddedDefinitions[TKey], GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>, TNullable>;
   };
-} & Group<NormalizedNodesWithDefault<TDefinitions, TNullable>>;
+} & GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>;
 
-type ArrayTemplate = Node | ObjectNodeDefinitions;
-type ArrayTemplateInput<TDefinition extends ArrayTemplate> = TDefinition extends Node
+type ArrayTemplate = AnyNode | ObjectNodeDefinitions;
+type ArrayTemplateInput<TDefinition extends ArrayTemplate> = TDefinition extends AnyNode
   ? TDefinition
   : ObjectNodeDefinitionInputs<Extract<TDefinition, ObjectNodeDefinitions>>;
 type ConfiguredArrayItem<TDefinition, TNullable extends boolean> = NormalizedNodeWithDefault<TDefinition, TNullable>;
 type ConfiguredArrayValue<TDefinition, TNullable extends boolean> = ArrayValue<ConfiguredArrayItem<TDefinition, TNullable>>;
 type ArrayInitial<TDefinition, TNullable extends boolean> = number | ArraySet<ConfiguredArrayItem<TDefinition, TNullable>> | null | undefined;
-type PositionalArrayOptions<TValue, TArray extends Node = ArrayNode<Node>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
+type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
 
 export interface ArrayFactory<TNullable extends boolean> {
   <TDefinition extends ArrayTemplate>(template: TDefinition & ArrayTemplateInput<TDefinition>,
