@@ -4,6 +4,13 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## 📦 Moving to 2.0.0 {#moving-to-200}
+
+The next release is `2.0.0` because it includes incompatible API and behavior changes.
+When upgrading from `1.1.0`, follow the unreleased migration sections below. Existing `^1.x`
+dependency ranges do not select `2.0.0`; update the dependency explicitly once it is published
+and run your application checks. Future incompatible changes will require another major release.
+
 ## 🔄 Unreleased: standalone validation error types {#standalone-validation-error-types}
 
 The `ValidationError` namespace has been replaced by directly exported types. Update imports
@@ -150,7 +157,7 @@ or missing actions. Pending validation is not awaited. See [Form submission](../
 
 ## 🔌 Renaming the custom-control state hook {#renaming-the-custom-control-state-hook}
 
-In the upcoming first public release, `1.0.0`, `useControlState()` is renamed to
+In the first public release, `1.0.0`, `useControlState()` is renamed to
 `useFormNodeState()`. Update imports from `@ngblocks/form-nodes` and every call to the hook. The old
 name is no longer exported.
 
@@ -160,7 +167,7 @@ see the [`useFormNodeState()` reference](../reference/form-node-state.md).
 
 ## 🧩 Removing the field adapter {#removing-the-field-adapter}
 
-In the upcoming first public release, `1.0.0`, Form Nodes no longer exposes `$field`.
+In the first public release, `1.0.0`, Form Nodes no longer exposes `$field`.
 Change each Form Nodes binding from:
 
 ```html

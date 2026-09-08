@@ -8,8 +8,8 @@ The current development line supports these verified minimum Angular patches:
 
 | Form Nodes | Angular | TypeScript |
 | --- | --- | --- |
-| `1.0.x` | `^21.0.7` | `>=5.9.0 <6.0.0` |
-| `1.0.x` | `^22.1.5` | `>=6.0.0 <6.1.0` |
+| `2.0.x` | `^21.0.7` | `>=5.9.0 <6.0.0` |
+| `2.0.x` | `^22.1.5` | `>=6.0.0 <6.1.0` |
 
 Both `@angular/core` and `@angular/forms` must satisfy the peer range. Keep all Angular packages
 on mutually compatible versions. Earlier Angular 21 and 22 patches are outside the verified range.

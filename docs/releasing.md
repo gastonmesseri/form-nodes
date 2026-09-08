@@ -17,10 +17,10 @@ npm view @ngblocks/form-nodes versions --json --registry=https://registry.npmjs.
 
 Choose a version using the [version policy](../website/docs/project/versioning.md): patch for
 compatible fixes, minor for compatible features, and major for incompatible changes. The version
-is independent of Angular's version. For example, to prepare a patch after `1.0.0`:
+is independent of Angular's version. The next release is `2.0.0` because the pending changes include incompatible APIs:
 
 ```sh
-RELEASE_VERSION=1.0.1
+RELEASE_VERSION=2.0.0
 npm version "$RELEASE_VERSION" --no-git-tag-version
 ```
 
@@ -33,8 +33,8 @@ Move the changes shipping in this release from `Unreleased` into a dated release
 and preserve previously published release entries. Update the root changelog's release and
 comparison links. Document incompatible changes in `website/docs/project/migrations.md`.
 
-For the first publication only, an already configured, unpublished initial version needs no bump.
-That exception no longer applies to the published `1.0.0`.
+If the repository already has the intended unpublished version, skip `npm version` and set
+`RELEASE_VERSION` to that version. Confirm registry availability before publishing.
 
 ## 2. Verify and commit the release
 
@@ -149,7 +149,7 @@ assuming the current `HEAD` produced the published package.
 ## 7. Create the GitHub Release
 
 Open [New release](https://github.com/gastonmesseri/form-nodes/releases/new), select the existing
-version tag, and use a title such as `Form Nodes v1.0.1`. Summarize that version's changelog and
+version tag, and use a title such as `Form Nodes v2.0.0`. Summarize that version's changelog and
 include installation instructions plus links to npm, the documentation, and the changelog at
 the release tag. Leave **Pre-release** unchecked for a stable version, then publish the release.
 
