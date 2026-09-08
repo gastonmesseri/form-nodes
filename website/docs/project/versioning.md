@@ -18,7 +18,7 @@ Form Nodes follows [Semantic Versioning](https://semver.org/):
 | Minor, such as `1.1.0` | Backward-compatible features |
 | Major, such as `2.0.0` | Breaking changes |
 
-The next release is `2.0.0`, incorporating the breaking changes documented in the migration guide.
+Version `2.0.0` incorporates the breaking changes documented in the migration guide.
 The API may continue to evolve as the library is tested in applications; further incompatible
 changes require another major release. Review the changelog
 and migration guide before every major upgrade. Breaking changes must be identified explicitly.

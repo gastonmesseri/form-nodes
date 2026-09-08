@@ -6,12 +6,11 @@ title: Migration guides
 
 ## 📦 Moving to 2.0.0 {#moving-to-200}
 
-The next release is `2.0.0` because it includes incompatible API and behavior changes.
-When upgrading from `1.1.0`, follow the unreleased migration sections below. Existing `^1.x`
-dependency ranges do not select `2.0.0`; update the dependency explicitly once it is published
-and run your application checks. Future incompatible changes will require another major release.
+Version `2.0.0` is a major release because it includes incompatible API and behavior changes.
+When upgrading from `1.1.0`, follow the 2.0.0 migration sections below. Existing `^1.x`
+dependency ranges do not select `2.0.0`; update the dependency explicitly and run your application checks. Future incompatible changes will require another major release.
 
-## 🔄 Unreleased: standalone validation error types {#standalone-validation-error-types}
+## 🔄 2.0.0: standalone validation error types {#standalone-validation-error-types}
 
 The `ValidationError` namespace has been replaced by directly exported types. Update imports
 and qualified references using this mapping:
@@ -28,7 +27,7 @@ The base `ValidationError` interface remains available. Object shapes, generic d
 readonly properties, target restrictions, and validation behavior are unchanged. See
 [Error types](../reference/validation.md#error-types).
 
-## 🧪 Unreleased: experimental input synchronization {#unreleased-experimental-input-synchronization}
+## 🧪 2.0.0: experimental input synchronization {#unreleased-experimental-input-synchronization}
 
 Rename `syncControlInputs` to `syncInputs`. Optional custom-control input synchronization is now
 **disabled by default**. To preserve the old full synchronization, explicitly pass
@@ -40,7 +39,7 @@ normal behavior. A node option configures only its own binding. See
 [the mode reference](../reference/provide-form-nodes-config.md#custom-control-inputs) before enabling
 this experimental Angular-internal adapter.
 
-## ⚙️ Unreleased: global configuration {#unreleased-global-configuration}
+## ⚙️ 2.0.0: global configuration {#unreleased-global-configuration}
 
 Replace `configureGlobalValidatorMessages(messages)` with
 `configureGlobalFormNodes({ validatorMessages: messages })`. The old export is removed.
@@ -54,7 +53,7 @@ global option, and omission preserves earlier settings.
 Cleanup callbacks now restore independent options and skip already cleaned-up overrides when
 called out of order. See [Global configuration](../reference/configure-global-form-nodes.md).
 
-## ⚙️ Unreleased: unified configuration provider {#unreleased-unified-configuration-provider}
+## ⚙️ 2.0.0: unified configuration provider {#unreleased-unified-configuration-provider}
 
 Use `provideFormNodesConfig()` for both validator messages and binding configuration:
 
@@ -85,7 +84,7 @@ providers; `{ classes: {} }` clears only classes. To also restore synchronizatio
 `{ classes: {}, syncInputs: 'all' }`.
 See [Configuration provider](../reference/provide-form-nodes-config.md).
 
-## 🌳 Unreleased: opt in to dynamic child iteration {#unreleased-opt-in-to-dynamic-child-iteration}
+## 🌳 2.0.0: opt in to dynamic child iteration {#unreleased-opt-in-to-dynamic-child-iteration}
 
 `forEachChild(callback)` now visits only initially declared children. To preserve the previous
 behavior of including children added with `add()`, pass the new option:
@@ -99,7 +98,7 @@ child types. A runtime boolean also requires a `DynamicNode` callback. Empty for
 need the option to visit any children; their default callback child type is `DynamicNode`.
 `Object.values(node.children)` continues to include added nodes and retains its existing types.
 
-## 📐 Unreleased: runtime child map types {#unreleased-runtime-child-map-types}
+## 📐 2.0.0: runtime child map types {#unreleased-runtime-child-map-types}
 
 `children` again accepts arbitrary string keys, so `node.children.nonExisting?.value()` is valid.
 Known properties retain their exact types. Enable `noUncheckedIndexedAccess` to have missing
@@ -112,7 +111,7 @@ from the initial declaration. Use `forEachChild()` for the precise declared-chil
 ## 📐 1.1.0: declared-child map types {#110-declared-child-map-types}
 
 In version 1.1.0, `children` exposed only initially declared keys in TypeScript. This restriction
-is superseded by the unreleased runtime-map change above. Replace dynamic
+is superseded by the 2.0.0 runtime-map change above. Replace dynamic
 `node.children[key]` access with `node.get(key)`, which returns `DynamicNode | undefined`,
 or retain the precisely typed node returned by `add()`.
 

@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 2.0.0 — 2026-09-08 {#200--2026-09-08}
+
 ### 🔸 Changed {#changed}
 
 - **Breaking:** Replaced the `ValidationError` namespace with directly exported types: `ValidationErrorForKind`, `ValidationErrorWithTargetNode`, `ValidationErrorWithOptionalTargetNode`, `ValidationErrorWithoutTargetNode`, and `ValidatorError`. Update qualified type references and imports; error shapes and validation behavior are unchanged.
