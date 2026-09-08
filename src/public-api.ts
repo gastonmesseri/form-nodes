@@ -4,7 +4,6 @@ export { field } from './lib/primitives/field';
 export { array } from './lib/primitives/array';
 export { isFormNode } from './lib/primitives/is-form-node';
 export { FormNodesModule } from './lib/form-nodes.module';
-export type { AnyFieldNode, AnyGroupNode, AnyFormNode, AnyArrayNode } from './lib/types/any-node.type';
 export { max } from './lib/validation/validators/max';
 export { min } from './lib/validation/validators/min';
 export { url } from './lib/validation/validators/url';

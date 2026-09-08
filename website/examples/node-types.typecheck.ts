@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { array, field, form, group, type AnyNode, type AnyFieldNode, type AnyFormNode, type AnyGroupNode, type AnyArrayNode } from '@ngblocks/form-nodes';
+import { array, field, form, group, type AnyNode, type FieldNode, type FormNode, type GroupNode, type ArrayNode } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-node-status',
@@ -19,10 +19,10 @@ export class NodeStatusComponent {
   `,
 })
 export class NodeToolsComponent {
-  field = input.required<AnyFieldNode>();
-  group = input.required<AnyGroupNode>();
-  form = input.required<AnyFormNode>();
-  array = input.required<AnyArrayNode>();
+  field = input.required<FieldNode>();
+  group = input.required<GroupNode>();
+  form = input.required<FormNode>();
+  array = input.required<ArrayNode>();
 }
 
 @Component({

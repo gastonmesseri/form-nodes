@@ -549,7 +549,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
   show(): void;
 };
 
-export type FieldNode<TValue, TParent extends AnyNode = AnyNode> =
+/** A field node. Omit TValue for an unspecified value, or supply it to constrain reads and writes. */
+export type FieldNode<TValue = any, TParent extends AnyNode = AnyNode> =
   & Signal<TValue>
   & {
     /** Returns the field's current committed value and participates in signal dependency tracking. */

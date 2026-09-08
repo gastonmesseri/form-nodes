@@ -279,7 +279,16 @@ export type NodeApi = {
 
 /**
  * Common callable contract for any field, group, form, or array node.
- * Use `$api` for collision-safe state and operations when the concrete node kind is unknown.
+ *
+ * **Use `AnyNode` through its `$api` property for all state and operations.**
+ * Child names can override direct state, operations, and even `api`, so the generic type cannot
+ * safely expose those members directly. Use `myAnyNode.$api.valid()` or
+ * `myAnyNode.$api.markAsTouched()` for guaranteed access. Call `myAnyNode()` to read its value.
+ *
+ * Use `DynamicNode` for direct common members only when the declaration is known not to shadow
+ * that surface. Neither type changes the node or resolves collisions at runtime.
+ * Native function members may appear in IntelliSense. They are not guaranteed node operations;
+ * hiding them with `HiddenFunctionMembers` would exclude nodes that override those names.
  * Value types are unspecified; retain the inferred node type when value precision is needed.
  */
 export type AnyNode = Signal<any> & {
@@ -289,10 +298,8 @@ export type AnyNode = Signal<any> & {
   /**
    * Collision-safe access to the node API.
    *
-   * Prefer `api` for normal application code. Use `$api` when a form declares a child named
-   * `api`, or when generic node code requires an access path that cannot collide with children.
-   *
-   * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
+   * **Use this property for all state and operations on `AnyNode`.** Both direct names and `api` may
+   * be child nodes, while `$api` always refers to the node's state and operations.
    */
   $api: NodeApi;
 };
@@ -306,6 +313,9 @@ export type PublicNode<TNode extends AnyNode> = AnyNode extends TNode
  * It exposes the state and operations shared by every node while keeping native callable
  * members such as `apply`, `bind`, and `call` hidden. Primitive-specific operations require a
  * statically known node type.
+ * Use this direct-member view only when the declaration is known not to shadow its members.
+ * For an arbitrary node with unknown child names, use `AnyNode` and access state and operations
+ * through `$api`. A type assertion to `DynamicNode` does not make colliding members safe.
  */
 export type DynamicNode =
   & PublicNode<AnyNode>

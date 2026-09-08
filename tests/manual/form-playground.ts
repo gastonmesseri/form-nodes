@@ -1,5 +1,6 @@
 import { computed, signal } from '@angular/core';
 
+import { AnyNode, FieldNode } from '../../dist/types/ngblocks-form-nodes';
 import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNodeDirective, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string }
@@ -588,3 +589,7 @@ class MyComponentForSelfReference {
 }
 
 // It should autocomplete also the follosing: field('', { /** This object keys should be autocompleted */ })
+const myAnyNodeTyped: AnyNode = {} as any;
+myAnyNodeTyped.$api;
+const myFieldNodeTyped: FieldNode = {} as any;
+myFieldNodeTyped.debouncing();

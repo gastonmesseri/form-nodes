@@ -58,6 +58,7 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         'reference/api-overview',
+        'reference/node-types',
         'reference/form',
         'reference/field',
         'reference/array',

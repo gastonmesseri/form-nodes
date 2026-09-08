@@ -15,6 +15,9 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 
 # group() {#group}
 
+For the exported `GroupNode` model type and its generic counterpart, see the
+[Node types reference](./node-types.md#group-node).
+
 `group()` creates a typed object aggregate. It provides named children, value aggregation,
 validation, state propagation, configuration, and the common node operations. It deliberately has
 no `onSubmit` option and no `submit()` method.

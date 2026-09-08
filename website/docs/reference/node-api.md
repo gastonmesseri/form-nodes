@@ -4,7 +4,6 @@ title: Node API
 
 import CodeBlock from '@theme/CodeBlock';
 import IsFormNodeExample from '!!raw-loader!../../examples/is-form-node.example.ts';
-import NodeTypesExample from '!!raw-loader!../../examples/node-types.typecheck.ts';
 
 # Node API {#node-api}
 
@@ -24,32 +23,15 @@ guide documents `.api` only for name collisions and generic infrastructure.
 
 ## Choosing a node type {#node-types}
 
-Import node types from `@ngblocks/form-nodes`. Prefer inferred declarations from `field()`,
-`form()`, `group()`, and `array()` when the application owns the model. For component inputs
-and generic utilities, choose the category that the consumer actually needs:
+See the [Node types reference](./node-types.md) for `FieldNode`, `GroupNode`, `FormNode`,
+`ArrayNode`, `AnyNode`, and `DynamicNode`, including usage without generic arguments. It documents
+parameters, component inputs, parent inference, and the distinction between models and bindings.
 
-| Accepted nodes | Unspecified structure | Known structure |
-| --- | --- | --- |
-| Any primitive | `AnyNode` | The inferred node type |
-| Fields | `AnyFieldNode` | `FieldNode<TValue>` |
-| Groups | `AnyGroupNode` | `GroupNode<TChildren>` |
-| Forms | `AnyFormNode` | `FormNode<TChildren>` |
-| Arrays | `AnyArrayNode` | `ArrayNode<TItem>` |
+### AnyNode or DynamicNode? {#any-node-or-dynamic-node}
 
-`AnyFormNode` accepts only `form()` nodes. `AnyNode` accepts all four primitives, including
-nested and detached nodes. `TChildren` describes child nodes; `TItem` describes an item node,
-not its raw value. For example, `ArrayNode<FieldNode<number>>` describes numeric field items.
-
-The `Any…` types deliberately erase value or child-structure details. They are not substitutes
-for validating an unknown value before writing it. Use concrete types when those details are
-part of the component's contract. Generic arrays expose their items as `AnyNode`.
-
-`AnyNode`, `AnyFormNode`, and `AnyGroupNode` provide operations through `$api`, without promising
-direct child names or direct operation names that a child could shadow. `AnyFieldNode` and
-`AnyArrayNode` also expose their category's direct operations. `FormNodeDirective` describes
-the Angular binding; `FormNode<TChildren>` describes the form model.
-
-<CodeBlock language="ts" title="node-types.typecheck.ts">{NodeTypesExample}</CodeBlock>
+Use [`AnyNode`](./node-types.md#any-node) with `$api` when child names are unknown. Use
+[`DynamicNode`](./node-types.md#dynamic-node) for direct common members when the declaration
+is known not to shadow that surface. Neither type wraps the node or repairs name collisions.
 
 ## Recognizing nodes with `isFormNode()` {#is-form-node}
 

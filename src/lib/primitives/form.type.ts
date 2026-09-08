@@ -3,6 +3,7 @@ import type { Injector, Signal } from '@angular/core';
 import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
 import type { ArrayNode } from './array.type';
+import type { GenericFormNode } from '../types/generic-node.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -830,8 +831,15 @@ type FormApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
   $api: FormApi<TNodes, TParent>;
 };
 
-export type FormNode<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
-  & Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
+/**
+ * Form node model. Omit the first type argument for an unspecified structure, or provide it
+ * to preserve exact child types.
+ *
+ * **Without generic arguments, use `$api` for state and operations because child names may collide.**
+ */
+export type FormNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
+  [TNodes] extends [never] ? GenericFormNode
+    : Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
     /** Returns the form's current aggregate committed value and participates in signal dependency tracking. */
     (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };

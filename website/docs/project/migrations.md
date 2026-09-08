@@ -23,8 +23,8 @@ use `FormNodeDirective`. `FormNodeBinding<TNode>` remains the generic binding co
 `[formNode]`, the `formNode` template export, and `field()`, `group()`, `form()`, and `array()`
 keep their names and runtime behavior. `isFormNode()` now narrows to `AnyNode`.
 
-For components that accept an unspecified node structure, use `AnyFieldNode`, `AnyGroupNode`,
-`AnyFormNode`, or `AnyArrayNode`. `AnyFormNode` means a form specifically; `AnyNode` accepts every
+For components that accept an unspecified node structure, omit the generic arguments and use `FieldNode`, `GroupNode`,
+`FormNode`, or `ArrayNode`. `FormNode` means a form specifically; `AnyNode` accepts every
 primitive. See [Choosing a node type](../reference/node-api.md#node-types).
 
 You can import [`FormNodesModule`](../reference/form-nodes-module.md) in components or application

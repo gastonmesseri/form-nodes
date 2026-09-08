@@ -8,6 +8,7 @@ import ancestryLookupsSource from '!!raw-loader!../../examples/ancestry-lookups.
 import validatorAncestrySource from '!!raw-loader!../../examples/validator-ancestry.typecheck.ts';
 import validatorFieldSignalSource from '!!raw-loader!../../examples/validator-field-signal.example.ts';
 import inlineValidatorNodesSource from '!!raw-loader!../../examples/inline-validator-nodes.typecheck.ts';
+import genericNodeApiSource from '!!raw-loader!../../examples/generic-node-api.example.ts';
 
 # Tree navigation and API access {#tree-navigation-and-api-access}
 
@@ -104,13 +105,14 @@ settings.api.readonly(); // form state
 settings(); // { readonly: false, value: 'domain value' }
 ```
 
-Generic code can use `.api` without first narrowing the node kind:
+For generic code receiving `AnyNode`, use **`node.$api`**. Unknown child names can override
+direct operations and the `api` alias itself. Use `DynamicNode` for direct common state and
+operations only when the declaration is known not to shadow that surface:
 
-```ts
-const isNodeValid = (node: AnyNode): boolean => {
-  return node.api.valid();
-};
-```
+<CodeBlock language="ts" title="generic-node-api.example.ts">{genericNodeApiSource}</CodeBlock>
+
+See [AnyNode or DynamicNode?](../reference/node-types.md#any-node) for the contract
+of each type. Neither type modifies or wraps a node at runtime.
 
 A field's rarely needed leaf `patch()` is exposed in the public types only through this uniform API and behaves
 like `set()`; application code should normally call `field.set(value)`.
@@ -126,8 +128,8 @@ response.$api.valid(); // collision-safe form state
 ```
 
 Do not use `$api` merely because it exists. Reserve it for infrastructure requiring a guaranteed
-path or for a form that actually declares an `api` child. The `$api` property is supported and not
-scheduled for removal; its deprecation annotation only keeps it less prominent in autocomplete.
+path or for a form that actually declares an `api` child. The `$api` property is supported and
+is not deprecated or scheduled for removal.
 
 ## 🌳 Parent, root, and path {#parent-root-and-path}
 

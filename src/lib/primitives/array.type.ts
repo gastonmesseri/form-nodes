@@ -190,7 +190,7 @@ export type ArraySet<TItem extends AnyNode> = readonly NodeSet<TItem>[];
 export type ArrayPatch<TItem extends AnyNode> = readonly NodePatch<TItem>[];
 
 export type ArrayRoot<TItem extends AnyNode, TParent extends AnyNode> = AnyNode extends TParent
-  ? ArrayNode<TItem, TParent>
+  ? AnyNode extends TItem ? AnyNode : ArrayNode<TItem, TParent>
   : RootNode<TParent>;
 
 export type ArrayItems<TItem extends AnyNode, TParent extends AnyNode> =
@@ -623,7 +623,11 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   show(): void;
 };
 
-export type ArrayNode<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
+/**
+ * Array node model. Omit the first type argument for an unspecified structure, or provide it
+ * to preserve exact item types. Generic array nodes retain array operations.
+ */
+export type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode = AnyNode> =
   & Signal<ArrayValue<TItem>>
   & {
     /** Returns the exposed array value, applying configured equality, and participates in signal dependency tracking. */

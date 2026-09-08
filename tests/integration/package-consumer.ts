@@ -1,5 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-import { FormNodesModule, FormNodeDirective, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -43,6 +43,14 @@ export class PackageConsumer {
     company: new Company('Form Nodes'),
     atomicAddress: field({ city: 'Bern' }),
   });
+
+  genericField: FieldNode = this.profile.name;
+
+  genericGroup: GroupNode = this.profile.preferences;
+
+  genericForm: FormNode = this.profile;
+
+  genericArray: ArrayNode = this.profile.addresses;
 
   readonly profileValue: FormNodeValue<PackageConsumer['profile']> = this.profile();
 

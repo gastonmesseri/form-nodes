@@ -10,6 +10,9 @@ import arrayTemplateFieldShorthandSource from '!!raw-loader!../../examples/array
 
 # array() {#array}
 
+For the exported `ArrayNode` model type and its generic counterpart, see the
+[Node types reference](./node-types.md#array-node).
+
 `array()` creates a dynamic collection of independently cloned nodes. It is not required merely
 because a value is an array. When one control owns the complete array—for example, a multi-select—
 use a normal array-valued `field()` instead. Choose `array()` when items need independent nodes,

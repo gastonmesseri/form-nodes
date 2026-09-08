@@ -16,6 +16,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 | I want to… | Start with | Details |
 | --- | --- | --- |
 | Model one logical value | `field()` | [`field()` reference](./field.md) |
+| Type a node input or reusable utility | `AnyNode`, `DynamicNode`, or a concrete node type | [Node types reference](./node-types.md) |
 | Organize unrelated standalone nodes without aggregate behavior | Plain JavaScript object | [Creating nodes](../concepts/creating-nodes.md#a-container-is-optional) |
 | Define a submission workflow boundary | `form()` | [`form()` reference](./form.md) |
 | Choose the default field nullability for an application | `createFormPrimitives()` | [`createFormPrimitives()` reference](./create-form-primitives.md) |

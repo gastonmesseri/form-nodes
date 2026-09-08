@@ -10,6 +10,9 @@ import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.ex
 
 # field() {#field}
 
+For the exported `FieldNode` model type and its generic counterpart, see the
+[Node types reference](./node-types.md#field-node).
+
 `field()` creates a leaf node for a scalar, object, date, or any other application value. Fields
 normally live inside a `form()` so their parent, path, validation, and state participate in a tree.
 

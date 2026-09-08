@@ -1,5 +1,6 @@
 import type { Signal } from '@angular/core';
 
+import type { GenericGroupNode } from '../types/generic-node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DynamicNode, NearestForm, AnyNode, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -288,9 +289,16 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
   $api: GroupApi<TNodes, TParent>;
 };
 
-/** An object-shaped structural node without its own submission workflow. */
-export type GroupNode<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
-  & Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
+/**
+ * An object-shaped structural node without its own submission workflow.
+ * Omit the first type argument for an unspecified structure, or provide it
+ * to preserve exact child types.
+ *
+ * **Without generic arguments, use `$api` for state and operations because child names may collide.**
+ */
+export type GroupNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
+  [TNodes] extends [never] ? GenericGroupNode
+    : Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
     /** Returns the group's current aggregate committed value and participates in signal dependency tracking. */
     (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };

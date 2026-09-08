@@ -6,12 +6,26 @@ The package name and public import path are `@ngblocks/form-nodes`. The package 
 exported symbols, node behavior, or Angular integration contracts.
 
 The public common node contract is `AnyNode`; concrete model types are `FieldNode<TValue>`,
-`GroupNode<TChildren>`, `FormNode<TChildren>`, and `ArrayNode<TItem>`. The generic category views
-`AnyFieldNode`, `AnyGroupNode`, `AnyFormNode`, and `AnyArrayNode` erase value/child detail while
+`GroupNode<TChildren>`, `FormNode<TChildren>`, and `ArrayNode<TItem>`.
+Without generic arguments, `FieldNode`, `GroupNode`, `FormNode`, and `ArrayNode` erase value/child detail while
 retaining category operations, including nested nodes with ancestors of a different category.
 Unknown form/group children do not become statically declared properties: generic consumers
-use `$api` to avoid child-name collisions. `AnyFormNode` refers only to the `form()` primitive.
+use `$api` to avoid child-name collisions. `FormNode` refers only to the `form()` primitive. Explicit generic arguments preserve value,
+child, and item precision; an omitted structure differs from the explicitly empty `{}` structure.
+These defaults change only the public type views, not runtime behavior. Angular 22 reference
+checked: `22.1.x` at `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41` (`api/types.ts` and
+`test/web/assertions.spec.ts` under `packages/forms/signals`).
 These type names change no runtime state, validation, propagation, or factory inference.
+
+When child names are unknown, `AnyNode` consumers must use `$api` for state and operations:
+children can shadow both direct API members and the `api` alias. `DynamicNode` exposes direct
+common state and operations for declarations known not to shadow that surface. It is not a
+runtime adapter or a collision check, and asserting an arbitrary node to `DynamicNode` cannot
+make a colliding member safe. `isFormNode()` narrows identity to `AnyNode` without guaranteeing
+the stronger direct-member contract. The generic API example exercises both supported uses.
+`AnyNode` does not intersect `HiddenFunctionMembers`: its private members would reject arrays
+with public `length` and forms/groups with colliding child names. Native function suggestions
+can therefore remain visible in IntelliSense; they are not guaranteed node operations.
 
 `FormNodeDirective` names the standalone `[formNode]` directive and its public binding view.
 `FormNodesModule` imports and exports that directive for standalone and NgModule consumers.

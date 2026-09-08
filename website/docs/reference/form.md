@@ -15,6 +15,9 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 
 # form() {#form}
 
+For the exported `FormNode` model type and its generic counterpart, see the
+[Node types reference](./node-types.md#form-node).
+
 `form()` creates a typed object tree that owns a submission workflow. Its initial children are
 fixed and precisely inferred; named children can also be attached and detached explicitly at
 runtime. Use groups or nested object shorthand for ordinary structural branches.
