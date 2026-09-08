@@ -1,13 +1,15 @@
-import { Component, model, output } from '@angular/core';
-import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
+import { Component, inject, model, output } from '@angular/core';
+import { field, form, FORM_NODE, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-description-input',
   template: `
-    <textarea #text [value]="value()" (input)="value.set(text.value)" (blur)="touch.emit()"></textarea>
+    <textarea #text [value]="value()" [attr.aria-invalid]="binding.errors().length ? true : null" (input)="value.set(text.value)" (blur)="touch.emit()"></textarea>
   `,
 })
 export class DescriptionInput {
+  binding = inject(FORM_NODE, { self: true });
+
   value = model('');
 
   touch = output<void>();

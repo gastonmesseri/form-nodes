@@ -4,8 +4,8 @@ import { findModelTransport } from './model-transport';
 import { createPairedTransport } from './paired-transport';
 import { connectControlInputs } from '../sync-control-inputs';
 import type { FormNodeControl } from '../../form-node-control';
-import type { CustomControlEvents } from './custom-control-events';
 import type { ControlAdapterConnection } from '../control-adapter';
+import { createCustomControlEvents } from './custom-control-events';
 import { getNodeInputConfig } from '../../../configuration/node-input-config';
 import type { InternalNode, AnyNode, NodeValue } from '../../../types/node.type';
 import { FORM_NODE_BIND_INPUT_OUTPUT_PAIRS } from '../../provide-form-nodes-config';
@@ -18,12 +18,10 @@ export const connectCustomControlAdapter = <TNode extends AnyNode>(
   node: () => TNode,
   injector: Injector,
   usesControlState = false,
-  preparedEvents?: CustomControlEvents,
 ): ControlAdapterConnection => {
-  const events = preparedEvents?.control === control ? preparedEvents : undefined;
   const directModel = findModelTransport(control);
   const experimental = directModel === undefined;
-  const model = events === undefined ? (directModel === undefined ? createPairedTransport(control, injector, usesControlState) : directModel) : events.model;
+  const model = directModel === undefined ? createPairedTransport(control, injector, usesControlState) : directModel;
   const inheritedPairs = injector.get(FORM_NODE_BIND_INPUT_OUTPUT_PAIRS, null) ?? getGlobalBindInputOutputPairs();
   const enabled = () => {
     if (!experimental) return true;
@@ -47,13 +45,10 @@ export const connectCustomControlAdapter = <TNode extends AnyNode>(
     currentNode.$api.markAsTouched();
     currentNode.$api._flushControlValueOnBlur();
   };
-  const valueSubscription = events ? undefined : model.subscribe(onValue);
-  const touchSubscription = events ? undefined : control.touch?.subscribe(onTouch);
-  events?.connect(onValue, onTouch);
+  const customEvents = createCustomControlEvents(control as FormNodeControl, directModel, onValue, onTouch);
+  const touchSubscription = customEvents.touch ? undefined : control.touch?.subscribe(onTouch);
 
   injector.get(DestroyRef).onDestroy(() => {
-    events?.disconnect();
-    valueSubscription?.unsubscribe();
     touchSubscription?.unsubscribe();
     nodeInput?.set(null);
   });
@@ -91,5 +86,6 @@ export const connectCustomControlAdapter = <TNode extends AnyNode>(
       if (enabled()) control.focus!(options);
     },
     inputNames,
-  } : { inputNames };
+    customEvents,
+  } : { inputNames, customEvents };
 };

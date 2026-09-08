@@ -186,10 +186,6 @@ need the updated node. Call `onTouched` before emitting a corresponding interact
 updates synchronously within those callbacks (subject to configured debounce); it cannot update
 from a value that the CVA has not delivered yet. The same limitation applies to Reactive Forms.
 
-Directly injecting `FORM_NODE` (or the binding directive itself) during the custom component's
-construction forces early binding creation before that component is available. This reentrant
-case retains initialization-time subscriptions and the previous output ordering: use the output's
-`$event` for its emitted value, since the node may still have its previous value inside the handler.
-Prefer `useFormNodeState()` for observing binding state without forcing binding construction.
-Injecting `NgControl` does not have this limitation. The token still resolves to the concrete
-binding instance; its identity is preserved.
+The same ordering holds when your component injects `FORM_NODE` or `FormNodeDirective` during
+construction. The injected token still identifies the concrete binding; no deferred injection or
+manual microtask is needed.

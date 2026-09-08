@@ -2789,41 +2789,40 @@ registrations on native hosts until initialization resolves the transport.
 
 ### Custom control event ordering
 
-For automatically discovered component models (`value` / `checked`, including aliases) and enabled
-input/output pairs, the binding reserves subscriptions during directive construction before
-Angular registers consumer template output handlers. Adapter selection then activates those
-subscriptions, applying the existing debounce, dirty, validation, touch, and reset semantics.
-`(valueChange)` and `(checkedChange)` handlers observe the committed node and ancestor values with
-immediate updates, including synchronous validation. `(touch)` handlers observe touched state and
-blur-debounce flushing. Configured debounce still leaves committed values pending; `controlValue()`
-exposes the pending control representation. Rebinding uses the current node; consumer resets inside
-output handlers are not overwritten by a later subscription. Destroying a binding unsubscribes its
-transport and clears callback references. Disabled experimental pairs retain their no-write behavior.
+The directive declares Angular host listeners for the custom-control contract outputs
+`valueChange`, `checkedChange`, and `touch`. Angular connects those listeners during view creation
+before consumer template handlers, without asking for the component during directive construction.
+Only the selected custom adapter supplies their callbacks. Its metadata chooses either the value
+or checked transport, including model/input aliases; unsupported output names remain inactive.
+A `touch` hook without a declared `touch` output retains its direct subscription for compatibility.
 
-Prepared subscriptions do not activate for CVAs or pass-through wrappers. NgControl creation is
-shared through an injector-local bridge so injecting it from a component constructor does not force
-premature binding construction or component discovery. NgControl remains lazy and shares the same
-accessor and node state as the selected CVA. Its binding is attached before initialization runs.
-CVA callbacks remain synchronous: an event emitted *after* `onChange` observes the update; one
-emitted *before* it cannot observe a change not yet delivered to the form engine. This ordering is
-owned by the component, and applies similarly to Angular Reactive Forms. Outputs emitted during
-construction before binding initialization are not treated as user interaction.
+With immediate updates, the corresponding template output handler sees the new node value, parent
+composition, dirty state, and synchronous validation. The `touch` handler sees touched state and
+blur-debounce flushing. This also holds when a custom component injects `FORM_NODE` or the concrete
+directive during construction. Token identity is unchanged; no cyclic-injection recovery or
+constructor-time component discovery is needed. Configured debounce still leaves committed values
+pending, and `controlValue()` exposes the pending representation. Rebinding uses the current node.
+Consumer resets inside handlers are not overwritten by a second transport subscription.
 
-Reference: Angular `22.1.x`, commit `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`,
+The three host listeners exist on all bindings, but native, CVA, and pass-through adapters never
+activate their callbacks. Native DOM events with those names are ignored instead of being treated
+as Angular output payloads. Only the selected custom output changes state; sibling output names
+cannot take over its transport. Angular removes host output listeners on destruction, and the
+binding clears its callbacks. Disabled experimental pairs retain their no-write behavior.
+
+NgControl remains lazy and shares the selected accessor and concrete binding state. CVA callbacks
+remain synchronous: an event emitted after `onChange` sees the update, subject to configured
+debounce; an event emitted before it cannot see a value not yet delivered to the form engine.
+That component-owned order also applies to Angular Reactive Forms. Construction-time outputs
+before binding initialization are not treated as user interaction.
+
+Reference: Angular `22.1.x`, commit `05a05f59657f048a87f3d4eb9ddb7968cfe8060e`,
 `packages/forms/signals/src/directive/control_custom.ts`, `control_cva.ts`, and `form_field.ts`,
 with custom-model and CVA coverage in `packages/forms/signals/test/web/form_field.spec.ts` and
-`interop.spec.ts`. Angular registers model and touch transport through its internal
-`ControlDirectiveHost` during control creation. Form Nodes uses public component metadata, DI,
-and output subscriptions instead of that internal hook.
-
-
-Directly injecting `FORM_NODE` (or the binding directive itself) during the custom component's
-construction forces early binding creation before that component is available. This reentrant
-case retains initialization-time subscriptions and the previous output ordering: use the output's
-`$event` for its emitted value, since the node may still have its previous value inside the handler.
-Prefer `useFormNodeState()` for observing binding state without forcing binding construction.
-Injecting `NgControl` does not have this limitation. The token still resolves to the concrete
-binding instance; its identity is preserved.
+`interop.spec.ts`. Angular uses its internal `ControlDirectiveHost` creation hook for model and
+touch transport. Form Nodes uses public Angular host listeners and component metadata to preserve
+that ordering on both supported Angular majors, accepting inactive contract listeners on other
+hosts instead of relying on Angular internals.
 
 ### Native parse errors
 

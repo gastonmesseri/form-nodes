@@ -1,55 +1,36 @@
-import { NG_VALUE_ACCESSOR } from '@angular/forms';
-import { DestroyRef, getDebugNode, reflectComponentType, type Injector, type ModelSignal, type Type } from '@angular/core';
+import { reflectComponentType, type Type } from '@angular/core';
 
-import { findModelTransport } from './model-transport';
-import { createPairedTransport } from './paired-transport';
 import type { FormNodeControl } from '../../form-node-control';
-import { hasControlStateConsumer } from '../../../form-node-state/adapters/form-node';
 
+/** Output callbacks owned exclusively by the selected custom-control adapter. */
 export type CustomControlEvents = {
-  control: FormNodeControl;
-  model: ModelSignal<unknown>;
-  connect(value: (value: unknown) => void, touch: () => void): void;
-  disconnect(): void;
+  valueChange?: (value: unknown) => void;
+  checkedChange?: (value: unknown) => void;
+  touch?: () => void;
 };
 
-/** Reserves output subscription order before Angular registers consumer template listeners. */
-export const prepareCustomControlEvents = (element: HTMLElement, injector: Injector): CustomControlEvents | undefined => {
-  const tokens = getDebugNode(element)?.providerTokens ?? [];
-  if (tokens.includes(NG_VALUE_ACCESSOR)) return;
-  const type = tokens.find(token => typeof token === 'function' && reflectComponentType(token as Type<unknown>)) as Type<FormNodeControl> | undefined;
-  if (!type) return;
-  const mirror = reflectComponentType(type)!;
-  if (mirror.inputs.some(input => input.templateName === 'formNode')) return;
-  if (!['value', 'checked'].some(name => mirror.inputs.some(input => input.templateName === name) && mirror.outputs.some(output => output.templateName === `${name}Change`))) return;
-  let control: FormNodeControl;
-  try {
-    control = injector.get(type);
-  } catch (error) {
-    // NG0200: preserve reentrant binding injection until the host finishes construction.
-    if ((error as { code?: unknown } | null)?.code === -200) return;
-    throw error;
+/** Routes only the selected value transport and declared touch output through host listeners. */
+export const createCustomControlEvents = (
+  control: FormNodeControl,
+  model: (() => unknown) | undefined,
+  onValue: (value: unknown) => void,
+  onTouch: () => void,
+): CustomControlEvents => {
+  const mirror = reflectComponentType(control.constructor as Type<unknown>);
+  const record = control as unknown as Record<string, unknown>;
+  const events: CustomControlEvents = {};
+  for (const name of ['value', 'checked'] as const) {
+    const input = mirror?.inputs.find(({ templateName }) => templateName === name);
+    const output = mirror?.outputs.find(({ templateName }) => templateName === `${name}Change`);
+    if (!input || !output) continue;
+    const emitter = record[output.propName] as { subscribe?: unknown } | undefined;
+    if (typeof emitter?.subscribe !== 'function') continue;
+    if (model !== undefined && record[input.propName] !== model) continue;
+    events[`${name}Change`] = onValue;
+    break;
   }
-  const directModel = findModelTransport(control);
-  const model = directModel === undefined ? createPairedTransport(control, injector, hasControlStateConsumer(element)) : directModel;
-  let onValue: ((value: unknown) => void) | undefined;
-  let onTouch: (() => void) | undefined;
-  const valueSubscription = model.subscribe(value => onValue?.(value));
-  const touchSubscription = control.touch?.subscribe(() => onTouch?.());
-  const disconnect = () => {
-    onValue = undefined;
-    onTouch = undefined;
-    valueSubscription.unsubscribe();
-    touchSubscription?.unsubscribe();
-  };
-  injector.get(DestroyRef).onDestroy(disconnect);
-  return {
-    control,
-    model,
-    connect(value, touch) {
-      onValue = value;
-      onTouch = touch;
-    },
-    disconnect,
-  };
+  if (mirror?.outputs.some(output => output.templateName === 'touch' && record[output.propName] === control.touch)) {
+    events.touch = onTouch;
+  }
+  return events;
 };

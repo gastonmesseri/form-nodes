@@ -16,7 +16,7 @@ import { registerControlStateBinding } from '../form-node-state/adapters/form-no
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
 import { prepareNativeControlEvents } from './adapters/native-control/native-control-events';
 import { syncNativeControlState } from './adapters/native-control/sync-native-control-state';
-import { prepareCustomControlEvents } from './adapters/signal-forms-control/custom-control-events';
+import type { CustomControlEvents } from './adapters/signal-forms-control/custom-control-events';
 import { componentAcceptsFormNode } from './adapters/signal-forms-control/discover-custom-control';
 import { FORM_NODE_INTEROP, createFormNodeInterop, injectFormNodeNgControl } from './form-node-interop';
 
@@ -32,6 +32,9 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE
     { provide: NgControl, useFactory: injectFormNodeNgControl },
   ],
   host: {
+    '(valueChange)': '_handleCustomEvent("valueChange", $event)',
+    '(checkedChange)': '_handleCustomEvent("checkedChange", $event)',
+    '(touch)': '_handleCustomEvent("touch", $event)',
     '(submit)': '_submitNativeForm($event)',
     '(reset)': '_resetNativeForm($event)',
   },
@@ -62,7 +65,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   private connectNativeEvents = prepareNativeControlEvents(this.element, this.renderer, this.destroyRef);
 
-  private customEvents = this.explicitPassThrough ? undefined : prepareCustomControlEvents(this.element, this.injector);
+  private customEvents: CustomControlEvents | undefined;
 
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
@@ -78,6 +81,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   constructor() {
     this.interop.connect(this);
     this.destroyRef.onDestroy(() => {
+      this.customEvents = undefined;
       this.formNodeStateCleanup?.();
       this.bindingInjectorCleanups.forEach(cleanup => cleanup());
       this.bindingInjectorCleanups.clear();
@@ -100,23 +104,28 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     }
     if (this.explicitPassThrough || componentAcceptsFormNode(this.element)) {
       this.connectNativeEvents();
-      this.customEvents?.disconnect();
       return;
     }
     const context: ControlAdapterContext<TNode> = {
       binding: this,
-      customEvents: this.customEvents,
       renderer: this.renderer,
       getNgControl: () => this._ngControl,
     };
     const connection = resolveControlAdapter(context, this.interop.peek()?.valueAccessor);
     this.connectNativeEvents(connection.nativeEvents);
+    this.customEvents = connection.customEvents;
     this.focuser = connection.focus ?? this.focuser;
     this.formNodeStateCleanup = registerControlStateBinding(this.element, this);
     syncNativeControlState(context, connection.inputNames);
     this.registerControlBinding();
     this.warnWhenHidden();
     this.installClassBindingEffect();
+  }
+
+  /** Dispatches declared custom outputs before consumer template listeners. */
+  _handleCustomEvent(name: keyof CustomControlEvents, value: unknown) {
+    if (value instanceof Event && value.type === name && value.currentTarget === this.element) return;
+    this.customEvents?.[name]?.(value);
   }
 
   /** Handles submission only when this binding is hosted by a native form. */

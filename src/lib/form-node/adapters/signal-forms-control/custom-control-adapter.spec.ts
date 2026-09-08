@@ -45,6 +45,7 @@ describe('connectCustomControlAdapter', () => {
     expect(name.dirty()).toBe(false);
 
     control.value.set('Mark');
+    connection.customEvents?.valueChange?.('Mark');
     expect(name()).toBe('Mark');
     expect(name.dirty()).toBe(true);
 
@@ -111,11 +112,12 @@ describe('connectCustomControlAdapter', () => {
     const name = field('node', { bindInputOutputPairs: true });
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
-      connectCustomControlAdapter(fixture.componentInstance as never, () => name, fixture.debugElement.injector);
+      const connection = connectCustomControlAdapter(fixture.componentInstance as never, () => name, fixture.debugElement.injector);
       TestBed.flushEffects();
       expect(fixture.componentInstance.value).toBe('owned');
       expect(warning).toHaveBeenCalledOnce();
       fixture.componentInstance.valueChange.emit('edited');
+      connection.customEvents?.valueChange?.('edited');
       TestBed.flushEffects();
       expect(name()).toBe('edited');
       expect(warning).toHaveBeenCalledOnce();

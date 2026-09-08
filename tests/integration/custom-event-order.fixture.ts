@@ -74,18 +74,58 @@ export class CustomEventOrderHost {
 
 @Component({ selector: 'direct-binding-control', template: '' })
 export class DirectBindingControl {
+  touch = output<void>();
+
   binding = inject(FORM_NODE, { self: true });
 
   value = model('');
 }
 
+@Component({ selector: 'direct-directive-control', template: '' })
+export class DirectDirectiveControl {
+  binding = inject(FormNodeDirective, { self: true });
+
+  checked = model(false);
+
+  touch = output<void>();
+}
+
+@Component({ selector: 'direct-pair-control', template: '' })
+export class DirectPairControl {
+  binding = inject(FORM_NODE, { self: true });
+
+  value = input('');
+
+  valueChange = output<string>();
+
+  touch = output<void>();
+}
+
 @Component({
   selector: 'direct-binding-host',
-  imports: [FormNodeDirective, DirectBindingControl],
-  template: '<direct-binding-control [formNode]="name" (valueChange)="observed = name()" />',
+  imports: [FormNodeDirective, DirectBindingControl, DirectDirectiveControl, DirectPairControl],
+  template: `
+    <direct-binding-control [formNode]="name" (valueChange)="observed = name()" (touch)="touched = name.touched()" />
+    <direct-directive-control [formNode]="checked" (checkedChange)="checkedObserved = checked()" (touch)="checkedTouched = checked.touched()" />
+    <direct-pair-control [formNode]="paired" (valueChange)="pairedObserved = paired()" (touch)="pairedTouched = paired.touched()" />
+  `,
 })
 export class DirectBindingHost {
   name = field.strict('initial');
 
   observed = '';
+
+  touched = false;
+
+  checked = field.strict(false);
+
+  checkedObserved = false;
+
+  checkedTouched = false;
+
+  paired = field.strict('initial', { bindInputOutputPairs: true });
+
+  pairedObserved = '';
+
+  pairedTouched = false;
 }

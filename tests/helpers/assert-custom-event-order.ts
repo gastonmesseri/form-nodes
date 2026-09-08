@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 import { By } from '@angular/platform-browser';
 import type { ComponentFixture } from '@angular/core/testing';
 
-import type { CustomEventOrderHost, OrderedValueControl, OrderedCheckboxControl, OrderedPairControl } from '../integration/custom-event-order.fixture';
+import type { CustomEventOrderHost, DirectBindingHost, DirectBindingControl, DirectDirectiveControl, DirectPairControl, OrderedValueControl, OrderedCheckboxControl, OrderedPairControl } from '../integration/custom-event-order.fixture';
 
 /** Exercises the same public event contract under JIT and production AOT. */
 export const assertCustomEventOrder = (fixture: ComponentFixture<CustomEventOrderHost>) => {
@@ -52,5 +52,44 @@ export const assertCustomEventOrder = (fixture: ComponentFixture<CustomEventOrde
   expect(host.observations).toHaveLength(1);
   expect(host.observations[0]).toMatchObject({ value: 'replacement', parent: { value: 'replacement' } });
   expect(previous.value()).toBe('reset');
+  fixture.destroy();
+};
+
+/** Confirms uniform timing even when custom constructors request their concrete binding. */
+export const assertDirectBindingEventOrder = (fixture: ComponentFixture<DirectBindingHost>) => {
+  fixture.detectChanges();
+  const host = fixture.componentInstance;
+  const element = fixture.debugElement.query(By.css('direct-binding-control'));
+  const control = element.componentInstance as DirectBindingControl;
+  const checkbox = fixture.debugElement.query(By.css('direct-directive-control')).componentInstance as DirectDirectiveControl;
+  const pair = fixture.debugElement.query(By.css('direct-pair-control')).componentInstance as DirectPairControl;
+  expect(control.binding.node()).toBe(host.name);
+  expect(checkbox.binding.node()).toBe(host.checked);
+  expect(pair.binding.node()).toBe(host.paired);
+  for (const element of fixture.nativeElement.children) {
+    for (const name of ['valueChange', 'checkedChange', 'touch']) {
+      element.dispatchEvent(new Event(name, { bubbles: true }));
+    }
+  }
+  expect(host.name()).toBe('initial');
+  expect(host.name.pristine()).toBe(true);
+  expect(host.name.untouched()).toBe(true);
+  expect(host.checked()).toBe(false);
+  expect(host.checked.pristine()).toBe(true);
+  expect(host.paired()).toBe('initial');
+  expect(host.paired.pristine()).toBe(true);
+  control.value.set('updated');
+  expect(host.observed).toBe('updated');
+  expect(host.name()).toBe('updated');
+  control.touch.emit();
+  expect(host.touched).toBe(true);
+  checkbox.checked.set(true);
+  expect(host.checkedObserved).toBe(true);
+  checkbox.touch.emit();
+  expect(host.checkedTouched).toBe(true);
+  pair.valueChange.emit('paired');
+  expect(host.pairedObserved).toBe('paired');
+  pair.touch.emit();
+  expect(host.pairedTouched).toBe(true);
   fixture.destroy();
 };

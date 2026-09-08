@@ -54,8 +54,8 @@ Most components can use `#binding="formNode"` with `viewChild()` instead of inje
 
 See [`[formNode]`](./form-node-binding.md) and [Node API](./node-api.md).
 
-When a custom component injects this token during construction, its output subscriptions retain
-initialization-time ordering to avoid a circular dependency. Inside `valueChange`, `checkedChange`,
-or `touch` handlers, node state may therefore still reflect the previous value or interaction.
-Use `$event` for the emitted value, or prefer `useFormNodeState()` when observing state is sufficient.
+Custom components can inject this token during construction without changing output ordering.
+With immediate updates, `valueChange`, `checkedChange`, and `touch` template handlers see the
+updated node value or touched state. Configured debounce still applies. The token continues to
+resolve to the concrete directive instance.
 See [custom output ordering](../guides/custom-controls.md#output-handler-order).

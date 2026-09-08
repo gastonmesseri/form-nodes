@@ -9,7 +9,6 @@ import type { CustomControlEvents } from './signal-forms-control/custom-control-
 export type ControlAdapterContext<TNode extends AnyNode = AnyNode> = {
   binding: FormNodeBinding<TNode>;
   renderer: Renderer2;
-  customEvents?: CustomControlEvents | undefined;
   getNgControl(): FormNodeNgControl;
 };
 
@@ -25,6 +24,7 @@ export type NativeControlEvents = {
 /** Capabilities returned after a control transport has been connected. */
 export type ControlAdapterConnection = {
   nativeEvents?: NativeControlEvents;
+  customEvents?: CustomControlEvents;
   focus?: (options?: FocusOptions) => void;
   inputNames: ReadonlySet<string>;
 };
