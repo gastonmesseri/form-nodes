@@ -446,7 +446,8 @@ asyncValidator({
 Resolved results and `onError` results use the same defensive normalization as synchronous
 validators: keep errors with a readable string `kind`, ignore malformed entries, and warn only
 in development. Ignored results contribute no errors; pending state still finishes normally.
-Strings are not converted into messages. This filtering does not invoke `onError` for malformed
+Strings become `{ kind: 'custom', message }`, including empty strings. Arrays can mix strings
+and error objects. See [Returning messages](../guides/validation.md#returning-messages). This filtering does not invoke `onError` for malformed
 results; that callback retains its existing exception/rejection handling. See
 [Malformed validator results](../guides/validation.md#malformed-validator-results).
 
@@ -459,8 +460,9 @@ type AsyncValidationResult =
 | Resolved or emitted result | Effect |
 | --- | --- |
 | `null`, `undefined`, or `void` | Validation succeeds |
+| `string` | Adds an error with `kind: 'custom'` and the returned message, including `''` |
 | `{ kind, message?, ... }` | Adds one error |
-| `readonly ValidationError[]` | Adds several errors in returned order |
+| An array of strings and/or error objects | Adds several errors in returned order |
 
 Observable-like values use their first emission and are then unsubscribed. RxJS Observables satisfy
 the structural contract, but Form Nodes does not require RxJS.
@@ -504,7 +506,7 @@ asynchronous execution. Later reactive changes retain their scheduled revalidati
 | `AsyncValidatorContext<TValue, TApi>` | Callback context with `abortSignal` |
 | `ParameterizedAsyncValidatorContext<TValue, TParams, TApi>` | Context with `abortSignal` and `params` |
 | `AsyncValidationResult` | Promise-like or Observable-like validation operation |
-| `ValidationResult` | Success, one error, or several errors |
+| `ValidationResult` | Success, a message or error object, or an array of both |
 
 See [Async validation](../guides/async-validation.md) for task-oriented examples and
 [Advanced behavior](../advanced/behavior-details.md#asynchronous-scheduling-and-dependencies) for

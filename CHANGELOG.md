@@ -11,7 +11,7 @@ provide backward-compatible fixes.
 
 ### Changed
 
-- Validator results now ignore malformed errors and accidentally returned nodes with development-only warnings, preserving valid errors in mixed-validity arrays. Error objects require a string `kind`; strings are not converted into messages. The same filtering applies to resolved asynchronous and `onError` results without leaving validation pending. Ignored results do not block the form.
+- Validator results now ignore malformed errors and accidentally returned nodes with development-only warnings, preserving valid errors in mixed-validity arrays. Error objects require a string `kind`. Validators can also return message strings, normalized to `{ kind: 'custom', message }`, including empty strings and arrays mixing messages with error objects. The same filtering applies to resolved asynchronous and `onError` results without leaving validation pending. Ignored results do not block the form.
 
 - Empty `form({})` and `group({})` declarations now type `forEachChild()` callbacks as `DynamicNode`, so operations such as `child.set('')` compile. Visiting added children still requires `includeDynamic: true`; nonempty declarations retain their concrete child union.
 

@@ -198,8 +198,7 @@ dateBetween('2026-01-01', '2026-12-31', { parseAs: 'browser' });
 // @ts-expect-error pattern options expose only the static or reactive message
 pattern(/^[a-z]+$/, { debounce: 300 });
 
-// @ts-expect-error synchronous validators must return a supported validation result
-validator<string>((_context) => 'invalid');
+validator<string>((_context) => 'Choose another value');
 
 // @ts-expect-error a non-nullable validator cannot observe a field that is nullable by default
 field(1, [positive]);

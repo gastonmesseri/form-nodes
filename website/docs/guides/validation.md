@@ -5,6 +5,7 @@ title: Validation
 # Validation {#validation}
 
 import CodeBlock from '@theme/CodeBlock';
+import stringValidationSource from '!!raw-loader!../../examples/string-validation.example.ts';
 import invalidValidationResultsSource from '!!raw-loader!../../examples/invalid-validation-results.example.ts';
 import validatorResolutionSource from '!!raw-loader!../../examples/validator-resolution.example.ts';
 import selfReferencingHelpersSource from '!!raw-loader!../../examples/self-referencing-validation-helpers.typecheck.ts';
@@ -158,11 +159,26 @@ This exception includes overloaded functions callable without arguments. For exa
 `uniqueItems` directly can match the unchecked parameterless branch. A deferred callback's
 returned validator is likewise not checked against the consuming field's value type.
 
+## 💬 Returning messages {#returning-messages}
+
+Return a string for a simple error message. Form Nodes converts it to
+`{ kind: 'custom', message }`, so error queries keep their usual object shape.
+
+<CodeBlock language="ts" title="string-validation.example.ts">{stringValidationSource}</CodeBlock>
+
+This works in inline validators, `validator()`, asynchronous validators, and `onError`.
+Arrays can mix message strings and error objects; order and duplicate kinds are preserved.
+`getError('custom')` returns the first matching error. Return an object with a specific `kind`
+when you need to identify a particular rule or target another node.
+
+Every string, including `''` and whitespace-only messages, represents an error. Messages are
+preserved exactly; return `null` or `undefined` for success.
+
 ## 🛡️ Malformed validator results {#malformed-validator-results}
 
 Error objects need a readable string `kind`; an empty string is allowed. Malformed objects,
-primitives, and returned form nodes are ignored with a warning in Angular development mode.
-Strings are not treated as error messages. `null` and `undefined` remain silent success results.
+non-string primitives, and returned form nodes are ignored with a warning in Angular development mode.
+`null` and `undefined` remain silent success results.
 Arrays retain valid errors and discard invalid entries. This applies to synchronous results,
 resolved asynchronous results, and asynchronous `onError` results.
 

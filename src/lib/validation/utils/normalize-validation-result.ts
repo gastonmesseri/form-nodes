@@ -17,8 +17,9 @@ export const normalizeValidationResult = (result: unknown): readonly ValidationE
   const items = Array.isArray(result) ? result : [result];
   for (const item of items) {
     if (isNil(item)) continue;
-    if (isValidationError(item)) errors.push(item);
-    else warnInDevMode('Ignored an invalid validator result. Return null, undefined, or an error object with a string "kind" property.');
+    if (typeof item === 'string') errors.push({ kind: 'custom', message: item });
+    else if (isValidationError(item)) errors.push(item);
+    else warnInDevMode('Ignored an invalid validator result. Return null, undefined, a message string, or an error object with a string "kind" property.');
   }
   return errors;
 };

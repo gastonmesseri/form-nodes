@@ -2692,7 +2692,7 @@ it('defers mixed self-referencing helpers and resumes asynchronous validation af
 it('ignores malformed synchronous results while preserving valid errors and reactive transitions', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   try {
-    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, 'Not a message', { kind: 1 }, null]);
+    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, 42, { kind: 1 }, null]);
     const run = vi.fn(() => result());
     const value = field('text', [run]);
     expect(value.errors()).toMatchObject([{ kind: '', message: 'Kept', targetNode: value }]);
@@ -2733,7 +2733,7 @@ it('filters invalid entries and nodes from returned validator arrays without exe
 it.each(['promise', 'observable', 'onError'] as const)('ignores malformed asynchronous field results from %s and finishes pending state', async (source) => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   try {
-    const result = signal<unknown>([{ kind: 'kept' }, {}, 'Not a message']);
+    const result = signal<unknown>([{ kind: 'kept' }, {}, 42]);
     const run = vi.fn();
     const value = field('text', [asyncValidator(() => {
       run();
@@ -2764,4 +2764,99 @@ it.each(['promise', 'observable', 'onError'] as const)('ignores malformed asynch
   } finally {
     warn.mockRestore();
   }
+});
+
+it('normalizes reactive message validators and preserves composed rules and error queries', () => {
+  const message = signal('Choose another name');
+  const run = vi.fn(() => message());
+  const rule = validator<string | null>(({ value }) => value() === 'admin' ? run() : null);
+  const name = field('admin', () => [rule]);
+  expect(name.errors()).toEqual([{ kind: 'custom', message: 'Choose another name', targetNode: name }]);
+  expect(name.getError('custom')?.message).toBe('Choose another name');
+  expect(name.hasError('custom')).toBe(true);
+  expect(name.invalid()).toBe(true);
+  expect(name.validators({ resolve: true })).toEqual([rule]);
+  expect(run).toHaveBeenCalledTimes(1);
+  message.set('');
+  expect(name.getError('custom')?.message).toBe('');
+  expect(name.invalid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(2);
+  expect(name.dirty()).toBe(false);
+  expect(name.touched()).toBe(false);
+  name.set('Alex');
+  expect(name.errors()).toEqual([]);
+  expect(name.valid()).toBe(true);
+  expect(name.pending()).toBe(false);
+  expect(run).toHaveBeenCalledTimes(2);
+});
+
+it.each(['promise', 'observable', 'onError'] as const)('normalizes reactive asynchronous messages from %s', async (source) => {
+  const result = signal<string | null>('Unavailable');
+  const run = vi.fn();
+  const name = field('Alex', [asyncValidator(() => {
+    run();
+    const snapshot = result();
+    if (source === 'onError') return Promise.reject(new Error('Offline'));
+    if (source === 'observable') {
+      return { subscribe: (observer: { next(value: string | null): void }) => {
+        observer.next(snapshot);
+        return { unsubscribe() {} };
+      } };
+    }
+    return Promise.resolve(snapshot);
+  }, { onError: () => result() })]);
+  expect(name.pending()).toBe(true);
+  await vi.waitFor(() => expect(name.pending()).toBe(false));
+  expect(name.errors()).toEqual([{ kind: 'custom', message: 'Unavailable', targetNode: name }]);
+  expect(name.invalid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(1);
+  result.set('');
+  await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+  await vi.waitFor(() => expect(name.pending()).toBe(false));
+  expect(name.getError('custom')?.message).toBe('');
+  expect(name.invalid()).toBe(true);
+  result.set(null);
+  await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(3));
+  await vi.waitFor(() => expect(name.pending()).toBe(false));
+  expect(name.errors()).toEqual([]);
+  expect(name.valid()).toBe(true);
+  expect(name.dirty()).toBe(false);
+  expect(name.touched()).toBe(false);
+});
+
+it('suppresses async work for synchronous messages and discards cancelled async messages', async () => {
+  const executions: { abortSignal: AbortSignal; resolve(value: string | null): void }[] = [];
+  const run = vi.fn();
+  const name = field('', [
+    ({ value }) => value() ? null : 'Enter a name',
+    asyncValidator(({ value, abortSignal }) => {
+      run(value());
+      return new Promise<string | null>((resolve) => {
+        executions.push({ abortSignal, resolve });
+      });
+    }),
+  ]);
+  expect(name.invalid()).toBe(true);
+  expect(name.pending()).toBe(false);
+  expect(run).not.toHaveBeenCalled();
+  name.set('Alex');
+  await vi.waitFor(() => expect(run).toHaveBeenCalledExactlyOnceWith('Alex'));
+  expect(name.pending()).toBe(true);
+  name.set('Sam');
+  await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+  expect(executions[0]!.abortSignal.aborted).toBe(true);
+  executions[0]!.resolve('Outdated error');
+  await Promise.resolve();
+  expect(name.errors()).toEqual([]);
+  expect(name.pending()).toBe(true);
+  executions[1]!.resolve('Choose another name');
+  await vi.waitFor(() => expect(name.pending()).toBe(false));
+  expect(name.getError('custom')?.message).toBe('Choose another name');
+  expect(name.invalid()).toBe(true);
+  name.reset('');
+  expect(name.getError('custom')?.message).toBe('Enter a name');
+  expect(name.pending()).toBe(false);
+  expect(name.dirty()).toBe(false);
+  expect(name.touched()).toBe(false);
+  expect(run).toHaveBeenCalledTimes(2);
 });

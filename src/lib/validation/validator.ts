@@ -3,6 +3,8 @@ import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './v
 
 /**
  * Gives a reusable synchronous validator a fully typed authoring context.
+ * Return a message string for a `custom` error, including an empty string, or return an error object
+ * with an explicit `kind`. Arrays may mix messages and error objects; return null or undefined for success.
  *
  * Use this helper when declaring a validator separately from `field()`, `form()`, `group()`, or `array()`,
  * where contextual inference from the consuming node is unavailable. The returned function is the

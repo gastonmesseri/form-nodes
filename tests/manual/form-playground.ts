@@ -92,8 +92,7 @@ myForm.myValo.validators({ resolve: true })
 
 /** @todo this is still not working, the type of the child should be an union */
 myForm.someNesting.forEachChild(child => {
-  child
-  // child.set();
+  child.set('' as any);
 })
 
 const myComputed = computed(() => myForm());
@@ -480,8 +479,9 @@ class MyComponentForSelfReference {
   ids = signal(['1', '2', '3']);
 
   myForm = form({
+    nonValidTypeValidatorField: field('', [matchedId([], '')]),
     somo: field('', [
-      ctx => ctx.parent(),
+      ctx => ctx.parent()
     ]),
     valueType: field<number>(null, [required]),
     value: field<string>(null, [

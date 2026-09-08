@@ -90,8 +90,8 @@ describe('runSyncValidators', () => {
     expect(fieldNode.errors()).toEqual([]);
   });
 
-  it('rejects arrays that mix validators and validation errors', () => {
-    const mixed = () => [required, { kind: 'mixed' }] as unknown as ComposableValidationResult<string | null>;
+  it.each([{ kind: 'mixed' }, 'Message', ''])('rejects arrays that mix validators and validation errors (%s)', (error) => {
+    const mixed = () => [required, error] as unknown as ComposableValidationResult<string | null>;
     const fieldNode = field('David', [mixed]);
 
     expect(() => fieldNode.validators({ resolve: true })).toThrow(

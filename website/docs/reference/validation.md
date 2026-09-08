@@ -208,19 +208,22 @@ errors remain owned by their item node after insertions, removals, moves, or rec
 
 ## ✅ Synchronous validators {#synchronous-validators}
 
-A synchronous validator receives `ValidatorContext<TValue>` and may return success, one error,
-several errors, or synchronous conditional composition.
+A synchronous validator receives `ValidatorContext<TValue>` and may return success, a message,
+an error object, an array of messages and error objects, or synchronous conditional composition.
 
 ```ts
 type ValidationResult =
   | null
   | undefined
   | void
+  | string
   | ValidationError.ValidatorResult
-  | readonly ValidationError.ValidatorResult[];
+  | readonly (string | ValidationError.ValidatorResult)[];
 ```
 
 Every signal read during execution is a dependency. When it changes, validation is recomputed.
+Strings become `{ kind: 'custom', message }`, including empty strings; public errors remain
+objects. See [Returning messages](../guides/validation.md#returning-messages).
 See [`validator()`](./validator.md) for the complete callback context and composition rules.
 
 ## ⏳ Asynchronous validators {#asynchronous-validators}

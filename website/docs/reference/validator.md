@@ -266,9 +266,11 @@ Any state signal read by the validator becomes a dependency.
 ## ✅ Validation results {#validation-results}
 
 Runtime normalization keeps objects whose `kind` is a readable string, including `''`. It ignores
-malformed objects, primitives, nested error arrays, and accidentally returned nodes, emitting a
+malformed objects, non-string primitives, nested error arrays, and accidentally returned nodes, emitting a
 warning only in Angular development mode. `null` and `undefined` are ignored silently. Arrays
-retain valid errors in order. A string return is not converted into a message. Ignored results
+retain valid errors in order. Strings become `{ kind: 'custom', message }`, including empty strings.
+`getError('custom')` returns the first matching error; use an explicit kind to distinguish rules.
+See [Returning messages](../guides/validation.md#returning-messages). Ignored results
 contribute no errors and do not block the form. See
 [Malformed validator results](../guides/validation.md#malformed-validator-results).
 
@@ -277,8 +279,9 @@ A synchronous validator may return:
 | Result | Meaning |
 | --- | --- |
 | `null`, `undefined`, or `void` | Success |
+| `string` | One error with `kind: 'custom'` and the returned message, including `''` |
 | `{ kind, ...data }` | One validation error |
-| `[{ kind, ... }, ...]` | Several errors, preserving their order |
+| An array of strings and/or error objects | Several errors, preserving their order |
 | Another synchronous validator | Conditional composition |
 | An array of synchronous validators | Conditional composition of several rules |
 
@@ -421,7 +424,7 @@ error?.minimumAge; // number | undefined
 | Type | Purpose |
 | --- | --- |
 | `ValidationError` | Base `{ kind, message? }` error shape. |
-| `ValidationResult` | Synchronous success, one error, or an error array. |
+| `ValidationResult` | Synchronous success, a message or error object, or an array of both. |
 | `ValidatorContext<TValue>` | Complete synchronous callback context. |
 | `Validator<TValue>` | Basic synchronous validation function. |
 | `ComposableValidator<TValue>` | Validator that can return other validators conditionally. |

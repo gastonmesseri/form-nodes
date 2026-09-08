@@ -4966,3 +4966,43 @@ it.each([false, true])('normalizes malformed aggregate validator results and pro
     warn.mockRestore();
   }
 });
+
+it.each([false, true])('propagates message arrays from fields and nested forms (async: %s)', async (asynchronous) => {
+  const message = signal<string | null>('Review profile');
+  const run = vi.fn(() => {
+    const text = message();
+    return text === null ? null : [text, { kind: 'custom', message: 'Second' }, ''];
+  });
+  const nested = form({ name: field('Alex', () => message()) }, asynchronous ? [asyncValidator(async () => run())] : [run]);
+  const root = form({ nested });
+  if (asynchronous) {
+    expect(root.pending()).toBe(true);
+    await vi.waitFor(() => expect(root.pending()).toBe(false));
+  }
+  expect(root.invalid()).toBe(true);
+  expect(nested.name.getError('custom')?.message).toBe('Review profile');
+  nested.name.setValidators([]);
+  if (asynchronous) {
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(root.pending()).toBe(false));
+  }
+  expect(nested.errors()).toEqual([
+    { kind: 'custom', message: 'Review profile', targetNode: nested },
+    { kind: 'custom', message: 'Second', targetNode: nested },
+    { kind: 'custom', message: '', targetNode: nested },
+  ]);
+  expect(nested.getError('custom')?.message).toBe('Review profile');
+  expect(root.allErrors()).toEqual(nested.errors());
+  expect(root.invalid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(1);
+  message.set(null);
+  if (asynchronous) {
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(root.pending()).toBe(false));
+  }
+  expect(root.allErrors()).toEqual([]);
+  expect(root.valid()).toBe(true);
+  expect(run).toHaveBeenCalledTimes(2);
+  expect(root.dirty()).toBe(false);
+  expect(root.touched()).toBe(false);
+});

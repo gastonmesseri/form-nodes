@@ -19,10 +19,25 @@ describe('normalizeValidationResult', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it.each([{}, { kind: 0 }, { kind: null }, { kind: undefined }, 'A message', 42, false, Symbol('invalid'), [[]]])('ignores malformed result %s and warns in development', (result) => {
+  it.each([{}, { kind: 0 }, { kind: null }, { kind: undefined }, 42, false, Symbol('invalid'), [[]]])('ignores malformed result %s and warns in development', (result) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(normalizeValidationResult(result)).toEqual([]);
     expect(warn).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('string "kind" property'));
+  });
+
+  it('normalizes messages without trimming, deduplicating, or changing structured errors', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const structured = { kind: 'custom', message: 'Structured', extra: 1 };
+    expect(normalizeValidationResult('')).toEqual([{ kind: 'custom', message: '' }]);
+    const errors = normalizeValidationResult(['First', structured, 'First', '  ', {}, null]);
+    expect(errors).toEqual([
+      { kind: 'custom', message: 'First' },
+      structured,
+      { kind: 'custom', message: 'First' },
+      { kind: 'custom', message: '  ' },
+    ]);
+    expect(errors[1]).toBe(structured);
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('ignores an object whose kind getter throws and preserves the other errors', () => {

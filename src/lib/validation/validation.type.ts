@@ -189,11 +189,12 @@ export namespace ValidationError {
 /** Indicates that validation completed without errors. */
 export type ValidationSuccess = null | undefined | void;
 
-/** A successful result, one validation error, or several validation errors. */
+/** A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings. */
 export type ValidationResult =
   | ValidationSuccess
+  | string
   | ValidationError.ValidatorResult
-  | readonly ValidationError.ValidatorResult[];
+  | readonly (string | ValidationError.ValidatorResult)[];
 
 /** Reactive context available to validation functions for the current field. */
 export type FieldContext<TValue> = {

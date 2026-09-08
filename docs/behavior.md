@@ -1010,9 +1010,13 @@ The same release tag was re-resolved for this change.
 Angular declares rules against a separate model/schema; this class-initializer inference pattern
 and returned-validator composition belong to Form Nodes' public API.
 
-Validator result normalization is defensive. Only non-array objects with a readable string
-`kind` become validation errors; `kind: ''` is allowed. `null` and `undefined` are silent success
-results. Other primitives (including strings), malformed objects, unreadable `kind` getters,
+Validator result normalization is defensive. Non-array objects with a readable string
+`kind` are accepted as validation errors; `kind: ''` is allowed. `null` and `undefined` are silent success
+results. Strings become `{ kind: 'custom', message }`, including empty and whitespace-only strings;
+no trimming or deduplication occurs. Arrays may mix strings and structured errors.
+`errors()` and `allErrors()` expose normalized objects; `getError('custom')` returns the first
+matching error, including explicitly returned objects with that kind. Use an explicit error kind
+to identify a particular rule. Other primitives, malformed objects, unreadable `kind` getters,
 and nested arrays are ignored with a development-only diagnostic. Valid error references, order,
 custom properties, and duplicate kinds are preserved. Invalid entries do not block validity.
 Warnings are emitted per invalid entry when validation recomputes, not for repeated cached reads.
@@ -1026,7 +1030,7 @@ does not catch exceptions thrown by validator callbacks or change explicit compo
 Arrays containing synchronous validators discard malformed entries before enforcing the existing
 prohibition on mixing valid errors and validators.
 
-This is an intentional defensive extension beyond Angular `v22.1.5`
+Defensive filtering and string-message shorthand are intentional extensions beyond Angular `v22.1.5`
 (`468b65b74566537456c192ac4281795c5a1e1a5e`). Inspected
 `packages/forms/signals/src/api/rules/validation/validate.ts`,
 `packages/forms/signals/src/field/validation.ts` (`normalizeErrors` and `addDefaultField`), and
