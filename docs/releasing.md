@@ -17,10 +17,10 @@ npm view @ngblocks/form-nodes versions --json --registry=https://registry.npmjs.
 
 Choose a version using the [version policy](../website/docs/project/versioning.md): patch for
 compatible fixes, minor for compatible features, and major for incompatible changes. The version
-is independent of Angular's version. The next release is `2.0.0` because the pending changes include incompatible APIs:
+is independent of Angular's version. For example, `3.0.0` includes incompatible public API renames:
 
 ```sh
-RELEASE_VERSION=2.0.0
+RELEASE_VERSION=3.0.0
 npm version "$RELEASE_VERSION" --no-git-tag-version
 ```
 
@@ -149,7 +149,7 @@ assuming the current `HEAD` produced the published package.
 ## 7. Create the GitHub Release
 
 Open [New release](https://github.com/gastonmesseri/form-nodes/releases/new), select the existing
-version tag, and use a title such as `FormNode Nodes v2.0.0`. Summarize that version's changelog and
+version tag, and use a title such as `Form Nodes v3.0.0`. Summarize that version's changelog and
 include installation instructions plus links to npm, the documentation, and the changelog at
 the release tag. Leave **Pre-release** unchecked for a stable version, then publish the release.
 

@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.0.0 — 2026-09-08 {#300--2026-09-08}
+
 ### Changed
 
 - **Breaking:** Renamed the common `Node` type to `AnyNode`, concrete `Field`, `Group`, and `Form` types to `FieldNode`, `GroupNode`, and `FormNode`, and the Angular `FormNode` directive/binding type to `FormNodeDirective`. `ArrayNode`, primitive factories, and `[formNode]` retain their names. `isFormNode()` now narrows to `AnyNode`. `FieldNode`, `GroupNode`, `FormNode`, and `ArrayNode` now accept omitted generic arguments for components and utilities handling unspecified values or structures; explicit arguments retain precise typing. Added `FormNodesModule` as an optional Angular import point that re-exports `FormNodeDirective` without configuring providers.
@@ -17,6 +19,10 @@ canonical release record.
 ### Added
 
 - Added `isFormNode(value)` to recognize field, form, group, and array nodes and narrow unknown values to `AnyNode` without evaluating them.
+
+### Fixed
+
+- Generic node APIs now expose optional `message` and binding metadata on errors returned by `errors()`, `allErrors()`, and `getError()`, matching concrete node error types.
 
 ## 📦 2.0.0 — 2026-09-08 {#200--2026-09-08}
 

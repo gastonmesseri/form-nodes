@@ -4,9 +4,9 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
-## Unreleased: node types and Angular imports {#node-type-names}
+## Moving to 3.0.0: node types and Angular imports {#node-type-names}
 
-This incompatible API reorganization is intended for the next major release after 2.0.0.
+Version 3.0.0 reorganizes public node types and Angular imports.
 Update imports and explicit type annotations:
 
 | Previous API | Replacement |

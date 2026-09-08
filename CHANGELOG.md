@@ -9,6 +9,8 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-09-08
+
 ### Changed
 
 - **Breaking:** Renamed the common `Node` type to `AnyNode`, concrete `Field`, `Group`, and `Form` types to `FieldNode`, `GroupNode`, and `FormNode`, and the Angular `FormNode` directive/binding type to `FormNodeDirective`. `ArrayNode`, primitive factories, and `[formNode]` retain their names. `isFormNode()` now narrows to `AnyNode`. `FieldNode`, `GroupNode`, `FormNode`, and `ArrayNode` now accept omitted generic arguments for components and utilities handling unspecified values or structures; explicit arguments retain precise typing. Added `FormNodesModule` as an optional Angular import point that re-exports `FormNodeDirective` without configuring providers.
@@ -218,9 +220,11 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
 
 [2.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.1.0...v2.0.0
+
+[3.0.0]: https://github.com/gastonmesseri/form-nodes/compare/v2.0.0...v3.0.0
