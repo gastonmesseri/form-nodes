@@ -49,6 +49,8 @@ export class FieldNode<TValue> {
 
   controlBindings = new Set<NodeControlBinding>();
 
+  controlValueCommitted: (() => void) | undefined;
+
   debounceStrategy: ControlDebounce | undefined;
 
   debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -278,17 +280,18 @@ export class FieldNode<TValue> {
     this.controlValue.set(next);
   }
 
-  setControlValue(next: TValue) {
+  setControlValue(next: TValue, onCommit?: () => void) {
     this.cancelControlDebounce();
     this.controlValue.set(next);
     this.selfDirty.set(true);
     const debounce = this.controlDebounce() ?? 0;
     const isImmediate = typeof debounce === 'number' && (!Number.isFinite(debounce) || debounce <= 0);
-    if (isImmediate) {
+    if (isImmediate || Object.is(this.value(), next)) {
       this.value.set(next);
+      onCommit?.();
       return;
     }
-    if (Object.is(this.value(), next)) return;
+    this.controlValueCommitted = onCommit;
     this.debouncing.set(true);
     this.debounceStrategy = debounce;
     if (debounce === 'blur') return;
@@ -375,8 +378,10 @@ export class FieldNode<TValue> {
   }
 
   commitControlValue() {
+    const onCommit = this.controlValueCommitted;
     this.cancelControlDebounce();
     this.value.set(this.controlValue());
+    onCommit?.();
   }
 
   resolveControlDebounce(controllerRef: WeakRef<AbortController>) {
@@ -395,6 +400,7 @@ export class FieldNode<TValue> {
     this.debounceTimer = null;
     this.debounceController = null;
     this.debounceStrategy = undefined;
+    this.controlValueCommitted = undefined;
     this.debouncing.set(false);
   }
 
@@ -468,7 +474,7 @@ export class FieldNode<TValue> {
       _value: this.value.asReadonly(),
       _controlDebounce: this.controlDebounce,
       _controlValue: this.controlValue.asReadonly(),
-      _setControlValue: publicApi.setControlValue,
+      _setControlValue: (next: TValue, onCommit?: () => void) => this.setControlValue(next, onCommit),
       _flushControlValueOnBlur: () => this.flushControlValueOnBlur(),
       _clone: this.createClone(),
       _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),

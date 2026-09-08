@@ -20,7 +20,7 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
   accessor.registerOnChange((value: unknown) => {
     if (destroyed || writingAccessorValue) return;
     lastViewValue = value;
-    (binding.node() as unknown as InternalNode).$api._setControlValue(value);
+    context.receiveValue(value);
   });
   accessor.registerOnTouched(() => {
     if (destroyed) return;

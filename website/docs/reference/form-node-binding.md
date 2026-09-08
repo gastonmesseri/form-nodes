@@ -3,6 +3,7 @@ title: "[formNode] directive"
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import valueOutputsSource from '!!raw-loader!../../examples/form-node-value-outputs.typecheck.ts';
 import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-handler.typecheck.ts';
 
 # [formNode] directive {#formnode-directive}
@@ -76,10 +77,62 @@ recognized custom component that models their complete value.
 | Native `<form>` | `form()` or `group()` | Handles submit and reset |
 | Pass-through wrapper | Any delegated node | Leaves synchronization to an inner binding |
 
+## 🔔 Value outputs {#value-outputs}
+
+Prefer `(formNodeValueChange)` over native `(input)` or `(change)` when your handler needs
+an updated node value. The selected adapter handles the appropriate native events, parsing,
+CVA callback, or custom control output. `$event` is the value, not a DOM event.
+
+| Output | Payload | Timing |
+| --- | --- | --- |
+| `formNodeControlValueChange` | `NodeValue<TNode>` | Immediately after the control value and dirty state are updated. |
+| `formNodeValueChange` | `NodeValue<TNode>` | After the control-originated value is committed, respecting debounce. |
+
+<CodeBlock language="ts" title="description-editor.component.ts">{valueOutputsSource}</CodeBlock>
+
+With a 300 ms debounce, typing several characters emits each parsed draft through
+`formNodeControlValueChange`, then emits the final committed value through `formNodeValueChange`.
+Touch, blur, submission, or `flush()` can confirm pending input early under the existing
+[debounce rules](../guides/value-flow-and-debounce.md). Asynchronous debounce emits the committed
+output only on successful completion or an explicit flush.
+
+Without debounce, both outputs are synchronous and the node is already updated in both handlers.
+The control-value output runs first. The committed output follows with the exposed value returned
+by `node()`, including any configured value equality. Parent values and synchronous validation are
+current; asynchronous validation can still be pending. If the first handler replaces the value,
+the superseded committed notification is suppressed.
+
+These outputs belong to the concrete control binding. Programmatic `set()`, `patch()`, `update()`,
+`reset()`, and `setControlValue()` calls do not emit them. A flush can emit a previously pending
+control edit. Replaced or cancelled debounce work does not emit a committed notification, and a
+binding does not emit a pending notification after it is destroyed or rebound to a different node.
+Native `<form>` bindings and pass-through wrappers do not aggregate or forward descendants' outputs;
+listen on the binding that owns the control transport.
+
+For native controls, unchanged parsed values are ignored, so an `input` followed by `change`, or
+`compositionend` followed by `input`, does not duplicate the notification or restart debounce.
+Composition is buffered, and invalid native input does not emit the previous value as a new value.
+Native validity-monitor notifications do not emit either output.
+
+For a CVA, these events originate in the callback registered with `registerOnChange`.
+Call that callback to communicate a view-to-model edit; `writeValue` must not call it as feedback.
+Signal controls use their selected `value` or `checked` model output; enabled input/output pairs
+use the corresponding output. Repeated custom callbacks are preserved even if their payloads are
+equal. The library cannot guarantee a physical user interaction: a custom control can emit from code.
+
+The output names do not create a `[(formNode)]` pair and do not participate in `value/valueChange`
+or `checked/checkedChange` discovery. Avoid declaring a component output with either of these same
+names on the binding host, since Angular can subscribe to both outputs.
+
+Both outputs also expose `OutputRef<NodeValue<TNode>>` on `FormNodeBinding<TNode>` for programmatic
+subscriptions. Consumers can subscribe and unsubscribe but cannot emit through that public view.
+
 ## 🔌 Binding instance {#binding-instance}
 
 | Member | Description |
 | --- | --- |
+| [`formNodeValueChange`](#value-outputs) | Committed control-originated value output. |
+| [`formNodeControlValueChange`](#value-outputs) | Immediate control value output. |
 | [`node()`](#node) | Reactive reference to the node currently bound to the host. |
 | [`errors()`](#errors) | Node errors visible to this binding, excluding errors owned by another concrete binding. |
 | [`element`](#element) | Host `HTMLElement`. |
@@ -401,6 +454,9 @@ export class FormNodeWrapperDirective {}
 ```
 
 ## Native interaction handlers {#native-interaction-handlers}
+
+Prefer the [value outputs](#value-outputs) for value-dependent application handlers. Use a native
+DOM event when you also need its event-specific information.
 
 For native inputs, textareas, and selects, `[formNode]` processes `input`, `change`, `blur`,
 and composition events before your Angular template handler for the same event. With immediate

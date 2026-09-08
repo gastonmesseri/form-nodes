@@ -1,5 +1,6 @@
 import { CSP_NONCE, DestroyRef, afterEveryRender, computed, effect, signal, untracked } from '@angular/core';
 
+import { shallowEqual } from '../../../utils/shallow-equal';
 import type { FieldNode } from '../../../primitives/field';
 import type { InternalNode, AnyNode, NodeValue } from '../../../types/node.type';
 import type { ControlAdapterContext, ControlAdapterConnection } from '../control-adapter';
@@ -9,7 +10,7 @@ import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from '.
 import { isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control-value';
 
 /** Owns native events, parsing errors, composition, and DOM value synchronization. */
-export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding }: ControlAdapterContext<TNode>, control: NativeFormNodeControl): ControlAdapterConnection => {
+export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, receiveValue }: ControlAdapterContext<TNode>, control: NativeFormNodeControl): ControlAdapterConnection => {
   const injector = binding.injector;
   const destroyRef = injector.get(DestroyRef);
   const cspNonce = injector.get(CSP_NONCE, null);
@@ -32,14 +33,23 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding }: 
       formNode: binding,
     }));
   });
-  const commit = () => {
+  const commit = (notify = true) => {
     if (composing || destroyed) return;
     if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;
     const field = getNativeField();
     field.markAsDirty();
     const result = parseNativeControlValue(control, () => field.controlValue());
     parseErrors.set(result.error ? [result.error] : []);
-    if ('value' in result) field.setControlValue(result.value as NodeValue<TNode>);
+    if ('value' in result) {
+      const previous: unknown = field.controlValue();
+      const next = result.value;
+      const unchanged = previous instanceof Date && next instanceof Date
+        ? Object.is(previous.getTime(), next.getTime())
+        : shallowEqual(previous, next);
+      if (unchanged) return;
+      if (notify) receiveValue(next);
+      else field.setControlValue(next as NodeValue<TNode>);
+    }
   };
   effect((onCleanup) => {
     const field = getNativeField();
@@ -61,7 +71,7 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding }: 
     afterEveryRender(() => writeNativeControlValue(control, getNativeField().controlValue()), { injector });
   }
   if (isNativeInput(control) && nativeInputRequiresValidityTracking(control)) {
-    const stopWatchingValidity = watchNativeInputValidity(control, commit, cspNonce ?? undefined);
+    const stopWatchingValidity = watchNativeInputValidity(control, () => commit(false), cspNonce ?? undefined);
     destroyRef.onDestroy(stopWatchingValidity);
   }
   if (isNativeSelect(control) && typeof MutationObserver === 'function') {

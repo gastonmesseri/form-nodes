@@ -7,8 +7,10 @@ import { array, field, form, FormNodeDirective } from '../../../src/public-api';
   standalone: true,
   imports: [FormNodeDirective],
   template: `
-    <input #binding="formNode" [formNode]="name">
-    <input [formNode]="profile.age">
+    <input #binding="formNode" [formNode]="name" (formNodeValueChange)="$event.toUpperCase()"
+      (formNodeControlValueChange)="$event.toUpperCase()">
+    <input [formNode]="profile.age" (formNodeValueChange)="$event.toFixed()"
+      (formNodeControlValueChange)="$event.toFixed()">
     @if (profile.get('dynamicName'); as dynamicName) {
       <input [formNode]="dynamicName">
     }
@@ -70,7 +72,7 @@ class ValidPeopleControl implements FormValueControl<{ name: string | null }[]> 
   imports: [ValidValueControl, ValidCheckboxControl, FormNodeDirective],
   template: `
     <valid-value-control [formNode]="name" />
-    <valid-checkbox-control [formNode]="active" />
+    <valid-checkbox-control [formNode]="active" (formNodeValueChange)="$event.valueOf()" />
   `,
 })
 class ValidSignalControlHost {
@@ -82,8 +84,8 @@ class ValidSignalControlHost {
   standalone: true,
   imports: [ValidProfileControl, ValidPeopleControl, FormNodeDirective],
   template: `
-    <valid-profile-control [formNode]="profile" />
-    <valid-people-control [formNode]="people" />
+    <valid-profile-control [formNode]="profile" (formNodeValueChange)="$event.name?.toUpperCase()" />
+    <valid-people-control [formNode]="people" (formNodeControlValueChange)="$event[0]?.name?.toUpperCase()" />
   `,
 })
 class ValidAggregateControlHost {

@@ -351,7 +351,7 @@ export type InternalNodeApi = NodeApi & {
   _value: Signal<any>;
   _controlDebounce: Signal<ControlDebounce | undefined>;
   _controlValue: Signal<any>;
-  _setControlValue(value: any): void;
+  _setControlValue(value: any, onCommit?: () => void): void;
   _flushControlValueOnBlur(): void;
   _clone(): AnyNode;
   _setParent(parent: AnyNode | null, key?: string | number): void;

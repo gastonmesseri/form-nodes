@@ -21,7 +21,7 @@ export const resolveControlAdapter = <TNode extends AnyNode>(
   const control = discoverCustomControl(binding.element);
   if (accessor) return connectCvaAdapter(context, accessor);
   if (control) {
-    return connectCustomControlAdapter(control as FormNodeControl<NodeValue<TNode>, TNode>, binding.node, binding.injector, hasControlStateConsumer(binding.element));
+    return connectCustomControlAdapter(control as FormNodeControl<NodeValue<TNode>, TNode>, binding.node, binding.injector, hasControlStateConsumer(binding.element), context.receiveValue);
   }
   if (isNativeFormNodeControl(binding.element)) return connectNativeControlAdapter(context, binding.element);
   throw new Error('formNode: the host must be a native form control, a recognized signal custom-control component, or provide ControlValueAccessor');

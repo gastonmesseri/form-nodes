@@ -18,6 +18,7 @@ export const connectCustomControlAdapter = <TNode extends AnyNode>(
   node: () => TNode,
   injector: Injector,
   usesControlState = false,
+  receiveValue = (value: unknown) => (node() as unknown as InternalNode).$api._setControlValue(value),
 ): ControlAdapterConnection => {
   const directModel = findModelTransport(control);
   const experimental = directModel === undefined;
@@ -37,7 +38,7 @@ export const connectCustomControlAdapter = <TNode extends AnyNode>(
   const { inputNames } = connectControlInputs(control, node, injector, usesControlState, experimental ? 'pairs' : 'signal-controls', enabled);
 
   const onValue = (value: unknown) => {
-    if (enabled() && !writingControlValue) (node() as unknown as InternalNode).$api._setControlValue(value);
+    if (enabled() && !writingControlValue) receiveValue(value);
   };
   const onTouch = () => {
     if (!enabled()) return;

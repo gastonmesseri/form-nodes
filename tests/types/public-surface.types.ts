@@ -1,4 +1,4 @@
-import type { Provider } from '@angular/core';
+import type { Provider, OutputRef } from '@angular/core';
 
 import type { Equal, Expect, HasKey } from './assert.types';
 import { FormNodeDirective, createFormPrimitives, field, useFormNodeState, provideFormNodesConfig, configureGlobalFormNodes, type GlobalFormNodesConfig, type ControlState, type ControlStateError, type FormNodeBinding, type FormNodesConfig, type FormPrimitives, type FormPrimitivesOptions } from '../../src/public-api';
@@ -122,3 +122,10 @@ injectedControlState.hasValidator(requiredReference, { resolve: false });
 injectedControlState.hasValidator(requiredReference, {});
 // @ts-expect-error Resolution must be a boolean.
 injectedControlState.hasValidator(requiredReference, { resolve: 'yes' });
+
+type _CommittedOutput = Expect<Equal<typeof nameBinding.formNodeValueChange, OutputRef<string>>>;
+type _ControlOutput = Expect<Equal<typeof nameBinding.formNodeControlValueChange, OutputRef<string>>>;
+nameBinding.formNodeValueChange.subscribe(value => value.toUpperCase());
+nameDirective.formNodeControlValueChange.subscribe(value => value.toUpperCase());
+// @ts-expect-error consumers subscribe to binding outputs but cannot emit them
+nameBinding.formNodeValueChange.emit('external');

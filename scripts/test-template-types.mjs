@@ -6,6 +6,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 const ngc = join(process.cwd(), 'node_modules', '@angular', 'compiler-cli', 'bundles', 'src', 'bin', 'ngc.js');
 const fixtures = [
   { file: 'valid.template.ts', shouldCompile: true },
+  { file: 'invalid-committed-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
+  { file: 'invalid-control-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
   { file: 'invalid-value.template.ts', shouldCompile: false, code: 'TS2322', diagnostic: "is not assignable to type 'AnyNode'" },
   { file: 'invalid-dynamic-property.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'mistypedName' does not exist" },
 ];

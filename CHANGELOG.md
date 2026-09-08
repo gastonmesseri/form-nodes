@@ -9,6 +9,10 @@ provide backward-compatible fixes.
 
 ## [Unreleased]
 
+### Added
+
+- Added typed `formNodeControlValueChange` and `formNodeValueChange` outputs to `[formNode]` for immediate control values and committed values after debounce or flush. Native controls, CVAs, signal controls, and enabled input/output pairs share this contract; programmatic node writes and cancelled or obsolete pending notifications do not emit. Duplicate native parsed values do not repeat notifications or restart debounce.
+
 ### Fixed
 
 - Custom signal controls and enabled input/output pairs now update node values, parent values, synchronous validation, and touched state before consumer `valueChange`, `checkedChange`, and `touch` template handlers run. Debounce and consumer resets remain respected, including controls that inject `NgControl`, `FORM_NODE`, or `FormNodeDirective` during construction. CVA and pass-through transports retain their ownership, and native DOM events with custom-output names do not update the custom model.

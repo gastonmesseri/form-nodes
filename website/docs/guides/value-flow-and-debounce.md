@@ -10,6 +10,17 @@ debouncing state.
 
 Form Nodes distinguishes programmatic model updates from values originating in a bound UI control. That distinction determines debounce and dirty behavior.
 
+## Control value events
+
+Use `(formNodeValueChange)` on `[formNode]` to receive control edits after they commit. With debounce,
+this waits for its completion or an early flush; without debounce, it emits synchronously.
+Use `(formNodeControlValueChange)` when you need the parsed draft immediately while the committed
+value may still be pending. Both carry the node's value type, not a DOM event.
+
+These outputs report edits from the selected control adapter, not programmatic node writes.
+See the [value output reference and complete example](../reference/form-node-binding.md#value-outputs)
+for event order, cancellation, native parsing, and custom control contracts.
+
 ## 📝 Committed values {#committed-values}
 
 Calling a node is the preferred committed-value read:

@@ -189,3 +189,13 @@ from a value that the CVA has not delivered yet. The same limitation applies to 
 The same ordering holds when your component injects `FORM_NODE` or `FormNodeDirective` during
 construction. The injected token still identifies the concrete binding; no deferred injection or
 manual microtask is needed.
+
+## Observing values from a bound custom control
+
+Consumers can listen to `(formNodeControlValueChange)` for the immediate value received from the
+control and `(formNodeValueChange)` for its committed value after debounce. The outputs follow the
+selected model, enabled input/output pair, or CVA transport. They do not react to programmatic node
+writes or model-to-view rendering. A CVA should call its registered `onChange` callback for
+view-to-model edits, and must not call it from `writeValue` as feedback. Custom code can invoke
+callbacks or emit model outputs, so these events do not certify a physical user interaction.
+See [value outputs](../reference/form-node-binding.md#value-outputs) for the full contract.

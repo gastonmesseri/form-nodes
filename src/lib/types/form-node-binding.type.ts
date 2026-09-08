@@ -1,10 +1,21 @@
-import type { Injector, Signal } from '@angular/core';
+import type { Injector, Signal, OutputRef } from '@angular/core';
 
-import type { AnyNode } from './node.type';
+import type { AnyNode, NodeValue } from './node.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 /** Public view of a concrete `[formNode]` binding. */
 export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
+  /**
+   * Control-originated value after it is committed, respecting debounce and flush.
+   * Programmatic node writes do not emit. Synchronous state is current in the handler;
+   * asynchronous validation may still be pending.
+   */
+  readonly formNodeValueChange: OutputRef<NodeValue<TNode>>;
+  /**
+   * Latest parsed value received from the selected control adapter, before waiting for debounce.
+   * This does not guarantee a physical user interaction: custom controls can emit from code.
+   */
+  readonly formNodeControlValueChange: OutputRef<NodeValue<TNode>>;
   /** Host element carrying the `[formNode]` directive. */
   readonly element: HTMLElement;
   /** Injector belonging to the binding's host element. */

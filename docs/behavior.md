@@ -3462,3 +3462,33 @@ Required error fallback reference: Angular `22.1.x` at
 `test/node/api/validators/required.spec.ts` under `packages/forms/signals`.
 Angular distinguishes REQUIRED metadata from validation errors. The common facade's own-error
 fallback intentionally extends that metadata-only behavior; it does not register validators.
+
+## Binding value outputs
+
+`[formNode]` exposes typed `formNodeControlValueChange` (immediate parsed control value) and
+`formNodeValueChange` (exposed committed node value). Only the selected control adapter initiates
+these notifications. Native forms and pass-through bindings do not forward child notifications.
+Without debounce, the node and synchronous parent/validation state are updated before either
+handler; the control-value output runs first. With debounce, the committed notification runs after
+successful completion or an early touch/blur/flush/submission commit, without waiting for async
+validation. Each pending edit carries its own completion callback, so replacement, reset,
+programmatic writes, and rejected debounce completion cannot notify for cancelled edits. A
+notification is suppressed when the originating binding is destroyed or points to a different node.
+Programmatic node writes (including public `setControlValue`) do not independently emit outputs.
+
+Native duplicate parsed values do not restart debounce or emit duplicate outputs; Date values are
+compared by timestamp and multiple-selection values by their entries. IME buffering and parsing
+errors retain their existing behavior. Validity-monitor updates are not output events. Custom/CVA
+callbacks retain each transport notification, including equal payloads; callbacks identify the
+control-to-model direction but cannot certify physical user input. Model-to-view writes remain
+guarded. Output names are separate from the value/checked pair discovery contract.
+
+Reference inspected: Angular `22.1.x` commit `05a05f59657f048a87f3d4eb9ddb7968cfe8060e`,
+`packages/forms/signals/src/field/node.ts` (`debounceSync` and synchronization),
+`src/directive/control_custom.ts`, `src/directive/control_cva.ts`, and
+`src/directive/control_native.ts`, with `test/node/api/debounce.spec.ts` and
+`test/web/form_field.spec.ts` under `packages/forms/signals/`. These govern immediate control
+updates, deferred committed values, touch flushes, and replacement cancellation. The two public
+outputs and native duplicate suppression are library-specific contracts rather than Angular API
+parity. Configured public equality can retain an equivalent exposed committed snapshot; control
+output payloads still report the current control value.

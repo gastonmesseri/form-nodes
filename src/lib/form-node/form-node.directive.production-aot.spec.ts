@@ -10,6 +10,7 @@ import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { warnFailedInputWrite } from './ng-internals/component-input-writer';
+import { assertValueChangeOutputs } from '../../../tests/helpers/assert-value-change-outputs';
 import { assertCustomEventOrder, assertDirectBindingEventOrder } from '../../../tests/helpers/assert-custom-event-order';
 
 declare const __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: string;
@@ -179,4 +180,32 @@ it('commits custom value, checked, pair and touch outputs before consumer handle
 it('updates before output handlers with direct binding constructor injection in production AOT', async () => {
   const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
   assertDirectBindingEventOrder(TestBed.createComponent(module.DirectBindingHost));
+});
+
+it('delivers control and committed value outputs through production AOT template listeners', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+  assertValueChangeOutputs(TestBed.createComponent(module.ValueChangeOutputsHost));
+});
+
+it('emits one typed value per native checkbox, date and selection edit in Chromium', async () => {
+  const module = await import(/* @vite-ignore */ __FORM_NODE_SIGNAL_CONTROL_FIXTURE__) as typeof import('../../../tests/integration/form-node-signal-control.fixture');
+  const fixture = TestBed.createComponent(module.ValueChangeOutputsHost);
+  fixture.detectChanges();
+  const host = fixture.componentInstance;
+  const checkbox = fixture.nativeElement.querySelector('#check') as HTMLInputElement;
+  checkbox.click();
+  const date = fixture.nativeElement.querySelector('#date') as HTMLInputElement;
+  date.value = '2026-09-09';
+  date.dispatchEvent(new Event('input'));
+  date.dispatchEvent(new Event('change'));
+  const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+  select.options[1]!.selected = true;
+  select.dispatchEvent(new Event('input'));
+  select.dispatchEvent(new Event('change'));
+  expect(host.events.map(({ source, kind, event }) => [source, kind, event])).toEqual([
+    ['check', 'control', true], ['check', 'value', true],
+    ['date', 'control', new Date('2026-09-09')], ['date', 'value', new Date('2026-09-09')],
+    ['selected', 'control', ['B']], ['selected', 'value', ['B']],
+  ]);
+  fixture.destroy();
 });

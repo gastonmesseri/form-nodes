@@ -5006,3 +5006,20 @@ it.each([false, true])('propagates message arrays from fields and nested forms (
   expect(root.dirty()).toBe(false);
   expect(root.touched()).toBe(false);
 });
+
+// Adapter commit hooks must observe complete public state, including ancestors.
+it('notifies the originating adapter after a deferred control edit is committed', () => {
+  const target = form({ name: field.strict('initial') }, { debounce: 'blur' });
+  const root = form({ target });
+  const observations: unknown[] = [];
+  const api = (target as unknown as InternalNode).$api;
+  api._setControlValue({ name: 'edited' }, () => observations.push({ value: target(), root: root(), dirty: root.dirty() }));
+  expect(observations).toEqual([]);
+  expect(target.$api.debouncing()).toBe(true);
+  root.flush();
+  expect(observations).toEqual([{ value: { name: 'edited' }, root: { target: { name: 'edited' } }, dirty: true }]);
+  root.flush();
+  expect(observations).toHaveLength(1);
+  api._setControlValue(api._value(), () => observations.push('same value'));
+  expect(observations.at(-1)).toBe('same value');
+});

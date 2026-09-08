@@ -1,5 +1,5 @@
 import { NgControl } from '@angular/forms';
-import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, type OnInit, type Signal } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, InjectionToken, Injector, Renderer2, afterRenderEffect, computed, effect, forwardRef, inject, input, output, type OnInit, type Signal } from '@angular/core';
 
 import { shallowEqual } from '../utils/shallow-equal';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
@@ -10,7 +10,7 @@ import { registerNodeBindingInjector } from '../utils/node-injector';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ControlAdapterContext } from './adapters/control-adapter';
 import { resolveControlAdapter } from './adapters/resolve-control-adapter';
-import type { InternalNode, InternalNodeApi, AnyNode } from '../types/node.type';
+import type { InternalNode, InternalNodeApi, AnyNode, NodeValue } from '../types/node.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 import { registerControlStateBinding } from '../form-node-state/adapters/form-node';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
@@ -43,6 +43,12 @@ export const FORM_NODE = new InjectionToken<FormNodeBinding<AnyNode>>('FORM_NODE
 export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBinding<TNode>, OnInit {
   formNodeInput = input.required<TNode>({ alias: 'formNode' });
 
+  /** Emits the committed control-originated value after debounce or an explicit flush. */
+  formNodeValueChange = output<NodeValue<TNode>>();
+
+  /** Emits the latest parsed control value immediately, including while debounce is pending. */
+  formNodeControlValueChange = output<NodeValue<TNode>>();
+
   injector = inject(Injector);
 
   private renderer = inject(Renderer2);
@@ -67,6 +73,8 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   private customEvents: CustomControlEvents | undefined;
 
+  bindingGeneration = 0;
+
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
   /** Current bound field, exposed as a signal for custom integrations. */
@@ -90,6 +98,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
       const cleanup = registerNodeBindingInjector(this.node(), this.injector);
       this.bindingInjectorCleanups.add(cleanup);
       onCleanup(() => {
+        this.bindingGeneration++;
         this.bindingInjectorCleanups.delete(cleanup);
         cleanup();
       });
@@ -110,6 +119,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
       binding: this,
       renderer: this.renderer,
       getNgControl: () => this.ngControl,
+      receiveValue: value => this.receiveControlValue(value),
     };
     const connection = resolveControlAdapter(context, this.interop.peek()?.valueAccessor);
     this.connectNativeEvents(connection.nativeEvents);
@@ -120,6 +130,31 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     this.registerControlBinding();
     this.warnWhenHidden();
     this.installClassBindingEffect();
+  }
+
+  /** Tracks the originating binding through synchronous and deferred commits. */
+  receiveControlValue(value: unknown) {
+    const node = this.node();
+    const api = (node as unknown as InternalNode).$api;
+    const bindingRef = new WeakRef(this);
+    const generation = this.bindingGeneration;
+    let receiving = true;
+    let committed = false;
+    let committedValue: NodeValue<TNode>;
+    const emitCommitted = () => {
+      const binding = bindingRef.deref();
+      if (!binding || binding.destroyRef.destroyed || binding.node() !== node || binding.bindingGeneration !== generation) return;
+      if (!Object.is(api._value(), committedValue)) return;
+      binding.formNodeValueChange.emit(node() as NodeValue<TNode>);
+    };
+    api._setControlValue(value, () => {
+      committedValue = api._value() as NodeValue<TNode>;
+      committed = true;
+      if (!receiving) emitCommitted();
+    });
+    this.formNodeControlValueChange.emit(api._controlValue() as NodeValue<TNode>);
+    receiving = false;
+    if (committed) emitCommitted();
   }
 
   /** Dispatches declared custom outputs before consumer template listeners. */

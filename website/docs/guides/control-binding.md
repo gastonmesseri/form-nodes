@@ -173,3 +173,12 @@ For multiple bindings, control-owned error filtering, accessor precedence, and S
 [Advanced behavior and edge cases](../advanced/behavior-details.md#multiple-bindings-and-control-owned-errors).
 The [`FormNodeDirective` binding reference](../reference/form-node-binding.md) lists its instance API,
 configuration providers, control contracts, pass-through registration, and native form directive.
+
+## Receiving control edits
+
+Prefer `(formNodeValueChange)` when reacting to an updated node value, or
+`(formNodeControlValueChange)` for the immediate draft before debounce. Both work across native
+controls, CVAs, signal controls, and enabled input/output pairs, so consumers do not need to select
+a native `input` or `change` event for each control type. See the
+[value output reference](../reference/form-node-binding.md#value-outputs) for a complete component
+example and the control-originated event contract.

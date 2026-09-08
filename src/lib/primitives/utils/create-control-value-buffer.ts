@@ -7,7 +7,7 @@ export type ControlValueBuffer<TValue, TControlValue = TValue> = {
   readonly debouncing: Signal<boolean>;
   cancel(): void;
   flush(): void;
-  set(value: TControlValue): void;
+  set(value: TControlValue, onCommit?: () => void): void;
 };
 
 type DebounceTarget = {
@@ -40,6 +40,7 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
   const pendingValue = signal(initialValue as unknown as TControlValue);
   const pending = signal(false);
   let baseline = initialValue;
+  let onCommitted: (() => void) | undefined;
   const state = {
     timer: null as ReturnType<typeof setTimeout> | null,
     controller: null as AbortController | null,
@@ -49,6 +50,7 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
       state.timer = null;
       state.controller = null;
       pending.set(false);
+      onCommitted = undefined;
     },
     commit: () => {
       if (!pending() || !Object.is(value(), baseline)) {
@@ -56,8 +58,10 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
         return;
       }
       const next = pendingValue();
+      const onCommit = onCommitted;
       state.cancel();
       commitValue(next);
+      onCommit?.();
     },
     resolve: (controllerRef: WeakRef<AbortController>) => {
       const controller = controllerRef.deref();
@@ -70,7 +74,7 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
   };
   const stateRef = new WeakRef(state);
   const isCurrent = computed(() => pending() && Object.is(value(), baseline));
-  const set = (next: TControlValue) => {
+  const set = (next: TControlValue, onCommit?: () => void) => {
     state.cancel();
     baseline = value();
     pendingValue.set(next);
@@ -78,8 +82,10 @@ export const createControlValueBuffer = <TValue, TControlValue = TValue>(
     const strategy = debounce() ?? 0;
     if (Object.is(next, baseline) || (typeof strategy === 'number' && (!Number.isFinite(strategy) || strategy <= 0))) {
       commitValue(next);
+      onCommit?.();
       return;
     }
+    onCommitted = onCommit;
     pending.set(true);
     if (strategy === 'blur') return;
     if (typeof strategy === 'function') {

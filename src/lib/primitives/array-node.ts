@@ -665,7 +665,7 @@ export class ArrayNode<TItem extends AnyNode> {
       _value: this.value,
       _controlDebounce: this.controlDebounce,
       _controlValue: publicApi.controlValue,
-      _setControlValue: (value: ArraySet<TItem> | null | undefined) => this.controlValueBuffer.set(this.normalizeArrayValue(value)),
+      _setControlValue: (value: ArraySet<TItem> | null | undefined, onCommit?: () => void) => this.controlValueBuffer.set(this.normalizeArrayValue(value), onCommit),
       _flushControlValueOnBlur: publicApi.flush,
       _clone: this.createClone(),
       _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),

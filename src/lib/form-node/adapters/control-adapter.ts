@@ -10,6 +10,7 @@ export type ControlAdapterContext<TNode extends AnyNode = AnyNode> = {
   binding: FormNodeBinding<TNode>;
   renderer: Renderer2;
   getNgControl(): FormNodeNgControl;
+  receiveValue(value: unknown): void;
 };
 
 /** Native transport callbacks connected only when the native adapter is selected. */
