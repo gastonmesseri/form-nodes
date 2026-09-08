@@ -90,7 +90,6 @@ const myForm = form({
 
 myForm.myValo.validators({ resolve: true })
 
-/** @todo this is still not working, the type of the child should be an union */
 myForm.someNesting.forEachChild(child => {
   child.set('' as any);
 })
@@ -474,6 +473,11 @@ const matchedId = (ids: any[], valueType: any) => validator<string | null>(({ va
   return !id && valueType > 3 ? { kind: 'unmatched' } : null;
 });
 
+const anotherMatchedId = (ids: any[], valueType: any) => validator<string | null>(({ value }) => {
+  const id = ids.find(e => e === value());
+  return !id && valueType > 3 ? { kind: 'unmatched' } : null;
+});
+
 const getSomeError = (a: any, b: any) => ({ kind: 'something' });
 
 class MyComponentForSelfReference {
@@ -555,7 +559,31 @@ class MyComponentForSelfReference {
         () => matchedId(this.ids(), this.myForm.valueType()),
         () => this.myForm.valueType() ? { kind: '' } : null,
       ],
-    })
+    }),
+    some6: field('', {
+      validators: [
+        required,
+        () => matchedId(this.ids(), this.myForm.valueType()),
+        () => anotherMatchedId(this.ids(), this.myForm.valueType()),
+      ],
+    }),
+    some7: field('', {
+      validators: () => {
+        const ids = this.ids();
+        const valueType = this.myForm.valueType();
+        return [required, matchedId(ids, valueType), anotherMatchedId(ids, valueType)];
+      },
+    }),
+    some8: field('', () => {
+      const ids = this.ids();
+      const valueType = this.myForm.valueType();
+      return [required, matchedId(ids, valueType), anotherMatchedId(ids, valueType)];
+    }),
+    some9: field('', [
+      required,
+      () => matchedId(this.ids(), this.myForm.valueType()),
+      () => anotherMatchedId(this.ids(), this.myForm.valueType()),
+    ]),
   });
 }
 

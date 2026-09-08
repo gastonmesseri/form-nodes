@@ -5,6 +5,21 @@ This document records the behavior currently implemented by the library. It is a
 The package name and public import path are `@ngblocks/form-nodes`. The package rename does not change
 exported symbols, node behavior, or Angular integration contracts.
 
+`isFormNode(value: unknown): value is Node` recognizes every primitive through the existing internal
+node marker, including nested, configured, and detached nodes. It does not call the candidate,
+read signal state, track dependencies, trigger validation, or change interaction or parent state,
+and requires no injection context. Ordinary Angular signals, node API objects, plain objects, and
+unmarked functions return false. The marker is local to a loaded package instance; separately
+loaded copies do not share recognition. Narrowing exposes the shared `Node` contract, not a
+specific primitive or value type.
+
+The identity-check reference inspected for this helper is Angular maintenance branch `22.1.x`,
+commit `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`:
+`packages/forms/signals/src/api/assertions.ts`, `src/api/symbols.ts`, `src/field/proxy.ts`, and
+`test/web/assertions.spec.ts`. Angular likewise checks a function's internal marker and rejects
+ordinary signals. Form Nodes retains its own marker and `Node` contract rather than recognizing
+Angular `FieldTree` values; no state transition or propagation behavior changes.
+
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.5` at commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
 Every `field()`, `group()`, `form()`, and `array()` exposes its complete API through `.api`, which

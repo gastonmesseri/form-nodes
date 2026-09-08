@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Added `isFormNode(value)` to recognize field, form, group, and array nodes and narrow unknown values to `Node` without evaluating them.
+
 ## 📦 2.0.0 — 2026-09-08 {#200--2026-09-08}
 
 ### 🔸 Changed {#changed}

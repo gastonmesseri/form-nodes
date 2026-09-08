@@ -1,8 +1,13 @@
 import { Component, viewChild } from '@angular/core';
 
-import { FormNode, array, createFormPrimitives, field, form, group, required, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue } from '@ngblocks/form-nodes';
+import { FormNode, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
+
+const candidate: unknown = configuredForms.field('Marco');
+if (!isFormNode(candidate) || candidate() !== 'Marco' || isFormNode({})) {
+  throw new Error('The package must export a working node type guard.');
+}
 
 class Company {
   constructor(readonly name: string) {}

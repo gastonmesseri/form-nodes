@@ -7,6 +7,9 @@ title: Form nodes
 import CodeBlock from '@theme/CodeBlock';
 import SignalInteropExample from '!!raw-loader!../../examples/signal-interop.example.ts';
 
+Use [`isFormNode(value)`](../reference/node-api.md#is-form-node) to check whether an unknown value
+is a field, form, group, or array node. The helper narrows the value to the shared `Node` type.
+
 Form Nodes represents every part of a form as a node:
 
 - `field()` creates a leaf value.

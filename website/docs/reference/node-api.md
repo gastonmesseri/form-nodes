@@ -2,6 +2,9 @@
 title: Node API
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import IsFormNodeExample from '!!raw-loader!../../examples/is-form-node.example.ts';
+
 # Node API {#node-api}
 
 This reference groups the public signals and operations available on fields, forms, and arrays. Exact value and parent types remain inferred from the node tree.
@@ -17,6 +20,26 @@ page documents the explicit alternative paths for generic infrastructure.
 Use direct members for actions and state on every node: `name.set()`, `items.push()`,
 `profile.patch()`, and `profile.valid()`. The [Tree navigation and API access](../concepts/tree-and-api.md)
 guide documents `.api` only for name collisions and generic infrastructure.
+
+## Recognizing nodes with `isFormNode()` {#is-form-node}
+
+Import `isFormNode` from `@ngblocks/form-nodes` to check an unknown value before using it as a node.
+
+```ts
+isFormNode(value: unknown): value is Node
+```
+
+The helper recognizes `field()`, `form()`, `group()`, and `array()` nodes, including nested nodes
+and nodes created by configured primitives. It narrows the value to the shared `Node` type;
+it does not infer a particular primitive or value type. It also works as an array filter predicate.
+
+<CodeBlock language="ts" title="is-form-node.example.ts">{IsFormNodeExample}</CodeBlock>
+
+The check uses an internal marker without calling the value, reading node state, or tracking signal
+dependencies. It works outside an Angular injection context. Plain objects, ordinary functions,
+Angular signals, and node API objects return `false`. Detached nodes still return `true`.
+The marker belongs to the loaded package instance: nodes from a separately loaded copy of the
+library are not recognized.
 
 ## 🧭 API map {#api-map}
 

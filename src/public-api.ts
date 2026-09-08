@@ -2,6 +2,7 @@ export { form } from './lib/primitives/form';
 export { group } from './lib/primitives/group';
 export { field } from './lib/primitives/field';
 export { array } from './lib/primitives/array';
+export { isFormNode } from './lib/primitives/is-form-node';
 export { max } from './lib/validation/validators/max';
 export { min } from './lib/validation/validators/min';
 export { url } from './lib/validation/validators/url';
