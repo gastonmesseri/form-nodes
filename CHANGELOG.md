@@ -15,6 +15,8 @@ provide backward-compatible fixes.
 
 ### Fixed
 
+- Restored initial string-literal suggestions for explicit union types such as `field<IborCode>(...)`, including nullable and configured factories. Invalid values remain type errors, and null/undefined inference is preserved.
+
 - Custom signal controls and enabled input/output pairs now update node values, parent values, synchronous validation, and touched state before consumer `valueChange`, `checkedChange`, and `touch` template handlers run. Debounce and consumer resets remain respected, including controls that inject `NgControl`, `FORM_NODE`, or `FormNodeDirective` during construction. CVA and pass-through transports retain their ownership, and native DOM events with custom-output names do not update the custom model.
 
 ## [3.0.2] - 2026-09-09

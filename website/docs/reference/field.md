@@ -3,6 +3,7 @@ title: field()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import fieldLiteralUnionSource from '!!raw-loader!../../examples/field-literal-union.example.ts';
 import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import fieldFocusSource from '!!raw-loader!../../examples/field-focus.typecheck.ts';
 import fieldEqualitySource from '!!raw-loader!../../examples/field-equality.example.ts';
@@ -95,6 +96,18 @@ field(initialValue, validators, options?);
 ```
 
 A field with no initial value starts at `null`.
+
+## Literal union suggestions
+
+With an explicit string-literal union, TypeScript IntelliSense suggests its string members when
+you open the initial value's quotes. For `IborCode` below, the suggestions are `DAILY` and `MONTHLY`.
+The empty string is only an editing state; it is not a valid completed initial value.
+
+<CodeBlock language="ts" title="pricing-form.ts">{fieldLiteralUnionSource}</CodeBlock>
+
+The same suggestions work with `field.nullable()`, `field.strict()` for non-nullable unions, and
+fields from `createFormPrimitives()`, including calls with validators or options. Invalid strings
+still produce a TypeScript error. Explicit `undefined` initialization retains its existing type.
 
 ## 📝 Nullability {#nullability}
 

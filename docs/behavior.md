@@ -3492,3 +3492,14 @@ updates, deferred committed values, touch flushes, and replacement cancellation.
 outputs and native duplicate suppression are library-specific contracts rather than Angular API
 parity. Configured public equality can retain an equivalent exposed committed snapshot; control
 output payloads still report the current control value.
+
+### Field literal-union IntelliSense
+
+Generic field overloads accepting the value type precede generic overloads accepting only
+`undefined`, so TypeScript's language service can suggest literal members while editing an empty
+quoted initial value. This applies to `field()`, `field.nullable()`, and configured nullable
+factories; strict variants retain their suggestions. Overload ordering changes editor completions
+without widening accepted values or changing runtime behavior. Non-generic null/undefined
+initialization still infers unknown, and explicit generic undefined initialization retains
+undefined in the resulting type. Automated language-service checks exercise both quote styles and
+all three argument layouts against source and built package declarations.

@@ -9,6 +9,7 @@ type NullableFieldOptions<TValue> = FieldOptions<TValue | null>;
 type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
 
 // Keep inference barriers on each argument alternative so option keys remain visible to editors.
+// Put value-bearing generic overloads before undefined-only ones for string-literal completions.
 
 /**
  * Creates a nullable field whose future value type is not yet known.
@@ -55,16 +56,6 @@ export function field(
       options: NoInfer<NullableFieldOptions<unknown>> | undefined
     ]
 ): FieldNode<unknown>;
-/** Creates a nullable field that preserves an explicitly typed `undefined` initial value. */
-export function field<TValue>(
-  value: undefined,
-  ...args:
-    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
-    | [
-      validators: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | undefined,
-      options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
-    ]
-): FieldNode<TValue | null | undefined>;
 /**
  * Creates a nullable field from an initial value and optional configuration.
  *
@@ -89,6 +80,16 @@ export function field<TValue>(
       options: NoInfer<NullableFieldOptions<TValue>> | undefined
     ]
 ): FieldNode<TValue | null>;
+/** Creates a nullable field that preserves an explicitly typed `undefined` initial value. */
+export function field<TValue>(
+  value: undefined,
+  ...args:
+    | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
+    | [
+      validators: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | undefined,
+      options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
+    ]
+): FieldNode<TValue | null | undefined>;
 export function field<TValue>(): FieldNode<TValue | null>;
 export function field<TValue>(
   value?: TValue,
@@ -168,14 +169,6 @@ export namespace field {
         options: NoInfer<NullableFieldOptions<unknown>> | undefined
       ]
   ): FieldNode<unknown>;
-  export function nullable<TValue>(value: undefined,
-    ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
-      | [
-        validators: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | undefined,
-        options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
-      ]
-  ): FieldNode<TValue | null | undefined>;
   export function nullable<TValue>(value: TValue | null,
     ...args:
       | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, FieldNode<TValue | null>>> | NoInfer<NullableFieldOptions<TValue>>]
@@ -184,6 +177,14 @@ export namespace field {
         options: NoInfer<NullableFieldOptions<TValue>> | undefined
       ]
   ): FieldNode<TValue | null>;
+  export function nullable<TValue>(value: undefined,
+    ...args:
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
+      | [
+        validators: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | undefined,
+        options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
+      ]
+  ): FieldNode<TValue | null | undefined>;
   export function nullable<TValue>(): FieldNode<TValue | null>;
   export function nullable<TValue>(
     value?: TValue | null,

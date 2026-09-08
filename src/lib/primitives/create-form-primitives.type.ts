@@ -33,14 +33,7 @@ interface FieldNullabilityOverrides {
         options: NoInfer<NullableFieldOptions<unknown>> | undefined
       ]
   ): FieldNode<unknown>;
-  nullable<TValue>(value: undefined,
-    ...args:
-      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
-      | [
-        validators: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | undefined,
-        options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
-      ]
-  ): FieldNode<TValue | null | undefined>;
+  // Match field.nullable overload ordering so literal completions use the value type.
   nullable<TValue>(value: TValue | null,
     ...args:
       | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null, FieldNode<TValue | null>>> | NoInfer<NullableFieldOptions<TValue>>]
@@ -49,6 +42,14 @@ interface FieldNullabilityOverrides {
         options: NoInfer<NullableFieldOptions<TValue>> | undefined
       ]
   ): FieldNode<TValue | null>;
+  nullable<TValue>(value: undefined,
+    ...args:
+      | [validatorsOrOptions?: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | NoInfer<FieldOptions<TValue | null | undefined>>]
+      | [
+        validators: NoInfer<ValidatorSource<TValue | null | undefined, FieldNode<TValue | null | undefined>>> | undefined,
+        options: NoInfer<FieldOptions<TValue | null | undefined>> | undefined
+      ]
+  ): FieldNode<TValue | null | undefined>;
   nullable<TValue>(): FieldNode<TValue | null>;
 }
 

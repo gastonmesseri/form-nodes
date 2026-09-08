@@ -76,3 +76,19 @@ field.strict(undefined);
 nullable.patch('Daniel');
 // @ts-expect-error native callable members are intentionally hidden
 nullable.apply(undefined, []);
+
+type IborCode = 'DAILY' | 'MONTHLY' | null;
+const iborCode = field<IborCode>('DAILY');
+const nullableIborCode = field.nullable<IborCode>('MONTHLY');
+const undefinedIborCode = field<IborCode>(undefined);
+type _IborValue = Expect<Equal<ReturnType<typeof iborCode>, IborCode>>;
+type _NullableIborValue = Expect<Equal<ReturnType<typeof nullableIborCode>, IborCode>>;
+type _UndefinedIborValue = Expect<Equal<ReturnType<typeof undefinedIborCode>, IborCode | undefined>>;
+// @ts-expect-error An empty string is not a member of the declared union.
+field<IborCode>('');
+// @ts-expect-error Unsupported initial codes must still be rejected.
+field<IborCode>('WEEKLY');
+// @ts-expect-error Nullable fields retain the declared literal union.
+field.nullable<IborCode>('WEEKLY');
+// @ts-expect-error Future values retain the declared literal union.
+iborCode.set('WEEKLY');
