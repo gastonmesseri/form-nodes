@@ -4912,3 +4912,57 @@ it('defers self-referencing synchronous guards on asynchronous aggregate nodes',
   expect(model.myForm.pending()).toBe(false);
   expect(model.myForm.invalid()).toBe(true);
 });
+
+it('ignores a parent node returned by a child validator and a node returned by its own validator', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const model = form({
+      kind: field('notAnError'),
+      somo: field('', [ctx => ctx.parent()]),
+      nested: form({ kind: field.strict('alsoNotAnError') }, [ctx => ctx.node()]),
+    });
+    expect(model.somo.errors()).toEqual([]);
+    expect(model.nested.errors()).toEqual([]);
+    expect(model.allErrors()).toEqual([]);
+    expect(model.valid()).toBe(true);
+    expect(model.pending()).toBe(false);
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(model.somo.validators({ resolve: true })).toHaveLength(1);
+    expect(warn).toHaveBeenCalledTimes(2);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it.each([false, true])('normalizes malformed aggregate validator results and propagates valid errors (async: %s)', async (asynchronous) => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, { kind: 4 }, null]);
+    const run = vi.fn(() => result());
+    const nested = form({ name: field('text') }, asynchronous ? [asyncValidator(async () => run())] : [run]);
+    const root = form({ nested });
+    if (asynchronous) {
+      expect(root.pending()).toBe(true);
+      await vi.waitFor(() => expect(root.pending()).toBe(false));
+    }
+    expect(nested.errors()).toMatchObject([{ kind: '', message: 'Kept', targetNode: nested }]);
+    expect(root.allErrors()).toEqual(nested.errors());
+    expect(root.invalid()).toBe(true);
+    expect(nested.name.valid()).toBe(true);
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(run).toHaveBeenCalledTimes(1);
+    result.set({});
+    if (asynchronous) {
+      await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+      await vi.waitFor(() => expect(root.pending()).toBe(false));
+    }
+    expect(root.allErrors()).toEqual([]);
+    expect(root.valid()).toBe(true);
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledTimes(3);
+    expect(root.dirty()).toBe(false);
+    expect(root.touched()).toBe(false);
+  } finally {
+    warn.mockRestore();
+  }
+});

@@ -1,6 +1,6 @@
-import { isNotNil } from '../utils/is-nil';
 import type { Node } from '../types/node.type';
 import type { MetadataKey } from '../metadata/metadata';
+import { isNode } from '../primitives/utils/node-marker';
 import { runWithValidatorMessages } from './validator-messages';
 import { isAsyncValidator } from './utils/async-validator-marker';
 import { addDefaultTargetNode } from './utils/add-default-target-node';
@@ -25,6 +25,8 @@ const resolveComposableResult = <TValue>(
   metadata: Map<MetadataKey<unknown, unknown>, unknown[]>,
   resolvedValidators: ComposableValidator<TValue>[],
 ): ValidationResult => {
+  if (isNode(result)) return normalizeValidationResult(result);
+
   if (typeof result === 'function') {
     if (isAsyncValidator(result)) {
       throw new Error('A synchronous validator cannot return an asyncValidator(); add it directly to the validators array.');
@@ -36,8 +38,8 @@ const resolveComposableResult = <TValue>(
     collectValidatorMetadata(result, metadata, context as ValidatorContext<unknown>);
     activeValidators.add(result);
     const outcome = result(context);
-    const returnsValidators = typeof outcome === 'function'
-      || Array.isArray(outcome) && outcome.some(item => typeof item === 'function');
+    const returnsValidators = typeof outcome === 'function' && !isNode(outcome)
+      || Array.isArray(outcome) && outcome.some(item => typeof item === 'function' && !isNode(item));
     if (!returnsValidators) resolvedValidators.push(result);
     const resolved = resolveComposableResult(outcome, context, activeValidators, depth + 1, metadata, resolvedValidators);
     activeValidators.delete(result);
@@ -45,13 +47,13 @@ const resolveComposableResult = <TValue>(
   }
 
   if (Array.isArray(result)) {
-    const items = result.filter(isNotNil);
-    const validators = items.filter(item => typeof item === 'function');
-    if (validators.length === 0) return items as readonly ValidationError.ValidatorResult[];
-    if (validators.length !== items.length) {
+    const validators = result.filter(item => typeof item === 'function' && !isNode(item));
+    const errors = normalizeValidationResult(result.filter(item => typeof item !== 'function' || isNode(item)));
+    if (validators.length === 0) return errors;
+    if (errors.length > 0) {
       throw new Error('Synchronous validator composition cannot mix validators and validation errors in the same array.');
     }
-    return (items as Validators<TValue>).flatMap((validator) => {
+    return (validators as Validators<TValue>).flatMap((validator) => {
       return normalizeValidationResult(resolveComposableResult(validator, context, activeValidators, depth, metadata, resolvedValidators));
     });
   }

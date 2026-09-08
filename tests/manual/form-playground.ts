@@ -82,7 +82,8 @@ const myForm = form({
     b: field(2),
     c: field(true),
   }, [ctx => ctx.value() ? { kind: '' } : null]),
-  myValo: field('', { syncInputs: false })
+  myValo: field('', { syncInputs: false }),
+  myValidatedField: field(true, [])
 }, {
   // equal: 'deep',
 });
@@ -480,7 +481,7 @@ class MyComponentForSelfReference {
 
   myForm = form({
     somo: field('', [
-      // ctx => ctx.field().parent()
+      ctx => ctx.parent(),
     ]),
     valueType: field<number>(null, [required]),
     value: field<string>(null, [

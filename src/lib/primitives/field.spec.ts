@@ -2688,3 +2688,80 @@ it('defers mixed self-referencing helpers and resumes asynchronous validation af
   expect(model.value.dirty()).toBe(false);
   expect(model.value.touched()).toBe(false);
 });
+
+it('ignores malformed synchronous results while preserving valid errors and reactive transitions', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, 'Not a message', { kind: 1 }, null]);
+    const run = vi.fn(() => result());
+    const value = field('text', [run]);
+    expect(value.errors()).toMatchObject([{ kind: '', message: 'Kept', targetNode: value }]);
+    expect(value.invalid()).toBe(true);
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledTimes(3);
+    expect(value.hasError('')).toBe(true);
+    expect(run).toHaveBeenCalledTimes(1);
+    result.set({ message: 'No kind' });
+    expect(value.errors()).toEqual([]);
+    expect(value.valid()).toBe(true);
+    expect(value.pending()).toBe(false);
+    expect(value.dirty()).toBe(false);
+    expect(value.touched()).toBe(false);
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledTimes(4);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it('filters invalid entries and nodes from returned validator arrays without executing nodes', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const other = form({ kind: field('notAnError') });
+    const value = field('', [() => [other, {}, required, null]]);
+    expect(value.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(value.validators({ resolve: true })).toEqual([required]);
+    expect(warn).toHaveBeenCalledTimes(2);
+    value.set('text');
+    expect(value.valid()).toBe(true);
+    expect(warn).toHaveBeenCalledTimes(4);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+it.each(['promise', 'observable', 'onError'] as const)('ignores malformed asynchronous field results from %s and finishes pending state', async (source) => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const result = signal<unknown>([{ kind: 'kept' }, {}, 'Not a message']);
+    const run = vi.fn();
+    const value = field('text', [asyncValidator(() => {
+      run();
+      const snapshot = result();
+      if (source === 'onError') return Promise.reject(new Error('Offline'));
+      if (source === 'observable') {
+        return { subscribe: (observer: { next(value: unknown): void }) => {
+          observer.next(snapshot);
+          return { unsubscribe() {} };
+        } };
+      }
+      return Promise.resolve(snapshot);
+    }, { onError: () => result() as any })]);
+    expect(value.pending()).toBe(true);
+    await vi.waitFor(() => expect(value.pending()).toBe(false));
+    expect(value.errors()).toMatchObject([{ kind: 'kept', targetNode: value }]);
+    expect(value.invalid()).toBe(true);
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledTimes(2);
+    result.set({ kind: false });
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(value.pending()).toBe(false));
+    expect(value.errors()).toEqual([]);
+    expect(value.valid()).toBe(true);
+    expect(warn).toHaveBeenCalledTimes(3);
+    expect(value.dirty()).toBe(false);
+    expect(value.touched()).toBe(false);
+  } finally {
+    warn.mockRestore();
+  }
+});

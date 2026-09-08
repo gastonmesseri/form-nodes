@@ -443,6 +443,13 @@ asyncValidator({
 
 ## 📝 Return value {#return-value}
 
+Resolved results and `onError` results use the same defensive normalization as synchronous
+validators: keep errors with a readable string `kind`, ignore malformed entries, and warn only
+in development. Ignored results contribute no errors; pending state still finishes normally.
+Strings are not converted into messages. This filtering does not invoke `onError` for malformed
+results; that callback retains its existing exception/rejection handling. See
+[Malformed validator results](../guides/validation.md#malformed-validator-results).
+
 ```ts
 type AsyncValidationResult =
   | PromiseLike<ValidationResult>

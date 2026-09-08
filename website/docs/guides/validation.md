@@ -5,6 +5,7 @@ title: Validation
 # Validation {#validation}
 
 import CodeBlock from '@theme/CodeBlock';
+import invalidValidationResultsSource from '!!raw-loader!../../examples/invalid-validation-results.example.ts';
 import validatorResolutionSource from '!!raw-loader!../../examples/validator-resolution.example.ts';
 import selfReferencingHelpersSource from '!!raw-loader!../../examples/self-referencing-validation-helpers.typecheck.ts';
 import selfReferencingValidationSource from '!!raw-loader!../../examples/self-referencing-validation.example.ts';
@@ -156,6 +157,21 @@ This exception includes overloaded functions callable without arguments. For exa
 `uniqueItems()` returns a validator whose array-value compatibility is checked, while passing
 `uniqueItems` directly can match the unchecked parameterless branch. A deferred callback's
 returned validator is likewise not checked against the consuming field's value type.
+
+## 🛡️ Malformed validator results {#malformed-validator-results}
+
+Error objects need a readable string `kind`; an empty string is allowed. Malformed objects,
+primitives, and returned form nodes are ignored with a warning in Angular development mode.
+Strings are not treated as error messages. `null` and `undefined` remain silent success results.
+Arrays retain valid errors and discard invalid entries. This applies to synchronous results,
+resolved asynchronous results, and asynchronous `onError` results.
+
+<CodeBlock language="ts" title="invalid-validation-results.example.ts">{invalidValidationResultsSource}</CodeBlock>
+
+Ignored results do not block the form. The warning identifies a mistake in the validator, not
+an error in the user's input. Nodes returned accidentally, such as `ctx.parent()`, are ignored
+without being called as composed validators. Exceptions thrown by your callback and the existing
+composition guards still follow their normal error handling.
 
 ## ✅ Conditional validators {#conditional-validators}
 

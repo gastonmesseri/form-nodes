@@ -1010,7 +1010,31 @@ The same release tag was re-resolved for this change.
 Angular declares rules against a separate model/schema; this class-initializer inference pattern
 and returned-validator composition belong to Form Nodes' public API.
 
-Signals read by either the outer or returned validators are dependencies of the same synchronous validation `computed()`. Nested composition is supported, and every level receives the same context object. `null` and `undefined` entries in a returned validator array are ignored, which allows concise conditional entries such as `() => [required, enabled() ? minLength(2) : null]`. After empty entries are removed, an array must contain either only validators or only validation errors; mixing validators and errors in one returned array throws because its intended evaluation order would be ambiguous. Circular composition throws an English runtime error, and resolution is limited to 100 returned-validator levels to protect against chains that continually allocate new functions.
+Validator result normalization is defensive. Only non-array objects with a readable string
+`kind` become validation errors; `kind: ''` is allowed. `null` and `undefined` are silent success
+results. Other primitives (including strings), malformed objects, unreadable `kind` getters,
+and nested arrays are ignored with a development-only diagnostic. Valid error references, order,
+custom properties, and duplicate kinds are preserved. Invalid entries do not block validity.
+Warnings are emitted per invalid entry when validation recomputes, not for repeated cached reads.
+Form Nodes returned as results are recognized before function composition and ignored without
+executing them; this includes a child validator accidentally returning `ctx.parent()`.
+
+The same normalization processes synchronous results, Promise/Observable results, and asynchronous
+`onError` results. Invalid asynchronous results finish pending state normally and do not call
+`onError`; existing cancellation and stale-result checks still run before publication. Normalization
+does not catch exceptions thrown by validator callbacks or change explicit composition guards.
+Arrays containing synchronous validators discard malformed entries before enforcing the existing
+prohibition on mixing valid errors and validators.
+
+This is an intentional defensive extension beyond Angular `v22.1.5`
+(`468b65b74566537456c192ac4281795c5a1e1a5e`). Inspected
+`packages/forms/signals/src/api/rules/validation/validate.ts`,
+`packages/forms/signals/src/field/validation.ts` (`normalizeErrors` and `addDefaultField`), and
+`packages/forms/signals/test/node/api/validators/validation_errors.spec.ts`. Angular's normalization
+assumes typed error objects; Form Nodes checks runtime results because parameterless callbacks
+have intentionally unchecked return types. Valid-error state propagation is unchanged.
+
+Signals read by either the outer or returned validators are dependencies of the same synchronous validation `computed()`. Nested composition is supported, and every level receives the same context object. `null` and `undefined` entries in a returned validator array are ignored, which allows concise conditional entries such as `() => [required, enabled() ? minLength(2) : null]`. After empty and malformed entries are removed, an array must contain either only validators or only validation errors; mixing validators and errors in one returned array throws because its intended evaluation order would be ambiguous. Circular composition throws an English runtime error, and resolution is limited to 100 returned-validator levels to protect against chains that continually allocate new functions.
 
 An `asyncValidator()` cannot be returned by a synchronous validator. Asynchronous validators must be placed directly in the validators array so their watcher lifecycle, debounce, cancellation, pending state, and dependency discovery can be established without executing arbitrary synchronous validators for classification:
 

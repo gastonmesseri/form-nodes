@@ -265,6 +265,13 @@ Any state signal read by the validator becomes a dependency.
 
 ## ✅ Validation results {#validation-results}
 
+Runtime normalization keeps objects whose `kind` is a readable string, including `''`. It ignores
+malformed objects, primitives, nested error arrays, and accidentally returned nodes, emitting a
+warning only in Angular development mode. `null` and `undefined` are ignored silently. Arrays
+retain valid errors in order. A string return is not converted into a message. Ignored results
+contribute no errors and do not block the form. See
+[Malformed validator results](../guides/validation.md#malformed-validator-results).
+
 A synchronous validator may return:
 
 | Result | Meaning |
@@ -275,7 +282,7 @@ A synchronous validator may return:
 | Another synchronous validator | Conditional composition |
 | An array of synchronous validators | Conditional composition of several rules |
 
-After nullish entries are removed, a returned array cannot mix validators and errors. Async
+After nullish and malformed entries are removed, a returned array cannot mix validators and valid errors. Async
 validators cannot be returned through this composition mechanism.
 
 An empty error array is also successful. Every error requires a discriminating `kind`; it may add

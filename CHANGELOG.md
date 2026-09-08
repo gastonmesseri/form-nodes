@@ -11,6 +11,8 @@ provide backward-compatible fixes.
 
 ### Changed
 
+- Validator results now ignore malformed errors and accidentally returned nodes with development-only warnings, preserving valid errors in mixed-validity arrays. Error objects require a string `kind`; strings are not converted into messages. The same filtering applies to resolved asynchronous and `onError` results without leaving validation pending. Ignored results do not block the form.
+
 - Empty `form({})` and `group({})` declarations now type `forEachChild()` callbacks as `DynamicNode`, so operations such as `child.set('')` compile. Visiting added children still requires `includeDynamic: true`; nonempty declarations retain their concrete child union.
 
 - Parameterless validator callbacks, including inline `validator()` and `asyncValidator()` callbacks, can reference their own class form without return annotations, preserving field and aggregate inference across primitive options, positional validators, and configured factories. Their return type is intentionally unchecked (including zero-argument overloads); context-taking callbacks and parameterized asynchronous validators keep their checked contracts. Option-object keys remain available in editor completion for all primitives. Initial setup for mixed synchronous and asynchronous rules is deferred so they can safely read the form after its class property is assigned; synchronous errors still suppress asynchronous execution.
