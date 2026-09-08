@@ -1,7 +1,7 @@
 import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { min, form, field, group, array, required, requiredIf, asyncValidator, createFormPrimitives, type Node, type Field, type DynamicNode, type FieldContext, type ValidatorApi, type ValidationError, type ValidatorContext, type FormValueContract, type ComposableValidator } from './public-api';
+import { min, form, field, group, array, required, requiredIf, asyncValidator, createFormPrimitives, type Node, type Field, type DynamicNode, type FieldContext, type ValidatorApi, type ValidatorContext, type FormValueContract, type ComposableValidator, type ValidationErrorWithTargetNode } from './public-api';
 
 describe('types', () => {
   it('exposes configured form primitive factories', () => {
@@ -492,14 +492,14 @@ describe('types', () => {
     };
     const fieldNode = field.strict('', [required]);
     expectTypeOf(fieldNode.errors()).toEqualTypeOf<
-      readonly ValidationError.WithTargetNode<typeof fieldNode>[]
+      readonly ValidationErrorWithTargetNode<typeof fieldNode>[]
     >();
   });
 
   it('types form errors as a readonly error array', () => {
     const formGroup = form({ age: field(23) });
     expectTypeOf(formGroup.api.errors()).toEqualTypeOf<
-      readonly ValidationError.WithTargetNode<typeof formGroup>[]
+      readonly ValidationErrorWithTargetNode<typeof formGroup>[]
     >();
   });
 

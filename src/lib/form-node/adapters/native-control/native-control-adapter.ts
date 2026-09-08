@@ -1,9 +1,9 @@
 import { CSP_NONCE, DestroyRef, afterEveryRender, computed, effect, signal, untracked } from '@angular/core';
 
 import type { Field } from '../../../primitives/field';
-import type { ValidationError } from '../../../validation/validation.type';
 import type { InternalNode, Node, NodeValue } from '../../../types/node.type';
 import type { ControlAdapterContext, ControlAdapterConnection } from '../control-adapter';
+import type { ValidationErrorWithoutTargetNode } from '../../../validation/validation.type';
 import { registerExternalValidationErrors } from '../../../validation/external-validation-errors';
 import { nativeInputRequiresValidityTracking, watchNativeInputValidity } from './native-input-validity';
 import { isNativeInput, isNativeSelect, parseNativeControlValue, writeNativeControlValue, type NativeFormNodeControl } from './native-control-value';
@@ -25,7 +25,7 @@ export const connectNativeControlAdapter = <TNode extends Node>({ binding, rende
     return node as Field<NodeValue<TNode>>;
   };
 
-  const parseErrors = signal<readonly ValidationError.WithoutTargetNode[]>([]);
+  const parseErrors = signal<readonly ValidationErrorWithoutTargetNode[]>([]);
   const bindingParseErrors = computed(() => {
     return parseErrors().map(error => ({
       ...error,

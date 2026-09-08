@@ -226,6 +226,7 @@ const myForm2 = form({
       country: field('Spain', { 
         validators: [
           // ctx => ctx.form()?.api.
+          ctx => [required, () => minLength(2)],
         ],
       }),
     },

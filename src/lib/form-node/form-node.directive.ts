@@ -7,11 +7,11 @@ import { FormNodeNgControl } from './form-node-ng-control';
 import { FORM_NODE_CLASSES } from './provide-form-nodes-config';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import { registerNodeBindingInjector } from '../utils/node-injector';
-import type { ValidationError } from '../validation/validation.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ControlAdapterContext } from './adapters/control-adapter';
 import { resolveControlAdapter } from './adapters/resolve-control-adapter';
 import type { InternalNode, InternalNodeApi, Node } from '../types/node.type';
+import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 import { registerControlStateBinding } from '../form-node-state/adapters/form-node';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
 import { syncNativeControlState } from './adapters/native-control/sync-native-control-state';
@@ -62,8 +62,8 @@ export class _FormNode<TNode extends Node = Node> implements FormNodeBinding<TNo
   node = computed<TNode>(() => this._field);
 
   /** Errors visible to this binding, excluding errors owned by another binding. */
-  errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]> = computed(() => {
-    const errors = this.node().$api.errors() as readonly ValidationError.WithTargetNode<TNode>[];
+  errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]> = computed(() => {
+    const errors = this.node().$api.errors() as readonly ValidationErrorWithTargetNode<TNode>[];
     return errors.filter(error => !error.formNode || error.formNode === this);
   }, { equal: shallowEqual });
 

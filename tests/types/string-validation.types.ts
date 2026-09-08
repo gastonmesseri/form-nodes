@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 
 import type { Equal, Expect } from './assert.types';
-import { asyncValidator, field, form, validator, type ValidationError, type ValidationResult } from '../../src/public-api';
+import { asyncValidator, field, form, validator, type ValidationError, type ValidationResult, type ValidationErrorWithTargetNode } from '../../src/public-api';
 
 const messages: ValidationResult = ['First', { kind: 'specific' }, ''];
 const rule = validator<string | null>(({ value }) => value() ? null : 'Enter a name');
@@ -29,7 +29,7 @@ class MessageForm {
 
 const model = new MessageForm();
 type _Value = Expect<Equal<ReturnType<typeof model.myForm.name>, string | null>>;
-type _Errors = Expect<Equal<ReturnType<typeof model.myForm.name.errors>[number], ValidationError.WithTargetNode<typeof model.myForm.name>>>;
+type _Errors = Expect<Equal<ReturnType<typeof model.myForm.name.errors>[number], ValidationErrorWithTargetNode<typeof model.myForm.name>>>;
 
 // @ts-expect-error Public errors remain objects, even when validators return messages.
 const invalidError: ValidationError = 'Message';

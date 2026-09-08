@@ -3,14 +3,14 @@ import { NG_VALIDATORS, Validators, type Validator, type ValidatorFn, type Valid
 
 import type { Node } from '../../../types/node.type';
 import type { ControlAdapterContext } from '../control-adapter';
-import type { ValidationError } from '../../../validation/validation.type';
+import type { ValidationErrorWithoutTargetNode } from '../../../validation/validation.type';
 import { registerExternalValidationErrors } from '../../../validation/external-validation-errors';
 
 const isValidatorObject = (validator: ValidatorFn | Validator): validator is Validator => {
   return typeof validator === 'object' && validator !== null;
 };
 
-const toControlErrors = (errors: ValidationErrors | null): readonly ValidationError.WithoutTargetNode[] => {
+const toControlErrors = (errors: ValidationErrors | null): readonly ValidationErrorWithoutTargetNode[] => {
   return errors ? Object.entries(errors).map(([kind, context]) => ({ kind, context })) : [];
 };
 

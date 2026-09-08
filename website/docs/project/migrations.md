@@ -4,6 +4,23 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## 🔄 Unreleased: standalone validation error types {#standalone-validation-error-types}
+
+The `ValidationError` namespace has been replaced by directly exported types. Update imports
+and qualified references using this mapping:
+
+| Previous reference | Import and use |
+| --- | --- |
+| `ValidationError.ForKind<K>` | `ValidationErrorForKind<K>` |
+| `ValidationError.WithTargetNode<N>` | `ValidationErrorWithTargetNode<N>` |
+| `ValidationError.WithOptionalTargetNode<N>` | `ValidationErrorWithOptionalTargetNode<N>` |
+| `ValidationError.WithoutTargetNode` | `ValidationErrorWithoutTargetNode` |
+| `ValidationError.ValidatorResult<N>` | `ValidatorError<N>` |
+
+The base `ValidationError` interface remains available. Object shapes, generic defaults,
+readonly properties, target restrictions, and validation behavior are unchanged. See
+[Error types](../reference/validation.md#error-types).
+
 ## 🧪 Unreleased: experimental input synchronization {#unreleased-experimental-input-synchronization}
 
 Rename `syncControlInputs` to `syncInputs`. Optional custom-control input synchronization is now

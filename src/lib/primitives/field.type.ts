@@ -3,7 +3,7 @@ import type { Injector, Signal } from '@angular/core';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NavigationRoot, NearestForm, Node, NodeKeyInParent, RootNode } from '../types/node.type';
-import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type FieldOptions<TValue = any> = {
   /**
@@ -372,7 +372,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    * // [{ kind: 'required', message: 'Name is required.', targetNode: name }]
    * ```
   */
-  errors: Signal<readonly ValidationError.WithTargetNode<Field<TValue, TParent>>[]>;
+  errors: Signal<readonly ValidationErrorWithTargetNode<Field<TValue, TParent>>[]>;
   /**
    * A signal containing the validation errors of **this field and its descendants**.
   * Fields have no descendants, so this contains the same errors as `errors()`.
@@ -385,7 +385,7 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    * // [{ kind: 'required', message: 'Name is required.', targetNode: name }]
    * ```
   */
-  allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
+  allErrors: Signal<readonly ValidationErrorWithTargetNode<Node>[]>;
   /** Whether this field has completed validation without errors. False while validity is unknown. */
   valid: Signal<boolean>;
   /** Whether this field currently has at least one validation error. */
@@ -395,13 +395,13 @@ export type FieldApi<TValue, TParent extends Node = Node> = {
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & ValidationErrorMap[TKind]) | undefined;
+  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<Field<TValue, TParent>> & ValidationErrorMap[TKind]) | undefined;
   /**
    * Returns the first custom error belonging directly to this field and matching `kind`.
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Field<TValue, TParent>> & CustomValidationError<TKind>) | undefined;
+  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<Field<TValue, TParent>> & CustomValidationError<TKind>) | undefined;
   /**
    * Whether this node's own errors contain the given kind. Does not search descendants.
    * @reactive Memoizes by kind and tracks the node's current errors.

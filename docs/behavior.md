@@ -576,7 +576,7 @@ Changes to any descendant are reflected reactively in every ancestor value.
 - `set()` and `reset(value)` require complete values at compile time.
 - `patch()` accepts recursive partial form values.
 - Incorrect value types and unknown keys in typed value updates are rejected at compile time.
-- Field and form errors use readonly arrays of `ValidationError.WithTargetNode`.
+- Field and form errors use readonly arrays of `ValidationErrorWithTargetNode`.
 
 ## Field nullability
 
@@ -840,7 +840,7 @@ The same context shape is used for field-level and form-level validators. In a f
 
 Additional Angular Signal Forms context members such as `state`, `fieldTree`, `valueOf`, `stateOf`, `fieldTreeOf`, and `pathKeys` are not implemented yet. They will be designed separately instead of being included with provisional semantics.
 
-Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a single `ValidationError.ValidatorResult`, or a readonly array of such errors.
+Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a message string, a single `ValidatorError`, or a readonly array of strings and error objects.
 
 Validators normally omit their own target. When their results are exposed through `errors()`, the validator runner associates every untargeted error with the node being validated through `targetNode`:
 
@@ -852,13 +852,14 @@ error.kind === 'required';
 error.targetNode === name;
 ```
 
-The public error variants are:
+Error variants are exported directly without a namespace. Their target and binding constraints are unchanged:
 
 ```ts
-ValidationError.WithTargetNode<TNode>
-ValidationError.WithOptionalTargetNode<TNode>
-ValidationError.WithoutTargetNode
-ValidationError.ValidatorResult<TNode>
+ValidationErrorForKind<TKind>
+ValidationErrorWithTargetNode<TNode>
+ValidationErrorWithOptionalTargetNode<TNode>
+ValidationErrorWithoutTargetNode
+ValidatorError<TNode>
 ```
 
 Field errors use their `Field<TValue>` as the target type. Form errors use their complete `Form<TNodes>` as the target type. A form, group, or other aggregate validator may explicitly return a descendant in `targetNode` for a cross-field rule. The internal defaulting operation preserves that target; otherwise it assigns the validated node. `formNode` remains reserved for errors produced by concrete rendered bindings.

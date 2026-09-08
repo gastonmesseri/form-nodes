@@ -1,9 +1,9 @@
 import { signal, untracked, type Signal, type WritableSignal } from '@angular/core';
 
 import type { Node } from '../types/node.type';
-import type { ValidationError } from './validation.type';
+import type { ValidationErrorWithTargetNode, ValidationErrorWithOptionalTargetNode } from './validation.type';
 
-type ExternalErrorSource<TNode extends Node> = Signal<readonly ValidationError.WithOptionalTargetNode<TNode>[]>;
+type ExternalErrorSource<TNode extends Node> = Signal<readonly ValidationErrorWithOptionalTargetNode<TNode>[]>;
 type ExternalErrorRegistration = {
   readonly source: ExternalErrorSource<Node>;
   readonly onReset?: () => void;
@@ -24,9 +24,9 @@ const getRegistry = (node: Node): WritableSignal<ExternalErrorSources> => {
 /** Reads errors contributed by integrations outside the node's configured validators. */
 export const readExternalValidationErrors = <TNode extends Node>(
   node: TNode,
-): readonly ValidationError.WithTargetNode<TNode>[] => {
+): readonly ValidationErrorWithTargetNode<TNode>[] => {
   return Array.from(getRegistry(node)().values()).flatMap(({ source }) => {
-    return (source() as readonly ValidationError.WithOptionalTargetNode<TNode>[]).map(error =>
+    return (source() as readonly ValidationErrorWithOptionalTargetNode<TNode>[]).map(error =>
       ({ ...error, targetNode: error.targetNode ?? node }),
     );
   });

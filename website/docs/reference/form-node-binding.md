@@ -103,7 +103,7 @@ binding.node() === this.myForm.email; // true
 
 ### 🔸 errors {#errors}
 
-**Signature:** `errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]>`
+**Signature:** `errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]>`
 
 Returns errors visible to this binding. Node errors without a concrete binding are included;
 binding-specific errors belonging to another rendered control are excluded.

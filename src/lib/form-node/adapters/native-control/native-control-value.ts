@@ -1,7 +1,7 @@
 import { untracked } from '@angular/core';
 
 import { isNil } from '../../../utils/is-nil';
-import type { ValidationError } from '../../../validation/validation.type';
+import type { ValidationErrorWithoutTargetNode } from '../../../validation/validation.type';
 
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
@@ -19,7 +19,7 @@ export const isNativeFormNodeControl = (element: HTMLElement): element is Native
 
 export type NativeControlParseResult =
   | { readonly value: unknown; readonly error?: never }
-  | { readonly value?: never; readonly error: ValidationError.WithoutTargetNode };
+  | { readonly value?: never; readonly error: ValidationErrorWithoutTargetNode };
 
 const readSelectedValues = (select: HTMLSelectElement): string[] => {
   return Array.from(select.selectedOptions, option => option.value);

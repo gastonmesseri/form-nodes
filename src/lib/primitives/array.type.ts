@@ -5,7 +5,7 @@ import type { Group } from './group.type';
 import type { Form, FormOptions } from './form.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NearestForm, Node, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
-import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type ArrayOptions<TValue = any, TArray extends Node = ArrayNode<Node>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
@@ -443,7 +443,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * // [{ kind: 'uniqueItems', duplicateIndexes: [0, 2], targetNode: names }]
    * ```
   */
-  errors: Signal<readonly ValidationError.WithTargetNode<ArrayNode<TItem, TParent>>[]>;
+  errors: Signal<readonly ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>>[]>;
   /**
   * A signal containing the validation errors of **this array node and its descendants**.
   *
@@ -455,7 +455,7 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    * // [{ kind: 'required', message: 'Name is required.', targetNode: names[0] }]
    * ```
   */
-  allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
+  allErrors: Signal<readonly ValidationErrorWithTargetNode<Node>[]>;
   /** Whether this array and every current item subtree have completed validation without errors. */
   valid: Signal<boolean>;
   /** Whether this array or any current item subtree contributes a validation error. */
@@ -465,13 +465,13 @@ export type ArrayApi<TItem extends Node, TParent extends Node = Node> = {
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & ValidationErrorMap[TKind]) | undefined;
+  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & ValidationErrorMap[TKind]) | undefined;
   /**
    * Returns the first custom error belonging directly to this array and matching `kind`.
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
+  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
   /**
    * Whether this node's own errors contain the given kind. Does not search descendants.
    * @reactive Memoizes by kind and tracks the node's current errors.

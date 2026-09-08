@@ -206,6 +206,23 @@ const contacts = array({
 Array-level errors belong to the array unless `targetNode` names an item or descendant. Item
 errors remain owned by their item node after insertions, removals, moves, or reconciliation.
 
+## 🧩 Error types {#error-types}
+
+Import error types directly from `@ngblocks/form-nodes`:
+
+| Type | Contract |
+| --- | --- |
+| `ValidationError` | Base error with `kind` and optional `message` |
+| `ValidationErrorForKind<TKind>` | Structured payload for a known kind, with a custom-kind fallback |
+| `ValidatorError<TNode>` | Validator-produced error with an optional target; no binding reference |
+| `ValidationErrorWithTargetNode<TNode>` | Published error with a required target and optional binding reference |
+| `ValidationErrorWithOptionalTargetNode<TNode>` | Error with an optional target and binding reference |
+| `ValidationErrorWithoutTargetNode` | Error without a target or binding reference |
+
+The generic target defaults to `Node` for `ValidatorError` and `unknown` for the other target
+variants. `ValidationResult` describes accepted callback results, including message strings;
+`ValidationError` and its variants describe error objects.
+
 ## ✅ Synchronous validators {#synchronous-validators}
 
 A synchronous validator receives `ValidatorContext<TValue>` and may return success, a message,
@@ -217,8 +234,8 @@ type ValidationResult =
   | undefined
   | void
   | string
-  | ValidationError.ValidatorResult
-  | readonly (string | ValidationError.ValidatorResult)[];
+  | ValidatorError
+  | readonly (string | ValidatorError)[];
 ```
 
 Every signal read during execution is a dependency. When it changes, validation is recomputed.

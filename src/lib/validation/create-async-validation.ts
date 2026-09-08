@@ -8,7 +8,7 @@ import { normalizeValidationResult } from './utils/normalize-validation-result';
 import { resolveAsyncValidationResult } from './utils/resolve-async-validation-result';
 import { createTrackedRunner, type TrackedRunner } from '../utils/create-reactive-watch';
 import { getAsyncValidatorOptions, isAsyncValidator } from './utils/async-validator-marker';
-import type { AsyncValidationResult, AsyncValidator, AsyncValidatorContext, AsyncValidatorState, FieldContext, ParameterizedAsyncValidatorContext, ValidationError, ValidationResult, Validators } from './validation.type';
+import type { AsyncValidationResult, AsyncValidator, AsyncValidatorContext, AsyncValidatorState, FieldContext, ParameterizedAsyncValidatorContext, ValidationError, ValidationResult, Validators, ValidationErrorWithTargetNode } from './validation.type';
 
 const wait = (milliseconds: number, signal: AbortSignal): Promise<void> => {
   return new Promise((resolve) => {
@@ -31,7 +31,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
   isActive: () => boolean,
   ensureStarted: () => void,
 ) => {
-  const errors = signal<readonly ValidationError.WithTargetNode<TNode>[]>([]);
+  const errors = signal<readonly ValidationErrorWithTargetNode<TNode>[]>([]);
   const pending = signal(false);
   let execution = 0;
   let firstValidation = true;
@@ -142,7 +142,7 @@ export const createAsyncValidation = <TValue, TNode extends Node & { $api: Async
     }
     cancel();
     const currentExecution = execution;
-    const results = activeValidators.map(() => [] as ValidationError.WithTargetNode<TNode>[]);
+    const results = activeValidators.map(() => [] as ValidationErrorWithTargetNode<TNode>[]);
     let remaining = activeValidators.length;
     pending.set(true);
 

@@ -134,57 +134,55 @@ export type CustomValidationError<TKind extends string = string> = ValidationErr
   & Readonly<Record<string, unknown>>
   & { readonly kind: TKind };
 
-export namespace ValidationError {
-  /** Resolves a known error kind to its structured type, with a generic fallback for custom kinds. */
-  export type ForKind<TKind extends string> = (
-    TKind extends keyof ValidationErrorMap ? ValidationErrorMap[TKind] : CustomValidationError<TKind>
-  ) & { readonly kind: TKind };
+/** Resolves a known error kind to its structured type, with a generic fallback for custom kinds. */
+export type ValidationErrorForKind<TKind extends string> = (
+  TKind extends keyof ValidationErrorMap ? ValidationErrorMap[TKind] : CustomValidationError<TKind>
+) & { readonly kind: TKind };
 
-  /** An error associated with a specific target node. */
-  export type WithTargetNode<TNode = unknown> = ValidationError & {
-    /**
-     * Node whose validation state owns this error.
-     *
-     * When the error is read from an ancestor aggregate through `allErrors()`, this remains the
-     * original field, form, or array that produced the error rather than the observing ancestor.
-     */
-    readonly targetNode: TNode;
-    /** Concrete control binding that produced this error, when the error is binding-specific. */
-    readonly formNode?: FormNodeBinding;
-  };
+/** An error associated with a specific target node. */
+export type ValidationErrorWithTargetNode<TNode = unknown> = ValidationError & {
+  /**
+   * Node whose validation state owns this error.
+   *
+   * When the error is read from an ancestor aggregate through `allErrors()`, this remains the
+   * original field, form, or array that produced the error rather than the observing ancestor.
+   */
+  readonly targetNode: TNode;
+  /** Concrete control binding that produced this error, when the error is binding-specific. */
+  readonly formNode?: FormNodeBinding;
+};
 
-  /** An error that may already define its target node. */
-  export type WithOptionalTargetNode<TNode = unknown> = ValidationError & {
-    /**
-     * Node whose validation state should own this error, when explicitly provided.
-     *
-     * Validators may omit it to target the node currently being validated. The validation
-     * pipeline then assigns that node before exposing the error through `errors()` or
-     * `allErrors()`.
-     */
-    readonly targetNode?: TNode;
-    /** Concrete control binding that produced this error, when the error is binding-specific. */
-    readonly formNode?: FormNodeBinding;
-  };
+/** An error that may already define its target node. */
+export type ValidationErrorWithOptionalTargetNode<TNode = unknown> = ValidationError & {
+  /**
+   * Node whose validation state should own this error, when explicitly provided.
+   *
+   * Validators may omit it to target the node currently being validated. The validation
+   * pipeline then assigns that node before exposing the error through `errors()` or
+   * `allErrors()`.
+   */
+  readonly targetNode?: TNode;
+  /** Concrete control binding that produced this error, when the error is binding-specific. */
+  readonly formNode?: FormNodeBinding;
+};
 
-  /** An error returned by a field validator before its target node is assigned. */
-  export type WithoutTargetNode = ValidationError & {
-    readonly targetNode?: never;
-    readonly formNode?: never;
-  };
+/** An error returned by a field validator before its target node is assigned. */
+export type ValidationErrorWithoutTargetNode = ValidationError & {
+  readonly targetNode?: never;
+  readonly formNode?: never;
+};
 
-  /** An error returned by a validator, optionally assigned to another node. */
-  export type ValidatorResult<TNode extends Node = Node> = ValidationError & {
-    /**
-     * Node that should own this error.
-     *
-     * Omit this property to target the node currently being validated. Set it for cross-field or
-     * aggregate validation whose error should be displayed by a specific descendant.
-     */
-    readonly targetNode?: TNode;
-    readonly formNode?: never;
-  };
-}
+/** An error returned by a validator, optionally assigned to another node. */
+export type ValidatorError<TNode extends Node = Node> = ValidationError & {
+  /**
+   * Node that should own this error.
+   *
+   * Omit this property to target the node currently being validated. Set it for cross-field or
+   * aggregate validation whose error should be displayed by a specific descendant.
+   */
+  readonly targetNode?: TNode;
+  readonly formNode?: never;
+};
 
 /** Indicates that validation completed without errors. */
 export type ValidationSuccess = null | undefined | void;
@@ -193,8 +191,8 @@ export type ValidationSuccess = null | undefined | void;
 export type ValidationResult =
   | ValidationSuccess
   | string
-  | ValidationError.ValidatorResult
-  | readonly (string | ValidationError.ValidatorResult)[];
+  | ValidatorError
+  | readonly (string | ValidatorError)[];
 
 /** Reactive context available to validation functions for the current field. */
 export type FieldContext<TValue> = {
@@ -293,7 +291,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    *
    * @reactive Reads the current direct-error collection on every call.
    */
-  getError<TKind extends string>(kind: TKind): ValidationError.ForKind<TKind> | undefined;
+  getError<TKind extends string>(kind: TKind): ValidationErrorForKind<TKind> | undefined;
   /** Replaces the node's committed value and triggers the corresponding state and validation updates. */
   set(value: TValue): void;
   /** Replaces the value with the result of applying `updater` to its current committed value. */

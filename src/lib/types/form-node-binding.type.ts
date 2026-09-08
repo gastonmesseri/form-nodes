@@ -1,7 +1,7 @@
 import type { Injector, Signal } from '@angular/core';
 
 import type { Node } from './node.type';
-import type { ValidationError } from '../validation/validation.type';
+import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 /** Public view of a concrete `[formNode]` binding. */
 export type FormNodeBinding<TNode extends Node = Node> = {
@@ -20,7 +20,7 @@ export type FormNodeBinding<TNode extends Node = Node> = {
    * // [{ kind: 'required', message: 'Value is required.', targetNode: binding.node() }]
    * ```
    */
-  readonly errors: Signal<readonly ValidationError.WithTargetNode<TNode>[]>;
+  readonly errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]>;
   /** Focuses this binding using its native or custom-control focus behavior. */
   focus(options?: FocusOptions): void;
   /** Commits pending control-originated values for the bound node. */

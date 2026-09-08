@@ -7,7 +7,7 @@ import type { SyncInputName } from '../configuration/node-input-config';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, Node, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
-import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators } from '../validation/validation.type';
+import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 /** Values inferred as concise `field()` definitions inside an object node. */
 export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | readonly unknown[] | ((...args: any[]) => any);
@@ -615,7 +615,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * // [{ kind: 'profileLocked', message: 'This profile cannot be edited.', targetNode: profile }]
    * ```
   */
-  errors: Signal<readonly ValidationError.WithTargetNode<Form<TNodes, TParent>>[]>;
+  errors: Signal<readonly ValidationErrorWithTargetNode<Form<TNodes, TParent>>[]>;
   /**
   * A signal containing the validation errors of **this form node and its descendants**.
   *
@@ -627,7 +627,7 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    * // [{ kind: 'required', message: 'Name is required.', targetNode: profile.name }]
    * ```
   */
-  allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
+  allErrors: Signal<readonly ValidationErrorWithTargetNode<Node>[]>;
   /** Whether this form and every descendant have completed validation without errors. */
   valid: Signal<boolean>;
   /** Whether this form or any descendant currently contributes a validation error. */
@@ -637,13 +637,13 @@ export type FormApi<TNodes extends Nodes, TParent extends Node = Node> = {
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
+  getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<Form<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
   /**
    * Returns the first custom error belonging directly to this form and matching `kind`.
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Form<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<Form<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
   /**
    * Whether this node's own errors contain the given kind. Does not search descendants.
    * @reactive Memoizes by kind and tracks the node's current errors.

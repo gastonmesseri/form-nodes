@@ -2,7 +2,7 @@ import type { Signal } from '@angular/core';
 
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DynamicNode, NearestForm, Node, Nodes, NodeValue, RootNode } from '../types/node.type';
-import type { CustomValidationError, ValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource } from '../validation/validation.type';
+import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, ValidationErrorWithTargetNode } from '../validation/validation.type';
 import type { AddedNode, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
@@ -240,7 +240,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * // [{ kind: 'unsupportedCountry', message: 'Country is unavailable.', targetNode: address }]
      * ```
      */
-    errors: Signal<readonly ValidationError.WithTargetNode<Group<TNodes, TParent>>[]>;
+    errors: Signal<readonly ValidationErrorWithTargetNode<Group<TNodes, TParent>>[]>;
     /**
      * Validation errors from this group and its complete subtree in structural order.
      *
@@ -250,19 +250,19 @@ export type GroupApi<TNodes extends Nodes, TParent extends Node = Node> =
      * // [{ kind: 'required', message: 'City is required.', targetNode: address.city }]
      * ```
      */
-    allErrors: Signal<readonly ValidationError.WithTargetNode<Node>[]>;
+    allErrors: Signal<readonly ValidationErrorWithTargetNode<Node>[]>;
     /**
      * Returns the first validation error belonging directly to this group and matching `kind`.
      *
      * @reactive Maintains an independent reactive computation for each `kind`.
      */
-    getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationError.WithTargetNode<Group<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
+    getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<Group<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
     /**
      * Returns the first custom error belonging directly to this group and matching `kind`.
      *
      * @reactive Maintains an independent reactive computation for each `kind`.
      */
-    getError<TKind extends string>(kind: TKind): (ValidationError.WithTargetNode<Group<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<Group<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
     /**
      * Aggregated validation phase for this group subtree: `'valid'`, `'invalid'`, or `'unknown'`.
      *

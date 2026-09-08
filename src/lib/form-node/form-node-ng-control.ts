@@ -8,8 +8,8 @@ import { isNode } from '../primitives/utils/node-marker';
 import { arrayToObject } from '../utils/array-to-object';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import type { InternalNode, Node, Nodes } from '../types/node.type';
-import type { ValidationError } from '../validation/validation.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
+import type { ValidationErrorWithOptionalTargetNode } from '../validation/validation.type';
 import { registerExternalValidationErrors } from '../validation/external-validation-errors';
 
 const controlErrorPayload = Symbol('controlErrorPayload');
@@ -59,7 +59,7 @@ export class FormNodeNgControl {
 
   _status = computed(() => this.status);
 
-  _manualErrorSource = computed<readonly ValidationError.WithOptionalTargetNode<Node>[]>(() => {
+  _manualErrorSource = computed<readonly ValidationErrorWithOptionalTargetNode<Node>[]>(() => {
     return Object.entries(this._manualErrors() ?? {}).map(([kind, context]) => ({
       kind,
       context,

@@ -7,12 +7,12 @@ import { addDefaultTargetNode } from './utils/add-default-target-node';
 import { createValidatorContext } from './utils/create-validator-context';
 import { normalizeValidationResult } from './utils/normalize-validation-result';
 import { collectValidatorMetadata, type ValidatorMetadata } from './validator-metadata';
-import type { AsyncValidatorState, ComposableValidationResult, ComposableValidator, FieldContext, ValidationError, ValidationResult, ValidatorContext, Validators } from './validation.type';
+import type { AsyncValidatorState, ComposableValidationResult, ComposableValidator, FieldContext, ValidationResult, ValidatorContext, Validators, ValidationErrorWithTargetNode } from './validation.type';
 
 const maximumCompositionDepth = 100;
 
 export type SyncValidation<TNode extends Node, TValue> = {
-  readonly errors: readonly ValidationError.WithTargetNode<TNode>[];
+  readonly errors: readonly ValidationErrorWithTargetNode<TNode>[];
   readonly metadata: ValidatorMetadata;
   readonly resolvedValidators: Validators<TValue>;
 };
@@ -73,7 +73,7 @@ export const runSyncValidators = <TValue, TNode extends Node & { $api: AsyncVali
   validators: Validators<TValue>,
   targetNode: TNode,
 ): SyncValidation<TNode, TValue> => {
-  const errors: ValidationError.WithTargetNode<TNode>[] = [];
+  const errors: ValidationErrorWithTargetNode<TNode>[] = [];
   const metadata = new Map<MetadataKey<unknown, unknown>, unknown[]>();
   const resolvedValidators: ComposableValidator<TValue>[] = [];
   const validatorContext = createValidatorContext(context, targetNode);
