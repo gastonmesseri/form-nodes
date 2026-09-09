@@ -56,6 +56,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [FormApi](./form-api.md) | State and operations for a form, including typed children and submission. |
 | [GroupApi](./group-api.md) | State and operations for a structural group, including its typed children. |
 | [NodeApi](./node-api.md) | The common API surface shared by all node kinds. |
+| [NodeErrorsSignal](./node-errors-signal.md) | Reactive own-error signal with an optional descendant query. Calling with no options or descendants:false preserves the owning node's target type. descendants:true includes the subtree and is equivalent to allErrors(); descendant targets retain their original nodes and therefore have the broader AnyNode type. |
 
 ## Controls and bindings
 

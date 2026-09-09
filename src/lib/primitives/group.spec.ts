@@ -517,3 +517,12 @@ it.each([false, true])('preserves configured defaults for empty factories with n
   values.resetToInitial();
   expect(values()).toEqual([]);
 });
+
+it('includes nested errors through the descendants option while retaining own errors', () => {
+  const details = group({ city: field('', [required]) });
+  expect(details.errors()).toEqual([]);
+  expect(details.errors({ descendants: true })).toBe(details.allErrors());
+  expect(details.errors({ descendants: true })[0]?.targetNode).toBe(details.city);
+  details.city.set('Zurich');
+  expect(details.errors({ descendants: true })).toEqual([]);
+});

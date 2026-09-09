@@ -6,6 +6,7 @@ import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
 import type { CallableNodeApi } from './callable-node-api.type';
 import type { NodeValueSignal } from './node-value-signal.type';
+import type { NodeErrorsSignal } from './node-errors-signal.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
@@ -119,7 +120,9 @@ export type NodeApi = {
   /** Whether this node or any descendant currently contributes a validation error. */
   invalid: Signal<boolean>;
   /**
-   * Validation errors belonging directly to this node, excluding descendant-owned errors.
+   * Validation errors belonging directly to this node by default.
+   * Pass `{ descendants: true }` to include descendants, exactly as `allErrors()`.
+   * @reactive Tracks the selected own or subtree error signal.
    *
    * @example
    * ```ts
@@ -127,7 +130,7 @@ export type NodeApi = {
    * // [{ kind: 'required', message: 'Value is required.', targetNode: node }]
    * ```
    */
-  errors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
+  errors: NodeErrorsSignal<AnyNode>;
   /**
    * Validation errors from this node and its complete subtree in structural order.
    *

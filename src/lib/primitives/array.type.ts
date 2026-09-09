@@ -5,6 +5,7 @@ import type { GroupNode } from './group.type';
 import type { FormNode, FormOptions } from './form.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
+import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -478,17 +479,22 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   *
   * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
    *
+   * Pass `{ descendants: true }` to read the same subtree errors as `allErrors()`.
+   *
    * @example
    * ```ts
    * names.errors();
    * // [{ kind: 'uniqueItems', duplicateIndexes: [0, 2], targetNode: names }]
    * ```
+   * @reactive Tracks own errors by default, or subtree errors when descendants is true.
   */
-  errors: Signal<readonly ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>>[]>;
+  errors: NodeErrorsSignal<ArrayNode<TItem, TParent>>;
   /**
   * A signal containing the validation errors of **this array node and its descendants**.
   *
   * ℹ️ To read only errors belonging directly to this array node, use `errors()` instead.
+   *
+   * Shortcut for `errors({ descendants: true })`, returning the same cached array.
    *
    * @example
    * ```ts

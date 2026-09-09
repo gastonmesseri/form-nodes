@@ -5408,3 +5408,41 @@ it('creates independent empty forms with normal dynamic children and submission 
   expect(profile()).toEqual({});
   expect(profile.valid()).toBe(true);
 });
+
+it('routes descendant error reads through the existing reactive subtree summary', () => {
+  const profile = form({
+    name: field('', [required]),
+    nested: form({ city: field('', [required]) }),
+    items: array(field('', [required]), { initialValue: 1 }),
+  });
+  const descendants = signal(true);
+  const observed = computed(() => profile.errors({ descendants: descendants() }));
+  expect(isSignal(profile.errors)).toBe(true);
+  expect(profile.errors()).toEqual([]);
+  expect(observed()).toBe(profile.allErrors());
+  expect(observed()).toHaveLength(3);
+  expect(observed().map(error => error.targetNode)).toEqual([profile.name, profile.nested.city, profile.items.at(0)]);
+  descendants.set(false);
+  expect(observed()).toBe(profile.errors());
+  profile.name.set('Ada');
+  descendants.set(true);
+  expect(observed()).toHaveLength(2);
+  profile.nested.disable();
+  expect(observed()).toHaveLength(1);
+  profile.items.removeAt(0);
+  expect(observed()).toEqual([]);
+  const added = profile.add('extra', field('', [required]));
+  expect(observed()[0]?.targetNode).toBe(added);
+  expect(profile.$api.errors({ descendants: true })).toBe(profile.allErrors());
+  profile.remove('extra');
+  expect(observed()).toEqual([]);
+});
+
+it('includes own errors before descendant errors without changing default reads', () => {
+  const profile = form({ name: field('', [required]) }, [() => ({ kind: 'profileError' })]);
+  expect(profile.errors().map(error => error.kind)).toEqual(['profileError']);
+  expect(profile.errors({ descendants: true }).map(error => error.kind)).toEqual(['profileError', 'required']);
+  expect(profile.errors({ descendants: true })[0]?.targetNode).toBe(profile);
+  profile.name.set('Ada');
+  expect(profile.errors({ descendants: true }).map(error => error.kind)).toEqual(['profileError']);
+});

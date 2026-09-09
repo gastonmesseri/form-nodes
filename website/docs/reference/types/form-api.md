@@ -56,7 +56,7 @@ type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
         }): Validators<FormValue<TNodes>>;
     };
     setValidators(validators: ValidatorSource<FormValue<TNodes>, FormNode<TNodes, TParent>>): void;
-    errors: Signal<readonly ValidationErrorWithTargetNode<FormNode<TNodes, TParent>>[]>;
+    errors: NodeErrorsSignal<FormNode<TNodes, TParent>>;
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     valid: Signal<boolean>;
     invalid: Signal<boolean>;
@@ -184,6 +184,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [FormPatch](./form-patch.md)
 - [FormSet](./form-set.md)
 - [FormValue](./form-value.md)
+- [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)
 - [ValidationErrorWithTargetNode](./validation-error-with-target-node.md)

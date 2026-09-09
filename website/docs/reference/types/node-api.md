@@ -38,7 +38,7 @@ type NodeApi = {
     validationStatus: Signal<'valid' | 'invalid' | 'unknown'>;
     valid: Signal<boolean>;
     invalid: Signal<boolean>;
-    errors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
+    errors: NodeErrorsSignal<AnyNode>;
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<AnyNode> & {
         readonly kind: TKind;
@@ -100,7 +100,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `validationStatus` | Aggregated validation phase for this node and its subtree. |
 | `valid` | Whether this node and its descendants have completed validation without errors. |
 | `invalid` | Whether this node or any descendant currently contributes a validation error. |
-| `errors` | Validation errors belonging directly to this node, excluding descendant-owned errors. |
+| `errors` | Validation errors belonging directly to this node by default. Pass `{ descendants: true }` to include descendants, exactly as `allErrors()`. |
 | `allErrors` | Validation errors from this node and its complete subtree in structural order. |
 | `getError` | Returns the first error belonging directly to this node and matching `kind`. |
 | `hasError` | Whether this node's own errors include the kind; does not search descendants. |
@@ -139,5 +139,6 @@ The declaration above also includes inherited contracts and overloads where appl
 - [Public types index](./index.md)
 - [AnyNode](./any-node.md)
 - [DisabledReason](./disabled-reason.md)
+- [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorWithTargetNode](./validation-error-with-target-node.md)

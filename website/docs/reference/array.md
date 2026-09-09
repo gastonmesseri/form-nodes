@@ -973,7 +973,11 @@ usernames.validators().length; // 1
 
 #### – errors() {#errors}
 
-**Signature:** `errors: Signal<readonly ValidationError[]>`
+**Signature:** `errors: NodeErrorsSignal<TNode>`
+
+Reads own errors by default. Pass `{ descendants: true }` to include every descendant, exactly as `allErrors()` does. `{ descendants: false }`, `{}`, and no arguments read only own errors. `TNode` is this concrete node type.
+
+The property remains an Angular `Signal`. Own reads preserve the concrete `targetNode` type; descendant reads use `AnyNode` because errors can belong to different node kinds. See [error queries](./validation-errors.md#error-queries) for an executable example.
 
 Contains validation errors owned directly by the array and excludes descendant errors.
 
@@ -991,6 +995,8 @@ Only errors owned directly by the array are returned.
 #### – allErrors() {#allerrors}
 
 **Signature:** `allErrors: Signal<readonly ValidationError[]>`
+
+Shortcut for `errors({ descendants: true })`, returning the same cached array.
 
 Contains errors from the array and every current descendant. Each error identifies its
 `targetNode`.

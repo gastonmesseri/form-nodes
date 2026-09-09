@@ -444,6 +444,10 @@
     "FormNodeSubmitEvent": {
       "family": "controls",
       "usage": "Use for template submit and submit-blocked handlers. The generic preserves the bound form and value types; `event` is the original native event, and `form.$api` gives collision-safe access."
+    },
+    "NodeErrorsSignal": {
+      "family": "apis",
+      "usage": "Use for a node error signal that supports both own and subtree reads. Calling `errors()` retains the owner type; `errors({ descendants: true })` includes descendant targets and matches `allErrors()`."
     }
   }
 }

@@ -2007,3 +2007,12 @@ it('creates empty arrays with independent unknown-valued field templates', () =>
   expect(values.touched()).toBe(false);
   expect(values.push()()).toBe(null);
 });
+
+it('includes item errors through the descendants option without changing own error reads', () => {
+  const names = array(field('', [required]), { initialValue: 1 });
+  expect(names.errors()).toEqual([]);
+  expect(names.errors({ descendants: true })).toBe(names.allErrors());
+  expect(names.errors({ descendants: true })[0]?.targetNode).toBe(names.at(0));
+  names.at(0)!.set('Ada');
+  expect(names.errors({ descendants: true })).toEqual([]);
+});

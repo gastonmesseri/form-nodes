@@ -2,6 +2,7 @@ import type { Signal } from '@angular/core';
 
 import type { GenericGroupNode } from '../types/generic-node.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
+import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DynamicNode, NearestForm, AnyNode, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -236,17 +237,22 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
     /**
      * Validation errors belonging directly to this group, excluding descendant-owned errors.
      *
-     * @example
+     * Pass `{ descendants: true }` to read the same subtree errors as `allErrors()`.
+   *
+   * @example
      * ```ts
      * address.errors();
      * // [{ kind: 'unsupportedCountry', message: 'Country is unavailable.', targetNode: address }]
      * ```
+       * @reactive Tracks own errors by default, or subtree errors when descendants is true.
      */
-    errors: Signal<readonly ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>>[]>;
+    errors: NodeErrorsSignal<GroupNode<TNodes, TParent>>;
     /**
      * Validation errors from this group and its complete subtree in structural order.
      *
-     * @example
+     * Shortcut for `errors({ descendants: true })`, returning the same cached array.
+   *
+   * @example
      * ```ts
      * address.allErrors();
      * // [{ kind: 'required', message: 'City is required.', targetNode: address.city }]

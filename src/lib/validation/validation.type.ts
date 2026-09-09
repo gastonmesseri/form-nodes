@@ -8,6 +8,7 @@ import type { ObservableLike } from '../types/observable-like.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
+import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, AnyNode, PublicNode } from '../types/node.type';
 
@@ -274,8 +275,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   readonly path: Signal<readonly string[]>;
   /** Current committed value of the node being validated. */
   readonly value: Signal<TValue>;
-  /** Validation errors owned directly by this node. */
-  readonly errors: Signal<readonly ValidationError[]>;
+  /** Own validation errors by default; pass `{ descendants: true }` to include descendants. */
+  readonly errors: NodeErrorsSignal;
   /** Errors owned by this node and every descendant. */
   readonly allErrors: Signal<readonly ValidationError[]>;
   /** Whether this node and its descendants have no active errors or unresolved validation. */

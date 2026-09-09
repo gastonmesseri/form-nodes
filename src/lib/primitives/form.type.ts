@@ -7,6 +7,7 @@ import type { GenericFormNode } from '../types/generic-node.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
+import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, AnyNode, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
@@ -650,17 +651,22 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   *
   * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
    *
+   * Pass `{ descendants: true }` to read the same subtree errors as `allErrors()`.
+   *
    * @example
    * ```ts
    * profile.errors();
    * // [{ kind: 'profileLocked', message: 'This profile cannot be edited.', targetNode: profile }]
    * ```
+   * @reactive Tracks own errors by default, or subtree errors when descendants is true.
   */
-  errors: Signal<readonly ValidationErrorWithTargetNode<FormNode<TNodes, TParent>>[]>;
+  errors: NodeErrorsSignal<FormNode<TNodes, TParent>>;
   /**
   * A signal containing the validation errors of **this form node and its descendants**.
   *
   * ℹ️ To read only errors belonging directly to this form node, use `errors()` instead.
+   *
+   * Shortcut for `errors({ descendants: true })`, returning the same cached array.
    *
    * @example
    * ```ts

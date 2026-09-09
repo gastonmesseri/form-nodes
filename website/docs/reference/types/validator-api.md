@@ -25,7 +25,7 @@ type ValidatorApi<TValue> = AsyncValidatorState & {
     readonly parent: Signal<ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode> | null>;
     readonly path: Signal<readonly string[]>;
     readonly value: Signal<TValue>;
-    readonly errors: Signal<readonly ValidationError[]>;
+    readonly errors: NodeErrorsSignal;
     readonly allErrors: Signal<readonly ValidationError[]>;
     readonly valid: Signal<boolean>;
     readonly invalid: Signal<boolean>;
@@ -72,7 +72,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `parent` | Immediate form, group, or array parent, or `null` for a standalone node. Common node members are available directly. A field can never be a parent. |
 | `path` | Property names and array indexes locating the node from its root. |
 | `value` | Current committed value of the node being validated. |
-| `errors` | Validation errors owned directly by this node. |
+| `errors` | Own validation errors by default; pass `{ descendants: true }` to include descendants. |
 | `allErrors` | Errors owned by this node and every descendant. |
 | `valid` | Whether this node and its descendants have no active errors or unresolved validation. |
 | `invalid` | Whether this node or a descendant currently contributes an error. False while unknown. |
@@ -102,6 +102,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [ArrayNode](./array-node.md)
 - [AsyncValidatorState](./async-validator-state.md)
 - [DynamicNode](./dynamic-node.md)
+- [NodeErrorsSignal](./node-errors-signal.md)
 - [ValidationError](./validation-error.md)
 - [ValidationErrorForKind](./validation-error-for-kind.md)
 - [ValidationStatus](./validation-status.md)

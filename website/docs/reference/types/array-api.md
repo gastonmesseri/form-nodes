@@ -70,7 +70,7 @@ type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
         }): Validators<ArrayValue<TItem>>;
     };
     setValidators(validators: ValidatorSource<ArrayValue<TItem>, ArrayNode<TItem, TParent>>): void;
-    errors: Signal<readonly ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>>[]>;
+    errors: NodeErrorsSignal<ArrayNode<TItem, TParent>>;
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     valid: Signal<boolean>;
     invalid: Signal<boolean>;
@@ -210,6 +210,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [ArrayValue](./array-value.md)
 - [CustomValidationError](./custom-validation-error.md)
 - [DisabledReason](./disabled-reason.md)
+- [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)
 - [ValidationErrorWithTargetNode](./validation-error-with-target-node.md)

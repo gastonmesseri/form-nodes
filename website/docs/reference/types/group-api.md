@@ -36,7 +36,7 @@ type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = Omit<Fo
     remove(key: string): DynamicNode | undefined;
     form: Signal<NearestForm<TParent> | null>;
     root: Signal<GroupRoot<TNodes, TParent>>;
-    errors: Signal<readonly ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>>[]>;
+    errors: NodeErrorsSignal<GroupNode<TNodes, TParent>>;
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
     getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
@@ -83,6 +83,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [FormApi](./form-api.md)
 - [GroupNode](./group-node.md)
 - [GroupValue](./group-value.md)
+- [NodeErrorsSignal](./node-errors-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)
 - [ValidationErrorWithTargetNode](./validation-error-with-target-node.md)
 - [ValidationStatus](./validation-status.md)

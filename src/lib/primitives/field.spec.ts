@@ -3130,3 +3130,17 @@ it('tracks a self-referencing when condition without evaluating it during constr
   expect(model.name.hasError('required')).toBe(true);
   expect(runs).toHaveBeenCalledTimes(3);
 });
+
+it('keeps own and descendant error reads equivalent for fields and signal-compatible', () => {
+  const name = field('', [required]);
+  expect(isSignal(name.errors)).toBe(true);
+  expect(name.errors({ descendants: true })).toBe(name.allErrors());
+  expect(name.errors({ descendants: false })).toBe(name.errors());
+  expect(name.errors({})).toBe(name.errors());
+  const observed = computed(() => name.errors({ descendants: true }));
+  expect(observed()).toHaveLength(1);
+  name.set('Ada');
+  expect(observed()).toEqual([]);
+  name.set('');
+  expect(observed()[0]?.targetNode).toBe(name);
+});

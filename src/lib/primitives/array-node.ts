@@ -18,6 +18,7 @@ import { resolveValueEquality } from './utils/resolve-value-equality';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
+import { createNodeErrorsSignal } from './utils/create-node-errors-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
@@ -648,7 +649,7 @@ export class ArrayNode<TItem extends AnyNode> {
       resetToInitial: () => this.resetToInitial(),
       validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
       setValidators: next => this.setValidators(next),
-      errors: this.errors,
+      errors: createNodeErrorsSignal(this.errors, this.allErrors),
       allErrors: this.allErrors,
       valid: this.valid,
       invalid: this.invalid,

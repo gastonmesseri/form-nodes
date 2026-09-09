@@ -89,7 +89,8 @@ On forms and groups, a child named `nodeType` can shadow the direct method. Use
 | `validators()` | Current normalized validator collection |
 | `setValidators(source)` | Replaces validators |
 | `errors()` | Errors owned directly by this node |
-| `allErrors()` | Own and descendant errors |
+| `errors({ descendants: true })` | Own and descendant errors |
+| `allErrors()` | Shortcut for `errors({ descendants: true })` |
 | `getError(kind)` | First own error of a kind |
 | `valid()` / `invalid()` | Aggregated validity |
 | `pending()` | Current asynchronous validation state |

@@ -12,6 +12,8 @@ canonical release record.
 
 ### Added
 
+- Read own and descendant validation errors with `errors({ descendants: true })` on any node. `allErrors()` remains its shortcut, while `errors()` keeps its existing own-error signal behavior and typing.
+
 - Allow `form()` and `group()` with no arguments to create empty objects, and `array()` to create an empty collection of unknown-valued fields with null defaults. Configured factories support the same declarations and preserve their defaults.
 
 ### Fixed

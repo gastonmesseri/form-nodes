@@ -23,7 +23,8 @@ and binding-specific `formNode`, including through `AnyNode.$api` and `DynamicNo
 Messages remain optional; this type correction does not create or resolve additional messages.
 Angular 22 reference: `22.1.x` at `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`,
 `packages/forms/signals/src/api/rules/validation/validation_errors.ts` and
-`packages/forms/signals/test/node/api/validators/validation_errors.spec.ts`.
+`packages/forms/signals/test/node/api/validators/validation_errors.spec.ts`, and the
+`errorSummary` tests in `packages/forms/signals/test/node/field_node.spec.ts`.
 
 When child names are unknown, `AnyNode` consumers must use `$api` for state and operations:
 children can shadow both direct API members and the `api` alias. `DynamicNode` exposes direct
@@ -1088,7 +1089,8 @@ Defensive filtering and string-message shorthand are intentional extensions beyo
 (`468b65b74566537456c192ac4281795c5a1e1a5e`). Inspected
 `packages/forms/signals/src/api/rules/validation/validate.ts`,
 `packages/forms/signals/src/field/validation.ts` (`normalizeErrors` and `addDefaultField`), and
-`packages/forms/signals/test/node/api/validators/validation_errors.spec.ts`. Angular's normalization
+`packages/forms/signals/test/node/api/validators/validation_errors.spec.ts`, and the
+`errorSummary` tests in `packages/forms/signals/test/node/field_node.spec.ts`. Angular's normalization
 assumes typed error objects; Form Nodes checks runtime results because parameterless callbacks
 have intentionally unchecked return types. Valid-error state propagation is unchanged.
 
@@ -1339,7 +1341,7 @@ This is comparable to Angular Signal Forms exposing required state for form cont
 ### Own and descendant errors
 
 `errors()` contains only errors that apply directly to the current node. Descendant errors make
-an aggregate node invalid, but do not appear in its `errors()` signal. `allErrors()` provides the
+an aggregate node invalid, but do not appear in its `errors()` signal. `errors({ descendants: true })`, also available through the `allErrors()` shortcut, provides the
 recursive alternative: it returns own errors first and then every descendant error in structural
 tree order. On a field, which has no descendants, `allErrors()` and `errors()` contain the same
 array.
@@ -1354,6 +1356,19 @@ navigate to the exact failing node. Forms traverse children in declaration order
 their current item order. This intentionally follows the recursive behavior of Angular 22 Signal
 Forms `errorSummary()`, while using the more explicit public name `allErrors()` and structural
 ordering until control bindings provide DOM-order information.
+
+`errors({})` and `errors({ descendants: false })` preserve own-only reads. A reactive boolean
+option switches dependency tracking between the existing own and subtree signals. No new
+per-call computed is created; subtree reads return the same cached array as `allErrors()`.
+`errors` remains an Angular `Signal`. Own reads retain the concrete target type; descendant
+reads expose `AnyNode` targets. This applies to fields, groups, forms, arrays, and their APIs.
+The underlying validation, suppression, and aggregation rules are unchanged.
+
+Reference inspected: Angular `22.1.x`, commit `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`,
+`packages/forms/signals/src/field/validation.ts` and
+`packages/forms/signals/test/node/api/validators/validation_errors.spec.ts`, and the
+`errorSummary` tests in `packages/forms/signals/test/node/field_node.spec.ts`.
+The optional argument is a Form Nodes API extension.
 
 ### Looking up an error by kind
 

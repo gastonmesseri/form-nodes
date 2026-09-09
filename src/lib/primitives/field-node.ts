@@ -13,6 +13,7 @@ import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
+import { createNodeErrorsSignal } from './utils/create-node-errors-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
@@ -443,7 +444,7 @@ export class FieldNode<TValue> {
       resetToInitial: () => this.resetToInitial(),
       validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
       setValidators: (next: ValidatorSource<TValue, PublicFieldNode<TValue>>) => this.setValidators(next),
-      errors: this.errors,
+      errors: createNodeErrorsSignal(this.errors, this.errors),
       allErrors: this.errors,
       valid: this.valid,
       invalid: this.invalid,

@@ -125,3 +125,5 @@ export type { NodeValueSignal } from './lib/types/node-value-signal.type';
 export type { CallableNodeApi } from './lib/types/callable-node-api.type';
 
 export type { FormNodeSubmitEvent } from './lib/types/form-node-binding.type';
+
+export type { NodeErrorsSignal } from './lib/types/node-errors-signal.type';

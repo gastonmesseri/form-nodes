@@ -44,7 +44,7 @@ type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
         }): Validators<TValue>;
     };
     setValidators(validators: ValidatorSource<TValue, FieldNode<TValue>>): void;
-    errors: Signal<readonly ValidationErrorWithTargetNode<FieldNode<TValue, TParent>>[]>;
+    errors: NodeErrorsSignal<FieldNode<TValue, TParent>>;
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     valid: Signal<boolean>;
     invalid: Signal<boolean>;
@@ -165,6 +165,7 @@ The declaration above also includes inherited contracts and overloads where appl
 - [CustomValidationError](./custom-validation-error.md)
 - [DisabledReason](./disabled-reason.md)
 - [FieldNode](./field-node.md)
+- [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
 - [ValidationErrorMap](./validation-error-map.md)
 - [ValidationErrorWithTargetNode](./validation-error-with-target-node.md)

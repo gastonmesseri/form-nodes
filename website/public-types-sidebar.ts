@@ -40,7 +40,8 @@ const publicTypesSidebar: SidebarsConfig[string] = [
       "reference/types/field-api",
       "reference/types/form-api",
       "reference/types/group-api",
-      "reference/types/node-api"
+      "reference/types/node-api",
+      "reference/types/node-errors-signal"
     ]
   },
   {

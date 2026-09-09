@@ -3,6 +3,7 @@ title: Validation error types
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import descendantsSource from '!!raw-loader!../../examples/errors-descendants.example.ts';
 import errorsSource from '!!raw-loader!../../examples/public-error-contracts.example.ts';
 
 # Validation error types
@@ -74,3 +75,16 @@ For controls observing Angular and Form Nodes bindings through `useFormNodeState
 
 See [validator messages](../guides/validator-messages.md) for message resolution and
 [custom control contracts](./custom-control-contracts.md) for reusable error-display integration.
+
+
+## Error queries {#error-queries}
+
+`node.errors()` reads only errors owned by that node. An invalid form can have no own errors when its children are invalid. Use `node.errors({ descendants: true })` to collect own errors followed by descendant errors in structural tree order. `node.allErrors()` remains an equivalent shortcut and returns the same cached array.
+
+<CodeBlock language="ts" title="errors-descendants.example.ts">{descendantsSource}</CodeBlock>
+
+No arguments, `{}`, and `{ descendants: false }` all select own errors. The option accepts a reactive boolean, for example inside `computed(() => profile.errors({ descendants: includeChildren() }))`. Reads track the selected existing signal; they do not create a new computed per call.
+
+Every error preserves its original `targetNode`. Own reads retain the concrete node type; subtree reads use `AnyNode`, whose collision-safe API is accessed through `targetNode.$api`. Fields have no descendants, so both queries return the same errors. Disabled descendants, asynchronous validation, and dynamic child changes follow the existing `allErrors()` behavior.
+
+The `errors` property remains assignable to Angular `Signal` and can still be passed directly to signal consumers. Its exported type is [`NodeErrorsSignal`](./types/node-errors-signal.md). These options apply to node errors, including `.api.errors` and `.$api.errors`; binding and `useFormNodeState()` error signals retain their own signatures.

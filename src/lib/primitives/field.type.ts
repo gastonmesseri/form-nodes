@@ -3,6 +3,7 @@ import type { Injector, Signal } from '@angular/core';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
+import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NavigationRoot, NearestForm, AnyNode, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -391,18 +392,23 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
   *
   * ℹ️ To work consistently with aggregate nodes, use `allErrors()` instead.
    *
+   * Pass `{ descendants: true }` to read the same subtree errors as `allErrors()`.
+   *
    * @example
    * ```ts
    * name.errors();
    * // [{ kind: 'required', message: 'Name is required.', targetNode: name }]
    * ```
+   * @reactive Tracks own errors by default, or subtree errors when descendants is true.
   */
-  errors: Signal<readonly ValidationErrorWithTargetNode<FieldNode<TValue, TParent>>[]>;
+  errors: NodeErrorsSignal<FieldNode<TValue, TParent>>;
   /**
    * A signal containing the validation errors of **this field and its descendants**.
   * Fields have no descendants, so this contains the same errors as `errors()`.
   *
   * ℹ️ To read only errors belonging directly to the current node, use `errors()` instead.
+   *
+   * Shortcut for `errors({ descendants: true })`, returning the same cached array.
    *
    * @example
    * ```ts
