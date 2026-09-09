@@ -1,5 +1,7 @@
 import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 
+import publicTypesSidebar from './public-types-sidebar';
+
 const sidebars: SidebarsConfig = {
   consumerDocs: [
     'index',
@@ -60,6 +62,12 @@ const sidebars: SidebarsConfig = {
       items: [
         'reference/api-overview',
         'reference/node-types',
+        {
+          type: 'category',
+          label: 'Public types',
+          link: { type: 'doc', id: 'reference/types/index' },
+          items: publicTypesSidebar,
+        },
         'reference/is-form-node',
         'reference/form',
         'reference/field',
@@ -69,6 +77,7 @@ const sidebars: SidebarsConfig = {
         'reference/use-closest-form',
         { type: 'doc', id: 'reference/form-node-binding', label: '[formNode]' },
         'reference/form-nodes-module',
+        'reference/custom-control-contracts',
         'reference/configuration',
         'reference/node-api',
         'reference/node-value',
@@ -91,6 +100,7 @@ const sidebars: SidebarsConfig = {
           label: 'Validation',
           link: { type: 'doc', id: 'reference/validation' },
           items: [
+            'reference/validation-errors',
             'reference/validator',
             'reference/async-validator',
             {

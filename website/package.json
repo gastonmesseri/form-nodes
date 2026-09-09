@@ -8,7 +8,8 @@
     "examples:test": "node scripts/test-examples.mjs",
     "serve": "docusaurus serve",
     "start": "docusaurus start",
-    "typecheck": "tsc --noEmit && npm run examples:test"
+    "typecheck": "node scripts/sync-public-type-reference.mjs --check && tsc --noEmit && npm run examples:test",
+    "types:sync": "node scripts/sync-public-type-reference.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

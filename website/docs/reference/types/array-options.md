@@ -1,0 +1,61 @@
+---
+title: ArrayOptions
+---
+
+# ArrayOptions
+
+Template, initial-data, validation, and ownership configuration for array().
+
+## Import
+
+```ts
+import type { ArrayOptions } from '@ngblocks/form-nodes';
+```
+
+## When to use it
+
+Use for array initialization and reconciliation options. Keep initial records and options such as `trackBy` together in the array declaration.
+
+## Declaration
+
+```ts
+type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+    validators?: ValidatorSource<TValue, TArray>;
+    debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
+    hidden?: boolean | (() => boolean);
+    disabled?: boolean | string | (() => boolean | string);
+    readonly?: boolean | (() => boolean);
+    initialValue?: TValue | number | null;
+    trackBy?: TValue extends readonly (infer TItemValue)[] ? ((value: TItemValue, index: number) => unknown) | (TItemValue extends object ? Extract<keyof TItemValue, string> : never) : never;
+};
+```
+
+## Type parameters
+
+| Parameter | Constraint | Default |
+| --- | --- | --- |
+| `TValue` | Unconstrained | `any` |
+| `TArray` | `AnyNode` | `ArrayNode<AnyNode>` |
+
+## Declared members
+
+The declaration above also includes inherited contracts and overloads where applicable.
+
+| Member | Meaning |
+| --- | --- |
+| `validators` | One validator or an array of validators for the complete array value, not each item. |
+| `debounce` | Default control-value debounce inherited by every current and future item. |
+| `hidden` | Initial or reactive visibility of the complete collection. |
+| `disabled` | Initial or reactive disabled state for the collection and its items. Return a string to record a user-facing reason. |
+| `readonly` | Initial or reactive readonly state for the collection and its items. |
+| `initialValue` | **Initial array contents.** Accepts either: |
+| `trackBy` | Selects the stable identity of an item when `set()`, `update()`, or `reset(value)` reconciles incoming values with the array's current nodes. Pass either a typed property name such as `'id'` or a callback for computed or non-property keys. |
+
+## Related reference
+
+- [Configuration reference](../configuration.md)
+- [Public types index](./index.md)
+- [AnyNode](./any-node.md)
+- [ArrayNode](./array-node.md)
+- [FormOptions](./form-options.md)
+- [ValidatorSource](./validator-source.md)

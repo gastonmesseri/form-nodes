@@ -298,3 +298,5 @@ For behavioral details that are intentionally too specialized for the normal ref
 [useClosestForm()](./use-closest-form.md) finds the owning form through the nearest injectable
 `[formNode]` binding. Observe [submitted()](./form.md#submitted) for attempts since reset and
 `submitting()` for an action currently in progress.
+
+See [Public types](./types/index.md) for every exported type alias and interface. For integration workflows, start with [custom control contracts](./custom-control-contracts.md) or [validation error types](./validation-errors.md).

@@ -204,3 +204,5 @@ function members in IntelliSense; see the [typed example](./node-value.md#explic
 Node `$api` properties use this callable facade; an unshadowed `api` aliases it. It preserves
 precise value and setter types while preventing children from overwriting operations.
 See [callable API reads and examples](./node-api.md#callable-api).
+
+Browse [Public types](./types/index.md) for a dedicated page for every exported type, including exact declarations, generic parameters, and related contracts.

@@ -582,3 +582,5 @@ the gate is evaluated; the payload remains the snapshot captured before that lis
 runs after the attempt notification, and can clear `submitted()` normally.
 
 <CodeBlock language="ts" title="profile.component.ts">{submitSource}</CodeBlock>
+
+See [custom control contracts](./custom-control-contracts.md) to choose a component or binding type, and [Public types](./types/index.md) for individual declarations.

@@ -1,0 +1,449 @@
+{
+  "families": {
+    "nodes": {
+      "title": "Nodes and values",
+      "contextTitle": "Choosing node types",
+      "context": "../node-types.md"
+    },
+    "apis": {
+      "title": "Node APIs",
+      "contextTitle": "Node API and collision-safe access",
+      "context": "../node-api.md"
+    },
+    "controls": {
+      "title": "Controls and bindings",
+      "contextTitle": "Custom control contracts",
+      "context": "../custom-control-contracts.md"
+    },
+    "validation": {
+      "title": "Validator contracts",
+      "contextTitle": "Validation reference",
+      "context": "../validation.md"
+    },
+    "errors": {
+      "title": "Validation errors and results",
+      "contextTitle": "Validation error types",
+      "context": "../validation-errors.md"
+    },
+    "configuration": {
+      "title": "Configuration",
+      "contextTitle": "Configuration reference",
+      "context": "../configuration.md"
+    },
+    "factories": {
+      "title": "Configured factories",
+      "contextTitle": "createFormPrimitives()",
+      "context": "../create-form-primitives.md"
+    },
+    "observables": {
+      "title": "Observable interoperability",
+      "contextTitle": "Asynchronous validators",
+      "context": "../async-validator.md"
+    }
+  },
+  "types": {
+    "FormNodeBinding": {
+      "family": "controls",
+      "usage": "Use for an injected binding, directive query, or integration callback. It describes the rendered binding, including outputs and host access; it is not a form node."
+    },
+    "FieldNode": {
+      "family": "nodes",
+      "usage": "Use for inputs or helpers that accept a field with a known value type. A bare `FieldNode` accepts unspecified field values; prefer factory inference when declaring the field itself."
+    },
+    "FieldApi": {
+      "family": "apis",
+      "usage": "Use for helpers that operate on field state and actions without accepting a node declaration. A field's `$api` additionally has the callable signal contract described by `CallableNodeApi`.",
+      "description": "State, value views, navigation, and operations available on a field node."
+    },
+    "FieldOptions": {
+      "family": "configuration",
+      "usage": "Use when sharing field configuration. Let `field()` infer value and owner types for ordinary declarations instead of annotating every options object.",
+      "description": "Value, validation, interaction, and ownership configuration for field()."
+    },
+    "ValidatorOptions": {
+      "family": "validation",
+      "usage": "Use for reusable custom validator configuration. Built-in validators expose their concrete options inline; consult each validator for supported value and context types."
+    },
+    "FormNodeDirective": {
+      "family": "controls",
+      "usage": "Use this type for a template-reference or view query. The same exported name is also the runtime directive imported in Angular components; use a normal import when adding it to `imports`.",
+      "description": "The public instance type of the [formNode] Angular directive."
+    },
+    "ObservableLike": {
+      "family": "observables",
+      "usage": "Use for an async source compatible with the library without depending on RxJS types. Honor subscription cleanup so cancelled validation stops its work."
+    },
+    "ObserverLike": {
+      "family": "observables",
+      "usage": "Use when implementing an observable-like validator source. Deliver values and completion or errors according to the observer contract."
+    },
+    "SubscriptionLike": {
+      "family": "observables",
+      "usage": "Return this cleanup handle from an observable-like source. The validation pipeline uses it to release obsolete work."
+    },
+    "GroupNode": {
+      "family": "nodes",
+      "usage": "Use for a structural group with no independent submit action or submitted history. Its first generic describes child nodes; nested forms keep their own submission behavior."
+    },
+    "GroupApi": {
+      "family": "apis",
+      "usage": "Use for structural-group API operations. A group's `$api` combines this contract with a callable signal; child nodes are available through `children`.",
+      "description": "State and operations for a structural group, including its typed children."
+    },
+    "GroupOptions": {
+      "family": "configuration",
+      "usage": "Use when a structural group needs its own validators or state options. Groups do not accept the form-specific submission workflow."
+    },
+    "GroupPatch": {
+      "family": "nodes",
+      "usage": "Use to derive the patch value contract from the group's child or item node types. It describes accepted patch input rather than a complete node value. Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "GroupSet": {
+      "family": "nodes",
+      "usage": "Use to derive the replace value contract from the group's child or item node types. It describes the complete value accepted by set(). Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "GroupValue": {
+      "family": "nodes",
+      "usage": "Use to derive the read value contract from the group's child or item node types. The result describes raw data, not child nodes. Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "FormNodesConfig": {
+      "family": "configuration",
+      "usage": "Use for options passed to `provideFormNodesConfig()`. Injector-scoped values configure bindings and validator messages in that scope."
+    },
+    "DisabledReason": {
+      "family": "configuration",
+      "usage": "Use when presenting or inspecting why a node is disabled. Preserve the originating node information when distinguishing local and inherited causes."
+    },
+    "DisabledStateSource": {
+      "family": "configuration",
+      "usage": "Use when sharing a disabled configuration between declarations. A string supplies a reason; reactive functions participate in state dependency tracking."
+    },
+    "DynamicNode": {
+      "family": "nodes",
+      "usage": "Use when the node kind is unknown but you know child names do not shadow common members. Choose `AnyNode` with `$api` when you cannot make that guarantee."
+    },
+    "FormNodeValue": {
+      "family": "nodes",
+      "usage": "Extract a value type from an existing node with `FormNodeValue<typeof myForm>`. This works across node kinds and avoids repeating the model's value interface."
+    },
+    "MarkAsTouchedOptions": {
+      "family": "configuration",
+      "usage": "Use for reusable wrappers around `markAsTouched()`. `skipDescendants` limits propagation; node interactivity rules still govern whether touching applies.",
+      "description": "Options controlling whether markAsTouched() propagates to descendants."
+    },
+    "AnyNode": {
+      "family": "nodes",
+      "usage": "Use for a node of unknown kind or structure. Read state and call operations through `$api`; child names can shadow direct members. Use `isFormNode()` to narrow an unknown value to this type."
+    },
+    "NodeApi": {
+      "family": "apis",
+      "usage": "Use when a helper needs only shared state and operations. This is the API object contract; use `AnyNode` for the node itself and access its `$api`.",
+      "description": "The common API surface shared by all node kinds."
+    },
+    "AsyncValidatorOptions": {
+      "family": "validation",
+      "usage": "Use for callback-form async scheduling, activation, and error recovery. Parameterless `when` returns are unchecked for self-reference inference; context-taking conditions retain boolean checking."
+    },
+    "ParameterizedAsyncValidatorConfig": {
+      "family": "validation",
+      "usage": "Use for the single-object form of `asyncValidator({ params, validate, ... })`. Keep tracked dependency reads in `params` and asynchronous work in `validate`.",
+      "description": "The object-form asyncValidator configuration, combining reactive params with an asynchronous validate callback."
+    },
+    "ParameterizedAsyncValidatorOptions": {
+      "family": "validation",
+      "usage": "Use for async options that also derive tracked params. The execution function belongs to `ParameterizedAsyncValidatorConfig`."
+    },
+    "FormFactory": {
+      "family": "factories",
+      "usage": "Use when passing the configured form factory from `createFormPrimitives()` to reusable declaration helpers.",
+      "description": "The form factory returned by createFormPrimitives()."
+    },
+    "GroupFactory": {
+      "family": "factories",
+      "usage": "Use when passing the configured group factory from `createFormPrimitives()` to reusable declaration helpers.",
+      "description": "The group factory returned by createFormPrimitives()."
+    },
+    "ArrayFactory": {
+      "family": "factories",
+      "usage": "Use when passing the configured array factory from `createFormPrimitives()` to reusable declaration helpers.",
+      "description": "The array factory returned by createFormPrimitives()."
+    },
+    "FieldFactory": {
+      "family": "factories",
+      "usage": "Use when passing a configured field factory to shared declaration code. Its overloads preserve nullable and strict modes.",
+      "description": "A configured field factory with nullable and strict declaration modes."
+    },
+    "FormPrimitives": {
+      "family": "factories",
+      "usage": "Use for a bundle returned by `createFormPrimitives()`. Keep the configured factories together when sharing defaults across declarations.",
+      "description": "The family of configured field, form, group, and array factories."
+    },
+    "FormPrimitivesOptions": {
+      "family": "factories",
+      "usage": "Use for the defaults supplied to `createFormPrimitives()`. Per-node declarations can still provide their own options where supported.",
+      "description": "Shared defaults supplied to createFormPrimitives()."
+    },
+    "NonNullableFieldFactory": {
+      "family": "factories",
+      "usage": "Use for a configured factory whose ordinary field declarations exclude null. Its overloads define how explicit nullable choices are represented.",
+      "description": "A configured field factory whose default declarations exclude null."
+    },
+    "ControlState": {
+      "family": "controls",
+      "usage": "Use for reusable UI that observes a binding through `useFormNodeState()`. This read-only facade normalizes supported Angular binding sources and does not expose node write operations."
+    },
+    "ControlStateError": {
+      "family": "controls",
+      "usage": "Use when rendering errors obtained from `useFormNodeState()`. This is a source-neutral error contract rather than a guarantee of a Form Nodes target node."
+    },
+    "ControlStateSource": {
+      "family": "controls",
+      "usage": "Use to inspect which binding API supplies a `ControlState`. The source can be absent when no supported binding is available; observe the facade's `source` signal."
+    },
+    "ControlStateDisabledReason": {
+      "family": "controls",
+      "usage": "Use for disabled explanations from `useFormNodeState()`. Unlike node-specific `DisabledReason`, this contract does not assume the original source is a Form Nodes node."
+    },
+    "ValidatorMessages": {
+      "family": "configuration",
+      "usage": "Use for a partial built-in message catalog supplied through configuration. Omitted entries continue through the normal message-resolution fallbacks."
+    },
+    "ValidatorMessageParameters": {
+      "family": "configuration",
+      "usage": "Use when writing reusable message functions that need built-in structured error data. The selected error kind determines which parameters are available."
+    },
+    "FormNodeControl": {
+      "family": "controls",
+      "usage": "Use as the union contract when infrastructure accepts either a value-model control or a boolean checkbox-model control. Implement the specific value or checkbox contract in concrete components."
+    },
+    "FormNodeUiControl": {
+      "family": "controls",
+      "usage": "Use for the optional state inputs and interaction hooks shared by custom controls. It does not by itself supply the required value or checked model."
+    },
+    "FormNodeValueControl": {
+      "family": "controls",
+      "usage": "Implement this contract in a custom component exposing a `value` model. Match its value type to the bound field, including nullability, and emit `touch` for completed interaction."
+    },
+    "FormNodeCheckboxControl": {
+      "family": "controls",
+      "usage": "Implement this contract in a custom component exposing a boolean `checked` model. Use a non-nullable boolean field when the component cannot represent null."
+    },
+    "ArrayApi": {
+      "family": "apis",
+      "usage": "Use for item-management helpers that need array operations. The callable `$api` also preserves the array's `length` signal.",
+      "description": "State and operations for an array node, including item access and reconciliation."
+    },
+    "ArraySet": {
+      "family": "nodes",
+      "usage": "Use to derive the replace value contract from the array's child or item node types. It describes the complete value accepted by set(). Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "ArrayNode": {
+      "family": "nodes",
+      "usage": "Use for dynamic collections whose first generic is the item node type. Read items and use array operations through the inferred API rather than treating this as a JavaScript array of raw values."
+    },
+    "ArrayItems": {
+      "family": "nodes",
+      "usage": "Use for the item-node collection returned by array navigation. These are nodes rather than raw array values.",
+      "description": "The typed collection of item nodes exposed by an array node."
+    },
+    "ArrayValue": {
+      "family": "nodes",
+      "usage": "Use to derive the read value contract from the array's child or item node types. The result describes raw data, not child nodes. Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "ArrayPatch": {
+      "family": "nodes",
+      "usage": "Use to derive the patch value contract from the array's child or item node types. It describes accepted patch input rather than a complete node value. Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "ArrayIndexes": {
+      "family": "nodes",
+      "usage": "Use when describing an array node's numeric property access. Each indexed item retains the owning array as its parent.",
+      "description": "Numeric node access with parent-aware array item types."
+    },
+    "ArrayOptions": {
+      "family": "configuration",
+      "usage": "Use for array initialization and reconciliation options. Keep initial records and options such as `trackBy` together in the array declaration.",
+      "description": "Template, initial-data, validation, and ownership configuration for array()."
+    },
+    "ArrayItemWithParent": {
+      "family": "nodes",
+      "usage": "Use when preserving an array item's navigation relationship in a reusable type. Ordinary consumers should normally let array item access infer it.",
+      "description": "An array item node whose parent is typed as the owning array."
+    },
+    "FormNode": {
+      "family": "nodes",
+      "usage": "Use for inputs and helpers that require form submission semantics. Its generic describes child nodes, not the plain form-value object; use `FormValueContract` for value-oriented constraints."
+    },
+    "FormApi": {
+      "family": "apis",
+      "usage": "Use for form API operations such as submission without exposing direct child-name collisions. The form's callable `$api` is described by `CallableNodeApi<FormApi<...>>`.",
+      "description": "State and operations for a form, including typed children and submission."
+    },
+    "FormSet": {
+      "family": "nodes",
+      "usage": "Use to derive the replace value contract from the form's child or item node types. It describes the complete value accepted by set(). Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "AddedNode": {
+      "family": "nodes",
+      "usage": "Use when describing the result of a dynamic addition. The resulting node preserves the normalized definition and its new parent type."
+    },
+    "FormPatch": {
+      "family": "nodes",
+      "usage": "Use to derive the patch value contract from the form's child or item node types. It describes accepted patch input rather than a complete node value. Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "FormValue": {
+      "family": "nodes",
+      "usage": "Use to derive the read value contract from the form's child or item node types. The result describes raw data, not child nodes. Use `FormNodeValue<typeof node>` when starting from an existing node instance."
+    },
+    "FormOptions": {
+      "family": "configuration",
+      "usage": "Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `onSubmitBlocked`. Let the form declaration infer its concrete value and node callback types when possible.",
+      "description": "Value, validation, interaction, ownership, and submission configuration for form()."
+    },
+    "FormValueContract": {
+      "family": "nodes",
+      "usage": "Use to check a form or group against an application value shape while preserving its inferred children. It is a structural compatibility contract, not a factory or a replacement node instance."
+    },
+    "DynamicFormChildren": {
+      "family": "nodes",
+      "usage": "Use for runtime-key child iteration when exact property names are unknown. Access each child's `$api` to avoid direct member collisions."
+    },
+    "Validator": {
+      "family": "validation",
+      "usage": "Use to type a reusable synchronous rule. Author it through `validator()` when you want contextual value and owner inference from the consuming declaration."
+    },
+    "Validators": {
+      "family": "validation",
+      "usage": "Use for a normalized readonly collection of composable rules. Use `ValidatorSource` for public inputs that also accept a single validator or nullish entries."
+    },
+    "ValidatorApi": {
+      "family": "validation",
+      "usage": "Use for the generic node API available inside synchronous validator contexts. Supply a more specific owner through the validator's generics only when the consuming contract guarantees it."
+    },
+    "FieldContext": {
+      "family": "validation",
+      "usage": "Use when a contract specifically requires the low-level reactive field context. Consumer-authored reusable rules normally use `ValidatorContext` or contextual inference through `validator()`."
+    },
+    "AsyncValidator": {
+      "family": "validation",
+      "usage": "Use for the marked result of `asyncValidator()`. A plain function returning a Promise is not a substitute for configuring a validator through the helper."
+    },
+    "ValidatorSource": {
+      "family": "validation",
+      "usage": "Use for an input accepting the same flexible validator sources as node declarations. Parameterless callbacks intentionally have unchecked returns to support class self-references."
+    },
+    "ValidationError": {
+      "family": "errors",
+      "usage": "Use for the base error category and optional human-readable message. Prefer a targeted error type when consuming a node's error collection."
+    },
+    "ValidationErrorForKind": {
+      "family": "errors",
+      "usage": "Use to derive the structured error associated with a kind, including registered custom kinds. Its fallback does not prove application-specific properties exist."
+    },
+    "ValidationErrorWithTargetNode": {
+      "family": "errors",
+      "usage": "Use when consuming errors already associated with a node. The generic preserves the target node type, and binding-specific attribution may also be available."
+    },
+    "ValidationErrorWithOptionalTargetNode": {
+      "family": "errors",
+      "usage": "Use for infrastructure accepting errors before or after target assignment. Check whether a target exists before using it."
+    },
+    "ValidationErrorWithoutTargetNode": {
+      "family": "errors",
+      "usage": "Use when returning a rule error for the current node and letting the pipeline assign ownership. Use a targeted contract only when intentionally redirecting the error."
+    },
+    "ValidatorError": {
+      "family": "errors",
+      "usage": "Use for a validator-returned error with optional target attribution. The pipeline can supply the current node when no explicit target is present."
+    },
+    "ValidationStatus": {
+      "family": "errors",
+      "usage": "Use to distinguish valid, invalid, and unresolved validation states. Pending asynchronous work does not necessarily make a node invalid; consult the validation-state guide for aggregation."
+    },
+    "ValidationResult": {
+      "family": "errors",
+      "usage": "Use as an explicit synchronous return annotation to break an inference cycle while preserving checked results. Nullish success, supported messages, and error collections follow the validator contract."
+    },
+    "ValidatorContext": {
+      "family": "validation",
+      "usage": "Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one."
+    },
+    "ValidationSuccess": {
+      "family": "errors",
+      "usage": "Use when a rule explicitly reports successful validation. Return the supported success values rather than arbitrary truthy or falsy values."
+    },
+    "AsyncValidatorApi": {
+      "family": "validation",
+      "usage": "Use for the node API exposed by asynchronous validator contexts. Follow the async validation contract for cancellation and result publication."
+    },
+    "ValidationErrorMap": {
+      "family": "errors",
+      "usage": "Augment this interface from the package module to register application-specific error kinds. Add a literal `kind` and structured properties so `getError(kind)` can narrow them."
+    },
+    "AsyncValidatorState": {
+      "family": "validation",
+      "usage": "Use for the state contract available through validator node APIs. Its declaration intentionally avoids recursively depending on the validation state being computed."
+    },
+    "ComposableValidator": {
+      "family": "validation",
+      "usage": "Use for a synchronous rule that can return another validator or a nested validator collection. Returned compositions retain the validation pipeline's state and error handling."
+    },
+    "ValidatorReadonlyApi": {
+      "family": "validation",
+      "usage": "Use when a validator integration should depend only on reactive value and navigation. Avoid requiring mutation operations when observation is sufficient."
+    },
+    "AsyncValidationResult": {
+      "family": "errors",
+      "usage": "Use for the Promise-like or Observable-like result of async validation. It describes the result container; create the validator itself with `asyncValidator()`."
+    },
+    "AsyncValidatorContext": {
+      "family": "validation",
+      "usage": "Use for an asynchronous validation callback. Observe `abortSignal` and return a supported async result; do not publish stale work after cancellation."
+    },
+    "CustomValidationError": {
+      "family": "errors",
+      "usage": "Use for unregistered custom errors. Additional data remains unknown; narrow or register the error kind before treating custom properties as concrete types."
+    },
+    "BuiltInValidationError": {
+      "family": "errors",
+      "usage": "Use when a contract accepts only library-provided error kinds. Narrow by `kind` before reading kind-specific data such as bounds or duplicate indexes."
+    },
+    "AsyncValidatorBaseContext": {
+      "family": "validation",
+      "usage": "Use for shared async conditions, parameter derivation, and failure handlers. The execution callback adds cancellation and, in parameterized mode, the params snapshot."
+    },
+    "ComposableValidationResult": {
+      "family": "errors",
+      "usage": "Use for synchronous validator results that may include further validator composition. Use `ValidationResult` when the rule only returns errors or success."
+    },
+    "ParameterizedAsyncValidatorContext": {
+      "family": "validation",
+      "usage": "Use for the object-form async validator's execution callback. Its `params` are the captured request snapshot; signal reads in execution are not the parameter dependency declaration."
+    },
+    "GlobalFormNodesConfig": {
+      "family": "configuration",
+      "usage": "Use for `configureGlobalFormNodes()` defaults. Prefer an injector-scoped provider when configuration must be scoped to an Angular application or subtree."
+    },
+    "SyncInputs": {
+      "family": "configuration",
+      "usage": "Use to configure synchronization on bindings or configured primitives. This chooses synchronized inputs; it does not change the underlying node's validation or state.",
+      "description": "Controls which node states and constraints are synchronized to a bound control."
+    },
+    "SyncInputName": {
+      "family": "configuration",
+      "usage": "Use when constructing a typed list of individual synchronized state or constraint names. Pass the list through the appropriate `syncInputs` configuration.",
+      "description": "Names accepted when selecting individual synchronized control inputs."
+    },
+    "NodeValueSignal": {
+      "family": "nodes",
+      "usage": "Use when a helper accepts the public `value` facade, including `committed` and `control` reads and setters. Ordinary application value reads can call the node directly."
+    },
+    "CallableNodeApi": {
+      "family": "apis",
+      "usage": "Use to describe a collision-safe API that is also callable as a signal. Calling it reads the exposed node value; its own members are not replaced by child names."
+    },
+    "FormNodeSubmitEvent": {
+      "family": "controls",
+      "usage": "Use for template submit and submit-blocked handlers. The generic preserves the bound form and value types; `event` is the original native event, and `form.$api` gives collision-safe access."
+    }
+  }
+}

@@ -348,3 +348,5 @@ It lists registered async validators without executing their async work. Success
 present; this is not an active-constraint query. See
 [Inspect resolved validators](../guides/validation.md#inspect-resolved-validators) for complete
 examples and the behavior of wrappers, disabled nodes, and invalid compositions.
+
+See [validation error types](./validation-errors.md) for result contracts, structured errors, and ownership, or [Public types](./types/index.md) for individual validator and context declarations.
