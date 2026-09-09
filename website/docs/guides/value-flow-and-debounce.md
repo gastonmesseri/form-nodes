@@ -54,6 +54,7 @@ including changes hidden by public equality. Validation and submission receive t
 | `patch(value)` | Replaces supplied branches or positions | Preserved | Preserved |
 | `reset()` | Preserves the committed value | Cleared recursively | Cleared recursively |
 | `reset(value)` | Replaces the complete value | Cleared recursively | Cleared recursively |
+| `resetToInitial()` | Restores captured initial values | Cleared recursively | Cleared recursively |
 
 Programmatic writes are synchronous and never debounced. They cancel pending control work and synchronize the directly bound control representation immediately.
 
@@ -144,3 +145,10 @@ node call and `controlValue()` keep their last committed representation until de
 A custom control bound directly to a form or array has its own aggregate control buffer. Its update marks the aggregate node dirty, then distributes or reconciles the complete value when committed; descendants are not individually marked dirty.
 
 Control debounce and asynchronous-validator `pending()` are independent states.
+
+## Restoring initial values
+
+`resetToInitial()` discards pending control input and restores captured initial values. It preserves
+current object schemas, restores initial array records, and does not emit control-originated value
+outputs. Loading server data through `reset(value)` does not redefine these defaults. See
+[Reset and restore initial values](./reset-and-restore.md) for the complete contract and examples.

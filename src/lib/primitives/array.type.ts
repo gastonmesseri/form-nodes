@@ -422,6 +422,43 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * ℹ️ Passing `null` or `undefined` clears the array before resetting its state.
    */
   reset(...args: [] | [value: ArraySet<TItem> | null | undefined]): void;
+  /**
+   * Restores captured initial item values, count and order, and resets subtree interaction state.
+   *
+   * Captures effective values after initialValue has been applied. Numeric initialValue captures
+   * the values actually generated for those items. Later insertions, removals, set(), and resets
+   * do not redefine this array baseline; an initially empty array becomes empty again.
+   * Reuses nodes by index or trackBy, removes excess nodes, and creates missing nodes. A factory
+   * may run to reconstruct missing nodes, but captured values replace freshly generated defaults.
+   * Removed node instances are not resurrected. Matching retained rows preserve their current
+   * object schema; dynamically added fields restore their own initial values.
+   *
+   * Cancels pending control input, clears dirty/touched state, resets control parsing state, and
+   * synchronizes bound controls. Current validators and availability configuration remain in place;
+   * the restored value can be invalid and asynchronous validation can still be pending.
+   * This programmatic operation does not emit formNodeValueChange or formNodeControlValueChange.
+   * Neither set(), patch(), update(), nor reset(value) replaces the stored initial values.
+   *
+   * Ordinary arrays, plain objects (including null-prototype objects), Date, Map, and Set are copied
+   * at capture and on restoration, including cycles and shared references within a captured value.
+   * Custom classes/subclasses, functions, files, typed arrays, and other opaque objects retain their
+   * references: in-place mutations of those values cannot be undone. Accessor descriptors are
+   * preserved without invoking getters; their external state is not captured. Prefer immutable
+   * values or reset(applicationOwnedSnapshot) when a custom snapshot policy is needed.
+   *
+   * @example
+   * ```ts
+   * const profile = form({
+   *   contacts: array({ name: field('') }, {
+   *     initialValue: [{ name: 'Ada' }],
+   *   }),
+   * });
+   * profile.contacts.push({ name: 'Lin' });
+   * profile.contacts.resetToInitial();
+   * profile.contacts(); // [{ name: 'Ada' }]
+   * ```
+   */
+  resetToInitial(): void;
   /** Current normalized validators assigned directly to this array, in declaration order. */
   validators: Signal<Validators<ArrayValue<TItem>>> & {
     /**

@@ -105,7 +105,7 @@ const myForm = form({
 | Decide between a group and submission boundary | `group()`, `form()` | [Group or form](#group-or-form) |
 | Read its value or navigate children | `myGroup()`, direct children, `children` | [Properties and methods](#properties-and-methods) |
 | Add, find, or remove runtime children | `add()`, `get()`, `remove()` | [Dynamic children](#dynamic-children-1) |
-| Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Method reference](#method-reference) |
+| Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()`, `resetToInitial()` | [Method reference](#method-reference) |
 | Inspect or replace validation | `errors()`, `allErrors()`, `valid()`, `setValidators()` | [Validation properties](#validation-properties) |
 | Manage interaction or availability | State signals and marker methods | [Interaction](#interaction-properties) and [availability](#availability-properties) |
 | Commit or focus bound controls | `flush()`, `focus()` | [Control methods](#control-methods) |
@@ -433,6 +433,7 @@ their value; `children` is a stable readonly map rather than a signal.
 | [`update(updater)`](#update) | Derives and assigns a complete value from the current value. |
 | [`patch(value)`](#patch) | Recursively assigns only supplied child branches. |
 | [`reset(value?)`](#reset) | Optionally assigns a value, then recursively clears interaction state. |
+| [`resetToInitial()`](#reset-to-initial) | Restores captured initial values and clears subtree interaction state. |
 | **Validation** | |
 | [`validators()`](#validators) | Current normalized validators owned by the group. |
 | [`setValidators(source)`](#setvalidators) | Replaces the group validator source and revalidates. |
@@ -1611,3 +1612,20 @@ their concrete child union for default iteration.
 result of `add()` when you need the exact added node type. Enumeration types do not change the
 form's statically inferred value shape or expand its direct child properties. This behavior is
 chosen from the declaration's type, not from the current number of runtime children.
+
+## ↩️ resetToInitial() {#reset-to-initial}
+
+**Signature:** `resetToInitial(): void`
+
+Restores captured initial values and clears dirty/touched state in this subtree. It cancels pending
+control input, synchronizes rendered controls, and retains current validators and availability
+configuration. It does not emit control-originated value outputs. Unlike `reset()`, it replaces
+values; unlike `reset(value)`, it needs no value argument and does not use the last loaded record.
+
+Object branches keep their current schema and restore each existing field to its own baseline.
+Arrays restore their initial values, count, and order through ordinary index or `trackBy`
+reconciliation. Factories can run to reconstruct missing nodes; restored data uses captured values.
+
+See [Reset and restore initial values](../guides/reset-and-restore.md) for executable examples,
+server-loaded records, nested arrays, dynamically added fields, snapshot boundaries, validation,
+and native reset buttons.

@@ -5023,3 +5023,81 @@ it('notifies the originating adapter after a deferred control edit is committed'
   api._setControlValue(api._value(), () => observations.push('same value'));
   expect(observations.at(-1)).toBe('same value');
 });
+
+describe('resetToInitial', () => {
+  it('restores nested forms and groups using the current schema and each field declaration', () => {
+    const name = field.strict('declared');
+    name.set('before attachment');
+    const profile = form({ name, address: { city: field.strict('Zurich') }, nested: form({ email: field('', [required]) }) });
+    const dynamic = profile.add('nickname', field.strict('initial nickname'));
+    profile.add('obsolete', field.strict('obsolete'));
+    profile.remove('obsolete');
+    profile.name.set('edited');
+    profile.address.city.setControlValue('Madrid');
+    profile.nested.email.setControlValue('email');
+    dynamic.set('edited nickname');
+    profile.markAsTouched();
+    profile.resetToInitial();
+    expect(profile()).toEqual({ name: 'declared', address: { city: 'Zurich' }, nested: { email: '' }, nickname: 'initial nickname' });
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(profile.nested.invalid()).toBe(true);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.get('obsolete')).toBeUndefined();
+    profile.nested.email.disable();
+    profile.nested.resetToInitial();
+    expect(profile.nested.email.disabled()).toBe(true);
+  });
+
+  it('cancels pending aggregate edits and restores arrays without redefining their initial records', () => {
+    const profile = form({ people: array({ name: field.strict('template') }, { initialValue: [{ name: 'Ada' }] }) }, { debounce: 'blur' });
+    profile.reset({ people: [{ name: 'server' }, { name: 'other' }] });
+    (profile as unknown as InternalNode).$api._setControlValue({ people: [{ name: 'pending' }] });
+    profile.resetToInitial();
+    profile.flush();
+    expect(profile()).toEqual({ people: [{ name: 'Ada' }] });
+    expect(profile.controlValue()).toEqual(profile());
+    expect(profile.debouncing()).toBe(false);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+  });
+});
+
+it('revalidates restored values and rejects stale async results outside injection context', async () => {
+  const runs: { value: unknown; signal: AbortSignal; finish: (error: { kind: string } | null) => void }[] = [];
+  const validate = asyncValidator(({ value, abortSignal }) => {
+    const observed = value();
+    return new Promise<{ kind: string } | null>((finish) => {
+      runs.push({ value: observed, signal: abortSignal, finish });
+    });
+  });
+  const target = form({ name: field.strict('initial') }, [validate]);
+  const root = form({ nested: form({ target }) });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(1);
+  target.set({ name: 'edited' });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(2);
+  expect(runs[0]!.signal.aborted).toBe(true);
+  target.resetToInitial();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(3);
+  expect(runs[1]!.signal.aborted).toBe(true);
+  expect(runs.map(run => run.value)).toEqual([{ name: 'initial' }, { name: 'edited' }, { name: 'initial' }]);
+  expect(target.pending()).toBe(true);
+  expect(root.pending()).toBe(true);
+  runs[1]!.finish({ kind: 'stale' });
+  runs[0]!.finish({ kind: 'obsolete initial run' });
+  runs[2]!.finish(null);
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(target.errors()).toEqual([]);
+  expect(target.pending()).toBe(false);
+  expect(root.pending()).toBe(false);
+  expect(root.valid()).toBe(true);
+  expect(root.pristine()).toBe(true);
+});

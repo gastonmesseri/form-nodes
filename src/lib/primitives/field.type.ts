@@ -351,6 +351,36 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * exposed value. Controls reset to the internally committed value.
    */
   reset(...args: [] | [value: TValue]): void;
+  /**
+   * Restores the field's captured initial value and resets its interaction state.
+   *
+   * Unlike reset(), this replaces the current value. Unlike reset(value), it does not need a value
+   * argument. Omitted initialization restores null; explicit undefined initialization restores
+   * undefined. For newly created array items, the effective item initialization value takes
+   * precedence over the field template's default.
+   *
+   * Cancels pending control input, clears dirty/touched state, resets control parsing state, and
+   * synchronizes bound controls. Current validators and availability configuration remain in place;
+   * the restored value can be invalid and asynchronous validation can still be pending.
+   * This programmatic operation does not emit formNodeValueChange or formNodeControlValueChange.
+   * Neither set(), patch(), update(), nor reset(value) replaces the stored initial values.
+   *
+   * Ordinary arrays, plain objects (including null-prototype objects), Date, Map, and Set are copied
+   * at capture and on restoration, including cycles and shared references within a captured value.
+   * Custom classes/subclasses, functions, files, typed arrays, and other opaque objects retain their
+   * references: in-place mutations of those values cannot be undone. Accessor descriptors are
+   * preserved without invoking getters; their external state is not captured. Prefer immutable
+   * values or reset(applicationOwnedSnapshot) when a custom snapshot policy is needed.
+   *
+   * @example
+   * ```ts
+   * const profile = form({ name: field('Marco') });
+   * profile.name.reset('Loaded from server');
+   * profile.name.resetToInitial();
+   * profile.name(); // 'Marco'
+   * ```
+   */
+  resetToInitial(): void;
   /** Current normalized validators assigned directly to this field, in declaration order. */
   validators: Signal<Validators<TValue>> & {
     /**

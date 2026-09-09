@@ -341,7 +341,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     }
     this.dynamicKeys.delete(key);
     delete this.childrenRecord[key];
-    (node as InternalNode).$api._setParent(null);
+    (node as unknown as InternalNode).$api._setParent(null);
     this.structureVersion.update(version => version + 1);
     return node;
   }
@@ -355,7 +355,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     nodes.forEach(([key, node]) => {
       this.childrenRecord[key] = node;
       this.dynamicKeys.add(key);
-      (node as InternalNode).$api._setParent(this.node, key);
+      (node as unknown as InternalNode).$api._setParent(this.node, key);
     });
     this.structureVersion.update(version => version + 1);
     return Object.fromEntries(nodes);
@@ -422,6 +422,23 @@ export class FormGroupNode<TNodes extends Nodes> {
         return;
       }
       this.children[key]!.$api.reset(value[key]);
+    });
+    this.controlBindings.forEach(binding => binding.reset?.());
+  }
+
+  captureInitialValue() {
+    this.getChildKeys().forEach(key => (this.children[key] as unknown as InternalNode).$api._captureInitialValue());
+  }
+
+  resetToInitial(...args: [] | [value: FormSet<TNodes>]) {
+    this.controlValueBuffer.cancel();
+    this.selfTouched.set(false);
+    this.selfDirty.set(false);
+    notifyExternalValidationReset(this.node);
+    this.getChildKeys().forEach((key) => {
+      const child = this.children[key] as unknown as InternalNode;
+      if (args.length === 1 && Object.prototype.hasOwnProperty.call(args[0], key)) child.$api._resetToInitial(args[0][key]);
+      else child.$api.resetToInitial();
     });
     this.controlBindings.forEach(binding => binding.reset?.());
   }
@@ -533,6 +550,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       update: (updater: (value: FormValue<TNodes>) => FormSet<TNodes>) => untracked(() => this.set(updater(this.exposedValue()))),
       patch: (value: FormPatch<TNodes>) => this.patch(value),
       reset: (...args: [] | [value: FormSet<TNodes>]) => this.reset(...args),
+      resetToInitial: () => this.resetToInitial(),
       validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
       setValidators: (next: ValidatorSource<FormValue<TNodes>>) => this.setValidators(next),
       errors: this.errors,
@@ -580,6 +598,8 @@ export class FormGroupNode<TNodes extends Nodes> {
       _controlValue: publicApi.controlValue,
       _setControlValue: this.controlValueBuffer.set,
       _flushControlValueOnBlur: publicApi.flush,
+      _captureInitialValue: () => this.captureInitialValue(),
+      _resetToInitial: (value: FormSet<TNodes>) => this.resetToInitial(value),
       _clone: this.createClone(),
       _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => this.refreshInjector(),

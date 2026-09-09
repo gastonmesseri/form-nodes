@@ -74,6 +74,7 @@ library are not recognized.
 | `set(value)` | Assigns a complete value |
 | `update(updater)` | Computes and assigns a complete value |
 | `reset()` / `reset(value)` | Clears interaction state, optionally replacing the value |
+| `resetToInitial()` | Restores captured initial values and clears interaction state; see [reset and restore](../guides/reset-and-restore.md) |
 | `form()` | Nearest explicit form workflow, or null when none owns the node |
 | `root()` | Complete structural root; every standalone root returns itself |
 | `parent()` | Direct parent or null at the root |

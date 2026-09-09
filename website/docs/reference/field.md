@@ -409,6 +409,7 @@ state API. Signal properties must be called to read their current value.
 | [`update(updater)`](#update) | Derives and assigns a value from the current committed value. |
 | [`setControlValue(value)`](#setcontrolvalue) | Receives a control value, marks dirty, and applies debounce. |
 | [`reset(value?)`](#reset) | Optionally replaces the value, then clears interaction state and pending input. |
+| [`resetToInitial()`](#reset-to-initial) | Restores captured initial values and clears subtree interaction state. |
 | [`debouncing()`](#debouncing) | Whether a control value is waiting to be committed. |
 | [`flush()`](#flush) | Immediately commits a pending control value. |
 | [`focus(options?)`](#focus) | Focuses the first bound `[formNode]` control in DOM order. |
@@ -1305,3 +1306,20 @@ memoize their boolean result by argument. `hasError()` follows error changes; `h
 follows `setValidators()` and, with resolution enabled, dependencies read by synchronous validators.
 The default registration query does not execute validators.
 For a child named `hasError` or `hasValidator`, use the parent's `$api` to call that operation.
+
+## ↩️ resetToInitial() {#reset-to-initial}
+
+**Signature:** `resetToInitial(): void`
+
+Restores captured initial values and clears dirty/touched state in this subtree. It cancels pending
+control input, synchronizes rendered controls, and retains current validators and availability
+configuration. It does not emit control-originated value outputs. Unlike `reset()`, it replaces
+values; unlike `reset(value)`, it needs no value argument and does not use the last loaded record.
+
+For this field, the baseline is its declaration value, or its effective supplied initialization
+when created as part of an array item. Supported containers are copied; opaque objects retain
+references and their in-place mutations cannot be undone.
+
+See [Reset and restore initial values](../guides/reset-and-restore.md) for executable examples,
+server-loaded records, nested arrays, dynamically added fields, snapshot boundaries, validation,
+and native reset buttons.

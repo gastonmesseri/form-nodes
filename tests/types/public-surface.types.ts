@@ -129,3 +129,8 @@ nameBinding.formNodeValueChange.subscribe(value => value.toUpperCase());
 nameDirective.formNodeControlValueChange.subscribe(value => value.toUpperCase());
 // @ts-expect-error consumers subscribe to binding outputs but cannot emit them
 nameBinding.formNodeValueChange.emit('external');
+
+name.resetToInitial();
+nameBinding.node().resetToInitial();
+// @ts-expect-error resetToInitial always restores captured defaults and accepts no replacement value
+name.resetToInitial('replacement');

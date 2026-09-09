@@ -104,6 +104,14 @@ export type NodeApi = {
    * assigning a new complete value first.
    */
   reset(...args: [] | [value: any]): void;
+  /**
+   * Restores captured initial values, cancels buffered input, and clears subtree dirty/touched state.
+   * Object nodes keep their current schema; arrays restore their initial values, count, and order.
+   * Programmatic writes do not redefine the baseline. Current validators and availability remain.
+   * Supported data containers are copied; opaque instances and accessor state retain references.
+   * This does not emit control-originated value outputs. See concrete node APIs for full details.
+   */
+  resetToInitial(): void;
   /** Aggregated validation phase for this node and its subtree. */
   validationStatus: Signal<'valid' | 'invalid' | 'unknown'>;
   /** Whether this node and its descendants have completed validation without errors. */
@@ -353,6 +361,8 @@ export type InternalNodeApi = NodeApi & {
   _controlValue: Signal<any>;
   _setControlValue(value: any, onCommit?: () => void): void;
   _flushControlValueOnBlur(): void;
+  _captureInitialValue(): void;
+  _resetToInitial(value: any): void;
   _clone(): AnyNode;
   _setParent(parent: AnyNode | null, key?: string | number): void;
   _refreshInjector(): void;

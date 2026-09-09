@@ -2877,3 +2877,139 @@ it('notifies the originating adapter after a deferred control edit is committed'
   api._setControlValue(api._value(), () => observations.push('same value'));
   expect(observations.at(-1)).toBe('same value');
 });
+
+describe('resetToInitial', () => {
+  it('restores declaration values without redefining them through programmatic resets', () => {
+    const name = field.strict('Marco', [required], { debounce: 'blur' });
+    const profile = form({ name });
+    name.reset('server');
+    name.setControlValue('pending');
+    name.markAsTouched();
+    name.setControlValue('another pending');
+    const { resetToInitial } = name;
+    resetToInitial();
+    expect(name()).toBe('Marco');
+    expect(name.controlValue()).toBe('Marco');
+    expect(name.debouncing()).toBe(false);
+    expect(name.pristine()).toBe(true);
+    expect(name.untouched()).toBe(true);
+    expect(profile()).toEqual({ name: 'Marco' });
+    expect(profile.pristine()).toBe(true);
+    expect(profile.valid()).toBe(true);
+    const empty = field('', [required]);
+    empty.set('valid');
+    empty.resetToInitial();
+    expect(empty.invalid()).toBe(true);
+    const undefinedValue = field<string>(undefined);
+    undefinedValue.set('changed');
+    undefinedValue.resetToInitial();
+    expect(undefinedValue()).toBeUndefined();
+  });
+
+  it('protects supported initial containers, cycles and aliases across repeated restores', () => {
+    const key = { id: 1 };
+    const initial = { list: [key], when: new Date(0), map: new Map([[key, key]]), set: new Set([key]), self: null as unknown };
+    initial.self = initial;
+    const node = field.strict(initial);
+    key.id = 2;
+    initial.when.setTime(100);
+    initial.list.push({ id: 3 });
+    node.resetToInitial();
+    const restored = node();
+    expect(restored).not.toBe(initial);
+    expect(restored.self).toBe(restored);
+    expect(restored.list).toEqual([{ id: 1 }]);
+    expect(restored.when.getTime()).toBe(0);
+    const restoredKey = restored.list[0]!;
+    expect(restored.map.get(restoredKey)).toBe(restoredKey);
+    expect(restored.set.has(restoredKey)).toBe(true);
+    restoredKey.id = 99;
+    restored.map.clear();
+    node.resetToInitial();
+    expect(node().list).toEqual([{ id: 1 }]);
+    expect(node().map.size).toBe(1);
+  });
+
+  it('retains opaque instances and accessor descriptors without invoking getters', () => {
+    class Opaque { value = 1; }
+    const opaque = new Opaque();
+    const getter = vi.fn(() => opaque.value);
+    const symbol = Symbol('value');
+    const initial = Object.create(null);
+    Object.defineProperty(initial, 'read', { get: getter, enumerable: true });
+    initial.opaque = opaque;
+    initial[symbol] = { original: true };
+    const node = field.strict(initial);
+    expect(getter).not.toHaveBeenCalled();
+    opaque.value = 2;
+    node.resetToInitial();
+    expect(getter).not.toHaveBeenCalled();
+    expect(Object.getPrototypeOf(node())).toBeNull();
+    expect(node().opaque).toBe(opaque);
+    expect(node().read).toBe(2);
+    expect(node()[symbol]).toEqual({ original: true });
+  });
+
+  it('cancels timed and custom debounce callbacks without later restoring stale edits', async () => {
+    vi.useFakeTimers();
+    try {
+      const name = field.strict('initial', { debounce: 100 });
+      name.setControlValue('pending');
+      name.resetToInitial();
+      vi.advanceTimersByTime(100);
+      expect(name()).toBe('initial');
+      let complete!: () => void;
+      let abortSignal!: AbortSignal;
+      const deferred = field.strict('initial', { debounce: (signal) => {
+        abortSignal = signal;
+        return new Promise<void>((resolve) => { complete = resolve; });
+      } });
+      deferred.setControlValue('pending');
+      deferred.resetToInitial();
+      expect(abortSignal.aborted).toBe(true);
+      complete();
+      await Promise.resolve();
+      expect(deferred()).toBe('initial');
+      expect(deferred.controlValue()).toBe('initial');
+    } finally { vi.useRealTimers(); }
+  });
+});
+
+it('revalidates restored values and rejects stale async results outside injection context', async () => {
+  const runs: { value: unknown; signal: AbortSignal; finish: (error: { kind: string } | null) => void }[] = [];
+  const validate = asyncValidator(({ value, abortSignal }) => {
+    const observed = value();
+    return new Promise<{ kind: string } | null>((finish) => {
+      runs.push({ value: observed, signal: abortSignal, finish });
+    });
+  });
+  const target = field.strict('initial', [validate]);
+  const root = form({ nested: form({ target }) });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(1);
+  target.set('edited');
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(2);
+  expect(runs[0]!.signal.aborted).toBe(true);
+  target.resetToInitial();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(3);
+  expect(runs[1]!.signal.aborted).toBe(true);
+  expect(runs.map(run => run.value)).toEqual(['initial', 'edited', 'initial']);
+  expect(target.pending()).toBe(true);
+  expect(root.pending()).toBe(true);
+  runs[1]!.finish({ kind: 'stale' });
+  runs[0]!.finish({ kind: 'obsolete initial run' });
+  runs[2]!.finish(null);
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(target.errors()).toEqual([]);
+  expect(target.pending()).toBe(false);
+  expect(root.pending()).toBe(false);
+  expect(root.valid()).toBe(true);
+  expect(root.pristine()).toBe(true);
+});

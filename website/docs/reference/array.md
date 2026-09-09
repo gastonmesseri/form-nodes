@@ -69,7 +69,7 @@ const myForm = form({
 | Read values, nodes, or array position | `myArray()`, `items()`, `myArray[index]` | [Properties and methods](#properties-and-methods) |
 | Search or iterate live item nodes | `at()`, `forEach()`, `map()`, `find()` | [Collection methods](#item-access-and-collection-methods) |
 | Add, remove, move, swap, or clear items | `push()`, `removeAt()`, `move()`, `swap()` | [Structural methods](#structural-methods) |
-| Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()` | [Value update methods](#value-update-methods) |
+| Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()`, `resetToInitial()` | [Value update methods](#value-update-methods) |
 | Preserve identity across server updates | `trackBy` | [Reconciliation](#reconciliation-and-trackby) |
 | Inspect aggregate state | Validation, interaction, and availability signals | [Validation](#validation-properties-and-methods), [interaction](#interaction-properties-and-methods), and [availability](#availability-properties-and-methods) |
 | Commit, focus, or inspect submission state | `flush()`, `focus()`, `submitting()` | [Control and submission](#control-and-submission-properties-and-methods) |
@@ -477,6 +477,7 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`update(updater)`](#update) | Derives and reconciles a complete value from the current plain value. |
 | [`patch(values)`](#patch) | Partially updates existing items by index without resizing. |
 | [`reset(value?)`](#reset) | Optionally reconciles a value, then recursively clears interaction state. |
+| [`resetToInitial()`](#reset-to-initial) | Restores captured initial values and clears subtree interaction state. |
 | **Validation** | |
 | [`validators()`](#validators) | Current normalized validators owned by the array. |
 | [`setValidators(source)`](#setvalidators) | Replaces the array validator source and revalidates. |
@@ -1992,3 +1993,20 @@ memoize their boolean result by argument. `hasError()` follows error changes; `h
 follows `setValidators()` and, with resolution enabled, dependencies read by synchronous validators.
 The default registration query does not execute validators.
 For a child named `hasError` or `hasValidator`, use the parent's `$api` to call that operation.
+
+## ↩️ resetToInitial() {#reset-to-initial}
+
+**Signature:** `resetToInitial(): void`
+
+Restores captured initial values and clears dirty/touched state in this subtree. It cancels pending
+control input, synchronizes rendered controls, and retains current validators and availability
+configuration. It does not emit control-originated value outputs. Unlike `reset()`, it replaces
+values; unlike `reset(value)`, it needs no value argument and does not use the last loaded record.
+
+Object branches keep their current schema and restore each existing field to its own baseline.
+Arrays restore their initial values, count, and order through ordinary index or `trackBy`
+reconciliation. Factories can run to reconstruct missing nodes; restored data uses captured values.
+
+See [Reset and restore initial values](../guides/reset-and-restore.md) for executable examples,
+server-loaded records, nested arrays, dynamically added fields, snapshot boundaries, validation,
+and native reset buttons.

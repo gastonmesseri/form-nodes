@@ -3503,3 +3503,39 @@ without widening accepted values or changing runtime behavior. Non-generic null/
 initialization still infers unknown, and explicit generic undefined initialization retains
 undefined in the resulting type. Automated language-service checks exercise both quote styles and
 all three argument layouts against source and built package declarations.
+
+## Restoring captured initial values
+
+`resetToInitial()` is a programmatic operation on field, group, form, and array APIs. Existing
+`reset()` semantics remain value-preserving, and `reset(value)` remains a one-off value replacement.
+Neither loading data nor later programmatic/control writes redefine the captured baseline.
+Field baselines are captured on declaration; array-created nodes recapture effective initialization
+after provided row data is applied. Form attachment does not rebase existing fields.
+
+Object branches restore current children recursively, including fields dynamically added later;
+removed object fields are not recreated. Arrays capture actual initial values after factory and
+initialValue initialization and restore count/order with existing index/key reconciliation. Missing
+nodes are freshly constructed, then initialized from captured data; generated IDs are not recomputed
+as the restored values. Retained nodes keep validators/options and dynamic schema. Restoring a row
+alone uses that row's own effective creation baseline; restoring its array uses the array baseline.
+Nested arrays inherit initialization supplied through outer records.
+
+Supported snapshot containers are ordinary arrays, plain/null-prototype objects, and standard
+Date/Map/Set instances, including cycles and aliases within a value graph. Own descriptors are
+copied without invoking accessors. Custom classes/subclasses and other opaque values retain
+references; accessors retain external behavior. Frozen/sealed object-wide state is not guaranteed.
+Every restoration copies protected supported values again. Cross-field identity is not guaranteed.
+
+Restoration clears subtree dirty/touched and control parsing state, cancels debounce work and its
+pending output callbacks, and synchronizes controls via existing reset hooks. It does not emit
+formNodeValueChange/formNodeControlValueChange, clear ancestor-owned flags, restore validator or
+availability configuration, cancel submissions, or promise validity. Normal reactive validation,
+cancellation, and equality behavior applies to restored committed values. Native reset buttons and
+binding.reset() continue to use reset(), not resetToInitial(). Outside-injection-context declaration,
+synchronous restoration, and explicitly triggered asynchronous validation remain supported.
+
+Angular reference: maintenance branch 22.1.x, commit 05a05f59657f048a87f3d4eb9ddb7968cfe8060e.
+Inspected packages/forms/signals/src/field/node.ts reset/_reset and
+packages/forms/signals/test/web/form_field.spec.ts reset/parser-reset cases. Angular preserves
+committed data when reset() receives no value and clears interaction/parser state. Captured initial
+restoration is an additional Form Nodes API, not a change to that existing reset behavior.

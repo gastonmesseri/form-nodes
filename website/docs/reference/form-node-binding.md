@@ -234,6 +234,10 @@ Programmatic `set()` calls are already immediate and do not require a flush.
 
 **Signature:** `reset(): void`
 
+To restore declared values, call `binding.node().$api.resetToInitial()`; see
+[Reset and restore initial values](../guides/reset-and-restore.md). The binding method itself keeps
+the existing value-preserving reset behavior.
+
 Resets node interaction state and control-specific parsing state. It also restores the rendered
 control from the node when a rejected native value was being displayed.
 

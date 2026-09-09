@@ -595,6 +595,40 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * value also assigns it; omitting the value preserves all current committed values.
    */
   reset(...args: [] | [value: FormSet<TNodes>]): void;
+  /**
+   * Restores the initial values of the current form/group subtree and resets interaction state.
+   *
+   * Preserves the current object schema: added fields return to their own initial values, removed
+   * fields are not recreated, and existing child nodes remain attached. A field changed before it
+   * was attached still restores its declaration value. Nested forms and groups follow the same
+   * rules. Arrays restore their captured initial values, count and order through reconciliation.
+   * Resetting one branch does not reset siblings or clear interaction flags owned by ancestors.
+   *
+   * Cancels pending control input, clears dirty/touched state, resets control parsing state, and
+   * synchronizes bound controls. Current validators and availability configuration remain in place;
+   * the restored value can be invalid and asynchronous validation can still be pending.
+   * This programmatic operation does not emit formNodeValueChange or formNodeControlValueChange.
+   * Neither set(), patch(), update(), nor reset(value) replaces the stored initial values.
+   *
+   * Ordinary arrays, plain objects (including null-prototype objects), Date, Map, and Set are copied
+   * at capture and on restoration, including cycles and shared references within a captured value.
+   * Custom classes/subclasses, functions, files, typed arrays, and other opaque objects retain their
+   * references: in-place mutations of those values cannot be undone. Accessor descriptors are
+   * preserved without invoking getters; their external state is not captured. Prefer immutable
+   * values or reset(applicationOwnedSnapshot) when a custom snapshot policy is needed.
+   *
+   * @example
+   * ```ts
+   * const profile = form({
+   *   name: field('Marco'),
+   *   address: { city: field('Zurich') },
+   * });
+   * profile.reset({ name: 'Server value', address: { city: 'Madrid' } });
+   * profile.resetToInitial();
+   * profile(); // { name: 'Marco', address: { city: 'Zurich' } }
+   * ```
+   */
+  resetToInitial(): void;
   /** Current normalized validators assigned directly to this form, in declaration order. */
   validators: Signal<Validators<FormValue<TNodes>>> & {
     /**

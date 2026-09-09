@@ -10,6 +10,7 @@ import type { ObjectNodeDefinitions } from './form.type';
 import { assertArrayObjectTemplate } from './array.utils';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { computedFunction } from '../utils/computed-function';
+import { cloneInitialValue } from './utils/clone-initial-value';
 import { createValidatorQuery } from '../validation/validator-query';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -52,6 +53,8 @@ export class ArrayNode<TItem extends AnyNode> {
   cloneOptions: Omit<ArrayOptions<ArrayValue<TItem>, any>, 'initialValue'> | undefined;
 
   cloneInitial: number | ArraySet<TItem>;
+
+  initialResetValue!: ArraySet<TItem>;
 
   equal: (previous: ArrayValue<TItem>, next: ArrayValue<TItem>) => boolean = Object.is;
 
@@ -282,7 +285,10 @@ export class ArrayNode<TItem extends AnyNode> {
     );
 
     this.node = this.createNode();
-    untracked(() => this.reparentItems());
+    untracked(() => {
+      this.reparentItems();
+      this.captureInitialValue();
+    });
     markAsNode(this.node);
     registerNodeInputConfig(this.node, this.options, () => this.metadata());
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
@@ -324,8 +330,7 @@ export class ArrayNode<TItem extends AnyNode> {
 
   insert(index: number, ...args: [] | [value: NodeSet<TItem>]) {
     this.assertIndex(index, true);
-    const item = this.createItem();
-    if (args.length === 1) item.$api.reset(args[0]);
+    const item = this.createItem(...args);
     const next = [...this.items()];
     next.splice(index, 0, item);
     this.items.set(next);
@@ -411,6 +416,20 @@ export class ArrayNode<TItem extends AnyNode> {
     this.controlBindings.forEach(binding => binding.reset?.());
   }
 
+  captureInitialValue() {
+    this.initialResetValue = cloneInitialValue(this.value()) as ArraySet<TItem>;
+    this.items().forEach(item => (item as unknown as InternalNode).$api._captureInitialValue());
+  }
+
+  resetToInitial(...args: [] | [value: ArraySet<TItem>]) {
+    this.controlValueBuffer.cancel();
+    this.reconcile(args.length === 1 ? args[0] : cloneInitialValue(this.initialResetValue), 'initial');
+    this.selfTouched.set(false);
+    this.selfDirty.set(false);
+    notifyExternalValidationReset(this.node);
+    this.controlBindings.forEach(binding => binding.reset?.());
+  }
+
   markAsTouched(options?: MarkAsTouchedOptions) {
     if (this.nonInteractive()) return;
     this.selfTouched.set(true);
@@ -477,19 +496,21 @@ export class ArrayNode<TItem extends AnyNode> {
     const values = typeof initial === 'number' ? null : [...initial];
     const count = typeof initial === 'number' ? initial : initial.length;
     return Array.from({ length: count }, (_, index) => {
-      const item = this.createItem();
-      if (values) untracked(() => item.$api.reset(values[index]!));
-      return item;
+      return values ? this.createItem(values[index]!) : this.createItem();
     });
   }
 
-  createItem(): TItem {
+  createItem(...args: [] | [value: NodeSet<TItem>]): TItem {
     const itemFactory = this.itemFactory;
     const definition = itemFactory();
     this.trackDefinition(definition, true);
-    if (isNode(definition)) return definition as TItem;
-    assertArrayObjectTemplate(definition, 'factory');
-    return group(definition as ObjectNodeDefinitions) as TItem;
+    if (!isNode(definition)) assertArrayObjectTemplate(definition, 'factory');
+    const item = (isNode(definition) ? definition : group(definition as ObjectNodeDefinitions)) as TItem;
+    untracked(() => {
+      if (args.length === 1) item.$api.reset(args[0]);
+      (item as unknown as InternalNode).$api._captureInitialValue();
+    });
+    return item;
   }
 
   trackDefinition(definition: unknown, root = false) {
@@ -505,29 +526,29 @@ export class ArrayNode<TItem extends AnyNode> {
     }
   }
 
-  reconcile(values: ArraySet<TItem>, mode: 'set' | 'reset') {
+  reconcile(values: ArraySet<TItem>, mode: 'set' | 'reset' | 'initial') {
     if (this.usesTrackBy) this.reconcileByKey(values, mode);
     else this.reconcileByIndex(values, mode);
   }
 
-  reconcileByIndex(values: ArraySet<TItem>, mode: 'set' | 'reset') {
+  reconcileByIndex(values: ArraySet<TItem>, mode: 'set' | 'reset' | 'initial') {
     const current = [...this.items()];
     const commonLength = Math.min(current.length, values.length);
     for (let index = 0; index < commonLength; index++) {
-      if (mode === 'reset') current[index]!.$api.reset(values[index]!);
+      if (mode === 'initial') (current[index] as unknown as InternalNode).$api._resetToInitial(values[index]!);
+      else if (mode === 'reset') current[index]!.$api.reset(values[index]!);
       else current[index]!.$api.set(values[index]!);
     }
     while (current.length > values.length) this.detachItem(current.pop()!);
     while (current.length < values.length) {
-      const item = this.createItem();
-      item.$api.reset(values[current.length]!);
+      const item = this.createItem(values[current.length]!);
       current.push(item);
     }
     this.items.set(current);
     this.reparentItems();
   }
 
-  reconcileByKey(values: ArraySet<TItem>, mode: 'set' | 'reset') {
+  reconcileByKey(values: ArraySet<TItem>, mode: 'set' | 'reset' | 'initial') {
     const trackBy = this.options!.trackBy!;
     const getTrackingKey = (value: NodeValue<TItem>, index: number): unknown => {
       if (typeof trackBy === 'function') return trackBy(value, index);
@@ -538,10 +559,13 @@ export class ArrayNode<TItem extends AnyNode> {
     const next = values.map((value, index) => {
       const key = incomingKeys[index]!;
       const existing = remainingItemsByKey.get(key);
-      const item = existing ?? this.createItem();
-      if (existing) remainingItemsByKey.delete(key);
-      if (mode === 'reset' || !existing) item.$api.reset(value);
-      else item.$api.set(value);
+      const item = existing ?? this.createItem(value);
+      if (existing) {
+        remainingItemsByKey.delete(key);
+        if (mode === 'initial') (item as unknown as InternalNode).$api._resetToInitial(value);
+        else if (mode === 'reset') item.$api.reset(value);
+        else item.$api.set(value);
+      }
       return item;
     });
     remainingItemsByKey.forEach(item => this.detachItem(item));
@@ -620,6 +644,7 @@ export class ArrayNode<TItem extends AnyNode> {
       update: updater => untracked(() => this.set(updater(this.exposedValue()))),
       patch: value => this.patch(value),
       reset: (...args) => this.reset(...args),
+      resetToInitial: () => this.resetToInitial(),
       validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
       setValidators: next => this.setValidators(next),
       errors: this.errors,
@@ -667,6 +692,8 @@ export class ArrayNode<TItem extends AnyNode> {
       _controlValue: publicApi.controlValue,
       _setControlValue: (value: ArraySet<TItem> | null | undefined, onCommit?: () => void) => this.controlValueBuffer.set(this.normalizeArrayValue(value), onCommit),
       _flushControlValueOnBlur: publicApi.flush,
+      _captureInitialValue: () => this.captureInitialValue(),
+      _resetToInitial: (value: ArraySet<TItem>) => this.resetToInitial(value),
       _clone: this.createClone(),
       _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => this.refreshInjector(),

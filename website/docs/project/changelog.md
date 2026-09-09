@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Added `resetToInitial()` to fields, groups, forms, and arrays. It restores captured initial values, clears subtree interaction state, and cancels pending control input without emitting control-originated value outputs. Object schemas are preserved; arrays restore their initial records through reconciliation. Supported data containers are copied, while opaque instances retain their references.
+
 ## 📦 3.1.0 — 2026-09-09 {#310--2026-09-09}
 
 ### Added

@@ -5,6 +5,7 @@ import { markAsNode } from './utils/node-marker';
 import { readMetadata } from '../metadata/metadata';
 import { shallowEqual } from '../utils/shallow-equal';
 import { computedFunction } from '../utils/computed-function';
+import { cloneInitialValue } from './utils/clone-initial-value';
 import { createValidatorQuery } from '../validation/validator-query';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
@@ -42,6 +43,8 @@ export class FieldNode<TValue> {
   node: PublicFieldNode<TValue>;
 
   cloneOptions: FieldOptions<TValue> | undefined;
+
+  initialResetValue!: TValue;
 
   equal: (previous: TValue, next: TValue) => boolean = Object.is;
 
@@ -237,6 +240,7 @@ export class FieldNode<TValue> {
     // Seed all local state before creating the context, validation, or public node.
     untracked(() => {
       this.validators.set(validators);
+      this.initialResetValue = cloneInitialValue(this.initialValue);
       this.value.set(this.initialValue);
       this.controlValue.set(this.initialValue);
       this.selfDisabled.set(getInitialDisabledState(disabled));
@@ -309,6 +313,14 @@ export class FieldNode<TValue> {
     this.selfDirty.set(false);
     notifyExternalValidationReset(this.node);
     this.controlBindings.forEach(binding => binding.reset?.());
+  }
+
+  captureInitialValue() {
+    this.initialResetValue = cloneInitialValue(this.value());
+  }
+
+  resetToInitial(...args: [] | [value: TValue]) {
+    this.reset(args.length === 1 ? args[0] : cloneInitialValue(this.initialResetValue));
   }
 
   markAsTouched() {
@@ -428,6 +440,7 @@ export class FieldNode<TValue> {
       flush: () => this.commitControlValue(),
       focus: (options?: FocusOptions) => this.getControlBindingForFocus()?.focus(options),
       reset: (...args: [] | [value: TValue]) => this.reset(...args),
+      resetToInitial: () => this.resetToInitial(),
       validators: createValidatorQuery(this.validators.asReadonly(), () => this.validatorResolution().resolvedValidators),
       setValidators: (next: ValidatorSource<TValue, PublicFieldNode<TValue>>) => this.setValidators(next),
       errors: this.errors,
@@ -476,6 +489,8 @@ export class FieldNode<TValue> {
       _controlValue: this.controlValue.asReadonly(),
       _setControlValue: (next: TValue, onCommit?: () => void) => this.setControlValue(next, onCommit),
       _flushControlValueOnBlur: () => this.flushControlValueOnBlur(),
+      _captureInitialValue: () => this.captureInitialValue(),
+      _resetToInitial: (value: TValue) => this.resetToInitial(value),
       _clone: this.createClone(),
       _setParent: (parent: AnyNode | null, key?: string) => this.setParent(parent, key),
       _refreshInjector: () => refreshNodeInjector(this.node),

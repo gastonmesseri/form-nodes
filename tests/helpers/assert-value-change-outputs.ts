@@ -51,5 +51,16 @@ export function assertValueChangeOutputs(fixture: ComponentFixture<ValueChangeOu
   textarea.dispatchEvent(new Event('input'));
   expect(received).toEqual(['subscribed']);
   subscription.unsubscribe();
+  host.events = [];
+  host.text.resetToInitial();
+  host.cva.$api.resetToInitial();
+  host.custom.$api.resetToInitial();
+  host.pair.resetToInitial();
+  fixture.detectChanges();
+  expect(textarea.value).toBe('');
+  expect(host.cva()).toBe('');
+  expect(host.custom()).toEqual({ name: '' });
+  expect(host.pair()).toEqual(['']);
+  expect(host.events).toEqual([]);
   fixture.destroy();
 }

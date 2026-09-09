@@ -82,12 +82,13 @@ it('emits once when the control-value handler flushes its own pending edit', () 
   expect(host.events.map(({ kind }) => kind)).toEqual(['control', 'value']);
 });
 
-it.each(['set', 'reset', 'rebind', 'destroy'] as const)('suppresses pending output after %s', (action) => {
+it.each(['set', 'reset', 'resetToInitial', 'rebind', 'destroy'] as const)('suppresses pending output after %s', (action) => {
   vi.useFakeTimers();
   const { host, edit, fixture } = setup(100);
   edit('pending');
   if (action === 'set') host.text.set('programmatic');
   if (action === 'reset') host.text.reset();
+  if (action === 'resetToInitial') host.text.resetToInitial();
   if (action === 'rebind') {
     host.text = field.strict('replacement');
     fixture.detectChanges();
@@ -205,4 +206,19 @@ it('does not revive a pending notification when a binding returns to its previou
   vi.advanceTimersByTime(100);
   expect(original()).toBe('pending');
   expect(host.events.map(({ kind }) => kind)).toEqual(['control']);
+});
+
+it('restores initial native values and clears parsing errors without output events', () => {
+  const { fixture, host } = setup();
+  const number = fixture.nativeElement.querySelector('#number') as HTMLInputElement;
+  number.value = 'invalid';
+  number.dispatchEvent(new Event('input'));
+  expect(host.number.invalid()).toBe(true);
+  host.number.resetToInitial();
+  expect(host.number()).toBe(0);
+  expect(host.number.controlValue()).toBe(0);
+  expect(host.number.valid()).toBe(true);
+  expect(host.number.pristine()).toBe(true);
+  expect(number.value).toBe('0');
+  expect(host.events).toEqual([]);
 });

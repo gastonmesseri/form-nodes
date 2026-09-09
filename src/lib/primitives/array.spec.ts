@@ -1889,3 +1889,66 @@ it('notifies the originating adapter after a deferred control edit is committed'
   api._setControlValue(api._value(), () => observations.push('same value'));
   expect(observations.at(-1)).toBe('same value');
 });
+
+describe('resetToInitial', () => {
+  it('restores effective initial values, count and order with keyed identity reconciliation', () => {
+    const people = array({ id: field.strict(0), name: field.strict('template') }, {
+      initialValue: [{ id: 1, name: 'Ada' }, { id: 2, name: 'Lin' }], trackBy: 'id',
+    });
+    const ada = people[0]!;
+    people[0]!.name.set('edited');
+    people[0]!.name.resetToInitial();
+    expect(people[0]!.name()).toBe('Ada');
+    people.set([{ id: 2, name: 'changed' }, { id: 1, name: 'changed' }, { id: 3, name: 'new' }]);
+    people.markAsTouched();
+    const { resetToInitial } = people;
+    resetToInitial();
+    expect(people()).toEqual([{ id: 1, name: 'Ada' }, { id: 2, name: 'Lin' }]);
+    expect(people[0]).toBe(ada);
+    expect(people.pristine()).toBe(true);
+    expect(people.untouched()).toBe(true);
+    people.removeAt(0);
+    people.resetToInitial();
+    expect(people()).toEqual([{ id: 1, name: 'Ada' }, { id: 2, name: 'Lin' }]);
+    expect(people[0]).not.toBe(ada);
+    people[0]!.name.set('again');
+    people[0]!.resetToInitial();
+    expect(people[0]!.name()).toBe('Ada');
+  });
+
+  it('restores captured generated values while reconstructing missing nodes through the factory', () => {
+    let id = 0;
+    const people = array(() => ({ id: field.strict(++id), name: field.strict('generated') }), { initialValue: 2 });
+    expect(id).toBe(2);
+    people.clear();
+    people.resetToInitial();
+    expect(id).toBe(4);
+    expect(people()).toEqual([{ id: 1, name: 'generated' }, { id: 2, name: 'generated' }]);
+    people.resetToInitial();
+    expect(id).toBe(4);
+    const added = people.push({ id: 5, name: 'added' });
+    added.name.set('edited');
+    added.resetToInitial();
+    expect(added.name()).toBe('added');
+    people.resetToInitial();
+    expect(people.length()).toBe(2);
+  });
+
+  it('restores nested arrays and dynamically added fields on retained records', () => {
+    const rows = array({ names: array(field.strict('template'), { initialValue: ['declared'] }) }, {
+      initialValue: [{ names: ['effective'] }],
+    });
+    const extra = rows[0]!.add('extra', field.strict('extra default'));
+    extra.set('edited');
+    rows[0]!.names.push('added');
+    rows.resetToInitial();
+    expect(rows()).toEqual([{ names: ['effective'], extra: 'extra default' }]);
+    rows[0]!.names[0]!.set('again');
+    rows[0]!.names.resetToInitial();
+    expect(rows[0]!.names()).toEqual(['effective']);
+    const empty = array(field.strict(''));
+    empty.push('temporary');
+    empty.resetToInitial();
+    expect(empty()).toEqual([]);
+  });
+});
