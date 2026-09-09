@@ -478,3 +478,42 @@ describe('group', () => {
     expect(filters()).toEqual({ query: '', page: 1, roles: ['admin'], range: { minimum: 0, maximum: 100 } });
   });
 });
+
+it('creates independent empty groups and adopts later children', () => {
+  const details = group();
+  const other = group();
+  expect(details()).toEqual({});
+  expect(details.valid()).toBe(true);
+  const name = details.add('name', field('Ada'));
+  expect(name.parent()).toBe(details);
+  expect(other()).toEqual({});
+  details.markAsTouched();
+  expect(name.touched()).toBe(true);
+  details.reset();
+  expect(name.touched()).toBe(false);
+  details.remove('name');
+  expect(details()).toEqual({});
+});
+
+it.each([false, true])('preserves configured defaults for empty factories with nullable: %s', (nullable) => {
+  const primitives = createFormPrimitives({ nullable, validatorMessages: { required: 'Required here.' } });
+  const profile = primitives.form();
+  const details = primitives.group();
+  const values = primitives.array();
+  expect(profile()).toEqual({});
+  expect(details()).toEqual({});
+  expect(values()).toEqual([]);
+  const name = profile.add('name', 'Ada');
+  const city = details.add('city', 'Zurich');
+  expect(name()).toBe('Ada');
+  expect(city()).toBe('Zurich');
+  const item = values.push();
+  expect(item()).toBe(null);
+  item.setValidators([required]);
+  expect(item.getError('required')?.message).toBe('Required here.');
+  expect(values.invalid()).toBe(true);
+  item.set('Grace');
+  expect(values.valid()).toBe(true);
+  values.resetToInitial();
+  expect(values()).toEqual([]);
+});

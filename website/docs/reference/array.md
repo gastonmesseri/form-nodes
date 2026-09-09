@@ -3,6 +3,7 @@ title: array()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
 import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import arrayFocusSource from '!!raw-loader!../../examples/array-focus.typecheck.ts';
 import arrayValueEqualitySource from '!!raw-loader!../../examples/array-value-equality.example.ts';
@@ -2038,3 +2039,17 @@ reconciliation. Factories can run to reconstruct missing nodes; restored data us
 See [Reset and restore initial values](../guides/reset-and-restore.md) for executable examples,
 server-loaded records, nested arrays, dynamically added fields, snapshot boundaries, validation,
 and native reset buttons.
+
+## Empty declaration
+
+`array(): ArrayNode<FieldNode<unknown>>` creates `[]` with a template equivalent to `field()`.
+`push()` adds a fresh field initialized to `null`; `push(value)` accepts an unknown value.
+Objects remain whole field values, not groups with child properties. Reads return `unknown[]`, so
+narrow item values before using them. The first pushed value does not determine later item types.
+
+Prefer an explicit object or node template when the item structure is known, or when you need
+validators, options, or a typed value contract. `resetToInitial()` restores the initial empty array.
+`createFormPrimitives().array()` uses a configured unknown-valued field template. Its missing-value
+placeholder remains `null` even with `nullable: false`, matching an unspecified configured field.
+
+<CodeBlock language="ts" title="empty-primitives.ts">{emptyPrimitivesSource}</CodeBlock>

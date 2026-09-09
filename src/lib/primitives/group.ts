@@ -9,6 +9,18 @@ export type { GroupNode, GroupApi, GroupChildren, GroupOptions, GroupPatch, Grou
 type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 
 /**
+ * Creates an empty group with value `{}`. Add dynamic children with `add()`.
+ * Pass `{}` explicitly when supplying validators or options.
+ *
+ * @example
+ * ```ts
+ * const node = group();
+ * node(); // {}
+ * node.add('name', field('Ada'));
+ * ```
+ */
+export function group(): GroupNode<{}>;
+/**
  * Creates an object-shaped structural node without an independent submission workflow.
  *
  * ```ts
@@ -42,7 +54,7 @@ export function group<TDefinitions extends ObjectNodeDefinitions>(
     ]
 ): GroupNode<NormalizedNodes<TDefinitions>>;
 export function group<TDefinitions extends ObjectNodeDefinitions>(
-  definitions: TDefinitions & GroupDefinitions<TDefinitions>,
+  definitions: TDefinitions & GroupDefinitions<TDefinitions> = {} as TDefinitions & GroupDefinitions<TDefinitions>,
   validatorsOrOptions?: ValidatorSource<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, GroupNode<NormalizedNodes<TDefinitions>>> | GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, GroupNode<NormalizedNodes<TDefinitions>>>,
   separateOptions?: GroupOptions<NoInfer<GroupValue<NormalizedNodes<TDefinitions>>>, GroupNode<NormalizedNodes<TDefinitions>>>,
 ): GroupNode<NormalizedNodes<TDefinitions>> {

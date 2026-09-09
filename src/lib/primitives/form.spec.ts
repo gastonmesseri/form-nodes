@@ -5383,3 +5383,28 @@ it.each([false, true])('tracks and cancels self-referencing when conditions with
   expect(model.profile.nested.valid()).toBe(true);
   injector.destroy();
 });
+
+it('creates independent empty forms with normal dynamic children and submission state', async () => {
+  const profile = form();
+  const other = form();
+  expect(profile()).toEqual({});
+  expect(profile.valid()).toBe(true);
+  expect(profile.pending()).toBe(false);
+  expect(profile.dirty()).toBe(false);
+  expect(profile.touched()).toBe(false);
+  const name = profile.add('name', field('', [required]));
+  expect(name.parent()).toBe(profile);
+  expect(profile.invalid()).toBe(true);
+  expect(other()).toEqual({});
+  name.set('Ada');
+  expect(profile.valid()).toBe(true);
+  expect(await profile.submit()).toBe(false);
+  expect(profile.submitted()).toBe(true);
+  profile.resetToInitial();
+  expect(profile.submitted()).toBe(false);
+  expect(name()).toBe('');
+  expect(profile.invalid()).toBe(true);
+  profile.remove('name');
+  expect(profile()).toEqual({});
+  expect(profile.valid()).toBe(true);
+});

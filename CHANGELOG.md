@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Allow `form()` and `group()` with no arguments to create empty objects, and `array()` to create an empty collection of unknown-valued fields with null defaults. Configured factories support the same declarations and preserve their defaults.
+
 ### Fixed
 
 - Support unannotated class self-references in parameterless `when` conditions across built-in and async validators while preserving typed contexts and checked boolean returns for context-taking conditions. Async conditions start safely after construction and restart validation when reenabled, even with unchanged values.

@@ -20,6 +20,7 @@ Use when passing the configured group factory from `createFormPrimitives()` to r
 
 ```ts
 interface GroupFactory<TNullable extends boolean> {
+    (): ConfiguredGroup<{}, TNullable>;
     <TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions>, ...args: [
         validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | NoInfer<GroupOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, GroupNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>>
     ] | [

@@ -95,7 +95,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
   };
 
   const configuredForm = ((
-    definitions: ObjectNodeDefinitions,
+    definitions: ObjectNodeDefinitions = {},
     validatorsOrOptions?: unknown,
     separateOptions?: unknown,
   ) => {
@@ -115,7 +115,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
   }) as unknown as FormPrimitives<TNullable>['form'];
 
   const configuredGroup = ((
-    definitions: ObjectNodeDefinitions,
+    definitions: ObjectNodeDefinitions = {},
     validatorsOrOptions?: unknown,
     separateOptions?: unknown,
   ) => {
@@ -141,7 +141,7 @@ export const createFormPrimitives = <const TNullable extends boolean = true>(opt
       : definition;
   };
 
-  const configuredArray = ((source: unknown, ...args: unknown[]) => {
+  const configuredArray = ((source: unknown = configuredField(null), ...args: unknown[]) => {
     const configuredSource = typeof source === 'function' && !isNode(source)
       ? () => normalizeArrayDefinition((source as () => unknown)())
       : normalizeArrayDefinition(source);

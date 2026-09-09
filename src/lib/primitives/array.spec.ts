@@ -1984,3 +1984,26 @@ it('keeps the callable array API length signal and collection operations intact'
   expect(api()).toEqual(['Ada']);
   expect(api.length()).toBe(1);
 });
+
+it('creates empty arrays with independent unknown-valued field templates', () => {
+  const values = array();
+  const other = array();
+  expect(values()).toEqual([]);
+  expect(values.valid()).toBe(true);
+  const first = values.push();
+  expect(first()).toBe(null);
+  expect(first.parent()).toBe(values);
+  expect(first.nodeType()).toBe('field');
+  values.push('Ada');
+  values.push({ name: 'Grace' });
+  expect(values()).toEqual([null, 'Ada', { name: 'Grace' }]);
+  expect(other()).toEqual([]);
+  values.set([23, false]);
+  expect(values()).toEqual([23, false]);
+  values.markAsTouched();
+  expect(values.at(0)!.touched()).toBe(true);
+  values.resetToInitial();
+  expect(values()).toEqual([]);
+  expect(values.touched()).toBe(false);
+  expect(values.push()()).toBe(null);
+});

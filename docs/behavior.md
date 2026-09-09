@@ -3681,3 +3681,23 @@ packages/forms/signals/src/api/rules/validation/required.ts and validate_async.t
 with test/node/api/validators/required.spec.ts and test/node/api/when.spec.ts.
 Angular evaluates conditional rules through tracked metadata/resource parameters; our unchecked
 parameterless signatures and non-DI watcher scheduling are intentional library-specific contracts.
+
+## Empty primitive declarations
+
+form() and group() with no arguments are equivalent to explicit empty definitions. Their value is
+{}, their initial children are empty, and normal validation, dynamic additions, parent ownership,
+interaction, and reset rules apply. Type inference retains an empty declared schema; add() returns
+the typed child but cannot mutate the original variable's static keys. Options still require an
+explicit definition argument. Zero-argument overloads cannot assert an undeclared generic schema.
+
+array() is equivalent to array(field()): initially [], with independent FieldNode<unknown> items
+created on demand. push() without a value adds null; provided objects remain field values rather
+than structural groups. resetToInitial() restores []. Configured factories preserve their defaults;
+the default array template is a configured unspecified field with a null initial placeholder even
+with nullable:false. All factories remain safe outside injection contexts.
+
+Angular reference inspected: 22.1.x at da8dac62a79025fa42ae3ee5c64e3e3f1979ce54,
+packages/forms/signals/src/api/structure.ts, test/node/form.spec.ts, and
+ test/node/validation_status.spec.ts. Angular requires a writable model signal and derives its tree
+from that model; argument-free construction and the unknown field template are intentional library
+API conveniences. Existing empty-tree state and propagation rules are unchanged.

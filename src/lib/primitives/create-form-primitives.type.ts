@@ -98,6 +98,8 @@ export type ConfiguredForm<TDefinitions extends ObjectNodeDefinitions, TNullable
 } & FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>;
 
 export interface FormFactory<TNullable extends boolean> {
+  /** Creates an empty form while preserving configured defaults for later additions. */
+  (): ConfiguredForm<{}, TNullable>;
   <TDefinitions extends ObjectNodeDefinitions>(
     definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions>,
     ...args:
@@ -110,6 +112,8 @@ export interface FormFactory<TNullable extends boolean> {
 }
 
 export interface GroupFactory<TNullable extends boolean> {
+  /** Creates an empty group while preserving configured defaults for later additions. */
+  (): ConfiguredGroup<{}, TNullable>;
   <TDefinitions extends ObjectNodeDefinitions>(
     definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions>,
     ...args:
@@ -138,6 +142,8 @@ type ArrayInitial<TDefinition, TNullable extends boolean> = number | ArraySet<Co
 type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
 
 export interface ArrayFactory<TNullable extends boolean> {
+  /** Creates an empty array using a configured unknown-valued field template initialized to null. */
+  (): ArrayNode<FieldNode<unknown>>;
   <TDefinition extends ArrayTemplate>(template: TDefinition & ArrayTemplateInput<TDefinition>,
     ...args:
       | [validatorsOrOptions?: NoInfer<ValidatorSource<ConfiguredArrayValue<TDefinition, TNullable>, ArrayNode<ConfiguredArrayItem<TDefinition, TNullable>>>> | NoInfer<ArrayOptions<ConfiguredArrayValue<TDefinition, TNullable>, ArrayNode<ConfiguredArrayItem<TDefinition, TNullable>>>>]

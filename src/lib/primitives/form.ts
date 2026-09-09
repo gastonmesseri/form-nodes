@@ -8,6 +8,18 @@ export type { AddedNode, DynamicFormChildren, FormNode, FormApi, FormChildren, F
 type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDefinitionInputs<TDefinitions>;
 
 /**
+ * Creates an empty form with value `{}`. Add dynamic children with `add()`.
+ * Pass `{}` explicitly when supplying validators or options.
+ *
+ * @example
+ * ```ts
+ * const node = form();
+ * node(); // {}
+ * node.add('name', field('Ada'));
+ * ```
+ */
+export function form(): FormNode<{}>;
+/**
  * ```ts
  * const profile = form({
  *   name: field(''),
@@ -44,7 +56,7 @@ export function form<TDefinitions extends ObjectNodeDefinitions>(
     ]
 ): FormNode<NormalizedNodes<TDefinitions>>;
 export function form<TDefinitions extends ObjectNodeDefinitions>(
-  definitions: TDefinitions & FormDefinitions<TDefinitions>,
+  definitions: TDefinitions & FormDefinitions<TDefinitions> = {} as TDefinitions & FormDefinitions<TDefinitions>,
   validatorsOrOptions?: ValidatorSource<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, FormNode<NormalizedNodes<TDefinitions>>> | FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, FormNode<NormalizedNodes<TDefinitions>>>,
   separateOptions?: FormOptions<NoInfer<FormValue<NormalizedNodes<TDefinitions>>>, FormNode<NormalizedNodes<TDefinitions>>>,
 ): FormNode<NormalizedNodes<TDefinitions>> {

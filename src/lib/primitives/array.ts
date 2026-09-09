@@ -1,6 +1,7 @@
 import { isNode } from './utils/node-marker';
 import type { NormalizedNode } from './form';
 import { createArrayNode } from './array-node';
+import { field, type FieldNode } from './field';
 import type { AnyNode } from '../types/node.type';
 import type { ValidatorSource } from '../validation/validation.type';
 import { assertArrayObjectTemplate, looksLikeValidatorSource } from './array.utils';
@@ -18,6 +19,20 @@ type ArraySource<TDefinition extends ArrayTemplate> = (TDefinition & ArrayTempla
 type ArrayInitial<TDefinition extends ArrayTemplate> = number | ArraySet<NormalizedNode<TDefinition>> | null | undefined;
 type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNodeType<AnyNode>> = Omit<ArrayOptions<TValue, TArray>, 'initialValue'>;
 
+/**
+ * Creates an empty array with an unknown-valued field template, equivalent to `array(field())`.
+ * `push()` without a value adds null; supplied values remain field values, including objects.
+ * Use an explicit template when item structure or validators are known.
+ *
+ * @example
+ * ```ts
+ * const values = array();
+ * values(); // []
+ * values.push('Ada');
+ * values(); // ['Ada']
+ * ```
+ */
+export function array(): ArrayNodeType<FieldNode<unknown>>;
 /**
  * Creates a dynamic array by cloning a declarative node template for every item.
  * 
@@ -132,7 +147,7 @@ export function array<TDefinition extends ArrayTemplate>(
     ]
 ): ArrayNodeType<NormalizedNode<TDefinition>>;
 export function array<TDefinition extends ArrayTemplate>(
-  source: ArraySource<TDefinition>,
+  source: ArraySource<TDefinition> = field() as unknown as ArraySource<TDefinition>,
   initialOrValidatorsOrOptions?: ArrayInitial<TDefinition> | ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
   validatorsOrOptions?: ValidatorSource<NoInfer<ArrayValue<NormalizedNode<TDefinition>>>, ArrayNodeType<NormalizedNode<TDefinition>>> | ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,
   separateOptions?: ArrayOptions<ArrayValue<NormalizedNode<TDefinition>>, ArrayNodeType<NormalizedNode<TDefinition>>>,

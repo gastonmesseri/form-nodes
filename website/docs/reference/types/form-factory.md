@@ -20,6 +20,7 @@ Use when passing the configured form factory from `createFormPrimitives()` to re
 
 ```ts
 interface FormFactory<TNullable extends boolean> {
+    (): ConfiguredForm<{}, TNullable>;
     <TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions>, ...args: [
         validatorsOrOptions?: NoInfer<ValidatorSource<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>> | NoInfer<FormOptions<FormValue<NormalizedNodesWithDefault<TDefinitions, TNullable>>, FormNode<NormalizedNodesWithDefault<TDefinitions, TNullable>>>>
     ] | [

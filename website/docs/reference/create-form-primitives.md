@@ -160,3 +160,11 @@ Import those factories from the application module when declaring forms.
 - [`form()`](./form.md)
 - [`array()`](./array.md)
 - [Configuration](./configuration.md)
+
+## Empty aggregate declarations
+
+The configured `form()`, `group()`, and `array()` factories can be called without arguments.
+Forms and groups start as `{}` and retain defaults for dynamic additions. Arrays start as `[]`
+with a configured unknown-valued field template initialized to `null`, including when the default
+nullability setting is false. Supply an explicit template for known item types or structure.
+See [empty arrays](./array.md#empty-declaration) and [empty forms](./form.md#empty-declaration).

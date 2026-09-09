@@ -3,6 +3,7 @@ title: form()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
 import submissionHistorySource from '!!raw-loader!../../examples/submission-history.example.ts';
 import emptyChildRecordSource from '!!raw-loader!../../examples/empty-child-record.example.ts';
 import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
@@ -1679,3 +1680,17 @@ reconciliation. Factories can run to reconstruct missing nodes; restored data us
 See [Reset and restore initial values](../guides/reset-and-restore.md) for executable examples,
 server-loaded records, nested arrays, dynamically added fields, snapshot boundaries, validation,
 and native reset buttons.
+
+## Empty declaration
+
+`form(): FormNode<{}>` creates the same initially empty object as `form({})`.
+It starts valid, untouched, and pristine. Add children dynamically with `add()`; the returned child
+retains its inferred type. The original variable's static child keys do not grow after an addition,
+so retain the returned child or use the documented dynamic lookup API.
+
+For validators or options, keep the explicit empty definition: `form({}, options)`.
+The zero-argument overload has no generic parameters and does not invent a typed child schema.
+Each call creates independent nodes and state. `createFormPrimitives().form()` supports the same
+empty declaration while retaining its configured defaults.
+
+<CodeBlock language="ts" title="empty-primitives.ts">{emptyPrimitivesSource}</CodeBlock>
