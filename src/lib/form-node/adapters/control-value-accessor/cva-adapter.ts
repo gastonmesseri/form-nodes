@@ -9,7 +9,8 @@ import type { ControlAdapterContext, ControlAdapterConnection } from '../control
 
 /**
  * Connects a provided or directly assigned CVA. Initial value and disabled state are written
- * synchronously before child initialization; later model-to-view writes run through effects.
+ * synchronously before child initialization. Later writes share one effect: enable before value,
+ * disable after value, and replay the current value when enabling. Resets use the same ordering.
  */
 export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapterContext<TNode>, accessor: ControlValueAccessor): ControlAdapterConnection => {
   const { binding, getNgControl } = context;
@@ -45,7 +46,6 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
   };
 
   let lastWrittenNode = binding.node();
-  let lastDisabledNode = lastWrittenNode;
 
   getNgControl().valueAccessor = accessor;
   // CVAs must receive initial state before child controls run their initialization hooks.
@@ -64,23 +64,22 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
     binding.node().$api.markAsTouched();
     (binding.node() as unknown as InternalNode).$api._flushControlValueOnBlur();
   });
-  effect(() => {
+  const synchronize = (force = false) => {
     const node = binding.node();
     const changedNode = node !== lastWrittenNode;
+    const disabled = node.$api.disabled();
+    const enabling = lastDisabled === true && !disabled;
     lastWrittenNode = node;
-    writeValue((node as unknown as InternalNode).$api._controlValue(), changedNode);
-  }, { injector });
-  if (accessor.setDisabledState) {
-    effect(() => {
-      const node = binding.node();
-      const changedNode = node !== lastDisabledNode;
-      lastDisabledNode = node;
-      writeDisabled(node.$api.disabled(), changedNode);
-    }, { injector });
-  }
+    // Enable before writing; disable after writing. Some CVAs reject writes while disabled.
+    // Replay on enable to recover changes received while the control was disabled.
+    if (!disabled) writeDisabled(false, changedNode);
+    writeValue((node as unknown as InternalNode).$api._controlValue(), force || changedNode || enabling);
+    if (disabled) writeDisabled(true, changedNode);
+  };
+  effect(() => synchronize(), { injector });
   connectLegacyValidators(context);
   return {
     ...connectControlInputs(accessor, binding.node, injector, hasControlStateConsumer(binding.element)),
-    reset: () => writeValue((binding.node() as unknown as InternalNode).$api._controlValue(), true),
+    reset: () => synchronize(true),
   };
 };

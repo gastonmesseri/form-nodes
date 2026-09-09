@@ -3764,3 +3764,25 @@ This complements Angular 22.1.x `control_cva.ts` binding synchronization (inspec
 `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`); it is a safeguard in our effect-based adapter.
 The browser regressions exercise real ng-bootstrap CVAs, inherited disable/enable transitions,
 and Reactive Forms initial-state comparisons. See [UI library testing](ui-library-testing.md).
+
+### Combined CVA value and disabled transitions
+
+Initial CVA setup retains Reactive Forms ordering: value, then disabled, before registering user
+callbacks. Subsequent synchronization reads one node snapshot in one effect. When enabling,
+it writes disabled=false before the value and forces the current control value to be replayed;
+when disabling, it writes the value before disabled=true. Reset uses this same synchronization
+synchronously and forces the value write. Node replacement also forces initialization of both
+properties. Ordinary unchanged snapshots remain deduplicated and no user output is introduced.
+
+A CVA can ignore writes while already disabled (ng-bootstrap rating does). Form Nodes does not
+temporarily enable a disabled control to force rendering; it recovers the latest value on enable.
+The combined ordering intentionally differs from Angular 22.1.x Signal Forms' value-first
+`control_cva.ts` update loop, inspected with `test/web/interop.spec.ts` at
+`da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`. Real controls are tested against Reactive Forms and
+on Angular 21.2.22 and 22.1.6, including enable+set, set+disable, enable+reset and writes while disabled.
+
+Output listeners may reset, patch or destroy their binding. Stale committed outputs are suppressed
+when a synchronous listener replaces the committed value or destroys the binding. Debounced
+submission flushes the pending value once; late completion after rebinding/destruction cannot emit
+through the old binding. Node-owned work may still finish on a detached node; it cannot overwrite
+the new bound node. Real-control regressions complement the generic output lifecycle tests.

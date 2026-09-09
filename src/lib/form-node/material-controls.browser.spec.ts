@@ -82,16 +82,20 @@ class MaterialHost {
 
   committed: unknown[] = [];
 
+  afterEvent = (_committed: boolean) => {};
+
   committedAtInput: unknown[] = [];
 
   record(value: unknown, committed: boolean) {
     expect(committed ? this.node()() : this.node().$api.value.control()).toEqual(value);
     if (!committed) this.committedAtInput.push(this.node()());
     (committed ? this.committed : this.immediate).push(value);
+    this.afterEvent(committed);
   }
 }
 
 const settle = async (fixture: ComponentFixture<unknown>) => {
+  if (fixture.componentRef.hostView.destroyed) return;
   fixture.detectChanges();
   await fixture.whenStable();
   fixture.detectChanges();
@@ -421,6 +425,91 @@ it.each(kinds.flatMap(kind => [false, true].map(debounce => ({ kind, debounce })
     expect(node.value.committed()).toEqual(initial);
     expect(host.immediate).toEqual([edited]);
     expect(host.committed).toEqual([initial]);
+  } finally {
+    fixture.destroy();
+  }
+});
+
+it.each((['input', 'select'] as const).flatMap(kind => ['reset', 'patch', 'destroy'].flatMap(action => [false, true].map(committed => ({ kind, action, committed })))))('handles $action inside a control output: $kind, committed=$committed', async ({ kind, action, committed }) => {
+  const { fixture, host, node, profile, initial } = await setup(kind);
+  let handled = false;
+  host.afterEvent = (phase) => {
+    if (phase !== committed || handled) return;
+    handled = true;
+    if (action === 'reset') profile.resetToInitial();
+    if (action === 'patch') profile.patch({ control: initial });
+    if (action === 'destroy') fixture.destroy();
+  };
+  try {
+    await edit(fixture, kind);
+    expect(handled).toBe(true);
+    expect(host.immediate).toHaveLength(1);
+    expect(host.committed).toHaveLength(committed ? 1 : 0);
+    if (action !== 'destroy') {
+      await settle(fixture);
+      expect(node()).toEqual(initial);
+      expect(view(fixture.nativeElement.querySelector('.node'), kind)).toEqual(view(fixture.nativeElement.querySelector('.baseline'), kind));
+    }
+  } finally {
+    fixture.destroy();
+  }
+});
+
+@Component({
+  selector: 'dynamic-datepicker-constraints-host',
+  template: '<input matInput [matDatepicker]="picker" [min]="min()" [max]="max()" [matDatepickerFilter]="filter()" [formNode]="node()" (formNodeValueChange)="events.push($event)" /><mat-datepicker #picker />',
+  imports: [MatInputModule, MatDatepickerModule, FormNodeDirective],
+  providers: [provideNativeDateAdapter()],
+})
+class DynamicDateHost {
+  profile = form({ date: field<Date>(new Date(2025, 0, 10)) });
+
+  node = signal<AnyNode>(this.profile.date);
+
+  min = signal<Date | null>(null);
+
+  max = signal<Date | null>(null);
+
+  filter = signal<(date: Date | null) => boolean>(() => true);
+
+  events: unknown[] = [];
+}
+
+it('refreshes dynamic date constraints, preserves constraint errors on reset and releases errors on rebinding', async () => {
+  const fixture = TestBed.createComponent(DynamicDateHost);
+  try {
+    await settle(fixture);
+    const host = fixture.componentInstance;
+    expect(host.profile.valid()).toBe(true);
+    host.min.set(new Date(2025, 0, 15));
+    await settle(fixture);
+    expect(host.profile.date.errors().map(error => error.kind)).toContain('matDatepickerMin');
+    expect(host.profile.invalid()).toBe(true);
+    host.profile.resetToInitial();
+    await settle(fixture);
+    expect(host.profile.invalid()).toBe(true);
+    host.min.set(null);
+    host.max.set(new Date(2025, 0, 5));
+    await settle(fixture);
+    expect(host.profile.date.errors().map(error => error.kind)).toEqual(['matDatepickerMax']);
+    host.max.set(null);
+    host.filter.set(() => false);
+    await settle(fixture);
+    expect(host.profile.date.errors().map(error => error.kind)).toEqual(['matDatepickerFilter']);
+    const replacement = field<Date>(new Date(2025, 0, 20));
+    host.node.set(replacement);
+    await settle(fixture);
+    expect(host.profile.valid()).toBe(true);
+    expect(replacement.errors().map(error => error.kind)).toEqual(['matDatepickerFilter']);
+    host.filter.set(() => true);
+    await settle(fixture);
+    expect(replacement.valid()).toBe(true);
+    host.min.set(new Date(2025, 0, 25));
+    await settle(fixture);
+    expect(replacement.invalid()).toBe(true);
+    fixture.destroy();
+    expect(replacement.valid()).toBe(true);
+    expect(host.events).toEqual([]);
   } finally {
     fixture.destroy();
   }

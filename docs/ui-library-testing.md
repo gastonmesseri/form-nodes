@@ -92,3 +92,33 @@ npx vitest run --config vitest.browser.config.ts src/lib/form-node/ui-libraries.
 
 The browser Vite configuration prebundles all imported UI entry points to avoid dependency
 rediscovery reloading tests and creating mismatched Angular DI token identities.
+
+## Combined-operation regressions and additional versions
+
+The matrix also covers coordinated enable/value/disable/reset writes, reentrant reset/patch/destroy
+from immediate and committed outputs, pending promise debounce followed by submission/rebinding/
+destruction, PrimeNG and NG-ZORRO object single/multiple selection with recreated options, and
+Material dynamic min/max/filter validation, ancestor reset, and validation cleanup on rebinding.
+
+PrimeNG checkbox shares Material's immediate-reset rendering boundary: resetting inside the click's
+output before checked state renders can leave native DOM checked, including with Reactive Forms.
+The test compares both integrations and verifies recovery after a rendered state update. PrimeNG 22
+can warn when its own output emits after a listener destroys the component; Form Nodes suppresses
+its stale outputs. The matrix does not suppress vendor warnings.
+
+An isolated, locked dependency matrix supplements the baseline workspace:
+
+| Angular | Material/CDK/Moment | PrimeNG | NG-ZORRO | ng-bootstrap | Ionic |
+| --- | --- | --- | --- | --- | --- |
+| 21.2.22 | 21.0.6 | 21.1.10 | 21.3.3 | 20.0.0 | 9.0.3 |
+| 22.1.6 | 22.1.6 | 22.1.1 | 22.0.1 | 21.0.0 | 9.0.3 |
+
+```sh
+npm run test:ui:compatibility -- 21
+npm run test:ui:compatibility -- 22
+```
+
+Each command installs from its own lockfile in a temporary workspace, installs its Chromium binary,
+checks versions, and runs all five Material/UI browser files against source. It leaves the primary
+workspace dependencies untouched. CI runs both rows. These are real browser integration checks;
+the existing packed-package compatibility checks remain separate and complementary.

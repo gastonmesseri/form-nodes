@@ -12,6 +12,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Fixed
 
+- Coordinate CVA value and disabled-state updates so enabling and setting a value in the same turn displays the latest value, including ng-bootstrap rating. Enabling also replays values that a control ignored while disabled; resets use the same synchronization order without emitting user changes.
+
 - Refresh custom CVA views after model and disabled-state writes, including controls such as ng-bootstrap rating and timepicker that do not request a check themselves. This prevents stale rendering and expression-changed errors when enabling or disabling these controls.
 
 - Restore CVA views on resets even when the value is unchanged, including ancestor resets and discarded pending input. Rebinding to an equal-valued node refreshes the CVA without carrying over an old draft; stale and destroyed bindings no longer participate in resets.

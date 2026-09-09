@@ -28,6 +28,7 @@ export default defineConfig({
       '@angular/material-moment-adapter',
       'moment',
       'primeng/select',
+      'primeng/multiselect',
       'ng-zorro-antd/select',
       '@angular/platform-browser/animations',
       'primeng/checkbox',

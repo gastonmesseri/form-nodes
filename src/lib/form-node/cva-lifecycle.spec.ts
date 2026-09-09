@@ -27,6 +27,8 @@ class Control {
 
   disabledWrites: boolean[] = [];
 
+  operations: unknown[] = [];
+
   change = (_value: unknown) => {};
 
   touch = () => {};
@@ -34,11 +36,15 @@ class Control {
   writeValue(value: unknown) {
     this.view = value;
     this.writes.push(value);
+    this.operations.push(['value', value]);
     // A misbehaving accessor must not turn model writes into user edits.
     this.change(value);
   }
 
-  setDisabledState(value: boolean) { this.disabledWrites.push(value); }
+  setDisabledState(value: boolean) {
+    this.disabledWrites.push(value);
+    this.operations.push(['disabled', value]);
+  }
 
   registerOnChange(fn: (value: unknown) => void) { this.change = fn; }
 
@@ -198,6 +204,47 @@ it.each(['field', 'ancestor'] as const)('refreshes plain CVA properties after mo
     host.profile.resetToInitial();
     await fixture.whenStable();
     expect(input.value).toBe('Ada');
+    expect(host.events).toEqual([]);
+  } finally {
+    fixture.destroy();
+  }
+});
+
+it.each(['field', 'ancestor'] as const)('orders combined CVA writes and replays values on %s enable', (scope) => {
+  const fixture = TestBed.createComponent(Host);
+  try {
+    const host = fixture.componentInstance;
+    host.node = host.profile.nested.name;
+    fixture.detectChanges();
+    const control = fixture.debugElement.children[0]!.componentInstance as Control;
+    expect(control.operations).toEqual([['value', 'Ada'], ['disabled', false]]);
+    const owner = scope === 'field' ? host.profile.nested.name : host.profile;
+    owner.disable();
+    fixture.detectChanges();
+    control.operations = [];
+    owner.enable();
+    host.profile.nested.name.set('Grace');
+    fixture.detectChanges();
+    expect(control.operations).toEqual([['disabled', false], ['value', 'Grace']]);
+    control.operations = [];
+    host.profile.nested.name.set('Lia');
+    owner.disable();
+    fixture.detectChanges();
+    expect(control.operations).toEqual([['value', 'Lia'], ['disabled', true]]);
+    host.profile.nested.name.set('Pending');
+    fixture.detectChanges();
+    control.operations = [];
+    owner.enable();
+    fixture.detectChanges();
+    expect(control.operations).toEqual([['disabled', false], ['value', 'Pending']]);
+    owner.disable();
+    fixture.detectChanges();
+    control.operations = [];
+    owner.enable();
+    host.profile.resetToInitial();
+    expect(control.operations).toEqual([['disabled', false], ['value', 'Ada']]);
+    fixture.detectChanges();
+    expect(control.operations).toHaveLength(2);
     expect(host.events).toEqual([]);
   } finally {
     fixture.destroy();

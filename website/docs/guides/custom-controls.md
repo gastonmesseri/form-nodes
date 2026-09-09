@@ -209,6 +209,12 @@ This matches Reactive Forms' initialization order. It does **not** make every la
 
 Form Nodes requests a view check after writing a CVA value or disabled state. This also supports controls whose `setDisabledState()` only assigns a plain property, such as ng-bootstrap rating and timepicker. Rendering still follows Angular's change detection cycle.
 
+After initialization, value and disabled state are synchronized together. Enabling happens before
+writing the value; disabling happens after it. Enabling also resends the current value, so a control
+that ignored a write while disabled catches up. This covers `node.enable(); node.set(nextValue)`
+in the same turn and enable followed by reset. A control that rejects writes while disabled may
+keep its previous display until enabled; Form Nodes does not temporarily enable it to force a write.
+
 CVA user input remains synchronous: call the callback supplied to `registerOnChange()` for user edits. Form Nodes receives that value immediately; configured debounce can defer its commit. Prefer `(formNodeControlValueChange)` for immediate control values and `(formNodeValueChange)` for committed values. Programmatic `writeValue()` calls must not emit user changes; Form Nodes also guards against synchronous feedback from an accessor.
 
 
@@ -223,8 +229,9 @@ ng-bootstrap, and Ionic. It checks initial values against Reactive Forms, user-v
 reset, rebinding, disabled state, and control-specific touch/debounce behavior. Select tests
 also cover late options and overlay selection; Material tests include native and Moment dates.
 
-The current fixtures use Angular 21.0.7 with Material 21.0.6, PrimeNG 21.1.10, NG-ZORRO 21.3.3,
-ng-bootstrap 20.0.0, and Ionic Angular 9.0.3. This covers the tested controls and versions, not
+The baseline fixtures use Angular 21.0.7 with Material 21.0.6, PrimeNG 21.1.10, NG-ZORRO 21.3.3,
+ng-bootstrap 20.0.0, and Ionic Angular 9.0.3. An additional isolated matrix runs these tests on
+Angular 21.2.22 and Angular 22.1.6 with compatible UI versions. This covers the tested controls and versions, not
 every component or configuration offered by these libraries. See the repository's
 [UI integration test matrix](https://github.com/gastonmesseri/form-nodes/blob/master/docs/ui-library-testing.md)
 for the exact controls, scenarios, version selection, and known boundaries.
@@ -233,3 +240,9 @@ A CVA decides when it reports touched: for example, ng-bootstrap rating reports 
 selection. With `debounce: 'blur'`, that callback commits the pending value in the same
 interaction. Form Nodes follows the accessor's touch notification rather than assuming every
 custom control waits for a native DOM blur.
+
+Resetting a checkbox from its own value output can happen before the browser's clicked state has
+been rendered by the UI component. Material and PrimeNG checkboxes can then retain that visual
+state even though the node has reset; this is also reproducible with Reactive Forms. The integration
+tests cover that shared boundary and recovery after a rendered state update. Prefer performing
+related-field updates from the output and keeping explicit form reset as a separate application action.

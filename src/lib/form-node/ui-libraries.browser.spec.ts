@@ -77,13 +77,17 @@ class UiLibraryHost {
 
   committed: unknown[] = [];
 
+  afterEvent = (_committed: boolean) => {};
+
   record(value: unknown, committed: boolean) {
     expect(committed ? this.node()() : this.node().$api.value.control()).toEqual(value);
     (committed ? this.committed : this.immediate).push(value);
+    this.afterEvent(committed);
   }
 }
 
 const settle = async (fixture: ComponentFixture<unknown>) => {
+  if (fixture.componentRef.hostView.destroyed) return;
   await fixture.whenStable();
   fixture.detectChanges();
   await fixture.whenStable();
@@ -92,12 +96,12 @@ const settle = async (fixture: ComponentFixture<unknown>) => {
   fixture.detectChanges();
 };
 
-const setup = async (kind: Kind, debounce = false, disabled = false, suppressEqual = false) => {
+const setup = async (kind: Kind, debounce: boolean | (() => Promise<void>) = false, disabled = false, suppressEqual = false) => {
   const fixture = TestBed.createComponent(UiLibraryHost);
   fixtures.push(fixture);
   const host = fixture.componentInstance;
   const initial = kind === 'ionic-input' ? 'Ada' : kind === 'bootstrap-rating' ? 2 : kind === 'bootstrap-time' ? { hour: 9, minute: 30, second: 0 } : false;
-  const profile = form({ control: field(initial, { disabled, ...(suppressEqual ? { equal: () => true } : {}), ...(debounce ? { debounce: 'blur' as const } : {}) }) });
+  const profile = form({ control: field(initial, { disabled, ...(suppressEqual ? { equal: () => true } : {}), ...(debounce ? { debounce: typeof debounce === 'function' ? debounce : 'blur' as const } : {}) }) });
   host.kind.set(kind);
   host.node.set(profile.control);
   host.baseline.setValue(initial);
@@ -115,8 +119,8 @@ const view = (root: HTMLElement, kind: Kind): unknown => {
   return root.querySelector<HTMLInputElement>('input')!.checked;
 };
 
-const edit = async (fixture: ComponentFixture<UiLibraryHost>, kind: Kind) => {
-  const root: HTMLElement = fixture.nativeElement.querySelector('.node');
+const edit = async (fixture: ComponentFixture<UiLibraryHost>, kind: Kind, scope = 'node') => {
+  const root: HTMLElement = fixture.nativeElement.querySelector(`.${scope}`);
   if (kind === 'ionic-input' || kind === 'bootstrap-time') {
     const input = root.querySelector<HTMLInputElement>('input')!;
     input.focus();
@@ -285,6 +289,117 @@ it.each(kinds.flatMap(kind => [false, true].map(debounce => ({ kind, debounce })
     expect(node.value.committed()).toEqual(initial);
     expect(host.immediate).toEqual([edited]);
     expect(host.committed).toEqual([initial]);
+  } finally {
+    fixture.destroy();
+  }
+});
+
+it.each(kinds)('synchronizes combined value and disabled transitions, including resets: %s', async (kind) => {
+  const { fixture, host, node, initial } = await setup(kind, false, true);
+  const changed = kind === 'ionic-input' ? 'Grace' : kind === 'bootstrap-rating' ? 7 : kind === 'bootstrap-time' ? { hour: 11, minute: 45, second: 0 } : true;
+  try {
+    const displayed = () => view(fixture.nativeElement.querySelector('.node'), kind);
+    const baseline = () => view(fixture.nativeElement.querySelector('.baseline'), kind);
+    node.enable();
+    host.baseline.enable();
+    node.set(changed);
+    host.baseline.setValue(changed);
+    await settle(fixture);
+    expect(displayed()).toEqual(baseline());
+    node.set(initial);
+    host.baseline.setValue(initial);
+    node.disable();
+    host.baseline.disable();
+    await settle(fixture);
+    expect(displayed()).toEqual(baseline());
+    node.set(changed);
+    await settle(fixture);
+    // Controls may reject writes while disabled. Enabling must replay the latest value.
+    node.enable();
+    host.baseline.enable();
+    host.baseline.setValue(changed);
+    await settle(fixture);
+    expect(displayed()).toEqual(baseline());
+    node.disable();
+    await settle(fixture);
+    node.enable();
+    node.resetToInitial();
+    host.baseline.reset(initial);
+    await settle(fixture);
+    expect(displayed()).toEqual(baseline());
+    expect(node()).toEqual(initial);
+    expect(host.immediate).toEqual([]);
+    expect(host.committed).toEqual([]);
+  } finally {
+    fixture.destroy();
+  }
+});
+
+it.each((['ionic-input', 'prime-checkbox', 'bootstrap-rating'] as const).flatMap(kind => ['reset', 'patch', 'destroy'].flatMap(action => [false, true].map(committed => ({ kind, action, committed })))))('handles $action inside a control output: $kind, committed=$committed', async ({ kind, action, committed }) => {
+  const { fixture, host, node, profile, initial } = await setup(kind);
+  const initialView = view(fixture.nativeElement.querySelector('.node'), kind);
+  let handled = false;
+  host.afterEvent = (phase) => {
+    if (phase !== committed || handled) return;
+    handled = true;
+    if (action === 'reset') profile.resetToInitial();
+    if (action === 'patch') profile.patch({ control: initial });
+    if (action === 'destroy') fixture.destroy();
+  };
+  try {
+    await edit(fixture, kind);
+    expect(handled).toBe(true);
+    expect(host.immediate).toHaveLength(1);
+    expect(host.committed).toHaveLength(committed ? 1 : 0);
+    if (action !== 'destroy') {
+      const subscription = host.baseline.valueChanges.subscribe(() => host.baseline.reset(initial, { emitEvent: false }));
+      await edit(fixture, kind, 'baseline');
+      subscription.unsubscribe();
+      await settle(fixture);
+      expect(node()).toEqual(initial);
+      expect(view(fixture.nativeElement.querySelector('.node'), kind)).toEqual(view(fixture.nativeElement.querySelector('.baseline'), kind));
+      // Checkbox DOM may retain the click in both integrations until a checked state renders.
+      node.set(host.immediate[0] as typeof initial);
+      await settle(fixture);
+      node.resetToInitial();
+      await settle(fixture);
+      expect(view(fixture.nativeElement.querySelector('.node'), kind)).toEqual(initialView);
+    }
+  } finally {
+    fixture.destroy();
+  }
+});
+
+it.each(['submit', 'rebind', 'destroy'] as const)('handles pending CVA debounce followed by %s and late completion', async (action) => {
+  let finish!: () => void;
+  const { fixture, host, node, profile, initial } = await setup('ionic-input', () => new Promise<void>((resolve) => { finish = resolve; }));
+  try {
+    await edit(fixture, 'ionic-input');
+    expect(node()).toBe(initial);
+    expect(node.debouncing()).toBe(true);
+    expect(host.immediate).toEqual(['Grace']);
+    expect(host.committed).toEqual([]);
+    const replacement = field('Replacement');
+    if (action === 'submit') await profile.submit();
+    if (action === 'rebind') {
+      host.node.set(replacement);
+      await settle(fixture);
+    }
+    if (action === 'destroy') fixture.destroy();
+    finish();
+    await Promise.resolve();
+    await Promise.resolve();
+    if (action !== 'destroy') await settle(fixture);
+    expect(host.committed).toEqual(action === 'submit' ? ['Grace'] : []);
+    if (action === 'submit') {
+      expect(profile()).toEqual({ control: 'Grace' });
+      expect(profile.submitted()).toBe(true);
+      expect(node.debouncing()).toBe(false);
+    }
+    if (action === 'rebind') {
+      expect(replacement()).toBe('Replacement');
+      expect(view(fixture.nativeElement.querySelector('.node'), 'ionic-input')).toBe('Replacement');
+    }
   } finally {
     fixture.destroy();
   }

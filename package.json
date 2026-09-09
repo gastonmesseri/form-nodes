@@ -46,7 +46,8 @@
     "test:watch": "vitest",
     "typecheck": "npm run lint && tsc -p tsconfig.spec.json --noEmit && npm run test:types && npm run test:templates",
     "test:compatibility": "node scripts/test-angular-compatibility.mjs",
-    "test:size": "npm run build && node scripts/test-build-size.mjs"
+    "test:size": "npm run build && node scripts/test-build-size.mjs",
+    "test:ui:compatibility": "node scripts/test-ui-compatibility.mjs"
   },
   "peerDependencies": {
     "@angular/core": "^21.0.7 || ^22.1.5",

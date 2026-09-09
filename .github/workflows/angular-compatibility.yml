@@ -73,3 +73,23 @@ jobs:
           OUTCOME: ${{ steps.compatibility.outcome }}
         run: |
           echo "Angular ${ANGULAR_MAJOR} / Node ${NODE_VERSION}: ${OUTCOME}" >> "$GITHUB_STEP_SUMMARY"
+
+  ui:
+    name: Angular ${{ matrix.angular }} real UI controls
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        angular: ['21', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tests/compatibility/ui-angular-${{ matrix.angular }}/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:ui:compatibility -- ${{ matrix.angular }}
