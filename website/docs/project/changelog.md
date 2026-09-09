@@ -16,6 +16,8 @@ versioning exception while the maintainer is the only consumer. See the
 
 ### Added
 
+- Add `formNodeSubmit` and `formNodeSubmitBlocked` outputs for native form attempts and validation-blocked attempts, with typed value, form, and original-event payloads. Pending input is flushed before notification; programmatic submissions remain callback-only.
+
 - Added readonly `form.submitted()` to record submit attempts until the form is reset, including attempts blocked by validation or missing actions. Nested forms keep independent histories, and subtree resets clear descendant form histories. Added `useClosestForm()` to reactively observe the form owning the nearest injectable `[formNode]` binding, enabling submission-aware error components without event subscriptions.
 
 ### Changed

@@ -350,7 +350,9 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
   readonly?: boolean | (() => boolean);
   /** Runs when submitWhen permits submission. Receives the exposed value snapshot first and this form second. */
   onSubmit?(value: TValue, form: TForm): void | PromiseLike<void>;
-  /** Runs when validation blocks submission, including pending validation with submitWhen: 'valid'. Does not run for concurrent submissions or a missing onSubmit. */
+  /** Runs when validation blocks submission, including pending validation with submitWhen: 'valid'. Does not run for concurrent submissions or a missing onSubmit.
+   * For native attempts, formNodeSubmitBlocked emits first and also supports forms without onSubmit.
+   */
   onSubmitBlocked?(form: TForm): void;
   /** When validation permits submission: 'not-invalid' (default) allows pending validation, 'valid' requires valid(), and 'always' bypasses the validation gate without disabling validators. Pending validation blocks immediately; it is not awaited. */
   submitWhen?: 'valid' | 'not-invalid' | 'always';

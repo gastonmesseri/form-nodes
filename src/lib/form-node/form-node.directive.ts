@@ -7,13 +7,13 @@ import type { FormNodeNgControl } from './form-node-ng-control';
 import { FORM_NODE_CLASSES } from './provide-form-nodes-config';
 import { FORM_NODE_PASS_THROUGH } from './form-node-pass-through';
 import { registerNodeBindingInjector } from '../utils/node-injector';
-import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ControlAdapterContext } from './adapters/control-adapter';
 import { resolveControlAdapter } from './adapters/resolve-control-adapter';
-import type { InternalNode, InternalNodeApi, AnyNode, NodeValue } from '../types/node.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 import { registerControlStateBinding } from '../form-node-state/adapters/form-node';
 import { getGlobalFormNodeClasses } from '../configuration/configure-global-form-nodes';
+import type { FormNodeBinding, FormNodeSubmitEvent } from '../types/form-node-binding.type';
+import type { InternalNode, InternalNodeApi, AnyNode, NodeValue } from '../types/node.type';
 import { prepareNativeControlEvents } from './adapters/native-control/native-control-events';
 import { syncNativeControlState } from './adapters/native-control/sync-native-control-state';
 import type { CustomControlEvents } from './adapters/signal-forms-control/custom-control-events';
@@ -48,6 +48,12 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   /** Emits the latest parsed control value immediately, including while debounce is pending. */
   formNodeControlValueChange = output<NodeValue<TNode>>();
+
+  /** Native form attempt after flushing input; emitted before validation gating and onSubmit. */
+  formNodeSubmit = output<FormNodeSubmitEvent<TNode>>();
+
+  /** Native form attempt rejected by submitWhen; async listeners are not awaited. */
+  formNodeSubmitBlocked = output<FormNodeSubmitEvent<TNode>>();
 
   injector = inject(Injector);
 
@@ -169,7 +175,17 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     event.preventDefault();
     const api = this.requireObjectNode();
     if (api.nodeType() === 'form') {
-      void (api as typeof api & { submit(): Promise<boolean> }).submit();
+      const form = this.node();
+      let payload: FormNodeSubmitEvent<TNode>;
+      void (api as typeof api & {
+        _submitFromControl(notifications: { attempted(): void; blocked(): void }): Promise<boolean>;
+      })._submitFromControl({
+        attempted: () => {
+          payload = { value: form() as NodeValue<TNode>, form, event };
+          this.formNodeSubmit.emit(payload);
+        },
+        blocked: () => this.formNodeSubmitBlocked.emit(payload),
+      });
       return;
     }
     api.markAsTouched();

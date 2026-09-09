@@ -2256,3 +2256,37 @@ it('exposes native submission and reset history to same-host and late descendant
   expect(readDescendant()).toBe('false');
   fixture.destroy();
 });
+
+it('emits native submission outputs with current values and the original submitter', async () => {
+  registerSignalOutputForJit(FormNodeDirective, 'formNodeSubmit');
+  registerSignalOutputForJit(FormNodeDirective, 'formNodeSubmitBlocked');
+  const attempts = vi.fn();
+  const blocked = vi.fn();
+  @Component({
+    template: `<form [formNode]="profile" (formNodeSubmit)="attempt($event)" (formNodeSubmitBlocked)="blocked($event)"><input [formNode]="profile.name"><button type="submit">Save</button></form>`,
+    imports: [FormNodeDirective],
+  })
+  class Host {
+    profile = form({ name: field('', [required], { debounce: 'blur' }) });
+    attempt = attempts;
+    blocked = blocked;
+  }
+  const fixture = TestBed.createComponent(Host);
+  fixture.detectChanges();
+  const element = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+  const button = element.querySelector('button')!;
+  element.requestSubmit(button);
+  expect(attempts).toHaveBeenCalledOnce();
+  expect(blocked).toHaveBeenCalledOnce();
+  expect(attempts.mock.calls[0]![0].event.submitter).toBe(button);
+  const input = element.querySelector('input')!;
+  input.value = 'Ada';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(fixture.componentInstance.profile.name()).toBe('');
+  element.requestSubmit(button);
+  expect(attempts.mock.calls[1]![0].value).toEqual({ name: 'Ada' });
+  expect(fixture.componentInstance.profile.name.touched()).toBe(true);
+  expect(blocked).toHaveBeenCalledOnce();
+  await fixture.componentInstance.profile.submit();
+  expect(attempts).toHaveBeenCalledTimes(2);
+});

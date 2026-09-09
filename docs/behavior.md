@@ -3622,3 +3622,27 @@ Consumers read history with `closest()?.submitted()` and values with `closest()?
 rebinding, initialization, and null-resolution rules are unchanged. Unlike Angular Signal Forms'
 field tree API, this callable API facade is a Form Nodes public design choice; no underlying
 submission or state propagation rules change.
+
+## Native submission outputs
+
+`formNodeSubmit` and `formNodeSubmitBlocked` are binding outputs for native form hosts bound to
+form() nodes. The attempt sets submitted, touches interactive descendants, flushes pending values,
+and emits `{ value, form, event }` before checking submitWhen and invoking the declared action.
+The value uses the exposed snapshot, including public equality. The blocked output follows the
+attempt when validation rejects it, including pending state under 'valid', even without onSubmit.
+The declaration's onSubmitBlocked retains its action-required contract. Concurrent attempts flush
+pending values and emit attempts only; they do not touch the already submitting subtree again,
+emit validation-blocked notifications, or run another action. Reentrant submit calls during
+preparation cannot duplicate actions. Programmatic submissions do not emit binding outputs.
+Group bindings retain touch/flush/reset behavior without submission outputs. Async output listeners
+are not awaited. Synchronous listeners can affect the later validation gate; payloads retain the
+snapshot taken before notification. Form-level history and reset propagation remain unchanged.
+
+Reference: Angular 22.1.x at 05a05f59657f048a87f3d4eb9ddb7968cfe8060e,
+packages/forms/signals/src/directive/form_root.ts and packages/forms/signals/test/node/form_root.spec.ts,
+packages/forms/signals/test/node/submit.spec.ts (validation gates, concurrency, touched descendants),
+and packages/forms/src/directives/ng_form.ts with template_integration_spec.ts (ngSubmit ordering).
+Signal Forms FormRoot delegates to configured submit options and has no matching output; these
+outputs are an intentional public API extension. NgForm provides the precedent for notifying native
+attempts after state preparation. Our submitWhen modes and template blocked output retain the
+library's explicitly documented validation semantics.

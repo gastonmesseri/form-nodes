@@ -3,6 +3,7 @@ title: "[formNode] directive"
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import submitSource from '!!raw-loader!../../examples/form-node-submit.typecheck.ts';
 import valueOutputsSource from '!!raw-loader!../../examples/form-node-value-outputs.typecheck.ts';
 import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-handler.typecheck.ts';
 
@@ -537,3 +538,47 @@ Hooks that assign `inject(NgControl).valueAccessor` during component constructio
 `[formNode]` without an `NG_VALUE_ACCESSOR` provider. The direct accessor takes precedence;
 value/change and touched callbacks follow rebinding and stop changing nodes after destruction.
 See [the complete example and compatibility boundaries](../guides/custom-controls-advanced.md#hooks-that-assign-ngcontrolvalueaccessor).
+
+## Submission outputs
+
+### `formNodeSubmit`
+
+Signature: `OutputRef<FormNodeSubmitEvent<TNode>>`.
+
+Emits every native submission attempt on `<form [formNode]="myForm">` when the node was declared
+with `form()`. The handler sees `submitted() === true` and exposed values after pending input is
+flushed. Interactive descendants are marked touched on a new attempt. The notification precedes
+the `submitWhen` gate and declared `onSubmit` action, so it also fires for invalid forms and forms
+without an action. It is an attempt notification, not a successful-save event.
+
+### `formNodeSubmitBlocked`
+
+Signature: `OutputRef<FormNodeSubmitEvent<TNode>>`.
+
+Emits after `formNodeSubmit` when `submitWhen` rejects the attempt: `'not-invalid'` rejects invalid
+forms, `'valid'` also rejects pending validation, and `'always'` never rejects for validation.
+Validation is not awaited. Unlike the declaration's `onSubmitBlocked`, this template notification
+also works without a declared `onSubmit`. When both exist, the output precedes the callback.
+Concurrent attempts still emit `formNodeSubmit`, but neither run the action again nor emit
+`formNodeSubmitBlocked`. Concurrency is not a validation failure.
+
+### Payload and lifecycle
+
+Both outputs receive `{ value, form, event }`, exported as `FormNodeSubmitEvent<TNode>`:
+
+- `value`: the exposed value snapshot captured after flushing, respecting custom equality.
+- `form`: the bound form node; `$api` gives collision-safe access to its state and operations.
+- `event`: the original native `Event`; narrow to `SubmitEvent` to access `submitter`.
+
+The outputs do not form a two-way binding pair with `[formNode]`. Calling `myForm.submit()` directly
+does not emit them. They do not emit from group bindings or non-form control hosts. Native submit
+prevents browser navigation; this includes synthetic submit events, not just physical user actions.
+
+Async template handlers are not awaited and do not hold `submitting()` active. Put asynchronous
+saving in the declaration's `onSubmit` to use its validation gate and concurrency management.
+Avoid saving in both places. A synchronous attempt listener may change values or validation before
+the gate is evaluated; the payload remains the snapshot captured before that listener. Calling
+`submit()` again from a listener does not start a second action. A reset in the declared action
+runs after the attempt notification, and can clear `submitted()` normally.
+
+<CodeBlock language="ts" title="profile.component.ts">{submitSource}</CodeBlock>

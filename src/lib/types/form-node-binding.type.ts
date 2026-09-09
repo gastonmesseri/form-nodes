@@ -3,6 +3,16 @@ import type { Injector, Signal, OutputRef } from '@angular/core';
 import type { AnyNode, NodeValue } from './node.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
+/** A native form submission attempt. Values are exposed snapshots; `form` is the bound node. */
+export type FormNodeSubmitEvent<TNode extends AnyNode = AnyNode> = {
+  /** Exposed form value after pending control input has been flushed. */
+  readonly value: NodeValue<TNode>;
+  /** Bound form node. Use `$api` for collision-safe state and operations. */
+  readonly form: TNode;
+  /** Original native submit event, including SubmitEvent.submitter when available. */
+  readonly event: Event;
+};
+
 /** Public view of a concrete `[formNode]` binding. */
 export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
   /**
@@ -16,6 +26,18 @@ export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
    * This does not guarantee a physical user interaction: custom controls can emit from code.
    */
   readonly formNodeControlValueChange: OutputRef<NodeValue<TNode>>;
+  /**
+   * Native submission attempt on a form() binding, after preparing values and interaction state,
+   * before the validation gate and declared action. Emits even without onSubmit or when blocked.
+   * Programmatic submit() does not emit. Async listeners are not awaited.
+   */
+  readonly formNodeSubmit: OutputRef<FormNodeSubmitEvent<TNode>>;
+  /**
+   * Native attempt rejected by submitWhen, including pending validation with 'valid'.
+   * Emits after formNodeSubmit, even without a declared onSubmit action. Concurrent attempts,
+   * group bindings, and programmatic submit() do not emit this output.
+   */
+  readonly formNodeSubmitBlocked: OutputRef<FormNodeSubmitEvent<TNode>>;
   /** Host element carrying the `[formNode]` directive. */
   readonly element: HTMLElement;
   /** Injector belonging to the binding's host element. */

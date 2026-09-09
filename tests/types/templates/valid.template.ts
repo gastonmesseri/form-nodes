@@ -7,6 +7,7 @@ import { array, field, form, FormNodeDirective } from '../../../src/public-api';
   standalone: true,
   imports: [FormNodeDirective],
   template: `
+    <form [formNode]="profile" (formNodeSubmit)="$event.value.age.toFixed()" (formNodeSubmitBlocked)="$event.form.$api.submitted()"></form>
     <input #binding="formNode" [formNode]="name" (formNodeValueChange)="$event.toUpperCase()"
       (formNodeControlValueChange)="$event.toUpperCase()">
     <input [formNode]="profile.age" (formNodeValueChange)="$event.toFixed()"

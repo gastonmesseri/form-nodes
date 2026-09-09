@@ -58,6 +58,8 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   childrenRecord: Record<string, AnyNode>;
 
+  preparingSubmission = false;
+
   dynamicKeys = new Set<string>();
 
   createDefinitions: ReturnType<typeof createNodeDefinitionFactory>;
@@ -461,19 +463,36 @@ export class FormGroupNode<TNodes extends Nodes> {
     this.getChildKeys().forEach(key => this.children[key]!.$api.flush());
   }
 
-  async submit(): Promise<boolean> {
+  async submit(notifications?: { attempted(): void; blocked(): void }): Promise<boolean> {
     this.submitted.set(true);
-    if (untracked(this.submitting)) return false;
-    const onSubmit = this.options?.onSubmit;
-    this.node.$api.markAsTouched();
-    if (!onSubmit) return false;
-    const shouldRun = this.options?.submitWhen === 'always'
-      || (this.options?.submitWhen === 'valid' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
-    if (!shouldRun) {
-      untracked(() => this.options?.onSubmitBlocked?.(this.node));
+    if (this.preparingSubmission || untracked(this.submitting)) {
+      if (notifications) {
+        this.node.$api.flush();
+        notifications.attempted();
+      }
       return false;
     }
-    this.selfSubmitting.set(true);
+    const onSubmit = this.options?.onSubmit;
+    this.preparingSubmission = true;
+    try {
+      this.node.$api.markAsTouched();
+      if (notifications) {
+        this.node.$api.flush();
+        notifications.attempted();
+      }
+      if (!onSubmit && !notifications) return false;
+      const shouldRun = this.options?.submitWhen === 'always'
+        || (this.options?.submitWhen === 'valid' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
+      if (!shouldRun) {
+        notifications?.blocked();
+        if (onSubmit) untracked(() => this.options?.onSubmitBlocked?.(this.node));
+        return false;
+      }
+      if (!onSubmit) return false;
+      this.selfSubmitting.set(true);
+    } finally {
+      this.preparingSubmission = false;
+    }
     try {
       await untracked(() => onSubmit(this.exposedValue(), this.node));
       return true;
@@ -598,6 +617,9 @@ export class FormGroupNode<TNodes extends Nodes> {
     } as unknown as FormApi<TNodes>;
 
     const internalApi = createCallableNodeApi({
+      ...(this.nodeType === 'form' ? {
+        _submitFromControl: (notifications: { attempted(): void; blocked(): void }) => this.submit(notifications),
+      } : {}),
       ...publicApi,
       _value: this.value,
       _controlDebounce: this.controlDebounce,

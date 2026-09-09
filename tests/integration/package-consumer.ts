@@ -18,7 +18,7 @@ class Company {
   imports: [FormNodesModule],
   providers: [provideFormNodesConfig({ syncInputs: false })],
   template: `
-    <form [formNode]="profile">
+    <form [formNode]="profile" (formNodeSubmit)="$event.form.$api.submitted()" (formNodeSubmitBlocked)="$event.event.preventDefault()">
       <span>{{ profile.submitted() }}</span>
       @if (closestForm(); as closest) { <span>{{ closest.submitted() }}</span> }
       <input #nameBinding="formNode" [formNode]="profile.name">

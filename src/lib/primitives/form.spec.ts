@@ -2,10 +2,10 @@ import moment from 'moment';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal } from '@angular/core';
 
-import { form } from './form';
 import { field } from './field';
 import { array } from './array';
 import { group } from './group';
+import { form, type FormNode } from './form';
 import { validator } from '../validation/validator';
 import { oneOf } from '../validation/validators/one-of';
 import { between } from '../validation/validators/between';
@@ -5296,4 +5296,27 @@ it('keeps the callable API independent of colliding static and dynamic child nam
   expect(profile.$api).toBe(api);
   expect(profile.details.api).toBe(profile.details.$api);
   expect(profile.details.$api()).toEqual({ value: 'group child' });
+});
+
+it('prevents reentrant blocked callbacks and permits a later valid submission', async () => {
+  const action = vi.fn();
+  const reentrantResults: Promise<boolean>[] = [];
+  const blocked = vi.fn((node: FormNode) => { reentrantResults.push(node.$api.submit()); });
+  const profile = form({ nested: form({ name: field('', [required]) }) }, {
+    onSubmit: action,
+    onSubmitBlocked: blocked,
+  });
+  expect(await profile.submit()).toBe(false);
+  expect(await Promise.all(reentrantResults)).toEqual([false]);
+  expect(blocked).toHaveBeenCalledOnce();
+  expect(profile.submitted()).toBe(true);
+  expect(profile.nested.submitted()).toBe(false);
+  expect(profile.nested.name.touched()).toBe(true);
+  expect(profile.submitting()).toBe(false);
+  profile.nested.name.set('Ada');
+  expect(await profile.submit()).toBe(true);
+  expect(action).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile);
+  profile.reset();
+  expect(profile.submitted()).toBe(false);
+  expect(profile.nested.name.touched()).toBe(false);
 });

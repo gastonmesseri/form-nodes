@@ -118,3 +118,13 @@ For an error component, combine field invalidity with `field.touched()` or its o
 This also covers fields created after an attempt. [useClosestForm()](../reference/use-closest-form.md)
 observes the owning form through the nearest binding, including components created after submission.
 Its signal removes the need to subscribe to `NgForm.ngSubmit` and copy a boolean locally.
+
+## Observe submission in the template
+
+Use `(formNodeSubmit)` for native submission attempts and `(formNodeSubmitBlocked)` for attempts
+rejected by `submitWhen`. Both provide `{ value, form, event }`. Attempt notifications happen after
+pending input is flushed and before validation gating, even without a declared action. Keep async
+saving in `onSubmit` when you need managed `submitting()` state and concurrency protection.
+
+See [submission outputs](../reference/form-node-binding.md#submission-outputs) for signatures,
+ordering, template-only usage, and the difference from programmatic `submit()`.

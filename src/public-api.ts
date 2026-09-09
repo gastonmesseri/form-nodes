@@ -123,3 +123,5 @@ export type { SyncInputs, SyncInputName } from './lib/configuration/node-input-c
 export type { NodeValueSignal } from './lib/types/node-value-signal.type';
 
 export type { CallableNodeApi } from './lib/types/callable-node-api.type';
+
+export type { FormNodeSubmitEvent } from './lib/types/form-node-binding.type';
