@@ -3736,3 +3736,17 @@ Angular reference: `22.1.x` commit `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`,
 `packages/forms/signals/src/directive/control_cva.ts` with `test/web/interop.spec.ts`.
 The synchronous initial write intentionally uses Reactive Forms' established CVA setup ordering;
 subsequent updates retain this library's signal-driven rendering and feedback suppression.
+
+
+CVA reset and rebinding: control bindings carry an optional reset operation. Reset calls it
+synchronously after restoring node data, even when equality suppresses a signal notification.
+CVA writes refresh the view-value cache and retain the feedback guard, so the next effect does
+not echo the reset or emit a user event. Ancestor resets propagate through bound descendants.
+A binding's reset callback verifies the node identity; obsolete and destroyed registrations
+cannot reset another node's view. Node-identity changes force value and disabled writes during
+reactive synchronization, independently of value equality. Ordinary updates remain deduplicated.
+
+Reference: Angular `22.1.x` at `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`,
+`packages/forms/signals/src/directive/control_cva.ts` and its unconditional reset-write test in
+`packages/forms/signals/test/web/interop.spec.ts`; Reactive Forms rebinding in
+`packages/forms/src/directives/reactive_directives/form_control_directive.ts` reruns CVA setup.

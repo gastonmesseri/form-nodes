@@ -19,8 +19,8 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
   let lastViewValue: unknown = Symbol('unset');
   injector.get(DestroyRef).onDestroy(() => { destroyed = true; });
 
-  const writeValue = (value: unknown) => {
-    if (Object.is(value, lastViewValue)) return;
+  const writeValue = (value: unknown, force = false) => {
+    if (!force && Object.is(value, lastViewValue)) return;
     lastViewValue = value;
     untracked(() => {
       writingAccessorValue = true;
@@ -32,11 +32,14 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
     });
   };
   let lastDisabled: boolean | undefined;
-  const writeDisabled = (disabled: boolean) => {
-    if (disabled === lastDisabled) return;
+  const writeDisabled = (disabled: boolean, force = false) => {
+    if (!force && disabled === lastDisabled) return;
     lastDisabled = disabled;
     untracked(() => accessor.setDisabledState?.(disabled));
   };
+
+  let lastWrittenNode = binding.node();
+  let lastDisabledNode = lastWrittenNode;
 
   getNgControl().valueAccessor = accessor;
   // CVAs must receive initial state before child controls run their initialization hooks.
@@ -56,11 +59,22 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
     (binding.node() as unknown as InternalNode).$api._flushControlValueOnBlur();
   });
   effect(() => {
-    writeValue((binding.node() as unknown as InternalNode).$api._controlValue());
+    const node = binding.node();
+    const changedNode = node !== lastWrittenNode;
+    lastWrittenNode = node;
+    writeValue((node as unknown as InternalNode).$api._controlValue(), changedNode);
   }, { injector });
   if (accessor.setDisabledState) {
-    effect(() => { writeDisabled(binding.node().$api.disabled()); }, { injector });
+    effect(() => {
+      const node = binding.node();
+      const changedNode = node !== lastDisabledNode;
+      lastDisabledNode = node;
+      writeDisabled(node.$api.disabled(), changedNode);
+    }, { injector });
   }
   connectLegacyValidators(context);
-  return connectControlInputs(accessor, binding.node, injector, hasControlStateConsumer(binding.element));
+  return {
+    ...connectControlInputs(accessor, binding.node, injector, hasControlStateConsumer(binding.element)),
+    reset: () => writeValue((binding.node() as unknown as InternalNode).$api._controlValue(), true),
+  };
 };

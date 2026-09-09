@@ -27,5 +27,7 @@ export type ControlAdapterConnection = {
   nativeEvents?: NativeControlEvents;
   customEvents?: CustomControlEvents;
   focus?: (options?: FocusOptions) => void;
+  /** Restores the control view even when resetting leaves the node value unchanged. */
+  reset?: () => void;
   inputNames: ReadonlySet<string>;
 };

@@ -79,6 +79,8 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   private customEvents: CustomControlEvents | undefined;
 
+  resetControl: (() => void) | undefined;
+
   bindingGeneration = 0;
 
   private focuser = (options?: FocusOptions) => this.element.focus(options);
@@ -130,6 +132,7 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
     const connection = resolveControlAdapter(context, this.interop.peek()?.valueAccessor);
     this.connectNativeEvents(connection.nativeEvents);
     this.customEvents = connection.customEvents;
+    this.resetControl = connection.reset;
     this.focuser = connection.focus ?? this.focuser;
     this.formNodeStateCleanup = registerControlStateBinding(this.element, this);
     syncNativeControlState(context, connection.inputNames);
@@ -255,10 +258,14 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
 
   private registerControlBinding() {
     effect((onCleanup) => {
-      const field = this.node() as unknown as InternalNode;
+      const node = this.node();
+      const field = node as unknown as InternalNode;
       onCleanup(field.$api._registerControlBinding({
         element: this.element,
         focus: options => this.focus(options),
+        reset: () => {
+          if (this.node() === node) this.resetControl?.();
+        },
       }));
     }, { injector: this.injector });
   }
@@ -281,6 +288,8 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
  * CVAs receive their initial value and optional disabled state synchronously during setup,
  * before child initialization. Subsequent model-to-view updates run through Angular effects;
  * they are not guaranteed to render before a programmatic node setter returns.
+ * Reset forces a synchronous CVA write even for unchanged values. Rebinding refreshes value
+ * and disabled state during synchronization, including when the new node has an equal value.
  * CVA user callbacks update control state synchronously, with debounce governing commits.
  */
 export const FormNodeDirective = _FormNode;

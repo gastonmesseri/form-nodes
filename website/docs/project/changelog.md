@@ -12,6 +12,8 @@ canonical release record.
 
 ### Fixed
 
+- Restore CVA views on resets even when the value is unchanged, including ancestor resets and discarded pending input. Rebinding to an equal-valued node refreshes the CVA without carrying over an old draft; stale and destroyed bindings no longer participate in resets.
+
 - Initialize CVA values and disabled state synchronously when `[formNode]` connects, so Angular Material radio groups display preloaded selections correctly, including inside nested custom controls and conditional views. Later model-to-view updates continue through the signal rendering cycle.
 
 ## 📦 3.4.0 — 2026-09-10 {#340--2026-09-10}
