@@ -121,3 +121,6 @@ non-boolean returns: always return a boolean. Parameterless `when` callbacks on 
 receiving a context retain their checked boolean result. It does not
 cause eager condition evaluation or change reactive tracking. A nullable numeric field still
 requires null handling in comparisons, as shown by `?? 0` above.
+
+For custom helper signatures and explicit return-type alternatives, see
+[troubleshooting circular type inference](../../guides/validation.md#circular-type-inference).

@@ -527,3 +527,6 @@ typed context and boolean result. See [self-referencing conditions](../guides/va
 Initial automatic evaluation of a configured `when` is deferred past synchronous construction.
 Validation-state reads or explicit validation can start it earlier. Disabling the condition cancels
 work and releases its dependency tracking; reenabling starts a fresh execution with current values.
+
+For custom helper signatures and explicit return-type alternatives, see
+[troubleshooting circular type inference](../guides/validation.md#circular-type-inference).

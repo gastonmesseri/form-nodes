@@ -433,3 +433,6 @@ error?.minimumAge; // number | undefined
 
 See [Validation](../guides/validation.md), [Built-in validators](./built-in-validators.md), and
 [`asyncValidator()`](./async-validator.md).
+
+For custom helper signatures and explicit return-type alternatives, see
+[troubleshooting circular type inference](../guides/validation.md#circular-type-inference).

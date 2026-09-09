@@ -5,6 +5,7 @@ title: Validation
 # Validation {#validation}
 
 import CodeBlock from '@theme/CodeBlock';
+import selfReferenceInferenceSource from '!!raw-loader!../../examples/self-reference-inference.typecheck.ts';
 import whenSelfReferenceSource from '!!raw-loader!../../examples/when-self-reference.example.ts';
 import stringValidationSource from '!!raw-loader!../../examples/string-validation.example.ts';
 import invalidValidationResultsSource from '!!raw-loader!../../examples/invalid-validation-results.example.ts';
@@ -296,3 +297,69 @@ initializer finishes. Reading validation state or explicitly calling `validate()
 work sooner; do so only after initialization. Disabling a condition cancels its pending work and
 releases dependency tracking. Reenabling it starts a fresh execution even when the field value
 has not changed. These rules apply inside and outside Angular injection contexts.
+
+## Troubleshooting circular type inference {#circular-type-inference}
+
+A class form can refer to a validator or condition that refers back to the same form. TypeScript
+may then report **TS7022**, **TS7023**, or **TS7024**: a property or function implicitly has type
+`any` because it is referenced directly or indirectly in its own initializer or return expression.
+A common cycle is `form → condition callback → computed → form`. Moving the computed above the
+form does not necessarily resolve a type-inference cycle.
+
+### What the library handles
+
+Parameterless inline validators, parameterless callbacks passed to `validator()` and
+`asyncValidator()`, `requiredIf` conditions, and parameterless `when` conditions support these
+self-references without explicit return annotations. Their callback return types are intentionally
+unchecked. The expected runtime result still applies: conditions should return booleans, synchronous
+validators should return supported validation results, and async validators should return supported
+Promise-like or Observable-like results. Context-taking callbacks retain their checked contracts.
+
+A custom helper with its own strict callback signature can reintroduce the cycle. Reactive numeric
+limits, date limits, allowed-value lists, and message callbacks also retain their existing checked
+signatures; they are not covered by the parameterless-condition relaxation.
+
+### Fix application code with an explicit result type
+
+Prefer an accurate return annotation at one point in the cycle. For example:
+
+- Annotate the computed callback: `computed((): boolean => ...)`.
+- Annotate the condition: `requiredWhen((): boolean => ...)`.
+- For a custom method, declare its actual result, such as `isTypeVisible(): boolean`.
+
+Use the actual result type for other callbacks: a numeric constraint may return `number | undefined`,
+a message may return `string | undefined`, and a synchronous custom validator can declare
+`ValidationResult`. Such annotations provide a type boundary while keeping return-value checking.
+Avoid annotating the entire form as `any`, since that discards useful child and value types.
+
+### Design a custom helper that permits unannotated consumers
+
+If you own the helper and deliberately accept the same tradeoff as the library, declare its
+parameterless callback parameter as `() => any`, and keep the helper's own return type precise.
+This removes contextual return checking for the callback while preserving the type of the returned
+validator. Merely wrapping the callback in `validator()` inside the helper does not change the
+helper's public signature. `() => unknown` is not an equivalent fix for this inference cycle.
+
+The following checked example compares both strict annotations and the permissive helper signature:
+
+<CodeBlock language="ts" title="self-reference-inference.ts">{selfReferenceInferenceSource}</CodeBlock>
+
+If you cannot change a helper, annotating just the callback as `(): any` is another localized
+escape hatch, shown in the final class. Prefer `(): boolean` when the result is known: it breaks
+the cycle while retaining return checking. An `as any` cast on the whole form would lose much more.
+
+Here, `any` describes the callback's accepted return type; it is not a value to return. Document the
+expected runtime result and the lost checking when publishing such a helper. A condition returning
+a string can now compile, so the convenience has a real cost. Do not widen context-taking callbacks
+or unrelated options unless their own use case requires a separately tested change.
+
+### Distinguish inference errors from early execution
+
+An error such as `this.isTypeVisible is not a function` at runtime has a different cause: something
+called the condition before the class finished initializing. A type annotation cannot delay execution.
+Pass the callback to the validation pipeline rather than invoking it while constructing a helper,
+and avoid reading validation state or explicitly starting validation from unfinished initializers.
+Automatic startup for async validators with `when` is deferred, but explicit reads can start it sooner.
+
+Finally, `required` does not narrow a nullable field's TypeScript value type. Handle `null` explicitly
+in comparisons, as the examples do with `?? 0`, or use `field.strict()` when null is not allowed.

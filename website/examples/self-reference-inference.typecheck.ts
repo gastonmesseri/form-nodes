@@ -1,0 +1,57 @@
+import { computed } from '@angular/core';
+import { field, form, required, type Validator } from '@ngblocks/form-nodes';
+
+// A reusable helper that checks the condition's return type.
+function requiredWhen(condition: () => boolean): Validator<unknown> {
+  return required({ when: condition });
+}
+
+export class ExplicitComputedResult {
+  form = form({
+    other: field<number>(23),
+    subType: field<string>(null, [requiredWhen(() => this.isTypeVisible())]),
+  });
+
+  isTypeVisible = computed((): boolean => (this.form.other() ?? 0) > 30);
+}
+
+export class ExplicitConditionResult {
+  form = form({
+    other: field<number>(23),
+    subType: field<string>(null, [requiredWhen((): boolean => this.isTypeVisible())]),
+  });
+
+  isTypeVisible = computed(() => (this.form.other() ?? 0) > 30);
+}
+
+// An intentional helper-author tradeoff: callers must still return a boolean.
+function inferredRequiredWhen(condition: () => any): Validator<unknown> {
+  return required({ when: condition });
+}
+
+export class UnannotatedConsumer {
+  form = form({
+    other: field<number>(23),
+    subType: field<string>(null, [inferredRequiredWhen(() => this.isTypeVisible())]),
+  });
+
+  isTypeVisible = computed(() => (this.form.other() ?? 0) > 30);
+}
+
+// The relaxed helper condition must not erase the form's inferred field types.
+const model = new UnannotatedConsumer();
+const visible: boolean = model.isTypeVisible();
+const subType: string | null = model.form.subType();
+// @ts-expect-error the field still rejects invalid writes
+model.form.subType.set(123);
+void [visible, subType];
+
+// A localized escape hatch when the helper's signature cannot be changed.
+export class UncheckedCallbackResult {
+  form = form({
+    other: field<number>(23),
+    subType: field<string>(null, [requiredWhen((): any => this.isTypeVisible())]),
+  });
+
+  isTypeVisible = computed(() => (this.form.other() ?? 0) > 30);
+}

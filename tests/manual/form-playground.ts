@@ -1,7 +1,7 @@
 import { computed, Signal, signal } from '@angular/core';
 
 import type { AnyNode, FieldNode } from '../../src/public-api';
-import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNodeDirective, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
+import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNodeDirective, group, min, minLength, oneOf, required, validator, requiredIf } from '../../src/public-api';
 
 type Company = { companyId: number; companyName: string }
 const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
@@ -617,3 +617,15 @@ functionThatTakesSignals(array(field('')));
 functionThatTakesSignals(field('').value);
 functionThatTakesSignals(field('').value.control);
 functionThatTakesSignals(field('').value.committed);
+
+
+class MyComponent {
+  form = form({
+    other: field<number>(23, [required]),
+    subType: field<string>(null, [requiredIf(() => this.isTypeVisible())]),
+  });
+
+  isTypeVisible = computed((): boolean => {
+    return this.form.other()! > 30;
+  });
+}
