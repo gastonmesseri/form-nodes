@@ -3750,3 +3750,17 @@ Reference: Angular `22.1.x` at `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`,
 `packages/forms/signals/src/directive/control_cva.ts` and its unconditional reset-write test in
 `packages/forms/signals/test/web/interop.spec.ts`; Reactive Forms rebinding in
 `packages/forms/src/directives/reactive_directives/form_control_directive.ts` reruns CVA setup.
+
+### CVA view refresh after writes
+
+After a CVA model or disabled-state write, the adapter marks the bound view for checking.
+This covers accessors that mutate plain properties without requesting change detection,
+such as ng-bootstrap 20 rating and timepicker. Signal-based model synchronization can run
+after host bindings have been evaluated; requesting the refresh prevents stale DOM and
+expression-changed errors. Deduplicated writes still do no work, and reset keeps its forced
+write behavior. No user-value output is introduced by a view refresh.
+
+This complements Angular 22.1.x `control_cva.ts` binding synchronization (inspected at
+`da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`); it is a safeguard in our effect-based adapter.
+The browser regressions exercise real ng-bootstrap CVAs, inherited disable/enable transitions,
+and Reactive Forms initial-state comparisons. See [UI library testing](ui-library-testing.md).

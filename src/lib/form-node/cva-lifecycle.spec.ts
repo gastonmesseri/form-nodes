@@ -141,3 +141,65 @@ it('restores committed input synchronously on reset and cancels a pending CVA ed
   expect(host.events).toEqual([]);
   fixture.destroy();
 });
+
+@Component({
+  selector: 'plain-property-cva',
+  template: '<input [value]="value" [disabled]="disabled" />',
+  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => PlainPropertyControl), multi: true }],
+  host: { '[attr.aria-disabled]': 'disabled' },
+})
+class PlainPropertyControl {
+  value: unknown = '';
+
+  disabled = false;
+
+  writeValue(value: unknown) { this.value = value; }
+
+  setDisabledState(disabled: boolean) { this.disabled = disabled; }
+
+  registerOnChange(_fn: (value: unknown) => void) {}
+
+  registerOnTouched(_fn: () => void) {}
+}
+
+@Component({
+  selector: 'plain-property-cva-host',
+  template: '<plain-property-cva [formNode]="node" (formNodeValueChange)="events.push($event)" />',
+  imports: [PlainPropertyControl, FormNodeDirective],
+})
+class PlainPropertyHost {
+  profile = form({ nested: form({ name: field('Ada') }) });
+
+  node: AnyNode = this.profile.nested.name;
+
+  events: unknown[] = [];
+}
+
+it.each(['field', 'ancestor'] as const)('refreshes plain CVA properties after model writes and %s disabled changes', async (scope) => {
+  const fixture = TestBed.createComponent(PlainPropertyHost);
+  try {
+    await fixture.whenStable();
+    const host = fixture.componentInstance;
+    const owner = scope === 'field' ? host.profile.nested.name : host.profile;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const control = fixture.nativeElement.querySelector('plain-property-cva') as HTMLElement;
+    expect(input.value).toBe('Ada');
+    host.profile.nested.name.set('Grace');
+    await fixture.whenStable();
+    expect(input.value).toBe('Grace');
+    owner.disable();
+    await fixture.whenStable();
+    expect(input.disabled).toBe(true);
+    expect(control.getAttribute('aria-disabled')).toBe('true');
+    owner.enable();
+    await fixture.whenStable();
+    expect(input.disabled).toBe(false);
+    expect(control.getAttribute('aria-disabled')).toBe('false');
+    host.profile.resetToInitial();
+    await fixture.whenStable();
+    expect(input.value).toBe('Ada');
+    expect(host.events).toEqual([]);
+  } finally {
+    fixture.destroy();
+  }
+});

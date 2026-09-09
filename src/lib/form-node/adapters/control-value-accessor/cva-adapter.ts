@@ -1,5 +1,5 @@
 import type { ControlValueAccessor } from '@angular/forms';
-import { DestroyRef, effect, untracked } from '@angular/core';
+import { DestroyRef, effect, untracked, ChangeDetectorRef } from '@angular/core';
 
 import { connectLegacyValidators } from './legacy-validators';
 import { connectControlInputs } from '../sync-control-inputs';
@@ -14,6 +14,8 @@ import type { ControlAdapterContext, ControlAdapterConnection } from '../control
 export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapterContext<TNode>, accessor: ControlValueAccessor): ControlAdapterConnection => {
   const { binding, getNgControl } = context;
   const injector = binding.injector;
+  // Some CVAs only assign plain properties; effect-driven writes must refresh their view.
+  const changeDetector = injector.get(ChangeDetectorRef);
   let destroyed = false;
   let writingAccessorValue = false;
   let lastViewValue: unknown = Symbol('unset');
@@ -26,6 +28,7 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
       writingAccessorValue = true;
       try {
         accessor.writeValue(value);
+        changeDetector.markForCheck();
       } finally {
         writingAccessorValue = false;
       }
@@ -35,7 +38,10 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
   const writeDisabled = (disabled: boolean, force = false) => {
     if (!force && disabled === lastDisabled) return;
     lastDisabled = disabled;
-    untracked(() => accessor.setDisabledState?.(disabled));
+    untracked(() => {
+      accessor.setDisabledState?.(disabled);
+      changeDetector.markForCheck();
+    });
   };
 
   let lastWrittenNode = binding.node();

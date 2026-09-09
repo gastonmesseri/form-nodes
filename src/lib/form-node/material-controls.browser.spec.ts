@@ -97,12 +97,12 @@ const settle = async (fixture: ComponentFixture<unknown>) => {
   fixture.detectChanges();
 };
 
-const setup = async (kind: Kind, debounce = false, disabled = false) => {
+const setup = async (kind: Kind, debounce = false, disabled = false, suppressEqual = false) => {
   const fixture = TestBed.createComponent(MaterialHost);
   const host = fixture.componentInstance;
   host.kind.set(kind);
   const initial = (kind === 'text' || kind === 'input') ? 'Ada' : kind === 'checkbox' ? false : kind === 'date' ? new Date(2025, 0, 10) : 'A';
-  const profile = form({ control: field(initial, { disabled, ...(debounce ? { debounce: 'blur' as const } : {}) }) });
+  const profile = form({ control: field(initial, { disabled, ...(suppressEqual ? { equal: () => true } : {}), ...(debounce ? { debounce: 'blur' as const } : {}) }) });
   const node = profile.control;
   host.node.set(node);
   host.baseline.setValue(initial);
@@ -186,7 +186,7 @@ it.each(kinds)('matches Reactive Forms initial rendering and supports reset, reb
 });
 
 it.each(kinds)('renders disabled state and re-enables user interaction: %s', async (kind) => {
-  const { fixture, host, node, profile } = await setup(kind);
+  const { fixture, host, profile } = await setup(kind);
   profile.disable();
   host.baseline.disable();
   await settle(fixture);
@@ -372,4 +372,56 @@ it('commits a blur-debounced select when its user selection closes the panel', a
   expect(node.$api.touched()).toBe(true);
   expect(node.$api.debouncing()).toBe(false);
   fixture.destroy();
+});
+
+// An always-equal comparator deliberately stresses the separation between public and control values.
+it.each(kinds.flatMap(kind => [false, true].map(debounce => ({ kind, debounce }))))('renders and resets equality-suppressed values: $kind, debounce=$debounce', async ({ kind, debounce }) => {
+  const { fixture, host, node, profile, initial } = await setup(kind, debounce, false, true);
+  try {
+    const root = () => fixture.nativeElement.querySelector('.node') as HTMLElement;
+    const initialView = view(root(), kind);
+    expect(node()).toEqual(initial);
+    expect(profile()).toEqual({ control: initial });
+    await edit(fixture, kind);
+    await settle(fixture);
+    const edited = node.value.control();
+    const editedView = view(root(), kind);
+    expect(edited).not.toEqual(initial);
+    expect(editedView).not.toEqual(initialView);
+    expect(host.immediate).toEqual([edited]);
+    expect(node.dirty()).toBe(true);
+    // Some controls report touched during selection and have already flushed blur debounce.
+    if (node.debouncing()) {
+      expect(node.value.committed()).toEqual(initial);
+      expect(host.committed).toEqual([]);
+    }
+    node.flush();
+    await settle(fixture);
+    expect(node.value.committed()).toEqual(edited);
+    expect(profile.value.committed()).toEqual({ control: edited });
+    expect(node()).toEqual(initial);
+    expect(profile()).toEqual({ control: initial });
+    expect(host.committed).toEqual([initial]);
+    expect(view(root(), kind)).toEqual(editedView);
+    profile.reset();
+    await settle(fixture);
+    expect(view(root(), kind)).toEqual(editedView);
+    expect(node.value.committed()).toEqual(edited);
+    expect(node.dirty()).toBe(false);
+    node.set(initial);
+    await settle(fixture);
+    expect(view(root(), kind)).toEqual(initialView);
+    node.set(edited);
+    await settle(fixture);
+    expect(view(root(), kind)).toEqual(editedView);
+    profile.resetToInitial();
+    await settle(fixture);
+    expect(view(root(), kind)).toEqual(initialView);
+    expect(node.value.control()).toEqual(initial);
+    expect(node.value.committed()).toEqual(initial);
+    expect(host.immediate).toEqual([edited]);
+    expect(host.committed).toEqual([initial]);
+  } finally {
+    fixture.destroy();
+  }
 });

@@ -19,6 +19,11 @@ The shared lifecycle test verifies that events go to the new node after rebindin
 changing or resetting the previous node cannot overwrite the current control. Outputs assert
 that their payload matches the node's committed or control value at the instant of delivery.
 
+The shared controls also run with `equal: () => true`, with and without blur debounce. These
+regressions verify that rendering follows the control value, committed snapshots stay current,
+public reads can retain their cached value, event payloads honor their respective value views,
+and both reset variants and programmatic writes restore the intended control display.
+
 ## Material rendering boundary
 
 Material checkbox/radio native inputs can retain a click's checked state when a programmatic

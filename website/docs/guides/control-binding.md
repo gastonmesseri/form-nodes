@@ -182,3 +182,10 @@ controls, CVAs, signal controls, and enabled input/output pairs, so consumers do
 a native `input` or `change` event for each control type. See the
 [value output reference](../reference/form-node-binding.md#value-outputs) for a complete component
 example and the control-originated event contract.
+
+A custom `equal` comparator can retain the previously exposed `node()` value without preventing
+the control from displaying new input. Rendering uses `value.control()`, while
+`value.committed()` exposes the latest committed data before the public equality check.
+Consequently, `formNodeValueChange` can emit the retained public value for an edit that compares
+equal; `formNodeControlValueChange` carries the latest control value. Debounce still determines
+when input is committed. See [value outputs](../reference/form-node-binding.md#value-outputs).

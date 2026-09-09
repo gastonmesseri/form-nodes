@@ -207,9 +207,29 @@ When `[formNode]` connects a `ControlValueAccessor`, it calls `writeValue()` wit
 
 This matches Reactive Forms' initialization order. It does **not** make every later model-to-view update synchronous: `node.set()`, form patches, and disabled-state changes update node state immediately, while existing CVAs receive changed state during Angular's reactive synchronization. A CVA must accept `writeValue()` before its view is initialized and during later updates. Reactive Forms' `FormControl.setValue()` instead invokes the registered model-to-view callback synchronously.
 
+Form Nodes requests a view check after writing a CVA value or disabled state. This also supports controls whose `setDisabledState()` only assigns a plain property, such as ng-bootstrap rating and timepicker. Rendering still follows Angular's change detection cycle.
+
 CVA user input remains synchronous: call the callback supplied to `registerOnChange()` for user edits. Form Nodes receives that value immediately; configured debounce can defer its commit. Prefer `(formNodeControlValueChange)` for immediate control values and `(formNodeValueChange)` for committed values. Programmatic `writeValue()` calls must not emit user changes; Form Nodes also guards against synchronous feedback from an accessor.
 
 
 Reset is an explicit exception to ordinary model-to-view deduplication: `reset()` and `resetToInitial()` synchronously call the bound CVA's `writeValue()` even when the value stays the same. This clears provisional control text that was never emitted to the node. Resetting an ancestor applies this to its bound descendants, and pending debounced input is discarded. Reset-driven writes do not emit `formNodeValueChange` or `formNodeControlValueChange`.
 
 Changing `[formNode]` to a different node forces a fresh value and disabled-state write during binding synchronization, even if both nodes have equal values. Subsequent resets and user callbacks target the new node; resetting the previous node or a node whose binding was destroyed does not write into the control. Ordinary unchanged-value effects still skip redundant writes.
+
+## Tested UI library integrations {#tested-ui-libraries}
+
+The Chromium regression suite uses real controls from Angular Material, PrimeNG, NG-ZORRO,
+ng-bootstrap, and Ionic. It checks initial values against Reactive Forms, user-value outputs,
+reset, rebinding, disabled state, and control-specific touch/debounce behavior. Select tests
+also cover late options and overlay selection; Material tests include native and Moment dates.
+
+The current fixtures use Angular 21.0.7 with Material 21.0.6, PrimeNG 21.1.10, NG-ZORRO 21.3.3,
+ng-bootstrap 20.0.0, and Ionic Angular 9.0.3. This covers the tested controls and versions, not
+every component or configuration offered by these libraries. See the repository's
+[UI integration test matrix](https://github.com/gastonmesseri/form-nodes/blob/master/docs/ui-library-testing.md)
+for the exact controls, scenarios, version selection, and known boundaries.
+
+A CVA decides when it reports touched: for example, ng-bootstrap rating reports it during
+selection. With `debounce: 'blur'`, that callback commits the pending value in the same
+interaction. Form Nodes follows the accessor's touch notification rather than assuming every
+custom control waits for a native DOM blur.
