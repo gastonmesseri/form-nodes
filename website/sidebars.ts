@@ -62,13 +62,6 @@ const sidebars: SidebarsConfig = {
       items: [
         'reference/api-overview',
         'reference/node-types',
-        {
-          type: 'category',
-          label: 'Public types',
-          link: { type: 'doc', id: 'reference/types/index' },
-          items: publicTypesSidebar,
-        },
-        'reference/is-form-node',
         'reference/form',
         'reference/field',
         'reference/array',
@@ -77,10 +70,17 @@ const sidebars: SidebarsConfig = {
         'reference/use-closest-form',
         { type: 'doc', id: 'reference/form-node-binding', label: '[formNode]' },
         'reference/form-nodes-module',
+        'reference/is-form-node',
         'reference/custom-control-contracts',
         'reference/configuration',
         'reference/node-api',
         'reference/node-value',
+        {
+          type: 'category',
+          label: 'Public types',
+          link: { type: 'doc', id: 'reference/types/index' },
+          items: publicTypesSidebar,
+        },
         {
           type: 'category',
           label: 'Other',
