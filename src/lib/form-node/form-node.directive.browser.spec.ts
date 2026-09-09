@@ -2197,7 +2197,7 @@ it('exposes native submission and reset history to same-host and late descendant
     closest = useClosestForm();
   }
 
-  @Component({ selector: 'submission-probe', template: `@if (closest(); as owner) { {{ owner.$api.submitted() }} } @else { false }` })
+  @Component({ selector: 'submission-probe', template: `@if (closest(); as owner) { {{ owner.submitted() }} } @else { false }` })
   class SubmissionProbe {
     closest = useClosestForm();
   }
@@ -2206,7 +2206,7 @@ it('exposes native submission and reset history to same-host and late descendant
     template: `
       <form [formNode]="active()">
         <input [formNode]="leaf()" closestFormProbe #same="closestFormProbe">
-        <output>@if (same.closest(); as owner) { {{ owner.$api.submitted() }} } @else { false }</output>
+        <output>@if (same.closest(); as owner) { {{ owner.submitted() }} } @else { false }</output>
         @if (show()) { <submission-probe /> }
         <button type="submit">Submit</button>
         <button type="reset">Reset</button>

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Injector, computed, signal } from '@angular/core';
+import { Injector, computed, isSignal, signal } from '@angular/core';
 
 import { form } from './form';
 import { array } from './array';
@@ -1967,4 +1967,20 @@ it('supports complete committed and buffered array writes through value signals'
   expect(items.debouncing()).toBe(false);
   items.resetToInitial();
   expect(items.value.committed()).toEqual(['Ada']);
+});
+
+it('keeps the callable array API length signal and collection operations intact', () => {
+  const names = array(field(''), { initialValue: ['Ada'] });
+  const api = names.$api;
+  expect(isSignal(api)).toBe(true);
+  expect(api).toBe(names.api);
+  expect(api()).toEqual(['Ada']);
+  expect(api.length()).toBe(1);
+  api.push('Grace');
+  expect(api()).toEqual(['Ada', 'Grace']);
+  expect(api.length()).toBe(2);
+  expect(api.at(1)!()).toBe('Grace');
+  api.resetToInitial();
+  expect(api()).toEqual(['Ada']);
+  expect(api.length()).toBe(1);
 });

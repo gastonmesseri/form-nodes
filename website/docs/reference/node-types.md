@@ -197,3 +197,10 @@ It is an Angular signal with `committed` and `control` signals, each exposing a 
 Bare `FieldNode` annotations preserve `value.committed()` and `value.control()` with `any` values.
 Use `FieldNode<TValue>` to preserve a known value type. The three value signals hide native
 function members in IntelliSense; see the [typed example](./node-value.md#explicit-fieldnode-annotations-and-intellisense).
+
+## CallableNodeApi
+
+`CallableNodeApi<TApi>` combines an API contract with `Signal<ReturnType<TApi['value']>>`.
+Node `$api` properties use this callable facade; an unshadowed `api` aliases it. It preserves
+precise value and setter types while preventing children from overwriting operations.
+See [callable API reads and examples](./node-api.md#callable-api).

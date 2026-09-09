@@ -3584,10 +3584,10 @@ not cancel the action; its finalization does not set history again. A subsequent
 sets the flag again even when concurrency blocks its action. Fresh clones/items start false. The
 property is form-only; use `$api.submitted()` for a form with a child named `submitted`.
 
-`useClosestForm()` requires an injection context and returns a `Signal<NavigationForm | null>`.
+`useClosestForm()` requires an injection context and returns a `Signal<CallableNodeApi<FormApi<any>> | null>`.
 It injects the nearest `FORM_NODE` once with optional resolution, including the current host, then
-reactively resolves `binding.node().$api.form()`. It follows rebinding, attachment, detachment, and
-reparenting. Forms return themselves; unowned nodes and missing bindings return null. A nearest
+reactively resolves `binding.node().$api.form()?.$api`. It follows rebinding, attachment, detachment, and
+reparenting. Forms return their callable API; unowned nodes and missing bindings return null. A nearest
 unowned binding prevents fallback to farther bindings. Angular DI boundaries apply; this is not
 DOM traversal, HTML form-owner lookup, or NgForm compatibility. The signal must not be read before
 the binding's required input is initialized. Components created after an attempt observe existing
@@ -3604,3 +3604,21 @@ by `packages/forms/src/directives/ng_form.ts`: onSubmit sets submitted before em
 and resetForm clears it. Unlike NgForm's directive-owned flag, ours belongs to the model and works
 without Angular DI or a native form. Existing no-action submission behavior also differs from
 FormRoot: Form Nodes marks touched even without an action, and now records the attempt as well.
+
+## Callable collision-safe APIs
+
+Every node's `$api` is a separate Angular signal facade enriched with the node API and internal
+underscore-prefixed transport methods. `api` aliases the same facade unless shadowed by a child.
+Calls delegate to the exposed `value` signal, retaining public equality, debounce, validation,
+and aggregate composition semantics. The facade has stable identity, is not marked as a node,
+and does not expose direct children. Children cannot overwrite its operations; array `length`
+is installed as a signal through property descriptors rather than assigning to the function's
+non-writable built-in property. `CallableNodeApi<TApi>` preserves read types and hides native
+function members on concrete views. Common AnyNode APIs stay structurally callable to accept both
+ordinary APIs and arrays whose `length` overrides the native function property.
+
+`useClosestForm()` now returns the owning form's callable API rather than its collision-prone node.
+Consumers read history with `closest()?.submitted()` and values with `closest()?.()`. Ownership,
+rebinding, initialization, and null-resolution rules are unchanged. Unlike Angular Signal Forms'
+field tree API, this callable API facade is a Form Nodes public design choice; no underlying
+submission or state propagation rules change.

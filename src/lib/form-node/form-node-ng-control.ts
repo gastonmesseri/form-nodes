@@ -7,6 +7,7 @@ import type { ArrayApi } from '../primitives/array.type';
 import { isNode } from '../primitives/utils/node-marker';
 import { arrayToObject } from '../utils/array-to-object';
 import { warnInDevMode } from '../utils/warn-in-dev-mode';
+import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { InternalNode, AnyNode, Nodes } from '../types/node.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { ValidationErrorWithOptionalTargetNode } from '../validation/validation.type';
@@ -226,13 +227,13 @@ export class FormNodeNgControl {
       if (kind === 'field') return undefined;
       let child: unknown;
       if (kind === 'array') {
-        const items = (node.$api as ArrayApi<AnyNode>).items();
+        const items = (node.$api as CallableNodeApi<ArrayApi<AnyNode>>).items();
         const index = typeof segment === 'number' && segment < 0 ? items.length + segment : segment;
         child = Object.hasOwn(items, index) ? items[index as number] : undefined;
       } else {
         // Track dynamic children independently of equality on the exposed aggregate value.
         (node as InternalNode).$api._value();
-        const children = (node.$api as FormApi<Nodes>).children;
+        const children = (node.$api as CallableNodeApi<FormApi<Nodes>>).children;
         child = Object.hasOwn(children, segment) ? children[segment] : undefined;
       }
       node = isNode(child) ? child : undefined;

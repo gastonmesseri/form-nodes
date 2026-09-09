@@ -11,6 +11,7 @@ import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
@@ -481,7 +482,7 @@ export class FieldNode<TValue> {
       show: () => this.selfHidden.set(false),
     };
 
-    const internalApi = {
+    const internalApi = createCallableNodeApi({
       ...publicApi,
       _value: this.value.asReadonly(),
       _controlDebounce: this.controlDebounce,
@@ -495,7 +496,7 @@ export class FieldNode<TValue> {
       _refreshInjector: () => refreshNodeInjector(this.node),
       _registerControlBinding: (binding: NodeControlBinding) => this.registerControlBinding(binding),
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),
-    };
+    });
 
     return Object.defineProperties(
       this.exposedValue,

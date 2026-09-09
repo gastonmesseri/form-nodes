@@ -38,6 +38,12 @@ const profile = form({ name: field(''), address: { city: field('') } });
 const names = array(field(''));
 const generic: AnyNode = profile;
 `;
+const apiPositions = [];
+for (const expression of ['myFieldNodeTyped.$api', 'profile.$api', 'profile.address.$api', 'names.$api']) {
+  source += `${expression}.`;
+  apiPositions.push({ position: source.length, expression });
+  source += ';\n';
+}
 const memberPositions = [];
 for (const node of ['myFieldNodeTyped', 'typedField', 'inferredField', 'profile', 'profile.address', 'names', 'generic.$api']) {
   for (const suffix of ['value', 'value.committed', 'value.control']) {
@@ -77,9 +83,17 @@ try {
     });
     assert.deepEqual(completion?.entries.map(entry => entry.name).sort(), expected, label);
   }
+  for (const { position, expression } of apiPositions) {
+    const names = service.getCompletionsAtPosition(file, position, { triggerCharacter: '.', triggerKind: ts.CompletionTriggerKind.TriggerCharacter })?.entries.map(entry => entry.name) ?? [];
+    for (const required of ['value', 'set', 'reset', 'valid']) assert.ok(names.includes(required), `${expression}: ${required}`);
+    for (const hidden of ['call', 'apply', 'bind', 'prototype', 'toString', 'name']) assert.ok(!names.includes(hidden), `${expression}: hidden ${hidden}`);
+    assert.equal(names.includes('length'), expression === 'names.$api', `${expression}: array length`);
+  }
 } finally {
   service.dispose();
 }
 console.log(`Field literal completions passed for ${positions.length} cases against ${packaged ? 'published declarations' : 'source declarations'}.`);
 
 console.log(`Node value member completions passed for ${memberPositions.length} cases against ${packaged ? 'published declarations' : 'source declarations'}.`);
+
+console.log(`Callable API completions passed for ${apiPositions.length} cases.`);

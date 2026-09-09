@@ -6,8 +6,8 @@ import { field } from '../primitives/field';
 import { group } from '../primitives/group';
 import { array } from '../primitives/array';
 import { FORM_NODE } from './form-node.directive';
-import { useClosestForm } from './use-closest-form';
 import type { AnyNode } from '../types/node.type';
+import { useClosestForm } from './use-closest-form';
 
 const bind = (node: AnyNode, parent?: Injector) => {
   const current = signal(node);
@@ -27,10 +27,10 @@ describe('useClosestForm', () => {
     const profile = form({ name: field('Ada'), address: { city: field('Zurich') }, items: array(field('')) });
     const bound = bind(profile);
     const closest = runInInjectionContext(bound.injector, useClosestForm);
-    expect(closest()).toBe(profile);
+    expect(closest()).toBe(profile.$api);
     for (const node of [profile.name, profile.address, profile.items]) {
       bound.current.set(node);
-      expect(closest()).toBe(profile);
+      expect(closest()).toBe(profile.$api);
     }
     for (const node of [field(''), group({}), array(field(''))]) {
       bound.current.set(node);
@@ -45,12 +45,12 @@ describe('useClosestForm', () => {
     const second = form({ nested: form({}) });
     const bound = bind(name);
     const closest = runInInjectionContext(bound.injector, useClosestForm);
-    const attempted = computed(() => closest()?.$api.submitted() ?? false);
-    expect(closest()).toBe(first);
+    const attempted = computed(() => closest()?.submitted() ?? false);
+    expect(closest()).toBe(first.$api);
     first.remove('name');
     expect(closest()).toBeNull();
     second.nested.add('name', name);
-    expect(closest()).toBe(second.nested);
+    expect(closest()).toBe(second.nested.$api);
     await second.submit();
     expect(attempted()).toBe(false);
     await second.nested.submit();
@@ -63,12 +63,27 @@ describe('useClosestForm', () => {
     const outer = form({});
     const parent = bind(outer);
     const child = Injector.create({ providers: [], parent: parent.injector });
-    expect(runInInjectionContext(child, useClosestForm)()).toBe(outer);
+    expect(runInInjectionContext(child, useClosestForm)()).toBe(outer.$api);
     const nearer = bind(field(''), child);
     const closest = runInInjectionContext(nearer.injector, useClosestForm);
     expect(closest()).toBeNull();
     const other = form({});
     nearer.current.set(other);
-    expect(closest()).toBe(other);
+    expect(closest()).toBe(other.$api);
   });
+});
+
+it('returns a callable, collision-safe API even when form children shadow its state', async () => {
+  const profile = form({ submitted: field('child'), value: field('value child'), api: field('api child') });
+  const bound = bind(profile);
+  const closest = runInInjectionContext(bound.injector, useClosestForm);
+  expect(closest()).toBe(profile.$api);
+  expect(isSignal(closest()!)).toBe(true);
+  expect(closest()?.()).toEqual(profile());
+  expect(closest()?.submitted()).toBe(false);
+  await closest()?.submit();
+  expect(closest()?.submitted()).toBe(true);
+  expect(profile.submitted()).toBe('child');
+  closest()?.reset();
+  expect(closest()?.submitted()).toBe(false);
 });

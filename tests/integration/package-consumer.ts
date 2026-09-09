@@ -20,7 +20,7 @@ class Company {
   template: `
     <form [formNode]="profile">
       <span>{{ profile.submitted() }}</span>
-      @if (closestForm(); as closest) { <span>{{ closest.$api.submitted() }}</span> }
+      @if (closestForm(); as closest) { <span>{{ closest.submitted() }}</span> }
       <input #nameBinding="formNode" [formNode]="profile.name">
       <input [formNode]="dynamicAge">
       @for (address of profile.addresses; track address) {

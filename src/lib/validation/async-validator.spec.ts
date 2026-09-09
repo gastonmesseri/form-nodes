@@ -3,6 +3,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
+import type { CallableNodeApi } from '../types/callable-node-api.type';
 import { form, type FormNode, type FormApi } from '../primitives/form';
 import { field, type FieldNode, type FieldApi } from '../primitives/field';
 import type { AsyncValidatorContext, FieldContext } from './validation.type';
@@ -366,7 +367,7 @@ describe('asyncValidator', () => {
     let receivedApi: FieldApi<string | null> | undefined;
     const name = field('David', [asyncValidator<string | null, FieldApi<string | null>, FieldNode<string | null>>(async ({ node }) => {
       const api = node().api;
-      expectTypeOf(api).toEqualTypeOf<FieldApi<string | null>>();
+      expectTypeOf(api).toEqualTypeOf<CallableNodeApi<FieldApi<string | null>>>();
       receivedApi = api;
       return null;
     })]);
@@ -382,7 +383,7 @@ describe('asyncValidator', () => {
     let receivedApi: CountryFormApi | undefined;
     const profile = form({ country }, [asyncValidator<{ country: string | null }, CountryFormApi, FormNode<{ country: typeof country }>>(async ({ node }) => {
       const api = node().api;
-      expectTypeOf(api).toEqualTypeOf<CountryFormApi>();
+      expectTypeOf(api).toEqualTypeOf<CallableNodeApi<CountryFormApi>>();
       receivedApi = api;
       return null;
     })]);

@@ -5264,3 +5264,36 @@ it('records rejected concurrent child attempts without inheriting the parent his
   resolve();
   await pending;
 });
+
+it('keeps the callable API independent of colliding static and dynamic child names', async () => {
+  const profile = form({
+    submitted: field('child'), value: field('value child'), api: field('api child'),
+    set: field('set child'), name: field('name child'), length: field('length child'),
+    call: field('call child'), bind: field('bind child'), apply: field('apply child'),
+    prototype: field('prototype child'), toString: field('toString child'),
+    details: { value: field('group child') },
+  });
+  const api = profile.$api;
+  const snapshot = computed(() => api());
+  expect(isSignal(api)).toBe(true);
+  expect(api()).toEqual(profile());
+  expect(api.value()).toEqual(profile());
+  expect(profile.api()).toBe('api child');
+  expect(api.children.submitted()).toBe('child');
+  expect(api.submitted()).toBe(false);
+  await api.submit();
+  expect(api.submitted()).toBe(true);
+  expect(profile.submitted()).toBe('child');
+  api.patch({ value: 'changed', toString: 'toString child' });
+  expect(snapshot().value).toBe('changed');
+  const original = snapshot();
+  api.add('reset', field('dynamic child'));
+  expect(snapshot()).toEqual({ ...original, reset: 'dynamic child' });
+  api.reset();
+  expect(api.submitted()).toBe(false);
+  api.remove('reset');
+  expect(snapshot()).toEqual(original);
+  expect(profile.$api).toBe(api);
+  expect(profile.details.api).toBe(profile.details.$api);
+  expect(profile.details.$api()).toEqual({ value: 'group child' });
+});

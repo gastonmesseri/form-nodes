@@ -7,19 +7,20 @@ import errorsSource from '!!raw-loader!../../examples/closest-form-errors.typech
 
 # useClosestForm()
 
-Returns a signal of the form owning the nearest injectable `[formNode]` binding. It lets descendant
+Returns a signal of the callable, collision-safe API of the form owning the nearest injectable `[formNode]` binding. It lets descendant
 components observe submission state without passing the form through inputs or subscribing to events.
 
 ## Signature
 
 ```ts
-useClosestForm(): Signal<NavigationForm | null>;
+useClosestForm(): Signal<CallableNodeApi<FormApi<any>> | null>;
 ```
 
-`NavigationForm` is the same unspecified-children navigation type exposed by a field's `form()`.
-It provides the form API, including `submitted()`, `submitting()`, and `submit()`. The function is
-exported from `@ngblocks/form-nodes`. You normally infer its return type; use `$api` when child
-names are unknown, since they may shadow direct methods such as `submitted`.
+The function is exported from `@ngblocks/form-nodes`. Its result is the owning form's `$api`,
+not the node with its direct child properties. `closestForm()?.submitted()` always reads state,
+even when a child is named `submitted`. `closestForm()?.()` reads the exposed aggregate value.
+Use `closestForm()?.children` to inspect children. The signal follows ownership changes, while
+both it and the returned API retain normal Angular signal semantics.
 
 ## Resolution and lifecycle
 
@@ -27,8 +28,8 @@ Call once in an Angular injection context, normally a component or directive fie
 The hook injects `FORM_NODE` with `optional: true`, starting on the current element and following
 Angular's injector hierarchy. It then observes that binding's current node and its `form()` owner.
 
-- Binding to a form: returns that form itself.
-- Binding to a field, group, or array: returns its nearest explicit form in the model tree.
+- Binding to a form: returns that form's API.
+- Binding to a field, group, or array: returns the API of its nearest explicit form in the model tree.
 - No injectable binding, or a node without a form owner: returns `null`.
 - Rebinding, attachment, detachment, and reparenting: the signal updates reactively.
 
@@ -63,3 +64,11 @@ must use this API or provide an explicit integration for the state they need.
 
 See [submission history](../guides/submission.md#submission-history), [FORM_NODE](./form-node-token.md),
 and [form()](./form.md#submitted).
+
+## Migrating earlier hook usage
+
+The hook now returns the callable API directly. Replace `closestForm()?.$api.submitted()` with
+`closestForm()?.submitted()`, and `closestForm()?.$api.value()` with `closestForm()?.()` or
+`closestForm()?.value()`. Direct child access becomes `closestForm()?.children.childName`.
+The result is not a node declaration and must not be passed to `[formNode]` or `isFormNode()`
+as though it were one.

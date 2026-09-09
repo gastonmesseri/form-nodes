@@ -20,6 +20,8 @@ versioning exception while the maintainer is the only consumer. See the
 
 ### Changed
 
+- Node `$api` objects and unshadowed `api` aliases are now callable Angular signals with collision-safe state and operations, typed by `CallableNodeApi`. Array APIs preserve `length()`. `useClosestForm()` now returns this API directly: replace `closestForm()?.$api.submitted()` with `closestForm()?.submitted()`; its calls still read the exposed form value.
+
 - **Breaking:** Replaced public `controlValue()` and `setControlValue(value)` with `value.control()` and `value.control.set(value)`. Fields, groups, forms, and arrays now expose `value.committed()` for committed data before configured equality checks, and `value.committed.set(value)` for immediate writes equivalent to `set(value)`. Control writes preserve debounce and dirty tracking; neither setter emits binding outputs by itself. Exported `NodeValueSignal` describes these nested signals and hides native function members from IntelliSense on all three views. Bare `FieldNode` annotations retain the nested reads and setters; explicit value generics preserve their precise types.
 
 ## 📦 3.2.0 — 2026-09-09 {#320--2026-09-09}

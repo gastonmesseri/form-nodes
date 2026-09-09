@@ -3,6 +3,7 @@ import type { Signal } from '@angular/core';
 import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
 import type { FormNode, FormOptions } from './form.type';
+import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
@@ -675,18 +676,21 @@ export type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode =
     /**
      * Complete array API and the recommended access path for application code.
      *
-     * `$api` exposes the same API through the collision-safe convention shared by every node.
+      * `$api` exposes the same API through the collision-safe convention shared by every node.
      */
-    api: ArrayApi<TItem, TParent>;
+    api: CallableNodeApi<ArrayApi<TItem, TParent>>;
     /**
-     * Collision-safe access to the array API.
+     * Callable, collision-safe access to the array API.
+     *
+     * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
+     * Child names never replace members on this API; access children through `children` when available.
      *
      * Prefer `api` for normal application code. `$api` exists as the stable access convention
      * shared by every node, including forms whose children may be named `api`.
      *
      * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
      */
-    $api: ArrayApi<TItem, TParent>;
+    $api: CallableNodeApi<ArrayApi<TItem, TParent>>;
   }
   & ArrayIndexes<TItem, TParent>
   & ArrayApi<TItem, TParent>

@@ -13,6 +13,7 @@ import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
@@ -596,7 +597,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       show: () => this.selfHidden.set(false),
     } as unknown as FormApi<TNodes>;
 
-    const internalApi = {
+    const internalApi = createCallableNodeApi({
       ...publicApi,
       _value: this.value,
       _controlDebounce: this.controlDebounce,
@@ -610,7 +611,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       _refreshInjector: () => this.refreshInjector(),
       _registerControlBinding: (binding: NodeControlBinding) => this.registerControlBinding(binding),
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),
-    };
+    });
 
     // Child names can replace callable properties and API aliases; $api stays collision-safe.
     return Object.defineProperties(

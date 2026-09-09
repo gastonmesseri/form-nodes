@@ -1,5 +1,6 @@
 import type { Injector, Signal } from '@angular/core';
 
+import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -582,18 +583,21 @@ export type FieldNode<TValue = any, TParent extends AnyNode = AnyNode> =
     /**
      * Complete field API and the recommended access path for application code.
      *
-    * `$api` exposes the same API through the collision-safe convention shared by every node.
+     * `$api` exposes the same API through the collision-safe convention shared by every node.
      */
-    api: FieldApi<TValue, TParent>;
+    api: CallableNodeApi<FieldApi<TValue, TParent>>;
     /**
-     * Collision-safe access to the field API.
+     * Callable, collision-safe access to the field API.
+     *
+     * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
+     * Child names never replace members on this API; access children through `children` when available.
      *
      * Prefer `api` for normal application code. `$api` exists as the stable access convention
      * shared by every node, including forms whose children may be named `api`.
      *
      * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
      */
-    $api: FieldApi<TValue, TParent>;
+    $api: CallableNodeApi<FieldApi<TValue, TParent>>;
   }
   & Omit<FieldApi<TValue, TParent>, 'patch'>
   & HiddenFunctionMembers;

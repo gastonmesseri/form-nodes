@@ -16,6 +16,7 @@ import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
@@ -685,7 +686,7 @@ export class ArrayNode<TItem extends AnyNode> {
       [Symbol.iterator]: () => (this.items() as ArrayItems<TItem, AnyNode>)[Symbol.iterator](),
     };
 
-    const internalApi = {
+    const internalApi = createCallableNodeApi({
       ...publicApi,
       _value: this.value,
       _controlDebounce: this.controlDebounce,
@@ -699,7 +700,7 @@ export class ArrayNode<TItem extends AnyNode> {
       _refreshInjector: () => this.refreshInjector(),
       _registerControlBinding: (binding: NodeControlBinding) => this.registerControlBinding(binding),
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),
-    };
+    });
 
     // defineProperties replaces the callable's built-in length with the public signal.
     const callableNode = Object.defineProperties(

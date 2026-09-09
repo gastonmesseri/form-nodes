@@ -1,6 +1,7 @@
 import type { Signal } from '@angular/core';
 
 import type { GenericGroupNode } from '../types/generic-node.type';
+import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DynamicNode, NearestForm, AnyNode, Nodes, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -281,12 +282,15 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
   /** Complete group API and the recommended access path for application code. */
   api: TNodes extends { api: infer TApi extends AnyNode }
     ? NodeWithParent<TApi, GroupNode<TNodes, TParent>>
-    : GroupApi<TNodes, TParent>;
+    : CallableNodeApi<GroupApi<TNodes, TParent>>;
   /**
-   * Collision-safe access to the group API.
+   * Callable, collision-safe access to the group API.
+   *
+   * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
+   * Child names never replace members on this API; access children through `children` when available.
    * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
-  $api: GroupApi<TNodes, TParent>;
+  $api: CallableNodeApi<GroupApi<TNodes, TParent>>;
 };
 
 /**

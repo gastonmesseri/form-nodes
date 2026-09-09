@@ -9,8 +9,8 @@ type _Submitted = Expect<Equal<ReturnType<typeof profile.submitted>, boolean>>;
 const generic: FormNode = profile;
 const genericSubmitted: Signal<boolean> = generic.$api.submitted;
 const closest = useClosestForm();
-const closestSubmitted: boolean | undefined = closest()?.$api.submitted();
-const submittedAction: Promise<boolean> | undefined = closest()?.$api.submit();
+const closestSubmitted: boolean | undefined = closest()?.submitted();
+const submittedAction: Promise<boolean> | undefined = closest()?.submit();
 // @ts-expect-error submitted is a readonly signal
 profile.submitted.set(true);
 // @ts-expect-error groups have no independent submission history

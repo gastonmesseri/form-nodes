@@ -17,7 +17,7 @@ export class SubmissionErrors {
   closestForm = useClosestForm();
   showErrors = computed(() => {
     const node = this.node();
-    return node.invalid() && (node.touched() || this.closestForm()?.$api.submitted() === true);
+    return node.invalid() && (node.touched() || this.closestForm()?.submitted() === true);
   });
 }
 

@@ -4,6 +4,7 @@ import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
 import type { ArrayNode } from './array.type';
 import type { GenericFormNode } from '../types/generic-node.type';
+import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { ValidatorMessages } from '../validation/validator-messages';
@@ -878,16 +879,19 @@ type FormApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
    */
   api: TNodes extends { api: infer TApi extends AnyNode }
     ? NodeWithParent<TApi, FormNode<TNodes, TParent>>
-    : FormApi<TNodes, TParent>;
+    : CallableNodeApi<FormApi<TNodes, TParent>>;
   /**
-   * Collision-safe access to the form API.
+   * Callable, collision-safe access to the form API.
+   *
+   * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
+   * Child names never replace members on this API; access children through `children` when available.
    *
    * Prefer `api` for normal application code. Use `$api` when this form declares a child named
    * `api`; the child takes precedence at `form.api`, while `form.$api` always remains the API.
    *
    * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
-  $api: FormApi<TNodes, TParent>;
+  $api: CallableNodeApi<FormApi<TNodes, TParent>>;
 };
 
 /**

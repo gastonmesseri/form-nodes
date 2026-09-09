@@ -4,6 +4,7 @@ import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
 import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
+import type { CallableNodeApi } from './callable-node-api.type';
 import type { NodeValueSignal } from './node-value-signal.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -309,7 +310,7 @@ export type AnyNode = Signal<any> & {
    * **Use this property for all state and operations on `AnyNode`.** Both direct names and `api` may
    * be child nodes, while `$api` always refers to the node's state and operations.
    */
-  $api: NodeApi;
+  $api: Signal<any> & NodeApi;
 };
 export type PublicNode<TNode extends AnyNode> = AnyNode extends TNode
   ? TNode & HiddenFunctionMembers
@@ -330,7 +331,7 @@ export type DynamicNode =
   & Omit<NodeApi, 'patch'>
   & {
     /** Complete common node API. */
-    api: NodeApi;
+    api: Signal<any> & NodeApi;
   };
 type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown];
 
@@ -343,10 +344,10 @@ export type RootNode<TNode extends AnyNode, TDepth extends readonly unknown[] = 
       : TNode
     : AnyNode;
 /** Generic form navigation without asserting unknown child names or hiding valid child collisions. */
-export type NavigationForm = AnyNode & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
+export type NavigationForm = AnyNode & FormApi<any> & { api: CallableNodeApi<FormApi<any>>; $api: CallableNodeApi<FormApi<any>> };
 
 /** Complete structural node APIs when an ancestor's exact declaration is unavailable. */
-export type NavigationRoot = FieldNode<any> | NavigationForm | (AnyNode & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> }) | ArrayNode<any>;
+export type NavigationRoot = FieldNode<any> | NavigationForm | (AnyNode & GroupApi<any> & { api: CallableNodeApi<GroupApi<any>>; $api: CallableNodeApi<GroupApi<any>> }) | ArrayNode<any>;
 
 export type NearestForm<TNode extends AnyNode> = AnyNode extends TNode ? NavigationForm
   : TNode extends { $api: { form: Signal<infer TForm> } }
@@ -368,7 +369,7 @@ export type InternalNodeApi = NodeApi & {
   _registerControlBinding(binding: NodeControlBinding): () => void;
   _getControlBindingForFocus(): NodeControlBinding | undefined;
 };
-export type InternalNode = Signal<any> & { $api: InternalNodeApi };
+export type InternalNode = Signal<any> & { $api: Signal<any> & InternalNodeApi };
 export type Nodes = Record<string, AnyNode>;
 export type NodeDefinition = AnyNode | NodeDefinitions;
 export interface NodeDefinitions {

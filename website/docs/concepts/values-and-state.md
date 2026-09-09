@@ -28,6 +28,10 @@ const nameValue = profileForm.name(); // 'Marco'
 
 ## 📝 Alternative value access {#alternative-value-access}
 
+The callable `node.$api()` and unshadowed `node.api()` also read the exposed value, just like
+`node()` and `node.value()`. Their properties provide collision-safe state and operations.
+See [callable APIs](./tree-and-api.md#callable-apis).
+
 Examples throughout this documentation call nodes directly. The same committed value is also
 available through `value()` directly or under `.api`:
 

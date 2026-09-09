@@ -3067,3 +3067,25 @@ it('observes its owner submission attempts without changing its own validation o
   expect(name.form()?.$api.submitted()).toBe(false);
   expect(showErrors()).toBe(false);
 });
+
+it('exposes a stable callable API signal with public equality and separate committed/control views', () => {
+  const name = field('Ada', { equal: (a, b) => a?.toLowerCase() === b?.toLowerCase(), debounce: 'blur' });
+  const api = name.$api;
+  const value = computed(() => api());
+  expect(api).toBe(name.api);
+  expect(isSignal(api)).toBe(true);
+  expect(value()).toBe('Ada');
+  api.value.control.set('ADA');
+  expect(api()).toBe('Ada');
+  expect(api.value.control()).toBe('ADA');
+  api.flush();
+  expect(api()).toBe('Ada');
+  expect(api.value.committed()).toBe('ADA');
+  const { set } = api;
+  set('Grace');
+  expect(value()).toBe('Grace');
+  expect(name()).toBe('Grace');
+  api.resetToInitial();
+  expect(value()).toBe('Ada');
+  expect(name.$api).toBe(api);
+});

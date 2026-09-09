@@ -232,3 +232,20 @@ command.apply(); // false
 ```
 
 This hiding affects the public type only; node callability and the documented API remain unchanged.
+
+## Callable APIs {#callable-apis}
+
+`node.$api` is also an Angular signal: calling it returns the same exposed value as `node()`.
+`node.api` refers to that same callable API unless an object child named `api` overrides the alias.
+The API itself never receives direct child properties, so its `value`, `set`, and `submitted`
+members remain safe. Inspect children through `children` or array collection methods.
+
+The exported `CallableNodeApi<TApi>` adds the call signature and signal contract to `FieldApi`,
+`GroupApi`, `FormApi`, or `ArrayApi`. Native function members are hidden on concrete API types,
+while API-defined members such as array `length()` remain visible. The broad `AnyNode` API stays
+structural so it can accept every node kind, including arrays with a signal-valued `length`.
+
+Calls honor exposed equality and debounce. Nested `api.value.committed()` and `api.value.control()`
+retain their distinct read/write behavior. This signal is not a form-node declaration: pass
+nodes to `[formNode]`, and use the API for generic reads and operations.
+See the [executable example](../reference/node-api.md#callable-api).

@@ -3,6 +3,7 @@ import type { Signal } from '@angular/core';
 import type { AnyNode } from './node.type';
 import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
+import type { CallableNodeApi } from './callable-node-api.type';
 import type { ValidationErrorWithTargetNode, ValidationErrorMap, CustomValidationError, ValidatorSource } from '../validation/validation.type';
 
 type UnknownChildrenMembers = 'children' | 'forEachChild' | 'add';
@@ -27,11 +28,11 @@ type GenericGroupApi = Omit<GroupApi<any>, UnknownChildrenMembers | keyof Generi
  * A form node with unspecified children. Use `$api` for form operations because child names may
  * collide with direct members. Use `FormNode<TChildren>` when the child structure is known.
  */
-export type GenericFormNode = Signal<any> & { (): any; $api: GenericFormApi };
+export type GenericFormNode = Signal<any> & { (): any; $api: CallableNodeApi<GenericFormApi> };
 
 /**
  * A group node with unspecified children. Use `$api` for group operations because child names may
  * collide with direct members. Use `GroupNode<TChildren>` when the child structure is known.
  */
-export type GenericGroupNode = Signal<any> & { (): any; $api: GenericGroupApi };
+export type GenericGroupNode = Signal<any> & { (): any; $api: CallableNodeApi<GenericGroupApi> };
 

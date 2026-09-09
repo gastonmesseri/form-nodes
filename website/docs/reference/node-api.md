@@ -3,6 +3,7 @@ title: Node API
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import callableApiSource from '!!raw-loader!../../examples/callable-api.example.ts';
 import IsFormNodeExample from '!!raw-loader!../../examples/is-form-node.example.ts';
 
 # Node API {#node-api}
@@ -49,7 +50,7 @@ it does not infer a particular primitive or value type. It also works as an arra
 
 The check uses an internal marker without calling the value, reading node state, or tracking signal
 dependencies. It works outside an Angular injection context. Plain objects, ordinary functions,
-Angular signals, and node API objects return `false`. Detached nodes still return `true`.
+Angular signals, and callable node APIs return `false`. Detached nodes still return `true`.
 The marker belongs to the loaded package instance: nodes from a separately loaded copy of the
 library are not recognized.
 
@@ -181,3 +182,22 @@ For scheduling, detached-node lifetime, multiple bindings, and defensive runtime
 Use `node.$api.value.committed()` to observe the latest committed data before configured equality,
 and `node.$api.value.control()` for the node's own pending input. Each has a `set()` method.
 See the [complete value reference](./node-value.md) for all five entries and an executable example.
+
+## Callable API {#callable-api}
+
+**Signature:** `CallableNodeApi<TApi extends { value: Signal<any> }>`.
+
+`$api()` reads the exposed value with the same inferred type and reactive semantics as calling
+the node. All API signals and operations remain available on that function. `$api` and the
+unshadowed `api` alias reference the same stable facade. They are distinct from the node and its
+`value` signal. Exposed custom equality still applies; use `api.value.committed()` for raw committed
+data. Neither calling the API nor obtaining it changes validation or interaction state.
+
+Child properties cannot overwrite API members. Array APIs keep their real `length()` signal;
+normal function members are hidden from IntelliSense on concrete API types. This does not remove
+JavaScript's function prototype or make unsupported properties part of the public contract.
+
+<CodeBlock language="typescript" title="callable-api.ts">{callableApiSource}</CodeBlock>
+
+[useClosestForm()](./use-closest-form.md) returns this callable API directly, so its consumers can
+read `closestForm()?.submitted()` without child-name collisions.

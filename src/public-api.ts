@@ -121,3 +121,5 @@ export { configureGlobalFormNodes, type GlobalFormNodesConfig } from './lib/conf
 export type { SyncInputs, SyncInputName } from './lib/configuration/node-input-config';
 
 export type { NodeValueSignal } from './lib/types/node-value-signal.type';
+
+export type { CallableNodeApi } from './lib/types/callable-node-api.type';

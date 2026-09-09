@@ -5,6 +5,7 @@ import type { GroupApi } from '../primitives/group.type';
 import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
 import type { ObservableLike } from '../types/observable-like.type';
+import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -232,10 +233,10 @@ export type AsyncValidatorState = {
 };
 
 /** Callable form API when the declaration's child keys are not known. */
-type ValidatorForm = PublicNode<AnyNode> & FormApi<any> & { api: FormApi<any>; $api: FormApi<any> };
+type ValidatorForm = PublicNode<AnyNode> & FormApi<any> & { api: CallableNodeApi<FormApi<any>>; $api: CallableNodeApi<FormApi<any>> };
 
 /** Callable group API when the declaration's child keys are not known. */
-type ValidatorGroup = PublicNode<AnyNode> & GroupApi<any> & { api: GroupApi<any>; $api: GroupApi<any> };
+type ValidatorGroup = PublicNode<AnyNode> & GroupApi<any> & { api: CallableNodeApi<GroupApi<any>>; $api: CallableNodeApi<GroupApi<any>> };
 
 type UntypedValidatorNode = FieldNode<any> | ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode>;
 
@@ -244,8 +245,8 @@ type ValidatorValueNode<TValue, TNode extends AnyNode = UntypedValidatorNode> = 
   ? Omit<TNode, 'value' | 'api' | '$api'> & HiddenFunctionMembers<keyof TNode> & {
     (): TValue;
     value: NodeValueSignal<TValue>;
-    api: Omit<TNode['api'], 'value'> & { value: NodeValueSignal<TValue> };
-    $api: Omit<TNode['$api'], 'value'> & { value: NodeValueSignal<TValue> };
+    api: CallableNodeApi<Omit<TNode['api'], 'value'> & { value: NodeValueSignal<TValue> }>;
+    $api: CallableNodeApi<Omit<TNode['$api'], 'value'> & { value: NodeValueSignal<TValue> }>;
   }
   : never;
 
