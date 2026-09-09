@@ -143,7 +143,7 @@ TypeScript may suggest function members such as `call`, `apply`, `bind`, `name`,
 They are not a reliable generic node API. Hiding them with private type members would exclude
 valid nodes that override those names, including arrays with a public `length()` signal.
 
-[`isFormNode(value)`](./node-api.md#is-form-node) accepts `unknown` and narrows it to `AnyNode`.
+[`isFormNode(value)`](./is-form-node.md) accepts `unknown` and narrows it to `AnyNode`.
 It checks identity, not a particular primitive kind, value type, or absence of name collisions.
 
 ## DynamicNode {#dynamic-node}

@@ -4,7 +4,6 @@ title: Node API
 
 import CodeBlock from '@theme/CodeBlock';
 import callableApiSource from '!!raw-loader!../../examples/callable-api.example.ts';
-import IsFormNodeExample from '!!raw-loader!../../examples/is-form-node.example.ts';
 
 # Node API {#node-api}
 
@@ -36,23 +35,8 @@ is known not to shadow that surface. Neither type wraps the node or repairs name
 
 ## Recognizing nodes with `isFormNode()` {#is-form-node}
 
-Import `isFormNode` from `@ngblocks/form-nodes` to check an unknown value before using it as a node.
-
-```ts
-isFormNode(value: unknown): value is AnyNode
-```
-
-The helper recognizes `field()`, `form()`, `group()`, and `array()` nodes, including nested nodes
-and nodes created by configured primitives. It narrows the value to the shared `AnyNode` type;
-it does not infer a particular primitive or value type. It also works as an array filter predicate.
-
-<CodeBlock language="ts" title="is-form-node.example.ts">{IsFormNodeExample}</CodeBlock>
-
-The check uses an internal marker without calling the value, reading node state, or tracking signal
-dependencies. It works outside an Angular injection context. Plain objects, ordinary functions,
-Angular signals, and callable node APIs return `false`. Detached nodes still return `true`.
-The marker belongs to the loaded package instance: nodes from a separately loaded copy of the
-library are not recognized.
+Use [`isFormNode(value)`](./is-form-node.md) to check an unknown value and narrow it to `AnyNode`.
+See its dedicated reference for the signature, examples, and package-instance limitations.
 
 ## 🧭 API map {#api-map}
 

@@ -60,6 +60,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'reference/api-overview',
         'reference/node-types',
+        'reference/is-form-node',
         'reference/form',
         'reference/field',
         'reference/array',
