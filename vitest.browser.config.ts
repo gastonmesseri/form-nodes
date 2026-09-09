@@ -15,7 +15,7 @@ export default defineConfig({
     __FORM_NODE_SIGNAL_CONTROL_FIXTURE__: JSON.stringify(signalControlFixture),
   },
   optimizeDeps: {
-    include: ['@angular/forms/signals', '@angular/platform-browser'],
+    include: ['@angular/forms/signals', '@angular/platform-browser', '@angular/material/core', '@angular/material/input', '@angular/material/radio', '@angular/material/select', '@angular/material/checkbox', '@angular/material/form-field', '@angular/material/datepicker', '@angular/material-moment-adapter', 'moment'],
   },
   test: {
     include: ['**/*.browser.spec.ts'],
