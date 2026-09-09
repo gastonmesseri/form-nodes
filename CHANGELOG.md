@@ -5,12 +5,14 @@ All notable changes to Form Nodes are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) by default. Breaking changes normally require a major release and must be called out here and in
 the consumer migration guide. Minor releases normally add backward-compatible features; patch releases
-provide backward-compatible fixes. The planned 3.3.0 nested value API migration is an explicit
+provide backward-compatible fixes. The 3.3.0 nested value API migration is an explicit
 exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
-Planned release: **3.3.0** (minor). The incompatible nested value API migration is an explicit
+## [3.3.0] - 2026-09-10
+
+Released as a minor version. The incompatible nested value API migration is an explicit
 versioning exception while the maintainer is the only consumer.
 
 ### Added
@@ -266,7 +268,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.3.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -282,3 +284,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.0.2...v3.1.0
 
 [3.2.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.1.0...v3.2.0
+
+[3.3.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.2.0...v3.3.0

@@ -7,7 +7,7 @@ title: Migration guides
 ## Moving to 3.3.0: nested value views {#nested-value-views}
 
 The old public names are removed without compatibility aliases. This incompatible change is
-planned for the minor release **3.3.0**, not 3.2.0. The maintainer has explicitly authorized this
+included in the minor release **3.3.0**. The maintainer has explicitly authorized this
 versioning exception because the library currently has no other consumers. The migration is
 still required; a minor version number does not make these removed APIs backward compatible.
 

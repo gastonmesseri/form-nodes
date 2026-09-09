@@ -10,7 +10,9 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
-Planned release: **3.3.0** (minor). The incompatible nested value API migration is an explicit
+## 📦 3.3.0 — 2026-09-10 {#330--2026-09-10}
+
+Released as a minor version. The incompatible nested value API migration is an explicit
 versioning exception while the maintainer is the only consumer. See the
 [version policy](./versioning.md#nested-value-api-exception).
 

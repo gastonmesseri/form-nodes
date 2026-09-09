@@ -56,7 +56,7 @@ Semantic Versioning policy above remains the rule for subsequent releases.
 
 ## Nested value API exception: 3.3.0 {#nested-value-api-exception}
 
-The nested value API change is planned for **3.3.0**, a minor release, at the maintainer's explicit
+The nested value API change ships in **3.3.0**, a minor release, at the maintainer's explicit
 request while the maintainer is the library's only consumer. This is an exception to the default
 Semantic Versioning policy, not a claim of backward compatibility.
 
