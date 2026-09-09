@@ -11,6 +11,7 @@ import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
@@ -430,12 +431,10 @@ export class FieldNode<TValue> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
-      value: this.exposedValue,
-      controlValue: this.controlValue.asReadonly(),
+      value: createNodeValueSignal(this.exposedValue, this.value, this.controlValue.asReadonly(), (next: TValue) => this.set(next), (next: TValue) => this.setControlValue(next)),
       set: (next: TValue) => this.set(next),
       patch: (next: TValue) => this.set(next),
       update: (updater: (value: TValue) => TValue) => untracked(() => this.set(updater(this.exposedValue()))),
-      setControlValue: (next: TValue) => this.setControlValue(next),
       debouncing: this.debouncing.asReadonly(),
       flush: () => this.commitControlValue(),
       focus: (options?: FocusOptions) => this.getControlBindingForFocus()?.focus(options),

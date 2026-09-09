@@ -5,6 +5,7 @@ import type { GroupApi } from '../primitives/group.type';
 import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
 import type { ObservableLike } from '../types/observable-like.type';
+import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, AnyNode, PublicNode } from '../types/node.type';
@@ -242,9 +243,9 @@ type UntypedValidatorNode = FieldNode<any> | ValidatorForm | ValidatorGroup | Ar
 type ValidatorValueNode<TValue, TNode extends AnyNode = UntypedValidatorNode> = TNode extends UntypedValidatorNode
   ? Omit<TNode, 'value' | 'api' | '$api'> & HiddenFunctionMembers<keyof TNode> & {
     (): TValue;
-    value: Signal<TValue>;
-    api: Omit<TNode['api'], 'value'> & { value: Signal<TValue> };
-    $api: Omit<TNode['$api'], 'value'> & { value: Signal<TValue> };
+    value: NodeValueSignal<TValue>;
+    api: Omit<TNode['api'], 'value'> & { value: NodeValueSignal<TValue> };
+    $api: Omit<TNode['$api'], 'value'> & { value: NodeValueSignal<TValue> };
   }
   : never;
 

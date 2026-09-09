@@ -57,8 +57,8 @@ describe('deep mixed form trees', () => {
     const team = root.teams[1]!;
     const member = team.members[0]!;
 
-    team.name.setControlValue('Core');
-    member.email.setControlValue('core@example.com');
+    team.name.value.control.set('Core');
+    member.email.value.control.set('core@example.com');
 
     expect(member()).toEqual({ email: 'core@example.com' });
     expect(team()).toEqual({ name: 'Core', members: [{ email: 'core@example.com' }] });
@@ -162,9 +162,9 @@ describe('deep mixed form trees', () => {
       }, { debounce: 100 });
       const name = root.groups[0]!.members[0]!.name;
 
-      name.setControlValue('Mark');
+      name.value.control.set('Mark');
       expect(name()).toBe('David');
-      expect(name.controlValue()).toBe('Mark');
+      expect(name.value.control()).toBe('Mark');
       expect(root.debouncing()).toBe(true);
 
       root.flush();

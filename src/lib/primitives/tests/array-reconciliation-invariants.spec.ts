@@ -89,8 +89,8 @@ describe('array keyed reconciliation invariants', () => {
       ], { debounce: 100, trackBy: person => person.id });
       const alex = people[0]!;
 
-      alex.name.setControlValue('Buffered Alex');
-      expect(alex.name.controlValue()).toBe('Buffered Alex');
+      alex.name.value.control.set('Buffered Alex');
+      expect(alex.name.value.control()).toBe('Buffered Alex');
       expect(alex.name()).toBe('Alex');
       expect(people.debouncing()).toBe(true);
 
@@ -101,7 +101,7 @@ describe('array keyed reconciliation invariants', () => {
 
       expect(people[1]).toBe(alex);
       expect(alex.name()).toBe('Alex from server');
-      expect(alex.name.controlValue()).toBe('Alex from server');
+      expect(alex.name.value.control()).toBe('Alex from server');
       expect(people.debouncing()).toBe(false);
 
       vi.runAllTimers();

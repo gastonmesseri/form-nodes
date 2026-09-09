@@ -4,6 +4,7 @@ import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
 import type { FieldNode } from '../primitives/field.type';
 import type { ArrayNode } from '../primitives/array.type';
+import type { NodeValueSignal } from './node-value-signal.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
@@ -67,9 +68,7 @@ export type NodeApi = {
    * name(); // 'Marco'
    * ```
    */
-  value: Signal<any>;
-  /** Value represented by a control bound directly to this node, including input awaiting a debounced commit. */
-  controlValue: Signal<any>;
+  value: NodeValueSignal<any>;
   /**
    * Property or array index under which this node is stored, or `null` when it is a root node.
    *

@@ -134,7 +134,7 @@ one. See [Async validation](./async-validation.md).
 
 ## ⏱️ Test debounce with fake timers {#test-debounce-with-fake-timers}
 
-Control-originated values expose an immediate `controlValue()` and a delayed committed node value:
+Control-originated values expose an immediate `value.control()` and a delayed committed node value:
 
 ```ts
 import { field, form } from '@ngblocks/form-nodes';
@@ -149,9 +149,9 @@ describe('search debounce', () => {
       query: field('', { debounce: 300 }),
     });
 
-    searchForm.query.setControlValue('signals');
+    searchForm.query.value.control.set('signals');
 
-    expect(searchForm.query.controlValue()).toBe('signals');
+    expect(searchForm.query.value.control()).toBe('signals');
     expect(searchForm.query()).toBe('');
     expect(searchForm.query.debouncing()).toBe(true);
 

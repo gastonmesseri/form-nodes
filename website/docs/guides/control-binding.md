@@ -34,7 +34,7 @@ matrix and integration boundaries.
 
 ## 🔌 Native controls {#native-controls}
 
-The directive synchronizes value, disabled, readonly, required, name, and applicable constraint state. DOM input updates use `setControlValue()`, mark the field dirty, and follow its debounce. Blur marks it touched.
+The directive synchronizes value, disabled, readonly, required, name, and applicable constraint state. DOM input updates use `value.control.set()`, mark the field dirty, and follow its debounce. Blur marks it touched.
 
 ```html
 <input [formNode]="profile.name" />

@@ -6,9 +6,9 @@ const searchForm = form({
   }),
 });
 
-searchForm.query.setControlValue('angular signals');
+searchForm.query.value.control.set('angular signals');
 
-if (searchForm.query.controlValue() !== 'angular signals') {
+if (searchForm.query.value.control() !== 'angular signals') {
   throw new Error('The control value should update immediately.');
 }
 if (searchForm.query() !== '' || !searchForm.query.debouncing()) {

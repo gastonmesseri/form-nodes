@@ -267,7 +267,7 @@ Every field, form, and array exposes common reactive state:
 
 | Area | Main members |
 | --- | --- |
-| Value | Node call, `value()`, `controlValue()`, `set()`, `update()`, `reset()` |
+| Value | Node call, `value()`, `value.control()`, `set()`, `update()`, `reset()` |
 | Validation | `errors()`, `allErrors()`, `getError()`, `valid()`, `invalid()`, `pending()` |
 | Interaction | `touched()`, `dirty()`, their complements, and marking methods |
 | Availability | `disabled()`, `readonly()`, `hidden()`, their complements, reasons, and actions |

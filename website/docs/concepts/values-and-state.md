@@ -115,7 +115,7 @@ submission rules, as well as for its other consumers.
 
 `reset()` clears interaction and pending control work while preserving current child values.
 `reset(value)` assigns the supplied child values; the exposed aggregate may still retain an equal
-previous snapshot. Bound controls follow current committed values. Consequently `controlValue()`
+previous snapshot. Bound controls follow current committed values. Consequently `value.control()`
 may differ from the exposed aggregate even without a pending debounce; it remains a control-facing
 signal, not an alternative general-purpose value accessor.
 
@@ -168,13 +168,13 @@ Resetting a nested node affects only that subtree. Validators remain configured 
 
 ## ⏱️ Control values and debounce {#control-values-and-debounce}
 
-`controlValue()` is not another general-purpose value accessor. It is the immediate value buffered
+`value.control()` is not another general-purpose value accessor. It is the immediate value buffered
 from a bound UI control, while the node call reads the committed model observed by validators and
 ancestors:
 
 :::info Two snapshots during debounce
 
-Read the node itself for application state. Reach for `controlValue()` only when control
+Read the node itself for application state. Reach for `value.control()` only when control
 infrastructure specifically needs the uncommitted UI representation.
 
 :::
@@ -184,15 +184,15 @@ const myForm = form({
   search: field('', { debounce: 300 }),
 });
 
-myForm.search.setControlValue('angular');
-myForm.search.controlValue(); // 'angular'
+myForm.search.value.control.set('angular');
+myForm.search.value.control(); // 'angular'
 myForm.search(); // '' until the delay completes (preferred committed-value read)
 myForm.search.debouncing(); // true
 ```
 
-Without a pending control debounce, `controlValue()` and the committed value normally match.
+Without a pending control debounce, `value.control()` and the committed value normally match.
 Pending values from descendant controls are not composed into a form or array's
-`controlValue()`; aggregate nodes continue exposing their last committed representation until the
+`value.control()`; aggregate nodes continue exposing their last committed representation until the
 descendant value commits.
 
 Use `debounce: 'blur'` to commit on focus loss, or provide a function that receives an `AbortSignal` and optionally returns a promise. A new control value cancels the previous debounce. `flush()` commits immediately.

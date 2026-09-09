@@ -51,7 +51,7 @@ it('coalesces numeric debounce without delaying the latest control value', () =>
   input.dispatchEvent(new Event('change'));
   expect(host.events.map(({ kind, event }) => [kind, event])).toEqual([['control', 'first'], ['control', 'latest']]);
   expect(host.text()).toBe('initial');
-  expect(host.text.controlValue()).toBe('latest');
+  expect(host.text.value.control()).toBe('latest');
   vi.advanceTimersByTime(40);
   expect(host.events.at(-1)).toMatchObject({ kind: 'value', event: 'latest', value: 'latest', parent: { text: 'latest' } });
   expect(host.events).toHaveLength(3);
@@ -216,7 +216,7 @@ it('restores initial native values and clears parsing errors without output even
   expect(host.number.invalid()).toBe(true);
   host.number.resetToInitial();
   expect(host.number()).toBe(0);
-  expect(host.number.controlValue()).toBe(0);
+  expect(host.number.value.control()).toBe(0);
   expect(host.number.valid()).toBe(true);
   expect(host.number.pristine()).toBe(true);
   expect(number.value).toBe('0');

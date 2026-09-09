@@ -23,7 +23,7 @@ function createFieldTemplateCase() {
   const parent = form({ name: template });
   const items = array(template);
   template.setValidators([]);
-  template.setControlValue('uncommitted');
+  template.value.control.set('uncommitted');
   return {
     references: [new WeakRef(template), new WeakRef(parent)],
     verify() {
@@ -32,7 +32,7 @@ function createFieldTemplateCase() {
       assert.equal(item.required(), true);
       assert.equal(item.pristine(), true);
       assert.equal(item.untouched(), true);
-      item.setControlValue('next');
+      item.value.control.set('next');
       assert.equal(item(), '');
       assert.equal(item.debouncing(), true);
       item.flush();

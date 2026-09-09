@@ -13,7 +13,7 @@ For constructor signatures, options, and primitive-specific examples, see [`form
 [`field()`](./field.md), and [`array()`](./array.md).
 
 Calling a node directly—such as `profile.name()` or `profile()`—is the preferred committed-value
-read. Use `controlValue()` only when the immediate, potentially debounced value owned by a bound
+read. Use `value.control()` only when the immediate, potentially debounced value owned by a bound
 control is specifically needed. The [Values and state](../concepts/values-and-state.md#alternative-value-access)
 page documents the explicit alternative paths for generic infrastructure.
 
@@ -70,7 +70,7 @@ library are not recognized.
 | --- | --- |
 | `myNode()` | Preferred read of the current committed value |
 | `nodeType()` | Stable primitive discriminant: `'field'`, `'group'`, `'form'`, or `'array'` |
-| `controlValue()` | Immediate value of a directly bound control; it may differ during debounce |
+| `value.control()` | Immediate value of a directly bound control; it may differ during debounce |
 | `set(value)` | Assigns a complete value |
 | `update(updater)` | Computes and assigns a complete value |
 | `reset()` / `reset(value)` | Clears interaction state, optionally replacing the value |
@@ -175,3 +175,9 @@ For compatibility with Angular `model()`, `ControlValueAccessor`, `NgControl`,
 and native controls, see [Advanced custom controls](../guides/custom-controls-advanced.md#angular-api-compatibility).
 For scheduling, detached-node lifetime, multiple bindings, and defensive runtime behavior, see
 [Advanced behavior and edge cases](../advanced/behavior-details.md).
+
+## Nested value views
+
+Use `node.$api.value.committed()` to observe the latest committed data before configured equality,
+and `node.$api.value.control()` for the node's own pending input. Each has a `set()` method.
+See the [complete value reference](./node-value.md) for all five entries and an executable example.

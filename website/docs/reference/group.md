@@ -414,7 +414,10 @@ their value; `children` is a stable readonly map rather than a signal.
 | [`myGroup.child`](#named-child-access) | Returns a named child node with its precise inferred type. |
 | [`children`](#children) | Stable readonly map of every current named child. |
 | [`value()`](#value) | Current committed aggregate value. Equivalent to calling the group directly. |
-| [`controlValue()`](#controlvalue) | Complete value from a control bound directly to the group. |
+| [`value.committed()`](#value-committed) | Latest committed data before configured equality checks. |
+| [`value.committed.set(value)`](#value-committed-set) | Complete immediate write, equivalent to `set()`. |
+| [`value.control()`](#controlvalue) | Complete value from a control bound directly to the group. |
+| [`value.control.set(value)`](#value-control-set) | Receives control input with debounce and dirty tracking. |
 | [`nodeType()`](#nodetype) | Returns the literal `'group'`. |
 | [`form()`](#form) | Nearest explicit form workflow, or `null` when none owns the group. |
 | [`root()`](#root) | Complete structural root; a root group returns itself. |
@@ -610,7 +613,7 @@ runtime keys. If a child is named `children`, use `address.$api.children`.
 
 #### 📝 value() {#value}
 
-**Signature:** `value: Signal<GroupValue>`
+**Signature:** `value: NodeValueSignal<GroupValue, GroupSet>`
 
 Contains the current committed aggregate value.
 
@@ -624,9 +627,25 @@ address.value(); // { city: 'Zurich' }
 
 Prefer the equivalent callable form, `address()`, for ordinary value reads.
 
-#### 🔌 controlValue() {#controlvalue}
+#### 📝 value.committed() {#value-committed}
 
-**Signature:** `controlValue: Signal<GroupValue>`
+**Signature:** `value.committed: Signal<GroupValue> & { set(value: GroupSet): void }`
+
+Reads the latest committed data, bypassing configured `equal` checks on this node and its
+children. Pending debounce is still respected. Normal signal identity checks still apply.
+See the [value views reference](./node-value.md#value-committed) for an executable example.
+
+#### ✏️ value.committed.set() {#value-committed-set}
+
+**Signature:** `value.committed.set(value: GroupSet): void`
+
+Equivalent to `set(value)`: commits immediately, cancels pending input, preserves dirty/touched
+state, and follows normal validation and parent propagation. Exposed reads still honor `equal`.
+See the [setter example](./node-value.md#value-committed-set).
+
+#### 🔌 value.control() {#controlvalue}
+
+**Signature:** `value.control: Signal<GroupValue>`
 
 Contains the complete value most recently received from a control bound directly to the group.
 
@@ -635,11 +654,20 @@ const address = group({
   city: field('Zurich'),
 });
 
-address.controlValue(); // { city: 'Zurich' }
+address.value.control(); // { city: 'Zurich' }
 ```
 
 Pending descendant control values are not aggregated into this signal. Read a descendant's
-`controlValue()` when its immediate buffered value is needed.
+`value.control()` when its immediate buffered value is needed.
+
+#### ✏️ value.control.set() {#value-control-set}
+
+**Signature:** `value.control.set(value: GroupSet): void`
+
+Receives a complete value for a control bound to this node, marks this node dirty, and applies
+configured or inherited debounce. It does not mark touched or emit binding outputs by itself.
+Read the [control setter example and propagation details](./node-value.md#value-control-set).
+
 
 #### 💡 nodeType() {#nodetype}
 
@@ -1505,7 +1533,7 @@ const address = group({
   city: field('', { debounce: 300 }),
 });
 
-address.city.setControlValue('Zurich');
+address.city.value.control.set('Zurich');
 address.flush();
 address.city(); // 'Zurich'
 address.debouncing(); // false

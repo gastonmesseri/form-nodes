@@ -4,6 +4,34 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## Moving to 3.3.0: nested value views {#nested-value-views}
+
+The old public names are removed without compatibility aliases. This incompatible change is
+planned for the minor release **3.3.0**, not 3.2.0. The maintainer has explicitly authorized this
+versioning exception because the library currently has no other consumers. The migration is
+still required; a minor version number does not make these removed APIs backward compatible.
+
+| Previous API | Replacement |
+| --- | --- |
+| `node.controlValue()` | `node.value.control()` |
+| `node.setControlValue(next)` | `node.value.control.set(next)` |
+| `node.api.controlValue()` | `node.api.value.control()` |
+| `node.$api.controlValue()` | `node.$api.value.control()` |
+| `node.api.setControlValue(next)` | `node.api.value.control.set(next)` |
+| `node.$api.setControlValue(next)` | `node.$api.value.control.set(next)` |
+
+When passing a signal to a utility, replace `node.controlValue` with `node.value.control`.
+For extracted actions, use `const { set: receiveValue } = node.value.control`.
+Use `$api.value` for generic `AnyNode` infrastructure or child-name collisions.
+
+`node()` and `node.value()` keep their exposed equality behavior. New `value.committed()` reads
+latest committed data before custom equality checks, including in descendants, but does not bypass
+debounce. `value.committed.set(next)` is equivalent to `node.set(next)`; `node.set()` remains supported.
+Control setters now have a uniform public path on all four node kinds. They receive complete
+values, mark the selected node dirty, and respect debounce; they do not collect child drafts or
+emit directive outputs by themselves. The nested signals provide `set`, not Angular's full
+`WritableSignal` interface. See [signatures, examples, and semantics](../reference/node-value.md).
+
 ## Moving to 3.0.0: node types and Angular imports {#node-type-names}
 
 Version 3.0.0 reorganizes public node types and Angular imports.
@@ -35,7 +63,8 @@ and does not register configuration providers.
 
 Version `2.0.0` is a major release because it includes incompatible API and behavior changes.
 When upgrading from `1.1.0`, follow the 2.0.0 migration sections below. Existing `^1.x`
-dependency ranges do not select `2.0.0`; update the dependency explicitly and run your application checks. Future incompatible changes will require another major release.
+dependency ranges do not select `2.0.0`; update the dependency explicitly and run your application checks. Incompatible changes normally require another major release; see the explicit
+[3.3.0 exception](./versioning.md#nested-value-api-exception).
 
 ## 🔄 2.0.0: standalone validation error types {#standalone-validation-error-types}
 

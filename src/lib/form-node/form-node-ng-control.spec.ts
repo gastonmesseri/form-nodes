@@ -320,9 +320,9 @@ describe('FormNodeDirective NgControl reset compatibility', () => {
     const root = form({ node, sibling });
     const bound = bind(node);
     const leaf = bind(name);
-    name.setControlValue('edited');
+    name.value.control.set('edited');
     name.markAsTouched();
-    sibling.setControlValue('other');
+    sibling.value.control.set('other');
     sibling.markAsTouched();
     bound.control.setErrors({ parentParsing: true });
     leaf.control.setErrors({ leafParsing: { raw: 'invalid' } });
@@ -368,7 +368,7 @@ describe('FormNodeDirective NgControl reset compatibility', () => {
     const { fixture, control } = bind(node);
     expect(node()).toBe('initial');
     node.set('committed');
-    node.setControlValue('buffered');
+    node.value.control.set('buffered');
     expect(node()).toBe('initial');
     expect(control.value).toBe('buffered');
     control.reset(undefined);
@@ -415,7 +415,7 @@ describe('FormNodeDirective NgControl reset compatibility', () => {
     const removed = profile.contacts[1]!;
     const child = bind(first.email);
     child.control.setErrors({ parsing: true });
-    first.email.setControlValue('edited');
+    first.email.value.control.set('edited');
     profile.contacts.markAsTouched();
     bound.control.reset([{ email: 'reset' }]);
     expect(profile()).toEqual({ contacts: [{ email: 'reset' }] });
@@ -437,7 +437,7 @@ describe('FormNodeDirective NgControl reset compatibility', () => {
     const root = form({ node });
     const bound = bind(node);
     const parent = bind(root);
-    name.setControlValue('edited');
+    name.value.control.set('edited');
     name.markAsTouched();
     bound.control.setErrors({ parsing: true });
     bound.fixture.detectChanges();
@@ -455,7 +455,7 @@ describe('FormNodeDirective NgControl reset compatibility', () => {
     expect(bound.cva.statuses).toEqual([]);
     expect(bound.cva.events).toEqual([]);
     expect(parent.cva.values).toHaveLength(1);
-    name.setControlValue('');
+    name.value.control.set('');
     name.markAsTouched();
     bound.fixture.detectChanges();
     expect(bound.cva.values).toHaveLength(1);
@@ -472,7 +472,7 @@ describe('FormNodeDirective NgControl reset compatibility', () => {
     const node = field.strict('initial', [required]);
     const { fixture, cva, control } = bind(node);
     control.reset('silent', { emitEvent: false });
-    node.setControlValue('');
+    node.value.control.set('');
     fixture.detectChanges();
     expect(cva.values).toEqual(['']);
     expect(cva.statuses).toEqual(['INVALID']);
@@ -520,7 +520,7 @@ describe('FormNodeDirective NgControl reset compatibility', () => {
     const { fixture, cva, control } = bind(node);
     try {
       for (const options of [{ onlySelf: true }, { overwriteDefaultValue: true }, { onlySelf: true, overwriteDefaultValue: true }]) {
-        name.setControlValue('edited');
+        name.value.control.set('edited');
         name.markAsTouched();
         control.setErrors({ parsing: true });
         fixture.detectChanges();
@@ -1145,7 +1145,7 @@ describe('FormNodeDirective NgControl subscriptions', () => {
     expect(control.invalid).toBe(true);
     expect(control.touched).toBe(false);
 
-    name.setControlValue('Ada');
+    name.value.control.set('Ada');
     name.markAsTouched();
     expect(control.valid).toBe(true);
     expect(control.dirty).toBe(true);

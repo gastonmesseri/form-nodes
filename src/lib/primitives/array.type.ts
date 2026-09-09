@@ -3,6 +3,7 @@ import type { Signal } from '@angular/core';
 import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
 import type { FormNode, FormOptions } from './form.type';
+import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
@@ -253,6 +254,10 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Exposed aggregate of item values. The `equal` option can retain an earlier equivalent array
    * independently of current item values and structure.
    *
+   * `value.committed()` reads committed data before configured equality; `value.control()` also
+   * includes this node's pending input. Their `set()` methods perform committed/control writes.
+   * See {@link NodeValueSignal} for debounce, aggregate, validation, and interaction semantics.
+   *
    * Prefer calling the array directly instead of using `names.value()` for ordinary value reads:
    *
    * @example
@@ -264,9 +269,7 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * names(); // ['Marco', 'Lia']
    * ```
    */
-  value: Signal<ArrayValue<TItem>>;
-  /** Complete control-facing value, independent of exposed equality. Pending descendant control values are not aggregated. */
-  controlValue: Signal<ArrayValue<TItem>>;
+  value: NodeValueSignal<ArrayValue<TItem>, ArraySet<TItem> | null | undefined>;
   /** Returns the live item node at `index`, or `undefined` when no item exists there. */
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
   /** Invokes `callback` once for each current item node, in index order. */

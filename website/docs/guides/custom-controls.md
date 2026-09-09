@@ -176,7 +176,7 @@ state and any value committed by blur debounce. This applies to models (includin
 
 <CodeBlock language="ts" title="description-editor.component.ts">{customEventOrderSource}</CodeBlock>
 
-Debounce still delays the committed value; `controlValue()` exposes pending control input.
+Debounce still delays the committed value; `value.control()` exposes pending control input.
 Programmatic writes to a component model can emit its output too, so `valueChange` alone does not
 identify user interaction. Construction-time emissions before binding initialization are not user
 interaction and do not have this ordering guarantee.

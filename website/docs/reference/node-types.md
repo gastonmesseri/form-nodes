@@ -187,3 +187,13 @@ including when generic arguments are omitted.
 
 Node types belong in TypeScript annotations. `FormNodeDirective` or
 [`FormNodesModule`](./form-nodes-module.md) belongs in Angular component `imports`.
+
+## NodeValueSignal
+
+`NodeValueSignal<TValue, TSet = TValue>` describes the nested `value` facade shared by all node kinds.
+It is an Angular signal with `committed` and `control` signals, each exposing a complete-value
+`set()` method. See [value views](./node-value.md) for signatures, examples, equality, and debounce.
+
+Bare `FieldNode` annotations preserve `value.committed()` and `value.control()` with `any` values.
+Use `FieldNode<TValue>` to preserve a known value type. The three value signals hide native
+function members in IntelliSense; see the [typed example](./node-value.md#explicit-fieldnode-annotations-and-intellisense).

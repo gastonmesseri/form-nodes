@@ -16,7 +16,7 @@ const profile = form({
 });
 
 const initial = profile();
-profile.contacts[0]!.name.setControlValue('MARCO');
+profile.contacts[0]!.name.value.control.set('MARCO');
 profile.contacts[0]!.name(); // 'MARCO': the item accepts the new value
 profile.contacts(); // [{ name: 'Marco' }]: array equality retains the exposed snapshot
 profile(); // { contacts: [{ name: 'Marco' }] }: parents compose exposed child values

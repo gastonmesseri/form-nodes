@@ -47,7 +47,7 @@ export class NativeEventOrderHost {
     this.observations.push({
       event,
       value: node(),
-      controlValue: node.controlValue(),
+      controlValue: node.value.control(),
       parentValue: this.profile(),
       dirty: node.dirty(),
       touched: node.touched(),

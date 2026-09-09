@@ -7,7 +7,7 @@ const profile = form({
 });
 
 profile.reset({ name: 'Server name', address: { city: 'Madrid' }, email: 'ada@example.com' });
-profile.name.setControlValue('Edited name');
+profile.name.value.control.set('Edited name');
 profile.markAsTouched();
 profile.resetToInitial();
 

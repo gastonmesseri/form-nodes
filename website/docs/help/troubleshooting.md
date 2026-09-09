@@ -54,7 +54,7 @@ value.
 immediately, while the committed model waits:
 
 ```ts
-myForm.search.controlValue(); // 'angular'
+myForm.search.value.control(); // 'angular'
 myForm.search();              // previous committed value
 myForm.search.debouncing();   // true
 ```
@@ -214,7 +214,7 @@ Check the higher-priority scopes before changing a global catalog. See
 
 ## 🔍 Still investigating? {#still-investigating}
 
-Reduce the case to one node and inspect its callable value, `controlValue()`, `validationStatus()`,
+Reduce the case to one node and inspect its callable value, `value.control()`, `validationStatus()`,
 `errors()`, `allErrors()`, `disabledReasons()`, `touched()`, and `dirty()` as applicable. The
 [API overview](../reference/api-overview.md) maps each concern to its detailed reference, while
 [Common mistakes](./common-mistakes.md) covers modeling choices that can look like runtime bugs.

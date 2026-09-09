@@ -22,17 +22,17 @@ if (profile.location() !== location) {
   throw new Error('Shallow equality should retain objects whose direct properties are equal.');
 }
 
-profile.username.setControlValue('MARCO');
+profile.username.value.control.set('MARCO');
 profile.username(); // 'Marco'
-profile.username.controlValue(); // 'MARCO'
-if (profile.username() !== 'Marco' || profile.username.controlValue() !== 'MARCO' || !profile.dirty()) {
+profile.username.value.control(); // 'MARCO'
+if (profile.username() !== 'Marco' || profile.username.value.control() !== 'MARCO' || !profile.dirty()) {
   throw new Error('Equality should preserve equivalent control input and interaction state.');
 }
 
 profile.username.reset();
 profile.username(); // 'Marco': equality retains the exposed value
-profile.username.controlValue(); // 'MARCO': reset preserves the latest committed write
-if (profile.username() !== 'Marco' || profile.username.controlValue() !== 'MARCO' || profile.dirty()) {
+profile.username.value.control(); // 'MARCO': reset preserves the latest committed write
+if (profile.username() !== 'Marco' || profile.username.value.control() !== 'MARCO' || profile.dirty()) {
   throw new Error('Reset should preserve the latest internal value in the control and clear interaction.');
 }
 

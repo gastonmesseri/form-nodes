@@ -163,7 +163,7 @@ describe('group', () => {
     first.name.set('MARCO');
     second.name.set('MARCO');
     expect(people()).toBe(initial);
-    expect(people.controlValue()).toEqual([{ name: 'MARCO' }, { name: 'MARCO' }]);
+    expect(people.value.control()).toEqual([{ name: 'MARCO' }, { name: 'MARCO' }]);
     const updater = vi.fn(value => ({ name: `${value.name}!` }));
     first.update(updater);
     expect(updater).toHaveBeenCalledExactlyOnceWith(initial[0]);

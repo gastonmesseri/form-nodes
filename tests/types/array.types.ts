@@ -22,7 +22,7 @@ type _ArrayNodeType = Expect<Equal<ReturnType<typeof people.nodeType>, 'array'>>
 const names = array(field(''), ['David']);
 const lockedNames = array(field(''), { disabled: 'Collection is locked' });
 type _StableApiValue = Expect<Equal<ReturnType<typeof names.$api.value>, (string | null)[]>>;
-type _ControlValue = Expect<Equal<ReturnType<typeof names.controlValue>, (string | null)[]>>;
+type _ControlValue = Expect<Equal<ReturnType<typeof names.value.control>, (string | null)[]>>;
 type _StandaloneRoot = Expect<Equal<ReturnType<typeof names.root>, typeof names>>;
 lockedNames.disable('Temporarily unavailable');
 const matrix = array(array(field(0), []), [[1, 2]]);

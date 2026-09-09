@@ -643,7 +643,7 @@ describe('FormNodeDirective in Chromium', () => {
     fixture.detectChanges();
     expect(input.value).toBe('MARCO');
     expect(fixture.componentInstance.profile.name()).toBe('Marco');
-    expect(fixture.componentInstance.profile.name.controlValue()).toBe('MARCO');
+    expect(fixture.componentInstance.profile.name.value.control()).toBe('MARCO');
     expect(fixture.componentInstance.profile.dirty()).toBe(true);
     dispatch(input, 'blur');
     TestBed.flushEffects();
@@ -654,7 +654,7 @@ describe('FormNodeDirective in Chromium', () => {
     expect(input.value).toBe('MARCO');
     expect(profile()).toBe(initial);
     expect(profile.name()).toBe('Marco');
-    expect(profile.name.controlValue()).toBe('MARCO');
+    expect(profile.name.value.control()).toBe('MARCO');
     expect(fixture.componentInstance.profile.pristine()).toBe(true);
     expect(profile.untouched()).toBe(true);
     fixture.destroy();
@@ -1286,7 +1286,7 @@ describe('FormNodeDirective in Chromium', () => {
 
     input.value = 'Mark';
     dispatch(input, 'input');
-    expect(fixture.componentInstance.name.controlValue()).toBe('Mark');
+    expect(fixture.componentInstance.name.value.control()).toBe('Mark');
     expect(fixture.componentInstance.name()).toBe('David');
     expect(fixture.componentInstance.name.debouncing()).toBe(true);
 
@@ -1869,7 +1869,7 @@ describe('FormNodeDirective in Chromium', () => {
     const { company } = fixture.componentInstance.myForm;
 
     control.value.set({ companyId: 24, companyName: 'Microsoft' });
-    expect(company.controlValue()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.value.control()).toEqual({ companyId: 24, companyName: 'Microsoft' });
     expect(company()).toEqual({ companyId: 23, companyName: 'Apple' });
     expect(company.companyId()).toBe(23);
     expect(company.companyName()).toBe('Apple');
@@ -1890,7 +1890,7 @@ describe('FormNodeDirective in Chromium', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(control.resetCalls).toBe(1);
-    expect(company.controlValue()).toEqual({ companyId: 24, companyName: 'Microsoft' });
+    expect(company.value.control()).toEqual({ companyId: 24, companyName: 'Microsoft' });
     expect(company()).toEqual({ companyId: 24, companyName: 'Microsoft' });
     expect(company.debouncing()).toBe(false);
     expect(company.pristine()).toBe(true);

@@ -93,9 +93,9 @@ const myForm = form({
 `form()` and `array()` are structural containers and remain non-null. See
 [`field()` nullability](../reference/field.md#nullability).
 
-## 🔌 Reading controlValue() as the normal value {#reading-controlvalue-as-the-normal-value}
+## 🔌 Reading value.control() as the normal value {#reading-controlvalue-as-the-normal-value}
 
-`controlValue()` is the immediate representation owned by a directly bound control. It may contain
+`value.control()` is the immediate representation owned by a directly bound control. It may contain
 a value that is still waiting for debounce.
 
 ```ts
@@ -103,9 +103,9 @@ const myForm = form({
   search: field('', { debounce: 300 }),
 });
 
-myForm.search.setControlValue('signals');
+myForm.search.value.control.set('signals');
 
-myForm.search.controlValue(); // 'signals'
+myForm.search.value.control(); // 'signals'
 myForm.search();              // '' until committed
 ```
 

@@ -45,7 +45,7 @@ function createUnreachableCase(kind: 'field' | 'array' | 'form' | 'group', debou
   const pendingValue = kind === 'field' ? 'pending' : kind === 'array' ? ['pending'] : { name: 'pending' };
   const initialValue = kind === 'field' ? 'initial' : kind === 'array' ? ['initial'] : { name: 'initial' };
   (target as InternalNode).$api._setControlValue(pendingValue);
-  assert.deepEqual(target.$api.controlValue(), pendingValue);
+  assert.deepEqual(target.$api.value.control(), pendingValue);
   assert.deepEqual(target(), debounce === 0 ? pendingValue : initialValue);
   assert.equal(target.$api.debouncing(), debounce !== 0);
   assert.equal(parent.dirty(), true);

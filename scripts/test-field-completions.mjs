@@ -9,7 +9,7 @@ const entry = packaged
   ? `../../dist/${JSON.parse(readFileSync(resolve('dist/package.json'), 'utf8')).typings}`
   : '../../src/public-api';
 const file = resolve('tests/types/field-completions.virtual.ts');
-let source = `import { field, createFormPrimitives } from '${entry}';
+let source = `import { field, form, array, createFormPrimitives, type FieldNode, type AnyNode } from '${entry}';
 type IborCode = 'DAILY' | 'MONTHLY' | null;
 const nullable = createFormPrimitives({ nullable: true });
 const strict = createFormPrimitives({ nullable: false });
@@ -28,6 +28,22 @@ for (const factory of factories) {
       positions.push({ position: source.length, label: `${factory} with ${args || 'no options'} and ${quote}` });
       source += `${quote}${args});\n`;
     }
+  }
+}
+source += `
+const myFieldNodeTyped: FieldNode = field('');
+const typedField: FieldNode<string> = field.strict('');
+const inferredField = field('');
+const profile = form({ name: field(''), address: { city: field('') } });
+const names = array(field(''));
+const generic: AnyNode = profile;
+`;
+const memberPositions = [];
+for (const node of ['myFieldNodeTyped', 'typedField', 'inferredField', 'profile', 'profile.address', 'names', 'generic.$api']) {
+  for (const suffix of ['value', 'value.committed', 'value.control']) {
+    source += `${node}.${suffix}.`;
+    memberPositions.push({ position: source.length, label: `${node}.${suffix}`, expected: suffix === 'value' ? ['committed', 'control'] : ['set'] });
+    source += ';\n';
   }
 }
 const options = { strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, moduleResolution: ts.ModuleResolutionKind.Bundler, skipLibCheck: true };
@@ -54,7 +70,16 @@ try {
     });
     assert.deepEqual(completion?.entries.map(entry => entry.name).sort(), ['DAILY', 'MONTHLY'], label);
   }
+  for (const { position, label, expected } of memberPositions) {
+    const completion = service.getCompletionsAtPosition(file, position, {
+      triggerCharacter: '.',
+      triggerKind: ts.CompletionTriggerKind.TriggerCharacter,
+    });
+    assert.deepEqual(completion?.entries.map(entry => entry.name).sort(), expected, label);
+  }
 } finally {
   service.dispose();
 }
 console.log(`Field literal completions passed for ${positions.length} cases against ${packaged ? 'published declarations' : 'source declarations'}.`);
+
+console.log(`Node value member completions passed for ${memberPositions.length} cases against ${packaged ? 'published declarations' : 'source declarations'}.`);

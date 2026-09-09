@@ -13,6 +13,7 @@ import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
@@ -544,8 +545,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
-      value: this.exposedValue,
-      controlValue: this.controlValueBuffer.controlValue,
+      value: createNodeValueSignal(this.exposedValue, this.value, this.controlValueBuffer.controlValue, (next: FormSet<TNodes>) => this.set(next), (next: FormSet<TNodes>) => this.controlValueBuffer.set(next)),
       set: (value: FormSet<TNodes>) => this.set(value),
       update: (updater: (value: FormValue<TNodes>) => FormSet<TNodes>) => untracked(() => this.set(updater(this.exposedValue()))),
       patch: (value: FormPatch<TNodes>) => this.patch(value),
@@ -595,7 +595,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       ...publicApi,
       _value: this.value,
       _controlDebounce: this.controlDebounce,
-      _controlValue: publicApi.controlValue,
+      _controlValue: this.controlValueBuffer.controlValue,
       _setControlValue: this.controlValueBuffer.set,
       _flushControlValueOnBlur: publicApi.flush,
       _captureInitialValue: () => this.captureInitialValue(),

@@ -440,7 +440,10 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`myArray()`](#callable-value) | Returns the exposed array value, applying `equal`. This is the preferred value-reading form. |
 | [`myArray[index]`](#indexed-access) | Returns the live item node at an index, or `undefined`. |
 | [`value()`](#value) | Exposed value. Equivalent to calling the array node directly. |
-| [`controlValue()`](#controlvalue) | Immediate value from a control bound directly to the array; it can differ during debounce. |
+| [`value.committed()`](#value-committed) | Latest committed data before configured equality checks. |
+| [`value.committed.set(value)`](#value-committed-set) | Complete immediate write, equivalent to `set()`. |
+| [`value.control()`](#controlvalue) | Immediate value from a control bound directly to the array; it can differ during debounce. |
+| [`value.control.set(value)`](#value-control-set) | Receives control input with debounce and dirty tracking. |
 | [`items()`](#items) | Readonly array of current live item nodes. Its reference changes with the structure. |
 | [`length()`](#length) | Current number of item nodes. |
 | [`nodeType()`](#nodetype) | Returns the literal `'array'`. |
@@ -735,7 +738,7 @@ usernames[20]; // undefined
 
 #### 📝 value() {#value}
 
-**Signature:** `value: Signal<ArrayValue>`
+**Signature:** `value: NodeValueSignal<ArrayValue, ArraySet | null | undefined>`
 
 Contains the exposed plain value, including any previous array retained by [equality](#equal-option).
 
@@ -749,9 +752,25 @@ usernames.value(); // ['ada', 'grace']
 
 Prefer the equivalent callable form, `usernames()`, for ordinary value reads.
 
-#### 🔌 controlValue() {#controlvalue}
+#### 📝 value.committed() {#value-committed}
 
-**Signature:** `controlValue: Signal<ArrayValue>`
+**Signature:** `value.committed: Signal<ArrayValue> & { set(value: ArraySet | null | undefined): void }`
+
+Reads the latest committed data, bypassing configured `equal` checks on this node and its
+children. Pending debounce is still respected. Normal signal identity checks still apply.
+See the [value views reference](./node-value.md#value-committed) for an executable example.
+
+#### ✏️ value.committed.set() {#value-committed-set}
+
+**Signature:** `value.committed.set(value: ArraySet | null | undefined): void`
+
+Equivalent to `set(value)`: commits immediately, cancels pending input, preserves dirty/touched
+state, and follows normal validation and parent propagation. Exposed reads still honor `equal`.
+See the [setter example](./node-value.md#value-committed-set).
+
+#### 🔌 value.control() {#controlvalue}
+
+**Signature:** `value.control: Signal<ArrayValue>`
 
 Contains the immediate value reported by a control bound directly to the array.
 
@@ -760,11 +779,20 @@ const usernames = array(field(''), {
   initialValue: ['ada', 'grace'],
 });
 
-usernames.controlValue(); // ['ada', 'grace']
+usernames.value.control(); // ['ada', 'grace']
 ```
 
 This can temporarily differ from `usernames()` when a control is bound directly to the array and
 its value is awaiting a debounced commit.
+
+#### ✏️ value.control.set() {#value-control-set}
+
+**Signature:** `value.control.set(value: ArraySet | null | undefined): void`
+
+Receives a complete value for a control bound to this node, marks this node dirty, and applies
+configured or inherited debounce. It does not mark touched or emit binding outputs by itself.
+Read the [control setter example and propagation details](./node-value.md#value-control-set).
+
 
 #### 📚 items() {#items}
 

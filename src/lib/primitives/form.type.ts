@@ -4,6 +4,7 @@ import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
 import type { ArrayNode } from './array.type';
 import type { GenericFormNode } from '../types/generic-node.type';
+import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
@@ -552,6 +553,10 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   /**
    * Exposed aggregate of public child values. The `equal` option may retain a previous snapshot.
    *
+   * `value.committed()` reads committed data before configured equality; `value.control()` also
+   * includes this node's pending input. Their `set()` methods perform committed/control writes.
+   * See {@link NodeValueSignal} for debounce, aggregate, validation, and interaction semantics.
+   *
    * Prefer calling the form directly instead of using `profile.value()` for ordinary value reads:
    *
    * @example
@@ -561,9 +566,7 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * profile(); // { name: 'Marco' }
    * ```
    */
-  value: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
-  /** Current control-facing value, independent of exposed equality. Pending descendant control values are not aggregated. */
-  controlValue: Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>;
+  value: NodeValueSignal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }, FormSet<TNodes>>;
   /**
    * Assigns a complete form value immediately without marking the form or its descendants dirty.
    *

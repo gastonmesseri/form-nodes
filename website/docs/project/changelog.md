@@ -10,6 +10,14 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+Planned release: **3.3.0** (minor). The incompatible nested value API migration is an explicit
+versioning exception while the maintainer is the only consumer. See the
+[version policy](./versioning.md#nested-value-api-exception).
+
+### Changed
+
+- **Breaking:** Replaced public `controlValue()` and `setControlValue(value)` with `value.control()` and `value.control.set(value)`. Fields, groups, forms, and arrays now expose `value.committed()` for committed data before configured equality checks, and `value.committed.set(value)` for immediate writes equivalent to `set(value)`. Control writes preserve debounce and dirty tracking; neither setter emits binding outputs by itself. Exported `NodeValueSignal` describes these nested signals and hides native function members from IntelliSense on all three views. Bare `FieldNode` annotations retain the nested reads and setters; explicit value generics preserve their precise types.
+
 ## 📦 3.2.0 — 2026-09-09 {#320--2026-09-09}
 
 ### Added

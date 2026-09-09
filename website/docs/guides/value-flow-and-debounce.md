@@ -63,16 +63,16 @@ value, including any value retained by `equal`, rather than a pending control va
 
 ## 🔌 Control-originated values {#control-originated-values}
 
-`setControlValue()` represents a UI edit:
+`value.control.set()` represents a UI edit:
 
 ```ts
 const myForm = form({
   search: field('', { debounce: 300 }),
 });
 
-myForm.search.setControlValue('angular');
+myForm.search.value.control.set('angular');
 
-myForm.search.controlValue(); // 'angular' immediately
+myForm.search.value.control(); // 'angular' immediately
 myForm.search(); // '' until committed
 myForm.search.debouncing(); // true
 myForm.search.dirty(); // true immediately
@@ -113,7 +113,7 @@ callbacks, values, or injectors keep their normal ownership.
 
 Marking an interactive node touched commits its pending control value for every debounce strategy. Touching a form or array recursively does the same for descendants unless `{ skipDescendants: true }` is used.
 
-`reset()` without a value behaves differently: it cancels pending debounce, discards the buffered value, and restores `controlValue()` and rendered controls from the committed model.
+`reset()` without a value behaves differently: it cancels pending debounce, discards the buffered value, and restores `value.control()` and rendered controls from the committed model.
 
 When `equal` retains an older exposed value, reset still restores the latest internally committed
 value to controls. It does not replace that value with the older public representative.
@@ -139,8 +139,8 @@ const profile = form({
 
 `form.debouncing()` and `array.debouncing()` are true while any current descendant has buffered control work. Their `flush()` recursively commits only their current subtree.
 
-Pending descendant values do not compose into an ancestor's `controlValue()`. Both the aggregate
-node call and `controlValue()` keep their last committed representation until descendants commit.
+Pending descendant values do not compose into an ancestor's `value.control()`. Both the aggregate
+node call and `value.control()` keep their last committed representation until descendants commit.
 
 A custom control bound directly to a form or array has its own aggregate control buffer. Its update marks the aggregate node dirty, then distributes or reconciles the complete value when committed; descendants are not individually marked dirty.
 
@@ -152,3 +152,11 @@ Control debounce and asynchronous-validator `pending()` are independent states.
 current object schemas, restores initial array records, and does not emit control-originated value
 outputs. Loading server data through `reset(value)` does not redefine these defaults. See
 [Reset and restore initial values](./reset-and-restore.md) for the complete contract and examples.
+
+## Inspecting committed data before equality
+
+`node.value.committed()` bypasses custom equality on the node and its descendants while still
+respecting debounce. `node.value.committed.set(next)` performs the same immediate complete write
+as `node.set(next)`. `node.value.control.set(next)` receives control input with dirty tracking
+and debounce. See the [value views reference](../reference/node-value.md) for the five individual
+entries and a complete executable example combining equality, debounce, and reset.

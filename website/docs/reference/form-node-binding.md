@@ -103,7 +103,7 @@ current; asynchronous validation can still be pending. If the first handler repl
 the superseded committed notification is suppressed.
 
 These outputs belong to the concrete control binding. Programmatic `set()`, `patch()`, `update()`,
-`reset()`, and `setControlValue()` calls do not emit them. A flush can emit a previously pending
+`reset()`, and `value.control.set()` calls do not emit them. A flush can emit a previously pending
 control edit. Replaced or cancelled debounce work does not emit a committed notification, and a
 binding does not emit a pending notification after it is destroyed or rebound to a different node.
 Native `<form>` bindings and pass-through wrappers do not aggregate or forward descendants' outputs;
@@ -470,7 +470,7 @@ with `matInput` when it uses the native binding adapter.
 
 <CodeBlock language="ts" title="description-editor.component.ts">{nativeInputHandlerSource}</CodeBlock>
 
-A configured debounce still delays the committed value: use `controlValue()` to read the parsed
+A configured debounce still delays the committed value: use `value.control()` to read the parsed
 pending value. With `debounce: 'blur'`, the committed value and touched state are updated before
 `(blur)` runs. IME composition keeps input buffered until composition ends. Failed parsing keeps
 the last valid node value and exposes a parse error before the handler runs.

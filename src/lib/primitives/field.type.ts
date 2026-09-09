@@ -1,5 +1,6 @@
 import type { Injector, Signal } from '@angular/core';
 
+import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, NavigationRoot, NearestForm, AnyNode, NodeKeyInParent, RootNode } from '../types/node.type';
@@ -284,6 +285,10 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * Exposed field value. The `equal` option may retain an earlier equivalent value independently
    * of the latest committed write used by controls and reset.
    *
+   * `value.committed()` reads committed data before configured equality; `value.control()` also
+   * includes this node's pending input. Their `set()` methods perform committed/control writes.
+   * See {@link NodeValueSignal} for debounce, aggregate, validation, and interaction semantics.
+   *
    * Prefer calling the field directly instead of using `name.value()` for ordinary value reads:
    *
    * @example
@@ -293,13 +298,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * name(); // 'Marco'
    * ```
    */
-  value: Signal<TValue>;
-  /**
-   * Immediate value buffered from the bound UI control before any configured debounce completes.
-   * Keeps the latest control input even when `equal` retains a different exposed value.
-   * Most consumers should read value() instead; controlValue() is primarily intended for control bindings.
-   */
-  controlValue: Signal<TValue>;
+  value: NodeValueSignal<TValue, TValue>;
   /**
    * Assigns a committed value immediately without marking the field dirty.
    *
@@ -319,16 +318,11 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    */
   update(updater: (value: TValue) => TValue): void;
   /**
-   * Receives a value from a bound UI control, marks the field dirty, and applies its configured
-   * debounce before committing the value.
-   */
-  setControlValue(value: TValue): void;
-  /**
    * Whether a control-originated value is waiting to be committed by this field's numeric,
    * blur-based, or asynchronous debounce. Programmatic writes do not activate this signal.
    */
   debouncing: Signal<boolean>;
-  /** Immediately commits the pending controlValue(), ending its configured debounce. Has no observable effect when no control update is pending. */
+  /** Immediately commits the pending value.control(), ending its configured debounce. Has no observable effect when no control update is pending. */
   flush(): void;
   /**
    * Focuses the first `[formNode]` control currently bound to this field in DOM order.

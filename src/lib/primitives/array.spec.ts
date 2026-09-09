@@ -59,7 +59,7 @@ describe('array', () => {
     expect(first.keyInParent()).toBe(operation === 'remove' ? null : 1);
     expect(parent.dirty()).toBe(true);
     expect(parent.touched()).toBe(operation !== 'remove');
-    expect(values.controlValue()).toEqual(operation === 'remove' ? [1] : [1, 1]);
+    expect(values.value.control()).toEqual(operation === 'remove' ? [1] : [1, 1]);
     values.reset();
     expect(parent.pristine()).toBe(true);
     expect(parent.untouched()).toBe(true);
@@ -67,7 +67,7 @@ describe('array', () => {
     values.clear();
     expect(values.length()).toBe(0);
     expect(second.parent()).toBeNull();
-    expect(values.controlValue()).toEqual([]);
+    expect(values.value.control()).toEqual([]);
     expect(parent()).toBe(initial);
   });
 
@@ -130,10 +130,10 @@ describe('array', () => {
     values.set([{ id: 2 }]);
     expect(first.parent()).toBeNull();
     expect(values[0]!.id()).toBe(2);
-    expect(values.controlValue()).toEqual([{ id: 2 }]);
+    expect(values.value.control()).toEqual([{ id: 2 }]);
     expect(() => values()).toThrow(failure);
     values.reset();
-    expect(values.controlValue()).toEqual([{ id: 2 }]);
+    expect(values.value.control()).toEqual([{ id: 2 }]);
     shouldThrow = false;
     values.push({ id: 3 });
     expect(values()).toEqual([{ id: 2 }, { id: 3 }]);
@@ -149,7 +149,7 @@ describe('array', () => {
     expect(people()).toEqual([{ id: 1, name: 'Marco' }]);
     item.id.set(2);
     expect(people()).toEqual([{ id: 1, name: 'Marco' }]);
-    expect(people.controlValue()).toEqual([{ id: 2, name: 'Marco' }]);
+    expect(people.value.control()).toEqual([{ id: 2, name: 'Marco' }]);
     people.set([{ id: 2, name: 'Lia' }]);
     expect(people[0]).toBe(item);
     expect(people()).toEqual([{ id: 2, name: 'Lia' }]);
@@ -1171,7 +1171,7 @@ describe('array', () => {
     const names = array(() => field('', [required]), 1);
 
     expect(names.invalid()).toBe(true);
-    names.at(0)!.setControlValue('Mono');
+    names.at(0)!.value.control.set('Mono');
     expect(names.valid()).toBe(true);
     expect(names.dirty()).toBe(true);
     names.at(0)!.markAsTouched();
@@ -1184,9 +1184,9 @@ describe('array', () => {
       const people = array({ name: field('') }, [], { debounce: 100 });
       const person = people.push({ name: 'Marco' });
 
-      person.name.setControlValue('Mark');
+      person.name.value.control.set('Mark');
 
-      expect(person.name.controlValue()).toBe('Mark');
+      expect(person.name.value.control()).toBe('Mark');
       expect(person.name()).toBe('Marco');
       expect(people()).toEqual([{ name: 'Marco' }]);
       expect(people.debouncing()).toBe(true);
@@ -1206,15 +1206,15 @@ describe('array', () => {
     const names = array(field('initial'), 1, { debounce: 'blur' });
     const first = names[0]!;
 
-    first.setControlValue('pending');
-    expect(first.controlValue()).toBe('pending');
+    first.value.control.set('pending');
+    expect(first.value.control()).toBe('pending');
     expect(first()).toBe('initial');
-    expect(names.controlValue()).toEqual(['initial']);
+    expect(names.value.control()).toEqual(['initial']);
     expect(names.debouncing()).toBe(true);
 
     names.flush();
     expect(first()).toBe('pending');
-    expect(names.controlValue()).toEqual(['pending']);
+    expect(names.value.control()).toEqual(['pending']);
     expect(names.debouncing()).toBe(false);
   });
 
@@ -1223,7 +1223,7 @@ describe('array', () => {
 
     (names as unknown as InternalNode).$api._setControlValue(['Mark', 'Lia']);
 
-    expect(names.controlValue()).toEqual(['Mark', 'Lia']);
+    expect(names.value.control()).toEqual(['Mark', 'Lia']);
     expect(names()).toEqual(['Marco']);
     expect(names.debouncing()).toBe(true);
     expect(names.dirty()).toBe(true);
@@ -1272,7 +1272,7 @@ describe('array', () => {
     expect(debounce).toHaveBeenCalledTimes(2);
     expect(abortSignals.map(signal => signal.aborted)).toEqual([true, false]);
     expect(target()).toEqual(['initial']);
-    expect(target.controlValue()).toEqual(['latest']);
+    expect(target.value.control()).toEqual(['latest']);
     expect(root.debouncing()).toBe(true);
     expect(root.dirty()).toBe(true);
 
@@ -1284,7 +1284,7 @@ describe('array', () => {
     completions[1]!.resolve();
     await Promise.resolve();
     expect(target()).toEqual(['latest']);
-    expect(target.controlValue()).toEqual(['latest']);
+    expect(target.value.control()).toEqual(['latest']);
     expect(root.debouncing()).toBe(false);
 
     setControlValue(['cancelled']);
@@ -1301,7 +1301,7 @@ describe('array', () => {
     await Promise.resolve();
     expect(debounce).toHaveBeenCalledTimes(4);
     expect(target()).toEqual(['latest']);
-    expect(target.controlValue()).toEqual(['latest']);
+    expect(target.value.control()).toEqual(['latest']);
     expect(root.debouncing()).toBe(false);
     expect(root.dirty()).toBe(true);
   });
@@ -1319,7 +1319,7 @@ describe('array', () => {
     names.reset();
 
     expect(abortSignal.aborted).toBe(true);
-    expect(names.controlValue()).toEqual(['Marco']);
+    expect(names.value.control()).toEqual(['Marco']);
     expect(names()).toEqual(['Marco']);
     expect(names.pristine()).toBe(true);
     expect(names.debouncing()).toBe(false);
@@ -1333,7 +1333,7 @@ describe('array', () => {
       }, { debounce: 100 });
       const name = profile.names.push('Marco');
 
-      name.setControlValue('Mark');
+      name.value.control.set('Mark');
 
       expect(profile.names.debouncing()).toBe(true);
       expect(profile.debouncing()).toBe(true);
@@ -1806,7 +1806,7 @@ describe('array', () => {
   it('resets current items without replacing their values or identities', () => {
     const names = array(field(''), ['Mono']);
     const item = names[0]!;
-    item.setControlValue('Lia');
+    item.value.control.set('Lia');
     item.markAsTouched();
 
     names.reset();
@@ -1951,4 +1951,20 @@ describe('resetToInitial', () => {
     empty.resetToInitial();
     expect(empty()).toEqual([]);
   });
+});
+
+it('supports complete committed and buffered array writes through value signals', () => {
+  const items = array(field(''), { initialValue: ['Ada'], debounce: 'blur' });
+  items.value.control.set(['Grace']);
+  expect(items.value.control()).toEqual(['Grace']);
+  expect(items.value.committed()).toEqual(['Ada']);
+  items.flush();
+  expect(items.value.committed()).toEqual(['Grace']);
+  items.value.control.set(undefined);
+  expect(items.value.control()).toEqual([]);
+  items.value.committed.set(null);
+  expect(items()).toEqual([]);
+  expect(items.debouncing()).toBe(false);
+  items.resetToInitial();
+  expect(items.value.committed()).toEqual(['Ada']);
 });

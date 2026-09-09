@@ -448,7 +448,10 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`myForm.child`](#named-child-access) | Returns a named child node with its precise inferred type. |
 | [`children`](#children) | Stable readonly map of every current named child. |
 | [`value()`](#value) | Current committed aggregate value. Equivalent to calling the form directly. |
-| [`controlValue()`](#controlvalue) | Complete value from a control bound directly to the form. |
+| [`value.committed()`](#value-committed) | Latest committed data before configured equality checks. |
+| [`value.committed.set(value)`](#value-committed-set) | Complete immediate write, equivalent to `set()`. |
+| [`value.control()`](#controlvalue) | Complete value from a control bound directly to the form. |
+| [`value.control.set(value)`](#value-control-set) | Receives control input with debounce and dirty tracking. |
 | [`nodeType()`](#nodetype) | Returns the literal `'form'`. |
 | [`form()`](#form-1) | This explicit form workflow. |
 | [`root()`](#root) | Complete structural root; a root form returns itself. |
@@ -587,7 +590,7 @@ runtime keys. If a declared child is named `children`, use `profile.$api.childre
 
 #### 📝 value() {#value}
 
-**Signature:** `value: Signal<FormValue>`
+**Signature:** `value: NodeValueSignal<FormValue, FormSet>`
 
 Contains the current committed aggregate value.
 
@@ -601,9 +604,25 @@ profile.value(); // { username: 'ada' }
 
 Prefer the equivalent callable form, `profile()`, for ordinary value reads.
 
-#### 🔌 controlValue() {#controlvalue}
+#### 📝 value.committed() {#value-committed}
 
-**Signature:** `controlValue: Signal<FormValue>`
+**Signature:** `value.committed: Signal<FormValue> & { set(value: FormSet): void }`
+
+Reads the latest committed data, bypassing configured `equal` checks on this node and its
+children. Pending debounce is still respected. Normal signal identity checks still apply.
+See the [value views reference](./node-value.md#value-committed) for an executable example.
+
+#### ✏️ value.committed.set() {#value-committed-set}
+
+**Signature:** `value.committed.set(value: FormSet): void`
+
+Equivalent to `set(value)`: commits immediately, cancels pending input, preserves dirty/touched
+state, and follows normal validation and parent propagation. Exposed reads still honor `equal`.
+See the [setter example](./node-value.md#value-committed-set).
+
+#### 🔌 value.control() {#controlvalue}
+
+**Signature:** `value.control: Signal<FormValue>`
 
 Contains the complete value most recently received from a control bound directly to this form.
 
@@ -612,14 +631,23 @@ const profile = form({
   username: field('ada'),
 });
 
-profile.controlValue(); // { username: 'ada' }
+profile.value.control(); // { username: 'ada' }
 ```
 
 Pending descendant control values are not aggregated into this signal; read each descendant's
-`controlValue()` when that immediate buffered value is needed.
+`value.control()` when that immediate buffered value is needed.
 
 With aggregate `equal`, this control-facing signal can contain newer committed child values than
 the exposed form value even without a pending debounce. See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality).
+
+#### ✏️ value.control.set() {#value-control-set}
+
+**Signature:** `value.control.set(value: FormSet): void`
+
+Receives a complete value for a control bound to this node, marks this node dirty, and applies
+configured or inherited debounce. It does not mark touched or emit binding outputs by itself.
+Read the [control setter example and propagation details](./node-value.md#value-control-set).
+
 
 #### 💡 nodeType() {#nodetype}
 
@@ -1487,7 +1515,7 @@ const search = form({
   query: field('', { debounce: 300 }),
 });
 
-search.query.setControlValue('angular');
+search.query.value.control.set('angular');
 search.flush();
 search.query(); // 'angular'
 search.debouncing(); // false

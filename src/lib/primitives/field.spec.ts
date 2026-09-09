@@ -250,14 +250,14 @@ describe('field', () => {
   });
 
   it('exposes a real signal with committed-value tracking and configured equality', () => {
-    const name = field.strict('Marco', { debounce: 'blur', equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    const name = field.strict('Marco', { debounce: 'blur', equal: (a, b) => a?.toLowerCase() === b?.toLowerCase() });
     const observe = <T>(source: Signal<T>) => computed(() => source());
     const observed = observe(name);
     const read = vi.fn(() => observed());
     const value = computed(read);
     expect(isSignal(name)).toBe(true);
     expect(value()).toBe('Marco');
-    name.setControlValue('Lia');
+    name.value.control.set('Lia');
     expect(value()).toBe('Marco');
     expect(read).toHaveBeenCalledTimes(1);
     name.flush();
@@ -274,7 +274,7 @@ describe('field', () => {
   it.each([false, true])('preserves async work when a computed dependency compares equal (injector: %s)', async (withInjector) => {
     const injector = withInjector ? Injector.create({ providers: [] }) : undefined;
     const source = signal('Marco');
-    const selected = computed(source, { equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    const selected = computed(source, { equal: (a, b) => a?.toLowerCase() === b?.toLowerCase() });
     const runs: { abortSignal: AbortSignal; finish: (result: null) => void }[] = [];
     const target = field('', {
       ...(injector ? { injector } : {}),
@@ -317,7 +317,7 @@ describe('field', () => {
     name.set(equivalent);
     expect(name()).toBe(initial);
     expect(name.value()).toBe(initial);
-    expect(name.controlValue()).toBe(equivalent);
+    expect(name.value.control()).toBe(equivalent);
     expect(observed()).toBe(initial);
     expect(name.valid()).toBe(true);
     expect(read).toHaveBeenCalledOnce();
@@ -347,7 +347,7 @@ describe('field', () => {
     const unrelated = signal(0);
     const equal = vi.fn((a: string, b: string) => {
       unrelated();
-      return a.toLowerCase() === b.toLowerCase();
+      return a?.toLowerCase() === b?.toLowerCase();
     });
     const name = field.strict('Marco', { equal });
     expect(name()).toBe('Marco');
@@ -380,7 +380,7 @@ describe('field', () => {
     const unrelated = signal(0);
     const name = field.strict('Marco', { equal: (a, b) => {
       unrelated();
-      return a.toLowerCase() === b.toLowerCase();
+      return a?.toLowerCase() === b?.toLowerCase();
     } });
     const schedule = vi.fn();
     expect(name()).toBe('Marco');
@@ -403,9 +403,9 @@ describe('field', () => {
     const initial = { name: 'Marco' };
     const name = field(initial, { equal: 'deep', debounce });
     expect(name()).toBe(initial);
-    name.setControlValue({ name: 'Lia' });
+    name.value.control.set({ name: 'Lia' });
     const next = { name: 'Marco' };
-    name.setControlValue(next);
+    name.value.control.set(next);
     expect(name.dirty()).toBe(true);
     expect(name.debouncing()).toBe(debounce !== 0);
     expect(name()).toBe(initial);
@@ -413,12 +413,12 @@ describe('field', () => {
     expect(name.debouncing()).toBe(false);
     expect(name.touched()).toBe(true);
     name.reset();
-    expect(name.controlValue()).toBe(next);
+    expect(name.value.control()).toBe(next);
     const resetValue = { name: 'Marco' };
     name.reset(resetValue);
     expect(name.touched()).toBe(false);
     expect(name.pristine()).toBe(true);
-    expect(name.controlValue()).toBe(resetValue);
+    expect(name.value.control()).toBe(resetValue);
     expect(name()).toBe(initial);
   });
 
@@ -431,10 +431,10 @@ describe('field', () => {
     } });
     expect(name()).toBe('Marco');
     name.set('Lia');
-    expect(name.controlValue()).toBe('Lia');
+    expect(name.value.control()).toBe('Lia');
     expect(() => name()).toThrow(failure);
     name.reset();
-    expect(name.controlValue()).toBe('Lia');
+    expect(name.value.control()).toBe('Lia');
     expect(() => name.value()).toThrow(failure);
     shouldThrow = false;
     name.set('Ada');
@@ -446,11 +446,11 @@ describe('field', () => {
     const debounce = vi.fn((signal: AbortSignal) => {
       return new Promise<void>((finish) => { runs.push({ abortSignal: signal, finish }); });
     });
-    const name = field.strict('Marco', { equal: (a, b) => a.toLowerCase() === b.toLowerCase(), debounce });
+    const name = field.strict('Marco', { equal: (a, b) => a?.toLowerCase() === b?.toLowerCase(), debounce });
     expect(name()).toBe('Marco');
-    name.setControlValue('Lia');
+    name.value.control.set('Lia');
     expect(name.debouncing()).toBe(true);
-    name.setControlValue('MARCO');
+    name.value.control.set('MARCO');
     expect(runs[0]!.abortSignal.aborted).toBe(true);
     expect(name.debouncing()).toBe(true);
     expect(debounce).toHaveBeenCalledTimes(2);
@@ -461,17 +461,17 @@ describe('field', () => {
     await Promise.resolve();
     expect(name.debouncing()).toBe(false);
     expect(name()).toBe('Marco');
-    expect(name.controlValue()).toBe('MARCO');
+    expect(name.value.control()).toBe('MARCO');
     expect(name.dirty()).toBe(true);
-    name.setControlValue('Ada');
-    name.setControlValue('MARCO');
+    name.value.control.set('Ada');
+    name.value.control.set('MARCO');
     expect(runs[2]!.abortSignal.aborted).toBe(true);
     expect(debounce).toHaveBeenCalledTimes(3);
     expect(name.debouncing()).toBe(false);
     runs[2]!.finish();
     await Promise.resolve();
     name.reset();
-    expect(name.controlValue()).toBe('MARCO');
+    expect(name.value.control()).toBe('MARCO');
   });
 
   it('captures equality at construction and accepts legitimate undefined values', () => {
@@ -489,7 +489,7 @@ describe('field', () => {
   });
 
   it('compares lazily against the last exposed value and coalesces intermediate writes', () => {
-    const equal = vi.fn((a: string, b: string) => a.toLowerCase() === b.toLowerCase());
+    const equal = vi.fn((a: string, b: string) => a?.toLowerCase() === b?.toLowerCase());
     const name = field.strict('Marco', { equal });
     name.set('MARCO');
     expect(name()).toBe('MARCO');
@@ -541,26 +541,26 @@ describe('field', () => {
     const observed: unknown[][] = [];
     const model = computed(() => {
       return field<unknown>(initial, ({ value, node }) => {
-        observed.push([value(), node().controlValue()]);
+        observed.push([value(), node().value.control()]);
         return null;
       }, { debounce: 'blur' });
     });
     const node = model();
     expect(node()).toBe(initial);
-    expect(node.controlValue()).toBe(initial);
+    expect(node.value.control()).toBe(initial);
     expect(observed).toEqual([]);
     expect(node.valid()).toBe(true);
     expect(observed).toHaveLength(1);
     expect(observed[0]![0]).toBe(initial);
     expect(observed[0]![1]).toBe(initial);
 
-    node.setControlValue('draft');
+    node.value.control.set('draft');
     expect(node()).toBe(initial);
-    expect(node.controlValue()).toBe('draft');
+    expect(node.value.control()).toBe('draft');
     expect(node.debouncing()).toBe(true);
     node.reset();
     expect(node()).toBe(initial);
-    expect(node.controlValue()).toBe(initial);
+    expect(node.value.control()).toBe(initial);
     expect(node.debouncing()).toBe(false);
     expect(node.pristine()).toBe(true);
     expect(node.untouched()).toBe(true);
@@ -576,7 +576,7 @@ describe('field', () => {
     const model = computed(() => field.strict('x', [length, validate]));
     const node = model();
     expect(node()).toBe('x');
-    expect(node.controlValue()).toBe('x');
+    expect(node.value.control()).toBe('x');
     expect(node.validators()).toEqual([length, validate]);
     expect(validate).not.toHaveBeenCalled();
 
@@ -599,7 +599,7 @@ describe('field', () => {
     const model = computed(() => field(initialValue, asArray ? [check] : check));
     const node = model();
     expect(node()).toBe(initialValue);
-    expect(node.controlValue()).toBe(initialValue);
+    expect(node.value.control()).toBe(initialValue);
     expect(node.validators()).toEqual([check]);
     expect(node.pending()).toBe(true);
     expect(node.validationStatus()).toBe('unknown');
@@ -995,7 +995,7 @@ describe('field', () => {
 
     expect(omitted()).toBeNull();
     expect(fieldNode()).toBeUndefined();
-    expect(fieldNode.controlValue()).toBeUndefined();
+    expect(fieldNode.value.control()).toBeUndefined();
     expect(typedField()).toBeUndefined();
     expect(explicitNullable()).toBeUndefined();
     expect(configuredOmitted()).toBeNull();
@@ -1196,8 +1196,9 @@ describe('field', () => {
 
   it('keeps extracted actions callable without a receiver', () => {
     const name = field('initial', { debounce: 'blur' });
-    const { set, update, setControlValue, flush, reset, setValidators, markAsTouched } = name;
+    const { set, update, flush, reset, setValidators, markAsTouched } = name;
     const { patch } = name.api;
+    const { set: setControlValue } = name.value.control;
 
     set('first');
     update(value => `${value}!`);
@@ -1206,7 +1207,7 @@ describe('field', () => {
 
     setControlValue('pending');
     expect(name()).toBe('first!');
-    expect(name.controlValue()).toBe('pending');
+    expect(name.value.control()).toBe('pending');
     expect(name.debouncing()).toBe(true);
     flush();
     expect(name()).toBe('pending');
@@ -1220,7 +1221,7 @@ describe('field', () => {
 
     reset('ready');
     expect(name()).toBe('ready');
-    expect(name.controlValue()).toBe('ready');
+    expect(name.value.control()).toBe('ready');
     expect(name.errors()).toEqual([]);
     expect(name.touched()).toBe(false);
     expect(name.dirty()).toBe(false);
@@ -1235,16 +1236,16 @@ describe('field', () => {
     expect(updater).toHaveBeenCalledOnce();
     expect(updater).toHaveBeenCalledWith(23);
     expect(fieldNode()).toBe(24);
-    expect(fieldNode.controlValue()).toBe(24);
+    expect(fieldNode.value.control()).toBe(24);
     expect(fieldNode.pristine()).toBe(true);
   });
 
   it('updates control and model values immediately without control debounce', () => {
     const fieldNode = field('David');
 
-    fieldNode.setControlValue('Daniel');
+    fieldNode.value.control.set('Daniel');
 
-    expect(fieldNode.controlValue()).toBe('Daniel');
+    expect(fieldNode.value.control()).toBe('Daniel');
     expect(fieldNode.value()).toBe('Daniel');
     expect(fieldNode.debouncing()).toBe(false);
     expect(fieldNode.dirty()).toBe(true);
@@ -1259,9 +1260,9 @@ describe('field', () => {
       expect(fieldNode.errors()).toEqual([]);
       expect(validate).toHaveBeenCalledOnce();
 
-      fieldNode.setControlValue('Daniel');
+      fieldNode.value.control.set('Daniel');
 
-      expect(fieldNode.controlValue()).toBe('Daniel');
+      expect(fieldNode.value.control()).toBe('Daniel');
       expect(fieldNode.value()).toBe('David');
       expect(fieldNode.debouncing()).toBe(true);
       expect(fieldNode.errors()).toEqual([]);
@@ -1281,8 +1282,8 @@ describe('field', () => {
   it('buffers blur-debounced control updates until blur or an explicit flush', () => {
     const fieldNode = field('initial', { debounce: 'blur' });
 
-    fieldNode.setControlValue('pending');
-    expect(fieldNode.controlValue()).toBe('pending');
+    fieldNode.value.control.set('pending');
+    expect(fieldNode.value.control()).toBe('pending');
     expect(fieldNode.value()).toBe('initial');
     expect(fieldNode.debouncing()).toBe(true);
 
@@ -1290,7 +1291,7 @@ describe('field', () => {
     expect(fieldNode.value()).toBe('pending');
     expect(fieldNode.debouncing()).toBe(false);
 
-    fieldNode.setControlValue('flushed');
+    fieldNode.value.control.set('flushed');
     fieldNode.flush();
     expect(fieldNode.value()).toBe('flushed');
     expect(fieldNode.debouncing()).toBe(false);
@@ -1310,8 +1311,8 @@ describe('field', () => {
       },
     });
 
-    fieldNode.setControlValue('first');
-    fieldNode.setControlValue('second');
+    fieldNode.value.control.set('first');
+    fieldNode.value.control.set('second');
     expect(runs[0]!.signal.aborted).toBe(true);
     expect(runs[1]!.signal.aborted).toBe(false);
     expect(fieldNode()).toBe('initial');
@@ -1325,25 +1326,25 @@ describe('field', () => {
     expect(fieldNode()).toBe('second');
     expect(fieldNode.debouncing()).toBe(false);
 
-    fieldNode.setControlValue('rejected');
+    fieldNode.value.control.set('rejected');
     runs[2]!.reject();
     await Promise.resolve();
     expect(fieldNode()).toBe('second');
-    expect(fieldNode.controlValue()).toBe('rejected');
+    expect(fieldNode.value.control()).toBe('rejected');
     expect(fieldNode.debouncing()).toBe(false);
 
-    fieldNode.setControlValue('reset pending');
+    fieldNode.value.control.set('reset pending');
     fieldNode.reset();
     expect(runs[3]!.signal.aborted).toBe(true);
     expect(fieldNode()).toBe('second');
-    expect(fieldNode.controlValue()).toBe('second');
+    expect(fieldNode.value.control()).toBe('second');
 
     runs[3]!.resolve();
     await Promise.resolve();
     expect(fieldNode()).toBe('second');
     expect(fieldNode.debouncing()).toBe(false);
 
-    fieldNode.setControlValue('flushed');
+    fieldNode.value.control.set('flushed');
     fieldNode.flush();
     expect(runs[4]!.signal.aborted).toBe(true);
     expect(fieldNode()).toBe('flushed');
@@ -1356,15 +1357,15 @@ describe('field', () => {
 
   it('handles synchronous custom control debouncers', () => {
     const immediate = field('initial', { debounce: () => { } });
-    immediate.setControlValue('updated');
+    immediate.value.control.set('updated');
     expect(immediate()).toBe('updated');
     expect(immediate.debouncing()).toBe(false);
 
     const failure = new Error('Debouncer failed');
     const throwing = field('initial', { debounce: () => { throw failure; } });
-    expect(() => throwing.setControlValue('pending')).toThrow(failure);
+    expect(() => throwing.value.control.set('pending')).toThrow(failure);
     expect(throwing()).toBe('initial');
-    expect(throwing.controlValue()).toBe('pending');
+    expect(throwing.value.control()).toBe('pending');
     expect(throwing.debouncing()).toBe(false);
   });
 
@@ -1384,7 +1385,7 @@ describe('field', () => {
       await Promise.resolve();
       expect(validate).toHaveBeenCalledOnce();
 
-      fieldNode.setControlValue('Daniel');
+      fieldNode.value.control.set('Daniel');
       await Promise.resolve();
       await Promise.resolve();
       expect(validate).toHaveBeenCalledOnce();
@@ -1404,13 +1405,13 @@ describe('field', () => {
     try {
       const fieldNode = field('initial', { debounce: 100 });
 
-      fieldNode.setControlValue('first');
+      fieldNode.value.control.set('first');
       await vi.advanceTimersByTimeAsync(50);
-      fieldNode.setControlValue('second');
+      fieldNode.value.control.set('second');
       await vi.advanceTimersByTimeAsync(99);
 
       expect(fieldNode.value()).toBe('initial');
-      expect(fieldNode.controlValue()).toBe('second');
+      expect(fieldNode.value.control()).toBe('second');
 
       fieldNode.flush();
 
@@ -1428,28 +1429,28 @@ describe('field', () => {
     try {
       const fieldNode = field('initial', { debounce: 100 });
 
-      fieldNode.setControlValue('stale');
+      fieldNode.value.control.set('stale');
       fieldNode.set('programmatic');
       await vi.runAllTimersAsync();
 
       expect(fieldNode.value()).toBe('programmatic');
-      expect(fieldNode.controlValue()).toBe('programmatic');
+      expect(fieldNode.value.control()).toBe('programmatic');
       expect(fieldNode.debouncing()).toBe(false);
 
-      fieldNode.setControlValue('stale reset');
+      fieldNode.value.control.set('stale reset');
       fieldNode.reset();
       await vi.runAllTimersAsync();
 
       expect(fieldNode.value()).toBe('programmatic');
-      expect(fieldNode.controlValue()).toBe('programmatic');
+      expect(fieldNode.value.control()).toBe('programmatic');
       expect(fieldNode.pristine()).toBe(true);
 
-      fieldNode.setControlValue('another stale value');
+      fieldNode.value.control.set('another stale value');
       fieldNode.reset('reset value');
       await vi.runAllTimersAsync();
 
       expect(fieldNode.value()).toBe('reset value');
-      expect(fieldNode.controlValue()).toBe('reset value');
+      expect(fieldNode.value.control()).toBe('reset value');
       expect(fieldNode.pristine()).toBe(true);
     } finally {
       vi.useRealTimers();
@@ -1459,7 +1460,7 @@ describe('field', () => {
   it('flushes a pending control value when marked as touched', () => {
     const fieldNode = field('initial', { debounce: 'blur' });
 
-    fieldNode.setControlValue('touched');
+    fieldNode.value.control.set('touched');
     fieldNode.markAsTouched();
 
     expect(fieldNode()).toBe('touched');
@@ -2130,7 +2131,7 @@ describe('field', () => {
     const { patch } = fieldNode as typeof fieldNode & Pick<typeof fieldNode.api, 'patch'>;
     patch('Bea');
     expect(fieldNode()).toBe('Bea');
-    expect(fieldNode.controlValue()).toBe('Bea');
+    expect(fieldNode.value.control()).toBe('Bea');
     expect(fieldNode.dirty()).toBe(false);
   });
 
@@ -2205,7 +2206,7 @@ describe('field', () => {
 
   it('goes back to pristine through markAsPristine', () => {
     const fieldNode = field('David');
-    fieldNode.setControlValue('Ana');
+    fieldNode.value.control.set('Ana');
     fieldNode.markAsPristine();
     expect(fieldNode.dirty()).toBe(false);
     expect(fieldNode.pristine()).toBe(true);
@@ -2220,7 +2221,7 @@ describe('field', () => {
 
   it('keeps dirty and touched independent', () => {
     const fieldNode = field('David');
-    fieldNode.setControlValue('Ana');
+    fieldNode.value.control.set('Ana');
     expect(fieldNode.dirty()).toBe(true);
     expect(fieldNode.touched()).toBe(false);
     fieldNode.markAsPristine();
@@ -2883,13 +2884,13 @@ describe('resetToInitial', () => {
     const name = field.strict('Marco', [required], { debounce: 'blur' });
     const profile = form({ name });
     name.reset('server');
-    name.setControlValue('pending');
+    name.value.control.set('pending');
     name.markAsTouched();
-    name.setControlValue('another pending');
+    name.value.control.set('another pending');
     const { resetToInitial } = name;
     resetToInitial();
     expect(name()).toBe('Marco');
-    expect(name.controlValue()).toBe('Marco');
+    expect(name.value.control()).toBe('Marco');
     expect(name.debouncing()).toBe(false);
     expect(name.pristine()).toBe(true);
     expect(name.untouched()).toBe(true);
@@ -2954,7 +2955,7 @@ describe('resetToInitial', () => {
     vi.useFakeTimers();
     try {
       const name = field.strict('initial', { debounce: 100 });
-      name.setControlValue('pending');
+      name.value.control.set('pending');
       name.resetToInitial();
       vi.advanceTimersByTime(100);
       expect(name()).toBe('initial');
@@ -2964,13 +2965,13 @@ describe('resetToInitial', () => {
         abortSignal = signal;
         return new Promise<void>((resolve) => { complete = resolve; });
       } });
-      deferred.setControlValue('pending');
+      deferred.value.control.set('pending');
       deferred.resetToInitial();
       expect(abortSignal.aborted).toBe(true);
       complete();
       await Promise.resolve();
       expect(deferred()).toBe('initial');
-      expect(deferred.controlValue()).toBe('initial');
+      expect(deferred.value.control()).toBe('initial');
     } finally { vi.useRealTimers(); }
   });
 });
@@ -3012,4 +3013,38 @@ it('revalidates restored values and rejects stale async results outside injectio
   expect(root.pending()).toBe(false);
   expect(root.valid()).toBe(true);
   expect(root.pristine()).toBe(true);
+});
+
+it('exposes reactive committed and control views with independent equality and debounce', () => {
+  const name = field('Ada', { equal: (a, b) => a?.toLowerCase() === b?.toLowerCase(), debounce: 'blur' });
+  const committed = computed(() => name.value.committed());
+  const control = computed(() => name.value.control());
+  expect(isSignal(name.value)).toBe(true);
+  expect(isSignal(name.value.committed)).toBe(true);
+  expect(isSignal(name.value.control)).toBe(true);
+  expect(name()).toBe('Ada');
+  expect(committed()).toBe('Ada');
+  expect(control()).toBe('Ada');
+  const { set: input } = name.value.control;
+  const { set } = name.value.committed;
+  input('ADA');
+  expect(control()).toBe('ADA');
+  expect(committed()).toBe('Ada');
+  expect(name.dirty()).toBe(true);
+  expect(name.touched()).toBe(false);
+  name.flush();
+  expect(committed()).toBe('ADA');
+  expect(name()).toBe('Ada');
+  input('discarded');
+  set('Grace');
+  expect(name.debouncing()).toBe(false);
+  expect(control()).toBe('Grace');
+  expect(committed()).toBe('Grace');
+  expect(name.dirty()).toBe(true);
+  name.resetToInitial();
+  expect(committed()).toBe('Ada');
+  expect(control()).toBe('Ada');
+  expect(name.pristine()).toBe(true);
+  input('Ada');
+  expect(name.dirty()).toBe(true);
 });

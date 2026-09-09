@@ -61,7 +61,7 @@ export class CustomEventOrderHost {
     this.observations.push({
       eventValue,
       value: node(),
-      controlValue: node.$api.controlValue(),
+      controlValue: node.$api.value.control(),
       parent: this.profile(),
       dirty: node.$api.dirty(),
       touched: node.$api.touched(),

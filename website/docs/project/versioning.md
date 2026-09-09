@@ -10,7 +10,8 @@ Form Nodes 22.
 
 ## 📦 Version policy {#version-policy}
 
-Form Nodes follows [Semantic Versioning](https://semver.org/):
+Form Nodes uses [Semantic Versioning](https://semver.org/) by default, with explicit exceptions
+documented below:
 
 | Release | Meaning |
 | --- | --- |
@@ -20,8 +21,8 @@ Form Nodes follows [Semantic Versioning](https://semver.org/):
 
 Version `3.0.0` reorganizes public node types and Angular imports as documented in the migration guide.
 The API may continue to evolve as the library is tested in applications; further incompatible
-changes require another major release. Review the changelog
-and migration guide before every major upgrade. Breaking changes must be identified explicitly.
+changes normally require another major release. Review the changelog
+and migration guide before every upgrade, including minor releases covered by an exception. Breaking changes must be identified explicitly.
 Dropping a supported Angular version requires a major release. Adding support for a new Angular
 major without breaking existing consumers does not require matching that Angular version number.
 
@@ -52,3 +53,14 @@ released versions, the changelog and migration guide are the authoritative start
 Version `1.1.0` includes the declared-child typing change documented in the migration guide.
 This is an explicit exception during initial development, before consumer adoption. The general
 Semantic Versioning policy above remains the rule for subsequent releases.
+
+## Nested value API exception: 3.3.0 {#nested-value-api-exception}
+
+The nested value API change is planned for **3.3.0**, a minor release, at the maintainer's explicit
+request while the maintainer is the library's only consumer. This is an exception to the default
+Semantic Versioning policy, not a claim of backward compatibility.
+
+`controlValue()` and `setControlValue()` are removed. Existing code must migrate to
+`value.control()` and `value.control.set()`, as described in the
+[3.3.0 migration guide](./migrations.md#nested-value-views). The changelog continues to identify
+the change as breaking so its upgrade requirements remain visible.

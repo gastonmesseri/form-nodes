@@ -504,7 +504,7 @@ describe('form', () => {
     expect(first.path()).toEqual(['people', '1']);
     expect(first.touched()).toBe(true);
     expect(people.map(item => item.id())).toEqual([2, 1]);
-    expect(profile.controlValue().people.map(item => item.id)).toEqual([2, 1]);
+    expect(profile.value.control().people.map(item => item.id)).toEqual([2, 1]);
     first.name.set('Ada');
     expect(profile().people).toEqual([{ id: 2, name: 'Lia' }, { id: 1, name: 'Ada' }]);
   });
@@ -529,10 +529,10 @@ describe('form', () => {
     const people = profile.details.people;
     const initial = profile();
     expect(profile.valid()).toBe(true);
-    people[0]!.name.setControlValue('MARCO');
+    people[0]!.name.value.control.set('MARCO');
     expect(people[0]!.name()).toBe('MARCO');
     expect(profile()).toBe(initial);
-    expect(profile.controlValue()).toEqual({ details: { people: [{ name: 'MARCO' }] } });
+    expect(profile.value.control()).toEqual({ details: { people: [{ name: 'MARCO' }] } });
     expect(profile.valid()).toBe(true);
     expect(contexts).toEqual([[initial.details.people, initial.details.people, initial.details.people]]);
     expect(validateParent).toHaveBeenCalledTimes(2);
@@ -616,9 +616,9 @@ describe('form', () => {
     const name = profile.details.name;
     const initial = profile();
     expect(profile.valid()).toBe(true);
-    name.setControlValue('MARCO');
+    name.value.control.set('MARCO');
     expect(profile()).toBe(initial);
-    expect(profile.controlValue()).toEqual({ details: { name: 'MARCO' } });
+    expect(profile.value.control()).toEqual({ details: { name: 'MARCO' } });
     expect(profile.valid()).toBe(true);
     expect(contexts).toEqual([['Marco', 'Marco', 'Marco']]);
     expect(validateParent).toHaveBeenCalledTimes(2);
@@ -631,7 +631,7 @@ describe('form', () => {
     externalError.set(false);
     profile.markAsTouched();
     profile.reset();
-    expect(profile.controlValue()).toEqual({ details: { name: 'MARCO' } });
+    expect(profile.value.control()).toEqual({ details: { name: 'MARCO' } });
     expect(profile()).toBe(initial);
     expect(profile.pristine()).toBe(true);
     expect(profile.untouched()).toBe(true);
@@ -656,10 +656,10 @@ describe('form', () => {
     expect(target()).toBe(initial);
     expect(target.debouncing()).toBe(false);
     target.flush();
-    expect(name.controlValue()).toBe('MARCO');
-    expect(target.controlValue()).toEqual(kind === 'form' ? { name: 'MARCO' } : ['MARCO']);
+    expect(name.value.control()).toBe('MARCO');
+    expect(target.value.control()).toEqual(kind === 'form' ? { name: 'MARCO' } : ['MARCO']);
     target.reset();
-    expect(name.controlValue()).toBe('MARCO');
+    expect(name.value.control()).toBe('MARCO');
     expect(target()).toBe(initial);
   });
 
@@ -682,14 +682,14 @@ describe('form', () => {
     expect(validateAggregate).toHaveBeenCalledOnce();
     expect(validateChild).toHaveBeenCalledOnce();
 
-    target.name.setControlValue('MARCO');
+    target.name.value.control.set('MARCO');
     expect(target.name()).toBe('MARCO');
     expect(target()).toBe(initial.target);
     expect(target.value()).toBe(target());
     expect(target.$api.value()).toBe(target());
     expect(parent()).toBe(initial);
-    expect(target.controlValue()).toEqual({ name: 'MARCO' });
-    expect(parent.controlValue()).toEqual({ target: { name: 'MARCO' } });
+    expect(target.value.control()).toEqual({ name: 'MARCO' });
+    expect(parent.value.control()).toEqual({ target: { name: 'MARCO' } });
     expect(parent.dirty()).toBe(true);
     expect(parent.invalid()).toBe(true);
     expect(target.errors()).toEqual([]);
@@ -706,7 +706,7 @@ describe('form', () => {
     expect(parent.pristine()).toBe(true);
     expect(parent.untouched()).toBe(true);
     expect(target.name()).toBe('MARCO');
-    expect(target.controlValue()).toEqual({ name: 'MARCO' });
+    expect(target.value.control()).toEqual({ name: 'MARCO' });
     expect(parent()).toBe(initial);
   });
 
@@ -735,7 +735,7 @@ describe('form', () => {
     target.reset({ name: 'MARCO!' });
     expect(target().name).toBe('Marco!');
     expect(target.name()).toBe('MARCO!');
-    expect(target.controlValue().name).toBe('MARCO!');
+    expect(target.value.control().name).toBe('MARCO!');
     expect(target.pristine()).toBe(true);
     expect(target.untouched()).toBe(true);
   });
@@ -753,8 +753,8 @@ describe('form', () => {
     target.people[0]!.name.set('MARCO');
     expect(target()).toBe(initial);
     expect(target.people()).toBe(initial.people);
-    expect(target.controlValue().details.person.name).toBe('MARCO');
-    expect(target.controlValue().people[0]!.name).toBe('MARCO');
+    expect(target.value.control().details.person.name).toBe('MARCO');
+    expect(target.value.control().people[0]!.name).toBe('MARCO');
     target.details.city.set('Bern');
     target.people.push({ name: 'Lia' });
     expect(target().details).toEqual({ person: { name: 'Marco' }, city: 'Bern' });
@@ -762,9 +762,9 @@ describe('form', () => {
     expect(target().people[0]).toBe(target.people[0]!());
     const extra = target.add('extra', makeItem());
     expect(target()).toHaveProperty('extra.name', 'Marco');
-    expect(target.controlValue()).toHaveProperty('extra.name', 'Marco');
+    expect(target.value.control()).toHaveProperty('extra.name', 'Marco');
     extra.name.set('MARCO');
-    expect(target.controlValue()).toHaveProperty('extra.name', 'MARCO');
+    expect(target.value.control()).toHaveProperty('extra.name', 'MARCO');
     expect(target()).toHaveProperty('extra.name', 'Marco');
     target.remove('extra');
     expect(target()).not.toHaveProperty('extra');
@@ -839,7 +839,7 @@ describe('form', () => {
     target.person.set(replacement);
     expect(target.person()).toBe(replacement);
     expect(target() === initial).toBe(equal === 'deep');
-    expect(target.controlValue().person).toBe(replacement);
+    expect(target.value.control().person).toBe(replacement);
     const flat = form({ name: field.strict<string>('Marco') }, { equal });
     const flatInitial = flat();
     flat.name.set('Lia');
@@ -880,7 +880,7 @@ describe('form', () => {
     });
     target();
     target.name.set('Lia');
-    expect(target.controlValue()).toEqual({ name: 'Lia' });
+    expect(target.value.control()).toEqual({ name: 'Lia' });
     expect(() => target()).toThrow(failure);
     expect(target.name()).toBe('Lia');
     expect(() => target()).toThrow(failure);
@@ -891,13 +891,13 @@ describe('form', () => {
 
   it('keeps public and control values synchronized without configured equality', () => {
     const target = form({ name: field('Marco'), people: array({ name: field('Lia') }, { initialValue: 1 }) });
-    expect(target()).toEqual(target.controlValue());
-    expect(target.people()).toEqual(target.people.controlValue());
+    expect(target()).toEqual(target.value.control());
+    expect(target.people()).toEqual(target.people.value.control());
     target.name.set('Mark');
     target.people[0]!.name.set('Ada');
     expect(target()).toEqual({ name: 'Mark', people: [{ name: 'Ada' }] });
-    expect(target()).toEqual(target.controlValue());
-    expect(target.people()).toEqual(target.people.controlValue());
+    expect(target()).toEqual(target.value.control());
+    expect(target.people()).toEqual(target.people.value.control());
   });
 
   it('preserves aggregate values and validation when a field receives an equal value', () => {
@@ -914,7 +914,7 @@ describe('form', () => {
     expect(profile()).toBe(initial);
     expect(profile.valid()).toBe(true);
     expect(validateForm).toHaveBeenCalledTimes(2);
-    profile.details.person.setControlValue({ name: 'Marco' });
+    profile.details.person.value.control.set({ name: 'Marco' });
     expect(profile.dirty()).toBe(true);
     expect(profile()).toBe(initial);
     profile.markAsTouched();
@@ -1121,7 +1121,7 @@ describe('form', () => {
     });
     const first = model();
     expect(first()).toEqual({});
-    expect(first.controlValue()).toEqual({});
+    expect(first.value.control()).toEqual({});
     expect(first.disabled()).toBe(false);
     expect(first.readonly()).toBe(true);
     expect(first.hidden()).toBe(true);
@@ -1196,9 +1196,9 @@ describe('form', () => {
       },
     });
     expect(profile()).toStrictEqual(expected);
-    expect(profile.controlValue()).toStrictEqual(expected);
+    expect(profile.value.control()).toStrictEqual(expected);
     expect(profile().details.payload).toBe(payload);
-    expect(profile.controlValue().details.payload).toBe(payload);
+    expect(profile.value.control().details.payload).toBe(payload);
     expect(observed).toEqual([]);
     expect(profile.valid()).toBe(true);
     expect(observed).toStrictEqual([expected]);
@@ -1217,7 +1217,7 @@ describe('form', () => {
     };
     const profile = inComputed ? computed(create)() : create();
     expect(profile()).toEqual({ details: { name: 'initial' } });
-    expect(profile.controlValue()).toEqual({ details: { name: 'initial' } });
+    expect(profile.value.control()).toEqual({ details: { name: 'initial' } });
     expect(profile.details.name.pending()).toBe(true);
     expect(profile.details.pending()).toBe(true);
     expect(profile.pending()).toBe(true);
@@ -2539,20 +2539,20 @@ describe('form', () => {
       expect(profile.errors()).toEqual([]);
       expect(validate).toHaveBeenCalledOnce();
 
-      profile.address.city.setControlValue('Bern');
+      profile.address.city.value.control.set('Bern');
 
-      expect(profile.address.city.controlValue()).toBe('Bern');
+      expect(profile.address.city.value.control()).toBe('Bern');
       expect(profile.address.city.value()).toBe('Zurich');
       expect(profile.address.value()).toEqual({ city: 'Zurich' });
       expect(profile.value()).toEqual({ address: { city: 'Zurich' } });
-      expect(profile.controlValue()).toEqual({ address: { city: 'Zurich' } });
+      expect(profile.value.control()).toEqual({ address: { city: 'Zurich' } });
       expect(validate).toHaveBeenCalledOnce();
 
       profile.address.city.flush();
 
       expect(profile.address.value()).toEqual({ city: 'Bern' });
       expect(profile.value()).toEqual({ address: { city: 'Bern' } });
-      expect(profile.controlValue()).toEqual({ address: { city: 'Bern' } });
+      expect(profile.value.control()).toEqual({ address: { city: 'Bern' } });
       expect(profile.errors()).toEqual([]);
       expect(validate).toHaveBeenCalledTimes(2);
       await vi.runAllTimersAsync();
@@ -2573,9 +2573,9 @@ describe('form', () => {
         }),
       }, { debounce: 100 });
 
-      profile.name.setControlValue('Mark');
-      profile.address.city.setControlValue('Bern');
-      profile.address.country.setControlValue('Germany');
+      profile.name.value.control.set('Mark');
+      profile.address.city.value.control.set('Bern');
+      profile.address.country.value.control.set('Germany');
 
       expect(profile()).toEqual({
         name: 'Marco',
@@ -2615,9 +2615,9 @@ describe('form', () => {
 
       internal.$api._setControlValue({ name: 'Mark' });
 
-      expect(profile.controlValue()).toEqual({ name: 'Mark' });
+      expect(profile.value.control()).toEqual({ name: 'Mark' });
       expect(profile()).toEqual({ name: 'Marco' });
-      expect(profile.name.controlValue()).toBe('Marco');
+      expect(profile.name.value.control()).toBe('Marco');
       expect(profile.debouncing()).toBe(true);
       expect(profile.dirty()).toBe(true);
 
@@ -2639,7 +2639,7 @@ describe('form', () => {
 
       profile.name.set('current');
 
-      expect(profile.controlValue()).toEqual({ name: 'current' });
+      expect(profile.value.control()).toEqual({ name: 'current' });
       expect(profile.debouncing()).toBe(false);
       await vi.runAllTimersAsync();
       expect(profile()).toEqual({ name: 'current' });
@@ -2650,12 +2650,12 @@ describe('form', () => {
 
   it('flushes its own and selected descendant buffers when marked as touched', () => {
     const profile = form({ name: field('Marco') }, { debounce: 'blur' });
-    profile.name.setControlValue('child');
+    profile.name.value.control.set('child');
 
     profile.markAsTouched({ skipDescendants: true });
 
     expect(profile()).toEqual({ name: 'Marco' });
-    expect(profile.name.controlValue()).toBe('child');
+    expect(profile.name.value.control()).toBe('child');
     expect(profile.name.touched()).toBe(false);
     expect(profile.debouncing()).toBe(true);
 
@@ -2696,7 +2696,7 @@ describe('form', () => {
     expect(debounce).toHaveBeenCalledTimes(2);
     expect(abortSignals.map(signal => signal.aborted)).toEqual([true, false]);
     expect(target()).toEqual({ name: 'initial' });
-    expect(target.controlValue()).toEqual({ name: 'latest' });
+    expect(target.value.control()).toEqual({ name: 'latest' });
     expect(root.debouncing()).toBe(true);
     expect(root.dirty()).toBe(true);
 
@@ -2708,7 +2708,7 @@ describe('form', () => {
     completions[1]!.resolve();
     await Promise.resolve();
     expect(target()).toEqual({ name: 'latest' });
-    expect(target.controlValue()).toEqual({ name: 'latest' });
+    expect(target.value.control()).toEqual({ name: 'latest' });
     expect(root.debouncing()).toBe(false);
 
     setControlValue({ name: 'cancelled' });
@@ -2725,7 +2725,7 @@ describe('form', () => {
     await Promise.resolve();
     expect(debounce).toHaveBeenCalledTimes(4);
     expect(target()).toEqual({ name: 'latest' });
-    expect(target.controlValue()).toEqual({ name: 'latest' });
+    expect(target.value.control()).toEqual({ name: 'latest' });
     expect(root.debouncing()).toBe(false);
     expect(root.dirty()).toBe(true);
   });
@@ -2743,7 +2743,7 @@ describe('form', () => {
     profile.reset();
 
     expect(abortSignal.aborted).toBe(true);
-    expect(profile.controlValue()).toEqual({ name: 'Marco' });
+    expect(profile.value.control()).toEqual({ name: 'Marco' });
     expect(profile()).toEqual({ name: 'Marco' });
     expect(profile.pristine()).toBe(true);
     expect(profile.debouncing()).toBe(false);
@@ -2757,8 +2757,8 @@ describe('form', () => {
         address: form({ city: field('Zurich') }, { debounce: 50 }),
       }, { debounce: 100 });
 
-      profile.name.setControlValue('Mark');
-      profile.address.city.setControlValue('Bern');
+      profile.name.value.control.set('Mark');
+      profile.address.city.value.control.set('Bern');
       await vi.advanceTimersByTimeAsync(50);
 
       expect(profile.name()).toBe('Marco');
@@ -2777,7 +2777,7 @@ describe('form', () => {
   it('inherits blur debounce and reports it through the form', () => {
     const profile = form({ name: field('initial') }, { debounce: 'blur' });
 
-    profile.name.setControlValue('pending');
+    profile.name.value.control.set('pending');
     expect(profile.name()).toBe('initial');
     expect(profile.debouncing()).toBe(true);
 
@@ -2792,7 +2792,7 @@ describe('form', () => {
       debounce: () => new Promise<void>((done) => { resolve = done; }),
     });
 
-    profile.name.setControlValue('pending');
+    profile.name.value.control.set('pending');
     expect(profile()).toEqual({ name: 'initial' });
     expect(profile.debouncing()).toBe(true);
 
@@ -3722,7 +3722,7 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    formGroup.name.setControlValue('Ana');
+    formGroup.name.value.control.set('Ana');
     expect(formGroup.api.dirty()).toBe(true);
     expect(formGroup.api.pristine()).toBe(false);
     expect(formGroup.age.dirty()).toBe(false);
@@ -3732,7 +3732,7 @@ describe('form', () => {
     const formGroup = form({
       address: form({ city: field('Zurich') }),
     });
-    formGroup.address.city.setControlValue('Madrid');
+    formGroup.address.city.value.control.set('Madrid');
     expect(formGroup.address.api.dirty()).toBe(true);
     expect(formGroup.api.dirty()).toBe(true);
   });
@@ -3848,7 +3848,7 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    formGroup.name.setControlValue('Ana');
+    formGroup.name.value.control.set('Ana');
     formGroup.name.markAsPristine();
     expect(formGroup.api.dirty()).toBe(false);
   });
@@ -3928,8 +3928,8 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
     formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
-    formGroup.name.setControlValue('Ana');
-    formGroup.address.city.setControlValue('Madrid');
+    formGroup.name.value.control.set('Ana');
+    formGroup.address.city.value.control.set('Madrid');
     formGroup.address.api.reset({ city: 'Bern' });
     expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Bern' } });
     expect(formGroup.address.city.dirty()).toBe(false);
@@ -5033,8 +5033,8 @@ describe('resetToInitial', () => {
     profile.add('obsolete', field.strict('obsolete'));
     profile.remove('obsolete');
     profile.name.set('edited');
-    profile.address.city.setControlValue('Madrid');
-    profile.nested.email.setControlValue('email');
+    profile.address.city.value.control.set('Madrid');
+    profile.nested.email.value.control.set('email');
     dynamic.set('edited nickname');
     profile.markAsTouched();
     profile.resetToInitial();
@@ -5056,7 +5056,7 @@ describe('resetToInitial', () => {
     profile.resetToInitial();
     profile.flush();
     expect(profile()).toEqual({ people: [{ name: 'Ada' }] });
-    expect(profile.controlValue()).toEqual(profile());
+    expect(profile.value.control()).toEqual(profile());
     expect(profile.debouncing()).toBe(false);
     expect(profile.pristine()).toBe(true);
     expect(profile.untouched()).toBe(true);
@@ -5100,4 +5100,42 @@ it('revalidates restored values and rejects stale async results outside injectio
   expect(root.pending()).toBe(false);
   expect(root.valid()).toBe(true);
   expect(root.pristine()).toBe(true);
+});
+
+it('exposes committed child data through nested forms without collecting pending child drafts', () => {
+  const profile = form({
+    details: form({ name: field('Ada', { equal: () => true }) }),
+  }, { debounce: 'blur' });
+  const exposed = profile();
+  const committed = computed(() => profile.value.committed());
+  expect(committed()).toEqual({ details: { name: 'Ada' } });
+  profile.details.name.value.committed.set('Grace');
+  expect(profile()).toEqual(exposed);
+  expect(committed()).toEqual({ details: { name: 'Grace' } });
+  profile.details.name.value.control.set('pending child');
+  expect(profile.value.control()).toEqual({ details: { name: 'Grace' } });
+  const { set: input } = profile.value.control;
+  input({ details: { name: 'pending root' } });
+  expect(profile.value.control()).toEqual({ details: { name: 'pending root' } });
+  expect(committed()).toEqual({ details: { name: 'Grace' } });
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(false);
+  profile.flush();
+  expect(committed()).toEqual({ details: { name: 'pending root' } });
+  expect(profile.details.name.value.control()).toBe('pending root');
+  const { set } = profile.value.committed;
+  set({ details: { name: 'final' } });
+  expect(committed()).toEqual({ details: { name: 'final' } });
+  profile.resetToInitial();
+  expect(committed()).toEqual({ details: { name: 'Ada' } });
+  expect(profile.pristine()).toBe(true);
+});
+
+it('allows value views through the collision-safe API and group control setters', () => {
+  const profile = form({ value: field('child'), address: { city: field('Zurich') } });
+  profile.address.value.control.set({ city: 'Bern' });
+  expect(profile.address.value.committed()).toEqual({ city: 'Bern' });
+  profile.$api.value.committed.set({ value: 'next child', address: { city: 'Basel' } });
+  expect(profile.value()).toBe('next child');
+  expect(profile.$api.value()).toEqual({ value: 'next child', address: { city: 'Basel' } });
 });

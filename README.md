@@ -605,7 +605,7 @@ name: field('', [required, minLength(2)], { debounce: 300 }),
 ```
 
 The input displays the pending control value immediately. `myForm.name()` continues to expose the
-committed value until the delay ends. Use `controlValue()` to inspect the pending display value,
+committed value until the delay ends. Use `value.control()` to inspect the pending display value,
 `debouncing()` to inspect the buffer, and `flush()` to commit it immediately.
 
 Use `debounce: 'blur'` to commit on touch/blur instead. Programmatic `set()`, `update()`, `patch()`,

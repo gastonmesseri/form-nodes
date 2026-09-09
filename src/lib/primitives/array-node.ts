@@ -16,6 +16,7 @@ import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
@@ -620,8 +621,7 @@ export class ArrayNode<TItem extends AnyNode> {
       parent: this.parent.asReadonly(),
       path: this.path,
       keyInParent: this.keyInParent.asReadonly(),
-      value: this.exposedValue,
-      controlValue: this.controlValueBuffer.controlValue,
+      value: createNodeValueSignal(this.exposedValue, this.value, this.controlValueBuffer.controlValue, (next: ArraySet<TItem> | null | undefined) => this.set(next), (next: ArraySet<TItem> | null | undefined) => this.controlValueBuffer.set(this.normalizeArrayValue(next))),
       at: index => this.items()[index] as ArrayItemNode<TItem> | undefined,
       forEach: callback => this.forEach(callback),
       map: callback => this.getItemSnapshot().map((item, index) => callback(item, index, this.node)),
@@ -689,7 +689,7 @@ export class ArrayNode<TItem extends AnyNode> {
       ...publicApi,
       _value: this.value,
       _controlDebounce: this.controlDebounce,
-      _controlValue: publicApi.controlValue,
+      _controlValue: this.controlValueBuffer.controlValue,
       _setControlValue: (value: ArraySet<TItem> | null | undefined, onCommit?: () => void) => this.controlValueBuffer.set(this.normalizeArrayValue(value), onCommit),
       _flushControlValueOnBlur: publicApi.flush,
       _captureInitialValue: () => this.captureInitialValue(),

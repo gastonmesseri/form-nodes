@@ -82,7 +82,7 @@ export class ValueChangeOutputsHost {
 
   record(source: 'text' | 'number' | 'check' | 'date' | 'selected' | 'cva' | 'custom' | 'checked' | 'pair', kind: string, event: unknown) {
     const node = this[source] as AnyNode;
-    this.events.push({ source, kind, event, value: node(), control: node.$api.controlValue(), dirty: node.$api.dirty(), valid: node.$api.valid(), parent: this.profile() });
+    this.events.push({ source, kind, event, value: node(), control: node.$api.value.control(), dirty: node.$api.dirty(), valid: node.$api.valid(), parent: this.profile() });
     this.afterEvent?.(kind);
   }
 }

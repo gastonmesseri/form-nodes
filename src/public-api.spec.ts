@@ -1,6 +1,7 @@
 import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
+import type { NodeValueSignal } from './lib/types/node-value-signal.type';
 import { min, form, field, group, array, required, requiredIf, asyncValidator, createFormPrimitives, type AnyNode, type FieldNode, type DynamicNode, type FieldContext, type ValidatorApi, type ValidatorContext, type FormValueContract, type ComposableValidator, type ValidationErrorWithTargetNode } from './public-api';
 
 describe('types', () => {
@@ -377,10 +378,10 @@ describe('types', () => {
   it('types control-originated value buffering on fields', () => {
     const fieldNode = field('David', { debounce: 100 });
 
-    expectTypeOf(fieldNode.controlValue()).toEqualTypeOf<string | null>();
-    expectTypeOf(fieldNode.api.controlValue()).toEqualTypeOf<string | null>();
+    expectTypeOf(fieldNode.value.control()).toEqualTypeOf<string | null>();
+    expectTypeOf(fieldNode.api.value.control()).toEqualTypeOf<string | null>();
     expectTypeOf(fieldNode.debouncing()).toEqualTypeOf<boolean>();
-    expectTypeOf(fieldNode.setControlValue).toBeCallableWith('Daniel');
+    expectTypeOf(fieldNode.value.control.set).toBeCallableWith('Daniel');
     expectTypeOf(fieldNode.flush).toBeCallableWith();
   });
 
@@ -645,7 +646,7 @@ describe('types', () => {
     expectTypeOf(added.address.parent()).toEqualTypeOf<typeof profile | null>();
     expectTypeOf(profile.remove('age')).toEqualTypeOf<DynamicNode | undefined>();
 
-    expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.value).toEqualTypeOf<Signal<any> | undefined>();
+    expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.value).toEqualTypeOf<NodeValueSignal<any> | undefined>();
     expectTypeOf(profile.get('nonExistingPropertyOrDynamic')?.disabled).toEqualTypeOf<Signal<boolean> | undefined>();
 
     if (false) {

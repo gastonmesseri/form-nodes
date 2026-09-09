@@ -85,13 +85,13 @@ export default function FormsPlayground() {
   }, []);
 
   const updateDisplayName = (event: ChangeEvent<HTMLInputElement>) => {
-    playgroundForm.displayName.setControlValue(event.currentTarget.value);
+    playgroundForm.displayName.value.control.set(event.currentTarget.value);
     refresh();
     refreshAfterDebounce();
   };
 
   const updateEmail = (event: ChangeEvent<HTMLInputElement>) => {
-    playgroundForm.email.setControlValue(event.currentTarget.value);
+    playgroundForm.email.value.control.set(event.currentTarget.value);
     refresh();
   };
 
@@ -190,7 +190,7 @@ export default function FormsPlayground() {
         <div className="forms-playground__flow" aria-label="Value flow">
           <span><strong>1</strong> Control event</span>
           <span aria-hidden="true">→</span>
-          <span><strong>2</strong> <code>controlValue()</code></span>
+          <span><strong>2</strong> <code>value.control()</code></span>
           <span aria-hidden="true">→</span>
           <span><strong>3</strong> Debounce</span>
           <span aria-hidden="true">→</span>
@@ -212,7 +212,7 @@ export default function FormsPlayground() {
         <label className="forms-playground__field">
           <span>Display name</span>
           <input
-            value={playgroundForm.displayName.controlValue() ?? ''}
+            value={playgroundForm.displayName.value.control() ?? ''}
             disabled={playgroundForm.displayName.disabled()}
             onBlur={touchDisplayName}
             onChange={updateDisplayName}
@@ -229,7 +229,7 @@ export default function FormsPlayground() {
           <span>Email</span>
           <input
             type="email"
-            value={playgroundForm.email.controlValue() ?? ''}
+            value={playgroundForm.email.value.control() ?? ''}
             onBlur={touchEmail}
             onChange={updateEmail}
           />
@@ -270,14 +270,14 @@ export default function FormsPlayground() {
                 <label>
                   <span>Label</span>
                   <input value={contact.label() ?? ''} onChange={event => {
-                    contact.label.setControlValue(event.currentTarget.value);
+                    contact.label.value.control.set(event.currentTarget.value);
                     refresh();
                   }} />
                 </label>
                 <label>
                   <span>Email</span>
                   <input type="email" value={contact.email() ?? ''} onChange={event => {
-                    contact.email.setControlValue(event.currentTarget.value);
+                    contact.email.value.control.set(event.currentTarget.value);
                     refresh();
                   }} />
                 </label>
@@ -322,8 +322,8 @@ export default function FormsPlayground() {
         <h3><code>playgroundForm()</code> · committed value</h3>
         <pre><code>{JSON.stringify(playgroundForm(), null, 2)}</code></pre>
 
-        <h3><code>displayName.controlValue()</code> · immediate</h3>
-        <pre><code>{JSON.stringify(playgroundForm.displayName.controlValue())}</code></pre>
+        <h3><code>displayName.value.control()</code> · immediate</h3>
+        <pre><code>{JSON.stringify(playgroundForm.displayName.value.control())}</code></pre>
 
         <h3><code>allErrors()</code> · simplified</h3>
         <pre><code>{JSON.stringify(visibleErrors, null, 2)}</code></pre>

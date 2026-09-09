@@ -424,7 +424,7 @@ describe('FormNodeDirective', () => {
       const { first, second, selected } = fixture.componentInstance;
 
       control.value.set({ name: 'pending first' });
-      expect(first.controlValue()).toEqual({ name: 'pending first' });
+      expect(first.value.control()).toEqual({ name: 'pending first' });
       expect(first()).toEqual({ name: 'first' });
 
       selected.set(second);
@@ -432,7 +432,7 @@ describe('FormNodeDirective', () => {
       expect(control.value()).toEqual({ name: 'second' });
 
       control.value.set({ name: 'pending second' });
-      expect(second.controlValue()).toEqual({ name: 'pending second' });
+      expect(second.value.control()).toEqual({ name: 'pending second' });
       expect(second()).toEqual({ name: 'second' });
 
       await vi.advanceTimersByTimeAsync(100);
@@ -478,14 +478,14 @@ describe('FormNodeDirective', () => {
       expect(control.value()).toBe('initial');
 
       control.value.set('pending');
-      expect(name.controlValue()).toBe('pending');
+      expect(name.value.control()).toBe('pending');
       expect(name()).toBe('initial');
 
       name.reset();
       TestBed.flushEffects();
       expect(control.reset).toHaveBeenCalledOnce();
       expect(control.value()).toBe('initial');
-      expect(name.controlValue()).toBe('initial');
+      expect(name.value.control()).toBe('initial');
 
       await vi.runAllTimersAsync();
       expect(name()).toBe('initial');
@@ -523,7 +523,7 @@ describe('FormNodeDirective', () => {
     const { name } = fixture.componentInstance;
 
     control.value.set('pending');
-    expect(name.controlValue()).toBe('pending');
+    expect(name.value.control()).toBe('pending');
     expect(name()).toBe('initial');
     expect(name.debouncing()).toBe(true);
 
@@ -622,7 +622,7 @@ describe('FormNodeDirective', () => {
 
     control.value.set({ name: 'Lia' });
 
-    expect(profile.controlValue()).toEqual({ name: 'Lia' });
+    expect(profile.value.control()).toEqual({ name: 'Lia' });
     expect(profile()).toEqual({ name: 'David' });
     expect(profile.debouncing()).toBe(true);
 
@@ -638,7 +638,7 @@ describe('FormNodeDirective', () => {
 
     expect(control.reset).toHaveBeenCalledOnce();
     expect(control.value()).toEqual({ name: 'Lia' });
-    expect(profile.controlValue()).toEqual({ name: 'Lia' });
+    expect(profile.value.control()).toEqual({ name: 'Lia' });
     expect(profile()).toEqual({ name: 'Lia' });
     expect(profile.pristine()).toBe(true);
     expect(profile.debouncing()).toBe(false);
@@ -958,7 +958,7 @@ describe('FormNodeDirective', () => {
 
     expect(input.value).toBe('not-a-number');
     expect(profile.age()).toBe(23);
-    expect(profile.age.controlValue()).toBe(23);
+    expect(profile.age.value.control()).toBe(23);
     expect(profile.age.dirty()).toBe(true);
     const parseError = profile.age.getError('parse');
     expect(parseError).toMatchObject({ kind: 'parse', targetNode: profile.age });
@@ -1379,7 +1379,7 @@ describe('FormNodeDirective', () => {
       input.value = 'Mark';
       dispatch(input, 'input');
 
-      expect(fixture.componentInstance.name.controlValue()).toBe('Mark');
+      expect(fixture.componentInstance.name.value.control()).toBe('Mark');
       expect(fixture.componentInstance.name()).toBe('David');
       expect(fixture.componentInstance.name.debouncing()).toBe(true);
 
@@ -1408,7 +1408,7 @@ describe('FormNodeDirective', () => {
 
     inputElement.value = 'pending';
     dispatch(inputElement, 'input');
-    expect(name.controlValue()).toBe('pending');
+    expect(name.value.control()).toBe('pending');
     expect(name()).toBe('initial');
     expect(name.debouncing()).toBe(true);
 
@@ -1439,7 +1439,7 @@ describe('FormNodeDirective', () => {
 
       inputElement.value = 'local pending';
       dispatch(inputElement, 'input');
-      expect(profile.name.controlValue()).toBe('local pending');
+      expect(profile.name.value.control()).toBe('local pending');
       expect(profile.name()).toBe('initial');
 
       profile.name.reset();
@@ -1450,7 +1450,7 @@ describe('FormNodeDirective', () => {
 
       inputElement.value = 'form pending';
       dispatch(inputElement, 'input');
-      expect(profile.name.controlValue()).toBe('form pending');
+      expect(profile.name.value.control()).toBe('form pending');
 
       profile.reset();
       expect(inputElement.value).toBe('initial');
@@ -1691,7 +1691,7 @@ describe('FormNodeDirective', () => {
     const { name } = fixture.componentInstance;
 
     control.change('pending');
-    expect(name.controlValue()).toBe('pending');
+    expect(name.value.control()).toBe('pending');
     expect(name()).toBe('initial');
 
     control.touched();
@@ -2430,7 +2430,7 @@ describe('FormNodeNgControl', () => {
     expect(control.hasValidator(Validators.required)).toBe(true);
     expect(control.hasValidator(Validators.email)).toBe(false);
 
-    name.setControlValue('David');
+    name.value.control.set('David');
     name.markAsTouched();
     expect(control.value).toBe('David');
     expect(control.valid).toBe(true);

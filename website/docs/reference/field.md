@@ -395,7 +395,10 @@ state API. Signal properties must be called to read their current value.
 | **Value and tree** | |
 | [`myField()`](#callable-value) | Returns the current committed value. This is the preferred value-reading form. |
 | [`value()`](#value) | Current committed value. Equivalent to calling the field directly. |
-| [`controlValue()`](#controlvalue) | Immediate value received from a bound control; it can differ during debounce. |
+| [`value.committed()`](#value-committed) | Latest committed data before configured equality checks. |
+| [`value.committed.set(value)`](#value-committed-set) | Complete immediate write, equivalent to `set()`. |
+| [`value.control()`](#controlvalue) | Immediate value received from a bound control; it can differ during debounce. |
+| [`value.control.set(value)`](#setcontrolvalue) | Receives a control value, marks dirty, and applies debounce. |
 | [`nodeType()`](#nodetype) | Returns the literal `'field'`. |
 | [`form()`](#form) | Nearest explicit form workflow, or `null` when none owns the field. |
 | [`root()`](#root) | Complete structural root; a standalone field returns itself. |
@@ -407,7 +410,6 @@ state API. Signal properties must be called to read their current value.
 | **Value and control** | |
 | [`set(value)`](#set) | Immediately assigns a committed value without marking the field dirty. |
 | [`update(updater)`](#update) | Derives and assigns a value from the current committed value. |
-| [`setControlValue(value)`](#setcontrolvalue) | Receives a control value, marks dirty, and applies debounce. |
 | [`reset(value?)`](#reset) | Optionally replaces the value, then clears interaction state and pending input. |
 | [`resetToInitial()`](#reset-to-initial) | Restores captured initial values and clears subtree interaction state. |
 | [`debouncing()`](#debouncing) | Whether a control value is waiting to be committed. |
@@ -455,7 +457,7 @@ state API. Signal properties must be called to read their current value.
 | **Submission** | |
 | [`submitting()`](#submitting) | Whether an ancestor form is running its submission action. |
 
-Programmatic `set()` and `update()` do not mark a field dirty. `setControlValue()` does. A disabled,
+Programmatic `set()` and `update()` do not mark a field dirty. `value.control.set()` does. A disabled,
 readonly, or hidden field reports `touched()` and `dirty()` as `false` without discarding the stored
 state; the state is visible again when the field becomes interactive.
 
@@ -484,9 +486,9 @@ username(); // 'ada'
 
 #### 📝 value() {#value}
 
-**Signature:** `value: Signal<TValue>`
+**Signature:** `value: NodeValueSignal<TValue, TValue>`
 
-Contains the current committed value.
+Contains the exposed committed value. Configured `equal` checks may retain an earlier equivalent value. For all three views and their setters, see the [value views reference](./node-value.md).
 
 ```ts
 const username = field('ada');
@@ -496,9 +498,25 @@ username.value(); // 'ada'
 
 Prefer the equivalent callable form, `username()`, for ordinary value reads.
 
-#### 🔌 controlValue() {#controlvalue}
+#### 📝 value.committed() {#value-committed}
 
-**Signature:** `controlValue: Signal<TValue>`
+**Signature:** `value.committed: Signal<TValue> & { set(value: TValue): void }`
+
+Reads the latest committed data, bypassing configured `equal` checks on this node and its
+children. Pending debounce is still respected. Normal signal identity checks still apply.
+See the [value views reference](./node-value.md#value-committed) for an executable example.
+
+#### ✏️ value.committed.set() {#value-committed-set}
+
+**Signature:** `value.committed.set(value: TValue): void`
+
+Equivalent to `set(value)`: commits immediately, cancels pending input, preserves dirty/touched
+state, and follows normal validation and parent propagation. Exposed reads still honor `equal`.
+See the [setter example](./node-value.md#value-committed-set).
+
+#### 🔌 value.control() {#controlvalue}
+
+**Signature:** `value.control: Signal<TValue>`
 
 Contains the immediate value most recently received from a bound UI control.
 
@@ -507,11 +525,29 @@ const username = field('ada', {
   debounce: 300,
 });
 
-username.controlValue(); // 'ada'
+username.value.control(); // 'ada'
 ```
 
-During debounce, `controlValue()` contains the pending control value while `username()` still
+During debounce, `value.control()` contains the pending control value while `username()` still
 contains the last committed value.
+
+#### 🔌 value.control.set() {#setcontrolvalue}
+
+**Signature:** `value.control.set(value: TValue): void`
+
+Receives a value from a UI control, marks the field dirty, and applies the configured debounce
+before committing it. Control bindings normally call this method for you.
+
+```ts
+const username = field('', {
+  debounce: 'blur',
+});
+
+username.value.control.set('ada');
+username.value.control(); // 'ada'
+username(); // ''
+username.dirty(); // true
+```
 
 #### 💡 nodeType() {#nodetype}
 
@@ -1020,24 +1056,6 @@ username.update(value => value?.trim() ?? null);
 username(); // 'ada'
 ```
 
-#### 🔌 setControlValue() {#setcontrolvalue}
-
-**Signature:** `setControlValue(value: TValue): void`
-
-Receives a value from a UI control, marks the field dirty, and applies the configured debounce
-before committing it. Control bindings normally call this method for you.
-
-```ts
-const username = field('', {
-  debounce: 'blur',
-});
-
-username.setControlValue('ada');
-username.controlValue(); // 'ada'
-username(); // ''
-username.dirty(); // true
-```
-
 #### ↩️ reset() {#reset}
 
 **Signatures:** `reset(): void` · `reset(value: TValue): void`
@@ -1065,7 +1083,7 @@ its public type exposes this operation only through `api` and `$api`.
 
 **Signature:** `flush(): void`
 
-Immediately commits a pending `controlValue()` and ends its debounce. It is a no-op when nothing is
+Immediately commits a pending `value.control()` and ends its debounce. It is a no-op when nothing is
 pending.
 
 ```ts
@@ -1073,7 +1091,7 @@ const username = field('', {
   debounce: 300,
 });
 
-username.setControlValue('ada');
+username.value.control.set('ada');
 username.flush();
 username(); // 'ada'
 username.debouncing(); // false

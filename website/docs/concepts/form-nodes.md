@@ -29,7 +29,7 @@ The utility still needs the injection context or injector required by Angular `e
 Creating and reading the node itself does not require an injection context.
 
 Consumers observe committed values and configured equality. Pending control input becomes visible
-when committed, for example by `flush()`. Use `node.controlValue` when a utility should observe
+when committed, for example by `flush()`. Use `node.value.control` when a utility should observe
 pending input instead. Nodes satisfy `Signal<T>`; their form operations do not implement Angular's
 complete `WritableSignal<T>` interface.
 
@@ -73,7 +73,7 @@ myForm.name.touched();
 myForm.name.markAsTouched();
 ```
 
-`controlValue()` has different semantics and represents an immediate value buffered from a bound
+`value.control()` has different semantics and represents an immediate value buffered from a bound
 UI control before debounce completes. The [Values and state](./values-and-state.md) page documents
 the explicit alternative value paths for generic infrastructure.
 

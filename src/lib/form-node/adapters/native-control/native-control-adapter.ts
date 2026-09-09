@@ -1,7 +1,7 @@
 import { CSP_NONCE, DestroyRef, afterEveryRender, computed, effect, signal, untracked } from '@angular/core';
 
-import { shallowEqual } from '../../../utils/shallow-equal';
 import type { FieldNode } from '../../../primitives/field';
+import { shallowEqual } from '../../../utils/shallow-equal';
 import type { InternalNode, AnyNode, NodeValue } from '../../../types/node.type';
 import type { ControlAdapterContext, ControlAdapterConnection } from '../control-adapter';
 import type { ValidationErrorWithoutTargetNode } from '../../../validation/validation.type';
@@ -20,7 +20,7 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
   destroyRef.onDestroy(() => { destroyed = true; });
   const getNativeField = (): FieldNode<NodeValue<TNode>> => {
     const node = binding.node() as unknown as Partial<FieldNode<NodeValue<TNode>>>;
-    if (typeof node.setControlValue !== 'function') {
+    if (node.$api?.nodeType() !== 'field') {
       throw new Error('formNode: native controls require a field node');
     }
     return node as FieldNode<NodeValue<TNode>>;
@@ -38,17 +38,17 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
     if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;
     const field = getNativeField();
     field.markAsDirty();
-    const result = parseNativeControlValue(control, () => field.controlValue());
+    const result = parseNativeControlValue(control, () => field.value.control());
     parseErrors.set(result.error ? [result.error] : []);
     if ('value' in result) {
-      const previous: unknown = field.controlValue();
+      const previous: unknown = field.value.control();
       const next = result.value;
       const unchanged = previous instanceof Date && next instanceof Date
         ? Object.is(previous.getTime(), next.getTime())
         : shallowEqual(previous, next);
       if (unchanged) return;
       if (notify) receiveValue(next);
-      else field.setControlValue(next as NodeValue<TNode>);
+      else field.value.control.set(next as NodeValue<TNode>);
     }
   };
   effect((onCleanup) => {
@@ -56,26 +56,26 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
     onCleanup(registerExternalValidationErrors(field, parsingOwner, bindingParseErrors, {
       onReset: () => {
         parseErrors.set([]);
-        writeNativeControlValue(control, field.controlValue());
+        writeNativeControlValue(control, field.value.control());
       },
     }));
   }, { injector });
   effect(() => {
-    const value = getNativeField().controlValue();
+    const value = getNativeField().value.control();
     untracked(() => {
       parseErrors.set([]);
       writeNativeControlValue(control, value);
     });
   }, { injector });
   if (isNativeInput(control) && control.type === 'radio') {
-    afterEveryRender(() => writeNativeControlValue(control, getNativeField().controlValue()), { injector });
+    afterEveryRender(() => writeNativeControlValue(control, getNativeField().value.control()), { injector });
   }
   if (isNativeInput(control) && nativeInputRequiresValidityTracking(control)) {
     const stopWatchingValidity = watchNativeInputValidity(control, () => commit(false), cspNonce ?? undefined);
     destroyRef.onDestroy(stopWatchingValidity);
   }
   if (isNativeSelect(control) && typeof MutationObserver === 'function') {
-    const observer = new MutationObserver(() => writeNativeControlValue(control, getNativeField().controlValue()));
+    const observer = new MutationObserver(() => writeNativeControlValue(control, getNativeField().value.control()));
     observer.observe(control, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
     destroyRef.onDestroy(() => observer.disconnect());
   }

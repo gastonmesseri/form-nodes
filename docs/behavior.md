@@ -368,7 +368,7 @@ need not have identical aliasing in an otherwise equivalent acyclic graph. Deep 
 not snapshot in-place mutations. The implementation does not depend on lodash or unwrap its
 library-specific chain objects.
 
-`controlValue()` retains the latest input independently of exposed equality. Control changes still
+`value.control()` retains the latest input independently of exposed equality. Control changes still
 mark dirty. Only input identical to the current internal value under `Object.is` cancels obsolete
 debounce work without scheduling replacement work. Publicly equivalent but internally different
 input follows the existing debounce strategy. `set()` cancels pending control work and stores the
@@ -442,7 +442,7 @@ must represent interchangeable values for those operations and the aggregate's v
 
 `reset(value)` writes the supplied child values even if the public aggregate retains an equivalent
 snapshot. Control-facing values may therefore differ from public aggregate reads with no pending
-debounce. This is intentional; `controlValue` remains a control representation rather than another
+debounce. This is intentional; `value.control` remains a control representation rather than another
 general-purpose public model accessor. Angular `[formField]` synchronization and `[formNode]`
 control buffers use committed values so retained snapshots cannot revert control input.
 
@@ -693,39 +693,39 @@ aggregation, state propagation, and paths remain available at all times.
 | --- | --- | --- | --- |
 | `set(value)` | Replaces the value | Preserves current state | No change |
 | `update(updater)` | Computes and replaces the value from the current committed value | Preserves current state | No change |
-| `setControlValue(value)` | Updates `controlValue()` immediately and commits `value()` after the configured debounce | Marks dirty immediately | No change |
-| `flush()` | Immediately commits a pending `controlValue()` | No additional change | No change |
+| `value.control.set(value)` | Updates `value.control()` immediately and commits `value()` after the configured debounce | Marks dirty immediately | No change |
+| `flush()` | Immediately commits a pending `value.control()` | No additional change | No change |
 | `api.patch(value)` | Same as `set(value)` | Preserves current state | No change |
 | `reset()` | Preserves the current value | Clears dirty | Clears touched |
 | `reset(value)` | Replaces the value | Clears dirty | Clears touched |
 
 `reset(value)` handles falsy values such as an empty string or zero. Resetting does not replace validators, and validation is recomputed against a newly assigned value.
 
-`update()` is the immutable convenience form of reading and setting a complete value. Its updater runs synchronously once and receives `value()`, never a pending `controlValue()`:
+`update()` is the immutable convenience form of reading and setting a complete value. Its updater runs synchronously once and receives `value()`, never a pending `value.control()`:
 
 ```ts
 age.update(value => (value ?? 0) + 1);
 ```
 
-The operation is executed untracked, delegates to the same programmatic behavior as `set()`, cancels pending field control debounce, synchronizes `controlValue()`, and preserves existing dirty and touched state.
+The operation is executed untracked, delegates to the same programmatic behavior as `set()`, cancels pending field control debounce, synchronizes `value.control()`, and preserves existing dirty and touched state.
 
 ### Control-originated value debounce
 
-`controlValue()` is the immediate value owned by the UI control bound to a field. `value()` is the committed model value used by validators and aggregated by parent forms. Configure `debounce` on a field and send future UI updates through `setControlValue()`:
+`value.control()` is the immediate value owned by the UI control bound to a field. `value()` is the committed model value used by validators and aggregated by parent forms. Configure `debounce` on a field and send future UI updates through `value.control.set()`:
 
 ```ts
 const search = field('', { debounce: 300 });
 
-search.setControlValue('angular');
+search.value.control.set('angular');
 
-search.controlValue(); // 'angular' immediately
+search.value.control(); // 'angular' immediately
 search.value(); // '' until 300 ms elapse
 search.debouncing(); // true
 ```
 
 Every new control update restarts the complete delay. `debounce: 'blur'` instead keeps the latest control value buffered until the native control blurs, a Signal control emits `touch`, a CVA invokes its touched callback, or application code calls `markAsTouched()`. Marking any interactive node touched commits its own pending control value for every debounce strategy, matching Angular Signal Forms. Aggregate `markAsTouched()` also applies this to descendants unless `skipDescendants` is true. A custom debouncer receives an `AbortSignal` and may return a promise; the value commits when that promise resolves. A newer control value aborts the previous signal and ignores its eventual settlement. A rejected debouncer leaves the committed value unchanged and ends `debouncing()`. A synchronous `void` result commits immediately, while a synchronous throw is propagated after cancelling the debounce. `flush()` commits the latest buffered value immediately for every strategy and aborts custom asynchronous work. A missing, non-finite, zero, or negative numeric debounce commits control updates immediately.
 
-Programmatic operations are never debounced. On fields, forms, and arrays, `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `controlValue()` and `value()` immediately. `reset()` without a value aborts custom asynchronous debounce work, discards the buffered control value, and restores `controlValue()` and any bound custom control from the currently committed value. This prevents a stale completion from overwriting newer programmatic state. A control update marks its directly bound node dirty immediately; reset clears dirty and touched state as usual without dirtying aggregate descendants.
+Programmatic operations are never debounced. On fields, forms, and arrays, `set()`, `api.patch()`, and `reset(value)` cancel any pending control update and synchronize `value.control()` and `value()` immediately. `reset()` without a value aborts custom asynchronous debounce work, discards the buffered control value, and restores `value.control()` and any bound custom control from the currently committed value. This prevents a stale completion from overwriting newer programmatic state. A control update marks its directly bound node dirty immediately; reset clears dirty and touched state as usual without dirtying aggregate descendants.
 
 Scheduled control-value debounce callbacks have weak ownership of their node state and per-update
 abort controller. Otherwise unreachable fields, forms, groups, arrays, and parent trees can be
@@ -747,7 +747,7 @@ and `packages/forms/signals/test/node/api/debounce.spec.ts` for completion, repl
 semantics. Weak lifetime for standalone Form Nodes nodes is an additional library contract, rather than a
 requirement inferred from Angular's injector-owned field lifecycle.
 
-Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. Every node exposes `controlValue()`, but it represents only the control bound directly to that node and does not aggregate pending control values from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
+Synchronous and asynchronous validators observe only committed `value()` changes. Parent forms likewise aggregate committed child values, including for nested forms. Every node exposes `value.control()`, but it represents only the control bound directly to that node and does not aggregate pending control values from descendants. `debouncing()` is independent from asynchronous validation `pending()`.
 
 This follows the control buffer semantics inspected in Angular Signal Forms 22.1.4 at commit `898380974d49cf7976e9d89cc74a0801a26ce7b1`, primarily `packages/forms/signals/src/api/types.ts`, `packages/forms/signals/src/field/node.ts`, `packages/forms/signals/src/field/state.ts`, and the debounce/reset field tests. This library exposes action methods instead of Angular's writable state signals to preserve its public API style.
 
@@ -773,19 +773,19 @@ negative value also overrides an inherited delay and commits control updates imm
 array items resolve the effective debounce after they are attached, so both current and future
 items inherit from their array and ancestors.
 
-Aggregate nodes expose a readonly `controlValue()` for a custom control bound directly to that form
-or array. Such a control has its own debounce buffer: `controlValue()` changes immediately while
+Aggregate nodes expose `value.control()` for a custom control bound directly to that form
+or array. Such a control has its own debounce buffer: `value.control()` changes immediately while
 `value()` and descendants retain their committed values until the aggregate strategy completes or
 `flush()` runs. Descendants remain pristine because the dirty interaction belongs to the aggregate
 control. A newer programmatic or descendant value invalidates the aggregate buffer so stale work
 cannot overwrite it.
 
 Pending control values from descendants are intentionally not composed into an ancestor's
-`controlValue()`. Until those descendants commit, both ancestor `value()` and `controlValue()` keep
+`value.control()`. Until those descendants commit, both ancestor `value()` and `value.control()` keep
 their last committed representation. This follows Angular Signal Forms, whose node-level
-`controlValue()` explicitly does not incorporate child control values. Unlike Angular's writable
-signal, this library keeps the signal readonly and distinguishes control-originated writes through
-its binding API.
+`controlValue()` explicitly does not incorporate child control values. This library exposes
+control writes through `value.control.set()` and its binding API; the nested signal does not
+implement the full Angular `WritableSignal` interface.
 
 `form.debouncing()` and `array.debouncing()` are true while any current descendant field has a
 pending control-value debounce. They aggregate only control debounce state and remain independent
@@ -1837,7 +1837,7 @@ pristine() === true
 ```
 
 - `set()` and `patch()` are programmatic updates and preserve the current dirty state.
-- `setControlValue()` represents an update from a bound UI control and marks the field dirty immediately, including when the control reports the existing value.
+- `value.control.set()` represents an update from a bound UI control and marks the field dirty immediately, including when the control reports the existing value.
 - `markAsDirty()` records dirty state without changing the value.
 - `markAsPristine()` clears dirty state without changing the value.
 - Validator changes do not mark a field dirty.
@@ -2445,7 +2445,7 @@ class ProfileEditor {
 The directive currently provides these behaviors:
 
 - Two-way synchronization with native `input`, `textarea`, and `select` elements, including number, range, checkbox, radio, date-like, and multiple-select values.
-- Native input updates use `setControlValue()`. They therefore mark the field dirty and honor the field's own or inherited control debounce; programmatic `set()` updates remain immediate and pristine. A dynamically bound native input `type` remains live: changing between compatible textual types such as `password` and `text` preserves model-to-view and view-to-model synchronization.
+- Native input updates use `value.control.set()`. They therefore mark the field dirty and honor the field's own or inherited control debounce; programmatic `set()` updates remain immediate and pristine. A dynamically bound native input `type` remains live: changing between compatible textual types such as `password` and `text` preserves model-to-view and view-to-model synchronization.
 - Resetting a field or an ancestor form cancels its pending native-control debounce, restores the rendered committed value immediately, and prevents the cancelled value from reappearing when its timer would have completed.
 - A blur event marks the field touched. IME composition is buffered until `compositionend`.
 - `disabled`, `readonly`, `required`, `aria-invalid`, `min`, `max`, `minLength`, `maxLength`, and `pattern` are synchronized from field state to applicable DOM properties. Applicability observes an input type bound during Angular initialization. Date limits are formatted for native `date` and `month` inputs. Native range controls apply browser clamping to their displayed value as constraints change; this does not rewrite a programmatic model value until the control emits an input event. When several pattern validators are active, the generated native pattern requires all of them; the node validators remain the authoritative validation behavior.
@@ -2456,7 +2456,7 @@ The directive currently provides these behaviors:
 - Components that provide `NG_VALUE_ACCESSOR` are connected through their `ControlValueAccessor`. If the CVA component declares standard Signal Forms state inputs, including a signal input named `name`, those inputs receive the same field state used for signal-native custom controls. The directive also provides a lightweight `NgControl` view for compatibility with controls that inspect it, including Angular Material-style controls.
 - A wrapper component may consume an input whose template name is exactly `formNode` and delegate that node to an inner `[formNode]` control. The outer directive becomes pass-through: it performs no synchronization, validation, CSS-class work, hidden-field warning, or focus registration. Only the delegated inner control is a binding. This is automatic and requires no provider. An aliased property is valid as long as its public template input name is `formNode`.
 - Component wrappers are detected automatically from Angular's public component metadata. A directive that consumes or re-exports `formNode`, including a host directive, must add `providers: [provideFormNodePassThrough()]` because Angular exposes no equivalent public runtime reflection API for directive inputs. The provider affects only the injector on that host element.
-- Components implementing Angular's standard `FormValueControl<T>` (`value = model<T>()`) or `FormCheckboxControl` (`checked = model<boolean>()`) are discovered automatically from their compiled component metadata. Separate input/output pairs require experimental bindInputOutputPairs: true; actual models and CVAs do not. They require no library-specific interface, provider, or registration. The model synchronizes in both directions and user changes follow the field's normal `setControlValue()` debounce behavior. A model must provide an initial value rather than use `model.required()`: Angular's template compiler has a special rule allowing `[formField]` to satisfy its custom control's required model input, but cannot extend that rule to third-party binding directives. Unlike Angular's internal control-creation hook, `[formNode]` connects during directive initialization, so the model is synchronized after the custom component's own `ngOnInit` and before its initialized view is consumed.
+- Components implementing Angular's standard `FormValueControl<T>` (`value = model<T>()`) or `FormCheckboxControl` (`checked = model<boolean>()`) are discovered automatically from their compiled component metadata. Separate input/output pairs require experimental bindInputOutputPairs: true; actual models and CVAs do not. They require no library-specific interface, provider, or registration. The model synchronizes in both directions and user changes follow the field's normal `value.control.set()` debounce behavior. A model must provide an initial value rather than use `model.required()`: Angular's template compiler has a special rule allowing `[formField]` to satisfy its custom control's required model input, but cannot extend that rule to third-party binding directives. Unlike Angular's internal control-creation hook, `[formNode]` connects during directive initialization, so the model is synchronized after the custom component's own `ngOnInit` and before its initialized view is consumed.
 - A `FormValueControl<T>` may bind to an aggregate `form()` or `array()` when `T` matches the node's complete value. A control-originated aggregate value marks that aggregate node dirty and then uses its normal structural update path: forms distribute the complete object to their children, while arrays reconcile, create, move, or detach item nodes according to their configured index or `trackBy` identity. Descendants are not individually marked dirty merely because the aggregate control supplied their values. Programmatic `set()` remains pristine and updates the custom model in the opposite direction.
 - Standard Signal Forms state inputs implemented by the component are synchronized when this library has an equivalent node state: `errors`, `disabled`, `disabledReasons`, `dirty`, `hidden`, `invalid`, `max`, `maxLength`, `min`, `minLength`, `name`, `pattern`, `pending`, `readonly`, `required`, and `touched`. The `name` input receives the same stable, path-aware value used by native controls. Constraint inputs receive the same strictest limits and complete pattern list exposed by the field. `disabledReasons` receives this library's `DisabledReason[]`, whose `sourceNode` is the equivalent of Angular's originating `fieldTree`. Input transforms are honored.
 - A state input declared by a component custom control takes precedence over a native DOM property with the same template name. Custom-element hosts never receive synthetic `disabled`, `required`, `readonly`, `name`, or constraint properties. When a component signal control or component CVA is hosted on a native form element, native fallback remains available only for properties the component does not declare. This matches Angular Signal Forms' `customControlHasInput()` precedence and prevents duplicate or accidental host writes. Unlike Angular's internal renderer, the public reflection API cannot enumerate inputs belonging to arbitrary directives on the same native host; directive-based controls therefore need to handle native-host collisions explicitly until Angular exposes an equivalent public facility.
@@ -2801,7 +2801,7 @@ composition, dirty state, and synchronous validation. The `touch` handler sees t
 blur-debounce flushing. This also holds when a custom component injects `FORM_NODE` or the concrete
 directive during construction. Token identity is unchanged; no cyclic-injection recovery or
 constructor-time component discovery is needed. Configured debounce still leaves committed values
-pending, and `controlValue()` exposes the pending representation. Rebinding uses the current node.
+pending, and `value.control()` exposes the pending representation. Rebinding uses the current node.
 Consumer resets inside handlers are not overwritten by a second transport subscription.
 
 The three host listeners exist on all bindings, but native, CVA, and pass-through adapters never
@@ -2826,10 +2826,10 @@ hosts instead of relying on Angular internals.
 
 ### Native parse errors
 
-Native controls parse their raw UI state before calling `setControlValue()`. If the browser reports
+Native controls parse their raw UI state before calling `value.control.set()`. If the browser reports
 `ValidityState.badInput`, or a numeric model is bound to a text input containing a non-numeric value,
 the field receives an external validation error with `kind: 'parse'`. The failed raw value remains in
-the DOM so the user can correct it, while both `value()` and `controlValue()` retain their last valid
+the DOM so the user can correct it, while both `value()` and `value.control()` retain their last valid
 values. The interaction still marks the field dirty, and the parse error immediately participates in
 the field and ancestor validation state. A successful later parse clears the error and follows the
 normal control debounce rules.
@@ -2848,7 +2848,7 @@ transitions using a small CSS animation hook, matching Angular Signal Forms. The
 document or Shadow Root, honors Angular's `CSP_NONCE`, and is removed when its last binding is
 destroyed. No validity observer or style is installed during server rendering.
 
-Native `input`, `select`, and `textarea` elements still require a `field()` because they edit scalar control representations. Aggregate nodes are accepted only through custom signal controls or CVAs capable of representing their complete object or array value. Forms and arrays expose that direct control representation through readonly `controlValue()` signals and may debounce it independently, without composing pending descendant control buffers.
+Native `input`, `select`, and `textarea` elements still require a `field()` because they edit scalar control representations. Aggregate nodes are accepted only through custom signal controls or CVAs capable of representing their complete object or array value. Forms and arrays expose that direct control representation through `value.control()` signals and may debounce it independently, without composing pending descendant control buffers.
 
 The architecture follows Angular 22 Signal Forms `FormField`, `FormValueControl`, and `FormCheckboxControl` behavior as inspected at tag `22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`), especially `packages/forms/signals/src/directive/form_field.ts`, `packages/forms/signals/src/directive/form_field_spec.ts`, `packages/forms/signals/src/api/types.ts`, and the binding selection in `packages/forms/signals/src/field/node.ts`. `[formNode]` reproduces the pass-through result without depending on Angular's internal control-creation hook: component wrappers are discovered through the public `getDebugNode()` and `reflectComponentType()` APIs, while directives opt in through `provideFormNodePassThrough()`. Its signal-control integration remains independent and uses the same public discovery APIs. Signal interoperability remains a directive concern and does not change field semantics.
 
@@ -2877,7 +2877,7 @@ Angular 22.1.5 exposes `ComponentRef.setInput()` publicly, but a directive on an
 The facade's `value()` reports current committed binding data. For `[formNode]`, it reads the
 node's internal `_value`, so public equality cannot hide committed changes from a custom control.
 It does not report pending debounce input; that remains in the control's `model()` and the node's
-`controlValue()`. Error/validation signals still follow the node's exposed-value validation rules.
+`value.control()`. Error/validation signals still follow the node's exposed-value validation rules.
 The `[formField]` adapter reads Angular's own committed `FieldState.value`, and AbstractControl
 adapters read their source control values. Those are external forms APIs, not Form Nodes public reads
 that should be rewritten to `_value`.
@@ -2910,7 +2910,7 @@ Form Nodes node-value reads. The relevant routing is:
 | Control-buffer baseline/invalidation and field commits/reset | Internal class `value`, exposed across nodes as `$api._value`. |
 | Angular adapter model initialization, synchronization, and bound-control reset | `$api._value()`. |
 | `useFormNodeState()` for a Form Nodes `[formNode]` binding | `$api._value()`, independently of exposed equality. |
-| Native controls, signal control models, and CVA rendering/validation | `_controlValue()` (or equivalent field `controlValue()`), including pending input. |
+| Native controls, signal control models, and CVA rendering/validation | `_controlValue()` (or equivalent field `value.control()`), including pending input. |
 | Public aggregate construction, built-in/custom validators, metadata contexts, submit, and update callbacks | Exposed values, intentionally respecting public equality. |
 | Array-template/definition cloning | Captured initial values and definition recipes; no current node-value read. |
 
@@ -3474,7 +3474,7 @@ successful completion or an early touch/blur/flush/submission commit, without wa
 validation. Each pending edit carries its own completion callback, so replacement, reset,
 programmatic writes, and rejected debounce completion cannot notify for cancelled edits. A
 notification is suppressed when the originating binding is destroyed or points to a different node.
-Programmatic node writes (including public `setControlValue`) do not independently emit outputs.
+Programmatic node writes (including public `value.control.set`) do not independently emit outputs.
 
 Native duplicate parsed values do not restart debounce or emit duplicate outputs; Date values are
 compared by timestamp and multiple-selection values by their entries. IME buffering and parsing
@@ -3539,3 +3539,30 @@ Inspected packages/forms/signals/src/field/node.ts reset/_reset and
 packages/forms/signals/test/web/form_field.spec.ts reset/parser-reset cases. Angular preserves
 committed data when reset() receives no value and clears interaction/parser state. Captured initial
 restoration is an additional Form Nodes API, not a change to that existing reset behavior.
+
+## Nested public value signals
+
+`value` is a `NodeValueSignal<TValue, TSet>` on every node kind. Its call retains exposed equality
+semantics. `value.committed()` reads raw committed data recursively, bypassing configured node and
+child equality without bypassing debounce. `value.control()` reads the node's own pending buffer
+or raw committed value; aggregate reads do not compose pending child drafts. Normal Angular signal
+identity checks apply to every view. The views are reactive and have stable identities.
+
+`value.committed.set()` delegates to the existing complete `set()` operation, cancelling pending
+input and preserving interaction state. `value.control.set()` receives complete control input,
+marks the selected node dirty even for equal input, preserves touched state, and applies inherited
+or configured debounce. Aggregate normalization and committed validation/propagation remain the
+same. Setters do not emit binding outputs by themselves. Public `controlValue`/`setControlValue`
+are removed; internal control transport retains its private API. `$api.value` handles collisions.
+
+Reference inspected: Angular `22.1.x`, commit `05a05f59657f048a87f3d4eb9ddb7968cfe8060e`,
+`packages/forms/signals/src/field/node.ts` (control setter, dirty marking, debounce/sync) and
+`packages/forms/signals/test/node/api/debounce.spec.ts` (immediate input, delayed commit, touch).
+The nested naming and separate pre-equality committed view are Form Nodes public API choices.
+
+The nested value facade and both nested signals intersect `HiddenFunctionMembers`: completion
+lists expose `committed`/`control` on `value` and `set` on each nested view, while preserving
+Angular signal assignability and call signatures. This affects public typing only. An explicit
+bare `FieldNode` annotation retains all views and setters with `any` values; a supplied value
+generic retains precise read/write types. Language-service tests verify the completion lists
+against both source and packaged declarations.

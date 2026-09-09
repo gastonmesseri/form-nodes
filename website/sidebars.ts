@@ -69,6 +69,7 @@ const sidebars: SidebarsConfig = {
         'reference/form-nodes-module',
         'reference/configuration',
         'reference/node-api',
+        'reference/node-value',
         {
           type: 'category',
           label: 'Other',
