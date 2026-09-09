@@ -19,3 +19,20 @@ type _Unknown = Expect<Equal<typeof unknown, unknown>>;
 type _Profile = Expect<Equal<typeof profile, { name: string | null }>>;
 type _Address = Expect<Equal<typeof address, { city: string }>>;
 type _Rows = Expect<Equal<typeof rows, number[]>>;
+
+const functionThatTakesSignals = (sig: Signal<any>) => { void sig; };
+functionThatTakesSignals(field(''));
+functionThatTakesSignals(form({}));
+functionThatTakesSignals(group({}));
+functionThatTakesSignals(array(field('')));
+functionThatTakesSignals(field('').value);
+functionThatTakesSignals(field('').value.control);
+functionThatTakesSignals(field('').value.committed);
+
+const exposedValue = acceptSignal(field('').value);
+const controlValue = acceptSignal(field('').value.control);
+const committedValue = acceptSignal(field('').value.committed);
+
+type _ExposedValue = Expect<Equal<typeof exposedValue, string | null>>;
+type _ControlValue = Expect<Equal<typeof controlValue, string | null>>;
+type _CommittedValue = Expect<Equal<typeof committedValue, string | null>>;
