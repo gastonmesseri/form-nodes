@@ -3717,3 +3717,22 @@ packages/forms/signals/src/api/structure.ts, test/node/form.spec.ts, and
  test/node/validation_status.spec.ts. Angular requires a writable model signal and derives its tree
 from that model; argument-free construction and the unknown field template are intentional library
 API conveniences. Existing empty-tree state and propagation rules are unchanged.
+
+
+### CVA initialization ordering
+
+The CVA adapter writes the current control value and optional disabled state synchronously when
+connecting, before registering view callbacks. It then observes later changes through effects,
+deduplicating the unchanged initial values. This prevents the lifecycle gap where Material radio
+buttons have already initialized with null but their group's content query is not yet available.
+Nested outer CVA writes and newly created conditional groups receive the same initial-state guarantee.
+User callbacks update the node synchronously; debounce still determines committed-value timing.
+Later programmatic node writes and disabled changes render through effects, not necessarily before
+the setter returns. Unlike Reactive Forms, this is not a synchronous model-to-view callback pipeline.
+
+Angular reference: `22.1.x` commit `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`,
+`packages/forms/src/directives/shared.ts` (`setUpControlValueAccessor`, `setUpModelChangePipeline`),
+`packages/forms/test/reactive_integration_spec.ts`, and Signal Forms
+`packages/forms/signals/src/directive/control_cva.ts` with `test/web/interop.spec.ts`.
+The synchronous initial write intentionally uses Reactive Forms' established CVA setup ordering;
+subsequent updates retain this library's signal-driven rendering and feedback suppression.

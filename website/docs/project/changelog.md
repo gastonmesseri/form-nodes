@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Fixed
+
+- Initialize CVA values and disabled state synchronously when `[formNode]` connects, so Angular Material radio groups display preloaded selections correctly, including inside nested custom controls and conditional views. Later model-to-view updates continue through the signal rendering cycle.
+
 ## 📦 3.4.0 — 2026-09-10 {#340--2026-09-10}
 
 ### Changed

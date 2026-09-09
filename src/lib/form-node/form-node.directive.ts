@@ -276,7 +276,13 @@ export class _FormNode<TNode extends AnyNode = AnyNode> implements FormNodeBindi
   }
 }
 
-/** Public Angular directive value used in component imports and dependency injection. */
+/**
+ * Public Angular directive for binding native and custom controls to a node.
+ * CVAs receive their initial value and optional disabled state synchronously during setup,
+ * before child initialization. Subsequent model-to-view updates run through Angular effects;
+ * they are not guaranteed to render before a programmatic node setter returns.
+ * CVA user callbacks update control state synchronously, with debounce governing commits.
+ */
 export const FormNodeDirective = _FormNode;
 
 /** Public instance view exposed by `[formNode]` template references and queries. */

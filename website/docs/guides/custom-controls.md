@@ -199,3 +199,12 @@ writes or model-to-view rendering. A CVA should call its registered `onChange` c
 view-to-model edits, and must not call it from `writeValue` as feedback. Custom code can invoke
 callbacks or emit model outputs, so these events do not certify a physical user interaction.
 See [value outputs](../reference/form-node-binding.md#value-outputs) for the full contract.
+
+
+## CVA initialization and update timing {#cva-timing}
+
+When `[formNode]` connects a `ControlValueAccessor`, it calls `writeValue()` with the current control value and calls `setDisabledState()` when implemented, synchronously during directive initialization. These calls happen before registering change and touch callbacks and before child controls run their initialization hooks. This lets controls such as Material radio groups select preloaded values, including when a parent CVA initializes an inner form or an `@if` creates a new group. The first reactive synchronization does not repeat an unchanged initial write.
+
+This matches Reactive Forms' initialization order. It does **not** make every later model-to-view update synchronous: `node.set()`, form patches, resets, and disabled-state changes update node state immediately, while existing CVAs receive changed state during Angular's reactive synchronization. A CVA must accept `writeValue()` before its view is initialized and during later updates. Reactive Forms' `FormControl.setValue()` instead invokes the registered model-to-view callback synchronously.
+
+CVA user input remains synchronous: call the callback supplied to `registerOnChange()` for user edits. Form Nodes receives that value immediately; configured debounce can defer its commit. Prefer `(formNodeControlValueChange)` for immediate control values and `(formNodeValueChange)` for committed values. Programmatic `writeValue()` calls must not emit user changes; Form Nodes also guards against synchronous feedback from an accessor.

@@ -2455,3 +2455,45 @@ describe('FormNodeNgControl', () => {
     expect(name.valid()).toBe(true);
   });
 });
+
+it.each([false, true])('initializes CVA value and disabled state before child hooks (disabled: %s)', (disabled) => {
+  const calls: string[] = [];
+  @Component({
+    selector: 'cva-initial-child',
+    template: '',
+    host: { 'data-initial-disabled': String(disabled) },
+  })
+  class Child {
+    ngOnInit() { calls.push('child'); }
+  }
+  @Component({
+    selector: 'cva-initial-state',
+    template: '<cva-initial-child />',
+    imports: [Child],
+    providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => Control), multi: true }],
+    host: { 'data-initial-disabled': String(disabled) },
+  })
+  class Control {
+    writeValue(value: unknown) { calls.push(`value:${value}`); }
+
+    setDisabledState(value: boolean) { calls.push(`disabled:${value}`); }
+
+    registerOnChange() { calls.push('change'); }
+
+    registerOnTouched() { calls.push('touch'); }
+  }
+  @Component({
+    template: '<cva-initial-state [formNode]="profile.name" />',
+    imports: [Control, FormNodeDirective],
+    host: { 'data-initial-disabled': String(disabled) },
+  })
+  class Host {
+    profile = form({ name: field('Ada', { disabled }) });
+  }
+  const fixture = TestBed.createComponent(Host);
+  fixture.detectChanges();
+  expect(calls).toEqual(['value:Ada', `disabled:${disabled}`, 'change', 'touch', 'child']);
+  fixture.detectChanges();
+  expect(calls).toHaveLength(5);
+  fixture.destroy();
+});

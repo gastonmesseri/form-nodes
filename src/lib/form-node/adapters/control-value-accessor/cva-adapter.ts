@@ -7,7 +7,10 @@ import type { InternalNode, AnyNode } from '../../../types/node.type';
 import { hasControlStateConsumer } from '../../../form-node-state/adapters/form-node';
 import type { ControlAdapterContext, ControlAdapterConnection } from '../control-adapter';
 
-/** Connects either an NG_VALUE_ACCESSOR provider or a directly assigned NgControl accessor. */
+/**
+ * Connects a provided or directly assigned CVA. Initial value and disabled state are written
+ * synchronously before child initialization; later model-to-view writes run through effects.
+ */
 export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapterContext<TNode>, accessor: ControlValueAccessor): ControlAdapterConnection => {
   const { binding, getNgControl } = context;
   const injector = binding.injector;
@@ -16,7 +19,32 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
   let lastViewValue: unknown = Symbol('unset');
   injector.get(DestroyRef).onDestroy(() => { destroyed = true; });
 
+  const writeValue = (value: unknown) => {
+    if (Object.is(value, lastViewValue)) return;
+    lastViewValue = value;
+    untracked(() => {
+      writingAccessorValue = true;
+      try {
+        accessor.writeValue(value);
+      } finally {
+        writingAccessorValue = false;
+      }
+    });
+  };
+  let lastDisabled: boolean | undefined;
+  const writeDisabled = (disabled: boolean) => {
+    if (disabled === lastDisabled) return;
+    lastDisabled = disabled;
+    untracked(() => accessor.setDisabledState?.(disabled));
+  };
+
   getNgControl().valueAccessor = accessor;
+  // CVAs must receive initial state before child controls run their initialization hooks.
+  // Later model writes remain scheduled through effects, following signal-based rendering.
+  untracked(() => {
+    writeValue((binding.node() as unknown as InternalNode).$api._controlValue());
+    writeDisabled(binding.node().$api.disabled());
+  });
   accessor.registerOnChange((value: unknown) => {
     if (destroyed || writingAccessorValue) return;
     lastViewValue = value;
@@ -28,23 +56,10 @@ export const connectCvaAdapter = <TNode extends AnyNode>(context: ControlAdapter
     (binding.node() as unknown as InternalNode).$api._flushControlValueOnBlur();
   });
   effect(() => {
-    const value = (binding.node() as unknown as InternalNode).$api._controlValue();
-    if (Object.is(value, lastViewValue)) return;
-    lastViewValue = value;
-    untracked(() => {
-      writingAccessorValue = true;
-      try {
-        accessor.writeValue(value);
-      } finally {
-        writingAccessorValue = false;
-      }
-    });
+    writeValue((binding.node() as unknown as InternalNode).$api._controlValue());
   }, { injector });
   if (accessor.setDisabledState) {
-    effect(() => {
-      const disabled = binding.node().$api.disabled();
-      untracked(() => accessor.setDisabledState!(disabled));
-    }, { injector });
+    effect(() => { writeDisabled(binding.node().$api.disabled()); }, { injector });
   }
   connectLegacyValidators(context);
   return connectControlInputs(accessor, binding.node, injector, hasControlStateConsumer(binding.element));

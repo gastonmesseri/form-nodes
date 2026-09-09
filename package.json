@@ -53,10 +53,13 @@
     "@angular/forms": "^21.0.7 || ^22.1.5"
   },
   "devDependencies": {
+    "@angular/cdk": "21.0.6",
+    "@angular/common": "21.0.7",
     "@angular/compiler": "21.0.7",
     "@angular/compiler-cli": "21.0.7",
     "@angular/core": "21.0.7",
     "@angular/forms": "21.0.7",
+    "@angular/material": "21.0.6",
     "@angular/platform-browser": "21.0.7",
     "@angular/platform-browser-dynamic": "21.0.7",
     "@angular/platform-server": "21.0.7",
