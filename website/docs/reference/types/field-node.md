@@ -21,7 +21,6 @@ Use for inputs or helpers that accept a field with a known value type. A bare `F
 ```ts
 type FieldNode<TValue = any, TParent extends AnyNode = AnyNode> = Signal<TValue> & {
     (): TValue;
-    api: CallableNodeApi<FieldApi<TValue, TParent>>;
     $api: CallableNodeApi<FieldApi<TValue, TParent>>;
 } & Omit<FieldApi<TValue, TParent>, 'patch'> & HiddenFunctionMembers;
 ```
@@ -39,8 +38,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `api` | Complete field API and the recommended access path for application code. |
-| `$api` | Callable, collision-safe access to the field API. |
+| `$api` | Callable, collision-safe access to the field API. Calling `$api()` reads the same exposed value as the node and tracks signal dependencies. Use direct members for application code and `$api` for generic code or child-name collisions. |
 
 ## Related reference
 

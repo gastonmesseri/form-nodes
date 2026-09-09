@@ -453,8 +453,7 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
-| [`api`](#api) | Complete array API. Direct members are preferred in application code. |
-| [`$api`](#api-1) | Collision-safe alias of `api` for generic infrastructure. |
+| [`$api`](#api-1) | Callable, collision-safe API for generic infrastructure. |
 | **Item access and collection** | |
 | [`at(index)`](#at) | Returns the live item node at an index, or `undefined`. |
 | [`forEach(callback)`](#foreach) | Invokes a callback once for every current item node. |
@@ -916,28 +915,11 @@ profile.usernames.keyInParent(); // 'usernames'
 profile.usernames[0]?.keyInParent(); // 0
 ```
 
-#### – api {#api}
-
-**Signature:** `api: ArrayApi<ItemNode>`
-
-Exposes the complete array API as a plain object.
-
-```ts
-const usernames = array(field(''), {
-  initialValue: ['ada', 'grace'],
-});
-
-usernames.api.length(); // 2
-```
-
-Direct access such as `usernames.length()` is preferred. Use `api` when generic infrastructure
-needs a consistent API object or when an object-form child collides with a native member name.
-
 #### – $api {#api-1}
 
-**Signature:** `$api: ArrayApi<ItemNode>`
+**Signature:** `$api: CallableNodeApi<CallableNodeApi<ArrayApi<ItemNode>>>`
 
-Exposes the same API through a name that cannot collide with a user-defined child.
+Exposes the complete callable API through a name that cannot collide with a user-defined child.
 
 ```ts
 const profile = form({

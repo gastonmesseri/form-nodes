@@ -27,7 +27,7 @@ Angular 22 reference: `22.1.x` at `ef48630a14f0bc8ba0a46d3fc7555c2a29f26a41`,
 `errorSummary` tests in `packages/forms/signals/test/node/field_node.spec.ts`.
 
 When child names are unknown, `AnyNode` consumers must use `$api` for state and operations:
-children can shadow both direct API members and the `api` alias. `DynamicNode` exposes direct
+children can shadow direct API members. `DynamicNode` exposes direct
 common state and operations for declarations known not to shadow that surface. It is not a
 runtime adapter or a collision check, and asserting an arbitrary node to `DynamicNode` cannot
 make a colliding member safe. `isFormNode()` narrows identity to `AnyNode` without guaranteeing
@@ -61,11 +61,13 @@ Angular `FieldTree` values; no state transition or propagation behavior changes.
 
 The internal state model is inspired by Angular 22 Signal Forms. The current reference baseline is Angular `22.1.5` at commit `468b65b74566537456c192ac4281795c5a1e1a5e`. Public names and signatures intentionally belong to this library and do not attempt to reproduce Angular's API.
 
-Every `field()`, `group()`, `form()`, and `array()` exposes its complete API through `.api`, which
-is the recommended access for application code. Every node also exposes the reserved `$api` escape
-hatch. `$api` always provides collision-safe access to the node API, including when an object node
-declares a child named `api`. Internal library code uses `$api`, so user-defined children cannot
-interfere with node operations. `$api` is a supported, stable escape hatch; it is not deprecated.
+Every node exposes its complete callable API through the reserved `$api` property. Use direct
+members in application code and `$api` for generic infrastructure or child-name collisions.
+Calling `$api()` reads the same exposed value as the node. A child named `api` is ordinary data.
+The `.api` alias was removed in 3.4.0; migrate alias access to `.$api`.
+This public naming change does not alter validation, values, or state propagation.
+Angular reference verified: `22.1.x`, commit `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54`;
+this library's API facade is an intentional public API design independent of Angular's field tree.
 
 ```ts
 const profile = form({ age: field(23) });
@@ -73,13 +75,12 @@ const profile = form({ age: field(23) });
 profile.disabled();
 profile.disable();
 profile.patch({ age: 30 });
-profile.api.disabled(); // recommended API access
 profile.$api.disabled(); // equivalent reserved escape hatch
 ```
 
 A group or form also exposes its initially declared children as direct properties. When a child name collides with a
 direct API member, the child always wins in both runtime behavior and TypeScript. Continue using
-`.api` in the common case; use `$api` when guaranteed collision-free access is needed:
+`$api` when guaranteed collision-free access is needed:
 
 ```ts
 const profile = form({
@@ -88,7 +89,7 @@ const profile = form({
 });
 
 profile.readonly(); // false
-profile.api.readonly(); // readonly state of the form
+profile.$api.readonly(); // readonly state of the form
 ```
 
 Every group and form also exposes a stable, readonly `children` map for explicit tree navigation.
@@ -103,16 +104,16 @@ const profile = form({
 
 profile.children.name === profile.name; // true
 profile.children.address.children.city === profile.address.city; // true
-profile.api.children === profile.children; // true
+profile.$api.children === profile.children; // true
 ```
 
-As with every direct form API member, a child named `children` takes precedence at the top level. The explicit map always remains available through `form.api.children`:
+As with every direct form API member, a child named `children` takes precedence at the top level. The explicit map always remains available through `form.$api.children`:
 
 ```ts
 const profile = form({ children: field('value') });
 
 profile.children(); // 'value'
-profile.api.children.children(); // 'value'
+profile.$api.children.children(); // 'value'
 ```
 
 Native function members such as `name`, `apply`, `arguments`, `call`, and `length` are hidden from
@@ -335,10 +336,10 @@ A field is callable and returns its current value:
 ```ts
 name(); // ''
 name.value(); // ''
-name.api.value(); // ''
+name.$api.value(); // ''
 ```
 
-These reads refer to the same value. Most field state and actions are exposed both on the callable field and under `field.api`. `patch()` is exposed in the public types through `field.api` and `field.$api`; for a leaf field it behaves exactly like `set()`. The callable field also carries the runtime method, but intentionally omits it from its public type.
+These reads refer to the same value. Most field state and actions are exposed both on the callable field and under `field.$api`. `patch()` is exposed in the public types through `field.$api`; for a leaf field it behaves exactly like `set()`. The callable field also carries the runtime method, but intentionally omits it from its public type.
 
 ## Field value equality
 
@@ -500,7 +501,7 @@ A form is callable and returns its aggregated value:
 
 ```ts
 profile(); // { city: 'Moscow', billingCity: 'Zurich' }
-profile.api.value(); // { city: 'Moscow', billingCity: 'Zurich' }
+profile.$api.value(); // { city: 'Moscow', billingCity: 'Zurich' }
 ```
 
 The callable and `value()` expose the fully materialized object shape in TypeScript tooling instead of an internal `FormValue<...>` alias. Nested forms and arrays are expanded recursively in IntelliSense.
@@ -519,9 +520,9 @@ structural methods after the aggregate value is checked against a named model. T
 TypeScript assignability; it does not change runtime behavior or require the model to determine
 which primitive represents each property.
 
-Each child is exposed under its definition key. Application code should normally access form-level state and actions through `form.api`. The same API is always available under `form.$api` when a collision-safe access path is required.
+Each child is exposed under its definition key. Application code normally uses direct state and actions. Use `form.$api` for collision-safe access.
 
-The key `api` is a valid child name and that child takes precedence over the alias. The key `$api` is reserved recursively and rejected by the public types, guaranteeing access to the node API at every depth. This guarantee is also enforced at runtime: even if a consumer bypasses TypeScript with `any` and declares a child named `$api`, the real node API keeps precedence at `node.$api`. The illegal child remains part of the form value and can be reached through `node.$api.children.$api`, but it cannot replace the reserved access path. Other function property names such as `name` and `length` remain valid child keys and resolve to the user-defined children at runtime.
+The key `api` is an ordinary child name with no special API behavior. The key `$api` is reserved recursively and rejected by the public types, guaranteeing access to the node API at every depth. This guarantee is also enforced at runtime: even if a consumer bypasses TypeScript with `any` and declares a child named `$api`, the real node API keeps precedence at `node.$api`. The illegal child remains part of the form value and can be reached through `node.$api.children.$api`, but it cannot replace the reserved access path. Other function property names such as `name` and `length` remain valid child keys and resolve to the user-defined children at runtime.
 
 ```ts
 const profile = form({ api: field('domain value') });
@@ -613,8 +614,8 @@ Groups and forms provide the same child access and value shape:
 
 ```ts
 profile.address.city(); // 'Moscow'
-profile.address.api.value(); // { city: 'Moscow', country: 'Russia' }
-profile.api.value(); // { address: { city: 'Moscow', country: 'Russia' } }
+profile.address.$api.value(); // { city: 'Moscow', country: 'Russia' }
+profile.$api.value(); // { address: { city: 'Moscow', country: 'Russia' } }
 ```
 
 Changes to any descendant are reflected reactively in every ancestor value.
@@ -922,7 +923,7 @@ This property corresponds behaviorally to Angular Signal Forms' `fieldTree`, but
 
 Synchronous and asynchronous validators share one readonly validator array. Asynchronous validators must be explicitly wrapped with `asyncValidator()`; the library does not invoke a validator merely to detect whether it returns a Promise or Observable.
 
-Validator callbacks receive a stable context containing `value`, `node`, `field`, `parent`, and `path`. Read interaction, availability, required, and submission signals through `node()` or `field()`; those signals are no longer copied onto the context. `node()` and its alias `field()` return the real callable node being validated, including when that node is a form, while `node().api` and `field().api` expose the node API when an alias is needed:
+Validator callbacks receive a stable context containing `value`, `node`, `field`, `parent`, and `path`. Read interaction, availability, required, and submission signals through `node()` or `field()`; those signals are no longer copied onto the context. `node()` and its alias `field()` return the real callable node being validated, including when that node is a form, while `node().$api` and `field().$api` expose the node API when an alias is needed:
 
 ```ts
 field('David', {
@@ -931,7 +932,7 @@ field('David', {
     context.node().disabled();
     context.path();
     context.field();
-    context.node().api.errors();
+    context.node().$api.errors();
     return null;
   }],
 });
@@ -1126,7 +1127,7 @@ The `asyncValidator()` overloads inline these accepted option shapes so editor c
 The named option and configuration types remain exported for separately constructed reusable
 configuration objects.
 
-Asynchronous callbacks access the runtime node API through `node().api` or `field().api`. Inline
+Asynchronous callbacks access the runtime node API through `node().$api` or `field().$api`. Inline
 validators infer the owning primitive and its API. Separately declared helpers use the generic
 node union unless their `TField` generic supplies an exact node. The existing `TApi` generic stays
 in its original position and specializes only the remaining context `parent` and `path` signals;
@@ -1134,9 +1135,9 @@ it no longer exposes a separate `api` member. Use `value()` for typed values wit
 Automatic validators track node API signals they read. Parameterized validators track those reads
 inside `params`, while their `validate` callback remains untracked.
 
-Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Validator callbacks access the same reactive path through either `context.path()` or `context.node().api.path()`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
+Every field and form API exposes `path: Signal<readonly string[]>`. The root path is `[]`; each descendant appends its key in the parent, such as `['address', 'city']`. Validator callbacks access the same reactive path through either `context.path()` or `context.node().$api.path()`. This follows Angular 22 Signal Forms' `pathKeys` model while using this library's `path` name.
 
-Every API also exposes `parent: Signal<AnyNode | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `AnyNode | null` parent type even after being inserted into a form; access through the form provides the refined type.
+Every API also exposes `parent: Signal<AnyNode | null>`, which returns the complete callable parent node or `null` at the root. Nodes reached through a form are refined to their concrete parent type, so `profile.address.city.$api.parent()` is typed as `typeof profile.address | null`. A standalone field reference cannot know its future owner and therefore retains the general `AnyNode | null` parent type even after being inserted into a form; access through the form provides the refined type.
 
 Nodes returned by the common validator API's `parent()`, `form()`, and `root()` remain callable, but native JavaScript function members such as `apply`, `bind`, `call`, `name`, and `prototype` are intentionally hidden from the public type and IntelliSense. Exact node return types apply the same hiding while preserving form keys that intentionally use one of those names.
 
@@ -1150,7 +1151,7 @@ roots; reattaching or reparenting them updates both signals immediately.
 Both lookups are reactive. Attaching, detaching, or reparenting a node retriggers automatic async
 validators that read the affected signal. Validator callbacks use `context.node().form()` and
 `context.node().root()`. Flat `context.form` and `context.root` properties are absent at runtime and
-in the public types; `parent` remains flat. The full `context.node().api` retains node navigation.
+in the public types; `parent` remains flat. The full `context.node().$api` retains node navigation.
 
 `context.node` and `context.field` are the same readonly Angular signal of the validated node.
 Neither returns `null`. Inline callbacks, including inline `validator()` and `asyncValidator()`
@@ -1165,7 +1166,7 @@ a helper's value generic preserves that type on the generic owner's callable val
 `value`, `api.value`, and `$api.value` signals, including async callback contexts. The primitive
 kind and child keys remain unspecified. Without a value generic or a consuming node, these reads
 remain `unknown`. Omit helper generics for inline inference or
-supply the owner generic explicitly. `context.node().api` follows the inferred or explicitly supplied node type.
+supply the owner generic explicitly. `context.node().$api` follows the inferred or explicitly supplied node type.
 Knowing the local node does not infer ancestors or siblings from an enclosing declaration.
 Inline validator contexts reuse the concrete node API value signal type for `value`, so IntelliSense
 shows the expanded aggregate model instead of `NoInfer<FormValue<NormalizedNodes<...>>>`. Generic
@@ -1265,7 +1266,7 @@ or inserted dynamically.
 
 The node value and the `when` condition are tracked before the debounce timer starts. A debounced validator that discovers automatic dependencies starts its publication timer immediately and invokes the service in the next microtask without waiting for that timer. Every signal it reads becomes a dependency, including external signals. Its result is not published until the initial debounce period has elapsed. If any discovered dependency changes during that period, the first operation is cancelled and the replacement invocation waits for a full debounce period before running. Later changes use the same cancellation and debounce behavior.
 
-Synchronous validators remain lazy and first run when validation state is consumed. Both synchronous and asynchronous validators can therefore refer to a class-owned form from a field initializer, such as `this.profile.name()`, without observing an uninitialized `this.profile`. Such callbacks are coupled to that class instance; `context.node().api.form()` remains preferable for reusable validators.
+Synchronous validators remain lazy and first run when validation state is consumed. Both synchronous and asynchronous validators can therefore refer to a class-owned form from a field initializer, such as `this.profile.name()`, without observing an uninitialized `this.profile`. Such callbacks are coupled to that class instance; `context.node().$api.form()` remains preferable for reusable validators.
 
 ### Typed cross-node validation
 
@@ -1297,15 +1298,15 @@ asyncValidator(async (): Promise<ValidationResult> => {
 });
 ```
 
-When coupling a validator to its owning class is undesirable, `context.node().api.form()` and
-`context.node().api.root()` are available as fallbacks. Their default types expose the generic form API
+When coupling a validator to its owning class is undesirable, `context.node().$api.form()` and
+`context.node().$api.root()` are available as fallbacks. Their default types expose the generic form API
 and the union of structural node APIs, respectively, without inferring exact sibling keys:
 
 ```ts
-const workflow = context.node().api.form();
-const tree = context.node().api.root();
-workflow?.api.valid();
-tree.api.valid();
+const workflow = context.node().$api.form();
+const tree = context.node().$api.root();
+workflow?.$api.valid();
+tree.$api.valid();
 ```
 
 The exact API can still be supplied explicitly where supported, but class-property access is the simplest option for inline, fully typed cross-node validation. Reusable validators should prefer explicit dependencies or the common `api.form()` view instead of closing over a component instance.
@@ -1381,7 +1382,7 @@ name.getError('required'); // { kind: 'required', targetNode: name }
 name.getError('missing'); // undefined
 ```
 
-The literal kind and exact target node are retained in TypeScript. A form searches only its own errors, not errors belonging to descendants. When several errors have the same kind, `getError()` returns the first and `errors()` remains the API for accessing every match. Each node internally memoizes a small, bounded set of per-kind computed selectors using shallow result equality, so a consumer of one kind does not propagate merely because an unrelated error kind changed. The method is available both directly and through `.api`; as usual, a form child named `getError` wins at the direct property and `form.api.getError(kind)` remains available.
+The literal kind and exact target node are retained in TypeScript. A form searches only its own errors, not errors belonging to descendants. When several errors have the same kind, `getError()` returns the first and `errors()` remains the API for accessing every match. Each node internally memoizes a small, bounded set of per-kind computed selectors using shallow result equality, so a consumer of one kind does not propagate merely because an unrelated error kind changed. The method is available both directly and through `.$api`; as usual, a form child named `getError` wins at the direct property and `form.$api.getError(kind)` remains available.
 
 Parameterized public functions that participate in signal dependency tracking are marked with `@reactive` in IntelliSense. Ordinary signal properties do not need this marker because their `Signal` type already communicates reactivity.
 
@@ -1412,7 +1413,7 @@ invalid() === !valid()
 
 During pending asynchronous validation, `valid()` and `invalid()` are both false.
 
-A form is valid when its own validators produce no errors and every interactive child is valid. `form.api.errors()` contains only errors produced by validators attached directly to that form. A form can therefore be invalid because of a descendant while its own `errors()` remains empty.
+A form is valid when its own validators produce no errors and every interactive child is valid. `form.$api.errors()` contains only errors produced by validators attached directly to that form. A form can therefore be invalid because of a descendant while its own `errors()` remains empty.
 
 Invalidity propagates upward through any number of nested forms. Fixing the failing descendant updates every ancestor.
 
@@ -1836,9 +1837,9 @@ untouched() === true
 A form keeps its own touched state and also aggregates touched state from descendants:
 
 - Any touched interactive descendant makes all its ancestor forms touched.
-- `form.api.markAsTouched()` marks the form and walks the subtree, marking every interactive descendant touched.
-- `form.api.markAsTouched({ skipDescendants: true })` marks only the form, including when it is empty.
-- `form.api.markAsUntouched()` clears only the form's own touched state; touched descendants can keep its aggregate state touched.
+- `form.$api.markAsTouched()` marks the form and walks the subtree, marking every interactive descendant touched.
+- `form.$api.markAsTouched({ skipDescendants: true })` marks only the form, including when it is empty.
+- `form.$api.markAsUntouched()` clears only the form's own touched state; touched descendants can keep its aggregate state touched.
 - Calling either action on a nested form affects only that subtree.
 - Reset is the recursive clearing operation and clears touched throughout the reset subtree.
 
@@ -1861,8 +1862,8 @@ pristine() === true
 A form keeps its own dirty state and also aggregates dirty state from descendants:
 
 - Any dirty interactive descendant makes all its ancestor forms dirty.
-- `form.api.markAsDirty()` marks only the form itself, including when it is empty.
-- `form.api.markAsPristine()` clears only the form's own dirty state without changing values; dirty descendants can keep its aggregate state dirty.
+- `form.$api.markAsDirty()` marks only the form itself, including when it is empty.
+- `form.$api.markAsPristine()` clears only the form's own dirty state without changing values; dirty descendants can keep its aggregate state dirty.
 - Calling either action on a nested form affects only that node, while its aggregate result still propagates to ancestors.
 - Reset is the recursive clearing operation and clears dirty throughout the reset subtree.
 
@@ -1876,7 +1877,7 @@ Fields and forms support disabled, readonly, and hidden state.
 | Readonly | `readonly()` | `writable()` | `markAsReadonly()` | `markAsWritable()` |
 | Hidden | `hidden()` | `visible()` | `hide()` | `show()` |
 
-Field actions are available directly and under `field.api`. Form actions are available under `form.api`.
+Field actions are available directly and under `field.$api`. Form actions are available under `form.$api`.
 
 ### State option sources
 
@@ -2687,7 +2688,7 @@ The directive currently provides these behaviors:
 - `NG_ASYNC_VALIDATORS` are not adapted by this CVA compatibility layer. Asynchronous validation belongs to the node's `asyncValidator()` pipeline, which owns cancellation, pending state, debounce, and stale-result handling explicitly.
 - Exporting the directive as `#binding="formNode"` provides the typed public binding API. `node` is the single reactive reference to the current bound node. `focus()`, `flush()`, and `reset()` operate on this concrete binding or its current node. The binding also exposes its host `element`, host `injector`, and a reactive `errors` signal.
 - `binding.errors()` contains every error of the current node that is not owned by a concrete control, plus only the control-specific errors whose `formNode` is that binding. When two controls bind the same field, a native parse error from one control therefore remains absent from the other binding's errors even though the field aggregates both errors. Rebinding updates `node` and `errors` together, and binding-produced errors use the directive itself as their stable `formNode` identity.
-- Every field, form, and array node also exposes `focus(options?)`. A field focuses the first of its current `[formNode]` bindings in DOM order. Forms and arrays search their current descendant bindings and focus the first rendered control in DOM order, independent of schema or array order. Signal custom controls use their optional `focus()` hook; native controls and CVAs focus the host element. Calling `focus()` without a bound control is a no-op, and destroyed or rebound directives are removed from the selection immediately. If a form child is named `focus`, that child keeps direct-property precedence and the operation remains available through `form.api.focus()`.
+- Every field, form, and array node also exposes `focus(options?)`. A field focuses the first of its current `[formNode]` bindings in DOM order. Forms and arrays search their current descendant bindings and focus the first rendered control in DOM order, independent of schema or array order. Signal custom controls use their optional `focus()` hook; native controls and CVAs focus the host element. Calling `focus()` without a bound control is a no-op, and destroyed or rebound directives are removed from the selection immediately. If a form child is named `focus`, that child keeps direct-property precedence and the operation remains available through `form.$api.focus()`.
 - Destroying the directive removes DOM listeners, disconnects select observation, and destroys its reactive effects through Angular's `DestroyRef` ownership.
 - The directive supports server rendering for native controls and custom `ControlValueAccessor` components. Initial value and node-state bindings are rendered on the server, while browser-only select option observation is installed only in a browser environment. Native value conversion identifies controls structurally instead of depending on browser constructor globals.
 - Client hydration reuses server-rendered controls rather than recreating them. Once hydrated, native events update the field normally, interaction state remains connected, and reactive value and validation bindings continue updating the claimed DOM nodes without hydration warnings or mismatches.
@@ -3623,7 +3624,7 @@ FormRoot: Form Nodes marks touched even without an action, and now records the a
 ## Callable collision-safe APIs
 
 Every node's `$api` is a separate Angular signal facade enriched with the node API and internal
-underscore-prefixed transport methods. `api` aliases the same facade unless shadowed by a child.
+underscore-prefixed transport methods. `$api` is the only reserved API access property.
 Calls delegate to the exposed `value` signal, retaining public equality, debounce, validation,
 and aggregate composition semantics. The facade has stable identity, is not marked as a node,
 and does not expose direct children. Children cannot overwrite its operations; array `length`

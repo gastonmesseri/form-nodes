@@ -1114,19 +1114,13 @@ describe('field', () => {
     expect(departure.errors()).toEqual([]);
   });
 
-  it('exposes the same API through api and $api', () => {
-    const name = field('David');
-
-    expect(name.$api).toBe(name.api);
-  });
-
   it('exposes an empty path when it is a root node', () => {
     const name = field('David');
 
-    expect(name.api.path()).toEqual([]);
-    expect(name.api.parent()).toBeNull();
-    expect(name.api.form()).toBeNull();
-    expect(name.api.root()).toBe(name);
+    expect(name.$api.path()).toEqual([]);
+    expect(name.$api.parent()).toBeNull();
+    expect(name.$api.form()).toBeNull();
+    expect(name.$api.root()).toBe(name);
     expect(name.keyInParent()).toBeNull();
   });
 
@@ -1197,7 +1191,7 @@ describe('field', () => {
   it('keeps extracted actions callable without a receiver', () => {
     const name = field('initial', { debounce: 'blur' });
     const { set, update, flush, reset, setValidators, markAsTouched } = name;
-    const { patch } = name.api;
+    const { patch } = name.$api;
     const { set: setControlValue } = name.value.control;
 
     set('first');
@@ -1496,7 +1490,7 @@ describe('field', () => {
     let disabled: unknown;
     let disabledReasons: unknown;
     const fieldNode = field('David', [(context) => {
-      validatorApi = context.node().api;
+      validatorApi = context.node().$api;
       validatorField = context.field();
       disabled = context.node().disabled;
       disabledReasons = context.node().disabledReasons;
@@ -1504,13 +1498,13 @@ describe('field', () => {
     }]);
 
     expect(fieldNode.errors()).toEqual([]);
-    expect(validatorApi).toBe(fieldNode.api);
+    expect(validatorApi).toBe(fieldNode.$api);
     expect(validatorField).toBe(fieldNode);
     expect(disabled).toBe(fieldNode.disabled);
     expect(disabledReasons).toBe(fieldNode.disabledReasons);
-    expect(fieldNode.api.path()).toEqual([]);
-    expect(fieldNode.api.parent()).toBeNull();
-    expect(fieldNode.api.form()).toBeNull();
+    expect(fieldNode.$api.path()).toEqual([]);
+    expect(fieldNode.$api.parent()).toBeNull();
+    expect(fieldNode.$api.form()).toBeNull();
   });
 
   it('reports the error of a failing validator', () => {
@@ -1700,7 +1694,7 @@ describe('field', () => {
   it('exposes its interaction and availability state to an asynchronous validator', async () => {
     const states: Array<{ dirty: boolean; disabled: boolean; hidden: boolean; readonly: boolean; touched: boolean }> = [];
     const fieldNode = field('David', [asyncValidator(async ({ node }) => {
-      const api = node().api;
+      const api = node().$api;
       states.push({
         dirty: api.dirty(),
         disabled: api.disabled(),
@@ -1761,7 +1755,7 @@ describe('field', () => {
     const fieldNode = field('', [required]);
 
     expect(fieldNode.required()).toBe(true);
-    expect(fieldNode.api.required()).toBe(true);
+    expect(fieldNode.$api.required()).toBe(true);
 
     fieldNode.set('David');
     expect(fieldNode.required()).toBe(true);
@@ -1779,7 +1773,7 @@ describe('field', () => {
     const unrelatedValidator = field('David', [() => ({ kind: 'unrelated' })]);
 
     expect(withoutValidators.required()).toBe(false);
-    expect(withoutValidators.api.required()).toBe(false);
+    expect(withoutValidators.$api.required()).toBe(false);
     expect(unrelatedValidator.required()).toBe(false);
   });
 
@@ -1871,7 +1865,7 @@ describe('field', () => {
 
     expect(fieldNode.getError('duplicate')).toMatchObject({ kind: 'duplicate', message: 'First' });
     expect(fieldNode.getError('duplicate')?.targetNode).toBe(fieldNode);
-    expect(fieldNode.api.getError('required')).toMatchObject({ kind: 'required' });
+    expect(fieldNode.$api.getError('required')).toMatchObject({ kind: 'required' });
     expect(fieldNode.getError('missing')).toBeUndefined();
 
     fieldNode.set('David');
@@ -1888,7 +1882,7 @@ describe('field', () => {
     fieldNode.set('David');
 
     expect(fieldNode.allErrors().map(error => error.kind)).toEqual(['custom']);
-    expect(fieldNode.api.allErrors()).toBe(fieldNode.allErrors());
+    expect(fieldNode.$api.allErrors()).toBe(fieldNode.allErrors());
   });
 
   it('does not propagate getError when only another error kind changes', () => {
@@ -2114,21 +2108,21 @@ describe('field', () => {
   it('exposes the same state through the root and through api', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const fieldNode = field('', [required]);
-    expect(fieldNode.api.value()).toBe(fieldNode.value());
-    expect(fieldNode.api.valid()).toBe(fieldNode.valid());
-    expect(fieldNode.api.errors()).toEqual(fieldNode.errors());
-    fieldNode.api.set('David');
+    expect(fieldNode.$api.value()).toBe(fieldNode.value());
+    expect(fieldNode.$api.valid()).toBe(fieldNode.valid());
+    expect(fieldNode.$api.errors()).toEqual(fieldNode.errors());
+    fieldNode.$api.set('David');
     expect(fieldNode()).toBe('David');
     expect(fieldNode.dirty()).toBe(false);
   });
 
   it('patches like it sets through the API and the runtime field member', () => {
     const fieldNode = field('David');
-    fieldNode.api.patch('Ana');
+    fieldNode.$api.patch('Ana');
     expect(fieldNode()).toBe('Ana');
     expect(fieldNode.dirty()).toBe(false);
 
-    const { patch } = fieldNode as typeof fieldNode & Pick<typeof fieldNode.api, 'patch'>;
+    const { patch } = fieldNode as typeof fieldNode & Pick<typeof fieldNode.$api, 'patch'>;
     patch('Bea');
     expect(fieldNode()).toBe('Bea');
     expect(fieldNode.value.control()).toBe('Bea');
@@ -3072,7 +3066,7 @@ it('exposes a stable callable API signal with public equality and separate commi
   const name = field('Ada', { equal: (a, b) => a?.toLowerCase() === b?.toLowerCase(), debounce: 'blur' });
   const api = name.$api;
   const value = computed(() => api());
-  expect(api).toBe(name.api);
+  expect(api).toBe(name.$api);
   expect(isSignal(api)).toBe(true);
   expect(value()).toBe('Ada');
   api.value.control.set('ADA');

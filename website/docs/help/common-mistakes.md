@@ -215,7 +215,7 @@ Hidden is form state, not a rendering instruction. Remove hidden UI explicitly:
 Development builds warn when a hidden node remains bound to a rendered control. See
 [Interaction and availability](../guides/interaction-and-availability.md#non-interactive-behavior).
 
-## 📖 Reaching for .api in ordinary code {#reaching-for-api-in-ordinary-code}
+## 📖 Reaching for .$api in ordinary code {#reaching-for-api-in-ordinary-code}
 
 Direct members are the normal, readable API:
 
@@ -225,7 +225,7 @@ myForm.contacts.push({ label: 'Work', email: 'ada@example.com' });
 myForm.valid();
 ```
 
-Use `.api` for generic infrastructure or a form child name collision. Use `$api` only when the
+Use `.$api` for generic infrastructure or a form child name collision. Use `$api` only when the
 `api` name itself collides or infrastructure needs a guaranteed path. See
 [Tree navigation and API access](../concepts/tree-and-api.md).
 

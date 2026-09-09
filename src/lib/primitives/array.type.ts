@@ -680,21 +680,9 @@ export type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode =
     /** Returns the exposed array value, applying configured equality, and participates in signal dependency tracking. */
     (): ArrayValue<TItem>;
     /**
-     * Complete array API and the recommended access path for application code.
-     *
-      * `$api` exposes the same API through the collision-safe convention shared by every node.
-     */
-    api: CallableNodeApi<ArrayApi<TItem, TParent>>;
-    /**
      * Callable, collision-safe access to the array API.
-     *
      * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
-     * Child names never replace members on this API; access children through `children` when available.
-     *
-     * Prefer `api` for normal application code. `$api` exists as the stable access convention
-     * shared by every node, including forms whose children may be named `api`.
-     *
-     * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
+     * Use direct members for application code and `$api` for generic code or child-name collisions.
      */
     $api: CallableNodeApi<ArrayApi<TItem, TParent>>;
   }

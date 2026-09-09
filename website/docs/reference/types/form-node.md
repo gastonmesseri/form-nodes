@@ -29,7 +29,7 @@ type FormNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
     (): {
         [K in keyof TNodes]: NodeValue<TNodes[K]>;
     };
-} & FormApiProperty<TNodes, TParent> & Omit<FormChildren<TNodes, TParent>, 'api'> & Omit<FormApi<TNodes, TParent>, keyof TNodes> & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;
+} & FormApiProperty<TNodes, TParent> & FormChildren<TNodes, TParent> & Omit<FormApi<TNodes, TParent>, keyof TNodes> & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;
 ```
 
 ## Type parameters

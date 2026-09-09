@@ -225,7 +225,7 @@ const myForm2 = form({
       city: field('Madrid'),
       country: field('Spain', { 
         validators: [
-          // ctx => ctx.form()?.api.
+          // ctx => ctx.form()?.$api.
           ctx => [required, () => minLength(2)],
         ],
       }),
@@ -367,7 +367,7 @@ const myFormSomewhere= aForm({
 
 const myFormHereValue = myFormHere();
 
-myForm2.address.api.errors().at(0)?.targetNode
+myForm2.address.$api.errors().at(0)?.targetNode
 
 myForm2.sons.at(0);
 const t = myForm2.sons.value();
@@ -402,7 +402,7 @@ function toto() {}
 
 
 const myField1 = field('something', [required, null]);
-// myForm2.address.city.parent()?.api.
+// myForm2.address.city.parent()?.$api.
 // myForm2.address.city.form()?.address.
 
 const myForm3 = form({

@@ -10,6 +10,12 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.4.0 — 2026-09-10 {#340--2026-09-10}
+
+### Changed
+
+- Use `.$api` as the single callable, collision-safe node API. The `.api` alias is removed; replace API accesses with `.$api`, while keeping ordinary child fields named `api`. This change is included in minor version 3.4.0 at the maintainer's request while the library has no other consumers.
+
 ### Added
 
 - Read own and descendant validation errors with `errors({ descendants: true })` on any node. `allErrors()` remains its shortcut, while `errors()` keeps its existing own-error signal behavior and typing.

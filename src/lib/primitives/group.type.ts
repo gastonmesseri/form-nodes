@@ -285,16 +285,11 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
   };
 
 type GroupApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
-  /** Complete group API and the recommended access path for application code. */
-  api: TNodes extends { api: infer TApi extends AnyNode }
-    ? NodeWithParent<TApi, GroupNode<TNodes, TParent>>
-    : CallableNodeApi<GroupApi<TNodes, TParent>>;
   /**
    * Callable, collision-safe access to the group API.
    *
    * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
    * Child names never replace members on this API; access children through `children` when available.
-   * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
   $api: CallableNodeApi<GroupApi<TNodes, TParent>>;
 };
@@ -314,6 +309,6 @@ export type GroupNode<TNodes extends Nodes = never, TParent extends AnyNode = An
     (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };
   }
   & GroupApiProperty<TNodes, TParent>
-  & Omit<GroupChildren<TNodes, TParent>, 'api'>
+  & GroupChildren<TNodes, TParent>
   & Omit<GroupApi<TNodes, TParent>, keyof TNodes>
   & HiddenFunctionMembers<keyof TNodes | keyof GroupApi<TNodes, TParent>>;

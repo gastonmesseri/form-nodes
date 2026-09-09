@@ -9,8 +9,8 @@ import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
+import type { DisabledReason, DynamicNode, AnyNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, DynamicNode, AnyNode, PublicNode } from '../types/node.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -234,19 +234,18 @@ export type AsyncValidatorState = {
 };
 
 /** Callable form API when the declaration's child keys are not known. */
-type ValidatorForm = PublicNode<AnyNode> & FormApi<any> & { api: CallableNodeApi<FormApi<any>>; $api: CallableNodeApi<FormApi<any>> };
+type ValidatorForm = Signal<any> & HiddenFunctionMembers & FormApi<any> & { $api: CallableNodeApi<FormApi<any>> };
 
 /** Callable group API when the declaration's child keys are not known. */
-type ValidatorGroup = PublicNode<AnyNode> & GroupApi<any> & { api: CallableNodeApi<GroupApi<any>>; $api: CallableNodeApi<GroupApi<any>> };
+type ValidatorGroup = Signal<any> & HiddenFunctionMembers & GroupApi<any> & { $api: CallableNodeApi<GroupApi<any>> };
 
 type UntypedValidatorNode = FieldNode<any> | ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode>;
 
 /** Preserves each primitive's members while specializing its committed-value access paths. */
 type ValidatorValueNode<TValue, TNode extends AnyNode = UntypedValidatorNode> = TNode extends UntypedValidatorNode
-  ? Omit<TNode, 'value' | 'api' | '$api'> & HiddenFunctionMembers<keyof TNode> & {
+  ? Omit<TNode, 'value' | '$api'> & HiddenFunctionMembers<keyof TNode> & {
     (): TValue;
     value: NodeValueSignal<TValue>;
-    api: CallableNodeApi<Omit<TNode['api'], 'value'> & { value: NodeValueSignal<TValue> }>;
     $api: CallableNodeApi<Omit<TNode['$api'], 'value'> & { value: NodeValueSignal<TValue> }>;
   }
   : never;

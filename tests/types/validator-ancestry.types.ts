@@ -4,13 +4,13 @@ import type { Equal, Expect } from './assert.types';
 import { array, asyncValidator, field, form, group, validator, type AsyncValidatorBaseContext, type AsyncValidatorContext, type FieldNode, type ParameterizedAsyncValidatorContext, type ValidatorApi, type ValidatorContext } from '../../src/public-api';
 
 type Root = ReturnType<ValidatorContext<string>['node']>;
-type ValidatorForm = NonNullable<ReturnType<Root['api']['form']>>;
+type ValidatorForm = NonNullable<ReturnType<Root['$api']['form']>>;
 type Parent = NonNullable<ReturnType<ValidatorContext<string>['parent']>>;
 type _RootKinds = Expect<Equal<ReturnType<Root['nodeType']>, 'field' | 'form' | 'group' | 'array'>>;
 type _ParentKinds = Expect<Equal<ReturnType<Parent['nodeType']>, 'form' | 'group' | 'array'>>;
 
 const checkAncestry = (ctx: ValidatorContext<string | null>) => {
-  const api = ctx.node().api;
+  const api = ctx.node().$api;
   type _Form = Expect<Equal<ReturnType<typeof api.form>, ValidatorForm | null>>;
   type _Parent = Expect<Equal<ReturnType<typeof ctx.parent>, Parent | null>>;
 
@@ -21,7 +21,7 @@ const checkAncestry = (ctx: ValidatorContext<string | null>) => {
   node.dirty();
   node.valid();
   node.reset();
-  node.api.touched();
+  node.$api.touched();
   node.$api.touched();
   // @ts-expect-error The validated node is not necessarily a form.
   node.submit();
@@ -126,7 +126,7 @@ field('', [asyncValidator({
 })]);
 form({ email: field('') }, {
   validators: (ctx) => {
-    const api = ctx.node().api;
+    const api = ctx.node().$api;
     type _FormValidatorKind = Expect<Equal<ReturnType<ReturnType<typeof ctx.node>['nodeType']>, 'form'>>;
     ctx.field().dirty();
     api.form()?.submit();
@@ -136,16 +136,16 @@ form({ email: field('') }, {
   },
 });
 
-const exactValidator = (ctx: ValidatorContext<string | null, typeof profile.nested.subForm.subGroup.email.api, typeof profile.nested.subForm.subGroup.email>) => {
-  const api = ctx.node().api;
+const exactValidator = (ctx: ValidatorContext<string | null, typeof profile.nested.subForm.subGroup.email.$api, typeof profile.nested.subForm.subGroup.email>) => {
+  const api = ctx.node().$api;
   type _ExactForm = Expect<Equal<ReturnType<typeof api.form>, typeof profile.nested.subForm | null>>;
   type _ExactRoot = Expect<Equal<ReturnType<typeof api.root>, typeof profile>>;
   type _ExactParent = Expect<Equal<ReturnType<typeof ctx.parent>, typeof profile.nested.subForm.subGroup | null>>;
   return null;
 };
 void exactValidator;
-asyncValidator<string | null, typeof profile.nested.subForm.subGroup.email.api, typeof profile.nested.subForm.subGroup.email>(async (ctx) => {
-  const api = ctx.node().api;
+asyncValidator<string | null, typeof profile.nested.subForm.subGroup.email.$api, typeof profile.nested.subForm.subGroup.email>(async (ctx) => {
+  const api = ctx.node().$api;
   type _ExactForm = Expect<Equal<ReturnType<typeof api.form>, typeof profile.nested.subForm | null>>;
   type _ExactRoot = Expect<Equal<ReturnType<typeof api.root>, typeof profile>>;
   type _ExactParent = Expect<Equal<ReturnType<typeof ctx.parent>, typeof profile.nested.subForm.subGroup | null>>;
@@ -159,7 +159,7 @@ parents.push(field(''));
 void roots;
 
 type ExactNode = typeof profile.nested.subForm.subGroup.email;
-type ExactApi = typeof profile.nested.subForm.subGroup.email.api;
+type ExactApi = typeof profile.nested.subForm.subGroup.email.$api;
 type _ExactSyncField = Expect<Equal<ValidatorContext<string | null, ExactApi, ExactNode>['field'], Signal<ExactNode>>>;
 type _ExactAsyncBaseField = Expect<Equal<AsyncValidatorBaseContext<string | null, ExactApi, ExactNode>['field'], Signal<ExactNode>>>;
 type _ExactAsyncField = Expect<Equal<AsyncValidatorContext<string | null, ExactApi, ExactNode>['field'], Signal<ExactNode>>>;

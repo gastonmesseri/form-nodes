@@ -19,18 +19,8 @@ Use when the node kind is unknown but you know child names do not shadow common 
 ## Declaration
 
 ```ts
-type DynamicNode = PublicNode<AnyNode> & Omit<NodeApi, 'patch'> & {
-    api: Signal<any> & NodeApi;
-};
+type DynamicNode = PublicNode<AnyNode> & Omit<NodeApi, 'patch'>;
 ```
-
-## Declared members
-
-The declaration above also includes inherited contracts and overloads where applicable.
-
-| Member | Meaning |
-| --- | --- |
-| `api` | Complete common node API. |
 
 ## Related reference
 

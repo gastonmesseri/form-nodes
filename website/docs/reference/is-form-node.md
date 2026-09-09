@@ -39,7 +39,7 @@ The helper can also be passed directly to an array's `filter()` method to obtain
 | Detached nodes | `true` |
 | Plain objects, ordinary functions, `null`, or `undefined` | `false` |
 | Ordinary Angular signals | `false` |
-| A node's callable `$api` or unshadowed `api` alias | `false` |
+| A node's callable `$api` | `false` |
 | Nodes from a separately loaded copy of the library | `false` |
 
 The check reads an internal marker. It does not call the supplied value, read node state, or

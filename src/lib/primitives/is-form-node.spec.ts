@@ -33,9 +33,9 @@ describe('isFormNode', () => {
     const callback = vi.fn();
     const derived = computed(callback);
     const node = field('Marco');
-    const lookalike = Object.assign(vi.fn(), { $api: node.$api, api: node.api });
+    const lookalike = Object.assign(vi.fn(), { $api: node.$api });
 
-    for (const value of [null, undefined, false, 0, 'Marco', Symbol('node'), 1n, {}, [], callback, derived, signal('Marco'), node.api, node(), lookalike]) {
+    for (const value of [null, undefined, false, 0, 'Marco', Symbol('node'), 1n, {}, [], callback, derived, signal('Marco'), node.$api, node(), lookalike]) {
       expect(isFormNode(value)).toBe(false);
     }
     expect(callback).not.toHaveBeenCalled();

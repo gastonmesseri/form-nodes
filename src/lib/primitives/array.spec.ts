@@ -308,12 +308,6 @@ describe('array', () => {
     expect(names.$api.nodeType()).toBe('array');
   });
 
-  it('exposes the same API through api and $api', () => {
-    const names = array(field(''), []);
-
-    expect(names.$api).toBe(names.api);
-  });
-
   it('allows focusing safely when no descendant UI control is bound', () => {
     const names = array(field('Marco'), 1);
 
@@ -1973,7 +1967,7 @@ it('keeps the callable array API length signal and collection operations intact'
   const names = array(field(''), { initialValue: ['Ada'] });
   const api = names.$api;
   expect(isSignal(api)).toBe(true);
-  expect(api).toBe(names.api);
+  expect(api).toBe(names.$api);
   expect(api()).toEqual(['Ada']);
   expect(api.length()).toBe(1);
   api.push('Grace');

@@ -6,7 +6,7 @@ type _NoExampleCustomError = Expect<Equal<HasKey<ValidationErrorMap, 'unavailabl
 const nameValidator = (context: ValidatorContext<string | null>) => {
   type _Value = Expect<Equal<ReturnType<typeof context.value>, string | null>>;
   const node = context.node();
-  type _ApiPath = Expect<Equal<ReturnType<typeof node.api.path>, readonly string[]>>;
+  type _ApiPath = Expect<Equal<ReturnType<typeof node.$api.path>, readonly string[]>>;
   type _Path = Expect<Equal<ReturnType<typeof context.path>, readonly string[]>>;
   return context.value() ? null : { kind: 'missingName' };
 };
@@ -40,7 +40,7 @@ field<Date>(null, [dateBetween('today', () => '2026-12-31')]);
 
 
 const adult = validator<number | null>(({ value, field: targetField }) => {
-  const api = targetField().api;
+  const api = targetField().$api;
   type _Value = Expect<Equal<ReturnType<typeof value>, number | null>>;
   type _ApiPath = Expect<Equal<ReturnType<typeof api.path>, readonly string[]>>;
   void targetField;
@@ -141,7 +141,7 @@ const profile = form({
   age: field(42, {
     validators: [context => {
       const _value: number | null = context.value();
-      const _fieldValue: number | null = context.node().api.value();
+      const _fieldValue: number | null = context.node().$api.value();
       void [_value, _fieldValue];
       return null;
     }],

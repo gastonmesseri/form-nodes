@@ -19,7 +19,7 @@ page documents the explicit alternative paths for generic infrastructure.
 
 Use direct members for actions and state on every node: `name.set()`, `items.push()`,
 `profile.patch()`, and `profile.valid()`. The [Tree navigation and API access](../concepts/tree-and-api.md)
-guide documents `.api` only for name collisions and generic infrastructure.
+guide documents `.$api` only for name collisions and generic infrastructure.
 
 ## Choosing a node type {#node-types}
 
@@ -173,8 +173,7 @@ See the [complete value reference](./node-value.md) for all five entries and an 
 **Signature:** `CallableNodeApi<TApi extends { value: Signal<any> }>`.
 
 `$api()` reads the exposed value with the same inferred type and reactive semantics as calling
-the node. All API signals and operations remain available on that function. `$api` and the
-unshadowed `api` alias reference the same stable facade. They are distinct from the node and its
+the node. All API signals and operations remain available on that stable function, which is distinct from the node and its
 `value` signal. Exposed custom equality still applies; use `api.value.committed()` for raw committed
 data. Neither calling the API nor obtaining it changes validation or interaction state.
 

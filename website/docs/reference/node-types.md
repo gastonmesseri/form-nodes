@@ -20,7 +20,7 @@ the declaration, and use explicit types for reusable functions, component inputs
 | What the consumer knows | Type | API access |
 | --- | --- | --- |
 | Only that the value is a node | [`AnyNode`](#any-node) | `$api` |
-| Common direct members are not shadowed by children | [`DynamicNode`](#dynamic-node) | Direct members, `.api`, or `$api` |
+| Common direct members are not shadowed by children | [`DynamicNode`](#dynamic-node) | Direct members, `.$api`, or `$api` |
 | Field value type | [`FieldNode<TValue>`](#field-node) | Direct field members |
 | Group child structure | [`GroupNode<TChildren>`](#group-node) | Inferred children and group members |
 | Form child structure | [`FormNode<TChildren>`](#form-node) | Inferred children and form members |
@@ -30,7 +30,7 @@ the declaration, and use explicit types for reusable functions, component inputs
 | Form category, unspecified children | [`FormNode`](#form-node) | `$api`, including `submit()` |
 | Array category, unspecified items | [`ArrayNode`](#array-node) | Direct array members; item operations through `$api` |
 
-For concrete groups and forms, a child can shadow a direct API member. Use `.api` when that
+For concrete groups and forms, a child can shadow a direct API member. Use `.$api` when that
 known declaration needs it, or `$api` when even `api` may be a child. See
 [Tree navigation and API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code).
 
@@ -149,7 +149,7 @@ It checks identity, not a particular primitive kind, value type, or absence of n
 ## DynamicNode {#dynamic-node}
 
 `DynamicNode` has no generic parameters. It exposes the shared state and actions directly,
-including `valid()`, `touched()`, `set()`, `reset()`, and `markAsTouched()`, plus `.api` and `$api`.
+including `valid()`, `touched()`, `set()`, `reset()`, and `markAsTouched()`, plus `.$api` and `$api`.
 The direct surface omits `patch()`, since leaf patching uses the API access paths. Native callable
 members are hidden. Category-specific actions such as form submission or array insertion
 require a category-specific type.
@@ -201,7 +201,7 @@ function members in IntelliSense; see the [typed example](./node-value.md#explic
 ## CallableNodeApi
 
 `CallableNodeApi<TApi>` combines an API contract with `Signal<ReturnType<TApi['value']>>`.
-Node `$api` properties use this callable facade; an unshadowed `api` aliases it. It preserves
+Node `$api` properties use this callable facade. It preserves
 precise value and setter types while preventing children from overwriting operations.
 See [callable API reads and examples](./node-api.md#callable-api).
 

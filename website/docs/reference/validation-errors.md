@@ -87,4 +87,4 @@ No arguments, `{}`, and `{ descendants: false }` all select own errors. The opti
 
 Every error preserves its original `targetNode`. Own reads retain the concrete node type; subtree reads use `AnyNode`, whose collision-safe API is accessed through `targetNode.$api`. Fields have no descendants, so both queries return the same errors. Disabled descendants, asynchronous validation, and dynamic child changes follow the existing `allErrors()` behavior.
 
-The `errors` property remains assignable to Angular `Signal` and can still be passed directly to signal consumers. Its exported type is [`NodeErrorsSignal`](./types/node-errors-signal.md). These options apply to node errors, including `.api.errors` and `.$api.errors`; binding and `useFormNodeState()` error signals retain their own signatures.
+The `errors` property remains assignable to Angular `Signal` and can still be passed directly to signal consumers. Its exported type is [`NodeErrorsSignal`](./types/node-errors-signal.md). These options apply to node errors, including `.$api.errors`; binding and `useFormNodeState()` error signals retain their own signatures.

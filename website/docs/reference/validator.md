@@ -195,10 +195,10 @@ See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside
 validator<string>(({ field }) => field().value() ? null : { kind: 'blank' });
 ```
 
-#### – node().api {#custom-validator-context-api}
+#### – node().$api {#custom-validator-context-api}
 
-Access the node API through `ctx.node().api` or `ctx.field().api`. Its type follows the validated
-node, so inline validators retain the concrete primitive API. There is no direct `ctx.api` property.
+Access the node API through `ctx.node().$api` or `ctx.field().$api`. Its type follows the validated
+node, so inline validators retain the concrete primitive API. There is no direct `ctx.$api` property.
 For ordinary state reads, use the node directly, such as `ctx.node().dirty()`.
 See [API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code) for aliases and child-name collisions.
 

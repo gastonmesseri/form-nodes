@@ -352,7 +352,7 @@ describe('group', () => {
 
     expect(address()).toEqual({ city: 'Zurich', zip: '8001' });
     expect(address).not.toHaveProperty('submit');
-    expect(address.api).not.toHaveProperty('submit');
+    expect(address.$api).not.toHaveProperty('submit');
 
     address.patch({ city: 'Bern' });
     expect(address()).toEqual({ city: 'Bern', zip: '8001' });

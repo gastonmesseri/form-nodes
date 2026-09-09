@@ -405,8 +405,7 @@ state API. Signal properties must be called to read their current value.
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
-| [`api`](#api) | Complete field API. Direct members are preferred in application code. |
-| [`$api`](#api-1) | Collision-safe alias of `api` for generic infrastructure. |
+| [`$api`](#api-1) | Callable, collision-safe API for generic infrastructure. |
 | **Value and control** | |
 | [`set(value)`](#set) | Immediately assigns a committed value without marking the field dirty. |
 | [`update(updater)`](#update) | Derives and assigns a value from the current committed value. |
@@ -635,26 +634,11 @@ const profile = form({
 profile.username.keyInParent(); // 'username'
 ```
 
-#### – api {#api}
-
-**Signature:** `api: FieldApi<TValue>`
-
-Exposes the complete field API as a plain object.
-
-```ts
-const username = field('ada');
-
-username.api.valid(); // true
-```
-
-Direct access such as `username.valid()` is preferred. `api` is useful to generic infrastructure
-that works with a consistent API object.
-
 #### – $api {#api-1}
 
-**Signature:** `$api: FieldApi<TValue>`
+**Signature:** `$api: CallableNodeApi<CallableNodeApi<FieldApi<TValue>>>`
 
-Exposes the same API through the collision-safe convention shared by every node kind.
+Exposes the complete callable API through the collision-safe convention shared by every node kind.
 
 ```ts
 const profile = form({
@@ -1083,7 +1067,7 @@ username.pristine(); // true
 
 `api.patch(value)` also exists for a uniform node API and is equivalent to `set(value)`. Use
 `set()` directly in ordinary field code. The callable field also carries `patch` at runtime, but
-its public type exposes this operation only through `api` and `$api`.
+its public type exposes this operation only through `$api`.
 
 #### – flush() {#flush}
 

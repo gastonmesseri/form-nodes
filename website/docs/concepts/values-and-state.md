@@ -28,27 +28,27 @@ const nameValue = profileForm.name(); // 'Marco'
 
 ## 📝 Alternative value access {#alternative-value-access}
 
-The callable `node.$api()` and unshadowed `node.api()` also read the exposed value, just like
+The callable `node.$api()` also reads the exposed value, just like
 `node()` and `node.value()`. Their properties provide collision-safe state and operations.
 See [callable APIs](./tree-and-api.md#callable-apis).
 
 Examples throughout this documentation call nodes directly. The same committed value is also
-available through `value()` directly or under `.api`:
+available through `value()` directly or under `.$api`:
 
 ```ts
 profileForm.value(); // { name: 'Marco', age: null, address: { ... }, secret: '' }
-profileForm.api.value(); // { name: 'Marco', age: null, address: { ... }, secret: '' }
+profileForm.$api.value(); // { name: 'Marco', age: null, address: { ... }, secret: '' }
 
 profileForm.name.value(); // 'Marco'
-profileForm.name.api.value(); // 'Marco'
+profileForm.name.$api.value(); // 'Marco'
 ```
 
 These alternatives are mainly useful in generic infrastructure or when explicitly naming the
 signal is important. They do not represent different snapshots: for any node, `myNode()`,
-`myNode.value()`, and `myNode.api.value()` return the same committed value. Prefer `myNode()` in
+`myNode.value()`, and `myNode.$api.value()` return the same committed value. Prefer `myNode()` in
 application examples and ordinary consumer code.
 
-The [Tree navigation and API access](./tree-and-api.md) guide documents `.api` for the uncommon case
+The [Tree navigation and API access](./tree-and-api.md) guide documents `.$api` for the uncommon case
 where a child name collides with a node member and for generic infrastructure.
 
 ## 📝 Custom equality for a consumer {#custom-equality-for-a-consumer}

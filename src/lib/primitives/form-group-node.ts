@@ -636,10 +636,10 @@ export class FormGroupNode<TNodes extends Nodes> {
       _getControlBindingForFocus: () => this.getControlBindingForFocus(),
     });
 
-    // Child names can replace callable properties and API aliases; $api stays collision-safe.
+    // Child names can replace direct callable properties; $api stays collision-safe.
     return Object.defineProperties(
       this.exposedValue,
-      Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, ...this.children, $api: internalApi }),
+      Object.getOwnPropertyDescriptors({ ...publicApi, ...this.children, $api: internalApi }),
     ) as FormNode<TNodes>;
   }
 }

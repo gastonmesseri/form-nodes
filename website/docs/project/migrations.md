@@ -4,6 +4,21 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## Moving to 3.4.0: one API access path {#single-api-access}
+
+Use `node.$api` wherever you previously used the `node.api` API alias. Direct reads and operations such as `node()`, `node.valid()`, and `node.reset()` continue to work.
+
+| Previous API access | Current API access |
+| --- | --- |
+| `node.api` | `node.$api` |
+| `node.api()` | `node.$api()` |
+| `node.api.valid()` | `node.$api.valid()` |
+| `node.api.value.control.set(next)` | `node.$api.value.control.set(next)` |
+
+`$api` remains callable, reactive, and safe from child-name collisions. A declared child named `api` is ordinary data: keep access such as `profile.api()` when it reads that child. Do not replace those child reads with API calls.
+
+This change ships in the minor release **3.4.0** at the maintainer's request while the library has no other consumers. The old alias is removed; update existing API access before upgrading.
+
 ## Moving to 3.3.0: nested value views {#nested-value-views}
 
 The old public names are removed without compatibility aliases. This incompatible change is

@@ -293,7 +293,7 @@ export type NodeApi = {
  * Common callable contract for any field, group, form, or array node.
  *
  * **Use `AnyNode` through its `$api` property for all state and operations.**
- * Child names can override direct state, operations, and even `api`, so the generic type cannot
+ * Child names can override direct state and operations, so the generic type cannot
  * safely expose those members directly. Use `myAnyNode.$api.valid()` or
  * `myAnyNode.$api.markAsTouched()` for guaranteed access. Call `myAnyNode()` to read its value.
  *
@@ -310,7 +310,7 @@ export type AnyNode = Signal<any> & {
   /**
    * Collision-safe access to the node API.
    *
-   * **Use this property for all state and operations on `AnyNode`.** Both direct names and `api` may
+   * **Use this property for all state and operations on `AnyNode`.** Direct names may
    * be child nodes, while `$api` always refers to the node's state and operations.
    */
   $api: Signal<any> & NodeApi;
@@ -331,11 +331,7 @@ export type PublicNode<TNode extends AnyNode> = AnyNode extends TNode
  */
 export type DynamicNode =
   & PublicNode<AnyNode>
-  & Omit<NodeApi, 'patch'>
-  & {
-    /** Complete common node API. */
-    api: Signal<any> & NodeApi;
-  };
+  & Omit<NodeApi, 'patch'>;
 type RootLookupDepth = readonly [unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown, unknown];
 
 export type RootNode<TNode extends AnyNode, TDepth extends readonly unknown[] = RootLookupDepth> =
@@ -347,10 +343,10 @@ export type RootNode<TNode extends AnyNode, TDepth extends readonly unknown[] = 
       : TNode
     : AnyNode;
 /** Generic form navigation without asserting unknown child names or hiding valid child collisions. */
-export type NavigationForm = AnyNode & FormApi<any> & { api: CallableNodeApi<FormApi<any>>; $api: CallableNodeApi<FormApi<any>> };
+export type NavigationForm = Signal<any> & FormApi<any> & { $api: CallableNodeApi<FormApi<any>> };
 
 /** Complete structural node APIs when an ancestor's exact declaration is unavailable. */
-export type NavigationRoot = FieldNode<any> | NavigationForm | (AnyNode & GroupApi<any> & { api: CallableNodeApi<GroupApi<any>>; $api: CallableNodeApi<GroupApi<any>> }) | ArrayNode<any>;
+export type NavigationRoot = FieldNode<any> | NavigationForm | (Signal<any> & GroupApi<any> & { $api: CallableNodeApi<GroupApi<any>> }) | ArrayNode<any>;
 
 export type NearestForm<TNode extends AnyNode> = AnyNode extends TNode ? NavigationForm
   : TNode extends { $api: { form: Signal<infer TForm> } }

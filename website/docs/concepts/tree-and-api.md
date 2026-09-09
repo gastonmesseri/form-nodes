@@ -55,8 +55,8 @@ const response = form({
 });
 
 response.children(); // 'domain value'
-response.api.children.children(); // 'domain value'
-response.api.children.status(); // 200
+response.$api.children.children(); // 'domain value'
+response.$api.children.status(); // 200
 ```
 
 In ordinary application code, continue to prefer `profile.name` and `profile.address.city` over
@@ -83,9 +83,9 @@ profile.reset();
 profile.valid();
 ```
 
-## 📖 .api for collisions and generic code {#api-for-collisions-and-generic-code}
+## 📖 .$api for collisions and generic code {#api-for-collisions-and-generic-code}
 
-Every node also exposes the same members through `.api`, but ordinary application examples should
+Every node also exposes the same members through `.$api`, but ordinary application examples should
 not use that longer path. It exists for two specific situations:
 
 - a form child has the same name as an API member; or
@@ -101,12 +101,12 @@ const settings = form({
 
 settings.readonly(); // false
 settings.value(); // 'domain value'
-settings.api.readonly(); // form state
+settings.$api.readonly(); // form state
 settings(); // { readonly: false, value: 'domain value' }
 ```
 
 For generic code receiving `AnyNode`, use **`node.$api`**. Unknown child names can override
-direct operations and the `api` alias itself. Use `DynamicNode` for direct common state and
+direct operations. Use `DynamicNode` for direct common state and
 operations only when the declaration is known not to shadow that surface:
 
 <CodeBlock language="ts" title="generic-node-api.example.ts">{genericNodeApiSource}</CodeBlock>
@@ -127,9 +127,7 @@ response(); // { api: 'v2' }
 response.$api.valid(); // collision-safe form state
 ```
 
-Do not use `$api` merely because it exists. Reserve it for infrastructure requiring a guaranteed
-path or for a form that actually declares an `api` child. The `$api` property is supported and
-is not deprecated or scheduled for removal.
+Prefer direct members for application code. Use `$api` for any child-name collision or when generic infrastructure needs a uniform API.
 
 ## 🌳 Parent, root, and path {#parent-root-and-path}
 
@@ -204,7 +202,7 @@ available on the union; operations unique to a primitive require narrowing.
 
 Knowing the validated node does not infer the enclosing form's parents or sibling keys. Access
 through the declared tree or an explicitly specialized context retains those exact relationships.
-Access an API alias through `ctx.node().api` or `ctx.field().api`; its type follows the node.
+Access an API alias through `ctx.node().$api` or `ctx.field().$api`; its type follows the node.
 Validators should normally read state and return errors rather than submit or mutate their node.
 
 <CodeBlock language="ts" title="validator-ancestry.typecheck.ts">{validatorAncestrySource}</CodeBlock>
@@ -236,7 +234,7 @@ This hiding affects the public type only; node callability and the documented AP
 ## Callable APIs {#callable-apis}
 
 `node.$api` is also an Angular signal: calling it returns the same exposed value as `node()`.
-`node.api` refers to that same callable API unless an object child named `api` overrides the alias.
+Child names never override the API facade.
 The API itself never receives direct child properties, so its `value`, `set`, and `submitted`
 members remain safe. Inspect children through `children` or array collection methods.
 

@@ -275,8 +275,7 @@ Every field, form, and array exposes common reactive state:
 | Controls | `debouncing()`, `flush()`, `focus()` |
 
 Call the node itself for its committed value and use direct members for normal application code.
-Use `.api` for generic infrastructure or name collisions and `$api` only when a guaranteed
-collision-safe path is required.
+Use `.$api` for generic infrastructure or child-name collisions.
 
 ## 📐 Importing types {#importing-types}
 

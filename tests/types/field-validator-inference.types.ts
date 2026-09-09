@@ -122,7 +122,7 @@ const reusable = validator<string | null>((ctx) => {
   const node = ctx.field();
   type _NodeValue = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
   type _CallableValue = Expect<Equal<ReturnType<typeof node>, string | null>>;
-  type _ApiValue = Expect<Equal<ReturnType<typeof node.api.value>, string | null>>;
+  type _ApiValue = Expect<Equal<ReturnType<typeof node.$api.value>, string | null>>;
   type _SafeApiValue = Expect<Equal<ReturnType<typeof node.$api.value>, string | null>>;
   type _NodeAlias = Expect<Equal<typeof ctx.node, typeof ctx.field>>;
   // @ts-expect-error The reusable validator's node value is not numeric.
@@ -136,7 +136,7 @@ const reusableAsync = asyncValidator<string | null>(async (ctx) => {
   const node = ctx.field();
   type _NodeValue = Expect<Equal<ReturnType<typeof node.value>, string | null>>;
   type _CallableValue = Expect<Equal<ReturnType<typeof node>, string | null>>;
-  type _ApiValue = Expect<Equal<ReturnType<typeof node.api.value>, string | null>>;
+  type _ApiValue = Expect<Equal<ReturnType<typeof node.$api.value>, string | null>>;
   type _SafeApiValue = Expect<Equal<ReturnType<typeof node.$api.value>, string | null>>;
   type _NodeAlias = Expect<Equal<typeof ctx.node, typeof ctx.field>>;
   // @ts-expect-error The reusable validator's node value is not numeric.

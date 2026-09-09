@@ -501,7 +501,7 @@ export class FieldNode<TValue> {
 
     return Object.defineProperties(
       this.exposedValue,
-      Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, $api: internalApi }),
+      Object.getOwnPropertyDescriptors({ ...publicApi, $api: internalApi }),
     ) as PublicFieldNode<TValue>;
   }
 }

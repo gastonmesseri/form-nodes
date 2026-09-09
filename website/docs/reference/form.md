@@ -460,7 +460,6 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`parent()`](#parent) | Direct parent node, or `null` at the root or after detachment. |
 | [`path()`](#path) | Property path from the root; array indexes are string segments. |
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
-| [`api`](#api) | Complete form API unless a declared child named `api` takes precedence. |
 | [`$api`](#api-1) | Guaranteed collision-safe form API. |
 | **Dynamic children** | |
 | [`add(key, definition)`](#add) | Attaches and returns one runtime child with its exact inferred node type. |
@@ -749,23 +748,6 @@ profile.settings.keyInParent(); // 'settings'
 ```
 
 ### ◆ API properties {#api-properties}
-
-#### – api {#api}
-
-**Signature:** `api: FormApi`
-
-Exposes the complete form API as a plain object unless a declared child named `api` takes
-precedence.
-
-```ts
-const profile = form({
-  username: field('ada'),
-});
-
-profile.api.valid(); // true
-```
-
-Direct operations such as `profile.valid()` are preferred.
 
 #### – $api {#api-1}
 

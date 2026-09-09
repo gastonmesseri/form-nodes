@@ -880,24 +880,10 @@ export type FormChildren<TNodes extends Nodes, TParent extends AnyNode> = {
 
 type FormApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
   /**
-   * Complete form API and the recommended access path for application code.
-   *
-   * When a form declares a child named `api`, this property is that child instead. Use `$api`
-   * when collision-safe access to the form API is required.
-   */
-  api: TNodes extends { api: infer TApi extends AnyNode }
-    ? NodeWithParent<TApi, FormNode<TNodes, TParent>>
-    : CallableNodeApi<FormApi<TNodes, TParent>>;
-  /**
    * Callable, collision-safe access to the form API.
    *
    * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
    * Child names never replace members on this API; access children through `children` when available.
-   *
-   * Prefer `api` for normal application code. Use `$api` when this form declares a child named
-   * `api`; the child takes precedence at `form.api`, while `form.$api` always remains the API.
-   *
-   * Prefer `api` for ordinary application code; `$api` remains a supported, stable escape hatch.
    */
   $api: CallableNodeApi<FormApi<TNodes, TParent>>;
 };
@@ -916,6 +902,6 @@ export type FormNode<TNodes extends Nodes = never, TParent extends AnyNode = Any
     (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };
   }
   & FormApiProperty<TNodes, TParent>
-  & Omit<FormChildren<TNodes, TParent>, 'api'>
+  & FormChildren<TNodes, TParent>
   & Omit<FormApi<TNodes, TParent>, keyof TNodes>
   & HiddenFunctionMembers<keyof TNodes | keyof FormApi<TNodes, TParent>>;

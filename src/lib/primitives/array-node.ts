@@ -706,7 +706,7 @@ export class ArrayNode<TItem extends AnyNode> {
     // defineProperties replaces the callable's built-in length with the public signal.
     const callableNode = Object.defineProperties(
       this.exposedValue,
-      Object.getOwnPropertyDescriptors({ ...publicApi, api: internalApi, $api: internalApi }),
+      Object.getOwnPropertyDescriptors({ ...publicApi, $api: internalApi }),
     );
 
     return new Proxy(callableNode, {

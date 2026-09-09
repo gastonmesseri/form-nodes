@@ -99,7 +99,7 @@ This example exercises all five entries, custom equality, debounce, cancellation
 
 ## Generic infrastructure and migration
 
-`node.value`, `node.api.value`, and `node.$api.value` expose the same facade. Child properties can
+`node.value` and `node.$api.value` expose the same facade. Child properties can
 shadow `value` or `api`; **use `node.$api.value` for an `AnyNode` whose child names are unknown**.
 All three views are Angular signals. Nested views expose `set()` only, not `update()` or
 `asReadonly()` from `WritableSignal`. Setters may be extracted without binding a receiver.

@@ -29,7 +29,7 @@ type GroupNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> 
     (): {
         [K in keyof TNodes]: NodeValue<TNodes[K]>;
     };
-} & GroupApiProperty<TNodes, TParent> & Omit<GroupChildren<TNodes, TParent>, 'api'> & Omit<GroupApi<TNodes, TParent>, keyof TNodes> & HiddenFunctionMembers<keyof TNodes | keyof GroupApi<TNodes, TParent>>;
+} & GroupApiProperty<TNodes, TParent> & GroupChildren<TNodes, TParent> & Omit<GroupApi<TNodes, TParent>, keyof TNodes> & HiddenFunctionMembers<keyof TNodes | keyof GroupApi<TNodes, TParent>>;
 ```
 
 ## Type parameters

@@ -2197,11 +2197,11 @@ describe('form', () => {
   it('exposes its public api directly on the form', () => {
     const profile = form({ age: field(23) });
 
-    expect(profile.value).toBe(profile.api.value);
-    expect(profile.disabled).toBe(profile.api.disabled);
-    expect(profile.set).toBe(profile.api.set);
-    expect(profile.patch).toBe(profile.api.patch);
-    expect(profile.reset).toBe(profile.api.reset);
+    expect(profile.value).toBe(profile.$api.value);
+    expect(profile.disabled).toBe(profile.$api.disabled);
+    expect(profile.set).toBe(profile.$api.set);
+    expect(profile.patch).toBe(profile.$api.patch);
+    expect(profile.reset).toBe(profile.$api.reset);
 
     profile.disable();
     expect(profile.disabled()).toBe(true);
@@ -2217,7 +2217,7 @@ describe('form', () => {
       address: { city: field('Zurich') },
     });
 
-    expect(profile.children).toBe(profile.api.children);
+    expect(profile.children).toBe(profile.$api.children);
     expect(profile.children.name).toBe(profile.name);
     expect(profile.children.address).toBe(profile.address);
     expect(profile.children.address.children.city).toBe(profile.address.city);
@@ -2271,8 +2271,8 @@ describe('form', () => {
 
     expect(profile.children).toBe(childrenField);
     expect(profile.children()).toBe('child');
-    expect(profile.api.children.children).toBe(childrenField);
-    expect(profile.api.children.age).toBe(profile.age);
+    expect(profile.$api.children.children).toBe(childrenField);
+    expect(profile.$api.children.age).toBe(profile.age);
   });
 
   it('gives children precedence over native function members', () => {
@@ -2323,18 +2323,18 @@ describe('form', () => {
     expect(profile.readonly()).toBe(false);
     expect(profile.disabled()).toBe('child');
     expect(profile.reset()).toBe('reset child');
-    expect(profile.api.readonly()).toBe(false);
-    expect(profile.api.disabled()).toBe(false);
+    expect(profile.$api.readonly()).toBe(false);
+    expect(profile.$api.disabled()).toBe(false);
 
-    profile.api.markAsReadonly();
-    profile.api.disable();
-    profile.api.reset({ age: 30, readonly: true, disabled: 'updated', reset: 'updated reset' });
+    profile.$api.markAsReadonly();
+    profile.$api.disable();
+    profile.$api.reset({ age: 30, readonly: true, disabled: 'updated', reset: 'updated reset' });
 
     expect(profile.readonly()).toBe(true);
     expect(profile.disabled()).toBe('updated');
     expect(profile.reset()).toBe('updated reset');
-    expect(profile.api.readonly()).toBe(true);
-    expect(profile.api.disabled()).toBe(true);
+    expect(profile.$api.readonly()).toBe(true);
+    expect(profile.$api.disabled()).toBe(true);
   });
 
   it('allows a synchronous field validator to read its owning class form on its first execution', () => {
@@ -2402,26 +2402,26 @@ describe('form', () => {
       },
     });
 
-    expect(profile.api.path()).toEqual([]);
-    expect(profile.name.api.path()).toEqual(['name']);
-    expect(profile.address.api.path()).toEqual(['address']);
-    expect(profile.address.city.api.path()).toEqual(['address', 'city']);
+    expect(profile.$api.path()).toEqual([]);
+    expect(profile.name.$api.path()).toEqual(['name']);
+    expect(profile.address.$api.path()).toEqual(['address']);
+    expect(profile.address.city.$api.path()).toEqual(['address', 'city']);
     expect(profile.keyInParent()).toBeNull();
     expect(profile.name.keyInParent()).toBe('name');
     expect(profile.address.keyInParent()).toBe('address');
     expect(profile.address.city.keyInParent()).toBe('city');
-    expect(profile.api.parent()).toBeNull();
-    expect(profile.name.api.parent()).toBe(profile);
-    expect(profile.address.api.parent()).toBe(profile);
-    expect(profile.address.city.api.parent()).toBe(profile.address);
-    expect(profile.api.form()).toBe(profile);
-    expect(profile.api.root()).toBe(profile);
-    expect(profile.name.api.form()).toBe(profile);
-    expect(profile.name.api.root()).toBe(profile);
-    expect(profile.address.api.form()).toBe(profile);
-    expect(profile.address.api.root()).toBe(profile);
-    expect(profile.address.city.api.form()).toBe(profile);
-    expect(profile.address.city.api.root()).toBe(profile);
+    expect(profile.$api.parent()).toBeNull();
+    expect(profile.name.$api.parent()).toBe(profile);
+    expect(profile.address.$api.parent()).toBe(profile);
+    expect(profile.address.city.$api.parent()).toBe(profile.address);
+    expect(profile.$api.form()).toBe(profile);
+    expect(profile.$api.root()).toBe(profile);
+    expect(profile.name.$api.form()).toBe(profile);
+    expect(profile.name.$api.root()).toBe(profile);
+    expect(profile.address.$api.form()).toBe(profile);
+    expect(profile.address.$api.root()).toBe(profile);
+    expect(profile.address.city.$api.form()).toBe(profile);
+    expect(profile.address.city.$api.root()).toBe(profile);
   });
 
   it('exposes tree navigation through a field synchronous validator api', () => {
@@ -2434,7 +2434,7 @@ describe('form', () => {
     const profile = form({
       address: {
         city: field('Zurich', [(context) => {
-          validatorApi = context.node().api;
+          validatorApi = context.node().$api;
           validatorField = context.field();
           validatorForm = context.node().form();
           validatorRoot = context.node().root();
@@ -2446,32 +2446,32 @@ describe('form', () => {
     });
 
     expect(profile.address.city.errors()).toEqual([]);
-    expect(validatorApi).toBe(profile.address.city.api);
+    expect(validatorApi).toBe(profile.address.city.$api);
     expect(validatorField).toBe(profile.address.city);
     expect(validatorForm).toBe(profile);
     expect(validatorRoot).toBe(profile);
     expect(validatorParent).toBe(profile.address);
     expect(validatorPath).toEqual(['address', 'city']);
-    expect(profile.address.city.api.path()).toEqual(['address', 'city']);
-    expect(profile.address.city.api.parent()).toBe(profile.address);
-    expect(profile.address.city.api.form()).toBe(profile);
+    expect(profile.address.city.$api.path()).toEqual(['address', 'city']);
+    expect(profile.address.city.$api.parent()).toBe(profile.address);
+    expect(profile.address.city.$api.form()).toBe(profile);
   });
 
   it('exposes form and root ancestry to synchronous form validators', () => {
     let validatorApi: unknown;
     let validatorField: unknown;
     const profile = form({ name: field('David') }, [(context) => {
-      validatorApi = context.node().api;
+      validatorApi = context.node().$api;
       validatorField = context.field();
       return null;
     }]);
 
-    expect(profile.api.errors()).toEqual([]);
-    expect(validatorApi).toBe(profile.api);
+    expect(profile.$api.errors()).toEqual([]);
+    expect(validatorApi).toBe(profile.$api);
     expect(validatorField).toBe(profile);
-    expect(profile.api.path()).toEqual([]);
-    expect(profile.api.parent()).toBeNull();
-    expect(profile.api.form()).toBe(profile);
+    expect(profile.$api.path()).toEqual([]);
+    expect(profile.$api.parent()).toBeNull();
+    expect(profile.$api.form()).toBe(profile);
   });
 
   it('keeps a nested form as validator workflow owner while tracking its structural root', async () => {
@@ -2514,14 +2514,14 @@ describe('form', () => {
       age: field(23),
       city: field('Zurich'),
     });
-    expect(formGroup.api.value()).toEqual({ age: 23, city: 'Zurich' });
+    expect(formGroup.$api.value()).toEqual({ age: 23, city: 'Zurich' });
     expect(formGroup()).toEqual({ age: 23, city: 'Zurich' });
   });
 
   it('reflects a field change in the form value', () => {
     const formGroup = form({ age: field(23) });
     formGroup.age.set(30);
-    expect(formGroup.api.value()).toEqual({ age: 30 });
+    expect(formGroup.$api.value()).toEqual({ age: 30 });
   });
 
   it('aggregates only committed values while a nested control update is debouncing', async () => {
@@ -2810,7 +2810,7 @@ describe('form', () => {
         country: field('CH'),
       }),
     });
-    expect(formGroup.api.value()).toEqual({
+    expect(formGroup.$api.value()).toEqual({
       age: 23,
       address: { city: 'Zurich', country: 'CH' },
     });
@@ -2824,12 +2824,12 @@ describe('form', () => {
         country: field('Russia'),
       },
     });
-    expect(formGroup.api.value()).toEqual({
+    expect(formGroup.$api.value()).toEqual({
       name: 'David',
       address: { city: 'Moscow', country: 'Russia' },
     });
     expect(formGroup.address.city()).toBe('Moscow');
-    expect(formGroup.address.api.value()).toEqual({ city: 'Moscow', country: 'Russia' });
+    expect(formGroup.address.$api.value()).toEqual({ city: 'Moscow', country: 'Russia' });
   });
 
   it('supports shorthand objects at multiple nesting levels', () => {
@@ -2846,12 +2846,12 @@ describe('form', () => {
 
   it('propagates parent state through shorthand nested groups', () => {
     const formGroup = form({ address: { city: field('Moscow') } });
-    formGroup.api.disable();
-    expect(formGroup.address.api.disabled()).toBe(true);
+    formGroup.$api.disable();
+    expect(formGroup.address.$api.disabled()).toBe(true);
     expect(formGroup.address.city.disabled()).toBe(true);
-    formGroup.api.enable();
-    formGroup.api.markAsReadonly();
-    expect(formGroup.address.api.readonly()).toBe(true);
+    formGroup.$api.enable();
+    formGroup.$api.markAsReadonly();
+    expect(formGroup.address.$api.readonly()).toBe(true);
     expect(formGroup.address.city.readonly()).toBe(true);
   });
 
@@ -2860,7 +2860,7 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
     expect(formGroup.address.city()).toBe('Zurich');
-    expect(formGroup.address.api.value()).toEqual({ city: 'Zurich' });
+    expect(formGroup.address.$api.value()).toEqual({ city: 'Zurich' });
   });
 
   it('propagates a nested field change up to the root', () => {
@@ -2868,7 +2868,7 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
     formGroup.address.city.set('Madrid');
-    expect(formGroup.api.value()).toEqual({ address: { city: 'Madrid' } });
+    expect(formGroup.$api.value()).toEqual({ address: { city: 'Madrid' } });
   });
 
   it('assigns every value through set', () => {
@@ -2876,8 +2876,8 @@ describe('form', () => {
       age: field(23),
       city: field('Zurich'),
     });
-    formGroup.api.set({ age: 30, city: 'Madrid' });
-    expect(formGroup.api.value()).toEqual({ age: 30, city: 'Madrid' });
+    formGroup.$api.set({ age: 30, city: 'Madrid' });
+    expect(formGroup.$api.value()).toEqual({ age: 30, city: 'Madrid' });
   });
 
   it('walks down into nested forms on set', () => {
@@ -2888,8 +2888,8 @@ describe('form', () => {
         country: field('CH'),
       }),
     });
-    formGroup.api.set({ age: 30, address: { city: 'Madrid', country: 'ES' } });
-    expect(formGroup.api.value()).toEqual({
+    formGroup.$api.set({ age: 30, address: { city: 'Madrid', country: 'ES' } });
+    expect(formGroup.$api.value()).toEqual({
       age: 30,
       address: { city: 'Madrid', country: 'ES' },
     });
@@ -2916,8 +2916,8 @@ describe('form', () => {
       age: field(23),
       city: field('Zurich'),
     });
-    formGroup.api.patch({ age: 30 });
-    expect(formGroup.api.value()).toEqual({ age: 30, city: 'Zurich' });
+    formGroup.$api.patch({ age: 30 });
+    expect(formGroup.$api.value()).toEqual({ age: 30, city: 'Zurich' });
   });
 
   it('patches nested forms partially', () => {
@@ -2928,8 +2928,8 @@ describe('form', () => {
         country: field('CH'),
       }),
     });
-    formGroup.api.patch({ address: { country: 'ES' } });
-    expect(formGroup.api.value()).toEqual({
+    formGroup.$api.patch({ address: { country: 'ES' } });
+    expect(formGroup.$api.value()).toEqual({
       age: 23,
       address: { city: 'Zurich', country: 'ES' },
     });
@@ -2937,15 +2937,15 @@ describe('form', () => {
 
   it('ignores unknown keys on patch', () => {
     const formGroup = form({ age: field(23) });
-    formGroup.api.patch({ age: 30, nope: 1 } as any);
-    expect(formGroup.api.value()).toEqual({ age: 30 });
+    formGroup.$api.patch({ age: 30, nope: 1 } as any);
+    expect(formGroup.$api.value()).toEqual({ age: 30 });
   });
 
   it('is valid with no validators and no invalid children', () => {
     const formGroup = form({ age: field(23) });
-    expect(formGroup.api.errors()).toEqual([]);
-    expect(formGroup.api.valid()).toBe(true);
-    expect(formGroup.api.invalid()).toBe(false);
+    expect(formGroup.$api.errors()).toEqual([]);
+    expect(formGroup.$api.valid()).toBe(true);
+    expect(formGroup.$api.invalid()).toBe(false);
   });
 
   it('reports its own validator through errors', () => {
@@ -2959,9 +2959,9 @@ describe('form', () => {
       },
       [sameCity],
     );
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
-    expect(formGroup.api.errors()[0]!.targetNode).toBe(formGroup);
-    expect(formGroup.api.valid()).toBe(false);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'sameCity' }]);
+    expect(formGroup.$api.errors()[0]!.targetNode).toBe(formGroup);
+    expect(formGroup.$api.valid()).toBe(false);
   });
 
   it('reevaluates a cross-field validator when a field changes', () => {
@@ -2976,8 +2976,8 @@ describe('form', () => {
       [sameCity],
     );
     formGroup.billingCity.set('Zurich');
-    expect(formGroup.api.errors()).toEqual([]);
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.errors()).toEqual([]);
+    expect(formGroup.$api.valid()).toBe(true);
   });
 
   it('reacts to external signals read by a synchronous form validator', () => {
@@ -2985,12 +2985,12 @@ describe('form', () => {
     const validate = vi.fn(() => blocked() ? { kind: 'blocked' } : null);
     const formGroup = form({ name: field('David') }, [validate]);
 
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.errors()).toEqual([]);
     expect(validate).toHaveBeenCalledOnce();
 
     blocked.set(true);
 
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'blocked' }]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'blocked' }]);
     expect(validate).toHaveBeenCalledTimes(2);
   });
 
@@ -3004,17 +3004,17 @@ describe('form', () => {
       [() => enabled() ? sameCity : null],
     );
 
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.errors()).toEqual([]);
     expect(sameCity).not.toHaveBeenCalled();
 
     enabled.set(true);
 
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'sameCity' }]);
     expect(sameCity).toHaveBeenCalledOnce();
 
     enabled.set(false);
 
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.errors()).toEqual([]);
     expect(sameCity).toHaveBeenCalledOnce();
   });
 
@@ -3025,38 +3025,38 @@ describe('form', () => {
     const validate = () => enabled() ? [first, second] : null;
     const formGroup = form({ name: field('David') }, validate);
 
-    expect(formGroup.api.validators()).toEqual([validate]);
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.validators()).toEqual([validate]);
+    expect(formGroup.$api.errors()).toEqual([]);
 
     enabled.set(true);
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
 
-    formGroup.api.setValidators(first);
-    expect(formGroup.api.validators()).toEqual([first]);
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'first' }]);
+    formGroup.$api.setValidators(first);
+    expect(formGroup.$api.validators()).toEqual([first]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'first' }]);
   });
 
   it('filters empty entries from the configured form-validator array', () => {
     const invalid = () => ({ kind: 'invalid' });
     const formGroup = form({ name: field('David') }, [invalid, null, undefined]);
 
-    expect(formGroup.api.validators()).toEqual([invalid]);
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'invalid' }]);
+    expect(formGroup.$api.validators()).toEqual([invalid]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'invalid' }]);
   });
 
   it('filters empty entries from a returned form-validator array', () => {
     const invalid = () => ({ kind: 'invalid' });
     const formGroup = form({ name: field('David') }, () => [invalid, null, undefined]);
 
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'invalid' }]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'invalid' }]);
   });
 
   it('is invalid when a child is invalid, even without own errors', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
-    expect(formGroup.api.errors()).toEqual([]);
-    expect(formGroup.api.valid()).toBe(false);
-    expect(formGroup.api.invalid()).toBe(true);
+    expect(formGroup.$api.errors()).toEqual([]);
+    expect(formGroup.$api.valid()).toBe(false);
+    expect(formGroup.$api.invalid()).toBe(true);
   });
 
   it('reports only its own active required error', () => {
@@ -3065,7 +3065,7 @@ describe('form', () => {
     const childRequired = form({ name: field('', [required]) });
 
     expect(ownRequired.required()).toBe(true);
-    expect(ownRequired.api.required()).toBe(true);
+    expect(ownRequired.$api.required()).toBe(true);
     expect(configuredRequired.errors()).toEqual([]);
     expect(configuredRequired.required()).toBe(true);
     expect(childRequired.name.required()).toBe(true);
@@ -3077,7 +3077,7 @@ describe('form', () => {
     const unrelatedValidator = form({ name: field('David') }, [() => ({ kind: 'unrelated' })]);
 
     expect(withoutValidators.required()).toBe(false);
-    expect(withoutValidators.api.required()).toBe(false);
+    expect(withoutValidators.$api.required()).toBe(false);
     expect(unrelatedValidator.required()).toBe(false);
   });
 
@@ -3126,7 +3126,7 @@ describe('form', () => {
 
     expect(formGroup.getError('formError')).toMatchObject({ kind: 'formError', message: 'First' });
     expect(formGroup.getError('formError')?.targetNode).toBe(formGroup);
-    expect(formGroup.api.getError('formError')).toBe(formGroup.getError('formError'));
+    expect(formGroup.$api.getError('formError')).toBe(formGroup.getError('formError'));
     expect(formGroup.getError('required')).toBeUndefined();
   });
 
@@ -3159,7 +3159,7 @@ describe('form', () => {
       'addressError',
       'cityError',
     ]);
-    expect(formGroup.api.allErrors()).toBe(formGroup.allErrors());
+    expect(formGroup.$api.allErrors()).toBe(formGroup.allErrors());
   });
 
   it('gives a child named getError precedence over the form method', () => {
@@ -3168,7 +3168,7 @@ describe('form', () => {
 
     expect(formGroup.getError).toBe(getErrorField);
     expect(formGroup.getError()).toBe('child');
-    expect(formGroup.api.getError('formError')).toMatchObject({ kind: 'formError' });
+    expect(formGroup.$api.getError('formError')).toMatchObject({ kind: 'formError' });
   });
 
   it('gives a child named allErrors precedence over the form signal', () => {
@@ -3177,7 +3177,7 @@ describe('form', () => {
 
     expect(formGroup.allErrors).toBe(allErrorsField);
     expect(formGroup.allErrors()).toBe('child');
-    expect(formGroup.api.allErrors().map(error => error.kind)).toEqual(['formError']);
+    expect(formGroup.$api.allErrors().map(error => error.kind)).toEqual(['formError']);
   });
 
   it('gives a child named required precedence over the form required signal', () => {
@@ -3186,7 +3186,7 @@ describe('form', () => {
 
     expect(formGroup.required).toBe(requiredField);
     expect(formGroup.required()).toBe('child');
-    expect(formGroup.api.required()).toBe(true);
+    expect(formGroup.$api.required()).toBe(true);
   });
 
   it('focuses safely without bindings and gives a child named focus precedence', () => {
@@ -3195,22 +3195,22 @@ describe('form', () => {
 
     expect(formGroup.focus).toBe(focusField);
     expect(formGroup.focus()).toBe('child');
-    expect(() => formGroup.api.focus()).not.toThrow();
+    expect(() => formGroup.$api.focus()).not.toThrow();
   });
 
   it('derives validationStatus from synchronous child validation', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
 
-    expect(formGroup.api.validationStatus()).toBe('invalid');
-    expect(formGroup.api.valid()).toBe(false);
-    expect(formGroup.api.invalid()).toBe(true);
+    expect(formGroup.$api.validationStatus()).toBe('invalid');
+    expect(formGroup.$api.valid()).toBe(false);
+    expect(formGroup.$api.invalid()).toBe(true);
 
     formGroup.city.set('Zurich');
 
-    expect(formGroup.api.validationStatus()).toBe('valid');
-    expect(formGroup.api.valid()).toBe(true);
-    expect(formGroup.api.invalid()).toBe(false);
+    expect(formGroup.$api.validationStatus()).toBe('valid');
+    expect(formGroup.$api.valid()).toBe(true);
+    expect(formGroup.$api.invalid()).toBe(false);
   });
 
   it('runs its own asynchronous validator and exposes its validation state', async () => {
@@ -3227,15 +3227,15 @@ describe('form', () => {
       ],
     );
 
-    expect(formGroup.api.pending()).toBe(true);
-    expect(formGroup.api.validationStatus()).toBe('unknown');
+    expect(formGroup.$api.pending()).toBe(true);
+    expect(formGroup.$api.validationStatus()).toBe('unknown');
 
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(formGroup.api.pending()).toBe(false);
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'citiesDoNotMatch' }]);
-    expect(formGroup.api.validationStatus()).toBe('invalid');
+    expect(formGroup.$api.pending()).toBe(false);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'citiesDoNotMatch' }]);
+    expect(formGroup.$api.validationStatus()).toBe('invalid');
   });
 
   it('suppresses aggregate pending state while non-interactive and restores it afterwards', () => {
@@ -3276,16 +3276,16 @@ describe('form', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'second' }]);
-    expect(formGroup.api.pending()).toBe(true);
-    expect(formGroup.api.validationStatus()).toBe('invalid');
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'second' }]);
+    expect(formGroup.$api.pending()).toBe(true);
+    expect(formGroup.$api.validationStatus()).toBe('invalid');
 
     resolveFirst({ kind: 'first' });
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
-    expect(formGroup.api.pending()).toBe(false);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'first' }, { kind: 'second' }]);
+    expect(formGroup.$api.pending()).toBe(false);
   });
 
   it('reruns its asynchronous validator when a signal read by it changes', async () => {
@@ -3299,7 +3299,7 @@ describe('form', () => {
     await Promise.resolve();
 
     expect(validate).toHaveBeenCalledOnce();
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.errors()).toEqual([]);
 
     allowedCountry.set('Germany');
     await Promise.resolve();
@@ -3308,7 +3308,7 @@ describe('form', () => {
     await Promise.resolve();
 
     expect(validate).toHaveBeenCalledTimes(2);
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
   });
 
   it('stops form-level reactive validation when its owning injector is destroyed', async () => {
@@ -3333,8 +3333,8 @@ describe('form', () => {
     await Promise.resolve();
 
     expect(validate).toHaveBeenCalledOnce();
-    expect(formGroup.api.pending()).toBe(false);
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.pending()).toBe(false);
+    expect(formGroup.$api.errors()).toEqual([]);
   });
 
   it('inherits async-validation ownership from an ancestor form injector', async () => {
@@ -3398,16 +3398,16 @@ describe('form', () => {
     );
 
     await Promise.resolve();
-    expect(formGroup.api.pending()).toBe(true);
+    expect(formGroup.$api.pending()).toBe(true);
 
     injector.destroy();
     expect(abortSignal?.aborted).toBe(true);
-    expect(formGroup.api.pending()).toBe(false);
+    expect(formGroup.$api.pending()).toBe(false);
 
     resolveValidation({ kind: 'lateError' });
     await Promise.resolve();
     await Promise.resolve();
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.errors()).toEqual([]);
   });
 
   it('restarts its debounced asynchronous validation when a descendant changes', async () => {
@@ -3426,8 +3426,8 @@ describe('form', () => {
     await vi.advanceTimersByTimeAsync(100);
 
     expect(validate).toHaveBeenCalledTimes(2);
-    expect(formGroup.api.pending()).toBe(false);
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
+    expect(formGroup.$api.pending()).toBe(false);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
     vi.useRealTimers();
   });
 
@@ -3443,7 +3443,7 @@ describe('form', () => {
 
     await Promise.resolve();
     await Promise.resolve();
-    expect(formGroup.api.errors()).toEqual([]);
+    expect(formGroup.$api.errors()).toEqual([]);
 
     allowedCountry.set('Germany');
     await Promise.resolve();
@@ -3452,7 +3452,7 @@ describe('form', () => {
     expect(validate).toHaveBeenLastCalledWith(expect.objectContaining({
       params: { allowed: 'Germany', country: 'Switzerland' },
     }));
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
   });
 
   it('reactively includes or excludes its asynchronous validator through when', async () => {
@@ -3462,26 +3462,26 @@ describe('form', () => {
       when: () => enabled(),
     })]);
 
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.valid()).toBe(true);
     expect(validate).not.toHaveBeenCalled();
 
     enabled.set(true);
     await Promise.resolve();
-    expect(formGroup.api.pending()).toBe(true);
+    expect(formGroup.$api.pending()).toBe(true);
     await Promise.resolve();
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'countryNotAllowed' }]);
 
     enabled.set(false);
     await Promise.resolve();
-    expect(formGroup.api.pending()).toBe(false);
-    expect(formGroup.api.errors()).toEqual([]);
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.pending()).toBe(false);
+    expect(formGroup.$api.errors()).toEqual([]);
+    expect(formGroup.$api.valid()).toBe(true);
   });
 
   it('exposes its aggregate interaction state to an asynchronous validator', async () => {
     const states: Array<{ dirty: boolean; touched: boolean }> = [];
     const formGroup = form({ country: field('Switzerland') }, [asyncValidator(async ({ node }) => {
-      const api = node().api;
+      const api = node().$api;
       states.push({ dirty: api.dirty(), touched: api.touched() });
       return null;
     })]);
@@ -3504,15 +3504,15 @@ describe('form', () => {
     const formGroup = form({
       address: form({ city: field('', [required]) }),
     });
-    expect(formGroup.address.api.valid()).toBe(false);
-    expect(formGroup.api.valid()).toBe(false);
+    expect(formGroup.address.$api.valid()).toBe(false);
+    expect(formGroup.$api.valid()).toBe(false);
   });
 
   it('becomes valid once the failing child is fixed', () => {
     const required = ({ value }: Context<string | null>) => (value() === '' ? { kind: 'required' } : null);
     const formGroup = form({ city: field('', [required]) });
     formGroup.city.set('Zurich');
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.valid()).toBe(true);
   });
 
   it('recomputes its errors after setValidators', () => {
@@ -3526,10 +3526,10 @@ describe('form', () => {
       },
       [sameCity],
     );
-    expect(formGroup.api.valid()).toBe(false);
-    formGroup.api.setValidators([]);
-    expect(formGroup.api.errors()).toEqual([]);
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.valid()).toBe(false);
+    formGroup.$api.setValidators([]);
+    expect(formGroup.$api.errors()).toEqual([]);
+    expect(formGroup.$api.valid()).toBe(true);
   });
 
   it('adds validators to a form declared without them', () => {
@@ -3537,12 +3537,12 @@ describe('form', () => {
       city: field('Zurich'),
       billingCity: field('Madrid'),
     });
-    expect(formGroup.api.valid()).toBe(true);
-    formGroup.api.setValidators([
+    expect(formGroup.$api.valid()).toBe(true);
+    formGroup.$api.setValidators([
       ({ value }) => (value().city === value().billingCity ? null : { kind: 'sameCity' }),
     ]);
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
-    expect(formGroup.api.valid()).toBe(false);
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'sameCity' }]);
+    expect(formGroup.$api.valid()).toBe(false);
   });
 
   it('runs a reusable aggregate validator authored with validator()', () => {
@@ -3585,17 +3585,17 @@ describe('form', () => {
         validators: [sameCity],
         hidden: true,
       });
-    expect(formGroup.api.validators()).toEqual([sameCity]);
-    expect(formGroup.api.hidden()).toBe(true);
-    expect(formGroup.api.errors()).toEqual([]);
-    formGroup.api.show();
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
+    expect(formGroup.$api.validators()).toEqual([sameCity]);
+    expect(formGroup.$api.hidden()).toBe(true);
+    expect(formGroup.$api.errors()).toEqual([]);
+    formGroup.$api.show();
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'sameCity' }]);
   });
 
   it('accepts second-argument options without validators', () => {
     const formGroup = form({ name: field('David') }, { disabled: true });
-    expect(formGroup.api.validators()).toEqual([]);
-    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.$api.validators()).toEqual([]);
+    expect(formGroup.$api.disabled()).toBe(true);
   });
 
   it('starts untouched', () => {
@@ -3603,8 +3603,8 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    expect(formGroup.api.touched()).toBe(false);
-    expect(formGroup.api.untouched()).toBe(true);
+    expect(formGroup.$api.touched()).toBe(false);
+    expect(formGroup.$api.untouched()).toBe(true);
   });
 
   it('is touched as soon as one child is touched', () => {
@@ -3613,8 +3613,8 @@ describe('form', () => {
       age: field(23),
     });
     formGroup.name.markAsTouched();
-    expect(formGroup.api.touched()).toBe(true);
-    expect(formGroup.api.untouched()).toBe(false);
+    expect(formGroup.$api.touched()).toBe(true);
+    expect(formGroup.$api.untouched()).toBe(false);
     expect(formGroup.age.touched()).toBe(false);
   });
 
@@ -3623,8 +3623,8 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
     formGroup.address.city.markAsTouched();
-    expect(formGroup.address.api.touched()).toBe(true);
-    expect(formGroup.api.touched()).toBe(true);
+    expect(formGroup.address.$api.touched()).toBe(true);
+    expect(formGroup.$api.touched()).toBe(true);
   });
 
   it('marks every descendant as touched', () => {
@@ -3635,11 +3635,11 @@ describe('form', () => {
         country: field('CH'),
       }),
     });
-    formGroup.api.markAsTouched();
+    formGroup.$api.markAsTouched();
     expect(formGroup.name.touched()).toBe(true);
     expect(formGroup.address.city.touched()).toBe(true);
     expect(formGroup.address.country.touched()).toBe(true);
-    expect(formGroup.address.api.touched()).toBe(true);
+    expect(formGroup.address.$api.touched()).toBe(true);
   });
 
   it('can mark an empty form as touched through its own interaction state', () => {
@@ -3671,11 +3671,11 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.markAsTouched();
-    formGroup.api.markAsUntouched();
+    formGroup.$api.markAsTouched();
+    formGroup.$api.markAsUntouched();
     expect(formGroup.name.touched()).toBe(true);
     expect(formGroup.address.city.touched()).toBe(true);
-    expect(formGroup.api.touched()).toBe(true);
+    expect(formGroup.$api.touched()).toBe(true);
   });
 
   it('only marks its own subtree as touched', () => {
@@ -3683,7 +3683,7 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.address.api.markAsTouched();
+    formGroup.address.$api.markAsTouched();
     expect(formGroup.address.city.touched()).toBe(true);
     expect(formGroup.name.touched()).toBe(false);
   });
@@ -3695,7 +3695,7 @@ describe('form', () => {
     });
     formGroup.name.markAsTouched();
     formGroup.name.markAsUntouched();
-    expect(formGroup.api.touched()).toBe(false);
+    expect(formGroup.$api.touched()).toBe(false);
   });
 
   it('stays untouched when values change through set and patch', () => {
@@ -3703,9 +3703,9 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
-    formGroup.api.patch({ name: 'Leo' });
-    expect(formGroup.api.touched()).toBe(false);
+    formGroup.$api.set({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.$api.patch({ name: 'Leo' });
+    expect(formGroup.$api.touched()).toBe(false);
   });
 
   it('starts pristine', () => {
@@ -3713,8 +3713,8 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    expect(formGroup.api.dirty()).toBe(false);
-    expect(formGroup.api.pristine()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(false);
+    expect(formGroup.$api.pristine()).toBe(true);
   });
 
   it('is dirty as soon as one child is dirty', () => {
@@ -3723,8 +3723,8 @@ describe('form', () => {
       age: field(23),
     });
     formGroup.name.value.control.set('Ana');
-    expect(formGroup.api.dirty()).toBe(true);
-    expect(formGroup.api.pristine()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(true);
+    expect(formGroup.$api.pristine()).toBe(false);
     expect(formGroup.age.dirty()).toBe(false);
   });
 
@@ -3733,8 +3733,8 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
     formGroup.address.city.value.control.set('Madrid');
-    expect(formGroup.address.api.dirty()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.address.$api.dirty()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
   });
 
   it('stays pristine through programmatic set', () => {
@@ -3742,10 +3742,10 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    formGroup.api.set({ name: 'Ana', age: 30 });
+    formGroup.$api.set({ name: 'Ana', age: 30 });
     expect(formGroup.name.dirty()).toBe(false);
     expect(formGroup.age.dirty()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
   });
 
   it('preserves existing descendant dirty state through programmatic set', () => {
@@ -3767,10 +3767,10 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    formGroup.api.patch({ name: 'Ana' });
+    formGroup.$api.patch({ name: 'Ana' });
     expect(formGroup.name.dirty()).toBe(false);
     expect(formGroup.age.dirty()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
   });
 
   it('keeps every branch pristine through a nested programmatic patch', () => {
@@ -3781,7 +3781,7 @@ describe('form', () => {
         country: field('CH'),
       }),
     });
-    formGroup.api.patch({ address: { country: 'ES' } });
+    formGroup.$api.patch({ address: { country: 'ES' } });
     expect(formGroup.address.country.dirty()).toBe(false);
     expect(formGroup.address.city.dirty()).toBe(false);
     expect(formGroup.name.dirty()).toBe(false);
@@ -3795,12 +3795,12 @@ describe('form', () => {
         country: field('CH'),
       }),
     });
-    formGroup.api.markAsDirty();
+    formGroup.$api.markAsDirty();
     expect(formGroup.dirty()).toBe(true);
     expect(formGroup.name.dirty()).toBe(false);
     expect(formGroup.address.city.dirty()).toBe(false);
     expect(formGroup.address.country.dirty()).toBe(false);
-    expect(formGroup.address.api.dirty()).toBe(false);
+    expect(formGroup.address.$api.dirty()).toBe(false);
 
     const emptyForm = form({});
     emptyForm.markAsDirty();
@@ -3812,12 +3812,12 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.markAsDirty();
+    formGroup.$api.markAsDirty();
     formGroup.name.markAsDirty();
-    formGroup.api.markAsPristine();
+    formGroup.$api.markAsPristine();
     expect(formGroup.name.dirty()).toBe(true);
     expect(formGroup.address.city.dirty()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
   });
 
   it('keeps the values after markAsPristine', () => {
@@ -3825,10 +3825,10 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
-    formGroup.api.markAsDirty();
-    formGroup.api.markAsPristine();
-    expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.$api.set({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.$api.markAsDirty();
+    formGroup.$api.markAsPristine();
+    expect(formGroup.$api.value()).toEqual({ name: 'Ana', address: { city: 'Madrid' } });
   });
 
   it('marks a nested form without dirtying its descendants or siblings', () => {
@@ -3836,7 +3836,7 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.address.api.markAsDirty();
+    formGroup.address.$api.markAsDirty();
     expect(formGroup.address.dirty()).toBe(true);
     expect(formGroup.address.city.dirty()).toBe(false);
     expect(formGroup.name.dirty()).toBe(false);
@@ -3850,7 +3850,7 @@ describe('form', () => {
     });
     formGroup.name.value.control.set('Ana');
     formGroup.name.markAsPristine();
-    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
   });
 
   it('keeps a field named name accessible', () => {
@@ -3862,7 +3862,7 @@ describe('form', () => {
   it('keeps a field named length accessible', () => {
     const formGroup = form({ length: field(10) });
     expect(formGroup.length()).toBe(10);
-    expect(formGroup.api.value()).toEqual({ length: 10 });
+    expect(formGroup.$api.value()).toEqual({ length: 10 });
   });
 
   it('reaches nested state through the child api', () => {
@@ -3870,10 +3870,10 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.name.api.set('Ana');
-    expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Zurich' } });
-    expect(formGroup.name.api.dirty()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    formGroup.name.$api.set('Ana');
+    expect(formGroup.$api.value()).toEqual({ name: 'Ana', address: { city: 'Zurich' } });
+    expect(formGroup.name.$api.dirty()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
   });
 
   it('keeps every value on reset with no argument', () => {
@@ -3881,9 +3881,9 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich'), country: field('CH') }),
     });
-    formGroup.api.set({ name: 'Ana', address: { city: 'Madrid', country: 'ES' } });
-    formGroup.api.reset();
-    expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Madrid', country: 'ES' } });
+    formGroup.$api.set({ name: 'Ana', address: { city: 'Madrid', country: 'ES' } });
+    formGroup.$api.reset();
+    expect(formGroup.$api.value()).toEqual({ name: 'Ana', address: { city: 'Madrid', country: 'ES' } });
   });
 
   it('clears dirty and touched on every descendant', () => {
@@ -3891,14 +3891,14 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
-    formGroup.api.markAsTouched();
-    formGroup.api.reset();
+    formGroup.$api.set({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.$api.markAsTouched();
+    formGroup.$api.reset();
     expect(formGroup.name.dirty()).toBe(false);
     expect(formGroup.address.city.dirty()).toBe(false);
     expect(formGroup.address.city.touched()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
-    expect(formGroup.api.touched()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
+    expect(formGroup.$api.touched()).toBe(false);
   });
 
   it('assigns every value passed to reset', () => {
@@ -3906,8 +3906,8 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich'), country: field('CH') }),
     });
-    formGroup.api.reset({ name: 'Leo', address: { city: 'Bern', country: 'CH' } });
-    expect(formGroup.api.value()).toEqual({ name: 'Leo', address: { city: 'Bern', country: 'CH' } });
+    formGroup.$api.reset({ name: 'Leo', address: { city: 'Bern', country: 'CH' } });
+    expect(formGroup.$api.value()).toEqual({ name: 'Leo', address: { city: 'Bern', country: 'CH' } });
   });
 
   it('stays pristine after reset with a value', () => {
@@ -3915,10 +3915,10 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.markAsTouched();
-    formGroup.api.reset({ name: 'Leo', address: { city: 'Bern' } });
-    expect(formGroup.api.dirty()).toBe(false);
-    expect(formGroup.api.touched()).toBe(false);
+    formGroup.$api.markAsTouched();
+    formGroup.$api.reset({ name: 'Leo', address: { city: 'Bern' } });
+    expect(formGroup.$api.dirty()).toBe(false);
+    expect(formGroup.$api.touched()).toBe(false);
     expect(formGroup.name.dirty()).toBe(false);
   });
 
@@ -3927,14 +3927,14 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.set({ name: 'Ana', address: { city: 'Madrid' } });
+    formGroup.$api.set({ name: 'Ana', address: { city: 'Madrid' } });
     formGroup.name.value.control.set('Ana');
     formGroup.address.city.value.control.set('Madrid');
-    formGroup.address.api.reset({ city: 'Bern' });
-    expect(formGroup.api.value()).toEqual({ name: 'Ana', address: { city: 'Bern' } });
+    formGroup.address.$api.reset({ city: 'Bern' });
+    expect(formGroup.$api.value()).toEqual({ name: 'Ana', address: { city: 'Bern' } });
     expect(formGroup.address.city.dirty()).toBe(false);
     expect(formGroup.name.dirty()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
   });
 
   it('revalidates after reset with a value', () => {
@@ -3948,9 +3948,9 @@ describe('form', () => {
       },
       [sameCity],
     );
-    expect(formGroup.api.valid()).toBe(true);
-    formGroup.api.reset({ city: 'Zurich', billingCity: 'Madrid' });
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'sameCity' }]);
+    expect(formGroup.$api.valid()).toBe(true);
+    formGroup.$api.reset({ city: 'Zurich', billingCity: 'Madrid' });
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'sameCity' }]);
   });
 
   it('starts enabled', () => {
@@ -3958,8 +3958,8 @@ describe('form', () => {
       name: field('David'),
       age: field(23),
     });
-    expect(formGroup.api.disabled()).toBe(false);
-    expect(formGroup.api.enabled()).toBe(true);
+    expect(formGroup.$api.disabled()).toBe(false);
+    expect(formGroup.$api.enabled()).toBe(true);
   });
 
   it('can start disabled through options', () => {
@@ -3972,9 +3972,9 @@ describe('form', () => {
       { disabled: true },
     );
 
-    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.$api.disabled()).toBe(true);
     expect(formGroup.name.disabled()).toBe(true);
-    expect(formGroup.address.api.disabled()).toBe(true);
+    expect(formGroup.address.$api.disabled()).toBe(true);
     expect(formGroup.address.city.disabled()).toBe(true);
   });
 
@@ -4013,12 +4013,12 @@ describe('form', () => {
     const validator = vi.fn(() => ({ kind: 'unavailable' }));
     const formGroup = form({ name: field('David') }, [validator], { disabled: true });
 
-    expect(formGroup.api.errors()).toEqual([]);
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.errors()).toEqual([]);
+    expect(formGroup.$api.valid()).toBe(true);
     expect(validator).not.toHaveBeenCalled();
 
-    formGroup.api.enable();
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'unavailable' }]);
+    formGroup.$api.enable();
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'unavailable' }]);
     expect(validator).toHaveBeenCalledOnce();
   });
 
@@ -4028,12 +4028,12 @@ describe('form', () => {
       name: field('', [required]),
       age: field(23),
     });
-    expect(formGroup.api.valid()).toBe(false);
+    expect(formGroup.$api.valid()).toBe(false);
     formGroup.name.disable();
     expect(formGroup.name.valid()).toBe(true);
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.valid()).toBe(true);
     formGroup.name.enable();
-    expect(formGroup.api.valid()).toBe(false);
+    expect(formGroup.$api.valid()).toBe(false);
   });
 
   it('ignores a disabled child when computing touched and dirty', () => {
@@ -4046,13 +4046,13 @@ describe('form', () => {
     formGroup.name.markAsDirty();
     expect(formGroup.name.touched()).toBe(false);
     expect(formGroup.name.dirty()).toBe(false);
-    expect(formGroup.api.touched()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.$api.touched()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
     formGroup.name.enable();
     expect(formGroup.name.dirty()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
     formGroup.age.markAsTouched();
-    expect(formGroup.api.touched()).toBe(true);
+    expect(formGroup.$api.touched()).toBe(true);
   });
 
   it('disables every descendant', () => {
@@ -4063,12 +4063,12 @@ describe('form', () => {
         country: field('CH'),
       }),
     });
-    formGroup.api.disable();
+    formGroup.$api.disable();
     expect(formGroup.name.disabled()).toBe(true);
     expect(formGroup.address.city.disabled()).toBe(true);
     expect(formGroup.address.country.disabled()).toBe(true);
-    expect(formGroup.address.api.disabled()).toBe(true);
-    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.address.$api.disabled()).toBe(true);
+    expect(formGroup.$api.disabled()).toBe(true);
   });
 
   it('enables every descendant', () => {
@@ -4076,11 +4076,11 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.disable();
-    formGroup.api.enable();
+    formGroup.$api.disable();
+    formGroup.$api.enable();
     expect(formGroup.name.disabled()).toBe(false);
     expect(formGroup.address.city.disabled()).toBe(false);
-    expect(formGroup.api.disabled()).toBe(false);
+    expect(formGroup.$api.disabled()).toBe(false);
   });
 
   it('preserves a child own disabled state after its parent is re-enabled', () => {
@@ -4089,12 +4089,12 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
 
-    formGroup.api.disable();
-    formGroup.api.enable();
+    formGroup.$api.disable();
+    formGroup.$api.enable();
 
-    expect(formGroup.api.disabled()).toBe(false);
+    expect(formGroup.$api.disabled()).toBe(false);
     expect(formGroup.name.disabled()).toBe(true);
-    expect(formGroup.address.api.disabled()).toBe(false);
+    expect(formGroup.address.$api.disabled()).toBe(false);
     expect(formGroup.address.city.disabled()).toBe(false);
   });
 
@@ -4106,20 +4106,20 @@ describe('form', () => {
 
     formGroup.name.markAsTouched();
     formGroup.address.city.markAsDirty();
-    expect(formGroup.api.touched()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.$api.touched()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
 
-    formGroup.api.disable();
+    formGroup.$api.disable();
     expect(formGroup.name.touched()).toBe(false);
     expect(formGroup.address.city.dirty()).toBe(false);
-    expect(formGroup.api.touched()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.$api.touched()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
 
-    formGroup.api.enable();
+    formGroup.$api.enable();
     expect(formGroup.name.touched()).toBe(true);
     expect(formGroup.address.city.dirty()).toBe(true);
-    expect(formGroup.api.touched()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.$api.touched()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
   });
 
   it('keeps every value after disabling the form', () => {
@@ -4127,8 +4127,8 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.api.disable();
-    expect(formGroup.api.value()).toEqual({ name: 'David', address: { city: 'Zurich' } });
+    formGroup.$api.disable();
+    expect(formGroup.$api.value()).toEqual({ name: 'David', address: { city: 'Zurich' } });
   });
 
   it('does not become disabled when every child is disabled', () => {
@@ -4137,9 +4137,9 @@ describe('form', () => {
       age: field(23),
     });
     formGroup.name.disable();
-    expect(formGroup.api.disabled()).toBe(false);
+    expect(formGroup.$api.disabled()).toBe(false);
     formGroup.age.disable();
-    expect(formGroup.api.disabled()).toBe(false);
+    expect(formGroup.$api.disabled()).toBe(false);
   });
 
   it('only disables its own subtree', () => {
@@ -4147,22 +4147,22 @@ describe('form', () => {
       name: field('David'),
       address: form({ city: field('Zurich') }),
     });
-    formGroup.address.api.disable();
+    formGroup.address.$api.disable();
     expect(formGroup.address.city.disabled()).toBe(true);
     expect(formGroup.name.disabled()).toBe(false);
-    expect(formGroup.api.disabled()).toBe(false);
+    expect(formGroup.$api.disabled()).toBe(false);
   });
 
   it('reports an empty form as enabled', () => {
     const formGroup = form({});
-    expect(formGroup.api.disabled()).toBe(false);
-    expect(formGroup.api.enabled()).toBe(true);
+    expect(formGroup.$api.disabled()).toBe(false);
+    expect(formGroup.$api.enabled()).toBe(true);
   });
 
   it('starts writable', () => {
     const formGroup = form({ name: field('David') });
-    expect(formGroup.api.readonly()).toBe(false);
-    expect(formGroup.api.writable()).toBe(true);
+    expect(formGroup.$api.readonly()).toBe(false);
+    expect(formGroup.$api.writable()).toBe(true);
   });
 
   it('propagates initial readonly state to every descendant', () => {
@@ -4175,9 +4175,9 @@ describe('form', () => {
       { readonly: true },
     );
 
-    expect(formGroup.api.readonly()).toBe(true);
+    expect(formGroup.$api.readonly()).toBe(true);
     expect(formGroup.name.readonly()).toBe(true);
-    expect(formGroup.address.api.readonly()).toBe(true);
+    expect(formGroup.address.$api.readonly()).toBe(true);
     expect(formGroup.address.city.readonly()).toBe(true);
   });
 
@@ -4185,12 +4185,12 @@ describe('form', () => {
     const validator = vi.fn(() => ({ kind: 'unavailable' }));
     const formGroup = form({ name: field('David') }, [validator], { readonly: true });
 
-    expect(formGroup.api.errors()).toEqual([]);
-    expect(formGroup.api.valid()).toBe(true);
+    expect(formGroup.$api.errors()).toEqual([]);
+    expect(formGroup.$api.valid()).toBe(true);
     expect(validator).not.toHaveBeenCalled();
 
-    formGroup.api.markAsWritable();
-    expect(formGroup.api.errors()).toMatchObject([{ kind: 'unavailable' }]);
+    formGroup.$api.markAsWritable();
+    expect(formGroup.$api.errors()).toMatchObject([{ kind: 'unavailable' }]);
     expect(validator).toHaveBeenCalledOnce();
   });
 
@@ -4198,7 +4198,7 @@ describe('form', () => {
     const formGroup = form({ name: field('David'), age: field(23) });
     formGroup.name.markAsReadonly();
     formGroup.age.markAsReadonly();
-    expect(formGroup.api.readonly()).toBe(false);
+    expect(formGroup.$api.readonly()).toBe(false);
   });
 
   it('preserves child-owned readonly state after its parent becomes writable', () => {
@@ -4207,12 +4207,12 @@ describe('form', () => {
       address: form({ city: field('Zurich') }),
     });
 
-    formGroup.api.markAsReadonly();
-    formGroup.api.markAsWritable();
+    formGroup.$api.markAsReadonly();
+    formGroup.$api.markAsWritable();
 
-    expect(formGroup.api.readonly()).toBe(false);
+    expect(formGroup.$api.readonly()).toBe(false);
     expect(formGroup.name.readonly()).toBe(true);
-    expect(formGroup.address.api.readonly()).toBe(false);
+    expect(formGroup.address.$api.readonly()).toBe(false);
     expect(formGroup.address.city.readonly()).toBe(false);
   });
 
@@ -4224,28 +4224,28 @@ describe('form', () => {
 
     formGroup.name.markAsTouched();
     formGroup.address.city.markAsDirty();
-    formGroup.api.markAsReadonly();
-    expect(formGroup.api.touched()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    formGroup.$api.markAsReadonly();
+    expect(formGroup.$api.touched()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
     expect(formGroup.name.touched()).toBe(false);
     expect(formGroup.address.city.dirty()).toBe(false);
 
-    formGroup.api.markAsWritable();
-    expect(formGroup.api.touched()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    formGroup.$api.markAsWritable();
+    expect(formGroup.$api.touched()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
     expect(formGroup.name.touched()).toBe(true);
     expect(formGroup.address.city.dirty()).toBe(true);
   });
 
   it('starts visible and can be hidden and shown', () => {
     const formGroup = form({ name: field('David') });
-    expect(formGroup.api.hidden()).toBe(false);
-    expect(formGroup.api.visible()).toBe(true);
-    formGroup.api.hide();
-    expect(formGroup.api.hidden()).toBe(true);
+    expect(formGroup.$api.hidden()).toBe(false);
+    expect(formGroup.$api.visible()).toBe(true);
+    formGroup.$api.hide();
+    expect(formGroup.$api.hidden()).toBe(true);
     expect(formGroup.name.hidden()).toBe(true);
-    formGroup.api.show();
-    expect(formGroup.api.hidden()).toBe(false);
+    formGroup.$api.show();
+    expect(formGroup.$api.hidden()).toBe(false);
     expect(formGroup.name.hidden()).toBe(false);
   });
 
@@ -4255,9 +4255,9 @@ describe('form', () => {
       undefined,
       { hidden: true },
     );
-    expect(formGroup.api.hidden()).toBe(true);
+    expect(formGroup.$api.hidden()).toBe(true);
     expect(formGroup.name.hidden()).toBe(true);
-    expect(formGroup.address.api.hidden()).toBe(true);
+    expect(formGroup.address.$api.hidden()).toBe(true);
     expect(formGroup.address.city.hidden()).toBe(true);
   });
 
@@ -4266,11 +4266,11 @@ describe('form', () => {
       name: field('David', undefined, { hidden: true }),
       address: { city: field('Moscow') },
     });
-    formGroup.api.hide();
-    formGroup.api.show();
-    expect(formGroup.api.hidden()).toBe(false);
+    formGroup.$api.hide();
+    formGroup.$api.show();
+    expect(formGroup.$api.hidden()).toBe(false);
     expect(formGroup.name.hidden()).toBe(true);
-    expect(formGroup.address.api.hidden()).toBe(false);
+    expect(formGroup.address.$api.hidden()).toBe(false);
     expect(formGroup.address.city.hidden()).toBe(false);
   });
 
@@ -4279,13 +4279,13 @@ describe('form', () => {
     const formGroup = form({ name: field('', [required]), age: field(23) });
     formGroup.name.markAsTouched();
     formGroup.name.markAsDirty();
-    expect(formGroup.api.valid()).toBe(false);
-    expect(formGroup.api.touched()).toBe(true);
-    expect(formGroup.api.dirty()).toBe(true);
+    expect(formGroup.$api.valid()).toBe(false);
+    expect(formGroup.$api.touched()).toBe(true);
+    expect(formGroup.$api.dirty()).toBe(true);
     formGroup.name.hide();
-    expect(formGroup.api.valid()).toBe(true);
-    expect(formGroup.api.touched()).toBe(false);
-    expect(formGroup.api.dirty()).toBe(false);
+    expect(formGroup.$api.valid()).toBe(true);
+    expect(formGroup.$api.touched()).toBe(false);
+    expect(formGroup.$api.dirty()).toBe(false);
   });
 
   it('reacts to form state source functions', () => {
@@ -4301,7 +4301,7 @@ describe('form', () => {
         hidden,
       });
     locked.set(true);
-    expect(formGroup.api.disabled()).toBe(true);
+    expect(formGroup.$api.disabled()).toBe(true);
     expect(formGroup.address.city.disabled()).toBe(true);
     locked.set(false);
     readonly.set(true);
@@ -5294,7 +5294,6 @@ it('keeps the callable API independent of colliding static and dynamic child nam
   api.remove('reset');
   expect(snapshot()).toEqual(original);
   expect(profile.$api).toBe(api);
-  expect(profile.details.api).toBe(profile.details.$api);
   expect(profile.details.$api()).toEqual({ value: 'group child' });
 });
 

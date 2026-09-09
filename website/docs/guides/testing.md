@@ -20,7 +20,7 @@ The examples use Vitest, but the same structure works with Jest, Jasmine, or ano
 | `[formNode]`, native events, custom controls, and CVAs | Angular `TestBed` with a DOM environment |
 | Native form submit and reset | Angular `TestBed` with a DOM environment |
 
-Assert behavior through public node calls, signals, and methods. Avoid testing `.api` and `$api`
+Assert behavior through public node calls, signals, and methods. Avoid testing `.$api` and `$api`
 when the same operation is available directly, and do not depend on private members or internal
 package paths.
 

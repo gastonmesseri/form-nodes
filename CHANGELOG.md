@@ -10,6 +10,12 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-09-10
+
+### Changed
+
+- Use `.$api` as the single callable, collision-safe node API. The `.api` alias is removed; replace API accesses with `.$api`, while keeping ordinary child fields named `api`. This change is included in minor version 3.4.0 at the maintainer's request while the library has no other consumers.
+
 ### Added
 
 - Read own and descendant validation errors with `errors({ descendants: true })` on any node. `allErrors()` remains its shortcut, while `errors()` keeps its existing own-error signal behavior and typing.
@@ -280,7 +286,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.4.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -298,3 +304,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.2.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.1.0...v3.2.0
 
 [3.3.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.2.0...v3.3.0
+
+[3.4.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.3.0...v3.4.0
