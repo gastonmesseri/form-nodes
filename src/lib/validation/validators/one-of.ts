@@ -1,8 +1,8 @@
 import { isNil } from '../../utils/is-nil';
 import { defaultOneOfMessage } from '../utils/default-validator-messages';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
+import type { DeferredCondition, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 /**
  * Requires a non-empty value to equal one of the allowed values.
@@ -44,8 +44,8 @@ export function oneOf<TValue = never>(
     /** Custom error or errors returned instead of the built-in error. */
     error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
-    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<TValue | null | undefined>) => boolean)>;
   },
 ): Validator<TValue | null | undefined>;
 /** Infers the constraint value type when no consuming node provides a context. */
@@ -60,8 +60,8 @@ export function oneOf<TValue>(
     /** Custom error or errors returned instead of the built-in error. */
     error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
-    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<TValue | null | undefined>) => boolean)>;
   },
 ): Validator<TValue | null | undefined>;
 export function oneOf<TValue>(
@@ -75,8 +75,8 @@ export function oneOf<TValue>(
     /** Custom error or errors returned instead of the built-in error. */
     error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
-    when?: (context: ValidatorContext<TValue | null | undefined>) => boolean;
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<TValue | null | undefined>) => boolean)>;
   },
 ): Validator<TValue | null | undefined> {
   const message = resolveValidatorMessageOption(options);

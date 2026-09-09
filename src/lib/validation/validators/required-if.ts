@@ -10,7 +10,7 @@ import type { ValidationResult, Validator, ValidatorContext } from '../validatio
  * The condition should return a boolean. Its return type is intentionally unchecked so class
  * initializers can reference their own form, including through a later declared computed signal,
  * without explicit return annotations. The form and computed retain their inferred types.
- * This relaxation applies only to requiredIf's condition, not required({ when }) or other options.
+ * Parameterless `when` callbacks on other validators support the same inference convention.
  *
  * @example Require a company name only for business accounts.
  * ```ts

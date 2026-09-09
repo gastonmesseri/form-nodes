@@ -5,7 +5,7 @@ import { isFieldContext } from '../utils/field-context-marker';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { defaultRequiredMessage } from '../utils/default-validator-messages';
 import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
-import type { FieldContext, ValidationError, ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import type { DeferredCondition, FieldContext, ValidationError, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 export const REQUIRED_METADATA = createMetadataKey<boolean, boolean>({
   getInitial: () => false,
@@ -50,8 +50,8 @@ export function required(options: string | ({
   /** Custom error or errors returned instead of the built-in error. */
   error?: ValidationResult | ((context: ValidatorContext<unknown>) => ValidationResult);
 }) & {
-  /** Reactive predicate deciding whether this validator and its required metadata are active. */
-  when?: (context: ValidatorContext<unknown>) => boolean;
+  /** Reactive predicate deciding whether this validator and its required metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+  when?: NoInfer<DeferredCondition | ((context: ValidatorContext<unknown>) => boolean)>;
 }): Validator<unknown>;
 /**
  * Validates required presence when passed directly in a validators array.
@@ -74,7 +74,8 @@ export function required(context: FieldContext<unknown>): ValidationResult;
 export function required(
   contextOrOptions: FieldContext<unknown> | string | {
     message?: string | (() => string | undefined);
-    when?: (context: ValidatorContext<unknown>) => boolean;
+    /** Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<unknown>) => boolean)>;
   },
 ): Validator<unknown> | ValidationResult {
   if (isFieldContext(contextOrOptions)) {

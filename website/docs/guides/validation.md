@@ -5,6 +5,7 @@ title: Validation
 # Validation {#validation}
 
 import CodeBlock from '@theme/CodeBlock';
+import whenSelfReferenceSource from '!!raw-loader!../../examples/when-self-reference.example.ts';
 import stringValidationSource from '!!raw-loader!../../examples/string-validation.example.ts';
 import invalidValidationResultsSource from '!!raw-loader!../../examples/invalid-validation-results.example.ts';
 import validatorResolutionSource from '!!raw-loader!../../examples/validator-resolution.example.ts';
@@ -276,3 +277,22 @@ the normal suppression rules. Ordinary queries do not execute validators. Direct
 async validators remain references in the resolved list; inspection does not start or restart their
 async work. Returning an async validator from a synchronous composition remains unsupported.
 Neither mode searches descendants or validators belonging to external controls.
+
+## Self-referencing `when` conditions
+
+Built-in validators and `asyncValidator` accept parameterless `when` callbacks referencing the
+form being declared, including through computed signals declared later in the class. The form and
+computed retain their inferred types without return annotations.
+
+<CodeBlock language="ts" title="profile-model.ts">{whenSelfReferenceSource}</CodeBlock>
+
+Parameterless conditions intentionally have unchecked return types; always return a boolean.
+Callbacks receiving a context, such as `when: ({ value }) => value() !== null`, keep a typed context
+and a checked boolean result. This change applies to `when`; reactive bounds, dates, lists, and
+message callbacks retain their existing signatures.
+
+Async validators with `when` defer their initial automatic condition evaluation until the class
+initializer finishes. Reading validation state or explicitly calling `validate()` can start that
+work sooner; do so only after initialization. Disabling a condition cancels its pending work and
+releases dependency tracking. Reenabling it starts a fresh execution even when the field value
+has not changed. These rules apply inside and outside Angular injection contexts.

@@ -19,7 +19,6 @@ import { REQUIRED_METADATA } from '../validation/validators/required';
 import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { registerNodeInputConfig } from '../configuration/node-input-config';
-import { isAsyncValidator } from '../validation/utils/async-validator-marker';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { normalizeValidatorSource } from '../validation/utils/validator-source';
@@ -30,6 +29,7 @@ import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/nod
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
+import { isAsyncValidator, needsDeferredValidationStart } from '../validation/utils/async-validator-marker';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { InternalNode, MarkAsTouchedOptions, AnyNode, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
@@ -456,9 +456,9 @@ export class ArrayNode<TItem extends AnyNode> {
       cleanup: this.asyncValidation.cancel,
       destroy: this.asyncValidation.destroy,
     };
-    // Mixed sources must not run synchronous guards before a consumer assigns its class form.
-    const hasSynchronousValidators = this.validators().some(validator => !isAsyncValidator(validator));
-    this.asyncValidationWatchRef = createReactiveWatch(this.asyncValidationWatchTarget, null, hasSynchronousValidators);
+    // Conditions and synchronous guards can reference a later declared class form or computed.
+    const deferInitialRun = needsDeferredValidationStart(this.validators());
+    this.asyncValidationWatchRef = createReactiveWatch(this.asyncValidationWatchTarget, null, deferInitialRun);
     watchNodeInjector(this.node, injector => this.asyncValidationWatchRef?.setInjector(injector));
   }
 

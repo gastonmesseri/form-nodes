@@ -117,7 +117,7 @@ The form's fields and the computed signal retain their inferred types.
 
 The condition parameter is typed `() => any` to break TypeScript's circular contextual-return
 inference, just like parameterless validator callbacks. This means TypeScript does not reject
-non-boolean returns: always return a boolean. The relaxation affects only this condition;
-`required({ when })` and other validator options retain their existing contracts. It does not
+non-boolean returns: always return a boolean. Parameterless `when` callbacks on other validators support the same convention; callbacks
+receiving a context retain their checked boolean result. It does not
 cause eager condition evaluation or change reactive tracking. A nullable numeric field still
 requires null handling in comparisons, as shown by `?? 0` above.

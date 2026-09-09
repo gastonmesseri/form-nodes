@@ -2,8 +2,8 @@ import { markValidatorMetadata } from '../validator-metadata';
 import { MAX_METADATA, MIN_METADATA } from '../constraint-metadata';
 import { defaultBetweenMessage } from '../utils/default-validator-messages';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
+import type { DeferredCondition, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 type ResolvedBounds = {
   minimum: number;
@@ -51,8 +51,8 @@ export const between = (
     /** Custom error or errors returned instead of the built-in error. */
     error?: ValidationResult | ((context: ValidatorContext<number | null>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
-    when?: (context: ValidatorContext<number | null>) => boolean;
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<number | null>) => boolean)>;
   },
 ): Validator<number | null> => {
   const message = resolveValidatorMessageOption(options);

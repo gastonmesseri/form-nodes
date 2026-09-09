@@ -414,6 +414,9 @@ export type Validators<TValue, TField extends AnyNode = ValidatorNode> = readonl
 // A shared first branch keeps contextual return typing stable across repeated instantiations.
 export type DeferredValidator = () => any;
 
+/** Shared unchecked branch for parameterless conditions in contextual and overloaded signatures. */
+export type DeferredCondition = () => any;
+
 /**
  * One validator or a readonly list in which `null` and `undefined` represent no validator.
  *

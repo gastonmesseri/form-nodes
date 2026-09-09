@@ -113,7 +113,11 @@ export const createAsyncValidation = <TValue, TNode extends AnyNode & { $api: As
     if (validators.some(validator => getAsyncValidatorOptions(validator).params === undefined)) context.value();
     const activeValidators = validators.flatMap((validator) => {
       const options = getAsyncValidatorOptions(validator);
-      if (options.when?.(baseContext) === false) return [];
+      if (options.when?.(baseContext) === false) {
+        trackedValidators.get(validator)?.runner.destroy();
+        trackedValidators.delete(validator);
+        return [];
+      }
       const params = options.params === undefined
         ? undefined
         : runTrackedParams(validator, () => options.params!(baseContext));

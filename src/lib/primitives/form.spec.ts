@@ -5343,3 +5343,43 @@ it('infers and tracks requiredIf through a later declared computed self-referenc
   expect(model.profile.nested.valid()).toBe(true);
   expect(model.profile.valid()).toBe(true);
 });
+
+it.each([false, true])('tracks and cancels self-referencing when conditions with injection context: %s', async (insideInjectionContext) => {
+  const requests: { signal: AbortSignal; resolve: (result: null) => void }[] = [];
+  const validate = vi.fn(({ abortSignal }: { abortSignal: AbortSignal }) => {
+    return new Promise<null>((resolve) => { requests.push({ signal: abortSignal, resolve }); });
+  });
+  class Model {
+    profile = form({
+      enabled: field.strict(false),
+      nested: form({
+        name: field('', [required({ when: () => this.active() })]),
+        code: field('', [asyncValidator(validate, { when: () => this.active() })]),
+      }),
+    });
+
+    active = computed(() => this.profile.enabled());
+  }
+  const injector = Injector.create({ providers: [] });
+  const model = insideInjectionContext ? runInInjectionContext(injector, () => new Model()) : new Model();
+  expect(model.profile.valid()).toBe(true);
+  expect(validate).not.toHaveBeenCalled();
+  model.profile.enabled.set(true);
+  expect(model.profile.nested.name.required()).toBe(true);
+  expect(model.profile.invalid()).toBe(true);
+  await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
+  expect(model.profile.nested.code.pending()).toBe(true);
+  model.profile.enabled.set(false);
+  await vi.waitFor(() => expect(requests[0]!.signal.aborted).toBe(true));
+  expect(model.profile.nested.name.required()).toBe(false);
+  expect(model.profile.pending()).toBe(false);
+  expect(model.profile.valid()).toBe(true);
+  requests[0]!.resolve(null);
+  model.profile.enabled.set(true);
+  model.profile.nested.name.set('Ada');
+  await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+  requests[1]!.resolve(null);
+  await vi.waitFor(() => expect(model.profile.valid()).toBe(true));
+  expect(model.profile.nested.valid()).toBe(true);
+  injector.destroy();
+});

@@ -2,9 +2,9 @@ import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { MAX_DATE_METADATA, MIN_DATE_METADATA } from '../constraint-metadata';
 import { defaultDateBetweenMessage } from '../utils/default-validator-messages';
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
 import { normalizeDateConstraintSource, type DateConstraintSource } from '../utils/date-constraint';
+import type { DeferredCondition, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 type ResolvedDateBounds = {
   minimum: Date;
@@ -62,8 +62,8 @@ export const dateBetween = (
     /** Custom error or errors returned instead of the built-in error. */
     error?: ValidationResult | ((context: ValidatorContext<Date | null>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
-    when?: (context: ValidatorContext<Date | null>) => boolean;
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<Date | null>) => boolean)>;
     /** Interprets calendar-date strings at UTC or local midnight. Defaults to `'utc'`. */
     parseAs?: 'utc' | 'local';
   },

@@ -3654,7 +3654,8 @@ matching deferred validator callbacks. This breaks circular inference through a 
 its later declared computed signals without losing field types or computed result types. Consumers
 should return booleans; incorrect returns are not statically rejected. No runtime logic changes:
 condition evaluation stays lazy, tracks signal reads, and controls required metadata and errors
-with normal parent and nested-form aggregation. required({ when }) is unchanged.
+with normal parent and nested-form aggregation. Parameterless when callbacks now share this convention,
+while context-taking conditions keep checked boolean results.
 
 Reference inspected: Angular 22.1.x commit da8dac62a79025fa42ae3ee5c64e3e3f1979ce54,
 packages/forms/signals/src/api/rules/validation/required.ts and
@@ -3662,3 +3663,21 @@ packages/forms/signals/test/node/api/validators/required.spec.ts (supports custo
 Angular keeps a boolean LogicFn with NoInfer for its schema-based API. Our unchecked callback
 signature is an intentional public inference tradeoff for self-referencing node declarations;
 reactive conditional-validation behavior is unchanged.
+
+## Self-referencing validator conditions
+
+Built-in validator and asyncValidator when signatures share a parameterless unchecked branch and
+a context-taking boolean branch. NoInfer prevents conditions from driving value/owner inference.
+The shared branch avoids circular contextual inference across overloads and sibling rules. Return
+booleans even though parameterless return values are unchecked. Bounds, lists, dates, and messages
+are unchanged. Async when callbacks defer initial automatic evaluation like synchronous guards;
+explicit validate or validation-state reads still flush initialization and require a completed model.
+Inactive conditions discard their tracked runners, cancel work, and clear errors/pending; reenabling
+starts fresh work even without a value change. This applies to field and aggregate validators and
+works outside injection contexts. Node state reads remain synchronously up to date.
+
+Angular reference: 22.1.x commit da8dac62a79025fa42ae3ee5c64e3e3f1979ce54,
+packages/forms/signals/src/api/rules/validation/required.ts and validate_async.ts,
+with test/node/api/validators/required.spec.ts and test/node/api/when.spec.ts.
+Angular evaluates conditional rules through tracked metadata/resource parameters; our unchecked
+parameterless signatures and non-DI watcher scheduling are intentional library-specific contracts.

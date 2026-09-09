@@ -2,7 +2,7 @@ import { isFieldContext } from '../utils/field-context-marker';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { defaultUniqueItemsMessage } from '../utils/default-validator-messages';
 import { applyValidatorWhen, resolveValidatorMessageOption, type ValidatorOptions } from '../utils/validator-options';
-import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import type { DeferredCondition, BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 type UniqueItemsOptions<TItem = unknown> = ValidatorOptions<readonly TItem[] | null | undefined>;
 
@@ -68,8 +68,8 @@ export function uniqueItems(options?: ({
   /** Custom error or errors returned instead of the built-in error. */
   error?: ValidationResult | ((context: ValidatorContext<readonly unknown[] | null | undefined>) => ValidationResult);
 }) & {
-  /** Reactive predicate deciding whether this validator is active. */
-  when?: (context: ValidatorContext<readonly unknown[] | null | undefined>) => boolean;
+  /** Reactive predicate deciding whether this validator is active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+  when?: NoInfer<DeferredCondition | ((context: ValidatorContext<readonly unknown[] | null | undefined>) => boolean)>;
 }): Validator<readonly unknown[] | null | undefined>;
 /**
  * Validates array item identity when passed directly in a validators array.
@@ -121,8 +121,8 @@ export function uniqueItems<TItem = unknown>(
     /** Custom error or errors returned instead of the built-in error. */
     error?: ValidationResult | ((context: ValidatorContext<readonly TItem[] | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator is active. */
-    when?: (context: ValidatorContext<readonly TItem[] | null | undefined>) => boolean;
+    /** Reactive predicate deciding whether this validator is active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<readonly TItem[] | null | undefined>) => boolean)>;
   },
 ): Validator<readonly TItem[] | null | undefined>;
 export function uniqueItems<TItem>(

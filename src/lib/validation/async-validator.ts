@@ -1,6 +1,6 @@
 import type { AnyNode } from '../types/node.type';
 import { markAsAsyncValidator, type AsyncValidatorOptions, type ParameterizedAsyncValidatorOptions } from './utils/async-validator-marker';
-import type { DeferredValidator, AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, AsyncValidatorContext, ParameterizedAsyncValidatorContext, ValidationResult, ValidatorOwner, ValidatorReadonlyApi } from './validation.type';
+import type { DeferredCondition, DeferredValidator, AsyncValidationResult, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, AsyncValidatorContext, ParameterizedAsyncValidatorContext, ValidationResult, ValidatorOwner, ValidatorReadonlyApi } from './validation.type';
 
 export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi, ValidatorOwner<TField>> & {
   /**
@@ -117,8 +117,9 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    * ```
    *
    * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
+   * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
    */
-  when?: (context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean;
+  when?: NoInfer<DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean)>;
   /**
    * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
    *
@@ -202,8 +203,9 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
      * ```
      *
      * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
+     * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
      */
-    when?: (context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean;
+    when?: NoInfer<DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean)>;
     /**
      * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
      *
@@ -251,8 +253,9 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
      * ```
      *
      * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
+     * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
      */
-    when?: (context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean;
+    when?: NoInfer<DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean)>;
     /**
      * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
      *

@@ -3,7 +3,7 @@ import { isFieldContext } from '../utils/field-context-marker';
 import { defaultUrlMessage } from '../utils/default-validator-messages';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
-import type { FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import type { DeferredCondition, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 const validateUrl = (
   { value }: FieldContext<string | null>,
@@ -48,8 +48,8 @@ export function url(options: string | ({
   /** Custom error or errors returned instead of the built-in error. */
   error?: ValidationResult | ((context: ValidatorContext<string | null>) => ValidationResult);
 }) & {
-  /** Reactive predicate deciding whether this validator is active. */
-  when?: (context: ValidatorContext<string | null>) => boolean;
+  /** Reactive predicate deciding whether this validator is active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+  when?: NoInfer<DeferredCondition | ((context: ValidatorContext<string | null>) => boolean)>;
 }): Validator<string | null>;
 /**
  * Validates an absolute WHATWG URL when passed directly in a validators array.
@@ -68,7 +68,8 @@ export function url(context: FieldContext<string | null>): ValidationResult;
 export function url(
   contextOrOptions: FieldContext<string | null> | string | {
     message?: string | (() => string | undefined);
-    when?: (context: ValidatorContext<string | null>) => boolean;
+    /** Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<string | null>) => boolean)>;
   },
 ): Validator<string | null> | ValidationResult {
   if (isFieldContext(contextOrOptions)) return validateUrl(contextOrOptions);

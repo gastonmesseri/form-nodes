@@ -12,6 +12,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Fixed
 
+- Support unannotated class self-references in parameterless `when` conditions across built-in and async validators while preserving typed contexts and checked boolean returns for context-taking conditions. Async conditions start safely after construction and restart validation when reenabled, even with unchanged values.
+
 - Allow `requiredIf` conditions to reference their class form through a later declared computed without explicit type annotations. Form and computed types remain inferred; the condition's return type is intentionally unchecked, so consumers must return a boolean.
 
 ## [3.3.0] - 2026-09-10

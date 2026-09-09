@@ -3106,3 +3106,27 @@ it('infers and tracks requiredIf through a later declared computed self-referenc
   expect(model.name.required()).toBe(true);
   expect(model.name.invalid()).toBe(true);
 });
+
+it('tracks a self-referencing when condition without evaluating it during construction', () => {
+  const runs = vi.fn();
+  class Model {
+    name = field<string>(null, [required({ when: () => this.active() })]);
+
+    active = computed(() => {
+      runs();
+      return this.name() !== 'optional';
+    });
+  }
+  const model = new Model();
+  expect(runs).not.toHaveBeenCalled();
+  expect(model.name.required()).toBe(true);
+  expect(model.name.invalid()).toBe(true);
+  expect(runs).toHaveBeenCalledTimes(1);
+  model.name.set('optional');
+  expect(model.name.required()).toBe(false);
+  expect(model.name.valid()).toBe(true);
+  expect(runs).toHaveBeenCalledTimes(2);
+  model.name.set(null);
+  expect(model.name.hasError('required')).toBe(true);
+  expect(runs).toHaveBeenCalledTimes(3);
+});

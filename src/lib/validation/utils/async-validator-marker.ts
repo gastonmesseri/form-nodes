@@ -1,5 +1,5 @@
 import type { AnyNode } from '../../types/node.type';
-import type { AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorNode, ValidatorReadonlyApi } from '../validation.type';
+import type { DeferredCondition, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorNode, ValidatorReadonlyApi } from '../validation.type';
 
 /** Scheduling, activation, and failure-handling options for `asyncValidator()`. */
 export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = {
@@ -27,8 +27,9 @@ export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TVal
    * ```
    *
    * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
+   * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
    */
-  when?: (context: AsyncValidatorBaseContext<TValue, TApi, TField>) => boolean;
+  when?: DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, TField>) => boolean);
   /**
    * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
    *
@@ -91,4 +92,9 @@ export const isAsyncValidator = (validator: Function): boolean => asyncValidator
 
 export const getAsyncValidatorOptions = <TValue>(validator: AsyncValidator<TValue>): StoredAsyncValidatorOptions<TValue> => {
   return asyncValidators.get(validator) ?? {};
+};
+
+/** Defers user conditions and synchronous guards until the declaring class can finish initializing. */
+export const needsDeferredValidationStart = (validators: readonly Function[]): boolean => {
+  return validators.some(validator => !isAsyncValidator(validator) || asyncValidators.get(validator)!.when !== undefined);
 };

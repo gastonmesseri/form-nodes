@@ -3,9 +3,9 @@ import { MIN_LENGTH_METADATA } from '../constraint-metadata';
 import { markValidatorMetadata } from '../validator-metadata';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { defaultMinLengthMessage } from '../utils/default-validator-messages';
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
 import { getLengthOrSize, type ValueWithLengthOrSize } from '../../utils/get-length-or-size';
 import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
+import type { DeferredCondition, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 /**
  * Requires a non-empty value's numeric `length` or `size` to meet a minimum.
@@ -39,8 +39,8 @@ export const minLength = (
     /** Custom error or errors returned instead of the built-in error. */
     error?: ValidationResult | ((context: ValidatorContext<ValueWithLengthOrSize | null>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. */
-    when?: (context: ValidatorContext<ValueWithLengthOrSize | null>) => boolean;
+    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<ValueWithLengthOrSize | null>) => boolean)>;
   },
 ): Validator<ValueWithLengthOrSize | null> => {
   const message = resolveValidatorMessageOption(options);

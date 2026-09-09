@@ -2,7 +2,7 @@ import { isFieldContext } from '../utils/field-context-marker';
 import { defaultIntegerMessage } from '../utils/default-validator-messages';
 import { resolveValidatorMessage } from '../utils/resolve-validator-message';
 import { applyValidatorWhen, resolveValidatorMessageOption } from '../utils/validator-options';
-import type { BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import type { DeferredCondition, BuiltInValidationErrorMap, FieldContext, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 const validateInteger = (
   { value }: FieldContext<number | null>,
@@ -45,8 +45,8 @@ export function integer(options: string | ({
   /** Custom error or errors returned instead of the built-in error. */
   error?: ValidationResult | ((context: ValidatorContext<number | null>) => ValidationResult);
 }) & {
-  /** Reactive predicate deciding whether this validator is active. */
-  when?: (context: ValidatorContext<number | null>) => boolean;
+  /** Reactive predicate deciding whether this validator is active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+  when?: NoInfer<DeferredCondition | ((context: ValidatorContext<number | null>) => boolean)>;
 }): Validator<number | null>;
 /**
  * Validates a safe integer when passed directly in a validators array.
@@ -65,7 +65,8 @@ export function integer(context: FieldContext<number | null>): ValidationResult;
 export function integer(
   contextOrOptions: FieldContext<number | null> | string | {
     message?: string | (() => string | undefined);
-    when?: (context: ValidatorContext<number | null>) => boolean;
+    /** Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    when?: NoInfer<DeferredCondition | ((context: ValidatorContext<number | null>) => boolean)>;
   },
 ): Validator<number | null> | ValidationResult {
   if (isFieldContext(contextOrOptions)) return validateInteger(contextOrOptions);

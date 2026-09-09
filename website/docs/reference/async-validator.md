@@ -517,3 +517,13 @@ Separately declared `asyncValidator<TValue>()` helpers preserve `TValue` on the 
 `context.node()` and `context.field()`, including callable value reads and the node's value signal.
 This also applies to `when`, `params`, and `onError` contexts. See the
 [reusable validator example](./validator.md#value-type-and-inference).
+
+### Self-referencing conditions
+
+A parameterless `when` can reference its declaring form through a later computed without type
+annotations. Its return is unchecked; return a boolean. Context-taking conditions retain their
+typed context and boolean result. See [self-referencing conditions](../guides/validation.md#self-referencing-when-conditions).
+
+Initial automatic evaluation of a configured `when` is deferred past synchronous construction.
+Validation-state reads or explicit validation can start it earlier. Disabling the condition cancels
+work and releases its dependency tracking; reenabling starts a fresh execution with current values.

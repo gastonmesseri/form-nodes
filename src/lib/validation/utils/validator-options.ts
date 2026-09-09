@@ -1,5 +1,5 @@
 import { copyConditionalValidatorMetadata } from '../validator-metadata';
-import type { ValidationResult, Validator, ValidatorContext } from '../validation.type';
+import type { DeferredCondition, ValidationResult, Validator, ValidatorContext } from '../validation.type';
 
 /** Common options supported by built-in validators. */
 export type ValidatorOptions<TValue = unknown> = ({
@@ -18,8 +18,8 @@ export type ValidatorOptions<TValue = unknown> = ({
   /** Custom error or errors returned instead of the built-in error. */
   error?: ValidationResult | ((context: ValidatorContext<TValue>) => ValidationResult);
 }) & {
-  /** Reactive predicate deciding whether the validator and its constraint metadata are active. */
-  when?: (context: ValidatorContext<TValue>) => boolean;
+  /** Reactive predicate deciding whether the validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+  when?: DeferredCondition | ((context: ValidatorContext<TValue>) => boolean);
 };
 
 export const resolveValidatorMessageOption = <TValue>(
