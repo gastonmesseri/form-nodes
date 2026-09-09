@@ -3,6 +3,7 @@ title: form()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import submissionHistorySource from '!!raw-loader!../../examples/submission-history.example.ts';
 import emptyChildRecordSource from '!!raw-loader!../../examples/empty-child-record.example.ts';
 import childInferenceSource from '!!raw-loader!../../examples/for-each-child-inference.typecheck.ts';
 import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
@@ -509,6 +510,7 @@ to read their current value; `children` is a stable readonly map rather than a s
 | [`debouncing()`](#debouncing) | Whether the form or a descendant has pending control input. |
 | [`flush()`](#flush) | Commits pending control values throughout the subtree. |
 | [`focus(options?)`](#focus) | Focuses the first bound control in DOM order. |
+| [`submitted()`](#submitted) | Whether this form has received a submit attempt since its last reset. |
 | [`submitting()`](#submitting) | Whether this form or an ancestor is running submission. |
 | [`submit()`](#submit) | Runs the configured submission workflow and returns its outcome. |
 
@@ -1100,6 +1102,21 @@ const search = form({
 search.debouncing(); // false before a bound control has a pending value
 ```
 
+#### 📨 submitted() {#submitted}
+
+**Signature:** `submitted: Signal<boolean>`
+
+Records an attempt on this specific form, even when invalid, already submitting, or missing an
+action. This readonly signal starts false and changes synchronously before submission guards.
+It does not mean success and is independent of the temporary `submitting()` state.
+
+Value edits and action completion preserve it. All form reset methods clear it, including resets
+propagated from an ancestor; a field reset does not. Nested forms own independent histories.
+A pending action finishing after a reset does not reactivate it. Use `$api.submitted()` if a child
+is named `submitted`. Read the [complete rules](../guides/submission.md#submission-history).
+
+<CodeBlock language="typescript" title="submission-history.ts">{submissionHistorySource}</CodeBlock>
+
 #### 📨 submitting() {#submitting}
 
 **Signature:** `submitting: Signal<boolean>`
@@ -1536,8 +1553,8 @@ the form takes precedence over descendant bindings. Standard `FocusOptions` are 
 
 **Signature:** `submit(): Promise<boolean>`
 
-Marks and flushes the subtree, checks the configured validation policy, and runs
-`onSubmit` when allowed.
+Records `submitted()` immediately, then follows the existing concurrency guard, subtree
+interaction, validation policy, and `onSubmit` action when allowed.
 
 ```ts
 const profile = form({

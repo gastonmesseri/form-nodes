@@ -292,3 +292,9 @@ must use `FormNodeDirective` instead.
 
 For behavioral details that are intentionally too specialized for the normal reference flow, see
 [Advanced behavior and edge cases](../advanced/behavior-details.md).
+
+## Submission context
+
+[useClosestForm()](./use-closest-form.md) finds the owning form through the nearest injectable
+`[formNode]` binding. Observe [submitted()](./form.md#submitted) for attempts since reset and
+`submitting()` for an action currently in progress.

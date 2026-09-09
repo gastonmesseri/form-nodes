@@ -14,6 +14,10 @@ Planned release: **3.3.0** (minor). The incompatible nested value API migration 
 versioning exception while the maintainer is the only consumer. See the
 [version policy](./versioning.md#nested-value-api-exception).
 
+### Added
+
+- Added readonly `form.submitted()` to record submit attempts until the form is reset, including attempts blocked by validation or missing actions. Nested forms keep independent histories, and subtree resets clear descendant form histories. Added `useClosestForm()` to reactively observe the form owning the nearest injectable `[formNode]` binding, enabling submission-aware error components without event subscriptions.
+
 ### Changed
 
 - **Breaking:** Replaced public `controlValue()` and `setControlValue(value)` with `value.control()` and `value.control.set(value)`. Fields, groups, forms, and arrays now expose `value.committed()` for committed data before configured equality checks, and `value.committed.set(value)` for immediate writes equivalent to `set(value)`. Control writes preserve debounce and dirty tracking; neither setter emits binding outputs by itself. Exported `NodeValueSignal` describes these nested signals and hides native function members from IntelliSense on all three views. Bare `FieldNode` annotations retain the nested reads and setters; explicit value generics preserve their precise types.

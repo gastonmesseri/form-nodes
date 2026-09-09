@@ -156,7 +156,7 @@ export type GroupChildren<TNodes extends Nodes, TParent extends AnyNode> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
-  & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitting' | 'validationStatus'>
+  & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitted' | 'submitting' | 'validationStatus'>
   & {
     /** Returns the concrete primitive represented by this node. */
     nodeType(): 'group';

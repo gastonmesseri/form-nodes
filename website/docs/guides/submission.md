@@ -2,6 +2,9 @@
 title: Form submission
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import historySource from '!!raw-loader!../../examples/submission-history.example.ts';
+
 # Form submission {#form-submission}
 
 The [executable submission example](../examples/executable-examples.mdx#submission) runs both the
@@ -83,3 +86,35 @@ still marks and flushes the subtree and returns `false`.
 
 Submission callbacks run without reactive dependency tracking. Options belong to the form where
 specified; nested forms retain their own callbacks and policy while inheriting `submitting()` state.
+
+## Submission history {#submission-history}
+
+`form.submitted()` is a readonly signal recording whether `submit()` has been called on this
+specific form since its last reset. It starts false and becomes true synchronously before guards,
+including attempts blocked by validation, missing `onSubmit`, or an already running action.
+Native submission through `<form [formNode]>` uses the same operation.
+
+| State or result | Meaning |
+| --- | --- |
+| `submitted()` | An attempt occurred since reset, regardless of success |
+| `submitting()` | An action on this form or an ancestor is currently running |
+| `await submit()` | True when the action completed; false when skipped; rejects when the action fails |
+
+Editing, `set()`, `patch()`, touching/untouching, and action completion leave history intact.
+`reset()`, `reset(value)`, and `resetToInitial()` clear it. A native reset through `[formNode]`
+clears it too. Resetting a field preserves its owner's history. If a reset occurs while an action
+is running, the flag remains false when the action settles; reset does not cancel that action.
+A new submit attempt after that reset sets the flag again, even if concurrency prevents its action.
+
+Each explicit nested `form()` owns its history: submitting a parent does not set a child's flag,
+and submitting a child does not set its parent's flag. Ancestor resets clear all descendant forms,
+including forms within groups and arrays. New forms and newly created array items start unsubmitted.
+Unlike `submitting()`, submission history is not inherited. It does not itself change validation,
+dirty/touched state, debounce, or the submission policy; existing `submit()` interaction rules remain.
+
+<CodeBlock language="typescript" title="submission-history.ts">{historySource}</CodeBlock>
+
+For an error component, combine field invalidity with `field.touched()` or its owner's `submitted()`.
+This also covers fields created after an attempt. [useClosestForm()](../reference/use-closest-form.md)
+observes the owning form through the nearest binding, including components created after submission.
+Its signal removes the need to subscribe to `NgForm.ngSubmit` and copy a boolean locally.

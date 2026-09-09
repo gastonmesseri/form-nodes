@@ -97,6 +97,8 @@ export class FormGroupNode<TNodes extends Nodes> {
 
   selfDirty = signal(false);
 
+  submitted = signal(false);
+
   selfSubmitting = signal(false);
 
   validators = signal<Validators<FormValue<TNodes>>>([]);
@@ -409,6 +411,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     this.controlValueBuffer?.cancel();
     this.selfTouched.set(false);
     this.selfDirty.set(false);
+    this.submitted.set(false);
     notifyExternalValidationReset(this.node);
     if (args.length === 0) {
       this.getChildKeys().forEach(key => this.children[key]!.$api.reset());
@@ -435,6 +438,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     this.controlValueBuffer.cancel();
     this.selfTouched.set(false);
     this.selfDirty.set(false);
+    this.submitted.set(false);
     notifyExternalValidationReset(this.node);
     this.getChildKeys().forEach((key) => {
       const child = this.children[key] as unknown as InternalNode;
@@ -457,6 +461,7 @@ export class FormGroupNode<TNodes extends Nodes> {
   }
 
   async submit(): Promise<boolean> {
+    this.submitted.set(true);
     if (untracked(this.submitting)) return false;
     const onSubmit = this.options?.onSubmit;
     this.node.$api.markAsTouched();
@@ -563,7 +568,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       required: this.required,
       pending: this.pending,
       submitting: this.submitting,
-      ...(this.nodeType === 'form' ? { submit: () => this.submit() } : {}),
+      ...(this.nodeType === 'form' ? { submitted: this.submitted.asReadonly(), submit: () => this.submit() } : {}),
       debouncing: this.debouncing,
       flush: () => this.flush(),
       focus: (options?: FocusOptions) => this.getControlBindingForFocus()?.focus(options),

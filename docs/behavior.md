@@ -3566,3 +3566,41 @@ Angular signal assignability and call signatures. This affects public typing onl
 bare `FieldNode` annotation retains all views and setters with `any` values; a supplied value
 generic retains precise read/write types. Language-service tests verify the completion lists
 against both source and packaged declarations.
+
+## Submission history and closest-form injection
+
+Each explicit `form()` exposes readonly `submitted: Signal<boolean>`. The flag starts false and
+is set synchronously at the start of `submit()`, before concurrency, action, and validation guards.
+It records an attempt, including invalid, missing-action, and concurrent attempts, not success.
+The existing return value, rejection, touched propagation, debounce flushing, and validation policy
+of `submit()` remain unchanged. `submitted` is not filtered by disabled/readonly/hidden state and
+is not inherited or aggregated. Nested forms record only their own direct attempts. `submitting`
+continues to describe an active action and remains inherited as before.
+
+`reset()`, `reset(value)`, and `resetToInitial()` clear history on the selected form and descendant
+forms, including forms reached through groups and arrays. Field-only resets do not clear ancestors.
+Value writes and action completion or rejection preserve history. Resetting during an action does
+not cancel the action; its finalization does not set history again. A subsequent attempt after reset
+sets the flag again even when concurrency blocks its action. Fresh clones/items start false. The
+property is form-only; use `$api.submitted()` for a form with a child named `submitted`.
+
+`useClosestForm()` requires an injection context and returns a `Signal<NavigationForm | null>`.
+It injects the nearest `FORM_NODE` once with optional resolution, including the current host, then
+reactively resolves `binding.node().$api.form()`. It follows rebinding, attachment, detachment, and
+reparenting. Forms return themselves; unowned nodes and missing bindings return null. A nearest
+unowned binding prevents fallback to farther bindings. Angular DI boundaries apply; this is not
+DOM traversal, HTML form-owner lookup, or NgForm compatibility. The signal must not be read before
+the binding's required input is initialized. Components created after an attempt observe existing
+history without an event replay or subscription. Binding scope and the model tree can differ;
+a separately supplied node input does not change the hook's chosen binding.
+
+Angular reference: `22.1.x` at `05a05f59657f048a87f3d4eb9ddb7968cfe8060e`.
+Inspected `packages/forms/signals/src/directive/form_root.ts`,
+`packages/forms/signals/src/field/submit.ts`, and tests
+`packages/forms/signals/test/node/form_root.spec.ts` and `node/submit.spec.ts` for submission action,
+concurrency, and inherited in-progress state. Those Signal Forms facilities do not supply this
+persistent attempt flag. Its semantics are an intentional additional Form Nodes feature inspired
+by `packages/forms/src/directives/ng_form.ts`: onSubmit sets submitted before emitting ngSubmit,
+and resetForm clears it. Unlike NgForm's directive-owned flag, ours belongs to the model and works
+without Angular DI or a native form. Existing no-action submission behavior also differs from
+FormRoot: Form Nodes marks touched even without an action, and now records the attempt as well.

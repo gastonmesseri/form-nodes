@@ -158,3 +158,8 @@ existing behavior. To restore a node obtained through a binding, call
 - [Field reference](../reference/field.md#reset-to-initial)
 - [Form reference](../reference/form.md#reset-to-initial)
 - [Array reference](../reference/array.md#reset-to-initial)
+
+All three form reset methods also clear `submitted()` on the reset form and descendant forms.
+Resetting only a field leaves its owner form's history intact. An already running submission action
+is not cancelled, and its eventual completion does not restore the cleared history.
+See [submission history](./submission.md#submission-history).

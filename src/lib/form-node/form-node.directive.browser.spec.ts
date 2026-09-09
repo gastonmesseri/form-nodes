@@ -2,7 +2,7 @@ import '@angular/compiler';
 import { TestBed } from '@angular/core/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { CSP_NONCE, Component, Injector, ViewEncapsulation, forwardRef, inject, input, model, output, signal, type OnDestroy } from '@angular/core';
+import { CSP_NONCE, Component, Directive, Injector, ViewEncapsulation, forwardRef, inject, input, model, output, signal, type OnDestroy } from '@angular/core';
 import { FormResetEvent, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, type AbstractControl, type ControlValueAccessor, type ValidationErrors } from '@angular/forms';
 import { FormField, form as createAngularForm, required as angularRequired, provideSignalFormsConfig, type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 
@@ -13,6 +13,7 @@ import { group } from '../primitives/group';
 import type { AnyNode } from '../types/node.type';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
+import { useClosestForm } from './use-closest-form';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
 import { asyncValidator } from '../validation/async-validator';
@@ -2188,4 +2189,70 @@ describe('FormNodeDirective in Chromium', () => {
     expect(fixture.nativeElement.querySelector('span').textContent).toContain('David');
     fixture.destroy();
   });
+});
+
+it('exposes native submission and reset history to same-host and late descendant form observers', async () => {
+  @Directive({ selector: '[closestFormProbe]', exportAs: 'closestFormProbe' })
+  class ClosestFormProbe {
+    closest = useClosestForm();
+  }
+
+  @Component({ selector: 'submission-probe', template: `@if (closest(); as owner) { {{ owner.$api.submitted() }} } @else { false }` })
+  class SubmissionProbe {
+    closest = useClosestForm();
+  }
+
+  @Component({
+    template: `
+      <form [formNode]="active()">
+        <input [formNode]="leaf()" closestFormProbe #same="closestFormProbe">
+        <output>@if (same.closest(); as owner) { {{ owner.$api.submitted() }} } @else { false }</output>
+        @if (show()) { <submission-probe /> }
+        <button type="submit">Submit</button>
+        <button type="reset">Reset</button>
+      </form>
+    `,
+    imports: [FormNodeDirective, ClosestFormProbe, SubmissionProbe],
+  })
+  class Host {
+    first = form({ name: field('', [required]) });
+    second = form({ name: field('Grace') });
+    active = signal(this.first);
+    leaf = signal(this.first.name);
+    show = signal(false);
+  }
+
+  const fixture = TestBed.createComponent(Host);
+  fixture.detectChanges();
+  const host = fixture.componentInstance;
+  const element = fixture.nativeElement as HTMLElement;
+  const readSameHost = () => element.querySelector('output')!.textContent!.trim();
+  const readDescendant = () => element.querySelector('submission-probe')!.textContent!.trim();
+  expect(readSameHost()).toBe('false');
+  element.querySelector<HTMLButtonElement>('[type="submit"]')!.click();
+  fixture.detectChanges();
+  expect(host.first.submitted()).toBe(true);
+  expect(host.first.invalid()).toBe(true);
+  expect(readSameHost()).toBe('true');
+  host.show.set(true);
+  fixture.detectChanges();
+  expect(readDescendant()).toBe('true');
+  element.querySelector<HTMLButtonElement>('[type="reset"]')!.click();
+  fixture.detectChanges();
+  expect(host.first.submitted()).toBe(false);
+  expect(readSameHost()).toBe('false');
+  expect(readDescendant()).toBe('false');
+  await host.second.submit();
+  host.leaf.set(host.second.name);
+  fixture.detectChanges();
+  expect(readSameHost()).toBe('true');
+  expect(readDescendant()).toBe('false');
+  host.active.set(host.second);
+  fixture.detectChanges();
+  expect(readDescendant()).toBe('true');
+  host.second.resetToInitial();
+  fixture.detectChanges();
+  expect(readSameHost()).toBe('false');
+  expect(readDescendant()).toBe('false');
+  fixture.destroy();
 });

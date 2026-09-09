@@ -3048,3 +3048,22 @@ it('exposes reactive committed and control views with independent equality and d
   input('Ada');
   expect(name.dirty()).toBe(true);
 });
+
+it('observes its owner submission attempts without changing its own validation or reset contract', async () => {
+  const name = field('', [required]);
+  const profile = form({ name });
+  const showErrors = computed(() => name.invalid() && (name.touched() || name.form()?.$api.submitted() === true));
+  expect(showErrors()).toBe(false);
+  await profile.submit();
+  expect(name.form()?.$api.submitted()).toBe(true);
+  expect(showErrors()).toBe(true);
+  name.reset();
+  expect(name.touched()).toBe(false);
+  expect(showErrors()).toBe(true);
+  const later = profile.add('email', field('', [required]));
+  expect(later.touched()).toBe(false);
+  expect(later.form()?.$api.submitted()).toBe(true);
+  profile.resetToInitial();
+  expect(name.form()?.$api.submitted()).toBe(false);
+  expect(showErrors()).toBe(false);
+});

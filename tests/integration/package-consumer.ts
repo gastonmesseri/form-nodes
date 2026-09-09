@@ -1,5 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-import { FormNodesModule, FormNodeDirective, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, useClosestForm, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -19,6 +19,8 @@ class Company {
   providers: [provideFormNodesConfig({ syncInputs: false })],
   template: `
     <form [formNode]="profile">
+      <span>{{ profile.submitted() }}</span>
+      @if (closestForm(); as closest) { <span>{{ closest.$api.submitted() }}</span> }
       <input #nameBinding="formNode" [formNode]="profile.name">
       <input [formNode]="dynamicAge">
       @for (address of profile.addresses; track address) {
@@ -28,6 +30,7 @@ class Company {
   `,
 })
 export class PackageConsumer {
+  closestForm = useClosestForm();
   readonly nullableOverride: string | null = configuredForms.field.nullable('Marco')();
   readonly nonNullableOverride: string = field.strict('Marco')();
   readonly configuredProfile = configuredForms.form({ name: configuredForms.field(''), city: '' });

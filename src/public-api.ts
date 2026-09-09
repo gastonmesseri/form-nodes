@@ -3,6 +3,7 @@ export { group } from './lib/primitives/group';
 export { field } from './lib/primitives/field';
 export { array } from './lib/primitives/array';
 export { isFormNode } from './lib/primitives/is-form-node';
+export { useClosestForm } from './lib/form-node/use-closest-form';
 export { FormNodesModule } from './lib/form-nodes.module';
 export { max } from './lib/validation/validators/max';
 export { min } from './lib/validation/validators/min';

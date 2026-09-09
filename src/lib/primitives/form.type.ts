@@ -697,6 +697,28 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   required: Signal<boolean>;
   /** Whether asynchronous validation is active on this form or any descendant. */
   pending: Signal<boolean>;
+  /**
+   * Whether `submit()` has been called on this form since its last reset.
+   *
+   * Becomes true synchronously before submission guards, including invalid, missing-action, and
+   * concurrent attempts. This records an attempt, not success; `submitting()` separately indicates
+   * a running action. Value edits and completed or rejected actions preserve this flag.
+   *
+   * `reset()`, `reset(value)`, and `resetToInitial()` clear it, including when an ancestor resets
+   * this form. Resetting a field does not clear its owner's flag. Each explicit nested form keeps
+   * its own history: submitting an ancestor or descendant does not set this form's flag.
+   * A reset during an asynchronous action stays cleared when that action settles.
+   *
+   * @example
+   * ```ts
+   * const profile = form({ name: field('') });
+   * await profile.submit();
+   * profile.submitted(); // true, even without an onSubmit action
+   * profile.reset();
+   * profile.submitted(); // false
+   * ```
+   */
+  submitted: Signal<boolean>;
   /** Whether this form or an ancestor form is currently running its submission action. */
   submitting: Signal<boolean>;
   /**

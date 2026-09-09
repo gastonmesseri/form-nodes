@@ -1,4 +1,4 @@
-import { computed, signal } from '@angular/core';
+import { computed, Signal, signal } from '@angular/core';
 
 import type { AnyNode, FieldNode } from '../../src/public-api';
 import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNodeDirective, group, min, minLength, oneOf, required, validator } from '../../src/public-api';
@@ -590,9 +590,30 @@ class MyComponentForSelfReference {
 
 // It should autocomplete also the follosing: field('', { /** This object keys should be autocompleted */ })
 
+
+const myFuncThatTakesSignal = (sig: Signal<any>) => {};
+
 const myAnyNodeTyped: AnyNode = {} as any;
 myAnyNodeTyped.$api;
 const myFieldNodeTyped: FieldNode = field('');
 myFieldNodeTyped.debouncing();
+myFieldNodeTyped.value
 myFieldNodeTyped.value.committed();
 myFieldNodeTyped.value.control();
+const myFieldNodeTyped2: FieldNode = {} as any;
+myFieldNodeTyped.value.committed
+myFuncThatTakesSignal(myFieldNodeTyped2.value.committed)
+// myFieldNodeTyped.value.
+const myFieldWithValue = field();
+myFieldWithValue.value
+myFuncThatTakesSignal(myFieldWithValue.value.committed)
+
+
+const functionThatTakesSignals = (sig: Signal<any>) => {};
+functionThatTakesSignals(field(''));
+functionThatTakesSignals(form({}));
+functionThatTakesSignals(group({}));
+functionThatTakesSignals(array(field('')));
+functionThatTakesSignals(field('').value);
+functionThatTakesSignals(field('').value.control);
+functionThatTakesSignals(field('').value.committed);

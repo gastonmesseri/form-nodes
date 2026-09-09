@@ -5139,3 +5139,128 @@ it('allows value views through the collision-safe API and group control setters'
   expect(profile.value()).toBe('next child');
   expect(profile.$api.value()).toEqual({ value: 'next child', address: { city: 'Basel' } });
 });
+
+describe('submission attempt history', () => {
+  it('records invalid attempts before the blocked callback and preserves validation state', async () => {
+    const action = vi.fn();
+    const blocked = vi.fn<(submitted: boolean) => void>();
+    const profile = form({ name: field('', [required]) }, {
+      onSubmit: action,
+      onSubmitBlocked: (node) => { blocked(node.submitted()); },
+    });
+    expect(isSignal(profile.submitted)).toBe(true);
+    expect(profile.submitted()).toBe(false);
+    expect(profile.invalid()).toBe(true);
+    expect(await profile.submit()).toBe(false);
+    expect(blocked).toHaveBeenCalledWith(true);
+    expect(action).not.toHaveBeenCalled();
+    expect(profile.submitted()).toBe(true);
+    expect(profile.submitting()).toBe(false);
+    expect(profile.name.touched()).toBe(true);
+    expect(profile.name.hasError('required')).toBe(true);
+    profile.name.set('Ada');
+    expect(profile.valid()).toBe(true);
+    expect(profile.submitted()).toBe(true);
+    expect(await profile.submit()).toBe(true);
+    expect(action).toHaveBeenCalledTimes(1);
+    expect(profile.submitted()).toBe(true);
+  });
+
+  it('records attempts without an action and resets only the selected subtree', async () => {
+    const profile = form({ name: field('Ada'), details: form({ city: field('Zurich') }) });
+    expect(await profile.details.submit()).toBe(false);
+    expect(profile.details.submitted()).toBe(true);
+    expect(profile.submitted()).toBe(false);
+    await profile.submit();
+    profile.name.reset();
+    expect(profile.submitted()).toBe(true);
+    profile.details.reset();
+    expect(profile.details.submitted()).toBe(false);
+    expect(profile.submitted()).toBe(true);
+    profile.reset();
+    await profile.submit();
+    expect(profile.details.submitted()).toBe(false);
+    await profile.details.submit();
+    profile.reset({ name: 'Grace', details: { city: 'Bern' } });
+    expect(profile.submitted()).toBe(false);
+    expect(profile.details.submitted()).toBe(false);
+    await profile.submit();
+    await profile.details.submit();
+    profile.resetToInitial();
+    expect(profile.submitted()).toBe(false);
+    expect(profile.details.submitted()).toBe(false);
+    expect(profile()).toEqual({ name: 'Ada', details: { city: 'Zurich' } });
+  });
+
+  it.each(['resolve', 'reject'] as const)('does not restore reset history when a pending action finishes: %s', async (outcome) => {
+    let resolve!: () => void;
+    let reject!: (reason: Error) => void;
+    const action = vi.fn(() => new Promise<void>((done, fail) => { resolve = done; reject = fail; }));
+    const profile = form({ name: field('Ada') }, { onSubmit: action });
+    const task = profile.submit();
+    expect(profile.submitted()).toBe(true);
+    expect(profile.submitting()).toBe(true);
+    expect(await profile.submit()).toBe(false);
+    expect(action).toHaveBeenCalledTimes(1);
+    profile.reset();
+    expect(profile.submitted()).toBe(false);
+    expect(profile.submitting()).toBe(true);
+    if (outcome === 'resolve') {
+      resolve();
+      expect(await task).toBe(true);
+    } else {
+      const failure = new Error('Submission failed');
+      reject(failure);
+      await expect(task).rejects.toBe(failure);
+    }
+    expect(profile.submitted()).toBe(false);
+    expect(profile.submitting()).toBe(false);
+  });
+
+  it('retains attempt history after a failed action and exposes it despite child-name collisions', async () => {
+    const failure = new Error('Submission failed');
+    const profile = form({ submitted: field('child'), api: field('another child') }, {
+      onSubmit: () => { throw failure; },
+    });
+    await expect(profile.submit()).rejects.toBe(failure);
+    expect(profile.$api.submitted()).toBe(true);
+    expect(profile.submitted()).toBe('child');
+    expect(profile.submitting()).toBe(false);
+    profile.resetToInitial();
+    expect(profile.$api.submitted()).toBe(false);
+  });
+});
+
+it('clears nested form histories through group and array resets and starts new items unsubmitted', async () => {
+  const profile = form({
+    section: { details: form({ city: field('Zurich') }) },
+    rows: array(() => form({ name: field('Ada') }), { initialValue: 1 }),
+  });
+  await profile.submit();
+  await profile.section.details.submit();
+  await profile.rows[0]!.submit();
+  profile.section.reset();
+  expect(profile.section.details.submitted()).toBe(false);
+  expect(profile.submitted()).toBe(true);
+  profile.rows.resetToInitial();
+  expect(profile.rows[0]!.submitted()).toBe(false);
+  const added = profile.rows.push();
+  expect(added.submitted()).toBe(false);
+  expect(profile.submitted()).toBe(true);
+});
+
+it('records rejected concurrent child attempts without inheriting the parent history', async () => {
+  let resolve!: () => void;
+  const childAction = vi.fn();
+  const profile = form({ nested: form({}, { onSubmit: childAction }) }, {
+    onSubmit: () => new Promise<void>((done) => { resolve = done; }),
+  });
+  const pending = profile.submit();
+  expect(profile.nested.submitted()).toBe(false);
+  expect(profile.nested.submitting()).toBe(true);
+  expect(await profile.nested.submit()).toBe(false);
+  expect(profile.nested.submitted()).toBe(true);
+  expect(childAction).not.toHaveBeenCalled();
+  resolve();
+  await pending;
+});
