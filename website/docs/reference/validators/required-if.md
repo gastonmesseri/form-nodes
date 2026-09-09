@@ -2,6 +2,9 @@
 title: requiredIf()
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import selfReferenceSource from '!!raw-loader!../../../examples/required-if-self-reference.example.ts';
+
 # requiredIf() {#requiredif}
 
 ## 🧭 API map {#api-map}
@@ -22,7 +25,7 @@ requiredIf(condition, message)
 requiredIf(condition, options)
 ```
 
-`condition` is a function returning `boolean`. The options customize only the failure message,
+`condition` should return `boolean`; its declared return type is intentionally unchecked to support self-references. The options customize only the failure message,
 which may itself be reactive.
 
 It is a concise alternative to `required({ when })` when the condition does not need the validator
@@ -103,3 +106,18 @@ continues to reflect the condition.
 - [Built-in validators](../built-in-validators.md)
 - [Validation](../validation.md)
 - [`field()`](../field.md)
+
+## Class self-references
+
+A condition can reference the form being declared, directly or through a computed signal declared
+later in the class. No explicit form type, computed type, or callback return annotation is needed.
+The form's fields and the computed signal retain their inferred types.
+
+<CodeBlock language="ts" title="profile-model.ts">{selfReferenceSource}</CodeBlock>
+
+The condition parameter is typed `() => any` to break TypeScript's circular contextual-return
+inference, just like parameterless validator callbacks. This means TypeScript does not reject
+non-boolean returns: always return a boolean. The relaxation affects only this condition;
+`required({ when })` and other validator options retain their existing contracts. It does not
+cause eager condition evaluation or change reactive tracking. A nullable numeric field still
+requires null handling in comparisons, as shown by `?? 0` above.

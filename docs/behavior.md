@@ -3646,3 +3646,19 @@ Signal Forms FormRoot delegates to configured submit options and has no matching
 outputs are an intentional public API extension. NgForm provides the precedent for notifying native
 attempts after state preparation. Our submitWhen modes and template blocked output retain the
 library's explicitly documented validation semantics.
+
+## requiredIf class inference
+
+requiredIf's parameterless condition has an intentionally unchecked return type (() => any),
+matching deferred validator callbacks. This breaks circular inference through a class form and
+its later declared computed signals without losing field types or computed result types. Consumers
+should return booleans; incorrect returns are not statically rejected. No runtime logic changes:
+condition evaluation stays lazy, tracks signal reads, and controls required metadata and errors
+with normal parent and nested-form aggregation. required({ when }) is unchanged.
+
+Reference inspected: Angular 22.1.x commit da8dac62a79025fa42ae3ee5c64e3e3f1979ce54,
+packages/forms/signals/src/api/rules/validation/required.ts and
+packages/forms/signals/test/node/api/validators/required.spec.ts (supports custom condition).
+Angular keeps a boolean LogicFn with NoInfer for its schema-based API. Our unchecked callback
+signature is an intentional public inference tradeoff for self-referencing node declarations;
+reactive conditional-validation behavior is unchanged.

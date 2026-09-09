@@ -7,6 +7,11 @@ import type { ValidationResult, Validator, ValidatorContext } from '../validatio
  * It uses the same empty-value and message behavior as `required()`. Signals read by `condition`
  * are tracked, and the node's `required()` metadata follows the active condition.
  *
+ * The condition should return a boolean. Its return type is intentionally unchecked so class
+ * initializers can reference their own form, including through a later declared computed signal,
+ * without explicit return annotations. The form and computed retain their inferred types.
+ * This relaxation applies only to requiredIf's condition, not required({ when }) or other options.
+ *
  * @example Require a company name only for business accounts.
  * ```ts
  * const businessAccount = signal(false);
@@ -17,11 +22,11 @@ import type { ValidationResult, Validator, ValidatorContext } from '../validatio
  * ```
  *
  * @reactive Tracks signals read by `condition` and by a custom message function while active.
- * @param condition Reactive function deciding whether required validation is active.
+ * @param condition Reactive boolean condition. Its return type is unchecked to support class self-references.
  * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export const requiredIf = (
-  condition: () => boolean,
+  condition: () => any,
   options?: string | {
     message?: string | (() => string | undefined);
     /** Custom error or errors returned instead of the built-in error. */

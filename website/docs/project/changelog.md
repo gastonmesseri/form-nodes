@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Fixed
+
+- Allow `requiredIf` conditions to reference their class form through a later declared computed without explicit type annotations. Form and computed types remain inferred; the condition's return type is intentionally unchecked, so consumers must return a boolean.
+
 ## 📦 3.3.0 — 2026-09-10 {#330--2026-09-10}
 
 Released as a minor version. The incompatible nested value API migration is an explicit

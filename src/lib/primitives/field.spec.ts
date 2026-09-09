@@ -3089,3 +3089,20 @@ it('exposes a stable callable API signal with public equality and separate commi
   expect(value()).toBe('Ada');
   expect(name.$api).toBe(api);
 });
+
+it('infers and tracks requiredIf through a later declared computed self-reference', () => {
+  class Model {
+    name = field<string>(null, [requiredIf(() => this.needsName())]);
+
+    needsName = computed(() => this.name() !== 'optional');
+  }
+  const model = new Model();
+  expect(model.name.required()).toBe(true);
+  expect(model.name.hasError('required')).toBe(true);
+  model.name.set('optional');
+  expect(model.name.required()).toBe(false);
+  expect(model.name.valid()).toBe(true);
+  model.name.set(null);
+  expect(model.name.required()).toBe(true);
+  expect(model.name.invalid()).toBe(true);
+});

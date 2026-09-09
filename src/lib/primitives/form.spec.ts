@@ -5320,3 +5320,26 @@ it('prevents reentrant blocked callbacks and permits a later valid submission', 
   expect(profile.submitted()).toBe(false);
   expect(profile.nested.name.touched()).toBe(false);
 });
+
+it('infers and tracks requiredIf through a later declared computed self-reference', () => {
+  class Model {
+    profile = form({
+      other: field<number>(23, [required]),
+      nested: form({ subType: field<string>(null, [requiredIf(() => this.visible())]) }),
+    });
+
+    visible = computed(() => (this.profile.other() ?? 0) > 30);
+  }
+  const model = new Model();
+  expect(model.profile.valid()).toBe(true);
+  expect(model.profile.nested.subType.required()).toBe(false);
+  model.profile.other.set(31);
+  expect(model.profile.nested.subType.required()).toBe(true);
+  expect(model.profile.nested.subType.hasError('required')).toBe(true);
+  expect(model.profile.nested.invalid()).toBe(true);
+  expect(model.profile.invalid()).toBe(true);
+  model.profile.other.set(23);
+  expect(model.profile.nested.subType.required()).toBe(false);
+  expect(model.profile.nested.valid()).toBe(true);
+  expect(model.profile.valid()).toBe(true);
+});
