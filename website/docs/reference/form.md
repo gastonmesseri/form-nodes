@@ -76,7 +76,7 @@ form(definitions, options?);
 form(definitions, validators, options?);
 ```
 
-### 🔸 Extract the value type {#extract-the-value-type}
+### ◆ Extract the value type {#extract-the-value-type}
 
 Use `FormNodeValue<typeof myForm>` to derive a reusable value type from a form instance, including
 nested objects, arrays, and field nullability:
@@ -89,7 +89,7 @@ Import the type from `@ngblocks/form-nodes`. See the dedicated
 [`FormNodeValue` reference](./form-node-value.md) for a complete example and the distinction from
 the child-map helper `FormValue<TNodes>`.
 
-### 🔸 Check a named value model {#check-a-named-value-model}
+### ◆ Check a named value model {#check-a-named-value-model}
 
 Use `satisfies FormValueContract<Model>` when the complete value must conform to a named domain
 model. `satisfies` checks the callable form value and its `value` signal without replacing the type
@@ -109,7 +109,7 @@ Nested object definitions are normalized to groups. Use an explicit `group()` wh
 validators, structural options, or validator messages. Use an explicit nested `form()` only when
 that branch needs an independent submission workflow.
 
-### 🔸 `field()` shorthand {#field-shorthand}
+### ◆ `field()` shorthand {#field-shorthand}
 
 Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as arrays
 and class instances, are concise alternatives to calling `field()`. Nested plain object literals
@@ -237,9 +237,9 @@ object-valued `field()` instead.
 
 Each option includes its signature, default behavior, scope, and a complete example.
 
-### 🔸 Values and validation {#values-and-validation}
+### ◆ Values and validation {#values-and-validation}
 
-#### ⚙️ equal {#form-equal-option}
+#### – equal {#form-equal-option}
 
 **Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
 
@@ -251,7 +251,7 @@ exposed child values; internal debounce invalidation remains independent.
 See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality) for the
 complete executable example, operation contract, lazy evaluation, and comparator behavior.
 
-#### ✅ validators {#form-validators-option}
+#### – validators {#form-validators-option}
 
 **Signature:** `validators?: ValidatorSource<FormValue, FormNode<TNodes>>`
 
@@ -271,7 +271,7 @@ const credentials = form({
 credentials.invalid(); // false
 ```
 
-#### 💬 validatorMessages {#form-validatormessages-option}
+#### – validatorMessages {#form-validatormessages-option}
 
 **Signature:** `validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined)`
 
@@ -290,7 +290,7 @@ const profile = form({
 profile.allErrors()[0]?.message; // 'Enter a username.'
 ```
 
-#### ⏱️ debounce {#form-debounce-option}
+#### – debounce {#form-debounce-option}
 
 **Signature:** `debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>)`
 
@@ -306,9 +306,9 @@ const search = form({
 });
 ```
 
-### 🔸 Availability {#availability}
+### ◆ Availability {#availability}
 
-#### ⚙️ hidden {#form-hidden-option}
+#### – hidden {#form-hidden-option}
 
 **Signature:** `hidden?: boolean | (() => boolean)`
 
@@ -322,7 +322,7 @@ const businessDetails = form({
 });
 ```
 
-#### ⚙️ disabled {#form-disabled-option}
+#### – disabled {#form-disabled-option}
 
 **Signature:** `disabled?: boolean | string | (() => boolean | string)`
 
@@ -339,7 +339,7 @@ const profile = form({
 profile.disabledReasons()[0]?.message; // 'Profile is locked'
 ```
 
-#### ⚙️ readonly {#form-readonly-option}
+#### – readonly {#form-readonly-option}
 
 **Signature:** `readonly?: boolean | (() => boolean)`
 
@@ -353,9 +353,9 @@ const profile = form({
 });
 ```
 
-### 🔸 Injector ownership {#injector-ownership}
+### ◆ Injector ownership {#injector-ownership}
 
-#### ⚙️ injector {#form-injector-option}
+#### – injector {#form-injector-option}
 
 **Signature:** `injector?: Injector`
 
@@ -370,7 +370,7 @@ const profile = form({
 });
 ```
 
-#### ⚙️ inheritInjector {#form-inheritinjector-option}
+#### – inheritInjector {#form-inheritinjector-option}
 
 **Signature:** `inheritInjector?: boolean`
 
@@ -385,7 +385,7 @@ const profile = form({
 });
 ```
 
-#### ⚙️ adoptBindingInjector {#form-adoptbindinginjector-option}
+#### – adoptBindingInjector {#form-adoptbindinginjector-option}
 
 **Signature:** `adoptBindingInjector?: boolean`
 
@@ -400,9 +400,9 @@ const profile = form({
 });
 ```
 
-### 🔸 Submission {#submission}
+### ◆ Submission {#submission}
 
-#### ⚙️ onSubmit, onSubmitBlocked, and submitWhen {#form-submission-option}
+#### – onSubmit, onSubmitBlocked, and submitWhen {#form-submission-option}
 
 **Signatures:**
 
@@ -538,9 +538,9 @@ Each entry includes its consumer-facing signature, what it represents or returns
 example. `FormValue` means the inferred committed object value, `FormSet` means the complete value
 accepted by `set()`, and `FormPatch` means the recursively partial value accepted by `patch()`.
 
-### 🔸 Value and tree properties {#value-and-tree-properties}
+### ◆ Value and tree properties {#value-and-tree-properties}
 
-#### 📝 Callable value {#callable-value}
+#### – Callable value {#callable-value}
 
 **Signature:** `(): FormValue`
 
@@ -556,7 +556,7 @@ const profile = form({
 profile(); // { username: 'ada', active: true }
 ```
 
-#### 🌳 Named child access {#named-child-access}
+#### – Named child access {#named-child-access}
 
 **Signature:** `readonly [childName]: ChildNode`
 
@@ -574,7 +574,7 @@ profile.username(); // 'ada'
 profile.address.city(); // 'Zurich'
 ```
 
-#### 🌳 children {#children}
+#### – children {#children}
 
 **Signature:** `readonly children: FormChildren`
 
@@ -591,7 +591,7 @@ profile.children.username(); // 'ada'
 Direct access is preferred for initially declared children. Use `get(key)` for
 runtime keys. If a declared child is named `children`, use `profile.$api.children` for the map.
 
-#### 📝 value() {#value}
+#### – value() {#value}
 
 **Signature:** `value: NodeValueSignal<FormValue, FormSet>`
 
@@ -607,7 +607,7 @@ profile.value(); // { username: 'ada' }
 
 Prefer the equivalent callable form, `profile()`, for ordinary value reads.
 
-#### 📝 value.committed() {#value-committed}
+#### – value.committed() {#value-committed}
 
 **Signature:** `value.committed: Signal<FormValue> & { set(value: FormSet): void }`
 
@@ -615,7 +615,7 @@ Reads the latest committed data, bypassing configured `equal` checks on this nod
 children. Pending debounce is still respected. Normal signal identity checks still apply.
 See the [value views reference](./node-value.md#value-committed) for an executable example.
 
-#### ✏️ value.committed.set() {#value-committed-set}
+#### – value.committed.set() {#value-committed-set}
 
 **Signature:** `value.committed.set(value: FormSet): void`
 
@@ -623,7 +623,7 @@ Equivalent to `set(value)`: commits immediately, cancels pending input, preserve
 state, and follows normal validation and parent propagation. Exposed reads still honor `equal`.
 See the [setter example](./node-value.md#value-committed-set).
 
-#### 🔌 value.control() {#controlvalue}
+#### – value.control() {#controlvalue}
 
 **Signature:** `value.control: Signal<FormValue>`
 
@@ -643,7 +643,7 @@ Pending descendant control values are not aggregated into this signal; read each
 With aggregate `equal`, this control-facing signal can contain newer committed child values than
 the exposed form value even without a pending debounce. See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality).
 
-#### ✏️ value.control.set() {#value-control-set}
+#### – value.control.set() {#value-control-set}
 
 **Signature:** `value.control.set(value: FormSet): void`
 
@@ -652,7 +652,7 @@ configured or inherited debounce. It does not mark touched or emit binding outpu
 Read the [control setter example and propagation details](./node-value.md#value-control-set).
 
 
-#### 💡 nodeType() {#nodetype}
+#### – nodeType() {#nodetype}
 
 **Signature:** `nodeType(): 'form'`
 
@@ -667,7 +667,7 @@ const profile = form({
 profile.nodeType(); // 'form'
 ```
 
-#### 🧩 form() {#form-1}
+#### – form() {#form-1}
 
 **Signature:** `form: Signal<FormNode>`
 
@@ -682,7 +682,7 @@ const profile = form({
 profile.form() === profile; // true
 ```
 
-#### 🌳 root() {#root}
+#### – root() {#root}
 
 **Signature:** `root: Signal<RootNode>`
 
@@ -700,7 +700,7 @@ checkout.payment.form() === checkout.payment; // true
 checkout.payment.root() === checkout; // true
 ```
 
-#### 🌳 parent() {#parent}
+#### – parent() {#parent}
 
 **Signature:** `parent: Signal<ParentNode | null>`
 
@@ -716,7 +716,7 @@ const profile = form({
 profile.settings.parent() === profile; // true
 ```
 
-#### 🌳 path() {#path}
+#### – path() {#path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
@@ -732,7 +732,7 @@ const profile = form({
 profile.settings.path(); // ['settings']
 ```
 
-#### 🌳 keyInParent() {#keyinparent}
+#### – keyInParent() {#keyinparent}
 
 **Signature:** `keyInParent: Signal<string | number | null>`
 
@@ -748,9 +748,9 @@ const profile = form({
 profile.settings.keyInParent(); // 'settings'
 ```
 
-### 🔸 API properties {#api-properties}
+### ◆ API properties {#api-properties}
 
-#### 📖 api {#api}
+#### – api {#api}
 
 **Signature:** `api: FormApi`
 
@@ -767,7 +767,7 @@ profile.api.valid(); // true
 
 Direct operations such as `profile.valid()` are preferred.
 
-#### 📖 $api {#api-1}
+#### – $api {#api-1}
 
 **Signature:** `$api: FormApi`
 
@@ -784,9 +784,9 @@ profile.reset(); // 'reset label'
 profile.$api.reset();
 ```
 
-### 🔸 Validation properties {#validation-properties}
+### ◆ Validation properties {#validation-properties}
 
-#### ✅ validators() {#validators}
+#### – validators() {#validators}
 
 **Signature:** `validators: Signal<Validators<FormValue>> & { (options: { resolve?: boolean }): Validators<FormValue> }`
 
@@ -803,7 +803,7 @@ const credentials = form({
 credentials.validators().length; // 1
 ```
 
-#### 🚨 errors() {#errors}
+#### – errors() {#errors}
 
 **Signature:** `errors: Signal<readonly ValidationError[]>`
 
@@ -820,7 +820,7 @@ const credentials = form({
 credentials.errors()[0]?.kind; // 'passwordMismatch'
 ```
 
-#### 🚨 allErrors() {#allerrors}
+#### – allErrors() {#allerrors}
 
 **Signature:** `allErrors: Signal<readonly ValidationError[]>`
 
@@ -835,7 +835,7 @@ profile.allErrors()[0]?.kind; // 'required'
 profile.errors(); // []
 ```
 
-#### 💡 valid() {#valid}
+#### – valid() {#valid}
 
 **Signature:** `valid: Signal<boolean>`
 
@@ -849,7 +849,7 @@ const profile = form({
 profile.valid(); // true
 ```
 
-#### 🚨 invalid() {#invalid}
+#### – invalid() {#invalid}
 
 **Signature:** `invalid: Signal<boolean>`
 
@@ -863,7 +863,7 @@ const profile = form({
 profile.invalid(); // true
 ```
 
-#### ✅ required() {#required}
+#### – required() {#required}
 
 **Signature:** `required: Signal<boolean>`
 
@@ -880,7 +880,7 @@ const profile = form({
 profile.required(); // true
 ```
 
-#### ⏳ pending() {#pending}
+#### – pending() {#pending}
 
 **Signature:** `pending: Signal<boolean>`
 
@@ -899,7 +899,7 @@ const profile = form({
 profile.pending(); // true while checkProfile() is running
 ```
 
-#### ✅ validationStatus() {#validationstatus}
+#### – validationStatus() {#validationstatus}
 
 **Signature:** `validationStatus: Signal<'valid' | 'invalid' | 'unknown'>`
 
@@ -916,9 +916,9 @@ profile.validationStatus(); // 'invalid'
 `'unknown'` means asynchronous validation is pending and no available error currently makes the
 subtree invalid.
 
-### 🔸 Interaction properties {#interaction-properties}
+### ◆ Interaction properties {#interaction-properties}
 
-#### 👆 touched() {#touched}
+#### – touched() {#touched}
 
 **Signature:** `touched: Signal<boolean>`
 
@@ -933,7 +933,7 @@ profile.username.markAsTouched();
 profile.touched(); // true
 ```
 
-#### 👆 untouched() {#untouched}
+#### – untouched() {#untouched}
 
 **Signature:** `untouched: Signal<boolean>`
 
@@ -947,7 +947,7 @@ const profile = form({
 profile.untouched(); // true
 ```
 
-#### 👆 dirty() {#dirty}
+#### – dirty() {#dirty}
 
 **Signature:** `dirty: Signal<boolean>`
 
@@ -962,7 +962,7 @@ profile.username.markAsDirty();
 profile.dirty(); // true
 ```
 
-#### 👆 pristine() {#pristine}
+#### – pristine() {#pristine}
 
 **Signature:** `pristine: Signal<boolean>`
 
@@ -976,9 +976,9 @@ const profile = form({
 profile.pristine(); // true
 ```
 
-### 🔸 Availability properties {#availability-properties}
+### ◆ Availability properties {#availability-properties}
 
-#### 🎛️ disabled() {#disabled}
+#### – disabled() {#disabled}
 
 **Signature:** `disabled: Signal<boolean>`
 
@@ -994,7 +994,7 @@ const profile = form({
 profile.disabled(); // true
 ```
 
-#### 🎛️ disabledReasons() {#disabledreasons}
+#### – disabledReasons() {#disabledreasons}
 
 **Signature:** `disabledReasons: Signal<readonly DisabledReason[]>`
 
@@ -1012,7 +1012,7 @@ profile.disabledReasons()[0]?.message; // 'Profile is locked'
 profile.username.disabled(); // true
 ```
 
-#### 🎛️ enabled() {#enabled}
+#### – enabled() {#enabled}
 
 **Signature:** `enabled: Signal<boolean>`
 
@@ -1026,7 +1026,7 @@ const profile = form({
 profile.enabled(); // true
 ```
 
-#### 🎛️ readonly() {#readonly}
+#### – readonly() {#readonly}
 
 **Signature:** `readonly: Signal<boolean>`
 
@@ -1042,7 +1042,7 @@ const profile = form({
 profile.readonly(); // true
 ```
 
-#### 🎛️ writable() {#writable}
+#### – writable() {#writable}
 
 **Signature:** `writable: Signal<boolean>`
 
@@ -1057,7 +1057,7 @@ const profile = form({
 profile.writable(); // true
 ```
 
-#### 🎛️ hidden() {#hidden}
+#### – hidden() {#hidden}
 
 **Signature:** `hidden: Signal<boolean>`
 
@@ -1073,7 +1073,7 @@ const profile = form({
 profile.hidden(); // true
 ```
 
-#### 🎛️ visible() {#visible}
+#### – visible() {#visible}
 
 **Signature:** `visible: Signal<boolean>`
 
@@ -1087,9 +1087,9 @@ const profile = form({
 profile.visible(); // true
 ```
 
-### 🔸 Control and submission properties {#control-and-submission-properties}
+### ◆ Control and submission properties {#control-and-submission-properties}
 
-#### ⏱️ debouncing() {#debouncing}
+#### – debouncing() {#debouncing}
 
 **Signature:** `debouncing: Signal<boolean>`
 
@@ -1103,7 +1103,7 @@ const search = form({
 search.debouncing(); // false before a bound control has a pending value
 ```
 
-#### 📨 submitted() {#submitted}
+#### – submitted() {#submitted}
 
 **Signature:** `submitted: Signal<boolean>`
 
@@ -1118,7 +1118,7 @@ is named `submitted`. Read the [complete rules](../guides/submission.md#submissi
 
 <CodeBlock language="typescript" title="submission-history.ts">{submissionHistorySource}</CodeBlock>
 
-#### 📨 submitting() {#submitting}
+#### – submitting() {#submitting}
 
 **Signature:** `submitting: Signal<boolean>`
 
@@ -1139,9 +1139,9 @@ profile.username.submitting(); // true while saveProfile() is running
 
 Each entry includes its consumer-facing signature, behavior, and return value.
 
-### 🔸 Dynamic children {#dynamic-children}
+### ◆ Dynamic children {#dynamic-children}
 
-#### 💡 add() {#add}
+#### – add() {#add}
 
 **Signatures:** `add(key: string, definition): AddedNode` ·
 `add(definitions): AddedNodes`
@@ -1177,7 +1177,7 @@ for its exact type, or retrieve it later with `get()`. Array values become
 fields; declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application
 object with `field(value)` when it should remain one atomic value.
 
-#### 💡 get() {#get}
+#### – get() {#get}
 
 **Signature:** `get(key: string): DynamicNode | undefined`
 
@@ -1199,7 +1199,7 @@ profile.get('age')?.value(); // 36
 profile.get('missing'); // undefined
 ```
 
-#### 📚 remove() {#remove}
+#### – remove() {#remove}
 
 **Signature:** `remove(key: string): DynamicNode | undefined`
 
@@ -1221,9 +1221,9 @@ profile.remove('missing'); // undefined
 See [Dynamic object children](../guides/dynamic-object-children.md) for value typing and collision
 behavior.
 
-### 🔸 Update values and reset state {#update-values-and-reset-state}
+### ◆ Update values and reset state {#update-values-and-reset-state}
 
-#### 📝 set() {#set}
+#### – set() {#set}
 
 **Signature:** `set(value: FormSet): void`
 
@@ -1246,7 +1246,7 @@ profile(); // { username: 'grace', active: false }
 
 Unknown runtime keys are ignored with a warning in development mode.
 
-#### 📝 update() {#update}
+#### – update() {#update}
 
 **Signature:** `update(updater: (value: FormValue) => FormSet): void`
 
@@ -1266,7 +1266,7 @@ profile.update(value => ({
 profile.username(); // 'ada'
 ```
 
-#### 📝 patch() {#patch}
+#### – patch() {#patch}
 
 **Signature:** `patch(value: FormPatch): void`
 
@@ -1293,7 +1293,7 @@ profile.address(); // { city: 'Zurich', country: 'UK' }
 
 Unknown runtime keys are ignored with a warning in development mode.
 
-#### ↩️ reset() {#reset}
+#### – reset() {#reset}
 
 **Signatures:** `reset(): void` · `reset(value: FormSet): void`
 
@@ -1314,9 +1314,9 @@ profile.touched(); // false
 profile.pristine(); // true
 ```
 
-### 🔸 Validation and interaction {#validation-and-interaction}
+### ◆ Validation and interaction {#validation-and-interaction}
 
-#### ✅ setValidators() {#setvalidators}
+#### – setValidators() {#setvalidators}
 
 **Signature:** `setValidators(validators: ValidatorSource<FormValue, FormNode<TNodes>>): void`
 
@@ -1333,7 +1333,7 @@ credentials.setValidators(credentialsMatch);
 credentials.invalid(); // true
 ```
 
-#### 🚨 getError() {#geterror}
+#### – getError() {#geterror}
 
 **Signature:** `getError(kind: string): ValidationError | undefined`
 
@@ -1351,7 +1351,7 @@ const credentials = form({
 credentials.getError('passwordMismatch')?.kind; // 'passwordMismatch'
 ```
 
-#### 👆 markAsTouched() {#markastouched}
+#### – markAsTouched() {#markastouched}
 
 **Signature:** `markAsTouched(options?: { skipDescendants?: boolean }): void`
 
@@ -1371,7 +1371,7 @@ profile.markAsTouched({ skipDescendants: true });
 profile.username.touched(); // false
 ```
 
-#### 👆 markAsUntouched() {#markasuntouched}
+#### – markAsUntouched() {#markasuntouched}
 
 **Signature:** `markAsUntouched(): void`
 
@@ -1388,7 +1388,7 @@ profile.markAsUntouched();
 profile.untouched(); // true
 ```
 
-#### 👆 markAsDirty() {#markasdirty}
+#### – markAsDirty() {#markasdirty}
 
 **Signature:** `markAsDirty(): void`
 
@@ -1403,7 +1403,7 @@ profile.markAsDirty();
 profile.dirty(); // true
 ```
 
-#### 👆 markAsPristine() {#markaspristine}
+#### – markAsPristine() {#markaspristine}
 
 **Signature:** `markAsPristine(): void`
 
@@ -1420,9 +1420,9 @@ profile.markAsPristine();
 profile.pristine(); // true
 ```
 
-### 🔸 Availability {#availability-1}
+### ◆ Availability {#availability-1}
 
-#### 🎛️ disable() {#disable}
+#### – disable() {#disable}
 
 **Signature:** `disable(message?: string): void`
 
@@ -1438,7 +1438,7 @@ profile.disabled(); // true
 profile.username.disabled(); // true
 ```
 
-#### 🎛️ enable() {#enable}
+#### – enable() {#enable}
 
 **Signature:** `enable(): void`
 
@@ -1455,7 +1455,7 @@ profile.enable();
 profile.enabled(); // true
 ```
 
-#### 🎛️ markAsReadonly() {#markasreadonly}
+#### – markAsReadonly() {#markasreadonly}
 
 **Signature:** `markAsReadonly(): void`
 
@@ -1470,7 +1470,7 @@ profile.markAsReadonly();
 profile.username.writable(); // false
 ```
 
-#### 🎛️ markAsWritable() {#markaswritable}
+#### – markAsWritable() {#markaswritable}
 
 **Signature:** `markAsWritable(): void`
 
@@ -1487,7 +1487,7 @@ profile.markAsWritable();
 profile.writable(); // true
 ```
 
-#### 🎛️ hide() {#hide}
+#### – hide() {#hide}
 
 **Signature:** `hide(): void`
 
@@ -1502,7 +1502,7 @@ profile.hide();
 profile.username.visible(); // false
 ```
 
-#### 🎛️ show() {#show}
+#### – show() {#show}
 
 **Signature:** `show(): void`
 
@@ -1519,9 +1519,9 @@ profile.show();
 profile.visible(); // true
 ```
 
-### 🔸 Control methods {#control-methods}
+### ◆ Control methods {#control-methods}
 
-#### ⏱️ flush() {#flush}
+#### – flush() {#flush}
 
 **Signature:** `flush(): void`
 
@@ -1539,7 +1539,7 @@ search.query(); // 'angular'
 search.debouncing(); // false
 ```
 
-#### 👆 focus() {#focus}
+#### – focus() {#focus}
 
 **Signature:** `focus(options?: FocusOptions): void`
 
@@ -1548,9 +1548,9 @@ the form takes precedence over descendant bindings. Standard `FocusOptions` are 
 
 <CodeBlock language="ts">{formFocusSource}</CodeBlock>
 
-### 🔸 Submission methods {#submission-methods}
+### ◆ Submission methods {#submission-methods}
 
-#### 📨 submit() {#submit}
+#### – submit() {#submit}
 
 **Signature:** `submit(): Promise<boolean>`
 

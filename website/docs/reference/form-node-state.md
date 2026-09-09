@@ -48,7 +48,7 @@ and does not replace the control's existing value contract.
 
 :::
 
-### 🔸 FormValueControl without experimental input writes {#formvaluecontrol-without-experimental-input-writes}
+### ◆ FormValueControl without experimental input writes {#formvaluecontrol-without-experimental-input-writes}
 
 Combine `value = model()` with `useFormNodeState()` to implement `FormValueControl` with value
 binding and full access to the state exposed by a bound Form Nodes node. Keep `syncInputs` off:
@@ -262,9 +262,9 @@ defaults above. `formControlName` and named `ngModel` bindings expose their dire
 
 ## 📖 Property reference {#property-reference}
 
-### 🔸 Connection properties {#connection-properties}
+### ◆ Connection properties {#connection-properties}
 
-#### ⚡ connected {#form-node-state-connected}
+#### – connected {#form-node-state-connected}
 
 **Signature:** `connected: Signal<boolean>`
 
@@ -274,7 +274,7 @@ Reports whether a supported binding currently owns the component host.
 if (this.formNodeState.connected()) setupFormOnlyBehavior();
 ```
 
-#### ⚡ source {#form-node-state-source}
+#### – source {#form-node-state-source}
 
 **Signature:** `source: Signal<ControlStateSource | null>`
 
@@ -285,9 +285,9 @@ Identifies the selected adapter as `'formNode'`, `'formField'`, `'formControl'`,
 this.formNodeState.source(); // 'formNode'
 ```
 
-### 🔸 Value and validation properties {#value-and-validation-properties}
+### ◆ Value and validation properties {#value-and-validation-properties}
 
-#### 📝 value {#form-node-state-value}
+#### – value {#form-node-state-value}
 
 **Signature:** `value: Signal<TValue | undefined>`
 
@@ -308,7 +308,7 @@ adapters read their own control values.
 preview = computed(() => this.formNodeState.value() ?? 'No value');
 ```
 
-#### 🚨 errors {#form-node-state-errors}
+#### – errors {#form-node-state-errors}
 
 **Signature:** `errors: Signal<readonly ControlStateError[]>`
 
@@ -320,7 +320,7 @@ requiredError = computed(() =>
 );
 ```
 
-#### 🚨 invalid {#form-node-state-invalid}
+#### – invalid {#form-node-state-invalid}
 
 **Signature:** `invalid: Signal<boolean>`
 
@@ -330,7 +330,7 @@ Reports whether validation currently fails.
 showErrors = computed(() => this.formNodeState.touched() && this.formNodeState.invalid());
 ```
 
-#### ⏳ pending {#form-node-state-pending}
+#### – pending {#form-node-state-pending}
 
 **Signature:** `pending: Signal<boolean>`
 
@@ -340,9 +340,9 @@ Reports unresolved asynchronous validation.
 statusText = computed(() => this.formNodeState.pending() ? 'Checking…' : 'Ready');
 ```
 
-### 🔸 Interaction and availability properties {#interaction-and-availability-properties}
+### ◆ Interaction and availability properties {#interaction-and-availability-properties}
 
-#### 🎛️ disabled {#form-node-state-disabled}
+#### – disabled {#form-node-state-disabled}
 
 **Signature:** `disabled: Signal<boolean>`
 
@@ -352,7 +352,7 @@ Reports whether user interaction is disabled.
 <input [disabled]="formNodeState.disabled()" />
 ```
 
-#### 🎛️ disabledReasons {#form-node-state-disabledreasons}
+#### – disabledReasons {#form-node-state-disabledreasons}
 
 **Signature:** `disabledReasons: Signal<readonly ControlStateDisabledReason[]>`
 
@@ -362,7 +362,7 @@ Returns normalized reasons when the active API exposes them.
 disabledMessage = computed(() => this.formNodeState.disabledReasons()[0]?.message);
 ```
 
-#### 👆 dirty {#form-node-state-dirty}
+#### – dirty {#form-node-state-dirty}
 
 **Signature:** `dirty: Signal<boolean>`
 
@@ -372,7 +372,7 @@ Reports whether user interaction changed the bound control.
 hasUnsavedChange = computed(() => this.formNodeState.dirty());
 ```
 
-#### 🎛️ hidden {#form-node-state-hidden}
+#### – hidden {#form-node-state-hidden}
 
 **Signature:** `hidden: Signal<boolean>`
 
@@ -384,7 +384,7 @@ Reports form-owned visibility state. APIs without hidden state return `false`.
 }
 ```
 
-#### 🎛️ readonly {#form-node-state-readonly}
+#### – readonly {#form-node-state-readonly}
 
 **Signature:** `readonly: Signal<boolean>`
 
@@ -394,7 +394,7 @@ Reports whether editing should be prevented without disabling interaction.
 <input [readonly]="formNodeState.readonly()" />
 ```
 
-#### ✅ required {#form-node-state-required}
+#### – required {#form-node-state-required}
 
 **Signature:** `required: Signal<boolean>`
 
@@ -429,7 +429,7 @@ also counts as required, so an acceptance checkbox can display the same indicato
 }
 ```
 
-#### 👆 touched {#form-node-state-touched}
+#### – touched {#form-node-state-touched}
 
 **Signature:** `touched: Signal<boolean>`
 
@@ -441,7 +441,7 @@ Reports whether the user interacted with and left the control.
 }
 ```
 
-### 🔸 Constraint properties {#constraint-properties}
+### ◆ Constraint properties {#constraint-properties}
 
 **Reactive Forms and `ngModel` expose constraints from standard Angular validator directives on
 the same host**, even when the current value is valid. No experimental configuration is needed.
@@ -472,7 +472,7 @@ Comments identify the suggested files; imports are shared by this combined examp
 
 <CodeBlock language="ts" title="Custom control and Reactive Forms editor">{constraintSource}</CodeBlock>
 
-#### ✅ min {#form-node-state-min}
+#### – min {#form-node-state-min}
 
 **Signature:** `min: Signal<number | Date | undefined>`
 
@@ -482,7 +482,7 @@ Returns the effective minimum numeric or date constraint.
 const minimum = this.formNodeState.min();
 ```
 
-#### ✅ max {#form-node-state-max}
+#### – max {#form-node-state-max}
 
 **Signature:** `max: Signal<number | Date | undefined>`
 
@@ -492,7 +492,7 @@ Returns the effective maximum numeric or date constraint.
 const maximum = this.formNodeState.max();
 ```
 
-#### ✅ minLength {#form-node-state-minlength}
+#### – minLength {#form-node-state-minlength}
 
 **Signature:** `minLength: Signal<number | undefined>`
 
@@ -502,7 +502,7 @@ Returns the effective minimum-length constraint.
 <input [attr.minlength]="formNodeState.minLength()" />
 ```
 
-#### ✅ maxLength {#form-node-state-maxlength}
+#### – maxLength {#form-node-state-maxlength}
 
 **Signature:** `maxLength: Signal<number | undefined>`
 
@@ -512,7 +512,7 @@ Returns the effective maximum-length constraint.
 <input [attr.maxlength]="formNodeState.maxLength()" />
 ```
 
-#### ✅ pattern {#form-node-state-pattern}
+#### – pattern {#form-node-state-pattern}
 
 **Signature:** `pattern: Signal<readonly RegExp[]>`
 
@@ -524,7 +524,7 @@ accepts = computed(() =>
 );
 ```
 
-#### ⚡ name {#form-node-state-name}
+#### – name {#form-node-state-name}
 
 **Signature:** `name: Signal<string | undefined>`
 
@@ -536,7 +536,7 @@ Returns a generated or declared control name when the active binding exposes one
 
 ## 📖 Method reference {#method-reference}
 
-### 🔸 hasError(kind) {#haserrorkind}
+### ◆ hasError(kind) {#haserrorkind}
 
 **Signature:** `hasError(kind: string): boolean`
 
@@ -553,7 +553,7 @@ showRequiredError = computed(() =>
 This checks an existing error, not whether a validator is configured. Use `required()` to decide
 whether to show a required asterisk even when the value is valid.
 
-### 🔸 getError(kind) {#geterrorkind}
+### ◆ getError(kind) {#geterrorkind}
 
 **Signature:** `getError(kind: string): ControlStateError | undefined`
 
@@ -580,7 +580,7 @@ Queries follow control replacement and disconnection. Angular control events upd
 silent Angular changes are reconciled after rendering, just like `errors()`. See the
 [complete custom-control example](#constraint-properties) for template use with error details.
 
-### 🔸 hasValidator(validator) {#hasvalidatorvalidator}
+### ◆ hasValidator(validator) {#hasvalidatorvalidator}
 
 **Signature:** `hasValidator(validator: unknown, options?: { resolve?: boolean }): boolean | undefined`
 
@@ -641,7 +641,7 @@ are reconciled after rendering using public validator references. Call `updateVa
 after modifying Angular validators as usual to update validation results. Merely querying async
 registrations does not start asynchronous validation.
 
-### 🔸 markAsTouched() {#markastouched}
+### ◆ markAsTouched() {#markastouched}
 
 **Signature:** `markAsTouched(): void`
 

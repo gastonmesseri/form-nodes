@@ -87,7 +87,7 @@ const name = field('', [required, minLength(3)]);
 Use the options form when the node also needs configuration such as `disabled`, `readonly`,
 `hidden`, debounce, injector ownership, array tracking, or form submission.
 
-### 🔸 Accepted validator entries {#accepted-validator-entries}
+### ◆ Accepted validator entries {#accepted-validator-entries}
 
 | Entry | Example | Behavior |
 | --- | --- | --- |
@@ -129,7 +129,7 @@ These node boundaries are unchanged by concise declarations. The
 [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix) shows
 which primitive owns validation for every shorthand category.
 
-### 🔸 field() {#field}
+### ◆ field() {#field}
 
 A field validator observes the complete field value. If a field stores an object or array, the
 validator still sees that value as one leaf:
@@ -144,7 +144,7 @@ const tags = field<string[]>([], {
 
 Use `array()` instead when each item needs independent validation, errors, paths, or state.
 
-### 🔸 group() and object shorthand {#group-and-object-shorthand}
+### ◆ group() and object shorthand {#group-and-object-shorthand}
 
 A group validator observes the aggregate object. It is appropriate for cross-field rules:
 
@@ -164,7 +164,7 @@ const credentials = group({
 The object shorthand creates the same kind of aggregate branch, but use explicit `group()` when
 that branch needs its own `validators` or other group options.
 
-### 🔸 form() {#form}
+### ◆ form() {#form}
 
 Form validation behaves like aggregate group validation. A form additionally uses its validation
 state to gate submission and exposes submission operations:
@@ -188,7 +188,7 @@ const booking = form({
 Invalid or unresolved validation prevents a normal submission run. See
 [Submission](../guides/submission.md) for the complete submission lifecycle.
 
-### 🔸 array() {#array}
+### ◆ array() {#array}
 
 An array can validate the collection while item nodes validate individual values:
 
@@ -284,7 +284,7 @@ Every node exposes its validation state directly:
 `unknown` means no error currently makes the node invalid, but an asynchronous result is still
 pending. It does not refer to the TypeScript value type.
 
-### 🔸 Aggregate state {#aggregate-state}
+### ◆ Aggregate state {#aggregate-state}
 
 Forms, groups, and arrays combine their own validation with descendant state:
 
@@ -339,7 +339,7 @@ normalized current collection with `validators()`.
 - [Node API](./node-api.md) — shared validation properties and methods
 - [Errors and validation status](../guides/errors-and-status.md) — displaying and typing errors
 
-### 🔸 Validator inspection and resolution {#validator-inspection-and-resolution}
+### ◆ Validator inspection and resolution {#validator-inspection-and-resolution}
 
 `validators` remains an Angular `Signal` of directly registered functions. Its options overload and
 `hasValidator` accept `{ resolve?: boolean }`, defaulting to false. Resolved inspection shares

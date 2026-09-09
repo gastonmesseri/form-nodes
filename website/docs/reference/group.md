@@ -127,7 +127,7 @@ group(definitions, validators, options?);
 Use [`FormValueContract<Model>`](./form-value-contract.md) with `satisfies` to check a group against
 a named aggregate value while preserving its inferred child-node types.
 
-### 🔸 `field()` shorthand {#field-shorthand}
+### ◆ `field()` shorthand {#field-shorthand}
 
 Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as arrays
 and class instances, can stand in for `field()` when defining a group:
@@ -230,9 +230,9 @@ concerns that child's value.
 
 Each option includes its signature, default behavior, scope, and a complete example.
 
-### 🔸 Values and validation {#values-and-validation}
+### ◆ Values and validation {#values-and-validation}
 
-#### ⚙️ equal {#group-equal-option}
+#### – equal {#group-equal-option}
 
 **Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
 
@@ -241,7 +241,7 @@ update callbacks, and public parent values. Child writes and control synchroniza
 current committed values. See [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality)
 for the executable example and full contract shared with `form()`.
 
-#### ✅ validators {#group-validators-option}
+#### – validators {#group-validators-option}
 
 **Signature:** `validators?: ValidatorSource<GroupValue, GroupNode<TNodes>>`
 
@@ -257,7 +257,7 @@ const dateRange = group({
 });
 ```
 
-#### 💬 validatorMessages {#group-validatormessages-option}
+#### – validatorMessages {#group-validatormessages-option}
 
 **Signature:** `validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined)`
 
@@ -277,7 +277,7 @@ const address = group({
 address.allErrors()[0]?.message; // 'Enter a city.'
 ```
 
-#### ⏱️ debounce {#group-debounce-option}
+#### – debounce {#group-debounce-option}
 
 **Signature:** `debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>)`
 
@@ -293,9 +293,9 @@ const address = group({
 });
 ```
 
-### 🔸 Availability {#availability}
+### ◆ Availability {#availability}
 
-#### ⚙️ hidden {#group-hidden-option}
+#### – hidden {#group-hidden-option}
 
 **Signature:** `hidden?: boolean | (() => boolean)`
 
@@ -309,7 +309,7 @@ const shippingAddress = group({
 });
 ```
 
-#### ⚙️ disabled {#group-disabled-option}
+#### – disabled {#group-disabled-option}
 
 **Signature:** `disabled?: boolean | string | (() => boolean | string)`
 
@@ -326,7 +326,7 @@ const address = group({
 address.disabledReasons()[0]?.message; // 'Address is managed by your organization'
 ```
 
-#### ⚙️ readonly {#group-readonly-option}
+#### – readonly {#group-readonly-option}
 
 **Signature:** `readonly?: boolean | (() => boolean)`
 
@@ -340,9 +340,9 @@ const identity = group({
 });
 ```
 
-### 🔸 Injector ownership {#injector-ownership}
+### ◆ Injector ownership {#injector-ownership}
 
-#### ⚙️ injector {#group-injector-option}
+#### – injector {#group-injector-option}
 
 **Signature:** `injector?: Injector`
 
@@ -357,7 +357,7 @@ const address = group({
 });
 ```
 
-#### ⚙️ inheritInjector {#group-inheritinjector-option}
+#### – inheritInjector {#group-inheritinjector-option}
 
 **Signature:** `inheritInjector?: boolean`
 
@@ -372,7 +372,7 @@ const address = group({
 });
 ```
 
-#### ⚙️ adoptBindingInjector {#group-adoptbindinginjector-option}
+#### – adoptBindingInjector {#group-adoptbindinginjector-option}
 
 **Signature:** `adoptBindingInjector?: boolean`
 
@@ -559,9 +559,9 @@ example. `GroupValue` means the inferred committed object value, `GroupSet` mean
 value accepted by `set()`, and `GroupPatch` means the recursively partial value accepted by
 `patch()`.
 
-### 🔸 Value and tree properties {#value-and-tree-properties}
+### ◆ Value and tree properties {#value-and-tree-properties}
 
-#### 📝 Callable value {#callable-value}
+#### – Callable value {#callable-value}
 
 **Signature:** `(): GroupValue`
 
@@ -577,7 +577,7 @@ const address = group({
 address(); // { city: 'Zurich', country: 'CH' }
 ```
 
-#### 🌳 Named child access {#named-child-access}
+#### – Named child access {#named-child-access}
 
 **Signature:** `readonly [childName]: ChildNode`
 
@@ -595,7 +595,7 @@ address.city(); // 'Zurich'
 address.coordinates.latitude(); // 47.3769
 ```
 
-#### 🌳 children {#children}
+#### – children {#children}
 
 **Signature:** `readonly children: GroupChildren`
 
@@ -612,7 +612,7 @@ address.children.city(); // 'Zurich'
 Direct access is preferred for initially declared children. Use `get(key)` for
 runtime keys. If a child is named `children`, use `address.$api.children`.
 
-#### 📝 value() {#value}
+#### – value() {#value}
 
 **Signature:** `value: NodeValueSignal<GroupValue, GroupSet>`
 
@@ -628,7 +628,7 @@ address.value(); // { city: 'Zurich' }
 
 Prefer the equivalent callable form, `address()`, for ordinary value reads.
 
-#### 📝 value.committed() {#value-committed}
+#### – value.committed() {#value-committed}
 
 **Signature:** `value.committed: Signal<GroupValue> & { set(value: GroupSet): void }`
 
@@ -636,7 +636,7 @@ Reads the latest committed data, bypassing configured `equal` checks on this nod
 children. Pending debounce is still respected. Normal signal identity checks still apply.
 See the [value views reference](./node-value.md#value-committed) for an executable example.
 
-#### ✏️ value.committed.set() {#value-committed-set}
+#### – value.committed.set() {#value-committed-set}
 
 **Signature:** `value.committed.set(value: GroupSet): void`
 
@@ -644,7 +644,7 @@ Equivalent to `set(value)`: commits immediately, cancels pending input, preserve
 state, and follows normal validation and parent propagation. Exposed reads still honor `equal`.
 See the [setter example](./node-value.md#value-committed-set).
 
-#### 🔌 value.control() {#controlvalue}
+#### – value.control() {#controlvalue}
 
 **Signature:** `value.control: Signal<GroupValue>`
 
@@ -661,7 +661,7 @@ address.value.control(); // { city: 'Zurich' }
 Pending descendant control values are not aggregated into this signal. Read a descendant's
 `value.control()` when its immediate buffered value is needed.
 
-#### ✏️ value.control.set() {#value-control-set}
+#### – value.control.set() {#value-control-set}
 
 **Signature:** `value.control.set(value: GroupSet): void`
 
@@ -670,7 +670,7 @@ configured or inherited debounce. It does not mark touched or emit binding outpu
 Read the [control setter example and propagation details](./node-value.md#value-control-set).
 
 
-#### 💡 nodeType() {#nodetype}
+#### – nodeType() {#nodetype}
 
 **Signature:** `nodeType(): 'group'`
 
@@ -685,7 +685,7 @@ const address = group({
 address.nodeType(); // 'group'
 ```
 
-#### 🧩 form() {#form}
+#### – form() {#form}
 
 **Signature:** `form: Signal<FormNode | null>`
 
@@ -700,7 +700,7 @@ const address = group({
 address.form(); // null
 ```
 
-#### 🌳 root() {#root}
+#### – root() {#root}
 
 **Signature:** `root: Signal<RootNode>`
 
@@ -715,7 +715,7 @@ const address = group({
 address.root() === address; // true
 ```
 
-#### 🌳 parent() {#parent}
+#### – parent() {#parent}
 
 **Signature:** `parent: Signal<ParentNode | null>`
 
@@ -731,7 +731,7 @@ const profile = form({
 profile.address.parent() === profile; // true
 ```
 
-#### 🌳 path() {#path}
+#### – path() {#path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
@@ -747,7 +747,7 @@ const profile = form({
 profile.address.path(); // ['address']
 ```
 
-#### 🌳 keyInParent() {#keyinparent}
+#### – keyInParent() {#keyinparent}
 
 **Signature:** `keyInParent: Signal<string | number | null>`
 
@@ -763,9 +763,9 @@ const profile = form({
 profile.address.keyInParent(); // 'address'
 ```
 
-### 🔸 API properties {#api-properties}
+### ◆ API properties {#api-properties}
 
-#### 📖 api {#api}
+#### – api {#api}
 
 **Signature:** `api: GroupApi`
 
@@ -781,7 +781,7 @@ address.api.valid(); // true
 
 Direct operations such as `address.valid()` are preferred.
 
-#### 📖 $api {#api-1}
+#### – $api {#api-1}
 
 **Signature:** `$api: GroupApi`
 
@@ -798,9 +798,9 @@ details.reset(); // 'reset label'
 details.$api.reset();
 ```
 
-### 🔸 Validation properties {#validation-properties}
+### ◆ Validation properties {#validation-properties}
 
-#### ✅ validators() {#validators}
+#### – validators() {#validators}
 
 **Signature:** `validators: Signal<Validators<GroupValue>> & { (options: { resolve?: boolean }): Validators<GroupValue> }`
 
@@ -817,7 +817,7 @@ const address = group({
 address.validators().length; // 1
 ```
 
-#### 🚨 errors() {#errors}
+#### – errors() {#errors}
 
 **Signature:** `errors: Signal<readonly ValidationError[]>`
 
@@ -834,7 +834,7 @@ const filters = group({
 filters.errors()[0]?.kind; // 'emptyFilters'
 ```
 
-#### 🚨 allErrors() {#allerrors}
+#### – allErrors() {#allerrors}
 
 **Signature:** `allErrors: Signal<readonly ValidationError[]>`
 
@@ -850,7 +850,7 @@ address.allErrors()[0]?.kind; // 'required'
 address.errors(); // []
 ```
 
-#### 💡 valid() {#valid}
+#### – valid() {#valid}
 
 **Signature:** `valid: Signal<boolean>`
 
@@ -864,7 +864,7 @@ const address = group({
 address.valid(); // true
 ```
 
-#### 🚨 invalid() {#invalid}
+#### – invalid() {#invalid}
 
 **Signature:** `invalid: Signal<boolean>`
 
@@ -878,7 +878,7 @@ const address = group({
 address.invalid(); // true
 ```
 
-#### ✅ required() {#required}
+#### – required() {#required}
 
 **Signature:** `required: Signal<boolean>`
 
@@ -895,7 +895,7 @@ const address = group({
 address.required(); // true
 ```
 
-#### ⏳ pending() {#pending}
+#### – pending() {#pending}
 
 **Signature:** `pending: Signal<boolean>`
 
@@ -914,7 +914,7 @@ const address = group({
 address.pending(); // true while checkAddress() is running
 ```
 
-#### ✅ validationStatus() {#validationstatus}
+#### – validationStatus() {#validationstatus}
 
 **Signature:** `validationStatus: Signal<'valid' | 'invalid' | 'unknown'>`
 
@@ -931,9 +931,9 @@ address.validationStatus(); // 'invalid'
 `'unknown'` means asynchronous validation is pending and no available error currently makes the
 subtree invalid.
 
-### 🔸 Interaction properties {#interaction-properties}
+### ◆ Interaction properties {#interaction-properties}
 
-#### 👆 touched() {#touched}
+#### – touched() {#touched}
 
 **Signature:** `touched: Signal<boolean>`
 
@@ -948,7 +948,7 @@ address.city.markAsTouched();
 address.touched(); // true
 ```
 
-#### 👆 untouched() {#untouched}
+#### – untouched() {#untouched}
 
 **Signature:** `untouched: Signal<boolean>`
 
@@ -962,7 +962,7 @@ const address = group({
 address.untouched(); // true
 ```
 
-#### 👆 dirty() {#dirty}
+#### – dirty() {#dirty}
 
 **Signature:** `dirty: Signal<boolean>`
 
@@ -977,7 +977,7 @@ address.city.markAsDirty();
 address.dirty(); // true
 ```
 
-#### 👆 pristine() {#pristine}
+#### – pristine() {#pristine}
 
 **Signature:** `pristine: Signal<boolean>`
 
@@ -991,9 +991,9 @@ const address = group({
 address.pristine(); // true
 ```
 
-### 🔸 Availability properties {#availability-properties}
+### ◆ Availability properties {#availability-properties}
 
-#### 🎛️ disabled() {#disabled}
+#### – disabled() {#disabled}
 
 **Signature:** `disabled: Signal<boolean>`
 
@@ -1009,7 +1009,7 @@ const address = group({
 address.disabled(); // true
 ```
 
-#### 🎛️ disabledReasons() {#disabledreasons}
+#### – disabledReasons() {#disabledreasons}
 
 **Signature:** `disabledReasons: Signal<readonly DisabledReason[]>`
 
@@ -1027,7 +1027,7 @@ address.disabledReasons()[0]?.message; // 'Address is locked'
 address.city.disabled(); // true
 ```
 
-#### 🎛️ enabled() {#enabled}
+#### – enabled() {#enabled}
 
 **Signature:** `enabled: Signal<boolean>`
 
@@ -1041,7 +1041,7 @@ const address = group({
 address.enabled(); // true
 ```
 
-#### 🎛️ readonly() {#readonly}
+#### – readonly() {#readonly}
 
 **Signature:** `readonly: Signal<boolean>`
 
@@ -1057,7 +1057,7 @@ const address = group({
 address.readonly(); // true
 ```
 
-#### 🎛️ writable() {#writable}
+#### – writable() {#writable}
 
 **Signature:** `writable: Signal<boolean>`
 
@@ -1072,7 +1072,7 @@ const address = group({
 address.writable(); // true
 ```
 
-#### 🎛️ hidden() {#hidden}
+#### – hidden() {#hidden}
 
 **Signature:** `hidden: Signal<boolean>`
 
@@ -1088,7 +1088,7 @@ const address = group({
 address.hidden(); // true
 ```
 
-#### 🎛️ visible() {#visible}
+#### – visible() {#visible}
 
 **Signature:** `visible: Signal<boolean>`
 
@@ -1102,9 +1102,9 @@ const address = group({
 address.visible(); // true
 ```
 
-### 🔸 Control and workflow properties {#control-and-workflow-properties}
+### ◆ Control and workflow properties {#control-and-workflow-properties}
 
-#### ⏱️ debouncing() {#debouncing}
+#### – debouncing() {#debouncing}
 
 **Signature:** `debouncing: Signal<boolean>`
 
@@ -1118,7 +1118,7 @@ const address = group({
 address.debouncing(); // false before a bound control has a pending value
 ```
 
-#### 📨 submitting() {#submitting}
+#### – submitting() {#submitting}
 
 **Signature:** `submitting: Signal<boolean>`
 
@@ -1141,9 +1141,9 @@ profile.address.submitting(); // true while saveProfile() is running
 
 Each entry includes its consumer-facing signature, behavior, and return value.
 
-### 🔸 Dynamic children {#dynamic-children-1}
+### ◆ Dynamic children {#dynamic-children-1}
 
-#### 💡 add() {#add}
+#### – add() {#add}
 
 **Signatures:** `add(key: string, definition): AddedNode` ·
 `add(definitions): AddedNodes`
@@ -1180,7 +1180,7 @@ its exact type, or retrieve it later with `get()`. Array values become fields;
 declare `array(...)` explicitly for a dynamic node collection. Wrap a plain application object
 with `field(value)` when it should remain one atomic value.
 
-#### 💡 get() {#get}
+#### – get() {#get}
 
 **Signature:** `get(key: string): DynamicNode | undefined`
 
@@ -1202,7 +1202,7 @@ filters.get('category')?.value(); // 'all'
 filters.get('missing'); // undefined
 ```
 
-#### 📚 remove() {#remove}
+#### – remove() {#remove}
 
 **Signature:** `remove(key: string): DynamicNode | undefined`
 
@@ -1221,9 +1221,9 @@ removed?.parent(); // null
 filters.remove('missing'); // undefined
 ```
 
-### 🔸 Update values and reset state {#update-values-and-reset-state}
+### ◆ Update values and reset state {#update-values-and-reset-state}
 
-#### 📝 set() {#set}
+#### – set() {#set}
 
 **Signature:** `set(value: GroupSet): void`
 
@@ -1246,7 +1246,7 @@ address(); // { city: 'London', country: 'UK' }
 
 Unknown runtime keys are ignored with a warning in development mode.
 
-#### 📝 update() {#update}
+#### – update() {#update}
 
 **Signature:** `update(updater: (value: GroupValue) => GroupSet): void`
 
@@ -1266,7 +1266,7 @@ address.update(value => ({
 address.city(); // 'Zurich'
 ```
 
-#### 📝 patch() {#patch}
+#### – patch() {#patch}
 
 **Signature:** `patch(value: GroupPatch): void`
 
@@ -1294,7 +1294,7 @@ address.coordinates(); // { latitude: 47.3769, longitude: -0.1276 }
 
 Unknown runtime keys are ignored with a warning in development mode.
 
-#### ↩️ reset() {#reset}
+#### – reset() {#reset}
 
 **Signatures:** `reset(): void` · `reset(value: GroupSet): void`
 
@@ -1315,9 +1315,9 @@ address.touched(); // false
 address.pristine(); // true
 ```
 
-### 🔸 Validation and interaction {#validation-and-interaction}
+### ◆ Validation and interaction {#validation-and-interaction}
 
-#### ✅ setValidators() {#setvalidators}
+#### – setValidators() {#setvalidators}
 
 **Signature:** `setValidators(validators: ValidatorSource<GroupValue, GroupNode<TNodes>>): void`
 
@@ -1334,7 +1334,7 @@ filters.setValidators(nonEmptyFilters);
 filters.invalid(); // true
 ```
 
-#### 🚨 getError() {#geterror}
+#### – getError() {#geterror}
 
 **Signature:** `getError(kind: string): ValidationError | undefined`
 
@@ -1352,7 +1352,7 @@ const filters = group({
 filters.getError('emptyFilters')?.kind; // 'emptyFilters'
 ```
 
-#### 👆 markAsTouched() {#markastouched}
+#### – markAsTouched() {#markastouched}
 
 **Signature:** `markAsTouched(options?: { skipDescendants?: boolean }): void`
 
@@ -1372,7 +1372,7 @@ address.markAsTouched({ skipDescendants: true });
 address.city.touched(); // false
 ```
 
-#### 👆 markAsUntouched() {#markasuntouched}
+#### – markAsUntouched() {#markasuntouched}
 
 **Signature:** `markAsUntouched(): void`
 
@@ -1389,7 +1389,7 @@ address.markAsUntouched();
 address.untouched(); // true
 ```
 
-#### 👆 markAsDirty() {#markasdirty}
+#### – markAsDirty() {#markasdirty}
 
 **Signature:** `markAsDirty(): void`
 
@@ -1404,7 +1404,7 @@ address.markAsDirty();
 address.dirty(); // true
 ```
 
-#### 👆 markAsPristine() {#markaspristine}
+#### – markAsPristine() {#markaspristine}
 
 **Signature:** `markAsPristine(): void`
 
@@ -1421,9 +1421,9 @@ address.markAsPristine();
 address.pristine(); // true
 ```
 
-### 🔸 Availability {#availability-1}
+### ◆ Availability {#availability-1}
 
-#### 🎛️ disable() {#disable}
+#### – disable() {#disable}
 
 **Signature:** `disable(message?: string): void`
 
@@ -1439,7 +1439,7 @@ address.disabled(); // true
 address.city.disabled(); // true
 ```
 
-#### 🎛️ enable() {#enable}
+#### – enable() {#enable}
 
 **Signature:** `enable(): void`
 
@@ -1456,7 +1456,7 @@ address.enable();
 address.enabled(); // true
 ```
 
-#### 🎛️ markAsReadonly() {#markasreadonly}
+#### – markAsReadonly() {#markasreadonly}
 
 **Signature:** `markAsReadonly(): void`
 
@@ -1471,7 +1471,7 @@ address.markAsReadonly();
 address.city.writable(); // false
 ```
 
-#### 🎛️ markAsWritable() {#markaswritable}
+#### – markAsWritable() {#markaswritable}
 
 **Signature:** `markAsWritable(): void`
 
@@ -1488,7 +1488,7 @@ address.markAsWritable();
 address.writable(); // true
 ```
 
-#### 🎛️ hide() {#hide}
+#### – hide() {#hide}
 
 **Signature:** `hide(): void`
 
@@ -1503,7 +1503,7 @@ address.hide();
 address.city.visible(); // false
 ```
 
-#### 🎛️ show() {#show}
+#### – show() {#show}
 
 **Signature:** `show(): void`
 
@@ -1520,9 +1520,9 @@ address.show();
 address.visible(); // true
 ```
 
-### 🔸 Control methods {#control-methods}
+### ◆ Control methods {#control-methods}
 
-#### ⏱️ flush() {#flush}
+#### – flush() {#flush}
 
 **Signature:** `flush(): void`
 
@@ -1540,7 +1540,7 @@ address.city(); // 'Zurich'
 address.debouncing(); // false
 ```
 
-#### 👆 focus() {#focus}
+#### – focus() {#focus}
 
 **Signature:** `focus(options?: FocusOptions): void`
 

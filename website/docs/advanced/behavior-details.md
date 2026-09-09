@@ -163,7 +163,7 @@ Synchronous `NG_VALIDATORS` errors participate in the node's real validation sta
 `NG_ASYNC_VALIDATORS` are not adapted; use `asyncValidator()` so cancellation, debounce, pending
 state, and stale-result handling remain owned by the node.
 
-### 🔸 Read-only signal-input compatibility {#read-only-signal-input-compatibility}
+### ◆ Read-only signal-input compatibility {#read-only-signal-input-compatibility}
 
 Angular does not expose a public setter for an `input()` signal on an existing host component. Form Nodes resolves aliases, property names, signal flags, and transforms through public
 `reflectComponentType()` metadata. A narrowly isolated compatibility adapter then discovers the

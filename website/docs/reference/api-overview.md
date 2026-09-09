@@ -42,7 +42,7 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 
 ## 🧩 Modeling primitives {#modeling-primitives}
 
-### 🔸 field() {#field}
+### ◆ field() {#field}
 
 Creates one leaf node. Its value can be a string, number, date, object, array, or any other
 application type. Fields are nullable by default.
@@ -63,7 +63,7 @@ Main exports: `field`, `FieldNode`, `FieldApi`, and `FieldOptions`.
 Use `createFormPrimitives({ nullable: false })` to obtain application-scoped factories whose fields and
 shorthands are non-nullable by default. Explicit field options always take precedence.
 
-### 🔸 form() {#form}
+### ◆ form() {#form}
 
 Creates the typed object tree that owns a submission workflow. It has the same structural behavior
 as a group plus `onSubmit` configuration and `submit()`. Root application workflows normally
@@ -77,7 +77,7 @@ of item nodes. Ordinary functions and non-plain object instances become concise 
 Main exports: `form`, `FormNode`, `FormApi`, `FormOptions`, `FormValue`, `FormNodeValue`, `FormValueContract`, `FormSet`,
 `FormPatch`.
 
-### 🔸 array() {#array}
+### ◆ array() {#array}
 
 Creates a dynamic collection by cloning one node template or invoking a factory. Use it when items
 need independent bindings, paths, validation, interaction state, or structural operations.
@@ -94,7 +94,7 @@ const myForm = form({
 Main exports: `array`, `ArrayNode`, `ArrayApi`, `ArrayOptions`, `ArrayValue`, `ArraySet`,
 `ArrayPatch`, `ArrayItems`, `ArrayIndexes`, and `ArrayItemWithParent`.
 
-### 🔸 Explicit group() {#explicit-group}
+### ◆ Explicit group() {#explicit-group}
 
 Plain nested objects already create structural groups and are the preferred way to model ordinary
 fixed branches:
@@ -115,7 +115,7 @@ state options, or message configuration without becoming a submission workflow. 
 
 ## ✅ Validation {#validation}
 
-### 🔸 Synchronous validation {#synchronous-validation}
+### ◆ Synchronous validation {#synchronous-validation}
 
 Pass built-in or custom validators to any node. `validator<TValue>()` supplies an explicit reusable
 authoring type but does not wrap or alter the callback at runtime.
@@ -137,7 +137,7 @@ const myForm = form({
 Frequently used types include `ValidationError`, `ValidationResult`, `ValidationStatus`,
 `ValidatorContext`, `ValidatorSource`, `Validators`, and the extensible `ValidationErrorMap`.
 
-### 🔸 Asynchronous validation {#asynchronous-validation}
+### ◆ Asynchronous validation {#asynchronous-validation}
 
 `asyncValidator()` marks asynchronous work explicitly so the node owns pending state, debounce,
 cancellation, dependency tracking, and stale-result protection.
@@ -159,7 +159,7 @@ const myForm = form({
 Related types include `AsyncValidator`, `AsyncValidatorContext`, `AsyncValidatorOptions`,
 `ParameterizedAsyncValidatorConfig`, and `ParameterizedAsyncValidatorContext`.
 
-### 🔸 Validator messages {#validator-messages}
+### ◆ Validator messages {#validator-messages}
 
 Message configuration follows this precedence, from highest to lowest:
 
@@ -198,7 +198,7 @@ provideFormNodesConfig({
 
 ## 🔌 Angular integration {#angular-integration}
 
-### 🔸 [formNode] {#formnode}
+### ◆ [formNode] {#formnode}
 
 Import `FormNodeDirective` into a standalone component and bind nodes directly:
 
@@ -222,7 +222,7 @@ and input/output control pairs (the latter require experimental `bindInputOutput
 
 Main exports: `FormNodeDirective`, `FormNodeBinding`, and [`FORM_NODE`](./form-node-token.md). One `FormNodeDirective` import supports native controls, custom controls, and native form roots.
 
-### 🔸 Custom-control and binding configuration {#custom-control-and-binding-configuration}
+### ◆ Custom-control and binding configuration {#custom-control-and-binding-configuration}
 
 | API | Purpose |
 | --- | --- |

@@ -51,7 +51,7 @@ Bindings receive a stable generated `name` based on the application, structural 
 
 Select values are reapplied when options change, including asynchronously rendered options. Radio bindings reevaluate their authored option value after Angular renders.
 
-### 🔸 Radio buttons {#radio-buttons}
+### ◆ Radio buttons {#radio-buttons}
 
 Bind every radio in a group to the same field and give each option a distinct string `value`.
 The field's initial value selects the matching option. `[formNode]` generates the shared `name`,

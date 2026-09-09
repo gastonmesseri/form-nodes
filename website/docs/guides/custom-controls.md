@@ -91,7 +91,7 @@ precedence even when they also expose a model; this preset does not write their 
 Use `'all'` for all inputs on any active custom-control adapter, including CVAs and enabled pairs.
 Native controls and standard CVA disabled callbacks remain connected in every mode.
 
-### 🔸 Select inputs and target controls {#select-inputs-and-target-controls}
+### ◆ Select inputs and target controls {#select-inputs-and-target-controls}
 
 Lists select exactly those inputs. Objects separate the input selection from its target:
 

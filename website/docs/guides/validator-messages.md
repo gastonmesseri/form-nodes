@@ -59,7 +59,7 @@ array catalog can override individual messages.
 
 ## ⚙️ Angular application configuration {#angular-application-configuration}
 
-### 🔸 Direct provider catalogs {#direct-provider-catalogs}
+### ◆ Direct provider catalogs {#direct-provider-catalogs}
 
 `provideFormNodesConfig()` also accepts a catalog object directly:
 
@@ -79,7 +79,7 @@ Use `validatorMessages: null` to replace the inherited provider catalog with an 
 This preserves node-local, form-tree, ancestor-node provider, global, and built-in fallbacks.
 Omitting the option or passing `undefined` instead inherits the injector catalog.
 
-### 🔸 Injectable catalogs {#injectable-catalogs}
+### ◆ Injectable catalogs {#injectable-catalogs}
 
 Configure translated defaults once in an application, route, or environment injector:
 

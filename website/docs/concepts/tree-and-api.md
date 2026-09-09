@@ -162,7 +162,7 @@ example also covers standalone fields, groups, and arrays:
 Both signals are stable and reactive, so validators and effects can observe a node being attached,
 detached, or moved. Validators access those signals through `ctx.node().form()` and `ctx.node().root()`.
 
-### 🔸 Navigation inside validators {#navigation-inside-validators}
+### ◆ Navigation inside validators {#navigation-inside-validators}
 
 `ctx.node` and `ctx.field` are the same readonly signal. Both return the validated node and never
 return `null`. Prefer `ctx.node()` when writing validation that can apply to different primitives.
@@ -185,7 +185,7 @@ Interaction, availability, required, and submission signals live on the node. Us
 `ctx.node().touched()`, `ctx.node().disabled()`, or `ctx.node().submitting()` instead of flat context
 properties. This applies to synchronous validators and every `asyncValidator()` callback.
 
-### 🔸 Inline node inference {#inline-node-inference}
+### ◆ Inline node inference {#inline-node-inference}
 
 An inline validator knows the primitive being created. A field validator receives `FieldNode<TValue>`;
 a form or group validator retains its declared children; an array validator retains its item type.

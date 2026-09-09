@@ -149,7 +149,7 @@ generic configuration code.
 
 ## 🔌 Binding property reference {#binding-property-reference}
 
-### 🔸 node {#node}
+### ◆ node {#node}
 
 **Signature:** `node: Signal<TNode>`
 
@@ -162,7 +162,7 @@ const binding = this.emailBinding();
 binding.node() === this.myForm.email; // true
 ```
 
-### 🔸 errors {#errors}
+### ◆ errors {#errors}
 
 **Signature:** `errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]>`
 
@@ -178,7 +178,7 @@ firstError?.targetNode === this.myForm.email; // true
 This distinction matters when the same field is rendered by multiple controls and one binding has
 a native parsing error.
 
-### 🔸 element {#element}
+### ◆ element {#element}
 
 **Signature:** `element: HTMLElement`
 
@@ -190,7 +190,7 @@ this.emailBinding().element.focus();
 
 Prefer `focus()` on the binding when a custom control may provide specialized focus behavior.
 
-### 🔸 injector {#injector}
+### ◆ injector {#injector}
 
 **Signature:** `injector: Injector`
 
@@ -203,7 +203,7 @@ const locale = this.emailBinding().injector.get(LOCALE_ID);
 
 ## 🔌 Binding method reference {#binding-method-reference}
 
-### 🔸 focus() {#focus}
+### ◆ focus() {#focus}
 
 **Signature:** `focus(options?: FocusOptions): void`
 
@@ -217,7 +217,7 @@ this.emailBinding().focus({ preventScroll: true });
 This differs from `node.focus()`, which selects one registered binding for a node. Calling the
 binding directly targets this exact rendered control.
 
-### 🔸 flush() {#flush}
+### ◆ flush() {#flush}
 
 **Signature:** `flush(): void`
 
@@ -231,7 +231,7 @@ this.myForm.email(); // latest control value
 
 Programmatic `set()` calls are already immediate and do not require a flush.
 
-### 🔸 reset() {#reset}
+### ◆ reset() {#reset}
 
 **Signature:** `reset(): void`
 

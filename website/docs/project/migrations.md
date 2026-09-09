@@ -288,7 +288,7 @@ Every breaking migration will identify:
 from. The development migration notes on this page apply to users of earlier repository snapshots. For a new application, start with [Installation](../getting-started/installation.md) and then
 build [Your first form](../getting-started/first-form.md).
 
-### 🔸 Package name {#package-name}
+### ◆ Package name {#package-name}
 
 The library is now named `@ngblocks/form-nodes`. Replace the previous package dependency with `@ngblocks/form-nodes`
 and update imports, re-exports, module augmentations, and any TypeScript path mappings or bundler
@@ -305,7 +305,7 @@ import { form, field, array } from '@ngblocks/form-nodes';
 Exported symbols and form behavior are unchanged by the rename. Remove the previous dependency
 from `package.json` and regenerate your lockfile with your package manager.
 
-### 🔸 Validator state access {#validator-state-access}
+### ◆ Validator state access {#validator-state-access}
 
 State signals are no longer direct validator-context properties. Read `dirty`, `disabled`,
 `disabledReasons`, `enabled`, `hidden`, `pristine`, `readonly`, `required`, `submitting`, `touched`,
@@ -316,7 +316,7 @@ The same migration applies to inline validators, `validator()`, built-in validat
 and all `asyncValidator()` callbacks. State reads retain their existing reactive tracking rules.
 `value`, `node`, `field`, `parent`, and `path` remain on the shared context.
 
-### 🔸 Validator node signals and navigation {#validator-node-signals-and-navigation}
+### ◆ Validator node signals and navigation {#validator-node-signals-and-navigation}
 
 `context.node` and `context.field` are now the same readonly signal returning the validated node.
 Inline callbacks and inline helpers infer the concrete primitive, its value type, and its children
@@ -338,7 +338,7 @@ as `Signal<TField>` on both aliases. Reading only `context.node()` tracks identi
 helpers, provide `TField` when an exact node type is needed; `TApi` now only specializes the
 remaining context navigation. Read the typed value with `context.value()`.
 
-### 🔸 Form and root ancestry lookups {#form-and-root-ancestry-lookups}
+### ◆ Form and root ancestry lookups {#form-and-root-ancestry-lookups}
 
 `form()` now identifies workflow ownership by returning the nearest explicit `form()`. Code that
 used it to reach the outermost structural node must call `root()` instead:
@@ -359,7 +359,7 @@ A standalone `group()` or `array()` previously returned itself from `form()` and
 `form()`, but now also expose themselves through `root()`. Update validator dependencies in the
 same way: use `context.node().form()` for the owning workflow and `context.node().root()` for the complete tree.
 
-### 🔸 Field nullability options {#field-nullability-options}
+### ◆ Field nullability options {#field-nullability-options}
 
 Per-field `nullable` options were removed before the initial release. Replace
 `field(value, { nullable: false })` with `field.strict(value)`, and replace
@@ -367,7 +367,7 @@ Per-field `nullable` options were removed before the initial release. Replace
 last argument. The `nullable` option on `createFormPrimitives()` is unchanged because it defines a
 factory-wide default rather than one field's local choice.
 
-### 🔸 Declaration shorthand contract {#declaration-shorthand-contract}
+### ◆ Declaration shorthand contract {#declaration-shorthand-contract}
 
 The initial `1.0.0` contract accepts primitive values, `Date`, functions, class instances, other
 non-plain objects, and arrays as atomic field shorthand inside `form()`, `group()`, dynamic

@@ -84,7 +84,7 @@ versioning exception while the maintainer is the only consumer. See the
 
 ## 📦 2.0.0 — 2026-09-08 {#200--2026-09-08}
 
-### 🔸 Changed {#changed}
+### ◆ Changed {#changed}
 
 - **Breaking:** Replaced the `ValidationError` namespace with directly exported types: `ValidationErrorForKind`, `ValidationErrorWithTargetNode`, `ValidationErrorWithOptionalTargetNode`, `ValidationErrorWithoutTargetNode`, and `ValidatorError`. Update qualified type references and imports; error shapes and validation behavior are unchanged.
 
@@ -106,7 +106,7 @@ versioning exception while the maintainer is the only consumer. See the
 
 - **Breaking behavior change:** `forEachChild()` on forms and groups now visits only declared children by default. Pass `{ includeDynamic: true }` as its second argument to include children added with `add()` and receive `DynamicNode` callbacks. Runtime boolean options also use `DynamicNode`. Empty declarations require the option to visit their children; default callbacks use `DynamicNode`.
 
-### 🔸 Added {#added}
+### ◆ Added {#added}
 
 - `useFormNodeState().hasValidator()` supports equivalent Form Nodes/Angular required queries and direct synchronous/asynchronous validator references where available, with reactive updates, opt-in `{ resolve: true }` composition queries for `[formNode]`, and `undefined` for unsupported or disconnected queries. Its queries and `hasError()` / `getError()` now use bounded memoization to avoid recomputing consumers when results are unchanged.
 
@@ -120,7 +120,7 @@ versioning exception while the maintainer is the only consumer. See the
 
 - `validators({ resolve: true })` and `hasValidator(validator, { resolve: true })` inspect final validator references reached through synchronous compositions, share validation evaluation, and react to composition dependencies. Default queries retain direct-registration semantics; async validators are listed without starting their work.
 
-### 🔸 Fixed {#fixed}
+### ◆ Fixed {#fixed}
 
 - Custom-control model binding resolves public aliases and requires input/output metadata for the same model property, preventing internal signals from being selected as value models.
 
@@ -130,11 +130,11 @@ versioning exception while the maintainer is the only consumer. See the
 
 ## 📦 1.1.0 — 2026-09-07 {#110--2026-09-07}
 
-### 🔸 Changed {#changed-1}
+### ◆ Changed {#changed-1}
 
 - **Breaking type change:** form and group `children` maps now expose only declared keys in TypeScript, so `Object.values(children)` infers the union of declared child types without `undefined`. Use `get(key)` or the result of `add()` for dynamic access. Runtime maps still contain dynamically added nodes, which are not represented in this static union. `forEachChild()` uses the same declared-child union; use `get(key)` inside the callback when handling arbitrary dynamic node types.
 
-### 🔸 Added {#added-1}
+### ◆ Added {#added-1}
 
 - All primitive nodes now expose reactive `hasError(kind)` queries for their own errors and `hasValidator(validator)` queries for directly registered validator functions, including async validators.
 
@@ -142,7 +142,7 @@ versioning exception while the maintainer is the only consumer. See the
 
 ## 📦 1.0.1 — 2026-09-07 {#101--2026-09-07}
 
-### 🔸 Fixed {#fixed-1}
+### ◆ Fixed {#fixed-1}
 
 - Fields, forms, groups, and arrays now satisfy Angular `Signal<T>` and are recognized by `isSignal()`, so they can be passed directly to signal-based utilities while preserving value inference and reactive updates.
 
@@ -150,7 +150,7 @@ versioning exception while the maintainer is the only consumer. See the
 
 First public release of `@ngblocks/form-nodes`, establishing the stable public API. Supports Angular `^21.0.7 || ^22.1.5`.
 
-### 🔸 Fixed {#fixed-2}
+### ◆ Fixed {#fixed-2}
 
 - Angular 21 consumers can now install Form Nodes on Node.js 20.19.0+, 22.12.0+, and 24.0.0+ within those majors without an engine mismatch. Angular 22 retains its higher Node.js requirements.
 
@@ -182,7 +182,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 - Compiled array templates no longer retain their source fields, forms, groups, arrays, or parent
   trees through clone callbacks. Later items still use the declared values, validators, and options.
 
-### 🔸 Added {#added-2}
+### ◆ Added {#added-2}
 
 - The npm package now provides repository, issue-reporting, and author links, clearer search metadata, and a bundled changelog.
 
@@ -211,7 +211,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 - Synchronous and asynchronous validation with reactive, configurable messages.
 - Angular `[formNode]` binding for native, signal-based, and `ControlValueAccessor` controls.
 
-### 🔸 Changed {#changed-2}
+### ◆ Changed {#changed-2}
 
 - **Breaking:** Form submission options are now flat: use `onSubmit(value, form)`, `onSubmitBlocked(form)`, and `submitWhen` instead of `submission`. The default still allows pending validation; use `'valid'` to require valid state or `'always'` to bypass the validation gate. The standalone `FormSubmissionOptions` type is removed; use `FormOptions`.
 

@@ -39,7 +39,7 @@ The `value` and `checked` contracts follow Angular's `FormValueControl<T>` and
 `FormCheckboxControl` shapes. A component does not have to declare that it implements those types;
 `[formNode]` discovers the public Angular inputs and outputs from component metadata.
 
-### 🔸 FormValueControl support and the experimental boundary {#formvaluecontrol-support-and-the-experimental-boundary}
+### ◆ FormValueControl support and the experimental boundary {#formvaluecontrol-support-and-the-experimental-boundary}
 
 The `value = model()` contract works without experimental options. **Full automatic population
 of `FormValueControl` state and constraint inputs is experimental** because those writes use
@@ -107,7 +107,7 @@ Angular's special required-model rule. The bound node replaces the initial value
 
 :::
 
-### 🔸 Aggregate value models {#aggregate-value-models}
+### ◆ Aggregate value models {#aggregate-value-models}
 
 A `value = model<T>()` control may bind directly to a `form()` or `array()` when `T` is the complete
 aggregate value:
@@ -225,7 +225,7 @@ cancellation, debounce, and stale-result handling.
 A CVA component can also declare the standard signal state inputs listed above. Those inputs receive
 the same node state as a signal-model control.
 
-### 🔸 Existing controls that inject NgControl {#existing-controls-that-inject-ngcontrol}
+### ◆ Existing controls that inject NgControl {#existing-controls-that-inject-ngcontrol}
 
 A CVA can obtain `NgControl` from its host injector in `ngAfterContentInit()` or
 `ngAfterViewInit()` and keep its existing subscriptions. `[formNode]` supplies the adapter automatically; no extra provider or Angular
@@ -264,7 +264,7 @@ one runtime object for `ngControl` and `ngControl.control`, so both have the sam
 A local helper can capture the host injector during construction and resolve
 `NgControl` in a lifecycle hook, following the same deferred lookup as the example above.
 
-### 🔸 CVA value changes and validation refresh requests {#cva-value-changes-and-validation-refresh-requests}
+### ◆ CVA value changes and validation refresh requests {#cva-value-changes-and-validation-refresh-requests}
 
 Send control input through the callback supplied to `registerOnChange()`, and report blur through
 `registerOnTouched()`. `[formNode]` uses those callbacks to update the control value, apply node
@@ -288,7 +288,7 @@ depends on ordinary properties, invoke the callback received through `registerOn
 Calling `updateValueAndValidity()` is not a substitute for that notification. Reactive rule
 dependencies update normally without either call.
 
-### 🔸 Validator functions and node validation {#validator-functions-and-node-validation}
+### ◆ Validator functions and node validation {#validator-functions-and-node-validation}
 
 Both `ngControl.validator` / `asyncValidator` and the corresponding `control` properties return
 `null`. This means the adapter exposes **no transferable Angular validator functions**, not that
@@ -312,7 +312,7 @@ CVA rules supplied through `NG_VALIDATORS` still contribute binding-owned errors
 node asynchronous validation continues normally when these properties are inspected, including
 pending results, reactive dependency changes, cancellation, and rebinding.
 
-### 🔸 Resetting from an existing CVA {#resetting-from-an-existing-cva}
+### ◆ Resetting from an existing CVA {#resetting-from-an-existing-cva}
 
 `ngControl.reset()` and `ngControl.control.reset()` reset the currently bound node and its
 subtree. With no value, or with `undefined`, reset preserves the latest committed values,
@@ -343,7 +343,7 @@ This is a Signal Forms reset contract, with intentional differences from Reactiv
 - `onlySelf: true` and `overwriteDefaultValue: true` are ignored with one `console.warn` per reset call in development mode. Production mode suppresses the warning. Reset continues and respects `emitEvent`; ancestors still update, and no reset default is stored. False or omitted options produce no warning.
 - `undefined` means no replacement value on this adapter. Use the node API when explicitly assigning `undefined` is required.
 
-### 🔸 Inspecting errors and observing state {#inspecting-errors-and-observing-state}
+### ◆ Inspecting errors and observing state {#inspecting-errors-and-observing-state}
 
 Both surfaces also support `getError(code, path?)` and `hasError(code, path?)`. For example,
 after the date control below reports an invalid date:
@@ -398,7 +398,7 @@ Reading component signals such as `disabledInput()` inside a subscription does n
 those signals. If those inputs can change independently, the component needs its own mechanism
 to synchronize them; `statusChanges` reports the bound node's state.
 
-### 🔸 Reporting parsing errors with setErrors {#reporting-parsing-errors-with-seterrors}
+### ◆ Reporting parsing errors with setErrors {#reporting-parsing-errors-with-seterrors}
 
 A custom control can report an error that originates in its own UI, such as an unparseable date,
 through its injected `NgControl.control.setErrors()`:
@@ -493,7 +493,7 @@ even if the control is already touched: later interactions can still need to flu
 input when the node uses `debounce: 'blur'`. A hook that suppresses repeated touched callbacks
 must remove that guard to support repeated blur-debounced edits.
 
-### 🔸 State-observing hooks {#state-observing-hooks}
+### ◆ State-observing hooks {#state-observing-hooks}
 
 Hooks that wrap `control.updateValueAndValidity()` to invalidate untracked value/error reads
 can observe node changes. The adapter also provides the internal reactive status, touched, and

@@ -110,7 +110,7 @@ standard CVAs remain connected independently of this setting.
 
 See [paired binding and its lifecycle](./provide-form-nodes-config.md#bind-input-output-pairs).
 
-### 🔸 Scope of experimental defaults {#scope-of-experimental-defaults}
+### ◆ Scope of experimental defaults {#scope-of-experimental-defaults}
 
 Each option resolves independently: explicit node option → nearest explicit Angular provider →
 global setting → library default (`false`). False or `null` disables that option without changing

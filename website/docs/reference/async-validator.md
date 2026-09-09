@@ -57,7 +57,7 @@ configuration keep their checked return contracts. Explicitly annotated standalo
 contexts still infer the value type. See
 [Self-referencing validators](../guides/validation.md#self-referencing-validators).
 
-### 🔸 Value type and inference {#value-type-and-inference}
+### ◆ Value type and inference {#value-type-and-inference}
 
 An `asyncValidator()` declared separately has no consuming node from which TypeScript can infer
 `TValue`. Without an explicit generic, `value()` is `unknown`; narrow it before use:
@@ -89,7 +89,7 @@ The optional `TApi` generic specializes the remaining `parent` and `path` proper
 add an `api` member to the context. `TField` specializes the node and its API; omit helper generics
 for inline inference. Without an exact node type, use `ctx.value()` for the typed value.
 
-### 🔸 Callback signature {#callback-signature}
+### ◆ Callback signature {#callback-signature}
 
 ```ts
 asyncValidator<TValue, TApi = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(
@@ -114,7 +114,7 @@ const usernameAvailable = asyncValidator(({ value, abortSignal }) => {
 });
 ```
 
-### 🔸 Parameterized signature {#parameterized-signature}
+### ◆ Parameterized signature {#parameterized-signature}
 
 ```ts
 asyncValidator<TValue, TParams, TApi = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>({
@@ -157,9 +157,9 @@ const usernameAvailable = asyncValidator({
 
 ## ⚙️ Option reference {#option-reference}
 
-### 🔸 Shared options {#shared-options}
+### ◆ Shared options {#shared-options}
 
-#### ⏳ debounce {#async-validator-debounce-option}
+#### – debounce {#async-validator-debounce-option}
 
 **Signature:** `debounce?: number`
 
@@ -176,7 +176,7 @@ asyncValidator(
 The value must be a number of milliseconds. This option delays validation after a committed value
 or another tracked dependency changes.
 
-#### ⏳ when {#async-validator-when-option}
+#### – when {#async-validator-when-option}
 
 **Signature:** `when?: (context: AsyncValidatorBaseContext<TValue, TApi>) => boolean`
 
@@ -191,7 +191,7 @@ asyncValidator(({ value, abortSignal }) => checkUsername(value(), abortSignal), 
 
 The parameterized signature does not evaluate `params` while `when` is false.
 
-#### 🚨 onError {#async-validator-onerror-option}
+#### – onError {#async-validator-onerror-option}
 
 **Signature:** `onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi>) => ValidationResult`
 
@@ -209,9 +209,9 @@ asyncValidator(({ value }) => checkUsername(value()), {
 Without `onError`, an operation failure contributes no validation error. Stale or destroyed
 executions do not publish a mapped result.
 
-### 🔸 Explicit parameters {#explicit-parameters}
+### ◆ Explicit parameters {#explicit-parameters}
 
-#### ⏳ params {#async-validator-params-option}
+#### – params {#async-validator-params-option}
 
 **Signature:** `params: (context: AsyncValidatorBaseContext<TValue, TApi>) => TParams`
 
@@ -264,7 +264,7 @@ account.set({ tenantId: 'private', theme: 'dark' });
 
 Returning a fresh object is therefore safe: allocation alone does not trigger another request.
 
-#### ⏳ validate {#async-validator-validate-option}
+#### – validate {#async-validator-validate-option}
 
 **Signature:** `validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams, TApi>) => AsyncValidationResult`
 
@@ -301,9 +301,9 @@ executions, and `params` only to parameterized `validate`.
 
 <div className="api-member-reference">
 
-### 🔸 Node and navigation {#node-and-navigation}
+### ◆ Node and navigation {#node-and-navigation}
 
-#### ⏳ value {#async-validator-context-value}
+#### – value {#async-validator-context-value}
 
 **Signature:** `value: Signal<TValue>`
 
@@ -314,7 +314,7 @@ dependency; reading it in `params` contributes to the derived snapshot.
 asyncValidator(({ value }) => checkUsername(value()));
 ```
 
-#### ⏳ node {#async-validator-context-node}
+#### – node {#async-validator-context-node}
 
 **Signature:** `node: Signal<TField>`
 
@@ -322,7 +322,7 @@ The readonly signal of the validated node, identical to `field`. Prefer this nam
 can be a form, group, or array. Both aliases retain the same inferred node type.
 See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
-#### ⏳ field {#async-validator-context-field}
+#### – field {#async-validator-context-field}
 
 **Signature:** `field: Signal<TField>`
 
@@ -342,24 +342,24 @@ See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside
 asyncValidator(({ field }) => auditNode(field()));
 ```
 
-#### ⏳ node().api {#async-validator-context-api}
+#### – node().api {#async-validator-context-api}
 
 Access the node API through `ctx.node().api` or `ctx.field().api`. Its type follows the validated
 node, so inline validators retain the concrete primitive API. There is no direct `ctx.api` property.
 For ordinary state reads, use the node directly, such as `ctx.node().dirty()`.
 See [API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code) for aliases and child-name collisions.
 
-#### ⏳ node().form() {#async-validator-context-form}
+#### – node().form() {#async-validator-context-form}
 
 Use `context.node().form()` (or `context.field().form()`) for the nearest explicit form workflow.
 It returns `null` when no form owns the node. There is no flat `context.form` property.
 
-#### ⏳ node().root() {#async-validator-context-root}
+#### – node().root() {#async-validator-context-root}
 
 Use `context.node().root()` (or `context.field().root()`) for the complete structural root.
 It never returns `null`. There is no flat `context.root` property.
 
-#### ⏳ parent {#async-validator-context-parent}
+#### – parent {#async-validator-context-parent}
 
 **Default type:** Signal of a form, group, or array API, or `null`.
 
@@ -370,7 +370,7 @@ or array. Common node members are available directly; primitive-specific operati
 asyncValidator(({ parent }) => parent() ? validateWithParent(parent()!) : Promise.resolve(null));
 ```
 
-#### ⏳ path {#async-validator-context-path}
+#### – path {#async-validator-context-path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
@@ -380,9 +380,9 @@ Property names and array indexes locating the node from its root. Array indexes 
 asyncValidator(({ path }) => auditPath(path()));
 ```
 
-### 🔸 State {#state}
+### ◆ State {#state}
 
-#### ⏳ state signals {#async-validator-context-state}
+#### – state signals {#async-validator-context-state}
 
 Read state through `ctx.node()` or its alias `ctx.field()`. These signals are not direct context
 properties. The same access works in inline validators and reusable helpers.
@@ -406,9 +406,9 @@ properties. The same access works in inline validators and reusable helpers.
 Reading state in `when`, the callback form, or `params` makes it a dependency.
 Parameterized `validate` and `onError` can read the same state without tracking new dependencies.
 
-### 🔸 Execution-only members {#execution-only-members}
+### ◆ Execution-only members {#execution-only-members}
 
-#### ⏳ abortSignal {#async-validator-context-abortsignal}
+#### – abortSignal {#async-validator-context-abortsignal}
 
 **Signature:** `abortSignal: AbortSignal`
 
@@ -425,7 +425,7 @@ asyncValidator(({ value, abortSignal }) => {
 
 Form Nodes discards stale results even when the underlying API ignores this signal.
 
-#### ⏳ params {#async-validator-context-params}
+#### – params {#async-validator-context-params}
 
 **Signature:** `params: TParams`
 
@@ -477,7 +477,7 @@ callbacks can safely reference a class form being declared. Reading errors or pe
 the initial setup immediately and schedules the asynchronous callback. Synchronous errors suppress
 asynchronous execution. Later reactive changes retain their scheduled revalidation behavior.
 
-### 🔸 Scheduling and status {#scheduling-and-status}
+### ◆ Scheduling and status {#scheduling-and-status}
 
 - Synchronous validators run first and block async validators while they have errors.
 - `pending()` is true during debounce and execution.
@@ -485,7 +485,7 @@ asynchronous execution. Later reactive changes retain their scheduled revalidati
 - A completed error makes the node invalid while another async validator may remain pending.
 - Results remain ordered by validator declaration, not completion time.
 
-### 🔸 Dependencies and cancellation {#dependencies-and-cancellation}
+### ◆ Dependencies and cancellation {#dependencies-and-cancellation}
 
 - A dependency change cancels stale work and restarts the complete debounce.
 - Simultaneous value, params, and `when` changes coalesce into one latest execution.

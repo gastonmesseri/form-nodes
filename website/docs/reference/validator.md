@@ -72,7 +72,7 @@ requirement, eager execution, or different reactivity.
 use their non-null aggregate values. A validator declared as `validator<number>()` therefore fits a
 field created with `field.strict()`.
 
-### 🔸 Signature {#signature}
+### ◆ Signature {#signature}
 
 ```ts
 validator<TValue, TField extends AnyNode = AnyNode>(
@@ -91,7 +91,7 @@ callbacks receiving a context still check their results. A fallback overload ret
 from explicitly annotated standalone callback contexts. See
 [Self-referencing validators](../guides/validation.md#self-referencing-validators).
 
-### 🔸 Value type and inference {#value-type-and-inference}
+### ◆ Value type and inference {#value-type-and-inference}
 
 Separately declared helpers preserve `TValue` on the generic node returned by `ctx.field()` and
 `ctx.node()`. Calling that node or reading its `value()` signal returns the same type as
@@ -154,9 +154,9 @@ reactive dependency.
 
 <div className="api-member-reference">
 
-### 🔸 Value and node {#value-and-node}
+### ◆ Value and node {#value-and-node}
 
-#### ✅ value {#custom-validator-context-value}
+#### – value {#custom-validator-context-value}
 
 **Signature:** `value: Signal<TValue>`
 
@@ -167,7 +167,7 @@ again when the value changes.
 validator<string>(({ value }) => value().trim() ? null : { kind: 'blank' });
 ```
 
-#### ✅ node {#custom-validator-context-node}
+#### – node {#custom-validator-context-node}
 
 **Signature:** `node: Signal<TField>`
 
@@ -175,7 +175,7 @@ The readonly signal of the validated node, identical to `field`. Prefer this nam
 can be a form, group, or array. Both aliases retain the same inferred node type.
 See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
-#### ✅ field {#custom-validator-context-field}
+#### – field {#custom-validator-context-field}
 
 **Signature:** `field: Signal<TField>`
 
@@ -195,26 +195,26 @@ See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside
 validator<string>(({ field }) => field().value() ? null : { kind: 'blank' });
 ```
 
-#### ✅ node().api {#custom-validator-context-api}
+#### – node().api {#custom-validator-context-api}
 
 Access the node API through `ctx.node().api` or `ctx.field().api`. Its type follows the validated
 node, so inline validators retain the concrete primitive API. There is no direct `ctx.api` property.
 For ordinary state reads, use the node directly, such as `ctx.node().dirty()`.
 See [API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code) for aliases and child-name collisions.
 
-### 🔸 Tree navigation {#tree-navigation}
+### ◆ Tree navigation {#tree-navigation}
 
-#### ✅ node().form() {#custom-validator-context-form}
+#### – node().form() {#custom-validator-context-form}
 
 Use `context.node().form()` (or `context.field().form()`) for the nearest explicit form workflow.
 It returns `null` when no form owns the node. There is no flat `context.form` property.
 
-#### ✅ node().root() {#custom-validator-context-root}
+#### – node().root() {#custom-validator-context-root}
 
 Use `context.node().root()` (or `context.field().root()`) for the complete structural root.
 It never returns `null`. There is no flat `context.root` property.
 
-#### ✅ parent {#custom-validator-context-parent}
+#### – parent {#custom-validator-context-parent}
 
 **Default type:** Signal of a form, group, or array API, or `null`.
 
@@ -225,7 +225,7 @@ or array. Common node members are available directly; primitive-specific operati
 validator<string>(({ parent }) => parent() ? null : { kind: 'mustHaveParent' });
 ```
 
-#### ✅ path {#custom-validator-context-path}
+#### – path {#custom-validator-context-path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
@@ -236,9 +236,9 @@ validator that reads the path can rerun when an array item moves.
 validator<string>(({ path }) => path().length > 3 ? { kind: 'tooDeep' } : null);
 ```
 
-### 🔸 State {#state}
+### ◆ State {#state}
 
-#### ✅ state signals {#custom-validator-context-state}
+#### – state signals {#custom-validator-context-state}
 
 Read state through `ctx.node()` or its alias `ctx.field()`. These signals are not direct context
 properties. The same access works in inline validators and reusable helpers.

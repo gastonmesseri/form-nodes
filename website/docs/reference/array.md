@@ -117,7 +117,7 @@ const myForm = form({
 
 The factory must return a fresh node each time.
 
-### 🔸 `field()` shorthands in object templates {#field-shorthands-in-object-templates}
+### ◆ `field()` shorthands in object templates {#field-shorthands-in-object-templates}
 
 Inside an object template, field-value shorthands use the same normalization and TypeScript
 inference as `form()` and `group()`. The object itself becomes a `group()`, while its concise leaf
@@ -189,9 +189,9 @@ TypeScript intentionally rejects providing it in both places.
 
 Each option below includes its signature, default behavior, scope, and a complete example.
 
-### 🔸 Values and validation {#values-and-validation}
+### ◆ Values and validation {#values-and-validation}
 
-#### ⚙️ equal {#equal-option}
+#### – equal {#equal-option}
 
 **Signature:** `equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean)`
 
@@ -221,7 +221,7 @@ Controls, reset, and debounce use current committed values. Reordering equal-val
 invalidates obsolete pending control input. See
 [Aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality) for the shared contract.
 
-#### ⚙️ initialValue {#initialvalue-option}
+#### – initialValue {#initialvalue-option}
 
 **Signature:** `initialValue?: readonly ItemValue[] | number | null`
 
@@ -262,7 +262,7 @@ users();
 // ]
 ```
 
-#### ✅ validators {#validators-option}
+#### – validators {#validators-option}
 
 **Signature:** `validators?: ValidatorSource<ArrayValue, ArrayNode<TItem>>`
 
@@ -278,7 +278,7 @@ const usernames = array(field(''), {
 usernames.invalid(); // true
 ```
 
-#### 💬 validatorMessages {#validatormessages-option}
+#### – validatorMessages {#validatormessages-option}
 
 **Signature:** `validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined)`
 
@@ -298,7 +298,7 @@ const users = array({
 users.allErrors()[0]?.message; // 'Enter a username.'
 ```
 
-#### ⚙️ trackBy {#trackby-option}
+#### – trackBy {#trackby-option}
 
 **Signature:** `trackBy?: keyof ItemValue | ((value: ItemValue, index: number) => unknown)`
 
@@ -319,7 +319,7 @@ const users = array({
 });
 ```
 
-#### ⏱️ debounce {#debounce-option}
+#### – debounce {#debounce-option}
 
 **Signature:** `debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>)`
 
@@ -333,9 +333,9 @@ const usernames = array(field(''), {
 });
 ```
 
-### 🔸 Availability {#availability}
+### ◆ Availability {#availability}
 
-#### ⚙️ hidden {#hidden-option}
+#### – hidden {#hidden-option}
 
 **Signature:** `hidden?: boolean | (() => boolean)`
 
@@ -350,7 +350,7 @@ const usernames = array(field(''), {
 usernames.hidden(); // follows showUsernames()
 ```
 
-#### ⚙️ disabled {#disabled-option}
+#### – disabled {#disabled-option}
 
 **Signature:** `disabled?: boolean | string | (() => boolean | string)`
 
@@ -366,7 +366,7 @@ usernames.disabled(); // true
 usernames.disabledReasons()[0]?.message; // 'Profile is locked'
 ```
 
-#### ⚙️ readonly {#readonly-option}
+#### – readonly {#readonly-option}
 
 **Signature:** `readonly?: boolean | (() => boolean)`
 
@@ -381,9 +381,9 @@ const usernames = array(field(''), {
 usernames.readonly(); // follows profileArchived()
 ```
 
-### 🔸 Injector ownership {#injector-ownership}
+### ◆ Injector ownership {#injector-ownership}
 
-#### ⚙️ injector {#injector-option}
+#### – injector {#injector-option}
 
 **Signature:** `injector?: Injector`
 
@@ -398,7 +398,7 @@ const usernames = array(field(''), {
 });
 ```
 
-#### ⚙️ inheritInjector {#inheritinjector-option}
+#### – inheritInjector {#inheritinjector-option}
 
 **Signature:** `inheritInjector?: boolean`
 
@@ -414,7 +414,7 @@ const profile = form({
 });
 ```
 
-#### ⚙️ adoptBindingInjector {#adoptbindinginjector-option}
+#### – adoptBindingInjector {#adoptbindinginjector-option}
 
 **Signature:** `adoptBindingInjector?: boolean`
 
@@ -704,9 +704,9 @@ precise parent and root types inferred from where the array is declared.
 `min()` is not included because it is a field constraint signal, not an array property; see the
 [`field()` reference](./field.md).
 
-### 🔸 Value and tree properties {#value-and-tree-properties}
+### ◆ Value and tree properties {#value-and-tree-properties}
 
-#### 📝 Callable value {#callable-value}
+#### – Callable value {#callable-value}
 
 **Signature:** `(): ArrayValue`
 
@@ -721,7 +721,7 @@ const usernames = array(field(''), {
 usernames(); // ['ada', 'grace']
 ```
 
-#### 💡 Indexed access {#indexed-access}
+#### – Indexed access {#indexed-access}
 
 **Signature:** `readonly [index: number]: ItemNode | undefined`
 
@@ -737,7 +737,7 @@ username?.(); // 'grace'
 usernames[20]; // undefined
 ```
 
-#### 📝 value() {#value}
+#### – value() {#value}
 
 **Signature:** `value: NodeValueSignal<ArrayValue, ArraySet | null | undefined>`
 
@@ -753,7 +753,7 @@ usernames.value(); // ['ada', 'grace']
 
 Prefer the equivalent callable form, `usernames()`, for ordinary value reads.
 
-#### 📝 value.committed() {#value-committed}
+#### – value.committed() {#value-committed}
 
 **Signature:** `value.committed: Signal<ArrayValue> & { set(value: ArraySet | null | undefined): void }`
 
@@ -761,7 +761,7 @@ Reads the latest committed data, bypassing configured `equal` checks on this nod
 children. Pending debounce is still respected. Normal signal identity checks still apply.
 See the [value views reference](./node-value.md#value-committed) for an executable example.
 
-#### ✏️ value.committed.set() {#value-committed-set}
+#### – value.committed.set() {#value-committed-set}
 
 **Signature:** `value.committed.set(value: ArraySet | null | undefined): void`
 
@@ -769,7 +769,7 @@ Equivalent to `set(value)`: commits immediately, cancels pending input, preserve
 state, and follows normal validation and parent propagation. Exposed reads still honor `equal`.
 See the [setter example](./node-value.md#value-committed-set).
 
-#### 🔌 value.control() {#controlvalue}
+#### – value.control() {#controlvalue}
 
 **Signature:** `value.control: Signal<ArrayValue>`
 
@@ -786,7 +786,7 @@ usernames.value.control(); // ['ada', 'grace']
 This can temporarily differ from `usernames()` when a control is bound directly to the array and
 its value is awaiting a debounced commit.
 
-#### ✏️ value.control.set() {#value-control-set}
+#### – value.control.set() {#value-control-set}
 
 **Signature:** `value.control.set(value: ArraySet | null | undefined): void`
 
@@ -795,7 +795,7 @@ configured or inherited debounce. It does not mark touched or emit binding outpu
 Read the [control setter example and propagation details](./node-value.md#value-control-set).
 
 
-#### 📚 items() {#items}
+#### – items() {#items}
 
 **Signature:** `items: Signal<readonly ItemNode[]>`
 
@@ -811,7 +811,7 @@ const usernameNodes = usernames.items();
 usernameNodes[0]?.(); // 'ada'
 ```
 
-#### 📚 length() {#length}
+#### – length() {#length}
 
 **Signature:** `length: Signal<number>`
 
@@ -825,7 +825,7 @@ const usernames = array(field(''), {
 usernames.length(); // 2
 ```
 
-#### 💡 nodeType() {#nodetype}
+#### – nodeType() {#nodetype}
 
 **Signature:** `nodeType(): 'array'`
 
@@ -837,7 +837,7 @@ const usernames = array(field(''));
 usernames.nodeType(); // 'array'
 ```
 
-#### 🧩 form() {#form}
+#### – form() {#form}
 
 **Signature:** `form: Signal<FormNode | null>`
 
@@ -854,7 +854,7 @@ const profile = form({
 profile.usernames.form() === profile; // true
 ```
 
-#### 🌳 root() {#root}
+#### – root() {#root}
 
 **Signature:** `root: Signal<RootNode>`
 
@@ -867,7 +867,7 @@ const usernames = array(field(''));
 usernames.root() === usernames; // true
 ```
 
-#### 🌳 parent() {#parent}
+#### – parent() {#parent}
 
 **Signature:** `parent: Signal<ParentNode | null>`
 
@@ -883,7 +883,7 @@ const profile = form({
 profile.usernames.parent() === profile; // true
 ```
 
-#### 🌳 path() {#path}
+#### – path() {#path}
 
 **Signature:** `path: Signal<readonly string[]>`
 
@@ -899,7 +899,7 @@ const profile = form({
 profile.usernames.path(); // ['usernames']
 ```
 
-#### 🌳 keyInParent() {#keyinparent}
+#### – keyInParent() {#keyinparent}
 
 **Signature:** `keyInParent: Signal<string | number | null>`
 
@@ -916,7 +916,7 @@ profile.usernames.keyInParent(); // 'usernames'
 profile.usernames[0]?.keyInParent(); // 0
 ```
 
-#### 📖 api {#api}
+#### – api {#api}
 
 **Signature:** `api: ArrayApi<ItemNode>`
 
@@ -933,7 +933,7 @@ usernames.api.length(); // 2
 Direct access such as `usernames.length()` is preferred. Use `api` when generic infrastructure
 needs a consistent API object or when an object-form child collides with a native member name.
 
-#### 📖 $api {#api-1}
+#### – $api {#api-1}
 
 **Signature:** `$api: ArrayApi<ItemNode>`
 
@@ -954,9 +954,9 @@ profile.usernames.$api.length(); // 2
 
 `$api` is the guaranteed collision-safe API path.
 
-### 🔸 Validation properties {#validation-properties}
+### ◆ Validation properties {#validation-properties}
 
-#### ✅ validators() {#validators}
+#### – validators() {#validators}
 
 **Signature:** `validators: Signal<Validators<ArrayValue>> & { (options: { resolve?: boolean }): Validators<ArrayValue> }`
 
@@ -971,7 +971,7 @@ const usernames = array(field(''), {
 usernames.validators().length; // 1
 ```
 
-#### 🚨 errors() {#errors}
+#### – errors() {#errors}
 
 **Signature:** `errors: Signal<readonly ValidationError[]>`
 
@@ -988,7 +988,7 @@ usernames.errors()[0]?.kind; // 'minLength'
 
 Only errors owned directly by the array are returned.
 
-#### 🚨 allErrors() {#allerrors}
+#### – allErrors() {#allerrors}
 
 **Signature:** `allErrors: Signal<readonly ValidationError[]>`
 
@@ -1006,7 +1006,7 @@ users.allErrors()[0]?.kind; // 'required'
 users.errors(); // []
 ```
 
-#### 💡 valid() {#valid}
+#### – valid() {#valid}
 
 **Signature:** `valid: Signal<boolean>`
 
@@ -1021,7 +1021,7 @@ const usernames = array(field(''), {
 usernames.valid(); // true
 ```
 
-#### 🚨 invalid() {#invalid}
+#### – invalid() {#invalid}
 
 **Signature:** `invalid: Signal<boolean>`
 
@@ -1036,7 +1036,7 @@ const usernames = array(field(''), {
 usernames.invalid(); // true
 ```
 
-#### ✅ required() {#required}
+#### – required() {#required}
 
 **Signature:** `required: Signal<boolean>`
 
@@ -1051,7 +1051,7 @@ const usernames = array(field(''), {
 usernames.required(); // true
 ```
 
-#### ⏳ pending() {#pending}
+#### – pending() {#pending}
 
 **Signature:** `pending: Signal<boolean>`
 
@@ -1068,7 +1068,7 @@ const usernames = array(field(''), {
 usernames.pending(); // true while checkUsernames() is running
 ```
 
-#### ✅ validationStatus() {#validationstatus}
+#### – validationStatus() {#validationstatus}
 
 **Signature:** `validationStatus: Signal<'valid' | 'invalid' | 'unknown'>`
 
@@ -1086,9 +1086,9 @@ usernames.validationStatus(); // 'invalid'
 The other possible values are `'valid'` and `'unknown'`. Unknown means asynchronous validation is
 pending and no error currently makes the subtree invalid.
 
-### 🔸 Interaction properties {#interaction-properties}
+### ◆ Interaction properties {#interaction-properties}
 
-#### 👆 touched() {#touched}
+#### – touched() {#touched}
 
 **Signature:** `touched: Signal<boolean>`
 
@@ -1103,7 +1103,7 @@ usernames.markAsTouched();
 usernames.touched(); // true
 ```
 
-#### 👆 untouched() {#untouched}
+#### – untouched() {#untouched}
 
 **Signature:** `untouched: Signal<boolean>`
 
@@ -1117,7 +1117,7 @@ const usernames = array(field(''), {
 usernames.untouched(); // true
 ```
 
-#### 👆 dirty() {#dirty}
+#### – dirty() {#dirty}
 
 **Signature:** `dirty: Signal<boolean>`
 
@@ -1132,7 +1132,7 @@ usernames.markAsDirty();
 usernames.dirty(); // true
 ```
 
-#### 👆 pristine() {#pristine}
+#### – pristine() {#pristine}
 
 **Signature:** `pristine: Signal<boolean>`
 
@@ -1146,9 +1146,9 @@ const usernames = array(field(''), {
 usernames.pristine(); // true
 ```
 
-### 🔸 Availability properties {#availability-properties}
+### ◆ Availability properties {#availability-properties}
 
-#### 🎛️ disabled() {#disabled}
+#### – disabled() {#disabled}
 
 **Signature:** `disabled: Signal<boolean>`
 
@@ -1162,7 +1162,7 @@ const usernames = array(field(''), {
 usernames.disabled(); // true
 ```
 
-#### 🎛️ disabledReasons() {#disabledreasons}
+#### – disabledReasons() {#disabledreasons}
 
 **Signature:** `disabledReasons: Signal<readonly DisabledReason[]>`
 
@@ -1178,7 +1178,7 @@ usernames.disabledReasons();
 // [{ sourceNode: usernames, message: 'Locked' }]
 ```
 
-#### 🎛️ enabled() {#enabled}
+#### – enabled() {#enabled}
 
 **Signature:** `enabled: Signal<boolean>`
 
@@ -1190,7 +1190,7 @@ const usernames = array(field(''));
 usernames.enabled(); // true
 ```
 
-#### 🎛️ readonly() {#readonly}
+#### – readonly() {#readonly}
 
 **Signature:** `readonly: Signal<boolean>`
 
@@ -1204,7 +1204,7 @@ const usernames = array(field(''), {
 usernames.readonly(); // true
 ```
 
-#### 🎛️ writable() {#writable}
+#### – writable() {#writable}
 
 **Signature:** `writable: Signal<boolean>`
 
@@ -1217,7 +1217,7 @@ const usernames = array(field(''));
 usernames.writable(); // true
 ```
 
-#### 🎛️ hidden() {#hidden}
+#### – hidden() {#hidden}
 
 **Signature:** `hidden: Signal<boolean>`
 
@@ -1231,7 +1231,7 @@ const usernames = array(field(''), {
 usernames.hidden(); // true
 ```
 
-#### 🎛️ visible() {#visible}
+#### – visible() {#visible}
 
 **Signature:** `visible: Signal<boolean>`
 
@@ -1243,9 +1243,9 @@ const usernames = array(field(''));
 usernames.visible(); // true
 ```
 
-### 🔸 Control and submission properties {#control-and-submission-properties}
+### ◆ Control and submission properties {#control-and-submission-properties}
 
-#### ⏱️ debouncing() {#debouncing}
+#### – debouncing() {#debouncing}
 
 **Signature:** `debouncing: Signal<boolean>`
 
@@ -1261,7 +1261,7 @@ const usernames = array(field('', {
 usernames.debouncing(); // false before a bound control has a pending value
 ```
 
-#### 📨 submitting() {#submitting}
+#### – submitting() {#submitting}
 
 **Signature:** `submitting: Signal<boolean>`
 
@@ -1286,9 +1286,9 @@ Each entry includes its consumer-facing signature, its behavior and return value
 example. The examples alternate between primitive `array(field())` items and form-object
 `array({ username: field() })` items so both node shapes are represented.
 
-### 🔸 Read and iterate item nodes {#read-and-iterate-item-nodes}
+### ◆ Read and iterate item nodes {#read-and-iterate-item-nodes}
 
-#### 📚 at() {#at}
+#### – at() {#at}
 
 **Signature:** `at(index: number): ItemNode | undefined`
 
@@ -1309,7 +1309,7 @@ users.at(1)?.username(); // 'grace'
 users.at(20); // undefined
 ```
 
-#### 💡 forEach() {#foreach}
+#### – forEach() {#foreach}
 
 **Signature:** `forEach(callback: (item: ItemNode, index: number, array: ArrayNode) => void): void`
 
@@ -1336,7 +1336,7 @@ users.forEach((user, index, arrayNode) => {
 // ['1/2: ada', '2/2: grace']
 ```
 
-#### 📚 map() {#map}
+#### – map() {#map}
 
 **Signature:** `map<TResult>(callback: (item: ItemNode, index: number, array: ArrayNode) => TResult): TResult[]`
 
@@ -1351,7 +1351,7 @@ const uppercaseUsernames = usernames.map(username => username().toUpperCase());
 // ['ADA', 'GRACE', 'LINUS']
 ```
 
-#### 📚 filter() {#filter}
+#### – filter() {#filter}
 
 **Signature:** `filter(predicate: (item: ItemNode, index: number, array: ArrayNode) => unknown): ItemNode[]`
 
@@ -1374,7 +1374,7 @@ const activeUsers = users.filter(user => user.active());
 activeUsers.map(user => user.username()); // ['ada', 'linus']
 ```
 
-#### 💡 find() {#find}
+#### – find() {#find}
 
 **Signature:** `find(predicate: (item: ItemNode, index: number, array: ArrayNode) => unknown): ItemNode | undefined`
 
@@ -1395,7 +1395,7 @@ const user = users.find(user => user.username() === 'grace');
 user?.active(); // false
 ```
 
-#### 📚 findIndex() {#findindex}
+#### – findIndex() {#findindex}
 
 **Signature:** `findIndex(predicate: (item: ItemNode, index: number, array: ArrayNode) => unknown): number`
 
@@ -1410,7 +1410,7 @@ usernames.findIndex(username => username() === 'linus'); // 2
 usernames.findIndex(username => username() === 'noa'); // -1
 ```
 
-#### 📚 some() {#some}
+#### – some() {#some}
 
 **Signature:** `some(predicate: (item: ItemNode, index: number, array: ArrayNode) => unknown): boolean`
 
@@ -1424,7 +1424,7 @@ const usernames = array(field(''), {
 usernames.some(username => username().startsWith('g')); // true
 ```
 
-#### 📚 every() {#every}
+#### – every() {#every}
 
 **Signature:** `every(predicate: (item: ItemNode, index: number, array: ArrayNode) => unknown): boolean`
 
@@ -1439,7 +1439,7 @@ const usernames = array(field(''), {
 usernames.every(username => username().length >= 3); // true
 ```
 
-#### 📚 includes() {#includes}
+#### – includes() {#includes}
 
 **Signature:** `includes(item: AnyNode, fromIndex?: number): boolean`
 
@@ -1456,7 +1456,7 @@ usernames.includes(username); // true
 usernames.includes(username, 1); // false
 ```
 
-#### 📚 indexOf() {#indexof}
+#### – indexOf() {#indexof}
 
 **Signature:** `indexOf(item: AnyNode, fromIndex?: number): number`
 
@@ -1473,7 +1473,7 @@ usernames.indexOf(username); // 1
 usernames.indexOf(username, 2); // -1
 ```
 
-#### 📚 Symbol.iterator {#symboliterator}
+#### – Symbol.iterator {#symboliterator}
 
 **Signature:** `[Symbol.iterator](): IterableIterator<ItemNode>`
 
@@ -1491,11 +1491,11 @@ for (const username of usernames) {
 const usernameNodes = [...usernames];
 ```
 
-### 🔸 Change the structure {#change-the-structure}
+### ◆ Change the structure {#change-the-structure}
 
 Structural methods preserve retained node identity and do not mark the array dirty automatically.
 
-#### 📚 push() {#push}
+#### – push() {#push}
 
 **Signatures:** `push(): ItemNode` · `push(value: ItemValue): ItemNode`
 
@@ -1516,7 +1516,7 @@ const emptyUser = users.push();
 emptyUser(); // { username: '', active: false }
 ```
 
-#### 📚 insert() {#insert}
+#### – insert() {#insert}
 
 **Signatures:** `insert(index: number): ItemNode` · `insert(index: number, value: ItemValue): ItemNode`
 
@@ -1540,7 +1540,7 @@ user.keyInParent(); // 1
 users.at(2)?.username(); // 'linus'
 ```
 
-#### 📚 removeAt() {#removeat}
+#### – removeAt() {#removeat}
 
 **Signature:** `removeAt(index: number): ItemNode | undefined`
 
@@ -1565,7 +1565,7 @@ user?.parent(); // null
 users(); // [{ username: 'ada', active: true }]
 ```
 
-#### 📚 moveUp() {#moveup}
+#### – moveUp() {#moveup}
 
 **Signature:** `moveUp(index: number): void`
 
@@ -1586,7 +1586,7 @@ myForm.usernames.moveUp(2);
 myForm.usernames(); // ['ada', 'linus', 'grace']
 ```
 
-#### 📚 moveDown() {#movedown}
+#### – moveDown() {#movedown}
 
 **Signature:** `moveDown(index: number): void`
 
@@ -1607,7 +1607,7 @@ myForm.usernames.moveDown(0);
 myForm.usernames(); // ['grace', 'ada', 'linus']
 ```
 
-#### 📚 move() {#move}
+#### – move() {#move}
 
 **Signature:** `move(fromIndex: number, toIndex: number): void`
 
@@ -1631,7 +1631,7 @@ myForm.usernames(); // ['ada', 'noa', 'grace', 'linus']
 myForm.usernames.at(1) === username; // true
 ```
 
-#### 📚 swap() {#swap}
+#### – swap() {#swap}
 
 **Signature:** `swap(firstIndex: number, secondIndex: number): void`
 
@@ -1651,7 +1651,7 @@ usernames.at(0) === lastUsername; // true
 usernames.at(2) === firstUsername; // true
 ```
 
-#### 💡 clear() {#clear}
+#### – clear() {#clear}
 
 **Signature:** `clear(): void`
 
@@ -1666,9 +1666,9 @@ usernames.clear();
 usernames(); // []
 ```
 
-### 🔸 Update values and reset state {#update-values-and-reset-state}
+### ◆ Update values and reset state {#update-values-and-reset-state}
 
-#### 📝 set() {#set}
+#### – set() {#set}
 
 **Signature:** `set(value: readonly ItemValue[] | null | undefined): void`
 
@@ -1692,7 +1692,7 @@ users();
 // [{ username: 'linus', active: true }, { username: 'noa', active: false }]
 ```
 
-#### 📝 update() {#update}
+#### – update() {#update}
 
 **Signature:** `update(updater: (value: ArrayValue) => readonly ItemValue[] | null | undefined): void`
 
@@ -1716,7 +1716,7 @@ users();
 // [{ username: 'ada', active: true }, { username: 'grace', active: false }]
 ```
 
-#### 📝 patch() {#patch}
+#### – patch() {#patch}
 
 **Signature:** `patch(value: readonly ItemPatch[]): void`
 
@@ -1743,7 +1743,7 @@ users();
 // [{ username: 'ada', active: true }, { username: 'grace-hopper', active: false }]
 ```
 
-#### ↩️ reset() {#reset}
+#### – reset() {#reset}
 
 **Signatures:** `reset(): void` · `reset(value: readonly ItemValue[] | null | undefined): void`
 
@@ -1763,9 +1763,9 @@ usernames.reset(['linus', 'noa']);
 usernames(); // ['linus', 'noa']
 ```
 
-### 🔸 Validation, interaction, and control methods {#validation-interaction-and-control-methods}
+### ◆ Validation, interaction, and control methods {#validation-interaction-and-control-methods}
 
-#### ✅ setValidators() {#setvalidators}
+#### – setValidators() {#setvalidators}
 
 **Signature:** `setValidators(validators: ValidatorSource<ArrayValue, ArrayNode<TItem>>): void`
 
@@ -1781,7 +1781,7 @@ usernames.setValidators(minLength(3));
 usernames.valid(); // false
 ```
 
-#### 🚨 getError() {#geterror}
+#### – getError() {#geterror}
 
 **Signature:** `getError(kind: string): ValidationError | undefined`
 
@@ -1797,7 +1797,7 @@ const usernames = array(field(''), {
 usernames.getError('uniqueItems')?.kind; // 'uniqueItems'
 ```
 
-#### ⏱️ flush() {#flush}
+#### – flush() {#flush}
 
 **Signature:** `flush(): void`
 
@@ -1815,7 +1815,7 @@ usernames.flush();
 usernames.debouncing(); // false
 ```
 
-#### 👆 focus() {#focus}
+#### – focus() {#focus}
 
 **Signature:** `focus(options?: FocusOptions): void`
 
@@ -1824,7 +1824,7 @@ Focuses the first bound UI control in the array subtree, following DOM order. St
 
 <CodeBlock language="ts">{arrayFocusSource}</CodeBlock>
 
-#### 👆 markAsTouched() {#markastouched}
+#### – markAsTouched() {#markastouched}
 
 **Signature:** `markAsTouched(options?: { skipDescendants?: boolean }): void`
 
@@ -1844,7 +1844,7 @@ usernames.markAsTouched({ skipDescendants: true });
 usernames.at(0)?.touched(); // false
 ```
 
-#### 👆 markAsUntouched() {#markasuntouched}
+#### – markAsUntouched() {#markasuntouched}
 
 **Signature:** `markAsUntouched(): void`
 
@@ -1861,7 +1861,7 @@ usernames.markAsUntouched();
 usernames.touched(); // false
 ```
 
-#### 👆 markAsDirty() {#markasdirty}
+#### – markAsDirty() {#markasdirty}
 
 **Signature:** `markAsDirty(): void`
 
@@ -1877,7 +1877,7 @@ usernames.markAsDirty();
 usernames.dirty(); // true
 ```
 
-#### 👆 markAsPristine() {#markaspristine}
+#### – markAsPristine() {#markaspristine}
 
 **Signature:** `markAsPristine(): void`
 
@@ -1894,7 +1894,7 @@ usernames.markAsPristine();
 usernames.pristine(); // true
 ```
 
-#### 🎛️ disable() {#disable}
+#### – disable() {#disable}
 
 **Signature:** `disable(message?: string): void`
 
@@ -1913,7 +1913,7 @@ usernames.disable('Locked');
 usernames.disabledReasons()[0]?.message; // 'Locked'
 ```
 
-#### 🎛️ enable() {#enable}
+#### – enable() {#enable}
 
 **Signature:** `enable(): void`
 
@@ -1930,7 +1930,7 @@ usernames.enable();
 usernames.enabled(); // true
 ```
 
-#### 🎛️ markAsReadonly() {#markasreadonly}
+#### – markAsReadonly() {#markasreadonly}
 
 **Signature:** `markAsReadonly(): void`
 
@@ -1945,7 +1945,7 @@ usernames.markAsReadonly();
 usernames.writable(); // false
 ```
 
-#### 🎛️ markAsWritable() {#markaswritable}
+#### – markAsWritable() {#markaswritable}
 
 **Signature:** `markAsWritable(): void`
 
@@ -1962,7 +1962,7 @@ usernames.markAsWritable();
 usernames.writable(); // true
 ```
 
-#### 🎛️ hide() {#hide}
+#### – hide() {#hide}
 
 **Signature:** `hide(): void`
 
@@ -1977,7 +1977,7 @@ usernames.hide();
 usernames.visible(); // false
 ```
 
-#### 🎛️ show() {#show}
+#### – show() {#show}
 
 **Signature:** `show(): void`
 

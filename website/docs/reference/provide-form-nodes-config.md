@@ -169,7 +169,7 @@ in a larger application, place them in `shared.module.ts`, `app.component.ts`, `
 when applicable, and `main.ts`, with the corresponding local imports. Comments mark the suggested
 file for each section; imports are grouped at the top to keep each combined example executable.
 
-### 🔸 Application-level configuration {#application-level-configuration}
+### ◆ Application-level configuration {#application-level-configuration}
 
 Choose this when the application owns the default configuration and `SharedModule` only makes
 `FormNodeDirective` available to templates. Register `provideFormNodesConfig()` once in `app.config.ts` or the
@@ -183,7 +183,7 @@ In an application bootstrapped with `AppModule`, put the same provider call in
 `[formNode]`. Components declared in NgModules must use `standalone: false`; their template
 dependencies belong in the declaring module's `imports`.
 
-### 🔸 Configuration supplied by SharedModule {#configuration-supplied-by-sharedmodule}
+### ◆ Configuration supplied by SharedModule {#configuration-supplied-by-sharedmodule}
 
 Choose this when importing `SharedModule` should also install your shared FormNodeDirective conventions.
 Put `FormNodeDirective` in `imports` and `exports`, and call `provideFormNodesConfig()` in
@@ -196,7 +196,7 @@ This is a valid pattern, but provider scope follows Angular's injector hierarchy
 source files that import the module. Importing the module makes the directive available to
 those templates; the configuration applies to nodes and bindings that resolve its providers.
 
-### 🔸 Choose the scope deliberately {#choose-the-scope-deliberately}
+### ◆ Choose the scope deliberately {#choose-the-scope-deliberately}
 
 | Registration | Configuration scope |
 | --- | --- |
@@ -254,7 +254,7 @@ A component with both CVA and a model follows the CVA path. Signal-control detec
 actual `value` or `checked` model, not an `implements FormValueControl` or `FormCheckboxControl`
 declaration. An active paired input/output control only matches target `'all'`.
 
-### 🔸 Configure model controls {#configure-model-controls}
+### ◆ Configure model controls {#configure-model-controls}
 
 <CodeBlock language="ts" title="app.config.ts">{signalControlConfigSource}</CodeBlock>
 
@@ -268,7 +268,7 @@ To narrow the selection further:
 syncInputs: { inputs: ['disabled', 'required'], target: 'signal-controls' }
 ```
 
-### 🔸 State, constraints, and declarations {#state-constraints-and-declarations}
+### ◆ State, constraints, and declarations {#state-constraints-and-declarations}
 
 Supported public input names are `disabled`, `disabledReasons`, `readonly`, `hidden`, `dirty`,
 `touched`, `invalid`, `pending`, `errors`, `name`, `required`, `min`, `max`, `minLength`, `maxLength`,
@@ -284,7 +284,7 @@ selected inputs to current or neutral values. Writes can replace component defau
 bindings; unselected inputs retain their existing values. Selecting a CVA's disabled input may write
 it in addition to the standard `setDisabledState()` call.
 
-### 🔸 Scope and rebinding {#scope-and-rebinding}
+### ◆ Scope and rebinding {#scope-and-rebinding}
 
 Each binding option resolves independently: node option (including factory defaults), nearest
 explicit provider, global fallback, then false. Lists and objects replace inherited selections as
