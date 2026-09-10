@@ -10,16 +10,6 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
-### Fixed
-
-- Coordinate CVA value and disabled-state updates so enabling and setting a value in the same turn displays the latest value, including ng-bootstrap rating. Enabling also replays values that a control ignored while disabled; resets use the same synchronization order without emitting user changes.
-
-- Refresh custom CVA views after model and disabled-state writes, including controls such as ng-bootstrap rating and timepicker that do not request a check themselves. This prevents stale rendering and expression-changed errors when enabling or disabling these controls.
-
-- Restore CVA views on resets even when the value is unchanged, including ancestor resets and discarded pending input. Rebinding to an equal-valued node refreshes the CVA without carrying over an old draft; stale and destroyed bindings no longer participate in resets.
-
-- Initialize CVA values and disabled state synchronously when `[formNode]` connects, so Angular Material radio groups display preloaded selections correctly, including inside nested custom controls and conditional views. Later model-to-view updates continue through the signal rendering cycle.
-
 ## 📦 3.4.0 — 2026-09-10 {#340--2026-09-10}
 
 ### Changed
@@ -33,6 +23,14 @@ canonical release record.
 - Allow `form()` and `group()` with no arguments to create empty objects, and `array()` to create an empty collection of unknown-valued fields with null defaults. Configured factories support the same declarations and preserve their defaults.
 
 ### Fixed
+
+- Coordinate CVA value and disabled-state updates so enabling and setting a value in the same turn displays the latest value, including ng-bootstrap rating. Enabling also replays values that a control ignored while disabled; resets use the same synchronization order without emitting user changes.
+
+- Refresh custom CVA views after model and disabled-state writes, including controls such as ng-bootstrap rating and timepicker that do not request a check themselves. This prevents stale rendering and expression-changed errors when enabling or disabling these controls.
+
+- Restore CVA views on resets even when the value is unchanged, including ancestor resets and discarded pending input. Rebinding to an equal-valued node refreshes the CVA without carrying over an old draft; stale and destroyed bindings no longer participate in resets.
+
+- Initialize CVA values and disabled state synchronously when `[formNode]` connects, so Angular Material radio groups display preloaded selections correctly, including inside nested custom controls and conditional views. Later model-to-view updates continue through the signal rendering cycle.
 
 - Support unannotated class self-references in parameterless `when` conditions across built-in and async validators while preserving typed contexts and checked boolean returns for context-taking conditions. Async conditions start safely after construction and restart validation when reenabled, even with unchanged values.
 

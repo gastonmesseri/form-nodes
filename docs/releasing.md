@@ -65,7 +65,7 @@ git diff --check
 git diff
 git add package.json package-lock.json CHANGELOG.md website/docs/project/changelog.md
 git diff --cached
-git commit -m "chore: prepare $RELEASE_VERSION release"
+git commit -m "Prepare $RELEASE_VERSION release"
 git status --short
 RELEASE_COMMIT=$(git rev-parse HEAD)
 git push origin master
