@@ -1,9 +1,12 @@
+import { untracked } from '@angular/core';
+
 import type { AnyNode } from '../types/node.type';
 import type { MetadataKey } from '../metadata/metadata';
 import { isNode } from '../primitives/utils/node-marker';
 import { runWithValidatorMessages } from './validator-messages';
 import { isAsyncValidator } from './utils/async-validator-marker';
 import { addDefaultTargetNode } from './utils/add-default-target-node';
+import { getNonReactiveValidator } from './utils/non-reactive-validator';
 import { createValidatorContext } from './utils/create-validator-context';
 import { normalizeValidationResult } from './utils/normalize-validation-result';
 import { collectValidatorMetadata, type ValidatorMetadata } from './validator-metadata';
@@ -35,15 +38,21 @@ const resolveComposableResult = <TValue>(
     if (depth >= maximumCompositionDepth) {
       throw new Error(`Synchronous validator composition exceeded ${maximumCompositionDepth} levels.`);
     }
-    collectValidatorMetadata(result, metadata, context as ValidatorContext<unknown>);
-    activeValidators.add(result);
-    const outcome = result(context);
-    const returnsValidators = typeof outcome === 'function' && !isNode(outcome)
-      || Array.isArray(outcome) && outcome.some(item => typeof item === 'function' && !isNode(item));
-    if (!returnsValidators) resolvedValidators.push(result);
-    const resolved = resolveComposableResult(outcome, context, activeValidators, depth + 1, metadata, resolvedValidators);
-    activeValidators.delete(result);
-    return resolved;
+    const source = getNonReactiveValidator(result);
+    const resolve = () => {
+      collectValidatorMetadata(source ?? result, metadata, context as ValidatorContext<unknown>);
+      activeValidators.add(result);
+      const outcome = result(context);
+      const returnsValidators = typeof outcome === 'function' && !isNode(outcome)
+        || Array.isArray(outcome) && outcome.some(item => typeof item === 'function' && !isNode(item));
+      if (!returnsValidators) resolvedValidators.push(result);
+      const resolved = resolveComposableResult(outcome, context, activeValidators, depth + 1, metadata, resolvedValidators);
+      activeValidators.delete(result);
+      return resolved;
+    };
+    if (source === undefined) return resolve();
+    context.value();
+    return untracked(resolve);
   }
 
   if (Array.isArray(result)) {

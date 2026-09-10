@@ -1,4 +1,5 @@
 import type { Equal, Expect } from './assert.types';
+import type { ValidatorNodeView } from '../../src/lib/validation/validator-node-view.type';
 import { array, field, form, group, isFormNode, type AnyNode, type DynamicNode, type FieldNode, type FormNode, type GroupNode, type ArrayNode } from '../../src/public-api';
 
 const profile = form({
@@ -76,9 +77,8 @@ type _UnspecifiedArrayRoot = Expect<Equal<ReturnType<ArrayNode['root']>, AnyNode
 type _KnownArrayRoot = Expect<Equal<ReturnType<ArrayNode<AnyNode, typeof details>['root']>, typeof details>>;
 
 genericArray.setValidators(({ node, value }) => {
-  type _ValidatorNode = Expect<Equal<ReturnType<typeof node>, ArrayNode>>;
+  type _ValidatorNode = Expect<Equal<ReturnType<typeof node>, ValidatorNodeView<ArrayNode>>>;
   type _ValidatorValue = Expect<Equal<ReturnType<typeof value>, any[]>>;
-  node().push();
   return null;
 });
 genericForm.$api.getError('required')?.targetNode.$api.submit();

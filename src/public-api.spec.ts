@@ -2,6 +2,7 @@ import { signal, type Signal } from '@angular/core';
 import { describe, expectTypeOf, it } from 'vitest';
 
 import type { NodeValueSignal } from './lib/types/node-value-signal.type';
+import type { ValidatorNodeView } from './lib/validation/validator-node-view.type';
 import { min, form, field, group, array, required, requiredIf, asyncValidator, createFormPrimitives, type AnyNode, type FieldNode, type DynamicNode, type FieldContext, type ValidatorApi, type ValidatorContext, type FormValueContract, type ComposableValidator, type ValidationErrorWithTargetNode } from './public-api';
 
 describe('types', () => {
@@ -348,7 +349,7 @@ describe('types', () => {
 
     profile.age.setValidators([
       asyncValidator<number | null, typeof profile.age.$api>(async ({ parent }) => {
-        expectTypeOf(parent()).toEqualTypeOf<typeof profile | null>();
+        expectTypeOf(parent()).toEqualTypeOf<ValidatorNodeView<typeof profile> | null>();
         return null;
       }),
     ]);
@@ -528,11 +529,11 @@ describe('types', () => {
       validators: [(context) => {
         expectTypeOf(context).toEqualTypeOf<ValidatorContext<string, ValidatorApi<string>, FieldNode<string>>>();
         expectTypeOf(context.value()).toEqualTypeOf<string>();
-        expectTypeOf(context.node().$api).toEqualTypeOf<FieldNode<string>['$api']>();
+        expectTypeOf(context.node().$api).toEqualTypeOf<ValidatorNodeView<FieldNode<string>>['$api']>();
         expectTypeOf(context.node().$api.value()).toEqualTypeOf<string>();
         expectTypeOf(context.node().$api.path()).toEqualTypeOf<readonly string[]>();
-        expectTypeOf(context.field).toEqualTypeOf<Signal<FieldNode<string>>>();
-        expectTypeOf(context.node()).toEqualTypeOf<FieldNode<string>>();
+        expectTypeOf(context.field).toEqualTypeOf<Signal<ValidatorNodeView<FieldNode<string>>>>();
+        expectTypeOf(context.node()).toEqualTypeOf<ValidatorNodeView<FieldNode<string>>>();
         expectTypeOf(context.path()).toEqualTypeOf<readonly string[]>();
         expectTypeOf(context.node().disabled()).toEqualTypeOf<boolean>();
         return null;

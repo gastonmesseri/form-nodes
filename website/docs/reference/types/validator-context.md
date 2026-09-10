@@ -4,7 +4,7 @@ title: ValidatorContext
 
 # ValidatorContext
 
-Reactive context provided to synchronous validators. Generic public owners retain TValue on their node value reads. Concrete owners and partial structural owner contracts remain exact; only the common owner exposes every node kind.
+Reactive context provided to synchronous validators. Generic public owners retain TValue on their node value reads. Concrete owners and partial structural owner contracts retain their value and child types through a read-only validation view. Validation outputs, metadata queries, and mutations are omitted recursively.
 
 ## Import
 
@@ -14,7 +14,7 @@ import type { ValidatorContext } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access.
+Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null and the recursive read-only validation view. Nullish members of the generic are removed automatically, so `ctx.parent<PageForm['roles'][number]>()` needs no `NonNullable` wrapper and returns a node view or null, never undefined. Validation outputs and mutations stay unavailable even with an explicit generic. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access.
 
 ## Declaration
 
@@ -25,12 +25,12 @@ type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = Valida
             $api: {
                 nodeType(): 'form' | 'group' | 'array';
             };
-        } = NonNullable<ReturnType<TApi['parent']>>>(): TParent | null;
-        (): ReturnType<TApi['parent']>;
+        } | null | undefined = NonNullable<ReturnType<TApi['parent']>>>(): ValidatorNodeView<NonNullable<TParent>> | null;
+        (): ValidatorNodeView<ReturnType<TApi['parent']>>;
     };
-    readonly value: ValidatorNode extends TField ? TApi['value'] : TField['$api']['value'];
-    readonly field: Signal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
-    readonly node: Signal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
+    readonly value: ValidatorNode extends TField ? TApi['value'] : ValidatorValueSignal<ReturnType<TField['$api']['value']>>;
+    readonly field: Signal<ValidatorNodeView<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>>;
+    readonly node: Signal<ValidatorNodeView<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>>;
 };
 ```
 
@@ -48,10 +48,10 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `parent` | Reactive immediate parent, or null before attachment and after detachment. Supply a parent node type to declare a structural contract: `ctx.parent&lt;RoleNode&gt;()`. This is a type assertion, not inference or runtime validation; null is always preserved. Prefer configure option callbacks for inferred sibling access without an assertion. |
+| `parent` | Reactive immediate parent, or null before attachment and after detachment. Supply a parent node type to declare a structural contract: `ctx.parent&lt;RoleNode&gt;()`. Indexed row types may include null or undefined: `ctx.parent&lt;PageForm['roles'][number]&gt;()`. The generic removes those nullish members; the result is the read-only node view or null, never undefined. This is a type assertion, not inference or runtime validation; null and the read-only validation view are always preserved, including when an explicit generic is supplied. Prefer configure option callbacks for inferred sibling access without an assertion. |
 | `value` | Current committed value of the node being validated. |
-| `field` | Readonly signal of the node being validated. `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`. |
-| `node` | Readonly signal of the node being validated. `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`. |
+| `field` | Readonly signal of the node being validated, with validation outputs and mutations omitted recursively from its type, including navigation and child access. `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`. |
+| `node` | Readonly signal of the node being validated, with validation outputs and mutations omitted recursively from its type, including navigation and child access. `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`. |
 
 ## Related reference
 

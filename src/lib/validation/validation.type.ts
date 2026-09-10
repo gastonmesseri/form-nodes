@@ -11,6 +11,7 @@ import type { FormNodeBinding } from '../types/form-node-binding.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { DisabledReason, DynamicNode, AnyNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
+import type { ValidatorNodeView, ValidatorValueSignal } from './validator-node-view.type';
 
 /** A validation error produced by a validator. */
 export interface ValidationError {
@@ -176,7 +177,7 @@ export type ValidationErrorWithoutTargetNode = ValidationError & {
 };
 
 /** An error returned by a validator, optionally assigned to another node. */
-export type ValidatorError<TNode extends AnyNode = AnyNode> = Omit<ValidationError, 'kind'> & {
+export type ValidatorError<TNode extends ValidatorNodeView<AnyNode> = ValidatorNodeView<AnyNode>> = Omit<ValidationError, 'kind'> & {
   /** Error identifier. Numeric inputs are normalized with String(kind); exposed errors always use strings. */
   readonly kind: string | number;
   /**
@@ -343,31 +344,37 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
 /**
  * Reactive context provided to synchronous validators.
  * Generic public owners retain TValue on their node value reads. Concrete owners and partial
- * structural owner contracts remain exact; only the common owner exposes every node kind.
+ * structural owner contracts retain their value and child types through a read-only validation
+ * view. Validation outputs, metadata queries, and mutations are omitted recursively.
  */
 export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & {
   /**
    * Reactive immediate parent, or null before attachment and after detachment.
    * Supply a parent node type to declare a structural contract: `ctx.parent<RoleNode>()`.
-   * This is a type assertion, not inference or runtime validation; null is always preserved.
+   * Indexed row types may include null or undefined: `ctx.parent<PageForm['roles'][number]>()`.
+   * The generic removes those nullish members; the result is the read-only node view or null, never undefined.
+   * This is a type assertion, not inference or runtime validation; null and the read-only
+   * validation view are always preserved, including when an explicit generic is supplied.
    * Prefer configure option callbacks for inferred sibling access without an assertion.
    */
   readonly parent: Pick<TApi['parent'], keyof TApi['parent']> & {
-    <TParent extends { $api: { nodeType(): 'form' | 'group' | 'array' } } = NonNullable<ReturnType<TApi['parent']>>>(): TParent | null;
-    (): ReturnType<TApi['parent']>;
+    <TParent extends { $api: { nodeType(): 'form' | 'group' | 'array' } } | null | undefined = NonNullable<ReturnType<TApi['parent']>>>(): ValidatorNodeView<NonNullable<TParent>> | null;
+    (): ValidatorNodeView<ReturnType<TApi['parent']>>;
   };
   /** Current committed value of the node being validated. */
-  readonly value: ValidatorNode extends TField ? TApi['value'] : TField['$api']['value'];
+  readonly value: ValidatorNode extends TField ? TApi['value'] : ValidatorValueSignal<ReturnType<TField['$api']['value']>>;
   /**
-   * Readonly signal of the node being validated.
+   * Readonly signal of the node being validated, with validation outputs and mutations omitted
+   * recursively from its type, including navigation and child access.
    * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.
    */
-  readonly field: Signal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
+  readonly field: Signal<ValidatorNodeView<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>>;
   /**
-   * Readonly signal of the node being validated.
+   * Readonly signal of the node being validated, with validation outputs and mutations omitted
+   * recursively from its type, including navigation and child access.
    * `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`.
    */
-  readonly node: Signal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
+  readonly node: Signal<ValidatorNodeView<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>>;
 };
 
 /** Reactive context shared by asynchronous validator conditions, params, and handlers. */

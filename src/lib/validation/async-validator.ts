@@ -275,16 +275,16 @@ export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue>
     onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => ValidationResult;
   },
 ): AsyncValidator<TValue, TField>;
-export function asyncValidator<TValue, TParams>(
+export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue>, TField extends AnyNode>(
   validatorOrConfig:
-    | ((context: AsyncValidatorContext<TValue>) => AsyncValidationResult)
-    | ParameterizedAsyncValidatorConfig<TValue, TParams>,
-  options: AsyncValidatorOptions<TValue> | ParameterizedAsyncValidatorOptions<TValue, TParams> = {},
-): AsyncValidator<TValue> {
+    | ((context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult)
+    | ParameterizedAsyncValidatorConfig<TValue, TParams, TApi, TField>,
+  options: AsyncValidatorOptions<TValue, TApi, ValidatorOwner<TField>> | ParameterizedAsyncValidatorOptions<TValue, TParams, TApi, ValidatorOwner<TField>> = {},
+): AsyncValidator<TValue, TField> {
   if (typeof validatorOrConfig === 'function') {
-    return markAsAsyncValidator(validatorOrConfig as unknown as AsyncValidator<TValue>, options);
+    return markAsAsyncValidator(validatorOrConfig as unknown as AsyncValidator<TValue>, options as unknown as AsyncValidatorOptions<TValue>) as AsyncValidator<TValue, TField>;
   }
-  return markAsAsyncValidator(validatorOrConfig.validate as unknown as AsyncValidator<TValue>, validatorOrConfig);
+  return markAsAsyncValidator(validatorOrConfig.validate as unknown as AsyncValidator<TValue>, validatorOrConfig as unknown as ParameterizedAsyncValidatorOptions<TValue, TParams>) as AsyncValidator<TValue, TField>;
 }
 
 export type { AsyncValidatorOptions, ParameterizedAsyncValidatorOptions } from './utils/async-validator-marker';

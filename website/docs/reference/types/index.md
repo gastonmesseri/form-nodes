@@ -92,7 +92,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [ParameterizedAsyncValidatorOptions](./parameterized-async-validator-options.md) | Options for an async validator whose tracked dependencies are exposed as a typed snapshot. |
 | [Validator](./validator.md) | Synchronous validator receiving the current value as a reactive signal. |
 | [ValidatorApi](./validator-api.md) | Common node API exposed to validators when no exact owner API is specified. |
-| [ValidatorContext](./validator-context.md) | Reactive context provided to synchronous validators. Generic public owners retain TValue on their node value reads. Concrete owners and partial structural owner contracts remain exact; only the common owner exposes every node kind. |
+| [ValidatorContext](./validator-context.md) | Reactive context provided to synchronous validators. Generic public owners retain TValue on their node value reads. Concrete owners and partial structural owner contracts retain their value and child types through a read-only validation view. Validation outputs, metadata queries, and mutations are omitted recursively. |
 | [ValidatorOptions](./validator-options.md) | Common options supported by built-in validators. |
 | [ValidatorReadonlyApi](./validator-readonly-api.md) | Reactive value and navigation shared by all validator context specializations. |
 | [Validators](./validators.md) | Readonly normalized collection of composable validators for a node value. |

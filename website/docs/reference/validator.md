@@ -3,6 +3,7 @@ title: validator()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import nonReactiveValidatorSource from '!!raw-loader!../../examples/non-reactive-validator.example.ts';
 import reusableValidatorNodeSource from '!!raw-loader!../../examples/reusable-validator-node.typecheck.ts';
 
 # validator() {#validator}
@@ -65,8 +66,9 @@ const myForm = form({
 });
 ```
 
-The helper returns the original function. It adds typing, not a runtime wrapper, injection
-requirement, eager execution, or different reactivity.
+By default, the helper returns the original function with normal signal tracking. Set
+`{ reactive: false }` to track the node value while sampling external signals without subscribing
+to their changes. Neither mode requires an injector or eagerly executes the callback.
 
 `TValue` must match the exact node value. Default fields normally include `null`; forms and arrays
 use their non-null aggregate values. A validator declared as `validator<number>()` therefore fits a
@@ -77,11 +79,12 @@ field created with [`field.strict()`](./field.md#nullability).
 ```ts
 validator<TValue, TField extends AnyNode = AnyNode>(
   validate: NoInfer<(() => any) | ComposableValidator<TValue, ValidatorOwner<TField>>>,
+  options?: { reactive?: boolean },
 ): ComposableValidator<TValue, TField>;
 ```
 
 `TValue` is the exact committed value type of the field, form, group, or array. The return value is
-the original `validate` function by identity. `TField` is inferred from the consuming primitive
+the original `validate` function by identity unless `reactive` is false, which returns a wrapper. `TField` is inferred from the consuming primitive
 when the helper is inline. `ValidatorOwner` gives a standalone helper the common node union
 when no concrete owner is supplied. Omit helper type arguments to infer both types inline.
 
@@ -90,6 +93,26 @@ validator, without a return annotation. Their accepted return type is intentiona
 callbacks receiving a context still check their results. A fallback overload retains inference
 from explicitly annotated standalone callback contexts. See
 [Self-referencing validators](../guides/validation.md#self-referencing-validators).
+
+### ◆ Validate on value changes without tracking external signals {#non-reactive-validation}
+
+<CodeBlock language="ts" title="non-reactive-validator.example.ts">{nonReactiveValidatorSource}</CodeBlock>
+
+`reactive` defaults to `true`. With `false`, the owning node value remains a dependency even if
+its callback never reads `value()`. Signal reads in the callback and in returned validator
+compositions are untracked. Conditions and error messages evaluated in that composition follow
+the same policy. The next execution samples their latest values. Each helper call has its own
+policy, so wrapping a shared function does not change other uses of that function.
+
+Normal lifecycle triggers still apply: replacing validators, restoring availability, or another
+tracked validator invalidating the node's shared validation computation can execute the callback
+again. This is not a once-only validator or a promise that only value changes can execute it.
+Public value equality and buffered input retain their existing behavior. This option is for
+synchronous validators; passing an `asyncValidator()` to it throws. Use the asynchronous
+validator's `params` option to control its dependencies.
+
+`untracked()` prevents dependency registration, but still evaluates signals. This option does
+not make self-referential validation reads safe.
 
 ### ◆ Value type and inference {#value-type-and-inference}
 
@@ -139,16 +162,30 @@ See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 | [`path()`](#custom-validator-context-path) | Reactive path from the root. |
 | [Node state](#custom-validator-context-state) | Read interaction and availability signals through `ctx.node()` or `ctx.field()`. |
 
-The context and its signals are stable. Any signal read while the validator executes becomes a
-reactive dependency.
+The context and its signals are stable. By default, signal reads while the validator executes
+become reactive dependencies. With `reactive: false`, only the owning value is tracked by the helper.
+
+The returned nodes are type-restricted views of the original objects. Validation errors/status,
+pending/debouncing state, validation-derived constraints (`required`, `min`, `max`, length bounds,
+and `pattern`), metadata/validator-resolution queries, and mutation methods are unavailable.
+The restriction follows `$api`, parent/root/form navigation, children, array items, and traversal
+callbacks. It also applies to `parent<TParent>()`; the generic describes structure and cannot
+restore the full API. A known child actually named `valid` or `set` remains a readable child. For an unspecified
+child dictionary such as `parent<FormNode<any>>()`, use `$api.get()` or `$api.children`; its
+arbitrary direct string index is omitted so it cannot expose validation outputs.
+
+Use values to express cross-field rules and return errors, optionally with a `targetNode` from
+the context. Perform node mutations in application actions or `configure`, outside validation.
+These are TypeScript restrictions: an external reference or an explicit unsafe cast can still
+create a cycle at runtime. `ValidatorNodeView` is an internal helper name, not a package import.
 
 ## 📖 Context reference {#context-reference}
 
 | Member | Type | Purpose |
 | --- | --- | --- |
 | [`value`](#custom-validator-context-value) | `Signal<TValue>` | Current committed value |
-| [`node`](#custom-validator-context-node) | `Signal<TField>` | Real node being validated |
-| [`field`](#custom-validator-context-field) | `Signal<TField>` | Real node being validated |
+| [`node`](#custom-validator-context-node) | `Signal<ValidatorNodeView<TField>>` | Real node being validated |
+| [`field`](#custom-validator-context-field) | `Signal<ValidatorNodeView<TField>>` | Real node being validated |
 | [`parent`](#custom-validator-context-parent) | parent-node signal | Direct parent or `null` |
 | [`path`](#custom-validator-context-path) | path signal | Location from the root |
 
@@ -169,7 +206,7 @@ validator<string>(({ value }) => value().trim() ? null : { kind: 'blank' });
 
 #### – node {#custom-validator-context-node}
 
-**Signature:** `node: Signal<TField>`
+**Signature:** `node: Signal<ValidatorNodeView<TField>>`
 
 The readonly signal of the validated node, identical to `field`. Prefer this name when the owner
 can be a form, group, or array. Both aliases retain the same inferred node type.
@@ -177,16 +214,16 @@ See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
 #### – field {#custom-validator-context-field}
 
-**Signature:** `field: Signal<TField>`
+**Signature:** `field: Signal<ValidatorNodeView<TField>>`
 
 A stable readonly signal returning the validated node; never `null`. This is the exact same signal
 as `node`. Inline primitive validators infer the concrete field, form, group, or array, including
 aggregate children and array items. A separately declared validator defaults to the common node
 API union; primitive-specific operations then require narrowing. Explicit `TField` context types
-are preserved as `Signal<TField>`.
+retain their value and child types through a recursive read-only view.
 
 `context.field()` returns the node. Read its committed value with `context.value()`, which
-preserves the inferred value type. Use `context.field().value()` when accessing it through the node. Reading only `field()` tracks node identity, which
+preserves the inferred value type. Call `context.field()()` when reading through the node. Reading only `field()` tracks node identity, which
 stays stable across value changes and attachment or detachment. Read a returned node's value or
 state signal when validation should depend on that state.
 See [Navigation inside validators](../concepts/tree-and-api.md#navigation-inside-validators).
@@ -221,6 +258,18 @@ It never returns `null`. There is no flat `context.root` property.
 The direct parent, or `null` when the validated node is a root. A parent is always a form, group,
 or array. Common node members are available directly; primitive-specific operations need narrowing.
 
+An explicit generic may include `null` or `undefined`, as array index types often do. The result
+is the restricted view of `NonNullable<TParent> | null`, with no `undefined` member:
+
+```ts
+ctx.parent<PageForm['roles'][number]>();
+ctx.parent<(typeof this.pageForm.roles)[number]>();
+ctx.parent<typeof this.pageForm.roles[0]>();
+```
+
+These type arguments describe the immediate parent's structure; they do not select an array item.
+See the [complete component example](../guides/configuring-nodes.md#declaring-a-parent-contract).
+
 ```ts
 validator<string>(({ parent }) => parent() ? null : { kind: 'mustHaveParent' });
 ```
@@ -240,7 +289,7 @@ validator<string>(({ path }) => path().length > 3 ? { kind: 'tooDeep' } : null);
 
 #### – state signals {#custom-validator-context-state}
 
-Read state through `ctx.node()` or its alias `ctx.field()`. These signals are not direct context
+Read interaction and availability state through `ctx.node()` or its alias `ctx.field()`. These signals are not direct context
 properties. The same access works in inline validators and reusable helpers.
 
 | Signal | Meaning | Example read |
@@ -257,9 +306,8 @@ properties. The same access works in inline validators and reusable helpers.
 | `ctx.node().writable()` | Consumers may permit editing | `ctx.node().writable()` |
 | `ctx.node().hidden()` | Consumers should omit the node | `ctx.node().hidden()` |
 | `ctx.node().visible()` | Consumers should display the node | `ctx.node().visible()` |
-| `ctx.node().required()` | Current rules require a value | `ctx.node().required()` |
 
-Any state signal read by the validator becomes a dependency.
+State reads become dependencies by default; `reactive: false` samples them without tracking.
 
 </div>
 

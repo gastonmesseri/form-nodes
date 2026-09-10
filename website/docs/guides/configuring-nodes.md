@@ -5,6 +5,7 @@ title: Configuring nodes and sibling rules
 # Configuring nodes and sibling rules
 
 import CodeBlock from '@theme/CodeBlock';
+import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
 
 Use the `configure` option when a rule needs several already-created children. Its callback receives
@@ -55,8 +56,19 @@ value changes. Install a validator that reads live values instead of capturing a
 ## Declaring a parent contract
 
 `ctx.parent<TParent>()` is available in synchronous and asynchronous validator contexts. It returns
-`TParent | null`, retains reactive parent tracking, and refers to the **immediate structural parent**.
+a read-only validation view of `NonNullable<TParent>`, or `null`. It retains reactive parent
+tracking and refers to the **immediate structural parent**.
 It does not skip an array to find a group. A field cannot be used as the parent type.
+
+Array index types may include `undefined`; pass them directly without writing `NonNullable`:
+
+<CodeBlock language="ts" title="indexed-validator-parent.typecheck.ts">{indexedParentSource}</CodeBlock>
+
+`ctx.parent<PageForm['roles'][number]>()` and
+`ctx.parent<(typeof this.pageForm.roles)[number]>()` both remove nullish members from the generic.
+`ctx.parent<typeof this.pageForm.roles[0]>()` also works, though `[number]` more clearly describes
+any row type. The return still includes `null` for a missing parent and never includes `undefined`.
+The generic only describes the immediate parent; it does not select a row or look up index zero.
 
 :::info A declared contract, not automatic inference
 
@@ -82,3 +94,8 @@ type RoleNode = ArrayItemNode<typeof profile.roles>;
 
 Extract this type from an already inferred declaration. Referencing that same declaration's type
 inside its initializer can introduce a circular inference dependency; the helper does not remove it.
+
+The node returned by `ctx.parent<TParent>()` always uses the recursive read-only validation view,
+even with an explicit generic. Read child values for conditions and return errors. Validation
+outputs, metadata queries, and mutations remain unavailable through that view; `configure` itself
+continues to receive the normal API for installing validators and initializing the node.

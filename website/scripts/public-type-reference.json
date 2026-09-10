@@ -365,7 +365,7 @@
     },
     "ValidatorContext": {
       "family": "validation",
-      "usage": "Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access."
+      "usage": "Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null and the recursive read-only validation view. Nullish members of the generic are removed automatically, so `ctx.parent<PageForm['roles'][number]>()` needs no `NonNullable` wrapper and returns a node view or null, never undefined. Validation outputs and mutations stay unavailable even with an explicit generic. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access."
     },
     "ValidationSuccess": {
       "family": "errors",

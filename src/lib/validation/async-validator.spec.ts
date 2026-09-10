@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { required } from './validators/required';
 import { asyncValidator } from './async-validator';
-import type { CallableNodeApi } from '../types/callable-node-api.type';
+import type { ValidatorNodeView } from './validator-node-view.type';
 import { form, type FormNode, type FormApi } from '../primitives/form';
 import { field, type FieldNode, type FieldApi } from '../primitives/field';
 import type { AsyncValidatorContext, FieldContext } from './validation.type';
@@ -326,8 +326,7 @@ describe('asyncValidator', () => {
       expectTypeOf(fieldNode).toEqualTypeOf<AsyncValidatorContext<number | null>['field']>();
       expectTypeOf(api.value()).toEqualTypeOf<number | null>();
       expectTypeOf(api.path()).toEqualTypeOf<readonly string[]>();
-      expectTypeOf(api.set).toBeCallableWith(42);
-      expectTypeOf(api.set).toBeCallableWith(null);
+      expectTypeOf(api.value.committed()).toEqualTypeOf<number | null>();
       expectTypeOf(value()).toEqualTypeOf<number | null>();
       expectTypeOf(path()).toEqualTypeOf<readonly string[]>();
       expectTypeOf(fieldNode().disabled()).toEqualTypeOf<boolean>();
@@ -364,10 +363,10 @@ describe('asyncValidator', () => {
   });
 
   it('preserves the API of an explicitly typed field node', async () => {
-    let receivedApi: FieldApi<string | null> | undefined;
+    let receivedApi: ValidatorNodeView<FieldNode<string | null>>['$api'] | undefined;
     const name = field('David', [asyncValidator<string | null, FieldApi<string | null>, FieldNode<string | null>>(async ({ node }) => {
       const api = node().$api;
-      expectTypeOf(api).toEqualTypeOf<CallableNodeApi<FieldApi<string | null>>>();
+      expectTypeOf(api).toEqualTypeOf<ValidatorNodeView<FieldNode<string | null>>['$api']>();
       receivedApi = api;
       return null;
     })]);
@@ -380,10 +379,10 @@ describe('asyncValidator', () => {
   it('preserves the API of an explicitly typed form node', async () => {
     const country = field('CH');
     type CountryFormApi = FormApi<{ country: typeof country }>;
-    let receivedApi: CountryFormApi | undefined;
+    let receivedApi: ValidatorNodeView<FormNode<{ country: typeof country }>>['$api'] | undefined;
     const profile = form({ country }, [asyncValidator<{ country: string | null }, CountryFormApi, FormNode<{ country: typeof country }>>(async ({ node }) => {
       const api = node().$api;
-      expectTypeOf(api).toEqualTypeOf<CallableNodeApi<CountryFormApi>>();
+      expectTypeOf(api).toEqualTypeOf<ValidatorNodeView<FormNode<{ country: typeof country }>>['$api']>();
       receivedApi = api;
       return null;
     })]);

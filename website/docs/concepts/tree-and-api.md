@@ -185,7 +185,7 @@ properties. This applies to synchronous validators and every [`asyncValidator()`
 
 ### ◆ Inline node inference {#inline-node-inference}
 
-An inline validator knows the primitive being created. A field validator receives [`FieldNode<TValue>`](../reference/types/field-node.md);
+An inline validator knows the primitive being created. A field validator receives a read-only validation view of [`FieldNode<TValue>`](../reference/types/field-node.md);
 a form or group validator retains its declared children; an array validator retains its item type.
 This works for positional validators, `options.validators`, configured primitives, and inline
 [`validator()`](../reference/validator.md) / `asyncValidator()` helpers. Omit helper type arguments to let the enclosing
@@ -203,7 +203,10 @@ available on the union; operations unique to a primitive require narrowing.
 Knowing the validated node does not infer the enclosing form's parents or sibling keys. Access
 through the declared tree or an explicitly specialized context retains those exact relationships.
 Access an API alias through `ctx.node().$api` or `ctx.field().$api`; its type follows the node.
-Validators should normally read state and return errors rather than submit or mutate their node.
+Validator node types expose values, interaction state, availability, and navigation. Validation
+results, constraint metadata, and mutations are omitted recursively, including `$api`, children,
+array traversal, and `parent<TParent>()` with an explicit generic. Read values for cross-field rules
+and return errors; perform mutations outside validation. Runtime node identity is unchanged.
 
 <CodeBlock language="ts" title="validator-ancestry.typecheck.ts">{validatorAncestrySource}</CodeBlock>
 

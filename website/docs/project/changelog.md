@@ -10,6 +10,15 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Pass nullable array item types directly to `ctx.parent<TParent>()`, including `PageForm['roles'][number]` and `(typeof this.pageForm.roles)[number]`. The generic strips null and undefined automatically while the result remains a restricted node view or null.
+- Opt out of external signal tracking with `validator(callback, { reactive: false })` while retaining validation on node value changes, including returned synchronous compositions.
+
+### Changed
+
+- **Breaking:** Validator contexts now expose read-only node views that omit validation results, derived constraints, validator-resolution queries, and mutations recursively. This includes `node()`, `field()`, `$api`, descendants, traversal, and `parent<TParent>()` even with an explicit generic. Use values for cross-field rules and perform mutations outside validation.
+
 ## 📦 3.5.0 — 2026-09-10 {#350--2026-09-10}
 
 ### Added

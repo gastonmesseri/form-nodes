@@ -23,6 +23,7 @@ import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { dateBetween } from '../validation/validators/date-between';
+import type { ValidatorNodeView } from '../validation/validator-node-view.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
 
@@ -716,7 +717,7 @@ describe('field', () => {
   });
 
   it('tracks interaction state read through validator node aliases', () => {
-    const validate = vi.fn((ctx: { node: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const validate = vi.fn((ctx: { node: Signal<ValidatorNodeView<AnyNode> & { touched: Signal<boolean>; dirty: Signal<boolean> }>; field: Signal<ValidatorNodeView<AnyNode> & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().touched() && ctx.field().dirty() ? { kind: 'edited' } : null;
     });
     const model = field('initial', { validators: validate });
@@ -735,14 +736,14 @@ describe('field', () => {
   });
 
   it('tracks node state in async conditions and params and exposes it to error handlers', async () => {
-    const params = vi.fn((ctx: { node: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const params = vi.fn((ctx: { node: Signal<ValidatorNodeView<AnyNode> & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().dirty();
     });
     const states: boolean[] = [];
-    const onError = vi.fn((_error: unknown, ctx: { node: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const onError = vi.fn((_error: unknown, ctx: { node: Signal<ValidatorNodeView<AnyNode> & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       return ctx.node().dirty() ? { kind: 'edited' } : null;
     });
-    const validate = vi.fn(async (ctx: { params: boolean; field: Signal<AnyNode & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
+    const validate = vi.fn(async (ctx: { params: boolean; field: Signal<ValidatorNodeView<AnyNode> & { touched: Signal<boolean>; dirty: Signal<boolean> }> }) => {
       states.push(ctx.field().dirty());
       throw new Error('Unavailable');
     });
@@ -786,8 +787,8 @@ describe('field', () => {
   });
 
   it('exposes a stable readonly validator field signal independently of the node value', () => {
-    const references: Signal<AnyNode>[] = [];
-    const validators = (context: { field: Signal<AnyNode>; node: Signal<AnyNode> }) => {
+    const references: Signal<ValidatorNodeView<AnyNode>>[] = [];
+    const validators = (context: { field: Signal<ValidatorNodeView<AnyNode>>; node: Signal<ValidatorNodeView<AnyNode>> }) => {
       references.push(context.field);
       expect(context.node).toBe(context.field);
       expect(isSignal(context.field)).toBe(true);
@@ -821,8 +822,8 @@ describe('field', () => {
 
   it('tracks async validator field identity separately from reading its node value', async () => {
     const readValue = signal(false);
-    const references: Signal<AnyNode>[] = [];
-    const params = vi.fn((context: { field: Signal<AnyNode>; node: Signal<AnyNode> }) => {
+    const references: Signal<ValidatorNodeView<AnyNode>>[] = [];
+    const params = vi.fn((context: { field: Signal<ValidatorNodeView<AnyNode>>; node: Signal<ValidatorNodeView<AnyNode>> }) => {
       references.push(context.field);
       expect(context.node).toBe(context.field);
       return readValue() ? context.field()() : context.field();
@@ -3246,4 +3247,116 @@ it('runs asynchronous validators installed by configure outside injection contex
   await vi.waitFor(() => expect(calls).toEqual(['', 'Ada']));
   await vi.waitFor(() => expect(node.pending()).toBe(false));
   expect(node.valid()).toBe(true);
+});
+
+it.each([false, true])('keeps value-triggered validation without external tracking (injector: %s)', (inContext) => {
+  const injector = Injector.create({ providers: [] });
+  const run = () => {
+    const minimum = signal(3);
+    const validate = vi.fn(({ value }: Context<number | null>) => {
+      return value()! < minimum() ? { kind: 'minimum' } : null;
+    });
+    const count = field(2, validator(validate, { reactive: false }));
+    expect(count()).toBe(2);
+    expect(count.errors()).toMatchObject([{ kind: 'minimum', targetNode: count }]);
+    expect(count.validationStatus()).toBe('invalid');
+    expect(count.pending()).toBe(false);
+    expect(count.dirty()).toBe(false);
+    expect(count.touched()).toBe(false);
+    expect(validate).toHaveBeenCalledTimes(1);
+
+    minimum.set(1);
+    expect(count.invalid()).toBe(true);
+    expect(validate).toHaveBeenCalledTimes(1);
+    count.set(4);
+    expect(count.valid()).toBe(true);
+    expect(validate).toHaveBeenCalledTimes(2);
+    count.markAsTouched();
+    count.markAsDirty();
+    count.reset(0);
+    expect(count.invalid()).toBe(true);
+    expect(count.dirty()).toBe(false);
+    expect(count.touched()).toBe(false);
+    expect(validate).toHaveBeenCalledTimes(3);
+    count.disable();
+    expect(count.errors()).toEqual([]);
+    expect(count.valid()).toBe(true);
+    count.enable();
+    expect(count.invalid()).toBe(true);
+  };
+  try {
+    if (inContext) runInInjectionContext(injector, run);
+    else run();
+  } finally {
+    injector.destroy();
+  }
+});
+
+it('tracks the field value even when a non-reactive callback does not read it', () => {
+  const active = signal(true);
+  const validate = vi.fn(() => active() ? { kind: 'blocked' } : null);
+  const count = field(1, validator(validate, { reactive: false }));
+  expect(count.invalid()).toBe(true);
+  active.set(false);
+  expect(count.invalid()).toBe(true);
+  expect(validate).toHaveBeenCalledTimes(1);
+  count.set(2);
+  expect(count.valid()).toBe(true);
+  expect(validate).toHaveBeenCalledTimes(2);
+});
+
+it('isolates non-reactive compositions and preserves leaf references and metadata', () => {
+  const active = signal(true);
+  const minimum = signal(3);
+  const leaf = min(() => minimum(), { when: () => active() });
+  const choose = vi.fn(() => [() => leaf]);
+  const count = field(2, validator(choose, { reactive: false }));
+  expect(count.errors()).toMatchObject([{ kind: 'min', min: 3 }]);
+  expect(count.validators({ resolve: true })).toEqual([leaf]);
+  expect(count.min()).toBe(3);
+  active.set(false);
+  minimum.set(1);
+  expect(count.invalid()).toBe(true);
+  expect(choose).toHaveBeenCalledTimes(1);
+  count.set(4);
+  expect(count.valid()).toBe(true);
+  expect(count.min()).toBeNull();
+  expect(choose).toHaveBeenCalledTimes(2);
+});
+
+it('gates asynchronous field validation with the last value-triggered synchronous result', async () => {
+  const minimum = signal(1);
+  const guard = validator<number | null>(({ value }) => {
+    return value()! < minimum() ? { kind: 'minimum' } : null;
+  }, { reactive: false });
+  const requests: { abortSignal: AbortSignal; resolve(result: null): void }[] = [];
+  const remote = asyncValidator<number | null>(({ abortSignal }) => {
+    return new Promise<null>(resolve => requests.push({ abortSignal, resolve }));
+  });
+  const model = field(0, [guard, remote]);
+  expect(model.invalid()).toBe(true);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(requests).toHaveLength(0);
+  minimum.set(-1);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(model.invalid()).toBe(true);
+  expect(requests).toHaveLength(0);
+  model.set(2);
+  await vi.waitFor(() => expect(requests).toHaveLength(1));
+  expect(model.validationStatus()).toBe('unknown');
+  expect(model.pending()).toBe(true);
+  minimum.set(3);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(requests[0]!.abortSignal.aborted).toBe(false);
+  expect(model.pending()).toBe(true);
+  model.reset(0);
+  await vi.waitFor(() => expect(model.invalid()).toBe(true));
+  expect(requests[0]!.abortSignal.aborted).toBe(true);
+  expect(model.pending()).toBe(false);
+  expect(model.touched()).toBe(false);
+  expect(model.dirty()).toBe(false);
+  requests[0]!.resolve(null);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(model.errors()).toMatchObject([{ kind: 'minimum' }]);
+  expect(model.pending()).toBe(false);
 });

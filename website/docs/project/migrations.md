@@ -4,6 +4,20 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## Unreleased: read-only validator contexts
+
+Nodes returned by `ctx.node()`, `ctx.field()`, and `ctx.parent<TParent>()` now expose a recursive
+read-only validation view. This includes `$api`, ancestors, children, and array traversal.
+The explicit parent generic preserves your child types but does not restore the full node API.
+
+Replace validation-output conditions such as `ctx.node().valid()` or `ctx.parent()?.errors()` with
+conditions on the relevant values. Return validation errors, optionally targeting a context node.
+Move mutations, submissions, and validator replacement into application actions or `configure`.
+Code outside validator contexts retains the normal node API. Runtime identities are unchanged.
+
+The optional `validator(callback, { reactive: false })` samples external signals on value-triggered
+validation; it does not make circular reads safe. See [the validator reference](../reference/validator.md).
+
 ## Moving to 3.4.0: one API access path {#single-api-access}
 
 Use `node.$api` wherever you previously used the `node.api` API alias. Direct reads and operations such as `node()`, `node.valid()`, and `node.reset()` continue to work.

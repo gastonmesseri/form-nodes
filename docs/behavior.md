@@ -994,6 +994,43 @@ const myField = field('Marco', [
 
 Here, `someCondition` is evaluated when `field()` is called. If the condition must react to a signal changing later, read that signal inside a validator source instead, as in the following example.
 
+`validator(callback, { reactive: false })` explicitly tracks the owning exposed value and executes
+its callback and returned synchronous compositions under `untracked()`. External reads do not
+invalidate validation on their own, even when the callback does not read its value. The next value
+change samples the latest external state. Each helper invocation has its own policy; the default
+returns the original function while false creates an independently marked wrapper. Composed leaf
+references and built-in metadata remain available to application-side validator/constraint queries.
+Conditions evaluated during composition are also untracked; independently observed constraint
+signals retain their normal metadata semantics. Ordinary availability, validator replacement, and
+shared validation-pipeline invalidations still apply. Interaction flags are not changed by validation.
+A reset to a different exposed value revalidates; equal values and buffered input retain their usual
+invalidation semantics. The behavior works without an injector and with an explicit/captured injector.
+
+Validator contexts expose recursive type-only node views through `node`, `field`, `parent`, `$api`,
+ancestor navigation, children, array indexes/items, and traversal callbacks. An explicit
+`parent<TParent>()` accepts a structural parent type with optional nullish members and returns
+`ValidatorNodeView<NonNullable<TParent>> | null`. Indexed types such as `PageForm['roles'][number]`,
+`(typeof this.pageForm.roles)[number]`, and `typeof this.pageForm.roles[0]` need no explicit
+`NonNullable`. The result never adds undefined, and field nodes remain invalid parent contracts.
+This normalization changes only typing, not lookup, attachment, or reactivity. The generic cannot
+restore validation outputs or mutations. Views omit errors and error queries, validity/status, pending/debouncing, required and
+constraint metadata, validator-resolution queries, and mutating operations. Nested value views
+are read-only. A known declared child named like an API member remains readable. Unspecified string-indexed
+children are accessed through `$api.get()` or `$api.children`; the direct arbitrary string index
+is omitted to preserve the boundary. Error targets may be
+these views: runtime node identity is unchanged. Explicit external references and unsafe casts can
+still create cycles; `untracked()` does not prevent computed signals from evaluating themselves.
+
+This policy was checked against Angular `v22.1.6`, commit
+`356adf749188d996a641181c56621a6285126f3c`: `packages/forms/signals/src/field/validation.ts`
+(sync errors, pending and aggregate status), `packages/forms/signals/src/api/types.ts`
+(`RootFieldContext`), `packages/forms/signals/test/node/validation_status.spec.ts`
+(value invalidation and child-to-parent validity), and `packages/core/primitives/signals/src/computed.ts`
+(reentrant computation detection). The indexed-parent convenience was also checked against
+`packages/forms/signals/test/node/field_node.spec.ts` (array elements and fieldTreeOf row identity);
+Angular has no equivalent explicit parent generic. The stricter context view and non-reactive helper option are
+intentional Form Nodes API extensions; Angular's context still exposes read-only validation state.
+
 A synchronous validator may return another synchronous validator or an array of synchronous validators. The runner invokes every returned validator with the same stable context and continues resolving returned validators until it reaches normal validation results. This provides reactive conditional composition without replacing the configured validator source:
 
 ```ts
@@ -1172,9 +1209,9 @@ shows the expanded aggregate model instead of `NoInfer<FormValue<NormalizedNodes
 contexts keep their `TApi` value signal and `TValue`. This is a type-only presentation change:
 `NoInfer` remains on primitive inputs, runtime signals are unchanged, and arrays, nullable values,
 unions, tuples, and nominal field values retain their types.
-Generic nearest-form and field-root lookups now expose complete node APIs, so navigation through
-the validated node remains usable without the removed flat shortcuts. Explicit `TField` context
-types remain exact under `Signal<TField>` on both aliases. Read values with `context.value()` for
+Generic nearest-form and field-root lookups expose recursive read-only validation views. Explicit
+`TField` context types retain their value and child types under `Signal<ValidatorNodeView<TField>>`
+on both aliases; validation outputs and mutations are omitted. Read values with `context.value()` for
 the inferred `TValue`, or with `context.node().value()` / `context.field().value()` through the node.
 
 The signal and its result retain their identities across value changes, validation runs, attachment,

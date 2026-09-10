@@ -132,7 +132,10 @@ contribute no error. See [Built-in validator custom errors](../reference/built-i
 
 ## ✅ Custom validators {#custom-validators}
 
-A synchronous validator receives a stable context with its value signal and access to the validated node:
+A synchronous validator receives a stable context with its value signal and a read-only validation
+view of the node. Validation results, metadata queries, and mutations are omitted recursively,
+including from `parent<TParent>()`, `$api`, and descendants. Use values for cross-field conditions.
+The same restriction applies to asynchronous contexts. See the [context reference](../reference/validator.md#validator-context).
 
 ```ts
 import { field, validator } from '@ngblocks/form-nodes';
@@ -148,7 +151,9 @@ const adult = validator<number | null>(({ value }) => {
 const age = field<number>(null, [adult]);
 ```
 
-Return `null`, `undefined`, or nothing for success; return one error or an array of errors for failure. `validator()` only provides a typed reusable authoring context—it does not add runtime behavior.
+Return `null`, `undefined`, or nothing for success; return one error or an array of errors for failure. `validator()` provides a typed reusable authoring context and tracks signals by default. Set
+`{ reactive: false }` to keep value-triggered validation without tracking external reads; see
+[the helper reference](../reference/validator.md#non-reactive-validation).
 
 Validators can inspect `value`, `node`, `field`, `parent`, and `path`. Read state through the node,
 such as `ctx.node().touched()` or `ctx.field().dirty()`. These reads become reactive dependencies,
@@ -271,7 +276,8 @@ const myForm = form({
 Use `setValidators()` when the configured validator collection itself must be replaced.
 
 Returned validators can be nested and all receive the same stable context. Signals read by the
-outer condition or any returned validator remain reactive dependencies. A returned array must
+outer condition or any returned validator remain reactive dependencies by default. A composition
+inside `validator(callback, { reactive: false })` samples those reads without tracking them. A returned array must
 contain validators or validation errors after nullish entries are removed; mixing both is rejected
 as ambiguous.
 

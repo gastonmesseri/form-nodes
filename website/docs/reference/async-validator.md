@@ -292,8 +292,8 @@ executions, and `params` only to parameterized `validate`.
 | Member | Type | Available in |
 | --- | --- | --- |
 | [`value`](#async-validator-context-value) | `Signal<TValue>` | All callbacks |
-| [`node`](#async-validator-context-node) | `Signal<TField>` | All callbacks |
-| [`field`](#async-validator-context-field) | `Signal<TField>` | All callbacks |
+| [`node`](#async-validator-context-node) | `Signal<ValidatorNodeView<TField>>` | All callbacks |
+| [`field`](#async-validator-context-field) | `Signal<ValidatorNodeView<TField>>` | All callbacks |
 | [`parent`](#async-validator-context-parent) | parent-node signal | All callbacks |
 | [`path`](#async-validator-context-path) | path signal | All callbacks |
 | [`abortSignal`](#async-validator-context-abortsignal) | `AbortSignal` | `validate` |
@@ -314,9 +314,14 @@ dependency; reading it in `params` contributes to the derived snapshot.
 asyncValidator(({ value }) => checkUsername(value()));
 ```
 
+Validation outputs, constraint metadata, and mutations are omitted from every returned node,
+including `$api`, descendants, navigation, and `parent<TParent>()`. This applies to `when`, `params`,
+`validate`, and `onError`. See the [validation context boundary](./validator.md#validator-context).
+`ValidatorNodeView` is an internal helper name, not a package import.
+
 #### – node {#async-validator-context-node}
 
-**Signature:** `node: Signal<TField>`
+**Signature:** `node: Signal<ValidatorNodeView<TField>>`
 
 The readonly signal of the validated node, identical to `field`. Prefer this name when the owner
 can be a form, group, or array. Both aliases retain the same inferred node type.
@@ -324,13 +329,13 @@ See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
 #### – field {#async-validator-context-field}
 
-**Signature:** `field: Signal<TField>`
+**Signature:** `field: Signal<ValidatorNodeView<TField>>`
 
 A stable readonly signal returning the validated node; never `null`. This is the exact same signal
 as `node`. Inline primitive validators infer the concrete field, form, group, or array, including
 aggregate children and array items. A separately declared validator defaults to the common node
 API union; primitive-specific operations then require narrowing. Explicit `TField` context types
-are preserved as `Signal<TField>`.
+retain value and child types through a recursive read-only validation view.
 
 `context.field()` returns the node. Read its committed value with `context.value()`, which
 preserves the inferred value type. Use `context.field().value()` when accessing it through the node. Reading only `field()` tracks node identity, which
@@ -401,7 +406,6 @@ properties. The same access works in inline validators and reusable helpers.
 | `ctx.node().writable()` | Consumers may permit editing | `ctx.node().writable()` |
 | `ctx.node().hidden()` | Consumers should omit the node | `ctx.node().hidden()` |
 | `ctx.node().visible()` | Consumers should display the node | `ctx.node().visible()` |
-| `ctx.node().required()` | Current rules require a value | `ctx.node().required()` |
 
 Reading state in `when`, the callback form, or `params` makes it a dependency.
 Parameterized `validate` and `onError` can read the same state without tracking new dependencies.

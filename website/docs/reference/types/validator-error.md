@@ -19,7 +19,7 @@ Use for a validator-returned error with optional target attribution. The pipelin
 ## Declaration
 
 ```ts
-type ValidatorError<TNode extends AnyNode = AnyNode> = Omit<ValidationError, 'kind'> & {
+type ValidatorError<TNode extends ValidatorNodeView<AnyNode> = ValidatorNodeView<AnyNode>> = Omit<ValidationError, 'kind'> & {
     readonly kind: string | number;
     readonly targetNode?: TNode;
     readonly formNode?: never;
@@ -30,7 +30,7 @@ type ValidatorError<TNode extends AnyNode = AnyNode> = Omit<ValidationError, 'ki
 
 | Parameter | Constraint | Default |
 | --- | --- | --- |
-| `TNode` | `AnyNode` | `AnyNode` |
+| `TNode` | `ValidatorNodeView<AnyNode>` | `ValidatorNodeView<AnyNode>` |
 
 ## Declared members
 
