@@ -43,6 +43,15 @@ Do not eagerly read the result in a constructor before the binding's required in
 Reading from a template or a lazy `computed()` keeps initialization in the normal Angular lifecycle.
 Calling the hook outside an injection context throws; an optional binding does not make DI optional.
 
+## Dialogs and overlays
+
+The overlay's DOM position does not determine form ownership. For a Material dialog, pass
+`viewContainerRef` from a component inside the intended `[formNode]` binding scope to
+`MatDialog.open()`. Its injected form context then follows that view's injector hierarchy,
+and `useClosestForm()` observes submission and reset without an event subscription.
+A dialog opened from the root injector without that context normally receives `null`.
+If you supply a custom dialog injector, its provider hierarchy determines visibility instead.
+
 ## Submission-aware errors
 
 The following block contains two suggested component files, identified by comments. The error

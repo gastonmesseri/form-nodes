@@ -7,6 +7,10 @@ import type { HiddenFunctionMembers } from './hidden-function-members.type';
  * Calling this signal is equivalent to calling the node: configured `equal` checks can retain
  * an earlier equivalent value. Prefer calling the node for ordinary application reads.
  *
+ * For mutable field values, pass a new object/array/Date instance (or clone a Moment before editing it).
+ * In-place mutation and setting the same reference do not notify internal signals, even when a
+ * custom public `equal` comparator is configured. Derived signals and controls can otherwise stay stale.
+ *
  * The nested signals provide `set()` only, not the full Angular `WritableSignal` API.
  * All setters are safe to extract and call without a receiver. Function members such as `call`,
  * `apply`, and `bind` are hidden from IntelliSense on all three views, so `committed`, `control`,

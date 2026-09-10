@@ -1,7 +1,7 @@
 # Angular Material integration tests
 
 The Material browser regressions run as part of `npm run test:browser`. They use real Material
-controls and Chromium, including DOM events and overlay options/calendar cells. They do not
+controls in Chromium, plus Firefox and WebKit through the isolated UI matrix, including DOM events and overlay options/calendar cells. They do not
 replace Material controls with CVA stubs. The generic CVA lifecycle tests remain complementary.
 
 ## Coverage
@@ -52,3 +52,14 @@ After `npm run test:browser` has prepared its fixtures, a focused rerun is:
 ```sh
 npx vitest run --config vitest.browser.config.ts src/lib/form-node/material-*.browser.spec.ts
 ```
+
+## Additional interaction and composition coverage
+
+`material-infrastructure.browser.spec.ts` covers moved/removed array rows with pending edits
+and open overlays, two different controls sharing a field, an OnPush date CVA backed by an
+inner `FormControl`, and dialog injector ownership with submission/reset state.
+`material-input-states.browser.spec.ts` covers partial and invalid date ranges, synthetic IME
+composition buffering, and browser-driven textarea fill/clear with pending-value reset.
+
+See [UI library testing](ui-library-testing.md#intermediate-values-and-infrastructure) for
+browser commands and the distinction between WebKit testing and real Safari/iOS or OS input.

@@ -224,14 +224,15 @@ Changing `[formNode]` to a different node forces a fresh value and disabled-stat
 
 ## Tested UI library integrations {#tested-ui-libraries}
 
-The Chromium regression suite uses real controls from Angular Material, PrimeNG, NG-ZORRO,
+The browser regression suite uses real controls from Angular Material, PrimeNG, NG-ZORRO,
 ng-bootstrap, and Ionic. It checks initial values against Reactive Forms, user-value outputs,
 reset, rebinding, disabled state, and control-specific touch/debounce behavior. Select tests
 also cover late options and overlay selection; Material tests include native and Moment dates.
 
 The baseline fixtures use Angular 21.0.7 with Material 21.0.6, PrimeNG 21.1.10, NG-ZORRO 21.3.3,
 ng-bootstrap 20.0.0, and Ionic Angular 9.0.3. An additional isolated matrix runs these tests on
-Angular 21.2.22 and Angular 22.1.6 with compatible UI versions. This covers the tested controls and versions, not
+Angular 21.2.22 and Angular 22.1.6 with compatible UI versions in Chromium, plus Angular 21.2.22
+in Firefox and WebKit. This covers the tested controls and versions, not
 every component or configuration offered by these libraries. See the repository's
 [UI integration test matrix](https://github.com/gastonmesseri/form-nodes/blob/master/docs/ui-library-testing.md)
 for the exact controls, scenarios, version selection, and known boundaries.
@@ -246,3 +247,18 @@ been rendered by the UI component. Material and PrimeNG checkboxes can then reta
 state even though the node has reset; this is also reproducible with Reactive Forms. The integration
 tests cover that shared boundary and recovery after a rendered state update. Prefer performing
 related-field updates from the output and keeping explicit form reset as a separate application action.
+
+The suite also covers PrimeNG formatted numbers, incomplete masks and object autocomplete,
+Material date ranges, array rows moved or removed during edits and open overlays, multiple
+controls sharing a node, and an OnPush date CVA with an inner Reactive Forms control.
+Autocomplete search text can differ from its selected model: user-value outputs follow the
+CVA's reported value, so typing a search does not necessarily select a new value.
+
+Dialogs follow Angular's injector hierarchy. Pass the appropriate `viewContainerRef` when
+opening a Material dialog that needs [useClosestForm()](../reference/use-closest-form.md).
+For mutable model values such as `Date`, `Moment`, or objects, follow the
+[new-instance update pattern](../concepts/values-and-state.md#mutable-values).
+
+IME composition is tested with synthetic composition events; browser fill/clear does not
+simulate saved-profile autofill or password managers. Playwright WebKit coverage does not
+replace testing Safari on the devices your application supports.

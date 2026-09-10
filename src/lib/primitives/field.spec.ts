@@ -3138,3 +3138,16 @@ it('keeps own and descendant error reads equivalent for fields and signal-compat
   name.set('');
   expect(observed()[0]?.targetNode).toBe(name);
 });
+
+it('requires replacing a mutated reference to notify derived values, independently of public equality', () => {
+  const initial = { name: 'Ada' };
+  const node = field(initial, { equal: () => false });
+  const name = computed(() => node()?.name);
+  expect(name()).toBe('Ada');
+  initial.name = 'Grace';
+  node.set(initial);
+  expect(node()?.name).toBe('Grace');
+  expect(name()).toBe('Ada');
+  node.set({ ...initial });
+  expect(name()).toBe('Grace');
+});

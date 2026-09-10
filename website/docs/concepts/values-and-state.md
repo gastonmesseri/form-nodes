@@ -3,6 +3,7 @@ title: Values and state
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import mutableValuesSource from '!!raw-loader!../../examples/mutable-values.example.ts';
 import aggregateValueEqualitySource from '!!raw-loader!../../examples/aggregate-value-equality.example.ts';
 import consumerValueEqualitySource from '!!raw-loader!../../examples/consumer-value-equality.example.ts';
 
@@ -263,3 +264,19 @@ structural node. They differ when an explicit form is nested inside another tree
 Forms expose a stable readonly `children` map. Arrays expose an `items()` signal and index access.
 
 See [Tree navigation and API access](./tree-and-api.md) for paths, parents, child maps, and API-name collisions.
+
+## Mutable values {#mutable-values}
+
+When a field stores a `Date`, Moment instance, array, or object, replace that value when changing its contents. Editing the existing
+instance in place does not notify signals. Calling `set()` with that same reference does not force
+notification either: internal committed and control signals still use identity equality, independently
+of the public `equal` option. A direct read can see the mutated object while a previously evaluated
+computed value or rendered control still shows its old result.
+
+Use `new Date(...)`, Moment's `.clone()`, object spread, or a new array before making the change:
+
+<CodeBlock language="ts" title="mutable-values.ts">{mutableValuesSource}</CodeBlock>
+
+Cloning before mutation also protects initial values from changes to opaque objects. Standard Dates
+are snapshotted for `resetToInitial()`, while Moment and other custom classes retain their references;
+see [reset snapshot semantics](../guides/reset-and-restore.md).

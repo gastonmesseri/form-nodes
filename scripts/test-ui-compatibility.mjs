@@ -4,13 +4,13 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 
 const workspace = resolve(import.meta.dirname, '..');
-const [major, ...extra] = process.argv.slice(2);
-if (!['21', '22'].includes(major) || extra.length) {
-  throw new Error('Usage: npm run test:ui:compatibility -- <21|22>');
+const [major, browser = 'chromium', ...extra] = process.argv.slice(2);
+if (!['21', '22'].includes(major) || !['chromium', 'firefox', 'webkit'].includes(browser) || extra.length) {
+  throw new Error('Usage: npm run test:ui:compatibility -- <21|22> [chromium|firefox|webkit]');
 }
 const directory = mkdtempSync(join(tmpdir(), `form-nodes-ui-${major}-`));
 const run = (command, args) => {
-  const result = spawnSync(command, args, { cwd: directory, encoding: 'utf8', env: process.env, maxBuffer: 20 * 1024 * 1024 });
+  const result = spawnSync(command, args, { cwd: directory, encoding: 'utf8', env: { ...process.env, FORM_NODES_UI_BROWSER: browser }, maxBuffer: 20 * 1024 * 1024 });
   const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
   process.stdout.write(output);
   if (result.error) throw result.error;
@@ -23,7 +23,7 @@ try {
     cpSync(join(workspace, name), join(directory, name), { recursive: true });
   }
   run('npm', ['ci', '--ignore-scripts', '--strict-peer-deps', '--no-audit', '--no-fund']);
-  run(process.execPath, ['node_modules/playwright/cli.js', 'install', 'chromium']);
+  run(process.execPath, ['node_modules/playwright/cli.js', 'install', browser]);
   const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
   for (const [name, expected] of Object.entries(manifest.devDependencies)) {
     const actual = JSON.parse(readFileSync(join(directory, 'node_modules', name, 'package.json'), 'utf8')).version;

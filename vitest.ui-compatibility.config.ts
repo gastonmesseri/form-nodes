@@ -1,5 +1,10 @@
 import { defineConfig } from 'vitest/config';
 
+const browser = process.env['FORM_NODES_UI_BROWSER'] ?? 'chromium';
+if (browser !== 'chromium' && browser !== 'firefox' && browser !== 'webkit') {
+  throw new Error('FORM_NODES_UI_BROWSER must be chromium, firefox, or webkit.');
+}
+
 export default defineConfig({
   optimizeDeps: {
     include: [
@@ -14,6 +19,11 @@ export default defineConfig({
       '@angular/material/datepicker',
       '@angular/material-moment-adapter',
       'moment',
+      'primeng/inputnumber',
+      'primeng/inputmask',
+      'primeng/autocomplete',
+      '@angular/material/dialog',
+      '@angular/core/rxjs-interop',
       'primeng/select',
       'primeng/multiselect',
       'ng-zorro-antd/select',
@@ -36,7 +46,7 @@ export default defineConfig({
       enabled: true,
       provider: 'playwright',
       headless: true,
-      instances: [{ browser: 'chromium' }],
+      instances: [{ browser }],
     },
   },
 });

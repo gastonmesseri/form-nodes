@@ -3786,3 +3786,20 @@ when a synchronous listener replaces the committed value or destroys the binding
 submission flushes the pending value once; late completion after rebinding/destruction cannot emit
 through the old binding. Node-owned work may still finish on a detached node; it cannot overwrite
 the new bound node. Real-control regressions complement the generic output lifecycle tests.
+
+
+### Mutable value identity and extended UI regressions
+
+Field storage detects changes by reference before the public `equal` comparator applies.
+Mutating an object, Date, or Moment in place and setting the same instance does not notify
+computed consumers or controls, even with `equal: () => false`. Direct reads may see the
+mutation while cached computations remain unchanged. Replace objects, copy Dates, and clone
+Moments before changing them. `resetToInitial()` snapshots Dates and plain data but
+retains opaque class-instance references, including Moment; preserve those original instances.
+Field and form regressions verify reference replacement and reset through their public APIs.
+
+Real-control coverage also exercises formatted/incomplete input, date ranges, moved/removed
+array rows during editing and overlays, shared-node controls, composite OnPush CVAs, and dialog
+injector ownership. `useClosestForm()` follows the injector supplied to a dialog, not its DOM
+placement; a view container inside the binding scope preserves submission/reset visibility.
+See [UI library testing](ui-library-testing.md) for the exact browser matrix and input limits.

@@ -5445,3 +5445,14 @@ it('includes own errors before descendant errors without changing default reads'
   profile.name.set('Ada');
   expect(profile.errors({ descendants: true }).map(error => error.kind)).toEqual(['profileError']);
 });
+
+it('updates aggregate derived values when mutable child values are replaced and restores initial snapshots', () => {
+  const profile = form({ person: field({ name: 'Ada' }), date: field(new Date(2025, 0, 10)) });
+  const summary = computed(() => `${profile().person?.name}:${profile().date?.getDate()}`);
+  expect(summary()).toBe('Ada:10');
+  profile.person.set({ name: 'Grace' });
+  profile.date.set(new Date(2025, 0, 11));
+  expect(summary()).toBe('Grace:11');
+  profile.resetToInitial();
+  expect(summary()).toBe('Ada:10');
+});

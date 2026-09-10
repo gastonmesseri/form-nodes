@@ -75,12 +75,20 @@ jobs:
           echo "Angular ${ANGULAR_MAJOR} / Node ${NODE_VERSION}: ${OUTCOME}" >> "$GITHUB_STEP_SUMMARY"
 
   ui:
-    name: Angular ${{ matrix.angular }} real UI controls
+    name: Angular ${{ matrix.angular }} / ${{ matrix.browser }} real UI controls
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        angular: ['21', '22']
+        include:
+          - angular: '21'
+            browser: chromium
+          - angular: '22'
+            browser: chromium
+          - angular: '21'
+            browser: firefox
+          - angular: '21'
+            browser: webkit
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -91,5 +99,5 @@ jobs:
             package-lock.json
             tests/compatibility/ui-angular-${{ matrix.angular }}/package-lock.json
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:ui:compatibility -- ${{ matrix.angular }}
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run test:ui:compatibility -- ${{ matrix.angular }} ${{ matrix.browser }}

@@ -118,7 +118,35 @@ npm run test:ui:compatibility -- 21
 npm run test:ui:compatibility -- 22
 ```
 
-Each command installs from its own lockfile in a temporary workspace, installs its Chromium binary,
-checks versions, and runs all five Material/UI browser files against source. It leaves the primary
-workspace dependencies untouched. CI runs both rows. These are real browser integration checks;
+Each command installs from its own lockfile in a temporary workspace, installs the selected browser,
+checks versions, and runs all eight Material/UI browser files against source. It leaves the primary
+workspace dependencies untouched. CI runs both rows in Chromium and the Angular 21 row in Firefox and WebKit. These are real browser integration checks;
 the existing packed-package compatibility checks remain separate and complementary.
+
+## Intermediate values and infrastructure
+
+The expanded matrix includes:
+
+- PrimeNG InputNumber with German and English formatting and InputMask with incomplete input,
+  compared with Reactive Forms through typing, blur, and reset.
+- PrimeNG object autocomplete: search text retains the selected model, asynchronous suggestions
+  select the actual object, and reset restores the display without a user-value output.
+- Material date ranges with a missing end date, invalid ordering, correction, and ancestor reset.
+- Array rows moved during promise-debounced editing or an open select overlay; removed rows
+  cannot overwrite a replacement or emit through their destroyed binding.
+- A Material input and select sharing one node, including pending control values, blur commit,
+  binding removal, and reset without duplicate user outputs.
+- An OnPush composite date CVA with an inner Reactive Forms control: parsing validators,
+  disabled state, parent reset, and destruction/recreation.
+- Material dialogs with and without `viewContainerRef`, including closest-form submission/reset.
+- Material textarea composition event buffering and browser-driven fill/clear followed by reset.
+
+```sh
+npm run test:ui:compatibility -- 21 firefox
+npm run test:ui:compatibility -- 21 webkit
+```
+
+Each browser runs the full 151-test UI matrix. WebKit coverage exercises Playwright's engine,
+not a physical iOS device or the Safari application. Composition events test the IME protocol
+synthetically; browser fill/clear is not saved-profile autofill, password-manager injection,
+or an operating-system IME session. Those remain manual integration checks.
