@@ -135,4 +135,4 @@ export { provideFormNodeStateErrors } from './lib/form-node-state/control-errors
 
 export { FormNodeErrors } from './lib/form-node-errors/form-node-errors.component';
 
-export type { FormNodeErrorsContext } from './lib/form-node-errors/form-node-errors-context.type';
+export type { FormNodeErrorsContext } from './lib/form-node-errors/form-node-errors.utils';
