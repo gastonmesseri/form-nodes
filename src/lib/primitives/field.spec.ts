@@ -3609,3 +3609,41 @@ it('recovers a configured comparator failure before the first callback snapshot'
   node.set('Grace');
   expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
 });
+
+describe('file field values', () => {
+  it('tracks file identity, validation, derived metadata, and reset outside injection', () => {
+    const node = field<File>(null, [required]);
+    const name = computed(() => node()?.name ?? 'No file');
+    const first = new File(['a'], 'report.txt');
+    const second = new File(['b'], 'report.txt');
+    expect(node.invalid()).toBe(true);
+    expect(name()).toBe('No file');
+    node.set(first);
+    expect(node()).toBe(first);
+    expect(name()).toBe('report.txt');
+    expect(node.valid()).toBe(true);
+    expect(node.dirty()).toBe(false);
+    node.set(second);
+    expect(node()).toBe(second);
+    node.markAsDirty();
+    node.markAsTouched();
+    node.reset();
+    expect(node()).toBe(second);
+    expect(node.dirty()).toBe(false);
+    expect(node.touched()).toBe(false);
+    node.resetToInitial();
+    expect(node()).toBeNull();
+    expect(name()).toBe('No file');
+    expect(node.invalid()).toBe(true);
+  });
+
+  it('restores an initial file array while retaining opaque file instances', () => {
+    const original = new File(['a'], 'original.txt');
+    const replacement = new File(['b'], 'replacement.txt');
+    const node = field<File[]>([original]);
+    node.set([replacement]);
+    node.resetToInitial();
+    expect(node()).toEqual([original]);
+    expect(node()![0]).toBe(original);
+  });
+});

@@ -2935,7 +2935,7 @@ transitions using a small CSS animation hook, matching Angular Signal Forms. The
 document or Shadow Root, honors Angular's `CSP_NONCE`, and is removed when its last binding is
 destroyed. No validity observer or style is installed during server rendering.
 
-Native `input`, `select`, and `textarea` elements still require a `field()` because they edit scalar control representations. Aggregate nodes are accepted only through custom signal controls or CVAs capable of representing their complete object or array value. Forms and arrays expose that direct control representation through `value.control()` signals and may debounce it independently, without composing pending descendant control buffers.
+Native `input`, `select`, and `textarea` elements still require a `field()` because they edit leaf control representations, including `File[]` selections. Aggregate nodes are accepted only through custom signal controls or CVAs capable of representing their complete object or array value. Forms and arrays expose that direct control representation through `value.control()` signals and may debounce it independently, without composing pending descendant control buffers.
 
 The architecture follows Angular 22 Signal Forms `FormField`, `FormValueControl`, and `FormCheckboxControl` behavior as inspected at tag `22.1.5` (`468b65b74566537456c192ac4281795c5a1e1a5e`), especially `packages/forms/signals/src/directive/form_field.ts`, `packages/forms/signals/src/directive/form_field_spec.ts`, `packages/forms/signals/src/api/types.ts`, and the binding selection in `packages/forms/signals/src/field/node.ts`. `[formNode]` reproduces the pass-through result without depending on Angular's internal control-creation hook: component wrappers are discovered through the public `getDebugNode()` and `reflectComponentType()` APIs, while directives opt in through `provideFormNodePassThrough()`. Its signal-control integration remains independent and uses the same public discovery APIs. Signal interoperability remains a directive concern and does not change field semantics.
 
@@ -4067,3 +4067,44 @@ control-originated commits avoid writing the same value back. The per-node callb
 operation batching are Form Nodes additions, not an Angular Signal Forms public API imitation.
 Cached comparator failures do not block later writes from recovering; failed public value reads
 do not emit a callback, and recovery compares against the last successfully observed value.
+
+
+## Native file inputs
+
+- `input[type=file]` reads the first `input.files` entry or `null`. With `multiple`, it reads
+  a new `File[]` snapshot, including `[]` for an empty selection. Files retain their identity;
+  distinct files with matching metadata are still distinct values. Multiple selections use a
+  leaf `field<File[]>`, not an aggregate `array()` node.
+- Both explicit `[formNode]` and standalone `[formNodeValue]` bindings use this conversion.
+  Input and change events share normal parsing, equality, dirty, validation, and debounce
+  handling. Duplicate events for the same identities and order do not emit twice. Blur marks
+  touched and flushes blur debounce; submission flushes pending selections. Picker cancellation
+  does not mutate node values or interaction state.
+- Ordinary reads and derived filename signals observe committed values. Pending selections are
+  rendered from the control value. Programmatic writes do not mark nodes dirty or emit control
+  outputs. Parent values and submissions retain the original File objects.
+- Writes preserve an already matching FileList. Clearing uses `input.value = ''`; nonempty
+  replacements use the host window's DataTransfer to assign `input.files`, preserving order.
+  Single and multiple controls reject incompatible scalar/array shapes. Nullish values clear
+  either control without coercing the model. Keep the multiple mode consistent with its value.
+- `reset()` preserves the committed selection, cancels drafts, clears interaction state, and
+  rewrites native selection even if the value is unchanged. `resetToInitial()` restores initial
+  files. Initial array snapshots retain opaque File instances. Native form reset follows the
+  existing preserve-current-value reset policy.
+- Server DOMs without a FileList skip selection writes and never serialize File objects into
+  value attributes. Replacing a nonempty selection without browser DataTransfer support throws
+  a descriptive error. Empty selections do not require that API.
+- File properties are immutable metadata, not independently writable signals. Replace arrays
+  rather than mutating them in place. No automatic upload, file-content JSON serialization,
+  filesystem-path selection, or accept-derived validator is provided.
+
+Reference inspected: Angular **v22.1.6**, commit
+`356adf749188d996a641181c56621a6285126f3c`:
+[`native.ts`](https://github.com/angular/angular/blob/v22.1.6/packages/forms/signals/src/directive/native.ts),
+[`control_native.ts`](https://github.com/angular/angular/blob/v22.1.6/packages/forms/signals/src/directive/control_native.ts),
+and [`form_field.spec.ts`](https://github.com/angular/angular/blob/v22.1.6/packages/forms/signals/test/web/form_field.spec.ts).
+That release has no file-specific native conversion or file tests. File conversion and
+programmatic FileList synchronization are intentional Form Nodes extensions; existing input,
+blur, buffered-value, and reset infrastructure governs their state behavior. The
+[HTML file-input API](https://html.spec.whatwg.org/multipage/input.html#dom-input-files)
+permits assigning a FileList and only permits the empty string when setting a file input's value.

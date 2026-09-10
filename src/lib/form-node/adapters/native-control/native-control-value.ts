@@ -1,6 +1,7 @@
 import { untracked } from '@angular/core';
 
 import { isNil } from '../../../utils/is-nil';
+import { writeNativeFiles } from './native-file-control';
 import type { ValidationErrorWithoutTargetNode } from '../../../validation/validation.type';
 
 export type NativeFormNodeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -33,6 +34,8 @@ export const readNativeControlValue = (
   if (!isNativeInput(element)) return element.value;
 
   switch (element.type) {
+    case 'file':
+      return element.multiple ? Array.from(element.files ?? []) : element.files?.item(0) ?? null;
     case 'checkbox':
       return element.checked;
     case 'radio':
@@ -104,6 +107,9 @@ export const writeNativeControlValue = (element: NativeFormNodeControl, value: u
   }
 
   switch (element.type) {
+    case 'file':
+      writeNativeFiles(element, value);
+      return;
     case 'checkbox':
       element.checked = Boolean(value);
       return;

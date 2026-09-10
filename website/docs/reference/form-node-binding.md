@@ -627,3 +627,17 @@ runs after the attempt notification, and can clear `submitted()` normally.
 <CodeBlock language="ts" title="profile.component.ts">{submitSource}</CodeBlock>
 
 See [custom control contracts](./custom-control-contracts.md) to choose a component or binding type, and [Public types](./types/index.md) for individual declarations.
+
+
+## Native file values {#native-file-values}
+
+`<input type="file" [formNode]="upload.file">` binds to a `field<File>(null)`;
+adding `multiple` binds to a `field<File[]>([])`. Empty user selections produce `null` and `[]`
+respectively. `[formNodeValue]` and `[(formNodeValue)]` support the same shapes with or without
+an explicit node. Read filenames reactively with `upload.file()?.name`.
+
+Selection participates in normal validation, interaction, debounce, and output semantics.
+Programmatic values and resets synchronize `input.files`; strings cannot select local paths.
+Populated programmatic selections require browser `DataTransfer` support. Selecting a file does
+not upload it. See [File inputs](../guides/control-binding.md#file-inputs) for complete examples,
+reset semantics, and `FormData` payloads.

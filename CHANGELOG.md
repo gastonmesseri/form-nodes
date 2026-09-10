@@ -10,6 +10,11 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Bind native file inputs to `File | null` or `File[]` fields, including standalone `[formNodeValue]` bindings. Selection updates reactive values and validation; programmatic updates and resets synchronize the browser selection without assigning filesystem paths.
+
+
 ## [3.7.0] - 2026-09-11
 
 ### Added

@@ -5984,3 +5984,27 @@ it('notifies form value changes while async validation is pending without waitin
   expect(profile.valid()).toBe(true);
   expect(states).toEqual([true]);
 });
+
+describe('file form values', () => {
+  it('aggregates nested file validation and submits original files outside injection', async () => {
+    const submitted = vi.fn();
+    const upload = form({
+      documents: { primary: field<File>(null, [required]), attachments: field<File[]>([]) },
+    }, { onSubmit: submitted });
+    const file = new File(['content'], 'report.txt');
+    expect(upload.invalid()).toBe(true);
+    upload.patch({ documents: { primary: file, attachments: [file] } });
+    expect(upload.valid()).toBe(true);
+    expect(upload.dirty()).toBe(false);
+    expect(upload().documents.primary).toBe(file);
+    expect(upload().documents.attachments![0]).toBe(file);
+    expect(await upload.submit()).toBe(true);
+    expect(submitted.mock.calls[0]![0].documents.primary).toBe(file);
+    expect(upload.touched()).toBe(true);
+    upload.resetToInitial();
+    expect(upload().documents).toEqual({ primary: null, attachments: [] });
+    expect(upload.invalid()).toBe(true);
+    expect(upload.touched()).toBe(false);
+    expect(upload.dirty()).toBe(false);
+  });
+});

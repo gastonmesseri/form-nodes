@@ -3,8 +3,10 @@ title: Control binding
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import standaloneSource from '!!raw-loader!../../examples/standalone-control-value.typecheck.ts';
+import fileValuesSource from '!!raw-loader!../../examples/file-values.example.ts';
+import nativeFileSource from '!!raw-loader!../../examples/native-file-binding.typecheck.ts';
 import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.typecheck.ts';
+import standaloneSource from '!!raw-loader!../../examples/standalone-control-value.typecheck.ts';
 
 # Control binding {#control-binding}
 
@@ -27,11 +29,53 @@ export class Editor {
 ```
 
 It supports native `input`, `select`, and `textarea` elements, Angular `ControlValueAccessor`
-components, `value = model<T>()` controls, and `checked = model<boolean>()` checkbox controls. Native controls bind scalar [`field()`](../reference/field.md) nodes; aggregate forms and
+components, `value = model<T>()` controls, and `checked = model<boolean>()` checkbox controls. Native controls bind leaf [`field()`](../reference/field.md) nodes; aggregate forms and
 arrays require a custom control that represents their complete value. Separate input/output pairs
 are also available through [experimental `bindInputOutputPairs`](./custom-controls.md#separate-input-output-pairs). See
 [Advanced custom controls](./custom-controls-advanced.md#angular-api-compatibility) for the complete compatibility
 matrix and integration boundaries.
+
+## File inputs {#file-inputs}
+
+Bind a file input directly to a field. The `multiple` attribute determines the value shape:
+
+| Native control | Field declaration | Empty user selection |
+| --- | --- | --- |
+| `<input type="file">` | `field<File>(null)` | `null` |
+| `<input type="file" multiple>` | `field<File[]>([])` | `[]` |
+
+A multiple selection is one `field<File[]>`, not an `array()` node. Its value is a snapshot of
+`input.files` as a normal array containing the original `File` objects.
+
+<CodeBlock language="ts" title="document-editor.component.ts">{nativeFileSource}</CodeBlock>
+
+Reading `upload.cover()?.name` in a template or `computed()` tracks the field: selecting or
+clearing a file updates the displayed name. Files also expose `size` (bytes), `type`, and
+`lastModified`. File metadata itself is immutable; replace the field value to select a different
+file. Replace arrays with `set()` or `update()` instead of mutating them in place.
+
+These bindings use the usual dirty, touched, validation, debounce, and committed-output rules.
+With debounce, ordinary node reads show the committed file until the pending selection commits.
+Cancelling the picker leaves the selection unchanged. The browser's `input` and `change` events
+for the same selection produce one value update.
+
+Use `set(null)` to clear a single input and `set([])` to clear a multiple input. Nullish values
+also clear either control. Existing `File` objects can be assigned programmatically; populated
+selections synchronize through the browser's `DataTransfer` and `input.files` APIs. A string
+path cannot select a local file. Keep `multiple` consistent with the model shape: a non-null
+single value must be a `File`, and a multiple value must be a `File[]`.
+
+`reset()` preserves the current committed value and clears interaction state; `resetToInitial()`
+restores the original file value, including the native selection. Files are not serialized into
+server-rendered HTML. Populating a selection requires browser `DataTransfer` support; clearing
+it does not.
+
+Selection does **not** upload anything. Build a `FormData` payload and send it through your own
+HTTP client when appropriate; JSON does not serialize file contents. The `accept` attribute is a
+picker hint, not a validator. Validate size/type in your application and validate uploaded data
+on the server.
+
+<CodeBlock language="ts" title="file-values.ts">{fileValuesSource}</CodeBlock>
 
 ## Standalone values {#standalone-values}
 

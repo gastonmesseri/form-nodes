@@ -71,6 +71,24 @@ describe('FormNodeDirective server rendering', () => {
     expect(html).toMatch(/name="[^".]+\.form\d+"/);
   });
 
+  it('renders file controls without serializing files into their value attribute', async () => {
+    @Component({
+      selector: 'app-root',
+      template: '<input type="file" [formNode]="attachment"><input type="file" multiple [formNode]="attachments">',
+      imports: [FormNodeDirective],
+    })
+    class App {
+      attachment = field<File>(new File(['data'], 'private.txt'), [required]);
+      attachments = field<File[]>([]);
+    }
+
+    const html = await render(App);
+    expect(html).toContain('type="file"');
+    expect(html).toContain('aria-invalid="false"');
+    expect(html).not.toContain('private.txt');
+    expect(html).not.toContain('[object File]');
+  });
+
   it('renders select values without requiring MutationObserver', async () => {
     @Component({
       selector: 'app-root',
