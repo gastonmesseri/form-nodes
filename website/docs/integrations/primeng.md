@@ -5,7 +5,7 @@ description: Bind Form Nodes directly to PrimeNG inputs, selects, checkboxes, da
 
 # PrimeNG {#primeng}
 
-PrimeNG form controls work with `[formNode]` through native elements and Angular's
+PrimeNG form controls work with [`[formNode]`](../reference/form-node-binding.md) through native elements and Angular's
 `ControlValueAccessor` contract. No Form Nodes adapter, wrapper, `FormControl`, `FormsModule`, or
 `ReactiveFormsModule` is required.
 
@@ -184,7 +184,7 @@ without it. Form Nodes adds no status classes by default.
 ## 📚 Binary and collection checkboxes {#binary-and-collection-checkboxes}
 
 Use `[binary]="true"` with a boolean field. For a checkbox group that owns one complete collection
-value, use an array-valued `field()` rather than `array()`. Use `array()` only when each item needs
+value, use an array-valued [`field()`](../reference/field.md) rather than [`array()`](../reference/array.md). Use `array()` only when each item needs
 an independent Form Nodes node. See
 [Choosing a primitive](../guides/choosing-a-primitive.md#array-field-or-array).
 

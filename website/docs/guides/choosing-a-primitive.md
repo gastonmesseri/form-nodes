@@ -6,10 +6,10 @@ title: Choosing a primitive
 
 Choose a primitive from the shape and lifecycle of the value you need to model:
 
-- Use `field()` for one replaceable value.
-- Use `form()` for the typed object tree that owns a submission workflow.
-- Use `array()` for a dynamic ordered collection of repeated nodes.
-- Use explicit `group()` when an object boundary needs its own configuration without submission; ordinary nested objects use shorthand.
+- Use [`field()`](../reference/field.md) for one replaceable value.
+- Use [`form()`](../reference/form.md) for the typed object tree that owns a submission workflow.
+- Use [`array()`](../reference/array.md) for a dynamic ordered collection of repeated nodes.
+- Use explicit [`group()`](../reference/group.md) when an object boundary needs its own configuration without submission; ordinary nested objects use shorthand.
 
 Most application forms combine several primitives rather than choosing only one.
 
@@ -38,7 +38,7 @@ const myForm = form({
 
 ## 🧭 At a glance {#at-a-glance}
 
-| Question | `field()` | `form()` | `array()` | `group()` |
+| Question | [`field()`](../reference/field.md) | [`form()`](../reference/form.md) | [`array()`](../reference/array.md) | [`group()`](../reference/group.md) |
 | --- | --- | --- | --- | --- |
 | Value shape | Any single value | Non-null object | Non-null array | Non-null object |
 | Structure | Leaf | Fixed workflow tree | Dynamic repeated items | Fixed named children |

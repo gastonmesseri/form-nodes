@@ -14,7 +14,7 @@ import type { Validators } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for a normalized readonly collection of composable rules. Use `ValidatorSource` for public inputs that also accept a single validator or nullish entries.
+Use for a normalized readonly collection of composable rules. Use [`ValidatorSource`](./validator-source.md) for public inputs that also accept a single validator or nullish entries.
 
 ## Declaration
 

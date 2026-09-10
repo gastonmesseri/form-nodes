@@ -33,7 +33,7 @@ The `value` argument is inferred from the complete form tree, including nested a
 
 ## 🔌 Bind the native form {#bind-the-native-form}
 
-The existing `FormNodeDirective` import handles both the native form and its controls:
+The existing [`FormNodeDirective`](../reference/form-node-binding.md) import handles both the native form and its controls:
 
 ```ts
 @Component({

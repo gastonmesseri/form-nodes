@@ -456,7 +456,7 @@ code.pattern();
 name.required();
 ```
 
-Multiple minimum constraints expose the strictest, largest minimum; multiple maximum constraints expose the strictest, smallest maximum. `pattern()` contains every active expression. Conditionally composed validators contribute metadata only while their branch is active. `[formNode]` forwards applicable metadata to native and compatible custom controls.
+Multiple minimum constraints expose the strictest, largest minimum; multiple maximum constraints expose the strictest, smallest maximum. `pattern()` contains every active expression. Conditionally composed validators contribute metadata only while their branch is active. [`[formNode]`](./form-node-binding.md) forwards applicable metadata to native and compatible custom controls.
 
 ## 🌳 Tree shaking {#tree-shaking}
 

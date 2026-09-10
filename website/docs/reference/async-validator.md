@@ -32,7 +32,7 @@ synchronous conditional validator.
 | Name dependencies explicitly | `asyncValidator({ params, validate, ... })` | [Parameterized signature](#parameterized-signature) |
 | Delay, condition, or recover validation | `debounce`, `when`, `onError` | [Option reference](#option-reference) |
 | Read value, tree, state, or cancellation | Callback context | [Context reference](#context-reference) |
-| Return a Promise, Observable-like value, or validation result | `AsyncValidationResult` | [Return value](#return-value) |
+| Return a Promise, Observable-like value, or validation result | [`AsyncValidationResult`](./types/async-validation-result.md) | [Return value](#return-value) |
 | Understand pending, ordering, and stale work | Node validation state | [Execution lifecycle](#execution-lifecycle) |
 
 ## 📐 Signatures {#signatures}
@@ -42,7 +42,7 @@ asyncValidator(validate, options?);
 asyncValidator({ params, validate, debounce?, when?, onError? });
 ```
 
-Both signatures produce an `AsyncValidator<TValue>` accepted by a field, form, group, or array
+Both signatures produce an [`AsyncValidator<TValue>`](./types/async-validator.md) accepted by a field, form, group, or array
 validator source. They differ only in how reactive dependencies are selected.
 
 | Signature | Tracked dependencies | Best for |
@@ -499,14 +499,14 @@ asynchronous execution. Later reactive changes retain their scheduled revalidati
 | Type | Purpose |
 | --- | --- |
 | `AsyncValidator<TValue>` | Marked validator accepted by validator sources |
-| `AsyncValidatorOptions<TValue, TApi>` | Callback-signature options |
-| `ParameterizedAsyncValidatorConfig<TValue, TParams, TApi>` | Complete parameterized configuration |
-| `ParameterizedAsyncValidatorOptions<TValue, TParams, TApi>` | Parameterized marker options |
-| `AsyncValidatorBaseContext<TValue, TApi>` | Context shared by `params`, `when`, and `onError` |
-| `AsyncValidatorContext<TValue, TApi>` | Callback context with `abortSignal` |
-| `ParameterizedAsyncValidatorContext<TValue, TParams, TApi>` | Context with `abortSignal` and `params` |
+| [`AsyncValidatorOptions<TValue, TApi>`](./types/async-validator-options.md) | Callback-signature options |
+| [`ParameterizedAsyncValidatorConfig<TValue, TParams, TApi>`](./types/parameterized-async-validator-config.md) | Complete parameterized configuration |
+| [`ParameterizedAsyncValidatorOptions<TValue, TParams, TApi>`](./types/parameterized-async-validator-options.md) | Parameterized marker options |
+| [`AsyncValidatorBaseContext<TValue, TApi>`](./types/async-validator-base-context.md) | Context shared by `params`, `when`, and `onError` |
+| [`AsyncValidatorContext<TValue, TApi>`](./types/async-validator-context.md) | Callback context with `abortSignal` |
+| [`ParameterizedAsyncValidatorContext<TValue, TParams, TApi>`](./types/parameterized-async-validator-context.md) | Context with `abortSignal` and `params` |
 | `AsyncValidationResult` | Promise-like or Observable-like validation operation |
-| `ValidationResult` | Success, a message or error object, or an array of both |
+| [`ValidationResult`](./types/validation-result.md) | Success, a message or error object, or an array of both |
 
 See [Async validation](../guides/async-validation.md) for task-oriented examples and
 [Advanced behavior](../advanced/behavior-details.md#asynchronous-scheduling-and-dependencies) for

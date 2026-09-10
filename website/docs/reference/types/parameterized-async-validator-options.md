@@ -14,7 +14,7 @@ import type { ParameterizedAsyncValidatorOptions } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for async options that also derive tracked params. The execution function belongs to `ParameterizedAsyncValidatorConfig`.
+Use for async options that also derive tracked params. The execution function belongs to [`ParameterizedAsyncValidatorConfig`](./parameterized-async-validator-config.md).
 
 ## Declaration
 

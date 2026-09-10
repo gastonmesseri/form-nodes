@@ -14,7 +14,7 @@ import type { FormNode } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for inputs and helpers that require form submission semantics. Its generic describes child nodes, not the plain form-value object; use `FormValueContract` for value-oriented constraints.
+Use for inputs and helpers that require form submission semantics. Its generic describes child nodes, not the plain form-value object; use [`FormValueContract`](./form-value-contract.md) for value-oriented constraints.
 
 ## Declaration
 

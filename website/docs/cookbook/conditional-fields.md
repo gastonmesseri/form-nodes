@@ -50,6 +50,6 @@ export class Checkout {
 
 Hidden nodes retain their values and validators but expose no errors and do not affect ancestor validity. When the business fields become visible again, validation resumes against their current values.
 
-Node state does not hide DOM by itself. Keeping the `@if` aligned with `visible()` avoids rendering a hidden `[formNode]` control.
+Node state does not hide DOM by itself. Keeping the `@if` aligned with `visible()` avoids rendering a hidden [`[formNode]`](../reference/form-node-binding.md) control.
 
 See [Interaction and availability](../guides/interaction-and-availability.md).

@@ -36,7 +36,7 @@ const myForm = form({
 </select>
 ```
 
-Use `array()` only when individual items need their own nodes, bindings, errors, paths, state, or
+Use [`array()`](../reference/array.md) only when individual items need their own nodes, bindings, errors, paths, state, or
 structural operations. See [Array field or `array()`](../guides/choosing-a-primitive.md#array-field-or-array).
 
 ## 🌳 Using a group for an atomic or nullable object {#using-a-group-for-an-atomic-or-nullable-object}
@@ -90,7 +90,7 @@ const myForm = form({
 });
 ```
 
-`form()` and `array()` are structural containers and remain non-null. See
+[`form()`](../reference/form.md) and `array()` are structural containers and remain non-null. See
 [`field()` nullability](../reference/field.md#nullability).
 
 ## 🔌 Reading value.control() as the normal value {#reading-controlvalue-as-the-normal-value}
@@ -315,7 +315,7 @@ See [Advanced custom controls](../guides/custom-controls-advanced.md#aggregate-v
 
 Synchronous `NG_VALIDATORS` from a CVA participate in node validation. `NG_ASYNC_VALIDATORS` are not
 adapted because async work needs node-owned cancellation, debounce, dependency tracking, and stale
-result protection. Declare it through `asyncValidator()` instead.
+result protection. Declare it through [`asyncValidator()`](../reference/async-validator.md) instead.
 
 If the problem is already happening and its cause is unclear, continue with the upcoming
 Troubleshooting guide. For a compact map of the complete public surface, see the

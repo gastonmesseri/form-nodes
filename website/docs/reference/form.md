@@ -17,7 +17,7 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 
 # form() {#form}
 
-For the exported `FormNode` model type and its generic counterpart, see the
+For the exported [`FormNode`](./types/form-node.md) model type and its generic counterpart, see the
 [Node types reference](./node-types.md#form-node).
 
 `form()` creates a typed object tree that owns a submission workflow. Its initial children are
@@ -53,14 +53,14 @@ const myForm = form({
 
 See the [validator argument and result contract](../guides/validation.md#validator-results) for
 this primitive's positional and `options.validators` signatures. Callbacks accept the fully typed
-node context and return `ValidationResult` or `ComposableValidationResult<TValue, TNode>` at runtime:
+node context and return [`ValidationResult`](./types/validation-result.md) or [`ComposableValidationResult<TValue, TNode>`](./types/composable-validation-result.md) at runtime:
 no error, messages, errors with string/numeric kinds, or synchronous validator compositions.
 
 :::info Declaration return inference
 
 The TypeScript callback return is intentionally `any` so self-referencing declarations compile.
 The node and context remain typed. Annotate the return with `ValidationResult` (or
-`ComposableValidationResult` for composition), or use the checked context-taking `validator()`
+`ComposableValidationResult` for composition), or use the checked context-taking [`validator()`](./validator.md)
 helper when you want result checking. Numeric error kinds are exposed as strings.
 
 :::
@@ -69,7 +69,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
-| Create or configure a form | `form(...)`, `FormOptions` | [Signatures](#signatures) and [options](#options) |
+| Create or configure a form | `form(...)`, [`FormOptions`](./types/form-options.md) | [Signatures](#signatures) and [options](#options) |
 | Read its value or navigate children | `myForm()`, direct children, `children` | [Properties and methods](#properties-and-methods) |
 | Replace, derive, patch, or reset values | `set()`, `update()`, `patch()`, `reset()`, `resetToInitial()` | [Method reference](#method-reference) |
 | Add, find, or remove runtime children | `add()`, `get()`, `remove()` | [Dynamic children](#dynamic-children) |
@@ -81,7 +81,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 | Handle a child/API name collision | `$api` | [API properties](#api-properties) |
 
 Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
-value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+value type and any declared children or array items. Inline `validator()` and [`asyncValidator()`](./async-validator.md)
 helpers retain that inference when their generics are omitted. See
 [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
@@ -94,7 +94,7 @@ form(definitions, validators, options?);
 
 ### ◆ Extract the value type {#extract-the-value-type}
 
-Use `FormNodeValue<typeof myForm>` to derive a reusable value type from a form instance, including
+Use [`FormNodeValue<typeof myForm>`](./types/form-node-value.md) to derive a reusable value type from a form instance, including
 nested objects, arrays, and field nullability:
 
 ```ts
@@ -103,7 +103,7 @@ type MyFormValue = FormNodeValue<typeof myForm>;
 
 Import the type from `@ngblocks/form-nodes`. See the dedicated
 [`FormNodeValue` reference](./form-node-value.md) for a complete example and the distinction from
-the child-map helper `FormValue<TNodes>`.
+the child-map helper [`FormValue<TNodes>`](./types/form-value.md).
 
 ### ◆ Check a named value model {#check-a-named-value-model}
 
@@ -115,8 +115,8 @@ inferred from `definitions`:
 
 Here `profile()` and `profile.value()` conform to `Profile`, while each child retains its inferred
 field type. `field.strict<string>('Switzerland')` gives `country` the non-nullable `string` type
-required by the model; ordinary `field()` declarations keep `username` and `age` nullable. An
-incompatible child value produces a TypeScript error at the `satisfies` expression. The same contract can check a `group()` because both primitives expose a callable
+required by the model; ordinary [`field()`](./field.md) declarations keep `username` and `age` nullable. An
+incompatible child value produces a TypeScript error at the `satisfies` expression. The same contract can check a [`group()`](./group.md) because both primitives expose a callable
 aggregate value and a `value` signal. See the dedicated
 [`FormValueContract` reference](./form-value-contract.md) for nullability, incompatible-model,
 annotation, and structural-compatibility details.
@@ -152,10 +152,10 @@ specific generic than the initial value can provide.
 
 See the [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-shorthand-matrix)
 for every normalization category, its explicit equivalent, and the cases that require
-`field()`, `group()`, or `array()`.
+`field()`, `group()`, or [`array()`](./array.md).
 
 Every array value, including an empty array, populated array, readonly tuple, or array of plain
-objects, becomes one `FieldNode`. Its interpretation never depends on its length or first item. To
+objects, becomes one [`FieldNode`](./types/field-node.md). Its interpretation never depends on its length or first item. To
 create a dynamic `ArrayNode` with independently addressable item nodes, declare `array(...)`
 explicitly. Use `field([...])` when making the atomic array-value intent visually explicit or when
 the field needs configuration. An empty `[]` shorthand infers `FieldNode<unknown[] | null>` instead of

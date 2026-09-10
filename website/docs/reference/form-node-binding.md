@@ -13,8 +13,8 @@ import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-h
 available. The same symbol is also the public generic type returned by binding queries.
 
 Import [`FormNodesModule`](./form-nodes-module.md) instead when you prefer one import point
-for the library's Angular template features. `FormNode<TChildren>` is the form model type;
-use `FormNodeDirective<TNode>` or `FormNodeBinding<TNode>` for a rendered binding.
+for the library's Angular template features. [`FormNode<TChildren>`](./types/form-node.md) is the form model type;
+use `FormNodeDirective<TNode>` or [`FormNodeBinding<TNode>`](./types/form-node-binding.md) for a rendered binding.
 
 ```ts
 import { Component, viewChild } from '@angular/core';
@@ -44,8 +44,8 @@ and linker infrastructure.
 | --- | --- | --- |
 | Query or inspect one concrete binding | `FormNodeDirective<TNode>`, `FormNodeBinding<TNode>` | [Binding instance](#binding-instance) |
 | Inject the binding on its host | `FORM_NODE` | [`FORM_NODE` reference](./form-node-token.md) |
-| Apply reactive CSS classes | `provideFormNodesConfig()` | [Automatic CSS classes](#automatic-css-classes) |
-| Delegate through a wrapper | `provideFormNodePassThrough()` | [Pass-through wrappers](#pass-through-wrappers) |
+| Apply reactive CSS classes | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) | [Automatic CSS classes](#automatic-css-classes) |
+| Delegate through a wrapper | [`provideFormNodePassThrough()`](./provide-form-node-pass-through.md) | [Pass-through wrappers](#pass-through-wrappers) |
 | Bind submit and reset on `<form>` | The same `FormNodeDirective` import | [Native form submission](#native-form-submission) |
 
 ## 🔌 Directive input {#directive-input}
@@ -66,8 +66,8 @@ export class EmailEditor {
 
 **Binding:** `[formNode]="node"`
 
-The directive accepts a field, form, group, or array node. Native controls require a `field()`;
-native `<form>` elements require a `form()` or `group()`. Aggregate nodes can also bind to a
+The directive accepts a field, form, group, or array node. Native controls require a [`field()`](./field.md);
+native `<form>` elements require a [`form()`](./form.md) or [`group()`](./group.md). Aggregate nodes can also bind to a
 recognized custom component that models their complete value.
 
 | Host | Accepted node | Purpose |
@@ -250,7 +250,7 @@ this.emailBinding().reset();
 
 ## 🔌 FORM_NODE {#form_node}
 
-`FORM_NODE` is the injection token for the binding on the current host. Most application code uses
+[`FORM_NODE`](./form-node-token.md) is the injection token for the binding on the current host. Most application code uses
 a template reference and `viewChild()` instead. Inject the token only when a directive or service
 co-located with the host genuinely needs the concrete binding.
 
@@ -378,7 +378,7 @@ experimental `bindInputOutputPairs: true` (including `[]` for value transport wi
 For `FormValueControl`, value binding through `model()` works without experimental options.
 Full automatic state/constraint input synchronization requires experimental `syncInputs: 'all'`;
 `'signal-controls'` also synchronizes all supported inputs for model controls, while excluding CVAs and paired input/output controls. Other modes select fewer inputs. Alternatively, a component can combine its value model with
-`useFormNodeState()` for full bound-state access and render that state itself without input writes.
+[`useFormNodeState()`](./form-node-state.md) for full bound-state access and render that state itself without input writes.
 Standard CVA value, touch, and disabled-state integration does not require `syncInputs`.
 See [FormValueControl support and a complete example](../guides/custom-controls.md#create-a-signal-model-control).
 
@@ -436,9 +436,9 @@ The related public types are:
 
 | Type | Purpose |
 | --- | --- |
-| `FormNodeValueControl<T>` | Signal control whose primary model is `value`. |
-| `FormNodeCheckboxControl` | Boolean signal control whose primary model is `checked`. |
-| `FormNodeControl<T>` | Union of recognized value and checkbox control contracts. |
+| [`FormNodeValueControl<T>`](./types/form-node-value-control.md) | Signal control whose primary model is `value`. |
+| [`FormNodeCheckboxControl`](./types/form-node-checkbox-control.md) | Boolean signal control whose primary model is `checked`. |
+| [`FormNodeControl<T>`](./types/form-node-control.md) | Union of recognized value and checkbox control contracts. |
 | `FormNodeUiControl<T>` | Common optional UI state and node-integration surface. |
 
 These contracts are declared by Form Nodes using Angular core signal types. They keep the same

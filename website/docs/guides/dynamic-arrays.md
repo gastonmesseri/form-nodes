@@ -7,7 +7,7 @@ title: Dynamic arrays
 For a complete program whose assertions verify keyed reconciliation and structural operations, see
 the [executable array example](../examples/executable-examples.mdx#array-reconciliation-and-operations).
 
-An `array()` owns an ordered collection of cloned node templates:
+An [`array()`](../reference/array.md) owns an ordered collection of cloned node templates:
 
 ```ts
 const myForm = form({

@@ -14,7 +14,7 @@ import type { ControlStateError } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when rendering errors obtained from `useFormNodeState()`. This is a source-neutral error contract rather than a guarantee of a Form Nodes target node.
+Use when rendering errors obtained from [`useFormNodeState()`](../form-node-state.md). This is a source-neutral error contract rather than a guarantee of a Form Nodes target node.
 
 ## Declaration
 

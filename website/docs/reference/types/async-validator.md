@@ -14,7 +14,7 @@ import type { AsyncValidator } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for the marked result of `asyncValidator()`. A plain function returning a Promise is not a substitute for configuring a validator through the helper.
+Use for the marked result of [`asyncValidator()`](../async-validator.md). A plain function returning a Promise is not a substitute for configuring a validator through the helper.
 
 ## Declaration
 

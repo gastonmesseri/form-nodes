@@ -8,13 +8,13 @@ import CodeBlock from '@theme/CodeBlock';
 import SignalInteropExample from '!!raw-loader!../../examples/signal-interop.example.ts';
 
 Use [`isFormNode(value)`](../reference/node-api.md#is-form-node) to check whether an unknown value
-is a field, form, group, or array node. The helper narrows the value to the shared `AnyNode` type.
+is a field, form, group, or array node. The helper narrows the value to the shared [`AnyNode`](../reference/types/any-node.md) type.
 
 Form Nodes represents every part of a form as a node:
 
-- `field()` creates a leaf value.
-- `form()` combines named child nodes into an object value.
-- `array()` manages an ordered collection of repeated node definitions.
+- [`field()`](../reference/field.md) creates a leaf value.
+- [`form()`](../reference/form.md) combines named child nodes into an object value.
+- [`array()`](../reference/array.md) manages an ordered collection of repeated node definitions.
 
 ## 🔌 Use nodes with Angular signal utilities {#use-nodes-with-angular-signal-utilities}
 
@@ -56,7 +56,7 @@ provides validation, errors, touched and dirty state, disabled/readonly/hidden s
 debounce, focus, tree navigation, and Angular control binding. A normal `signal()` that stores the
 same value does not provide those form behaviors.
 
-This mental model also applies to `form()`, `group()`, and `array()`: each primitive is callable to
+This mental model also applies to `form()`, [`group()`](../reference/group.md), and `array()`: each primitive is callable to
 read its aggregate committed value and exposes `set()` and `update()`, while adding the structural
 and state behavior appropriate to that node kind.
 

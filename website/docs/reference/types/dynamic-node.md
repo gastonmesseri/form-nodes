@@ -14,7 +14,7 @@ import type { DynamicNode } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when the node kind is unknown but you know child names do not shadow common members. Choose `AnyNode` with `$api` when you cannot make that guarantee.
+Use when the node kind is unknown but you know child names do not shadow common members. Choose [`AnyNode`](./any-node.md) with `$api` when you cannot make that guarantee.
 
 ## Declaration
 

@@ -7,7 +7,7 @@ title: Async validation
 The complete [asynchronous validation example](../examples/executable-examples.mdx#asynchronous-validation)
 is compiled and executed with assertions for pending, failure, rerun, and recovery.
 
-Wrap asynchronous validators explicitly with `asyncValidator()`. This lets the node own pending state, debounce, cancellation, and stale-result handling without executing arbitrary validators to classify them.
+Wrap asynchronous validators explicitly with [`asyncValidator()`](../reference/async-validator.md). This lets the node own pending state, debounce, cancellation, and stale-result handling without executing arbitrary validators to classify them.
 
 ```ts
 import { asyncValidator, field, required } from '@ngblocks/form-nodes';
@@ -111,7 +111,7 @@ error makes the node invalid.
 
 Async validation works inside and outside Angular injection contexts. A node's explicit or currently
 captured injector owns its watcher. Without one, the node temporarily adopts the injector of a
-directly bound `[formNode]` host and then uses the nearest ancestor injector by default, including
+directly bound [`[formNode]`](../reference/form-node-binding.md) host and then uses the nearest ancestor injector by default, including
 items created later by an array template or factory. Set `adoptBindingInjector: false` to disable
 direct binding adoption, or `inheritInjector: false` to prevent ancestor lookup. Rebinding and
 detaching release transient ownership without disabling later validation. Outside dependency

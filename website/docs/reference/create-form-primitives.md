@@ -38,7 +38,7 @@ explicitDefaultForms.field(''); // Field<string | null>
 
 <CodeBlock language="ts" title="create-form-primitives.typecheck.ts">{createFormPrimitivesSource}</CodeBlock>
 
-Here, `field('')` and the `city: ''` shorthand both produce `FieldNode<string>`. A local
+Here, `field('')` and the `city: ''` shorthand both produce [`FieldNode<string>`](./types/field-node.md). A local
 `field.nullable('')` declaration still produces `FieldNode<string | null>`.
 
 ## 💬 Configure validator messages {#configure-validator-messages}
@@ -91,7 +91,7 @@ field.strict('');                     // Field<string>
 field.nullable('');                   // Field<string | null>
 ```
 
-`field.nullable()` and `field.strict()` always override the configured default, so local
+[`field.nullable()`](./field.md#nullability) and `field.strict()` always override the configured default, so local
 exceptions remain concise in either direction.
 
 Omitting the value or passing `null` or `undefined` produces `FieldNode<unknown>` because there is no
@@ -133,7 +133,7 @@ const profile = nonNullableForms.form({
 }, {});
 ```
 
-The configured `form()` attaches that existing node without changing its value type.
+The configured [`form()`](./form.md) attaches that existing node without changing its value type.
 
 ## 🚀 Application entry point {#application-entry-point}
 
@@ -163,7 +163,7 @@ Import those factories from the application module when declaring forms.
 
 ## Empty aggregate declarations
 
-The configured `form()`, `group()`, and `array()` factories can be called without arguments.
+The configured `form()`, [`group()`](./group.md), and [`array()`](./array.md) factories can be called without arguments.
 Forms and groups start as `{}` and retain defaults for dynamic additions. Arrays start as `[]`
 with a configured unknown-valued field template initialized to `null`, including when the default
 nullability setting is false. Supply an explicit template for known item types or structure.

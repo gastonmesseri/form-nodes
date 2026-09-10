@@ -21,10 +21,10 @@ Ask these questions for every value:
 
 | Modeling need | Recommended primitive |
 | --- | --- |
-| One control owns one complete value | `field()` |
-| Fixed named properties need independent nodes | Nested object shorthand or `group()` |
-| Object tree owns a submission workflow | `form()` |
-| Repeated items need independent nodes | `array()` |
+| One control owns one complete value | [`field()`](../reference/field.md) |
+| Fixed named properties need independent nodes | Nested object shorthand or [`group()`](../reference/group.md) |
+| Object tree owns a submission workflow | [`form()`](../reference/form.md) |
+| Repeated items need independent nodes | [`array()`](../reference/array.md) |
 | Nullable object or collection edited atomically | Object- or array-valued `field()` |
 | Runtime collection of keyed entries | `array()` of `{ key, value }` forms, or one record-valued `field()` |
 
@@ -116,7 +116,7 @@ This keeps ordinary hierarchy visually obvious while making exceptional behavior
 :::tip Model absence deliberately
 
 Nullable is the default because empty controls commonly represent no value. Use
-`field.strict()` only when `null` is invalid throughout the domain, not merely because the
+[`field.strict()`](../reference/field.md#nullability) only when `null` is invalid throughout the domain, not merely because the
 initial value happens to be present.
 
 :::

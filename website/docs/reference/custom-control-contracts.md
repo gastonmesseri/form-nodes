@@ -7,7 +7,7 @@ import contractsSource from '!!raw-loader!../../examples/public-control-contract
 
 # Custom control contracts
 
-These types describe custom Angular components that bind through `[formNode]`. They provide
+These types describe custom Angular components that bind through [`[formNode]`](./form-node-binding.md). They provide
 compile-time checks for the supported model and optional UI members. They are not constructors,
 providers, or a replacement for the directive's runtime adapter discovery.
 
@@ -28,7 +28,7 @@ providers, or a replacement for the directive's runtime adapter discovery.
 A value control exposes `value: ModelSignal<TValue>`. A checkbox control exposes
 `checked: ModelSignal<boolean>`. The contracts reserve the other model property so that the
 component declares one transport. Match nullability to the node: the following components accept
-non-nullable values and bind to `field.strict()` declarations.
+non-nullable values and bind to [`field.strict()`](./field.md#nullability) declarations.
 
 <CodeBlock language="ts" title="profile-controls.ts">{contractsSource}</CodeBlock>
 
@@ -38,7 +38,7 @@ only the model and selected UI members.
 
 ## Optional UI state and interaction
 
-`FormNodeUiControl` groups signal inputs such as `disabled`, `readonly`, `required`, `errors`,
+[`FormNodeUiControl`](./types/form-node-ui-control.md) groups signal inputs such as `disabled`, `readonly`, `required`, `errors`,
 and constraints, plus optional `touch`, `focus()`, `reset()`, and `node` integration. See its
 [full declaration](./types/form-node-ui-control.md) for exact member types.
 
@@ -52,12 +52,12 @@ Input synchronization follows configuration; declaring a compatible input does n
 
 ## Binding state and value notifications
 
-A `FormNodeBinding` describes a rendered connection. It exposes the host, the bound-node signal,
-error state, and outputs. A `FormNodeControl` describes the component on the other side of that
-connection. `ControlState` is a source-neutral observation facade and does not expose node actions.
+A [`FormNodeBinding`](./types/form-node-binding.md) describes a rendered connection. It exposes the host, the bound-node signal,
+error state, and outputs. A [`FormNodeControl`](./types/form-node-control.md) describes the component on the other side of that
+connection. [`ControlState`](./types/control-state.md) is a source-neutral observation facade and does not expose node actions.
 
-`formNodeControlValueChange` reports the immediate control value; `formNodeValueChange` follows
-commit and debounce. Native submission outputs are separate and carry `FormNodeSubmitEvent`.
+[`formNodeControlValueChange`](./form-node-binding.md#value-outputs) reports the immediate control value; `formNodeValueChange` follows
+commit and debounce. Native submission outputs are separate and carry [`FormNodeSubmitEvent`](./types/form-node-submit-event.md).
 See the [directive reference](./form-node-binding.md) for event ordering and programmatic-write rules.
 
 CVA components can continue using Angular's `ControlValueAccessor` contract through the CVA

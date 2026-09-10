@@ -14,7 +14,7 @@ import type { NodeApi } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when a helper needs only shared state and operations. This is the API object contract; use `AnyNode` for the node itself and access its `$api`.
+Use when a helper needs only shared state and operations. This is the API object contract; use [`AnyNode`](./any-node.md) for the node itself and access its `$api`.
 
 ## Declaration
 

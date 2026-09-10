@@ -11,7 +11,7 @@ import runtimeSource from '!!raw-loader!../../examples/global-form-nodes-configu
 
 Configures process-wide defaults for validator messages and automatic classes. Optional
 experimental control integration is documented at the end of this page. Angular providers override each option independently. The exported
-`GlobalFormNodesConfig` type describes these options.
+[`GlobalFormNodesConfig`](./types/global-form-nodes-config.md) type describes these options.
 
 ## 📐 Signature {#signature}
 

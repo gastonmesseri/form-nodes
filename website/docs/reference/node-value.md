@@ -8,7 +8,7 @@ import typedViewsSource from '!!raw-loader!../../examples/typed-node-value-views
 
 # Node value views
 
-Every field, group, form, and array exposes `value`, a `NodeValueSignal<TValue, TSet>`.
+Every field, group, form, and array exposes `value`, a [`NodeValueSignal<TValue, TSet>`](./types/node-value-signal.md).
 `TValue` is its read type; `TSet` is the complete input accepted by `node.set()`.
 This distinction preserves optional input defaults and array normalization. Array setters also
 accept `null` or `undefined` to clear the array. Group/form setters accept complete objects,
@@ -87,8 +87,8 @@ captured initial values.
 
 **Example:** `profile.name.value.control.set('ADA')` buffers input and marks the field dirty.
 
-Neither nested setter emits `formNodeControlValueChange` or `formNodeValueChange` by itself.
-Those outputs originate in the bound adapter's input channel. Keep `[formNode]` for ordinary binding;
+Neither nested setter emits [`formNodeControlValueChange`](./form-node-binding.md#value-outputs) or `formNodeValueChange` by itself.
+Those outputs originate in the bound adapter's input channel. Keep [`[formNode]`](./form-node-binding.md) for ordinary binding;
 there is no need to call a setter from its output handler to synchronize the node again.
 
 ## Executable example
@@ -100,7 +100,7 @@ This example exercises all five entries, custom equality, debounce, cancellation
 ## Generic infrastructure and migration
 
 `node.value` and `node.$api.value` expose the same facade. Child properties can
-shadow `value` or `api`; **use `node.$api.value` for an `AnyNode` whose child names are unknown**.
+shadow `value` or `api`; **use `node.$api.value` for an [`AnyNode`](./types/any-node.md) whose child names are unknown**.
 All three views are Angular signals. Nested views expose `set()` only, not `update()` or
 `asReadonly()` from `WritableSignal`. Setters may be extracted without binding a receiver.
 
@@ -111,7 +111,7 @@ Public `controlValue()` and `setControlValue()` have been removed. Follow the
 
 `const myFieldNodeTyped: FieldNode = field('')` retains both `value.committed()` and
 `value.control()`, including their `set()` methods. Omitting the generic uses `any`; use
-`FieldNode<string>` for string reads and writes, or retain the inferred factory type.
+[`FieldNode<string>`](./types/field-node.md) for string reads and writes, or retain the inferred factory type.
 The property is spelled **`committed`**, with two `t` characters.
 
 Function members such as `call`, `apply`, `bind`, `name`, and `length` are hidden from IntelliSense

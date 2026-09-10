@@ -9,7 +9,7 @@ import FormsPlayground from '../src/components/FormsPlayground';
 
 # Playground {#playground}
 
-This playground runs the real `form()`, `field()`, `array()`, and built-in validator implementations
+This playground runs the real [`form()`](./reference/form.md), [`field()`](./reference/field.md), [`array()`](./reference/array.md), and built-in validator implementations
 in your browser. The declaration, editable controls, value pipeline, public signals, errors, and
 resulting JSON are shown together so you can connect the API with its observable behavior.
 
@@ -30,7 +30,7 @@ resulting JSON are shown together so you can connect the API with its observable
 ## 💡 What the panels represent {#what-the-panels-represent}
 
 - **Model declaration:** the exact `form()` tree instantiated by the playground.
-- **Editor:** control-originated changes, equivalent to changes received through `[formNode]`.
+- **Editor:** control-originated changes, equivalent to changes received through [`[formNode]`](./reference/form-node-binding.md).
 - **Signal inspector:** live reads from the node's public API.
 - **Committed value:** the result of calling `playgroundForm()`.
 - **Immediate control value:** the pending display-name value before its debounce commits.

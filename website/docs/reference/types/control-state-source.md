@@ -14,7 +14,7 @@ import type { ControlStateSource } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use to inspect which binding API supplies a `ControlState`. The source can be absent when no supported binding is available; observe the facade's `source` signal.
+Use to inspect which binding API supplies a [`ControlState`](./control-state.md). The source can be absent when no supported binding is available; observe the facade's `source` signal.
 
 ## Declaration
 

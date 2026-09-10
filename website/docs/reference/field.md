@@ -11,11 +11,11 @@ import undefinedFieldSource from '!!raw-loader!../../examples/undefined-field.ex
 
 # field() {#field}
 
-For the exported `FieldNode` model type and its generic counterpart, see the
+For the exported [`FieldNode`](./types/field-node.md) model type and its generic counterpart, see the
 [Node types reference](./node-types.md#field-node).
 
 `field()` creates a leaf node for a scalar, object, date, or any other application value. Fields
-normally live inside a `form()` so their parent, path, validation, and state participate in a tree.
+normally live inside a [`form()`](./form.md) so their parent, path, validation, and state participate in a tree.
 
 Use [`FormNodeValue<typeof myField>`](./form-node-value.md) to extract a field's value type.
 
@@ -44,14 +44,14 @@ const myForm = form({
 
 See the [validator argument and result contract](../guides/validation.md#validator-results) for
 this primitive's positional and `options.validators` signatures. Callbacks accept the fully typed
-node context and return `ValidationResult` or `ComposableValidationResult<TValue, TNode>` at runtime:
+node context and return [`ValidationResult`](./types/validation-result.md) or [`ComposableValidationResult<TValue, TNode>`](./types/composable-validation-result.md) at runtime:
 no error, messages, errors with string/numeric kinds, or synchronous validator compositions.
 
 :::info Declaration return inference
 
 The TypeScript callback return is intentionally `any` so self-referencing declarations compile.
 The node and context remain typed. Annotate the return with `ValidationResult` (or
-`ComposableValidationResult` for composition), or use the checked context-taking `validator()`
+`ComposableValidationResult` for composition), or use the checked context-taking [`validator()`](./validator.md)
 helper when you want result checking. Numeric error kinds are exposed as strings.
 
 :::
@@ -62,12 +62,12 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 | --- | --- | --- |
 | Decide whether a value should be one field | `field<T>()` | [Arrays and objects](#fields-can-hold-arrays-and-objects) |
 | Choose field nullability | Nullability shortcuts | [Nullability](#nullability) |
-| Configure validation, debounce, or state | `FieldOptions` | [Options](#options) |
+| Configure validation, debounce, or state | [`FieldOptions`](./types/field-options.md) | [Options](#options) |
 | Read value, parent, or path | `myField()`, `parent()`, `path()` | [Properties and methods](#properties-and-methods) |
 | Change or reset its value | `set()`, `update()`, `reset()` | [Method reference](#method-reference) |
 | Inspect errors or constraints | `errors()`, `getError()`, `required()`, `min()` | [Validation properties](#validation-properties) |
 | Manage touched, dirty, or availability | State signals and marker methods | [Interaction](#interaction-properties) and [availability](#availability-properties) |
-| Connect it to an Angular control | `FormNodeDirective`, `[formNode]` | [Binding in Angular](#binding-in-angular) |
+| Connect it to an Angular control | [`FormNodeDirective`](./form-node-binding.md), `[formNode]` | [Binding in Angular](#binding-in-angular) |
 
 ## 📚 Fields can hold arrays and objects {#fields-can-hold-arrays-and-objects}
 
@@ -88,7 +88,7 @@ const myForm = form({
 </select>
 ```
 
-This field has one validation and interaction state for the complete `string[]`. Use `array()` only
+This field has one validation and interaction state for the complete `string[]`. Use [`array()`](./array.md) only
 when items need independent nodes, bindings, errors, paths, or structural operations. See
 [Array field or `array()`](../guides/choosing-a-primitive.md#array-field-or-array) for a complete
 comparison.
@@ -98,7 +98,7 @@ When a value appears directly inside an object-node definition, consult the
 whether it becomes an implicit field or structural group.
 
 Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
-value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+value type and any declared children or array items. Inline `validator()` and [`asyncValidator()`](./async-validator.md)
 helpers retain that inference when their generics are omitted. See
 [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
@@ -122,7 +122,7 @@ The empty string is only an editing state; it is not a valid completed initial v
 <CodeBlock language="ts" title="pricing-form.ts">{fieldLiteralUnionSource}</CodeBlock>
 
 The same suggestions work with `field.nullable()`, `field.strict()` for non-nullable unions, and
-fields from `createFormPrimitives()`, including calls with validators or options. Invalid strings
+fields from [`createFormPrimitives()`](./create-form-primitives.md), including calls with validators or options. Invalid strings
 still produce a TypeScript error. Explicit `undefined` initialization retains its existing type.
 
 ## 📝 Nullability {#nullability}
@@ -276,7 +276,7 @@ Data views compare their offset, length, and complete backing buffers. BigInt pr
 by value; boxed BigInts and unsupported object kinds compare by identity.
 
 The option is captured at construction, applies only to this field, and is preserved in array
-template clones and configured field factories. `form()`, `group()`, and `array()` provide
+template clones and configured field factories. `form()`, [`group()`](./group.md), and `array()` provide
 [aggregate value equality](../concepts/values-and-state.md#aggregate-value-equality), which retains
 their exposed snapshot independently of child storage.
 
@@ -687,7 +687,7 @@ username.validators().length; // 2
 
 Reads own errors by default. Pass `{ descendants: true }` to include every descendant, exactly as `allErrors()` does. `{ descendants: false }`, `{}`, and no arguments read only own errors. `TNode` is this concrete node type.
 
-The property remains an Angular `Signal`. Own reads preserve the concrete `targetNode` type; descendant reads use `AnyNode` because errors can belong to different node kinds. See [error queries](./validation-errors.md#error-queries) for an executable example.
+The property remains an Angular `Signal`. Own reads preserve the concrete `targetNode` type; descendant reads use [`AnyNode`](./types/any-node.md) because errors can belong to different node kinds. See [error queries](./validation-errors.md#error-queries) for an executable example.
 
 Contains the current validation errors owned by the field.
 

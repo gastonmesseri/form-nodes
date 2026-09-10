@@ -9,7 +9,7 @@ import nativeControlsSource from '!!raw-loader!../../examples/tutorial-native-co
 
 # 2. Bind controls {#2-bind-controls}
 
-`[formNode]` binds naturally to native elements, signal custom controls, Angular Material, PrimeNG,
+[`[formNode]`](../reference/form-node-binding.md) binds naturally to native elements, signal custom controls, Angular Material, PrimeNG,
 and other controls built on Angular's standard forms contracts. There are no Form Nodes adapters to
 install, wrappers to write, or per-library providers to configure. Import the control as its own
 documentation requires, then bind your node with the same `[formNode]` syntax.

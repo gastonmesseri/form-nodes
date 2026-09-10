@@ -8,8 +8,8 @@ import formNodeValueSource from '!!raw-loader!../../examples/form-node-value.typ
 
 # FormNodeValue {#formnodevalue}
 
-`FormNodeValue<typeof node>` extracts the committed value type of any `form()`, `group()`,
-`array()`, or `field()` instance. Use it to type saved drafts, service parameters, or other values
+[`FormNodeValue<typeof node>`](./types/form-node-value.md) extracts the committed value type of any [`form()`](./form.md), [`group()`](./group.md),
+[`array()`](./array.md), or [`field()`](./field.md) instance. Use it to type saved drafts, service parameters, or other values
 that should follow a node's inferred model.
 
 ```ts
@@ -25,12 +25,12 @@ type MyFormValue = FormNodeValue<typeof myForm>;
 The same helper works for the complete form and each selected child. It preserves each node's
 value type recursively:
 
-- Ordinary fields include `null`; `field.strict()` fields retain their non-nullable type.
+- Ordinary fields include `null`; [`field.strict()`](./field.md#nullability) fields retain their non-nullable type.
 - Explicit `undefined`, literal unions, and application-specific object types are preserved.
 - Groups and nested forms produce nested objects.
 - Dynamic arrays produce arrays of their item values. An array-valued field retains its own field
   type, including nullability of the complete array.
-- Nodes created with `createFormPrimitives()` preserve their configured nullability defaults and
+- Nodes created with [`createFormPrimitives()`](./create-form-primitives.md) preserve their configured nullability defaults and
   any explicit field overrides.
 
 ## 📐 Signature and scope {#signature-and-scope}
@@ -58,7 +58,7 @@ change runtime behavior.
 | Type | Input | Purpose |
 | --- | --- | --- |
 | `FormNodeValue<typeof node>` | Any node instance type | Extract its committed value type. |
-| `FormValue<TNodes>` | A map of child-node types | Map each child node to its value type. |
+| [`FormValue<TNodes>`](./types/form-value.md) | A map of child-node types | Map each child node to its value type. |
 | `FormValueContract<Model>` | An existing object value model | Check an inferred form or group with `satisfies`. |
 
 Use `FormNodeValue` when the node declaration defines your model. Use

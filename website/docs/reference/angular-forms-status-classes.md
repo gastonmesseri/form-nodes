@@ -57,8 +57,8 @@ provideFormNodesConfig({
 });
 ```
 
-Each predicate tracks its dependencies independently. Through `provideFormNodesConfig()`, the map
-applies to descendant `[formNode]` bindings.
+Each predicate tracks its dependencies independently. Through [`provideFormNodesConfig()`](./provide-form-nodes-config.md), the map
+applies to descendant [`[formNode]`](./form-node-binding.md) bindings.
 
 See [`provideFormNodesConfig()`](./provide-form-nodes-config.md) and
 [`[formNode]`](./form-node-binding.md#automatic-css-classes).

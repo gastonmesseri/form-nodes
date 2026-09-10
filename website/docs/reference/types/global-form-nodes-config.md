@@ -14,7 +14,7 @@ import type { GlobalFormNodesConfig } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for `configureGlobalFormNodes()` defaults. Prefer an injector-scoped provider when configuration must be scoped to an Angular application or subtree.
+Use for [`configureGlobalFormNodes()`](../configure-global-form-nodes.md) defaults. Prefer an injector-scoped provider when configuration must be scoped to an Angular application or subtree.
 
 ## Declaration
 

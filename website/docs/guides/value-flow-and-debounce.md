@@ -12,7 +12,7 @@ Form Nodes distinguishes programmatic model updates from values originating in a
 
 ## Control value events
 
-Use `(formNodeValueChange)` on `[formNode]` to receive control edits after they commit. With debounce,
+Use `(formNodeValueChange)` on [`[formNode]`](../reference/form-node-binding.md) to receive control edits after they commit. With debounce,
 this waits for its completion or an early flush; without debounce, it emits synchronously.
 Use `(formNodeControlValueChange)` when you need the parsed draft immediately while the committed
 value may still be pending. Both carry the node's value type, not a DOM event.

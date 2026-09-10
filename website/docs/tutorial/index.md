@@ -11,7 +11,7 @@ This tutorial builds a customer profile editor one capability at a time. Every s
 By the end, the form will include:
 
 - A typed model owned by an Angular component.
-- Native controls connected with `[formNode]`.
+- Native controls connected with [`[formNode]`](../reference/form-node-binding.md).
 - Built-in validation and error rendering.
 - Nested addresses and reactive state.
 - A dynamic contacts array with stable identity.

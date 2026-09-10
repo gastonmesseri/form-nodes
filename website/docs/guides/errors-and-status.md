@@ -72,7 +72,7 @@ error?.message;
 error?.targetNode;
 ```
 
-Unknown custom kinds retain a permissive error shape. Reusable packages can augment `ValidationErrorMap` for precise custom lookup:
+Unknown custom kinds retain a permissive error shape. Reusable packages can augment [`ValidationErrorMap`](../reference/types/validation-error-map.md) for precise custom lookup:
 
 ```ts
 declare module '@ngblocks/form-nodes' {
@@ -104,7 +104,7 @@ Validators preserve declaration order. Async results become visible as they comp
 
 ## 🚨 Binding-filtered errors {#binding-filtered-errors}
 
-A `FormNodeDirective` binding's `errors()` includes:
+A [`FormNodeDirective`](../reference/form-node-binding.md) binding's `errors()` includes:
 
 - Node errors that are not owned by one concrete control.
 - Binding-owned errors whose `formNode` is that exact binding.

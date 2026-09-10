@@ -12,7 +12,7 @@ verifies insertion, lookup, aggregate values, and detachment.
 
 ## 🌳 Add one child {#add-one-child}
 
-`add(name, definition)` accepts the same shorthand as an initial `form()` or `group()` declaration,
+`add(name, definition)` accepts the same shorthand as an initial [`form()`](../reference/form.md) or [`group()`](../reference/group.md) declaration,
 attaches the normalized node, and returns it with its exact inferred type:
 
 ```ts
@@ -32,7 +32,7 @@ disabled, readonly, hidden, debounce, focus, and injector inheritance.
 ## 🌳 Add several children {#add-several-children}
 
 Pass an object to add several definitions in one structural update. Plain nested objects become
-`group()` nodes and concise values become `field()` nodes, just as they do in the original
+`group()` nodes and concise values become [`field()`](../reference/field.md) nodes, just as they do in the original
 `form()` declaration:
 
 ```ts
@@ -80,7 +80,7 @@ intentional: allowing arbitrary properties would also allow a typo such as
 ## 💡 Look up a runtime key {#look-up-a-runtime-key}
 
 Use `get(key)` for a runtime key. It returns `DynamicNode | undefined`.
-`DynamicNode` exposes every state and operation shared by all node kinds, such as `value`,
+[`DynamicNode`](../reference/types/dynamic-node.md) exposes every state and operation shared by all node kinds, such as `value`,
 `disabled`, `errors`, `set()`, and `reset()`. Primitive-specific operations such as `submit()` are
 not available until the node is narrowed. Children declared in the original definition retain
 their exact direct-property types.

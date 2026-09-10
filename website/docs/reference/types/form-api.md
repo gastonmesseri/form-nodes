@@ -14,7 +14,7 @@ import type { FormApi } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for form API operations such as submission without exposing direct child-name collisions. The form's callable `$api` is described by `CallableNodeApi<FormApi<...>>`.
+Use for form API operations such as submission without exposing direct child-name collisions. The form's callable `$api` is described by [`CallableNodeApi<FormApi<...>>`](./callable-node-api.md).
 
 ## Declaration
 

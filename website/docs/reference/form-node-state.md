@@ -19,7 +19,7 @@ form binding attached to its host.
 
 :::tip One state implementation for every supported binding
 
-**Supports `[formNode]`, `[formField]`, `[formControl]`, `[formControlName]`, and `[(ngModel)]`.**
+**Supports [`[formNode]`](./form-node-binding.md), `[formField]`, `[formControl]`, `[formControlName]`, and `[(ngModel)]`.**
 
 **Implement your custom control's state UI once, regardless of which supported binding the caller uses.**
 The hook automatically selects the binding on the component host. Read the same `disabled()`,
@@ -173,7 +173,7 @@ model; `useFormNodeState()` observes its state without converting it into Form N
 <CodeBlock language="ts" metastring="{13,15,17,19,29}">{formFieldSource}</CodeBlock>
 
 This source supplies Angular Signal Forms state, including constraints and disabled reasons,
-through the same `ControlState` signals.
+through the same [`ControlState`](./types/control-state.md) signals.
 
 ## ✅ Practical state patterns {#practical-state-patterns}
 
@@ -712,9 +712,9 @@ registry. Always use `connected()` when behavior depends on an active source.
 | Type | Purpose |
 | --- | --- |
 | `ControlState<TValue>` | Complete facade returned by `useFormNodeState<TValue>()`. |
-| `ControlStateSource` | Union of supported source names. |
-| `ControlStateError` | Normalized error with a required `kind`. |
-| `ControlStateDisabledReason` | Normalized disabled reason with an optional `message`. |
+| [`ControlStateSource`](./types/control-state-source.md) | Union of supported source names. |
+| [`ControlStateError`](./types/control-state-error.md) | Normalized error with a required `kind`. |
+| [`ControlStateDisabledReason`](./types/control-state-disabled-reason.md) | Normalized disabled reason with an optional `message`. |
 
 ## 🔗 Related guides and reference {#related-guides-and-reference}
 

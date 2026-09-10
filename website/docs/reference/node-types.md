@@ -12,7 +12,7 @@ import ConcreteNodeTypesExample from '!!raw-loader!../../examples/concrete-node-
 
 Import these types from `@ngblocks/form-nodes` with `import type` or an inline `type` import.
 They describe existing nodes; they are not constructors or Angular dependencies. Create nodes
-with `field()`, `group()`, `form()`, and `array()`. Let those factories infer types when you own
+with [`field()`](./field.md), [`group()`](./group.md), [`form()`](./form.md), and [`array()`](./array.md). Let those factories infer types when you own
 the declaration, and use explicit types for reusable functions, component inputs, and contracts.
 
 ## Choose a type {#choose-a-type}
@@ -42,9 +42,9 @@ FieldNode<TValue = any, TParent = AnyNode>
 
 Describes one field. `TValue` is its complete value type, including `null` or `undefined` when
 those values are allowed. It can be a scalar, object, date, or array; an array-valued field
-does not become an `ArrayNode`.
+does not become an [`ArrayNode`](./types/array-node.md).
 
-For example, `field('Marco')` infers `FieldNode<string | null>`, while `field.strict('Marco')`
+For example, `field('Marco')` infers [`FieldNode<string | null>`](./types/field-node.md), while `field.strict('Marco')`
 infers `FieldNode<string>`. A `FieldNode<string>` input requires the non-nullable contract.
 Omit the generic argument (`FieldNode`) to accept fields with unrelated value types. Its value
 becomes `any`, so reads and writes no longer enforce a specific value shape. It still accepts
@@ -67,9 +67,9 @@ The group's value is computed from its children and retains their value types.
 Groups provide structural and shared state operations but do not own an independent submission
 workflow. Both `group({ ... })` and structural object shorthand create group nodes. Use explicit
 `group()` when configuring group validators or options, or when teaching the primitive itself.
-Without generic arguments, `GroupNode` describes unspecified children, not an empty group.
+Without generic arguments, [`GroupNode`](./types/group-node.md) describes unspecified children, not an empty group.
 **Use `$api` for state and operations**, because child names may shadow direct members. Child
-enumeration exposes `AnyNode`; no direct child names are invented. `GroupNode<{}>` explicitly
+enumeration exposes [`AnyNode`](./types/any-node.md); no direct child names are invented. `GroupNode<{}>` explicitly
 describes an empty declared structure. See the [`group()` reference](./group.md).
 
 ## FormNode {#form-node}

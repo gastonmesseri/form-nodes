@@ -9,8 +9,8 @@ import formValueContractArraySource from '!!raw-loader!../../examples/form-value
 
 # FormValueContract {#formvaluecontract}
 
-`FormValueContract<TValue>` is a compile-time contract for checking the aggregate committed value
-of a `form()` or `group()`. Use it with TypeScript's `satisfies` operator so the definitions remain
+[`FormValueContract<TValue>`](./types/form-value-contract.md) is a compile-time contract for checking the aggregate committed value
+of a [`form()`](./form.md) or [`group()`](./group.md). Use it with TypeScript's `satisfies` operator so the definitions remain
 the source of every concrete child-node type.
 
 ```ts
@@ -38,7 +38,7 @@ profile.value(); // { username: '', age: 0, country: 'Switzerland' }
 ```
 
 The expression retains the type inferred by `form()`. `username` and `age` remain their concrete
-`FieldNode` nodes, and `country` remains a `FieldNode<string>` declared with `field.strict<string>()`.
+[`FieldNode`](./types/field-node.md) nodes, and `country` remains a `FieldNode<string>` declared with `field.strict<string>()`.
 The `Profile` model verifies their aggregate value.
 
 ## 📝 Incompatible values {#incompatible-values}
@@ -99,7 +99,7 @@ lets a named value model provide an additional check without replacing that defi
 ## 📚 Arrays and nullability {#arrays-and-nullability}
 
 After the basic object contract, the same pattern can validate dynamic arrays while preserving
-their concrete `ArrayNode` API:
+their concrete [`ArrayNode`](./types/array-node.md) API:
 
 <CodeBlock language="ts">{formValueContractArraySource}</CodeBlock>
 

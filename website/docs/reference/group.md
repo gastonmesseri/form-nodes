@@ -16,7 +16,7 @@ import objectShorthandFormNodeSource from '!!raw-loader!../../examples/object-sh
 
 # group() {#group}
 
-For the exported `GroupNode` model type and its generic counterpart, see the
+For the exported [`GroupNode`](./types/group-node.md) model type and its generic counterpart, see the
 [Node types reference](./node-types.md#group-node).
 
 `group()` creates a typed object aggregate. It provides named children, value aggregation,
@@ -25,7 +25,7 @@ no `onSubmit` option and no `submit()` method.
 
 Use [`FormNodeValue<typeof myGroup>`](./form-node-value.md) to extract a group's value type.
 
-Plain nested objects in `form()`, `group()`, and object templates in `array()` are shorthand for
+Plain nested objects in [`form()`](./form.md), `group()`, and object templates in [`array()`](./array.md) are shorthand for
 groups. Prefer shorthand until a branch needs its own options or validators.
 
 :::tip Prefer object shorthand when the group needs no configuration
@@ -102,14 +102,14 @@ const myForm = form({
 
 See the [validator argument and result contract](../guides/validation.md#validator-results) for
 this primitive's positional and `options.validators` signatures. Callbacks accept the fully typed
-node context and return `ValidationResult` or `ComposableValidationResult<TValue, TNode>` at runtime:
+node context and return [`ValidationResult`](./types/validation-result.md) or [`ComposableValidationResult<TValue, TNode>`](./types/composable-validation-result.md) at runtime:
 no error, messages, errors with string/numeric kinds, or synchronous validator compositions.
 
 :::info Declaration return inference
 
 The TypeScript callback return is intentionally `any` so self-referencing declarations compile.
 The node and context remain typed. Annotate the return with `ValidationResult` (or
-`ComposableValidationResult` for composition), or use the checked context-taking `validator()`
+`ComposableValidationResult` for composition), or use the checked context-taking [`validator()`](./validator.md)
 helper when you want result checking. Numeric error kinds are exposed as strings.
 
 :::
@@ -118,7 +118,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
-| Create or configure an object branch | `group(...)`, `GroupOptions` | [Signatures](#signatures) and [options](#options) |
+| Create or configure an object branch | `group(...)`, [`GroupOptions`](./types/group-options.md) | [Signatures](#signatures) and [options](#options) |
 | Decide between a group and submission boundary | `group()`, `form()` | [Group or form](#group-or-form) |
 | Read its value or navigate children | `myGroup()`, direct children, `children` | [Properties and methods](#properties-and-methods) |
 | Add, find, or remove runtime children | `add()`, `get()`, `remove()` | [Dynamic children](#dynamic-children-1) |
@@ -129,7 +129,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 | Observe an ancestor submission | `submitting()` | [Control and workflow properties](#control-and-workflow-properties) |
 
 Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
-value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+value type and any declared children or array items. Inline `validator()` and [`asyncValidator()`](./async-validator.md)
 helpers retain that inference when their generics are omitted. See
 [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
@@ -146,7 +146,7 @@ a named aggregate value while preserving its inferred child-node types.
 ### ◆ `field()` shorthand {#field-shorthand}
 
 Values such as `string`, `number`, `boolean`, `Date`, `null`, and `undefined`, as well as arrays
-and class instances, can stand in for `field()` when defining a group:
+and class instances, can stand in for [`field()`](./field.md) when defining a group:
 
 ```ts
 const address = group({
@@ -159,7 +159,7 @@ address.postcode(); // 8000
 ```
 
 This shorthand is especially convenient and unambiguous for strings, numbers, booleans, dates,
-and arrays used as one control value. Every array becomes a `FieldNode`, regardless of whether it is
+and arrays used as one control value. Every array becomes a [`FieldNode`](./types/field-node.md), regardless of whether it is
 empty or what its items contain. Declare `array(...)` explicitly when the items need their own
 nodes, validation, interaction state, or structural operations. An empty `[]` shorthand widens to
 `unknown[]`; use `field<Item[]>([])` when the eventual item type is known.
@@ -190,7 +190,7 @@ const profile = group({
 });
 ```
 
-If a plain `company` object is inferred as a `GroupNode`, `[formNode]` binding still works. Aggregate
+If a plain `company` object is inferred as a `GroupNode`, [`[formNode]`](./form-node-binding.md) binding still works. Aggregate
 nodes can bind to a custom control as one complete value; changes from the control are distributed
 to the group's child nodes:
 
@@ -570,7 +570,7 @@ and detached children remain usable independently. See
 ## 📖 Property reference {#property-reference}
 
 Each entry includes its consumer-facing signature, what it represents or returns, and a complete
-example. `GroupValue` means the inferred committed object value, `GroupSet` means the complete
+example. [`GroupValue`](./types/group-value.md) means the inferred committed object value, `GroupSet` means the complete
 value accepted by `set()`, and `GroupPatch` means the recursively partial value accepted by
 `patch()`.
 

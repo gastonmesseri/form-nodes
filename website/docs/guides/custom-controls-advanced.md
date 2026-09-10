@@ -37,7 +37,7 @@ Form Nodes interface, base class, or registration provider.
 
 The `value` and `checked` contracts follow Angular's `FormValueControl<T>` and
 `FormCheckboxControl` shapes. A component does not have to declare that it implements those types;
-`[formNode]` discovers the public Angular inputs and outputs from component metadata.
+[`[formNode]`](../reference/form-node-binding.md) discovers the public Angular inputs and outputs from component metadata.
 
 ### ◆ FormValueControl support and the experimental boundary {#formvaluecontrol-support-and-the-experimental-boundary}
 
@@ -46,12 +46,12 @@ of `FormValueControl` state and constraint inputs is experimental** because thos
 Angular internals. Enable `syncInputs: 'all'` to synchronize every supported input, or use
 `'declared'`, an input list, or `{ inputs, target }` to limit the selection.
 
-The same option is available on `field()`, `form()`, `group()`, `array()`, `createFormPrimitives()`
-defaults, `provideFormNodesConfig()`, and `configureGlobalFormNodes()`. Node settings apply only
+The same option is available on [`field()`](../reference/field.md), [`form()`](../reference/form.md), [`group()`](../reference/group.md), [`array()`](../reference/array.md), [`createFormPrimitives()`](../reference/create-form-primitives.md)
+defaults, [`provideFormNodesConfig()`](../reference/provide-form-nodes-config.md), and [`configureGlobalFormNodes()`](../reference/configure-global-form-nodes.md). Node settings apply only
 to that node's binding. See [selection modes and precedence](../reference/provide-form-nodes-config.md#custom-control-inputs).
 
 A component implementing `FormValueControl` can instead combine `value = model()` with
-`useFormNodeState()`. It then has value binding and full access to Form Nodes state through public
+[`useFormNodeState()`](../reference/form-node-state.md). It then has value binding and full access to Form Nodes state through public
 APIs, without enabling input synchronization. The component reads the hook's signals to render
 state, constraints, and errors and calls `markAsTouched()` on blur. The hook does not write the
 component's existing input properties or render its DOM for it. The same approach works with a
@@ -453,7 +453,7 @@ export class TextField {
 <app-text-field [formNode]="profile.name" />
 ```
 
-The wrapper is detected as pass-through, so only the inner control creates a binding. A directive or host directive that consumes or re-exports `formNode` must register `provideFormNodePassThrough()` because Angular does not expose equivalent public runtime input reflection for directives.
+The wrapper is detected as pass-through, so only the inner control creates a binding. A directive or host directive that consumes or re-exports `formNode` must register [`provideFormNodePassThrough()`](../reference/provide-form-node-pass-through.md) because Angular does not expose equivalent public runtime input reflection for directives.
 
 ## 🔌 Compatibility boundaries {#compatibility-boundaries}
 

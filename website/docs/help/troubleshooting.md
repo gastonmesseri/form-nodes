@@ -12,7 +12,7 @@ underlying behavior in more detail.
 
 **Symptom:** Angular reports that it cannot bind to `formNode`, or the directive does not run.
 
-**Solution:** import `FormNodeDirective` in every standalone component that uses `[formNode]`, or export it
+**Solution:** import [`FormNodeDirective`](../reference/form-node-binding.md) in every standalone component that uses `[formNode]`, or export it
 from an NgModule imported by that component. The same import supports controls and native form
 roots:
 
@@ -140,7 +140,7 @@ In an Angular `@for`, track the node instance: `@for (person of people; track pe
 
 **Symptom:** calling `myArray.set(null)` produces `[]`.
 
-**Cause:** `array()` is a permanent structural container. `null` and `undefined` deliberately clear
+**Cause:** [`array()`](../reference/array.md) is a permanent structural container. `null` and `undefined` deliberately clear
 its items instead of making the node nullable.
 
 **Solution:** use `field<Item[]>()` if the complete array is one nullable value owned by a single
@@ -181,7 +181,7 @@ model applies to readonly and hidden state. See
 Check these conditions:
 
 1. The native form has `[formNode]="myForm"` and the component imports `FormNodeDirective`.
-2. The node was created with `form()`, not `group()`, and has a `onSubmit`. A group binding
+2. The node was created with [`form()`](../reference/form.md), not [`group()`](../reference/group.md), and has a `onSubmit`. A group binding
    remains functional but intentionally has no action to run.
 3. The submit button has `type="submit"`.
 4. Validation is not blocking submission. Submission marks the tree touched and resolves to
@@ -204,9 +204,9 @@ Message catalogs use nearest-wins precedence:
 
 1. Validator-local `message`.
 2. Closest form or array `validatorMessages` catalog.
-3. Closest `createFormPrimitives()` validator-message default.
-4. Closest `provideFormNodesConfig()` provider.
-5. `configureGlobalFormNodes()`.
+3. Closest [`createFormPrimitives()`](../reference/create-form-primitives.md) validator-message default.
+4. Closest [`provideFormNodesConfig()`](../reference/provide-form-nodes-config.md) provider.
+5. [`configureGlobalFormNodes()`](../reference/configure-global-form-nodes.md).
 6. Built-in English message.
 
 Check the higher-priority scopes before changing a global catalog. See

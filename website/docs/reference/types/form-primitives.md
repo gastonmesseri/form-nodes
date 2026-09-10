@@ -14,7 +14,7 @@ import type { FormPrimitives } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for a bundle returned by `createFormPrimitives()`. Keep the configured factories together when sharing defaults across declarations.
+Use for a bundle returned by [`createFormPrimitives()`](../create-form-primitives.md). Keep the configured factories together when sharing defaults across declarations.
 
 ## Declaration
 

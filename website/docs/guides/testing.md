@@ -17,7 +17,7 @@ The examples use Vitest, but the same structure works with Jest, Jasmine, or ano
 | Values, state, synchronous validators, and node methods | Plain unit test |
 | Async validation, cancellation, and debounce | Plain unit test with controlled promises or timers |
 | Array identity and structural operations | Plain unit test |
-| `[formNode]`, native events, custom controls, and CVAs | Angular `TestBed` with a DOM environment |
+| [`[formNode]`](../reference/form-node-binding.md), native events, custom controls, and CVAs | Angular `TestBed` with a DOM environment |
 | Native form submit and reset | Angular `TestBed` with a DOM environment |
 
 Assert behavior through public node calls, signals, and methods. Avoid testing `.$api` and `$api`
@@ -26,7 +26,7 @@ package paths.
 
 ## 🧪 Test a node tree without Angular {#test-a-node-tree-without-angular}
 
-`form()`, `field()`, and `array()` do not require an Angular injection context:
+[`form()`](../reference/form.md), [`field()`](../reference/field.md), and [`array()`](../reference/array.md) do not require an Angular injection context:
 
 ```ts
 import { describe, expect, it } from 'vitest';

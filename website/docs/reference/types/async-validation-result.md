@@ -14,7 +14,7 @@ import type { AsyncValidationResult } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for the Promise-like or Observable-like result of async validation. It describes the result container; create the validator itself with `asyncValidator()`.
+Use for the Promise-like or Observable-like result of async validation. It describes the result container; create the validator itself with [`asyncValidator()`](../async-validator.md).
 
 ## Declaration
 

@@ -39,7 +39,7 @@ const myForm = form({
 | Declare rules on a node | `validators` | [The validators property](#the-validators-property) |
 | Write a reusable synchronous rule | `validator()` | [`validator()` reference](./validator.md) |
 | Run asynchronous validation | `asyncValidator()` | [`asyncValidator()` reference](./async-validator.md) |
-| Understand each node type | `field()`, `group()`, `form()`, `array()` | [Validation by node type](#validation-by-node-type) |
+| Understand each node type | [`field()`](./field.md), [`group()`](./group.md), [`form()`](./form.md), [`array()`](./array.md) | [Validation by node type](#validation-by-node-type) |
 | Read errors and status | Node validation signals | [Validation state](#validation-state) |
 | Target a child from an aggregate rule | `targetNode` | [Error ownership](#error-ownership) |
 | Replace rules at runtime | `setValidators()` | [Replacing validators](#replacing-validators) |
@@ -72,8 +72,8 @@ const myForm = form({
 Parameterless source callbacks can reference the form being initialized, such as
 `() => equalTo(this.myForm.password())`, without return annotations.
 Their return type is intentionally unchecked, including overloaded functions callable without
-arguments. This also applies to parameterless callbacks passed to `validator()` and the callback
-signature of `asyncValidator()`. Use context-taking callbacks for checked reusable rules and call
+arguments. This also applies to parameterless callbacks passed to [`validator()`](./validator.md) and the callback
+signature of [`asyncValidator()`](./async-validator.md). Use context-taking callbacks for checked reusable rules and call
 overloaded factories such as `uniqueItems()` when you need value-compatibility checking. The
 supported runtime results are unchanged. See
 [Self-referencing validators](../guides/validation.md#self-referencing-validators) for a complete example.
@@ -212,12 +212,12 @@ Import error types directly from `@ngblocks/form-nodes`:
 
 | Type | Contract |
 | --- | --- |
-| `ValidationError` | Base error with `kind` and optional `message` |
-| `ValidationErrorForKind<TKind>` | Structured payload for a known kind, with a custom-kind fallback |
-| `ValidatorError<TNode>` | Validator-produced error with an optional target; no binding reference |
-| `ValidationErrorWithTargetNode<TNode>` | Published error with a required target and optional binding reference |
-| `ValidationErrorWithOptionalTargetNode<TNode>` | Error with an optional target and binding reference |
-| `ValidationErrorWithoutTargetNode` | Error without a target or binding reference |
+| [`ValidationError`](./types/validation-error.md) | Base error with `kind` and optional `message` |
+| [`ValidationErrorForKind<TKind>`](./types/validation-error-for-kind.md) | Structured payload for a known kind, with a custom-kind fallback |
+| [`ValidatorError<TNode>`](./types/validator-error.md) | Validator-produced error with an optional target; no binding reference |
+| [`ValidationErrorWithTargetNode<TNode>`](./types/validation-error-with-target-node.md) | Published error with a required target and optional binding reference |
+| [`ValidationErrorWithOptionalTargetNode<TNode>`](./types/validation-error-with-optional-target-node.md) | Error with an optional target and binding reference |
+| [`ValidationErrorWithoutTargetNode`](./types/validation-error-without-target-node.md) | Error without a target or binding reference |
 
 The generic target defaults to `AnyNode` for `ValidatorError` and `unknown` for the other target
 variants. `ValidationResult` describes accepted callback results, including message strings;

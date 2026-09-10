@@ -14,7 +14,7 @@ import type { FormNodesConfig } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for options passed to `provideFormNodesConfig()`. Injector-scoped values configure bindings and validator messages in that scope.
+Use for options passed to [`provideFormNodesConfig()`](../provide-form-nodes-config.md). Injector-scoped values configure bindings and validator messages in that scope.
 
 ## Declaration
 

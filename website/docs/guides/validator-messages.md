@@ -15,9 +15,9 @@ For all node and binding options—not only messages—see the
 
 | Intended scope | API and recommended location |
 | --- | --- |
-| Standalone Angular application | `provideFormNodesConfig()` in `app.config.ts`, passed to `bootstrapApplication` |
+| Standalone Angular application | [`provideFormNodesConfig()`](../reference/provide-form-nodes-config.md) in `app.config.ts`, passed to `bootstrapApplication` |
 | NgModule application | `provideFormNodesConfig()` in `AppModule.providers` |
-| Shared process-wide fallback, including nodes outside DI | `configureGlobalFormNodes()` in `main.ts`, before bootstrapping |
+| Shared process-wide fallback, including nodes outside DI | [`configureGlobalFormNodes()`](../reference/configure-global-form-nodes.md) in `main.ts`, before bootstrapping |
 | Larger message catalog | Export the data from a separate file and import it at the chosen configuration point |
 
 Prefer the Angular provider for application configuration, particularly when messages depend on
@@ -34,7 +34,7 @@ The closest definition wins:
 
 1. Validator-local `message` option.
 2. Closest form or array `validatorMessages` catalog.
-3. Closest `createFormPrimitives()` validator-message default.
+3. Closest [`createFormPrimitives()`](../reference/create-form-primitives.md) validator-message default.
 4. Closest Angular `provideFormNodesConfig()` catalog.
 5. Process-wide `configureGlobalFormNodes()` catalog.
 6. Built-in English message.
@@ -54,7 +54,7 @@ export const { form, group, array, field } = createFormPrimitives({
 });
 ```
 
-This also covers standalone fields created by that `field()` factory. A closer form, group, or
+This also covers standalone fields created by that [`field()`](../reference/field.md) factory. A closer form, group, or
 array catalog can override individual messages.
 
 ## ⚙️ Angular application configuration {#angular-application-configuration}

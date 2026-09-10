@@ -14,7 +14,7 @@ import type { FieldApi } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for helpers that operate on field state and actions without accepting a node declaration. A field's `$api` additionally has the callable signal contract described by `CallableNodeApi`.
+Use for helpers that operate on field state and actions without accepting a node declaration. A field's `$api` additionally has the callable signal contract described by [`CallableNodeApi`](./callable-node-api.md).
 
 ## Declaration
 

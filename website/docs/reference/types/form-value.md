@@ -14,7 +14,7 @@ import type { FormValue } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use to derive the read value contract from the form's child or item node types. The result describes raw data, not child nodes. Use `FormNodeValue<typeof node>` when starting from an existing node instance.
+Use to derive the read value contract from the form's child or item node types. The result describes raw data, not child nodes. Use [`FormNodeValue<typeof node>`](./form-node-value.md) when starting from an existing node instance.
 
 ## Declaration
 

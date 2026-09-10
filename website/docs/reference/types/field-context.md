@@ -14,7 +14,7 @@ import type { FieldContext } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when a contract specifically requires the low-level reactive field context. Consumer-authored reusable rules normally use `ValidatorContext` or contextual inference through `validator()`.
+Use when a contract specifically requires the low-level reactive field context. Consumer-authored reusable rules normally use [`ValidatorContext`](./validator-context.md) or contextual inference through [`validator()`](../validator.md).
 
 ## Declaration
 

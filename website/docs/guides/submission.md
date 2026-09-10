@@ -10,7 +10,7 @@ import historySource from '!!raw-loader!../../examples/submission-history.exampl
 The [executable submission example](../examples/executable-examples.mdx#submission) runs both the
 invalid callback and the successful asynchronous action.
 
-Configure submission on the root `form()`:
+Configure submission on the root [`form()`](../reference/form.md):
 
 ```ts
 const registration = form({
@@ -35,7 +35,7 @@ Submission marks the form subtree touched, which also commits pending control va
 
 ## 🧩 Native form elements {#native-form-elements}
 
-Import `FormNodeDirective` once and use it for both the native form and its controls:
+Import [`FormNodeDirective`](../reference/form-node-binding.md) once and use it for both the native form and its controls:
 
 ```ts
 @Component({
@@ -55,7 +55,7 @@ export class RegistrationPage {}
 
 On a native `<form>`, `FormNodeDirective` prevents native navigation, disables native constraint submission
 with `novalidate`, and maps native reset to the bound object node's `reset()`. With `form()`, submit
-runs the configured action. Binding a `group()` is intentionally tolerated: submit still marks and
+runs the configured action. Binding a [`group()`](../reference/group.md) is intentionally tolerated: submit still marks and
 flushes the tree but runs no action. This makes an accidental group/form choice non-destructive
 while keeping submission configuration exclusive to `form()`.
 

@@ -23,8 +23,8 @@ guide documents `.$api` only for name collisions and generic infrastructure.
 
 ## Choosing a node type {#node-types}
 
-See the [Node types reference](./node-types.md) for `FieldNode`, `GroupNode`, `FormNode`,
-`ArrayNode`, `AnyNode`, and `DynamicNode`, including usage without generic arguments. It documents
+See the [Node types reference](./node-types.md) for [`FieldNode`](./types/field-node.md), [`GroupNode`](./types/group-node.md), [`FormNode`](./types/form-node.md),
+[`ArrayNode`](./types/array-node.md), [`AnyNode`](./types/any-node.md), and [`DynamicNode`](./types/dynamic-node.md), including usage without generic arguments. It documents
 parameters, component inputs, parent inference, and the distinction between models and bindings.
 
 ### AnyNode or DynamicNode? {#any-node-or-dynamic-node}
@@ -143,7 +143,7 @@ Arrays are iterable and expose `forEach`, `map`, `filter`, `find`, `findIndex`, 
 
 ## 🔌 Binding API {#binding-api}
 
-A `FormNodeDirective<TNode>` obtained through `viewChild()` exposes:
+A [`FormNodeDirective<TNode>`](./form-node-binding.md) obtained through `viewChild()` exposes:
 
 | Member | Description |
 | --- | --- |

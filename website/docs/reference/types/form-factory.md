@@ -14,7 +14,7 @@ import type { FormFactory } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when passing the configured form factory from `createFormPrimitives()` to reusable declaration helpers.
+Use when passing the configured form factory from [`createFormPrimitives()`](../create-form-primitives.md) to reusable declaration helpers.
 
 ## Declaration
 

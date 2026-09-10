@@ -16,10 +16,10 @@ tree, Angular providers configure an injector scope, and the process-wide API su
 | Scope | API | Affects | Reactive |
 | --- | --- | --- | --- |
 | Validator call | `{ message }` | That validator instance | Message functions are reactive |
-| Node or subtree | `field()`, `form()`, `array()`, and `group()` options | The declared node; selected options inherit | Function sources are reactive |
-| Angular injector | `provideFormNodesConfig()` | Messages for nodes created in that scope; descendant `[formNode]` bindings | Selected message functions and class predicates are reactive |
-| Factory set | `createFormPrimitives()` | Nodes created through that set | Catalog sources are reactive; node options override shared defaults |
-| JavaScript process | `configureGlobalFormNodes()` | Fallback messages; classes and input synchronization for new bindings | Catalog sources, selected messages, and captured class predicates are reactive |
+| Node or subtree | [`field()`](./field.md), [`form()`](./form.md), [`array()`](./array.md), and [`group()`](./group.md) options | The declared node; selected options inherit | Function sources are reactive |
+| Angular injector | [`provideFormNodesConfig()`](./provide-form-nodes-config.md) | Messages for nodes created in that scope; descendant [`[formNode]`](./form-node-binding.md) bindings | Selected message functions and class predicates are reactive |
+| Factory set | [`createFormPrimitives()`](./create-form-primitives.md) | Nodes created through that set | Catalog sources are reactive; node options override shared defaults |
+| JavaScript process | [`configureGlobalFormNodes()`](./configure-global-form-nodes.md) | Fallback messages; classes and input synchronization for new bindings | Catalog sources, selected messages, and captured class predicates are reactive |
 
 Global configuration controls messages, classes, and input synchronization. It does not change
 node defaults such as nullability, debounce, disabled state, or validators. `createFormPrimitives()` can scope nullability, validator messages,
@@ -54,7 +54,7 @@ The call-site types are designed for discovery in IntelliSense. Small accepted u
 state—are shown directly instead of being hidden behind another type name. Reactive callbacks are
 identified in their property documentation and describe what changes retrigger them.
 
-Named types such as `FieldOptions`, `FormOptions`, `ArrayOptions`, and `GroupOptions` remain
+Named types such as [`FieldOptions`](./types/field-options.md), [`FormOptions`](./types/form-options.md), [`ArrayOptions`](./types/array-options.md), and [`GroupOptions`](./types/group-options.md) remain
 available when an application wants to construct or reuse configuration separately. These are
 consumer-owned mutable objects, so their properties are not marked `readonly`; the library reads
 the selected values when the node is created.

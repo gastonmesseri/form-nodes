@@ -141,7 +141,7 @@ this.myForm.contacts.swap(0, 1);
 - [`array()` reference](../reference/array.md) lists signatures, options, state, and edge cases.
 - [Build a reorderable array](../cookbook/reorderable-arrays.md) shows movement controls and
   server reconciliation with `trackBy`.
-- [Choosing a primitive](../guides/choosing-a-primitive.md) compares an `array()` node with an
-  array-valued `field()`.
+- [Choosing a primitive](../guides/choosing-a-primitive.md) compares an [`array()`](../reference/array.md) node with an
+  array-valued [`field()`](../reference/field.md).
 
 Continue with [Step 6: Validate asynchronously](./06-async-validation.md).

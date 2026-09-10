@@ -32,7 +32,7 @@ See the [complete compatibility table](../project/compatibility.md) before upgra
 
 :::tip Forms work outside Angular DI
 
-Creating and using `field()` and `form()` does not require an Angular injection context. Angular
+Creating and using [`field()`](../reference/field.md) and [`form()`](../reference/form.md) does not require an Angular injection context. Angular
 dependency injection is used only when an optional integration explicitly needs it.
 
 :::

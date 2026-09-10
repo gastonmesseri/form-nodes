@@ -88,7 +88,7 @@ Update a field programmatically with `set()`:
 myForm.username.set('marco');
 ```
 
-`FormNodeDirective` is imported by the standalone component so `[formNode]` is available in its template.
+[`FormNodeDirective`](../reference/form-node-binding.md) is imported by the standalone component so `[formNode]` is available in its template.
 Keep the bindings next to the model whenever a compact inline template remains readable.
 
 If your application uses NgModules, you can import and re-export `FormNodeDirective` from a shared module instead:

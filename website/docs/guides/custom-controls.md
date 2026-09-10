@@ -12,7 +12,7 @@ import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-for
 
 # Custom controls {#custom-controls}
 
-Bind a custom component with `[formNode]`, just as you would a native input. For a new
+Bind a custom component with [`[formNode]`](../reference/form-node-binding.md), just as you would a native input. For a new
 component, expose a `value = model(...)`. Existing `ControlValueAccessor` components
 can use the same binding.
 
@@ -28,7 +28,7 @@ experimental input synchronization. The integration has two separate responsibil
 
 | Component design | Value and state integration |
 | --- | --- |
-| `value = model()` with `useFormNodeState()` | Value binding and full access to the bound Form Nodes state without experimental input writes. The component renders the state itself. |
+| `value = model()` with [`useFormNodeState()`](../reference/form-node-state.md) | Value binding and full access to the bound Form Nodes state without experimental input writes. The component renders the state itself. |
 | `value = model()` with state/constraint `input()` properties | Value binding works by default. Automatically populating those inputs requires experimental `syncInputs`; use `'all'` for every supported input. |
 | `ControlValueAccessor` / `NG_VALUE_ACCESSOR` | Values, change/touch callbacks, and `setDisabledState()` use the normal CVA contract, independently of `syncInputs`. |
 
@@ -152,7 +152,7 @@ See the [Angular Material](../integrations/angular-material.md) and
 
 ## 🔗 Go further {#go-further}
 
-The optional `FormNodeValueControl<T>` and `FormNodeCheckboxControl` types can document a
+The optional [`FormNodeValueControl<T>`](../reference/types/form-node-value-control.md) and [`FormNodeCheckboxControl`](../reference/types/form-node-checkbox-control.md) types can document a
 component's contract consistently on Angular 21 and 22. Runtime discovery does not require them.
 
 The [advanced custom-controls guide](./custom-controls-advanced.md) covers aggregate models,
@@ -186,7 +186,7 @@ need the updated node. Call `onTouched` before emitting a corresponding interact
 updates synchronously within those callbacks (subject to configured debounce); it cannot update
 from a value that the CVA has not delivered yet. The same limitation applies to Reactive Forms.
 
-The same ordering holds when your component injects `FORM_NODE` or `FormNodeDirective` during
+The same ordering holds when your component injects [`FORM_NODE`](../reference/form-node-token.md) or `FormNodeDirective` during
 construction. The injected token still identifies the concrete binding; no deferred injection or
 manual microtask is needed.
 
@@ -218,7 +218,7 @@ keep its previous display until enabled; Form Nodes does not temporarily enable 
 CVA user input remains synchronous: call the callback supplied to `registerOnChange()` for user edits. Form Nodes receives that value immediately; configured debounce can defer its commit. Prefer `(formNodeControlValueChange)` for immediate control values and `(formNodeValueChange)` for committed values. Programmatic `writeValue()` calls must not emit user changes; Form Nodes also guards against synchronous feedback from an accessor.
 
 
-Reset is an explicit exception to ordinary model-to-view deduplication: `reset()` and `resetToInitial()` synchronously call the bound CVA's `writeValue()` even when the value stays the same. This clears provisional control text that was never emitted to the node. Resetting an ancestor applies this to its bound descendants, and pending debounced input is discarded. Reset-driven writes do not emit `formNodeValueChange` or `formNodeControlValueChange`.
+Reset is an explicit exception to ordinary model-to-view deduplication: `reset()` and `resetToInitial()` synchronously call the bound CVA's `writeValue()` even when the value stays the same. This clears provisional control text that was never emitted to the node. Resetting an ancestor applies this to its bound descendants, and pending debounced input is discarded. Reset-driven writes do not emit [`formNodeValueChange`](../reference/form-node-binding.md#value-outputs) or `formNodeControlValueChange`.
 
 Changing `[formNode]` to a different node forces a fresh value and disabled-state write during binding synchronization, even if both nodes have equal values. Subsequent resets and user callbacks target the new node; resetting the previous node or a node whose binding was destroyed does not write into the control. Ordinary unchanged-value effects still skip redundant writes.
 

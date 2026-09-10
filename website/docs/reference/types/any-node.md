@@ -14,7 +14,7 @@ import type { AnyNode } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for a node of unknown kind or structure. Read state and call operations through `$api`; child names can shadow direct members. Use `isFormNode()` to narrow an unknown value to this type.
+Use for a node of unknown kind or structure. Read state and call operations through `$api`; child names can shadow direct members. Use [`isFormNode()`](../is-form-node.md) to narrow an unknown value to this type.
 
 ## Declaration
 

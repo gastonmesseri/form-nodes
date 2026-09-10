@@ -14,7 +14,7 @@ import type { Validator } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use to type a reusable synchronous rule. Author it through `validator()` when you want contextual value and owner inference from the consuming declaration.
+Use to type a reusable synchronous rule. Author it through [`validator()`](../validator.md) when you want contextual value and owner inference from the consuming declaration.
 
 ## Declaration
 

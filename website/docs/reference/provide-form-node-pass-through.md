@@ -5,7 +5,7 @@ title: provideFormNodePassThrough()
 # provideFormNodePassThrough() {#provideformnodepassthrough}
 
 Marks a directive or host directive that consumes and delegates `formNode`, keeping the outer
-`[formNode]` binding passive while an inner control performs synchronization.
+[`[formNode]`](./form-node-binding.md) binding passive while an inner control performs synchronization.
 
 ## 📐 Signature {#signature}
 

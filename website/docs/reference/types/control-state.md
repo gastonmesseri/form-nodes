@@ -14,7 +14,7 @@ import type { ControlState } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for reusable UI that observes a binding through `useFormNodeState()`. This read-only facade normalizes supported Angular binding sources and does not expose node write operations.
+Use for reusable UI that observes a binding through [`useFormNodeState()`](../form-node-state.md). This read-only facade normalizes supported Angular binding sources and does not expose node write operations.
 
 ## Declaration
 

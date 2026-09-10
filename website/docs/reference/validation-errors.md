@@ -25,14 +25,14 @@ result, the node assigns ownership, and an error renderer consumes the published
 | Return asynchronous results | [`AsyncValidationResult`](./types/async-validation-result.md) |
 | Return errors or further synchronous validator composition | [`ComposableValidationResult`](./types/composable-validation-result.md) |
 
-`ValidationError` exposes `kind: string` and `message?: string`. Do not assume every error has a
+[`ValidationError`](./types/validation-error.md) exposes `kind: string` and `message?: string`. Do not assume every error has a
 message; provide an application fallback or a configured validator message. A synchronous result
 can also be a string, which becomes a `custom` error, or a readonly array of messages and errors.
 An empty string is still an error message. `null`, `undefined`, and `void` indicate success.
 
-`ValidatorError` accepts `kind: string | number` as input. A numeric identifier such as `123`
+[`ValidatorError`](./types/validator-error.md) accepts `kind: string | number` as input. A numeric identifier such as `123`
 is normalized to `'123'` before publication; `ValidationError` and error queries continue to
-use strings. Use `ValidatorError` or `ValidationResult` to annotate rules returning numeric
+use strings. Use `ValidatorError` or [`ValidationResult`](./types/validation-result.md) to annotate rules returning numeric
 kinds, and query them with `getError('123')`. Numeric errors are shallow copies; their source
 object is not mutated. See the [complete validator result contract](../guides/validation.md#validator-results)
 for the declaration callback's intentional `any` return and checked authoring alternatives.
@@ -75,7 +75,7 @@ visibility, and error-query behavior.
 it is not an error object. Pending asynchronous work and existing errors must be considered
 according to the node's aggregation rules.
 
-For controls observing Angular and Form Nodes bindings through `useFormNodeState()`, use
+For controls observing Angular and Form Nodes bindings through [`useFormNodeState()`](./form-node-state.md), use
 [`ControlStateError`](./types/control-state-error.md). For translated or configured messages, use
 [`ValidatorMessages`](./types/validator-messages.md) and
 [`ValidatorMessageParameters`](./types/validator-message-parameters.md).
@@ -92,6 +92,6 @@ See [validator messages](../guides/validator-messages.md) for message resolution
 
 No arguments, `{}`, and `{ descendants: false }` all select own errors. The option accepts a reactive boolean, for example inside `computed(() => profile.errors({ descendants: includeChildren() }))`. Reads track the selected existing signal; they do not create a new computed per call.
 
-Every error preserves its original `targetNode`. Own reads retain the concrete node type; subtree reads use `AnyNode`, whose collision-safe API is accessed through `targetNode.$api`. Fields have no descendants, so both queries return the same errors. Disabled descendants, asynchronous validation, and dynamic child changes follow the existing `allErrors()` behavior.
+Every error preserves its original `targetNode`. Own reads retain the concrete node type; subtree reads use [`AnyNode`](./types/any-node.md), whose collision-safe API is accessed through `targetNode.$api`. Fields have no descendants, so both queries return the same errors. Disabled descendants, asynchronous validation, and dynamic child changes follow the existing `allErrors()` behavior.
 
 The `errors` property remains assignable to Angular `Signal` and can still be passed directly to signal consumers. Its exported type is [`NodeErrorsSignal`](./types/node-errors-signal.md). These options apply to node errors, including `.$api.errors`; binding and `useFormNodeState()` error signals retain their own signatures.

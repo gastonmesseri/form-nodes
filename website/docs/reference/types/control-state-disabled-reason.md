@@ -14,7 +14,7 @@ import type { ControlStateDisabledReason } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for disabled explanations from `useFormNodeState()`. Unlike node-specific `DisabledReason`, this contract does not assume the original source is a Form Nodes node.
+Use for disabled explanations from [`useFormNodeState()`](../form-node-state.md). Unlike node-specific [`DisabledReason`](./disabled-reason.md), this contract does not assume the original source is a Form Nodes node.
 
 ## Declaration
 

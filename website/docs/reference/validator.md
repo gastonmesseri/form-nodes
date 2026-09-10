@@ -32,12 +32,12 @@ const myForm = form({
 | --- | --- | --- |
 | Write a validator inline | `({ value }) => ...` | [Inline validators](#inline-validators) |
 | Declare a reusable typed validator | `validator<TValue>()` | [Signature](#signature) |
-| Read node value, tree, or state | `ValidatorContext<TValue>` | [Context reference](#context-reference) |
-| Return success or errors | `ValidationResult` | [Validation results](#validation-results) |
+| Read node value, tree, or state | [`ValidatorContext<TValue>`](./types/validator-context.md) | [Context reference](#context-reference) |
+| Return success or errors | [`ValidationResult`](./types/validation-result.md) | [Validation results](#validation-results) |
 | Enable rules reactively | Return another validator | [Conditional composition](#conditional-composition) |
 | Replace validators at runtime | `setValidators()` | [Validator sources](#validator-sources) |
 | Assign an aggregate error to a child | `targetNode` | [Error ownership](#error-ownership) |
-| Type custom error data | `ValidationErrorMap` | [Typed custom errors](#typed-custom-errors) |
+| Type custom error data | [`ValidationErrorMap`](./types/validation-error-map.md) | [Typed custom errors](#typed-custom-errors) |
 
 ## ✅ Inline validators {#inline-validators}
 
@@ -70,7 +70,7 @@ requirement, eager execution, or different reactivity.
 
 `TValue` must match the exact node value. Default fields normally include `null`; forms and arrays
 use their non-null aggregate values. A validator declared as `validator<number>()` therefore fits a
-field created with `field.strict()`.
+field created with [`field.strict()`](./field.md#nullability).
 
 ### ◆ Signature {#signature}
 
@@ -318,7 +318,7 @@ both. A mixed array throws because its intent is ambiguous.
 
 :::
 
-Put `asyncValidator()` directly in the node's validator source; returning it from synchronous
+Put [`asyncValidator()`](./async-validator.md) directly in the node's validator source; returning it from synchronous
 composition throws. Circular composition is rejected, and composition deeper than 100 levels
 throws instead of recursing indefinitely.
 
@@ -423,12 +423,12 @@ error?.minimumAge; // number | undefined
 
 | Type | Purpose |
 | --- | --- |
-| `ValidationError` | Base `{ kind, message? }` error shape. |
+| [`ValidationError`](./types/validation-error.md) | Base `{ kind, message? }` error shape. |
 | `ValidationResult` | Synchronous success, a message or error object, or an array of both. |
 | `ValidatorContext<TValue>` | Complete synchronous callback context. |
-| `Validator<TValue>` | Basic synchronous validation function. |
-| `ComposableValidator<TValue>` | Validator that can return other validators conditionally. |
-| `ValidatorSource<TValue, TField>` | One validator or a readonly validator array with nullish entries. |
+| [`Validator<TValue>`](./types/validator.md) | Basic synchronous validation function. |
+| [`ComposableValidator<TValue>`](./types/composable-validator.md) | Validator that can return other validators conditionally. |
+| [`ValidatorSource<TValue, TField>`](./types/validator-source.md) | One validator or a readonly validator array with nullish entries. |
 | `ValidationErrorMap` | Extensible registry used by typed `getError()`. |
 
 See [Validation](../guides/validation.md), [Built-in validators](./built-in-validators.md), and

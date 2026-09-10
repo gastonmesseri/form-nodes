@@ -10,7 +10,7 @@ import appConfigSource from '!!raw-loader!../../examples/validator-messages-app-
 import applicationConfigSource from '!!raw-loader!../../examples/shared-module-application-config.typecheck.ts';
 import sharedConfigSource from '!!raw-loader!../../examples/shared-module-shared-config.typecheck.ts';
 
-Configures validator messages and reactive CSS classes with one provider function. Optional experimental control integration is documented at the end of this page. The exported `FormNodesConfig` type describes the same options.
+Configures validator messages and reactive CSS classes with one provider function. Optional experimental control integration is documented at the end of this page. The exported [`FormNodesConfig`](./types/form-nodes-config.md) type describes the same options.
 
 ## 📐 Signature {#signature}
 
@@ -26,7 +26,7 @@ provideFormNodesConfig(config: {
 
 ## 💡 `classes` {#classes}
 
-Configure CSS class names and reactive predicates for `[formNode]` bindings.
+Configure CSS class names and reactive predicates for [`[formNode]`](./form-node-binding.md) bindings.
 No classes are enabled by default. Set `classes: null` to restore that default in a nearer scope.
 
 ```ts title="app.config.ts"
@@ -292,7 +292,7 @@ one value; they do not merge. A node option affects its own binding, not descend
 
 Provider/global fallbacks are captured when a connection is created. Rebinding uses the replacement
 node's options. Inputs no longer selected retain their last values rather than restoring defaults.
-For state access without experimental writes, use a model with `useFormNodeState()` and render its
+For state access without experimental writes, use a model with [`useFormNodeState()`](./form-node-state.md) and render its
 signals. See [custom controls](../guides/custom-controls.md).
 
 ## 🧪 `bindInputOutputPairs` (experimental) {#bind-input-output-pairs}

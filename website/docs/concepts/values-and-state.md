@@ -55,8 +55,8 @@ where a child name collides with a node member and for generic infrastructure.
 ## 📝 Custom equality for a consumer {#custom-equality-for-a-consumer}
 
 When a particular consumer needs its own definition of equality, derive a signal with Angular's
-`computed()` and supply an `equal` function. This works with `form()`, `group()`, `array()`, and
-`field()`: read the selected node inside the computation and compare the resulting values.
+`computed()` and supply an `equal` function. This works with [`form()`](../reference/form.md), [`group()`](../reference/group.md), [`array()`](../reference/array.md), and
+[`field()`](../reference/field.md): read the selected node inside the computation and compare the resulting values.
 
 The following preview treats name capitalization as irrelevant while still observing email changes:
 

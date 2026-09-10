@@ -20,7 +20,7 @@ The internal `DeclarationValidator<TValue, TField>` signature is `(context: Vali
 
 :::info Supported results remain typed contracts
 
-The `any` return avoids circular initializer inference; it does not expand valid runtime results. Return `ValidationResult` for errors/messages/success, or `ComposableValidationResult<TValue, TField>` for synchronous composition. Annotate that return or use a context-taking `validator()` helper for checked authoring. Returned inline callbacks need such a checked context. See the [full result contract](../../guides/validation.md#validator-results).
+The `any` return avoids circular initializer inference; it does not expand valid runtime results. Return [`ValidationResult`](./validation-result.md) for errors/messages/success, or [`ComposableValidationResult<TValue, TField>`](./composable-validation-result.md) for synchronous composition. Annotate that return or use a context-taking [`validator()`](../validator.md) helper for checked authoring. Returned inline callbacks need such a checked context. See the [full result contract](../../guides/validation.md#validator-results).
 
 :::
 

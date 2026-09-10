@@ -5,7 +5,7 @@ description: Bind Form Nodes directly to Angular Material inputs, selects, check
 
 # Angular Material {#angular-material}
 
-Angular Material controls work with `[formNode]` through their normal Angular Forms contracts. No
+Angular Material controls work with [`[formNode]`](../reference/form-node-binding.md) through their normal Angular Forms contracts. No
 Form Nodes adapter, wrapper, `FormControl`, `FormsModule`, or `ReactiveFormsModule` is required.
 
 ## 🚀 Install Material {#install-material}

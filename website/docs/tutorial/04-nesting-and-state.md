@@ -4,7 +4,7 @@ title: 4. Add nesting and state
 
 # 4. Add nesting and reactive state {#4-add-nesting-and-reactive-state}
 
-Group related fields with shorthand objects. Use an explicit `group()` when that branch needs its
+Group related fields with shorthand objects. Use an explicit [`group()`](../reference/group.md) when that branch needs its
 own configuration.
 
 The validators from the previous step are omitted here so the nested structure remains easy to

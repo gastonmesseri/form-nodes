@@ -14,7 +14,7 @@ import type { ArraySet } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use to derive the replace value contract from the array's child or item node types. It describes the complete value accepted by set(). Use `FormNodeValue<typeof node>` when starting from an existing node instance.
+Use to derive the replace value contract from the array's child or item node types. It describes the complete value accepted by set(). Use [`FormNodeValue<typeof node>`](./form-node-value.md) when starting from an existing node instance.
 
 ## Declaration
 

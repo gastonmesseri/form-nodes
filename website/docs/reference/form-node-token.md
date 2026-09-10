@@ -4,7 +4,7 @@ title: FORM_NODE
 
 # FORM_NODE {#form_node}
 
-`FORM_NODE` is the Angular injection token for the concrete `[formNode]` binding on the current
+`FORM_NODE` is the Angular injection token for the concrete [`[formNode]`](./form-node-binding.md) binding on the current
 host. Use it when a colocated directive or service needs that exact rendered control.
 
 ## 📐 Type {#type}

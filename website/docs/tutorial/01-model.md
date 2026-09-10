@@ -4,7 +4,7 @@ title: 1. Declare the model
 
 # 1. Declare the model {#1-declare-the-model}
 
-Start with a component-owned form tree. `field()` creates leaf values and `form()` infers their combined object shape.
+Start with a component-owned form tree. [`field()`](../reference/field.md) creates leaf values and [`form()`](../reference/form.md) infers their combined object shape.
 
 ```ts
 import { Component } from '@angular/core';
@@ -81,7 +81,7 @@ control interaction behavior.
 ## 🔗 Related guides and reference {#related-guides-and-reference}
 
 - [Creating nodes](../concepts/creating-nodes.md) covers every `field()`, `form()`, nested-object,
-  and `array()` declaration shape.
+  and [`array()`](../reference/array.md) declaration shape.
 - [Values and state](../concepts/values-and-state.md) explains callable values, `set()`, `update()`,
   `patch()`, and `reset()`.
 - [`field()` reference](../reference/field.md) documents nullability, options, state, and validation.

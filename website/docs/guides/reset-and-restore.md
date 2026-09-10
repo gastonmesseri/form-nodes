@@ -138,14 +138,14 @@ equivalent snapshot. Internally committed data and rendered controls use the res
 
 Native controls, CVAs, and signal custom controls synchronize through their existing reset/render
 paths. Parsing state is cleared and optional custom `reset()` hooks run for retained bindings.
-`resetToInitial()` does not emit `formNodeValueChange` or `formNodeControlValueChange`, because it is
+`resetToInitial()` does not emit [`formNodeValueChange`](../reference/form-node-binding.md#value-outputs) or `formNodeControlValueChange`, because it is
 a programmatic operation. It also cancels notifications belonging to discarded pending input.
 
 Use an explicit button handler to restore defaults:
 
 <CodeBlock language="ts" title="profile-editor.component.ts">{controlSource}</CodeBlock>
 
-A native `<button type="reset">` on a `[formNode]` form still invokes the existing `reset()` behavior;
+A native `<button type="reset">` on a [`[formNode]`](../reference/form-node-binding.md) form still invokes the existing `reset()` behavior;
 it does not automatically call `resetToInitial()`. A binding's `reset()` method also keeps its
 existing behavior. To restore a node obtained through a binding, call
 `binding.node().$api.resetToInitial()` when you need a collision-safe generic path.

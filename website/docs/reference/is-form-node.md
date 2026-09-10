@@ -34,7 +34,7 @@ The helper can also be passed directly to an array's `filter()` method to obtain
 
 | Value | Result |
 | --- | --- |
-| Nodes created by `field()`, `form()`, `group()`, or `array()` | `true` |
+| Nodes created by [`field()`](./field.md), [`form()`](./form.md), [`group()`](./group.md), or [`array()`](./array.md) | `true` |
 | Nested nodes and nodes from configured primitives | `true` |
 | Detached nodes | `true` |
 | Plain objects, ordinary functions, `null`, or `undefined` | `false` |

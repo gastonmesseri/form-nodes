@@ -7,7 +7,7 @@ import errorsSource from '!!raw-loader!../../examples/closest-form-errors.typech
 
 # useClosestForm()
 
-Returns a signal of the callable, collision-safe API of the form owning the nearest injectable `[formNode]` binding. It lets descendant
+Returns a signal of the callable, collision-safe API of the form owning the nearest injectable [`[formNode]`](./form-node-binding.md) binding. It lets descendant
 components observe submission state without passing the form through inputs or subscribing to events.
 
 ## Signature
@@ -25,8 +25,8 @@ both it and the returned API retain normal Angular signal semantics.
 ## Resolution and lifecycle
 
 Call once in an Angular injection context, normally a component or directive field initializer.
-The hook injects `FORM_NODE` with `optional: true`, starting on the current element and following
-Angular's injector hierarchy. It then observes that binding's current node and its `form()` owner.
+The hook injects [`FORM_NODE`](./form-node-token.md) with `optional: true`, starting on the current element and following
+Angular's injector hierarchy. It then observes that binding's current node and its [`form()`](./field.md#form) owner.
 
 - Binding to a form: returns that form's API.
 - Binding to a field, group, or array: returns the API of its nearest explicit form in the model tree.
@@ -79,5 +79,5 @@ and [form()](./form.md#submitted).
 The hook now returns the callable API directly. Replace `closestForm()?.$api.submitted()` with
 `closestForm()?.submitted()`, and `closestForm()?.$api.value()` with `closestForm()?.()` or
 `closestForm()?.value()`. Direct child access becomes `closestForm()?.children.childName`.
-The result is not a node declaration and must not be passed to `[formNode]` or `isFormNode()`
+The result is not a node declaration and must not be passed to `[formNode]` or [`isFormNode()`](./is-form-node.md)
 as though it were one.

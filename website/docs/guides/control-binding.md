@@ -8,7 +8,7 @@ import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.
 # Control binding {#control-binding}
 
 The [type-checked Angular example](../examples/executable-examples.mdx#angular-binding-and-viewchild)
-covers the standalone directive import, `[formNode]`, `FormNodeDirective`, and `viewChild.required()`.
+covers the standalone directive import, [`[formNode]`](../reference/form-node-binding.md), `FormNodeDirective`, and `viewChild.required()`.
 
 Import `FormNodeDirective` and bind a node with `[formNode]`:
 
@@ -26,7 +26,7 @@ export class Editor {
 ```
 
 It supports native `input`, `select`, and `textarea` elements, Angular `ControlValueAccessor`
-components, `value = model<T>()` controls, and `checked = model<boolean>()` checkbox controls. Native controls bind scalar `field()` nodes; aggregate forms and
+components, `value = model<T>()` controls, and `checked = model<boolean>()` checkbox controls. Native controls bind scalar [`field()`](../reference/field.md) nodes; aggregate forms and
 arrays require a custom control that represents their complete value. Separate input/output pairs
 are also available through [experimental `bindInputOutputPairs`](./custom-controls.md#separate-input-output-pairs). See
 [Advanced custom controls](./custom-controls-advanced.md#angular-api-compatibility) for the complete compatibility
@@ -186,6 +186,6 @@ example and the control-originated event contract.
 A custom `equal` comparator can retain the previously exposed `node()` value without preventing
 the control from displaying new input. Rendering uses `value.control()`, while
 `value.committed()` exposes the latest committed data before the public equality check.
-Consequently, `formNodeValueChange` can emit the retained public value for an edit that compares
+Consequently, [`formNodeValueChange`](../reference/form-node-binding.md#value-outputs) can emit the retained public value for an edit that compares
 equal; `formNodeControlValueChange` carries the latest control value. Debounce still determines
 when input is committed. See [value outputs](../reference/form-node-binding.md#value-outputs).

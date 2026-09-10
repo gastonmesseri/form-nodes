@@ -14,7 +14,7 @@ import type { ArrayFactory } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when passing the configured array factory from `createFormPrimitives()` to reusable declaration helpers.
+Use when passing the configured array factory from [`createFormPrimitives()`](../create-form-primitives.md) to reusable declaration helpers.
 
 ## Declaration
 

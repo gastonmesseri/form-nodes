@@ -42,7 +42,7 @@ The map does not contain a second set of nodes: its entries are the exact nodes 
 directly. It is useful when code should be deliberately explicit about traversing children, or when
 generic infrastructure needs the complete named-child collection.
 
-Every key supplied by the user in the initial `form()` definition takes precedence in the public
+Every key supplied by the user in the initial [`form()`](../reference/form.md) definition takes precedence in the public
 type over ordinary node API and native callable members. This includes `value`, `reset`, `api`,
 `children`, `name`, and `apply`. The reserved name `$api` always provides collision-safe API access.
 
@@ -105,8 +105,8 @@ settings.$api.readonly(); // form state
 settings(); // { readonly: false, value: 'domain value' }
 ```
 
-For generic code receiving `AnyNode`, use **`node.$api`**. Unknown child names can override
-direct operations. Use `DynamicNode` for direct common state and
+For generic code receiving [`AnyNode`](../reference/types/any-node.md), use **`node.$api`**. Unknown child names can override
+direct operations. Use [`DynamicNode`](../reference/types/dynamic-node.md) for direct common state and
 operations only when the declaration is known not to shadow that surface:
 
 <CodeBlock language="ts" title="generic-node-api.example.ts">{genericNodeApiSource}</CodeBlock>
@@ -181,14 +181,14 @@ not subscribe to the value; read the returned node's value, state, or ancestry t
 
 Interaction, availability, required, and submission signals live on the node. Use
 `ctx.node().touched()`, `ctx.node().disabled()`, or `ctx.node().submitting()` instead of flat context
-properties. This applies to synchronous validators and every `asyncValidator()` callback.
+properties. This applies to synchronous validators and every [`asyncValidator()`](../reference/async-validator.md) callback.
 
 ### ◆ Inline node inference {#inline-node-inference}
 
-An inline validator knows the primitive being created. A field validator receives `FieldNode<TValue>`;
+An inline validator knows the primitive being created. A field validator receives [`FieldNode<TValue>`](../reference/types/field-node.md);
 a form or group validator retains its declared children; an array validator retains its item type.
 This works for positional validators, `options.validators`, configured primitives, and inline
-`validator()` / `asyncValidator()` helpers. Omit helper type arguments to let the enclosing
+[`validator()`](../reference/validator.md) / `asyncValidator()` helpers. Omit helper type arguments to let the enclosing
 primitive infer both the value and the node. Explicit generics on the primitive, such as
 `field.strict<string>('')`, still preserve this inference.
 
@@ -238,7 +238,7 @@ Child names never override the API facade.
 The API itself never receives direct child properties, so its `value`, `set`, and `submitted`
 members remain safe. Inspect children through `children` or array collection methods.
 
-The exported `CallableNodeApi<TApi>` adds the call signature and signal contract to `FieldApi`,
+The exported [`CallableNodeApi<TApi>`](../reference/types/callable-node-api.md) adds the call signature and signal contract to [`FieldApi`](../reference/types/field-api.md),
 `GroupApi`, `FormApi`, or `ArrayApi`. Native function members are hidden on concrete API types,
 while API-defined members such as array `length()` remain visible. The broad `AnyNode` API stays
 structural so it can accept every node kind, including arrays with a signal-valued `length`.

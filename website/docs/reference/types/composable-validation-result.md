@@ -14,7 +14,7 @@ import type { ComposableValidationResult } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for synchronous validator results that may include further validator composition. Use `ValidationResult` when the rule only returns errors or success.
+Use for synchronous validator results that may include further validator composition. Use [`ValidationResult`](./validation-result.md) when the rule only returns errors or success.
 
 ## Declaration
 

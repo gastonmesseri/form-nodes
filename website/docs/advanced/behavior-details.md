@@ -55,7 +55,7 @@ const myForm = form({
 ```
 
 Nullish entries are ignored. After they are removed, a returned array must contain either validators
-or validation errors—not a mixture of both. An `asyncValidator()` must be configured directly in
+or validation errors—not a mixture of both. An [`asyncValidator()`](../reference/async-validator.md) must be configured directly in
 the node's validator list; returning one from a synchronous validator is intentionally unsupported
 because its watcher lifecycle must be established without executing arbitrary validators.
 
@@ -90,7 +90,7 @@ pending, but errors remain ordered by validator declaration rather than network 
 ## 🔌 Ownership and lifetime {#ownership-and-lifetime}
 
 An explicit or currently captured injector takes precedence. Otherwise, a directly bound
-`[formNode]` injector and then the nearest ancestor injector own async validation watchers by
+[`[formNode]`](../reference/form-node-binding.md) injector and then the nearest ancestor injector own async validation watchers by
 default. `adoptBindingInjector: false` and `inheritInjector: false` control those stages
 independently. Rebinding and detaching release transient ownership. The effective injector's
 `DestroyRef` provides deterministic cleanup.
@@ -183,7 +183,7 @@ work. Errors thrown by an application-defined input transform are still reported
 
 In development mode, Form Nodes emits one warning per affected control instance and input name when such a write is
 skipped. When the component does not already use it, the warning recommends
-`useFormNodeState()` as the source-neutral state facade. A component already consuming that
+[`useFormNodeState()`](../reference/form-node-state.md) as the source-neutral state facade. A component already consuming that
 facade does not receive the redundant recommendation. A `ControlValueAccessor` is another option when only
 value and disabled interoperability are needed; it does not provide channels for every optional
 state such as `readonly`, `required`, or errors.
@@ -226,7 +226,7 @@ that returns the same live node more than once also throws, preventing shared pa
 ## 🔌 Current structural boundaries {#current-structural-boundaries}
 
 Initially declared form child keys remain fixed, while `add()` and `remove()` manage explicitly
-dynamic named children. Use `array()` for runtime addition, removal, and reordering of repeated
+dynamic named children. Use [`array()`](../reference/array.md) for runtime addition, removal, and reordering of repeated
 nodes. Schema-driven generation from JSON definitions is not currently part of the public API.
 
 Continue with [Async validation](../guides/async-validation.md),

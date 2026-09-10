@@ -4,7 +4,7 @@ title: Remote validation
 
 # Validate against a remote API {#validate-against-a-remote-api}
 
-Wrap remote work in `asyncValidator()` so the node owns debounce, cancellation, pending state, and
+Wrap remote work in [`asyncValidator()`](../reference/async-validator.md) so the node owns debounce, cancellation, pending state, and
 stale-result protection. The component keeps the pending and error UI next to the validated model:
 
 ```ts

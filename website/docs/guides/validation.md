@@ -36,32 +36,32 @@ execute those functions or expand returned compositions by default.
 
 ## Validator arguments and return values {#validator-results}
 
-The same `ValidatorSource<TValue, TNode>` contract applies to these inputs:
+The same [`ValidatorSource<TValue, TNode>`](../reference/types/validator-source.md) contract applies to these inputs:
 
 | Primitive | Positional validators | Options |
 | --- | --- | --- |
-| `field()` | `field(initialValue, validators, options?)` | `field(initialValue, { validators })` |
-| `form()` | `form(definition, validators, options?)` | `form(definition, { validators })` |
-| `group()` | `group(definition, validators, options?)` | `group(definition, { validators })` |
-| `array()` | `array(template, validators, options?)` or `array(template, initialValue, validators, options?)` | `array(template, { initialValue, validators })` |
+| [`field()`](../reference/field.md) | `field(initialValue, validators, options?)` | `field(initialValue, { validators })` |
+| [`form()`](../reference/form.md) | `form(definition, validators, options?)` | `form(definition, { validators })` |
+| [`group()`](../reference/group.md) | `group(definition, validators, options?)` | `group(definition, { validators })` |
+| [`array()`](../reference/array.md) | `array(template, validators, options?)` or `array(template, initialValue, validators, options?)` | `array(template, { initialValue, validators })` |
 
 The argument itself accepts one callback or a readonly list of callbacks, including registered
-`asyncValidator()` functions. Nullish list entries are ignored. `setValidators()` accepts this
+[`asyncValidator()`](../reference/async-validator.md) functions. Nullish list entries are ignored. `setValidators()` accepts this
 same source. This also applies to strict/nullable fields and configured primitives.
 
-A synchronous callback receives a typed `ValidatorContext<TValue, ValidatorApi<TValue>, TNode>`.
-Its supported result contract is `ComposableValidationResult<TValue, TNode>`:
+A synchronous callback receives a typed [`ValidatorContext<TValue, ValidatorApi<TValue>, TNode>`](../reference/types/validator-context.md).
+Its supported result contract is [`ComposableValidationResult<TValue, TNode>`](../reference/types/composable-validation-result.md):
 
 | Returned value | Meaning |
 | --- | --- |
 | `null`, `undefined`, or implicit fallthrough (`void`) | No errors |
 | `string`, including `''` | An error with `kind: 'custom'` and that message |
-| `ValidatorError` | An error with `kind: string \| number`, optional `message: string`, and optional `targetNode` |
+| [`ValidatorError`](../reference/types/validator-error.md) | An error with `kind: string \| number`, optional `message: string`, and optional `targetNode` |
 | A readonly array of message strings and error objects | Several errors in order; an empty array succeeds |
 | A synchronous validator | Evaluate that validator using the same context |
 | A readonly array of synchronous validators and nullish entries | Evaluate those validators using the same context |
 
-`ValidationResult` describes the first four rows; `ComposableValidationResult<TValue, TNode>`
+[`ValidationResult`](../reference/types/validation-result.md) describes the first four rows; `ComposableValidationResult<TValue, TNode>`
 also includes the composition rows. Returned arrays must not mix validators and errors.
 A bare number or boolean is not an error result. A raw Promise or Observable is not a synchronous
 result: register `asyncValidator()` to handle asynchronous work and its lifecycle.
@@ -74,7 +74,7 @@ initializing form or group. The context, sibling fields, node methods, and model
 
 For explicit result checking, annotate the callback with `: ValidationResult`, or with
 `: ComposableValidationResult<TValue, TNode>` when composing validators. The context-taking
-`validator()` helper also checks results. For returned inline validators, wrapping the outer
+[`validator()`](../reference/validator.md) helper also checks results. For returned inline validators, wrapping the outer
 callback in `validator()` restores their contextual parameter types. A checked self-referencing
 callback may still need the return annotation to break TypeScript's inference cycle.
 
@@ -300,7 +300,7 @@ name.pattern();
 name.required();
 ```
 
-`[formNode]` forwards applicable metadata to native and compatible custom controls.
+[`[formNode]`](../reference/form-node-binding.md) forwards applicable metadata to native and compatible custom controls.
 
 See [Built-in validators](../reference/built-in-validators.md) and [Validator messages](./validator-messages.md).
 For reusable helpers, context types, result shapes, and conditional composition, see the

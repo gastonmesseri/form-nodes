@@ -14,7 +14,7 @@ import type { GroupFactory } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when passing the configured group factory from `createFormPrimitives()` to reusable declaration helpers.
+Use when passing the configured group factory from [`createFormPrimitives()`](../create-form-primitives.md) to reusable declaration helpers.
 
 ## Declaration
 

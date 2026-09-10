@@ -14,7 +14,7 @@ import type { FormPrimitivesOptions } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for the defaults supplied to `createFormPrimitives()`. Per-node declarations can still provide their own options where supported.
+Use for the defaults supplied to [`createFormPrimitives()`](../create-form-primitives.md). Per-node declarations can still provide their own options where supported.
 
 ## Declaration
 

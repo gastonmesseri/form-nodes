@@ -9,7 +9,7 @@ import computedDeclarationSource from '!!raw-loader!../../examples/computed-decl
 
 # Creating nodes {#creating-nodes}
 
-Form Nodes models a workflow as a tree of `field()`, `form()`, `array()`, and `group()` nodes.
+Form Nodes models a workflow as a tree of [`field()`](../reference/field.md), [`form()`](../reference/form.md), [`array()`](../reference/array.md), and [`group()`](../reference/group.md) nodes.
 TypeScript infers the complete value shape from that tree.
 
 When a named domain model should check that inferred value without replacing concrete child types,
@@ -32,7 +32,7 @@ const myForm = form({
 });
 ```
 
-Fields are nullable by default. `myForm.name` is therefore `FieldNode<string | null>`, even though its initial value is a string. Opt out when null is not a valid business value:
+Fields are nullable by default. `myForm.name` is therefore [`FieldNode<string | null>`](../reference/types/field-node.md), even though its initial value is a string. Opt out when null is not a valid business value:
 
 ```ts
 const name = field.strict('');

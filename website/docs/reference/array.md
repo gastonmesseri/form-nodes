@@ -11,12 +11,12 @@ import arrayTemplateFieldShorthandSource from '!!raw-loader!../../examples/array
 
 # array() {#array}
 
-For the exported `ArrayNode` model type and its generic counterpart, see the
+For the exported [`ArrayNode`](./types/array-node.md) model type and its generic counterpart, see the
 [Node types reference](./node-types.md#array-node).
 
 `array()` creates a dynamic collection of independently cloned nodes. It is not required merely
 because a value is an array. When one control owns the complete array—for example, a multi-select—
-use a normal array-valued `field()` instead. Choose `array()` when items need independent nodes,
+use a normal array-valued [`field()`](./field.md) instead. Choose `array()` when items need independent nodes,
 bindings, validation state, or structural operations.
 
 Use [`FormNodeValue<typeof myArray>`](./form-node-value.md) to extract an array node's value type.
@@ -66,14 +66,14 @@ const myForm = form({
 
 See the [validator argument and result contract](../guides/validation.md#validator-results) for
 this primitive's positional and `options.validators` signatures. Callbacks accept the fully typed
-node context and return `ValidationResult` or `ComposableValidationResult<TValue, TNode>` at runtime:
+node context and return [`ValidationResult`](./types/validation-result.md) or [`ComposableValidationResult<TValue, TNode>`](./types/composable-validation-result.md) at runtime:
 no error, messages, errors with string/numeric kinds, or synchronous validator compositions.
 
 :::info Declaration return inference
 
 The TypeScript callback return is intentionally `any` so self-referencing declarations compile.
 The node and context remain typed. Annotate the return with `ValidationResult` (or
-`ComposableValidationResult` for composition), or use the checked context-taking `validator()`
+`ComposableValidationResult` for composition), or use the checked context-taking [`validator()`](./validator.md)
 helper when you want result checking. Numeric error kinds are exposed as strings.
 
 :::
@@ -92,7 +92,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 | Commit, focus, or inspect submission state | `flush()`, `focus()`, `submitting()` | [Control and submission](#control-and-submission-properties-and-methods) |
 
 Inline validators receive `ctx.node()` and `ctx.field()` typed as this primitive, preserving its
-value type and any declared children or array items. Inline `validator()` and `asyncValidator()`
+value type and any declared children or array items. Inline `validator()` and [`asyncValidator()`](./async-validator.md)
 helpers retain that inference when their generics are omitted. See
 [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 
@@ -136,7 +136,7 @@ The factory must return a fresh node each time.
 ### ◆ `field()` shorthands in object templates {#field-shorthands-in-object-templates}
 
 Inside an object template, field-value shorthands use the same normalization and TypeScript
-inference as `form()` and `group()`. The object itself becomes a `group()`, while its concise leaf
+inference as [`form()`](./form.md) and [`group()`](./group.md). The object itself becomes a `group()`, while its concise leaf
 values become independently cloned `field()` nodes:
 
 <CodeBlock language="ts">{arrayTemplateFieldShorthandSource}</CodeBlock>
@@ -149,7 +149,7 @@ The [declaration shorthand matrix](../concepts/creating-nodes.md#declaration-sho
 compares these template declarations with their explicit equivalents and explains when a nested
 `array()` is required.
 
-An array inside the object template becomes one array-valued `FieldNode`; its length and contents do
+An array inside the object template becomes one array-valued [`FieldNode`](./types/field-node.md); its length and contents do
 not affect that decision. Use an explicit nested `array(...)` when its items need independent
 nodes. Use `field(objectValue)` when a plain object is an atomic application value rather than
 nested group structure.
@@ -164,7 +164,7 @@ Items created later from either a template or factory inherit the array's neares
 default. Set `inheritInjector: false` on an item template or factory result to create a lifecycle
 boundary for that item subtree.
 
-Like every node, an array also adopts a directly bound `[formNode]` host injector by default. Use
+Like every node, an array also adopts a directly bound [`[formNode]`](./form-node-binding.md) host injector by default. Use
 `adoptBindingInjector: false` when rendering the array must not change its lifecycle owner.
 
 | Option | Accepted value | Purpose |
@@ -713,7 +713,7 @@ submission members.
 Each entry includes its consumer-facing signature, what it represents or returns, and a complete
 example. In the signatures below, `ItemNode` means the node cloned from the array template,
 `ItemValue` means that node's plain value, `ItemPatch` means the partial value accepted by that
-node's `patch()`, and `ArrayValue` means `ItemValue[]`. `ParentNode` and `RootNode` represent the
+node's `patch()`, and [`ArrayValue`](./types/array-value.md) means `ItemValue[]`. `ParentNode` and `RootNode` represent the
 precise parent and root types inferred from where the array is declared.
 
 `min()` is not included because it is a field constraint signal, not an array property; see the
@@ -975,7 +975,7 @@ usernames.validators().length; // 1
 
 Reads own errors by default. Pass `{ descendants: true }` to include every descendant, exactly as `allErrors()` does. `{ descendants: false }`, `{}`, and no arguments read only own errors. `TNode` is this concrete node type.
 
-The property remains an Angular `Signal`. Own reads preserve the concrete `targetNode` type; descendant reads use `AnyNode` because errors can belong to different node kinds. See [error queries](./validation-errors.md#error-queries) for an executable example.
+The property remains an Angular `Signal`. Own reads preserve the concrete `targetNode` type; descendant reads use [`AnyNode`](./types/any-node.md) because errors can belong to different node kinds. See [error queries](./validation-errors.md#error-queries) for an executable example.
 
 Contains validation errors owned directly by the array and excludes descendant errors.
 
