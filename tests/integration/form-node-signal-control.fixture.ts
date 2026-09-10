@@ -209,3 +209,21 @@ export { IsolatedCva, IsolatedModel, NativeEventIsolationHost } from './native-e
 export { CustomEventOrderHost, DirectBindingControl, DirectBindingHost } from './custom-event-order.fixture';
 
 export { ValueChangeOutputsHost } from './value-change-outputs.fixture';
+
+@Component({
+  imports: [FormNodeDirective, AotSignalValueControl],
+  template: `
+    <input id="standalone" [(formNodeValue)]="name" />
+    <aot-signal-value-control [(formNodeValue)]="custom" />
+    <input id="explicit" [formNode]="profile.name" [formNodeValue]="source()" />
+  `,
+})
+export class AotStandaloneValueHost {
+  name = signal('Ada');
+
+  custom = signal('Initial custom value');
+
+  source = signal('Grace');
+
+  profile = form({ name: field.strict('') });
+}

@@ -10,7 +10,7 @@ import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-h
 # [formNode] directive {#formnode-directive}
 
 `FormNodeDirective` is the standalone Angular directive imported by components to make `[formNode]`
-available. The same symbol is also the public generic type returned by binding queries.
+and `[formNodeValue]` available. The same symbol is also the public generic type returned by binding queries.
 
 Import [`FormNodesModule`](./form-nodes-module.md) instead when you prefer one import point
 for the library's Angular template features. [`FormNode<TChildren>`](./types/form-node.md) is the form model type;
@@ -50,7 +50,7 @@ and linker infrastructure.
 
 ## 🔌 Directive input {#directive-input}
 
-Import `FormNodeDirective` in the component and bind a Form Nodes node to the required `formNode` input:
+Import `FormNodeDirective` in the component and bind a Form Nodes node to the `formNode` input:
 
 ```ts
 @Component({
@@ -77,6 +77,49 @@ recognized custom component that models their complete value.
 | CVA component | Compatible field or aggregate node | Uses `ControlValueAccessor` interoperability |
 | Native `<form>` | `form()` or `group()` | Handles submit and reset |
 | Pass-through wrapper | Any delegated node | Leaves synchronization to an inner binding |
+
+## Value input {#value-input}
+
+`[formNodeValue]="value"` supplies a raw value. `[(formNodeValue)]="value"` additionally writes
+committed control changes back to a writable signal or assignable property. Import the same
+`FormNodeDirective`; no `FormsModule` is required.
+
+| Inputs | Bound node |
+| --- | --- |
+| `[formNode]` | The supplied node; existing behavior is unchanged. |
+| `[formNodeValue]` | One independent field initialized from the supplied value. |
+| Both | The supplied node, updated from `formNodeValue`. |
+| `[formNode]="undefined"` with `[formNodeValue]` | The independent field. |
+
+A value input may itself be `null` or `undefined`. Objects, arrays, and functions remain atomic
+values. `[formNode]` still accepts only nodes, and an invalid node is an error. A native `<form>`
+continues to require an explicit form or group node.
+
+Source changes are programmatic `set()` operations: they cancel pending input, preserve dirty
+and touched state, run normal validation and `onValueChange` callbacks, and emit neither value
+output. Local edits update the bound node and emit the existing outputs. With one-way binding,
+they do not assign the application source or get overwritten merely because change detection
+runs again. Two-way echoes do not overwrite a newer pending draft.
+
+Changing `[formNode]` applies the current source value to the new node. With a value input,
+changing the node to `undefined` activates the internal field, creating it only on its first use.
+Later returns to standalone mode reuse that same field and apply the current source. Binding
+state, contributed errors, and injector leases move to the current node; deferred outputs from
+an old node are ignored. An internal field has the host injector and no structural parent.
+
+`#control="formNode"` exposes `control.node()` in either mode. For a standalone value of type
+`T`, this is `FieldNode<T>` and both value outputs carry `T`; with an explicit node they retain
+that node's types. A supplied value must be assignable to the explicit node's value type.
+For a typed view query, use `FormNodeDirective<FieldNode<T>>`.
+
+`control.reset()` follows ordinary node reset behavior: it clears interaction and pending input
+while retaining the committed value. `control.node().resetToInitial()` restores the value captured
+when that internal field was first created. Neither operation writes the application source.
+Standalone fields are not automatically registered with ancestor forms, so those forms do not
+submit or reset them.
+
+See the [complete standalone example](../guides/control-binding.md#standalone-values).
+Pass-through wrappers that delegate their own `formNode` input still require that explicit input.
 
 ## 🔔 Value outputs {#value-outputs}
 

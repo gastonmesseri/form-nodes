@@ -3,6 +3,7 @@ title: Control binding
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import standaloneSource from '!!raw-loader!../../examples/standalone-control-value.typecheck.ts';
 import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.typecheck.ts';
 
 # Control binding {#control-binding}
@@ -31,6 +32,37 @@ arrays require a custom control that represents their complete value. Separate i
 are also available through [experimental `bindInputOutputPairs`](./custom-controls.md#separate-input-output-pairs). See
 [Advanced custom controls](./custom-controls-advanced.md#angular-api-compatibility) for the complete compatibility
 matrix and integration boundaries.
+
+## Standalone values {#standalone-values}
+
+Use `[formNodeValue]` when you have a value or an application signal and do not need to declare
+an explicit field. The directive creates one independent field and keeps it for the lifetime of
+the binding. Use `[(formNodeValue)]` to write committed control edits back to your writable signal
+or component property.
+
+<CodeBlock language="ts" title="contact-editor.component.ts">{standaloneSource}</CodeBlock>
+
+Editing the suggested name updates the internal field and `lastEdit`, while `suggestedName`
+keeps its original value. A later change to `suggestedName` updates the control. Ordinary change
+detection does not restore the original value over local edits. The search uses two-way binding,
+so each committed edit updates `search`.
+
+The contact input reuses `contact.name`: incoming `loadedName` changes call its programmatic
+setter, preserving its validators, dirty state, and touched state. These source updates do not
+emit `formNodeValueChange`; user edits do, following the node's debounce configuration.
+
+The same inputs work with CVAs and supported signal controls. `useFormNodeState()` observes the
+internal field, including contributed errors, just as it observes an explicit node.
+
+An internal field is a separate root, even inside a bound `<form>`. It does not participate in
+that form's value, validation, submission, or reset. Objects and arrays stay atomic field values;
+they do not create child nodes. Separate standalone radio bindings also have separate roots:
+use a shared explicit field for a radio group.
+
+Read or operate on the internal field with `#suggestion="formNode"` and `suggestion.node()`.
+For validators, debounce, or participation in a larger form, pass an explicit `[formNode]`.
+See the [value input reference](../reference/form-node-binding.md#value-input) for rebinding,
+reset, and typing details.
 
 ## 🔌 Native controls {#native-controls}
 

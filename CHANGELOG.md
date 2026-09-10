@@ -12,6 +12,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
+- Bind raw values with `[formNodeValue]` or use `[(formNodeValue)]` for committed two-way updates. Controls create one independent field when no `[formNode]` is supplied, reuse explicit nodes when provided, and expose the same state and CVA error integration in both modes.
+
 - React to committed value changes with typed `onValueChange(value, node)` options on fields, forms, groups, and arrays. Callbacks respect equality and debounce, skip initialization, and observe complete aggregate updates without requiring an injector.
 
 - Contribute reactive component errors with `useFormNodeState({ errors })`, returning one error, a message, an array, or no result. Contributions participate in bound-control validity and clean up on rebinding or destruction. Add `provideFormNodeStateErrors()` for CVAs used with Angular 22 Signal Forms.

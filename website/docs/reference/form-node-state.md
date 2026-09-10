@@ -16,7 +16,9 @@ import ngModelSource from '!!raw-loader!../../examples/form-node-state-ng-model.
 # useFormNodeState() {#useformnodestate}
 
 `useFormNodeState()` gives a custom-control component one stable, signal-based view of the
-form binding attached to its host.
+form binding attached to its host. With `[formNodeValue]`, it observes the automatically created
+field, or the explicit `[formNode]` when both are supplied. Error contributions and cleanup use
+the same lifecycle in either mode.
 
 :::tip One state implementation for every supported binding
 

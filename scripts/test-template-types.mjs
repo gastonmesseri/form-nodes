@@ -8,6 +8,9 @@ const fixtures = [
   { file: 'valid.template.ts', shouldCompile: true },
   { file: 'invalid-committed-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
   { file: 'invalid-control-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
+  { file: 'invalid-standalone-output.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
+  { file: 'invalid-standalone-node.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'toUpperCase' does not exist on type 'number'" },
+  { file: 'invalid-node-value.template.ts', shouldCompile: false, code: 'TS2322', diagnostic: 'is not assignable to type' },
   { file: 'invalid-value.template.ts', shouldCompile: false, code: 'TS2322', diagnostic: "is not assignable to type 'AnyNode'" },
   { file: 'invalid-dynamic-property.template.ts', shouldCompile: false, code: 'TS2339', diagnostic: "Property 'mistypedName' does not exist" },
 ];

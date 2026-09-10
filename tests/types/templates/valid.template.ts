@@ -1,4 +1,4 @@
-import { Component, model, viewChild } from '@angular/core';
+import { Component, model, signal, viewChild } from '@angular/core';
 import { type FormCheckboxControl, type FormValueControl } from '@angular/forms/signals';
 
 import { array, field, form, FormNodeDirective } from '../../../src/public-api';
@@ -95,3 +95,28 @@ class ValidAggregateControlHost {
 }
 
 void [ValidFormNodeHost, ValidSignalControlHost, ValidAggregateControlHost];
+
+@Component({
+  imports: [FormNodeDirective, ValidProfileControl, ValidPeopleControl],
+  template: `
+    <input #standalone="formNode" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()"
+      (formNodeControlValueChange)="$event.toFixed()">
+    {{ standalone.node()().toFixed() }}
+    <input [(formNodeValue)]="amount">
+    <input [formNode]="optionalAge()" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()">
+    <input [formNodeValue]="optionalName()" (formNodeValueChange)="$event?.toUpperCase()">
+    <valid-profile-control [formNodeValue]="person" (formNodeValueChange)="$event.name.toUpperCase()" />
+    <valid-people-control [formNodeValue]="people" (formNodeValueChange)="$event[0]!.name.toUpperCase()" />
+    <input [formNode]="age" [formNodeValue]="amount()" (formNodeValueChange)="$event.toFixed()">
+  `,
+})
+class ValidStandaloneHost {
+  amount = signal(42);
+  age = field.strict(0);
+  optionalAge = signal<typeof this.age | undefined>(undefined);
+  optionalName = signal<string | null>(null);
+  person = { name: 'Ada' };
+  people = [this.person];
+}
+
+void ValidStandaloneHost;

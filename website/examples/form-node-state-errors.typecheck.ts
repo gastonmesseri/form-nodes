@@ -68,3 +68,12 @@ export class AppointmentEditor {
     date: field<Date>(null),
   });
 }
+
+@Component({
+  selector: 'standalone-appointment-editor',
+  imports: [CustomInputDate, FormNodeDirective],
+  template: '<custom-input-date [(formNodeValue)]="selectedDate" />',
+})
+export class StandaloneAppointmentEditor {
+  selectedDate = signal<Date | null>(null);
+}

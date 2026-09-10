@@ -274,3 +274,11 @@ control's actual validity without replacing its configured validators.
 See [component error contributions](../reference/form-node-state.md#contribute-errors) for a complete
 CVA example, lifecycle behavior, and the `provideFormNodeStateErrors()` provider required for CVAs
 used with Angular 22 Signal Forms.
+
+## Standalone use {#standalone-use}
+
+The same CVA or supported signal control can receive `[formNodeValue]` without a declared node,
+or `[(formNodeValue)]` to update an application signal. Form Nodes creates an independent field;
+`useFormNodeState()` and its error contributions continue to work. Supplying `[formNode]` as
+well reuses that node and its validators. See [Standalone values](./control-binding.md#standalone-values)
+for a complete example and the input's synchronization rules.
