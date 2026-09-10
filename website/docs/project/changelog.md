@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.6.0 — 2026-09-10 {#360--2026-09-10}
+
 ### Added
 
 - Pass nullable array item types directly to `ctx.parent<TParent>()`, including `PageForm['roles'][number]` and `(typeof this.pageForm.roles)[number]`. The generic strips null and undefined automatically while the result remains a restricted node view or null.
@@ -17,7 +19,7 @@ canonical release record.
 
 ### Changed
 
-- **Breaking:** Validator contexts now expose read-only node views that omit validation results, derived constraints, validator-resolution queries, and mutations recursively. This includes `node()`, `field()`, `$api`, descendants, traversal, and `parent<TParent>()` even with an explicit generic. Use values for cross-field rules and perform mutations outside validation.
+- **Breaking:** Validator contexts now expose read-only node views that omit validation results, derived constraints, validator-resolution queries, and mutations recursively. This includes `node()`, `field()`, `$api`, descendants, traversal, and `parent<TParent>()` even with an explicit generic. Use values for cross-field rules and perform mutations outside validation. This breaking type change ships in minor version 3.6.0 at the maintainer's explicit request.
 
 ## 📦 3.5.0 — 2026-09-10 {#350--2026-09-10}
 

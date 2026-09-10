@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-09-10
+
 ### Added
 
 - Pass nullable array item types directly to `ctx.parent<TParent>()`, including `PageForm['roles'][number]` and `(typeof this.pageForm.roles)[number]`. The generic strips null and undefined automatically while the result remains a restricted node view or null.
@@ -17,7 +19,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Changed
 
-- **Breaking:** Validator contexts now expose read-only node views that omit validation results, derived constraints, validator-resolution queries, and mutations recursively. This includes `node()`, `field()`, `$api`, descendants, traversal, and `parent<TParent>()` even with an explicit generic. Use values for cross-field rules and perform mutations outside validation.
+- **Breaking:** Validator contexts now expose read-only node views that omit validation results, derived constraints, validator-resolution queries, and mutations recursively. This includes `node()`, `field()`, `$api`, descendants, traversal, and `parent<TParent>()` even with an explicit generic. Use values for cross-field rules and perform mutations outside validation. This breaking type change ships in minor version 3.6.0 at the maintainer's explicit request.
 
 ## [3.5.0] - 2026-09-10
 
@@ -315,7 +317,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.5.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.6.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -337,3 +339,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.4.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.3.0...v3.4.0
 
 [3.5.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.4.0...v3.5.0
+
+[3.6.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.5.0...v3.6.0

@@ -4,11 +4,13 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
-## Unreleased: read-only validator contexts
+## Moving to 3.6.0: read-only validator contexts {#read-only-validator-contexts}
 
 Nodes returned by `ctx.node()`, `ctx.field()`, and `ctx.parent<TParent>()` now expose a recursive
 read-only validation view. This includes `$api`, ancestors, children, and array traversal.
 The explicit parent generic preserves your child types but does not restore the full node API.
+This breaking type change ships in minor version **3.6.0** at the maintainer's explicit request,
+as an exception to the default Semantic Versioning policy.
 
 Replace validation-output conditions such as `ctx.node().valid()` or `ctx.parent()?.errors()` with
 conditions on the relevant values. Return validation errors, optionally targeting a context node.

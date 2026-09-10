@@ -64,3 +64,11 @@ Semantic Versioning policy, not a claim of backward compatibility.
 `value.control()` and `value.control.set()`, as described in the
 [3.3.0 migration guide](./migrations.md#nested-value-views). The changelog continues to identify
 the change as breaking so its upgrade requirements remain visible.
+
+## Validator context exception: 3.6.0 {#validator-context-exception}
+
+The read-only validator context change ships in **3.6.0**, a minor release, at the maintainer's
+explicit request. This is an exception to the default Semantic Versioning policy. Validation
+outputs and mutations are omitted from context node types; existing validators using those
+members must follow the [3.6.0 migration guide](./migrations.md#read-only-validator-contexts).
+The changelog identifies this as a breaking type change.
