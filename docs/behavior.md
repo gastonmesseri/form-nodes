@@ -3803,3 +3803,18 @@ array rows during editing and overlays, shared-node controls, composite OnPush C
 injector ownership. `useClosestForm()` follows the injector supplied to a dialog, not its DOM
 placement; a view container inside the binding scope preserves submission/reset visibility.
 See [UI library testing](ui-library-testing.md) for the exact browser matrix and input limits.
+
+
+### Context-taking validator return inference
+
+An inline context-taking validator that reads its own initializing group can produce a
+TypeScript TS7022/TS7024 cycle. An error-or-null ternary and an error-or-undefined ternary can
+both trigger it, while an `if` with implicit fallthrough can compile. This is a type-inference
+difference: null, explicit undefined, and falling through all remain successful validation
+results. Annotating the callback result as `ValidationResult` breaks the cycle without erasing
+field or group types or allowing invalid error results. Context-taking validator returns remain
+checked; only parameterless deferred callbacks have the existing unchecked return contract.
+Angular `22.1.x` at `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54` was inspected in
+`api/rules/validation/validate.ts`, `util.ts`, and `test/node/api/validators/validation_errors.spec.ts`.
+Its schema-path API does not determine this library's declaration inference; no runtime validation
+or dependency-tracking behavior changes in this clarification.

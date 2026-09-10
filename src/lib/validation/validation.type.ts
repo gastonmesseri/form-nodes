@@ -427,8 +427,8 @@ export type DeferredCondition = () => any;
  * Overloaded functions callable without arguments also match the unchecked callback branch.
  */
 export type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> =
-  | DeferredValidator
   | ComposableValidator<TValue, TField>
+  | DeferredValidator
   // Tuple contextual typing avoids comparing a deferred callback's return with sibling entries.
   | readonly [
     validator?: DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess,

@@ -19,7 +19,7 @@ Use for an input accepting the same flexible validator sources as node declarati
 ## Declaration
 
 ```ts
-type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> = DeferredValidator | ComposableValidator<TValue, TField> | readonly [
+type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> = ComposableValidator<TValue, TField> | DeferredValidator | readonly [
     validator?: DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess,
     ...validators: (DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess)[]
 ];

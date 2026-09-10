@@ -332,6 +332,20 @@ a message may return `string | undefined`, and a synchronous custom validator ca
 `ValidationResult`. Such annotations provide a type boundary while keeping return-value checking.
 Avoid annotating the entire form as `any`, since that discards useful child and value types.
 
+### Context-taking validators that read their owning group
+
+A validator such as `field<string>(null, ({ value }) => ...)` can also create a cycle when its
+body reads a sibling through the group being initialized. Annotate only the callback's result:
+`({ value }): ValidationResult => ...`. The `dateRange` example below demonstrates this with
+`group()`; the same boundary works for a class property initialized with `form()`.
+
+A ternary returning an error or `null` can trigger TS7022/TS7024. Replacing `null` with an
+explicit `undefined` can still fail, even when an `if` with an implicit fallthrough compiles.
+The latter returns `undefined` at runtime; it is not a different validation outcome. Do not
+rely on rewriting the control flow to break inference cycles. A `ValidationResult` annotation
+keeps the sibling fields, context value, and error results checked without annotating the group
+as `any`. These context-taking callbacks do not use the unchecked parameterless escape hatch.
+
 ### Design a custom helper that permits unannotated consumers
 
 If you own the helper and deliberately accept the same tradeoff as the library, declare its
