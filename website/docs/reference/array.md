@@ -3,6 +3,8 @@ title: array()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
+import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
 import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
 import validationQueriesSource from '!!raw-loader!../../examples/validation-queries.example.ts';
 import arrayFocusSource from '!!raw-loader!../../examples/array-focus.typecheck.ts';
@@ -82,6 +84,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
+| Validate a field using a sibling in the same row | `ctx.parent<TParent>()` | [Sibling validation](#sibling-validation) |
 | Choose a template and initial items | `array(template, ...)` | [Signatures](#signatures) and [options](#options) |
 | Read values, nodes, or array position | `myArray()`, `items()`, `myArray[index]` | [Properties and methods](#properties-and-methods) |
 | Search or iterate live item nodes | `at()`, `forEach()`, `map()`, `find()` | [Collection methods](#item-access-and-collection-methods) |
@@ -153,6 +156,56 @@ An array inside the object template becomes one array-valued [`FieldNode`](./typ
 not affect that decision. Use an explicit nested `array(...)` when its items need independent
 nodes. Use `field(objectValue)` when a plain object is an atomic application value rather than
 nested group structure.
+
+## Validate a field using a sibling in the same row {#sibling-validation}
+
+Put the validator on the field in the object template. Inside that validator, `ctx.parent()`
+refers to the **current row**, so you can read another field in that row. Supply the row's node
+type to expose its child names in IntelliSense.
+
+For example, each package has a `deliveryMethod` and a `pickupLocation`. The pickup location is
+required only when that package's delivery method is `'pickup'`:
+
+<CodeBlock language="ts" title="delivery-editor.component.ts">{indexedParentSource}</CodeBlock>
+
+Here, `ctx.value()` reads the pickup location being validated, while `row?.deliveryMethod()`
+reads its sibling. Keep the sibling read inside the validator so changes to the delivery method
+revalidate the pickup location. Every cloned row, including rows added later, resolves its own
+parent; the rule does not read the first package or another row.
+
+Both forms of the generic are supported:
+
+```ts
+ctx.parent<(typeof this.deliveryForm.packages)[number]>();
+ctx.parent<DeliveryForm['packages'][number]>();
+```
+
+Use the first inside the component and the second when an existing form type is available.
+`typeof this.deliveryForm.packages[0]` also works as the generic, but `[number]` communicates
+that the type describes any row. This is a type reference, not a runtime index lookup.
+Null and undefined are removed from the generic automatically; you do not need `NonNullable`.
+The result still includes `null` when the field has no parent, hence the optional chaining.
+
+The generic declares the structure you expect; it does not verify child names or placement at
+runtime. The parent is always the immediate structural parent. If the validated field is inside
+a nested group, that group is its parent. For a primitive field template, the parent is the array.
+
+Validator context nodes expose a recursive read-only view, even with an explicit parent generic.
+Read sibling **values**, rather than validation results such as `valid()`, `invalid()`, or
+`errors()`, which are omitted to avoid circular validation dependencies. Mutations are also
+unavailable through the context. See [validator contexts](./validator.md#custom-validator-context-parent).
+
+### Infer siblings with `configure`
+
+To avoid an explicit parent contract, use a `group()` template with `configure`. Its typed
+`children` belong to that row, and each new clone runs its own callback:
+
+<CodeBlock language="ts" title="configure-nodes.ts">{configureSource}</CodeBlock>
+
+The assertions demonstrate independent row validation, newly added rows, and a reusable field
+with a parent contract. Put `configure` on the **template group** for row rules;
+`array(..., { configure })` configures the collection itself. See
+[configuring nodes and sibling rules](../guides/configuring-nodes.md) for initialization and lifecycle details.
 
 ## ⚙️ Options {#options}
 

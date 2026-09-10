@@ -77,6 +77,17 @@ Compiling a template does not keep its original nodes or their parent tree alive
 
 A factory must return a fresh tree. Returning the same live node more than once throws rather than allowing items to share state.
 
+## Validate siblings within a row
+
+A field validator can read another field in the same array item through
+`ctx.parent<(typeof this.deliveryForm.packages)[number]>()`. For example, require a
+`pickupLocation` when that row's `deliveryMethod` is `'pickup'`. The parent generic accepts
+nullable indexed item types without `NonNullable`; the returned parent can still be `null`.
+
+See the [complete sibling-validation examples in `array()`](../reference/array.md#sibling-validation)
+for a component declaration, the equivalent named form type, and a `configure` alternative with
+inferred child types. Each row reads its own sibling, including rows created later.
+
 ## 📚 Reading items {#reading-items}
 
 Read values by calling the array and nodes through indexes, `at()`, `items()`, iteration, or familiar helpers:
