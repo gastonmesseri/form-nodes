@@ -51,8 +51,11 @@ body {
   color: var(--docs-ink);
 }
 
-.navbar {
-  backdrop-filter: blur(16px);
+/* A filtered navbar confines the fixed mobile sidebar to the navbar's height. */
+@media (min-width: 997px) {
+  .navbar {
+    backdrop-filter: blur(16px);
+  }
 }
 
 .navbar__brand {
