@@ -56,7 +56,7 @@ Its supported result contract is [`ComposableValidationResult<TValue, TNode>`](.
 | --- | --- |
 | `null`, `undefined`, or implicit fallthrough (`void`) | No errors |
 | `string`, including `''` | An error with `kind: 'custom'` and that message |
-| [`ValidatorError`](../reference/types/validator-error.md) | An error with `kind: string \| number`, optional `message: string`, and optional `targetNode` |
+| [`ValidatorError`](../reference/types/validator-error.md)<br/>`{ kind: string \| number; message?: string; targetNode?: AnyNode }` | One validation error. Omit `targetNode` to target the current node, or specify another node. |
 | A readonly array of message strings and error objects | Several errors in order; an empty array succeeds |
 | A synchronous validator | Evaluate that validator using the same context |
 | A readonly array of synchronous validators and nullish entries | Evaluate those validators using the same context |
