@@ -1,5 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-import { FormNodesModule, FormNodeDirective, useClosestForm, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, useClosestForm, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -86,3 +86,25 @@ export class PackageConsumer {
 
 const restoreGlobal = configureGlobalFormNodes({ classes: null, syncInputs: 'declared' });
 restoreGlobal();
+
+
+const configuredRows = array(group({ count: field(0), label: field('') }, {
+  configure: ({ children }) => {
+    children.label.setValidators(() => {
+      const count: number | null = children.count();
+      return count === null ? { kind: 'missingCount' } : null;
+    });
+  },
+}), {
+  configure: ({ items }) => {
+    const count: number | null | undefined = items()[0]?.count();
+    void count;
+  },
+});
+type ConfiguredRow = ArrayItemNode<typeof configuredRows>;
+const configuredRow: ConfiguredRow = configuredRows.push();
+configuredRow.label.setValidators((ctx) => {
+  const parent = ctx.parent<ConfiguredRow>();
+  const count: number | null | undefined = parent?.count();
+  return count === null ? { kind: 'missingCount' } : null;
+});

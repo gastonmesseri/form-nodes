@@ -169,6 +169,7 @@ Like every node, an array also adopts a directly bound [`[formNode]`](./form-nod
 
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
+| [`configure`](#configure) | `(api) => void` | Configure this instance once with its typed, collision-safe API. |
 | [`equal`](#equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed array values; defaults to `Object.is`. |
 | [`initialValue`](#initialvalue-option) | Item-value array, non-negative integer, `null`, or `undefined` | Creates items from supplied values or creates a requested number of items from the template defaults. Nullish values produce an empty array. |
 | [`validators`](#validators-option) | Validator, validator array, `null`, or `undefined` | Validates the complete array value. Put validators on the item template instead when every item needs independent validation. |
@@ -202,6 +203,22 @@ TypeScript intentionally rejects providing it in both places.
 <div className="api-member-reference">
 
 ## ⚙️ Option reference {#option-reference}
+
+### configure {#configure}
+
+**Signature:** `configure?: (api: TArray['$api']) => void`
+
+Synchronously configures each new instance with its callable, collision-safe API after its own
+structure is ready. The callback is untracked; validators installed inside it remain reactive.
+Fresh template clones run their own callback. Existing instances do not rerun it on reset or edits.
+Ancestors may not be attached yet. Return values are ignored.
+
+This callback configures the array itself through `items()`. For per-row sibling rules, put
+`configure` on a `group()` or `form()` template.
+
+See [configuring nodes and sibling rules](../guides/configuring-nodes.md) for an executable example,
+parent contracts, initialization order, and lifecycle details.
+
 
 Each option below includes its signature, default behavior, scope, and a complete example.
 

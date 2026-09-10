@@ -10,6 +10,11 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- Configure each new field, group, form, or array synchronously through its typed `configure` option. Configure row templates to install sibling validators with inferred types and independent references for every clone.
+- Declare an explicit immediate-parent contract with `ctx.parent<TParent>()` in validator contexts (no runtime check; nullable), and extract existing array row types with `ArrayItemNode<TArray>`.
+
 ### Changed
 
 - Allow context-taking declaration validators to reference their initializing form or group without return annotations, including error-or-null/undefined ternaries. Context and node types stay inferred; callback returns are intentionally unchecked. Use `ValidationResult`, `ComposableValidationResult`, or a context-taking `validator()` helper for checked authoring; returned inline validators need a checked context.

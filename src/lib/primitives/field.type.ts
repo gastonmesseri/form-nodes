@@ -10,6 +10,23 @@ import type { CustomValidationError, ValidationErrorMap, ValidationStatus, Valid
 
 export type FieldOptions<TValue = any> = {
   /**
+   * Configures this instance synchronously once, after its own API and children are ready.
+   * Receives the collision-safe callable `$api`, so child names cannot hide operations.
+   * Runs untracked; install validators here to track their reads when validation executes.
+   * Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits.
+   * Ancestors may not be attached yet. Do not read the variable being initialized here.
+   * Returned values are ignored; this is not an async or cleanup lifecycle hook.
+   *
+   * @example
+   * ```ts
+   * const name = field('', {
+   *   configure: api => api.setValidators(required),
+   * });
+   * ```
+   */
+  configure?: (api: FieldNode<TValue>['$api']) => void;
+
+  /**
    * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
    *
    * Reactively copies node state and constraints into matching custom-control inputs. This is

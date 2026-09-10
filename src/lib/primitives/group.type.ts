@@ -9,7 +9,34 @@ import type { CustomValidationError, ValidationErrorMap, ValidationStatus, Valid
 import type { AddedNode, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
-export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'configure' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+  /**
+   * Configures this instance synchronously once, after its own API and children are ready.
+   * Receives the collision-safe callable `$api`, so child names cannot hide operations.
+   * Runs untracked; install validators here to track their reads when validation executes.
+   * Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits.
+   * Ancestors may not be attached yet. Do not read the variable being initialized here.
+   * Returned values are ignored; this is not an async or cleanup lifecycle hook.
+   *
+   * @example
+   * ```ts
+   * const roles = array(group({
+   *   valueType: field<number>(null),
+   *   value: field<string>(null),
+   * }, {
+   *   configure: ({ children }) => {
+   *     children.value.setValidators(() => {
+   *       const type = children.valueType();
+   *       return type !== null && type > 10 && !children.value()
+   *         ? { kind: 'roleValue', message: 'Enter a role value.' }
+   *         : null;
+   *     });
+   *   },
+   * }));
+   * ```
+   */
+  configure?: (api: TGroup['$api']) => void;
+
   /**
    * One validator or an array of validators for the complete group value.
    *

@@ -14,12 +14,13 @@ import type { GroupOptions } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when a structural group needs its own validators or state options. Groups do not accept the form-specific submission workflow.
+Use when a structural group needs its own validators or state options. Groups do not accept the form-specific submission workflow. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).
 
 ## Declaration
 
 ```ts
-type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'configure' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+    configure?: (api: TGroup['$api']) => void;
     validators?: ValidatorSource<TValue, TGroup>;
     debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
     hidden?: boolean | (() => boolean);
@@ -41,6 +42,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
+| `configure` | Configures this instance synchronously once, after its own API and children are ready. Receives the collision-safe callable `$api`, so child names cannot hide operations. Runs untracked; install validators here to track their reads when validation executes. Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits. Ancestors may not be attached yet. Do not read the variable being initialized here. Returned values are ignored; this is not an async or cleanup lifecycle hook. |
 | `validators` | One validator or an array of validators for the complete group value. |
 | `debounce` | Default control-value debounce inherited by descendants of this object branch. |
 | `hidden` | Initial or reactive visibility of the complete object branch. |

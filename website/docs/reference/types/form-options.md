@@ -14,12 +14,13 @@ import type { FormOptions } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `onSubmitBlocked`. Let the form declaration infer its concrete value and node callback types when possible.
+Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `onSubmitBlocked`. Let the form declaration infer its concrete value and node callback types when possible. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).
 
 ## Declaration
 
 ```ts
 type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
+    configure?: (api: TForm['$api']) => void;
     syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | {
         inputs: 'declared' | 'all' | readonly SyncInputName[];
         target?: 'all' | 'signal-controls' | 'cva' | undefined;
@@ -54,6 +55,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
+| `configure` | Configures this instance synchronously once, after its own API and children are ready. Receives the collision-safe callable `$api`, so child names cannot hide operations. Runs untracked; install validators here to track their reads when validation executes. Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits. Ancestors may not be attached yet. Do not read the variable being initialized here. Returned values are ignored; this is not an async or cleanup lifecycle hook. |
 | `syncInputs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |
 | `bindInputOutputPairs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |
 | `equal` | Equality for the exposed aggregate value. Defaults to `Object.is`. Equal results retain the previous public value for callable/value reads, value-dependent validation, submission values, and update callbacks. Child writes and internal control synchronization still use the latest committed values. The comparator is captured at construction and runs untracked when the exposed computed value is evaluated. |

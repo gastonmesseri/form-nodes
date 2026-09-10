@@ -345,7 +345,17 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
  * Generic public owners retain TValue on their node value reads. Concrete owners and partial
  * structural owner contracts remain exact; only the common owner exposes every node kind.
  */
-export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'parent' | 'path'> & {
+export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & {
+  /**
+   * Reactive immediate parent, or null before attachment and after detachment.
+   * Supply a parent node type to declare a structural contract: `ctx.parent<RoleNode>()`.
+   * This is a type assertion, not inference or runtime validation; null is always preserved.
+   * Prefer configure option callbacks for inferred sibling access without an assertion.
+   */
+  readonly parent: Pick<TApi['parent'], keyof TApi['parent']> & {
+    <TParent extends { $api: { nodeType(): 'form' | 'group' | 'array' } } = NonNullable<ReturnType<TApi['parent']>>>(): TParent | null;
+    (): ReturnType<TApi['parent']>;
+  };
   /** Current committed value of the node being validated. */
   readonly value: ValidatorNode extends TField ? TApi['value'] : TField['$api']['value'];
   /**

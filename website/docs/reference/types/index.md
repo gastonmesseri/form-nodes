@@ -25,6 +25,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [AddedNode](./added-node.md) | Result of attaching a node definition or shorthand dynamically to an object node. |
 | [AnyNode](./any-node.md) | Common callable contract for any field, group, form, or array node. |
 | [ArrayIndexes](./array-indexes.md) | Numeric node access with parent-aware array item types. |
+| [ArrayItemNode](./array-item-node.md) | The existing item node type of an array node, excluding undefined. |
 | [ArrayItems](./array-items.md) | The typed collection of item nodes exposed by an array node. |
 | [ArrayItemWithParent](./array-item-with-parent.md) | An array item node whose parent is typed as the owning array. |
 | [ArrayNode](./array-node.md) | Array node model. Omit the first type argument for an unspecified structure, or provide it to preserve exact item types. Generic array nodes retain array operations. |

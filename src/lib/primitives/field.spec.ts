@@ -3187,3 +3187,63 @@ it('normalizes asynchronous numeric errors before exposing field and parent stat
   expect(value.valid()).toBe(true);
   expect(owner.valid()).toBe(true);
 });
+
+describe('declaration configuration', () => {
+  it('configures once with a callable safe API before returning, without tracking reads', () => {
+    const dependency = signal(0);
+    const configure = vi.fn((api: ReturnType<typeof field<string>>['$api']) => {
+      expect(api()).toBe('');
+      expect(api.parent()).toBeNull();
+      dependency();
+      api.setValidators(required);
+    });
+    const declaration = computed(() => field('', { configure }));
+    const node = declaration();
+    expect(node.hasError('required')).toBe(true);
+    dependency.set(1);
+    expect(declaration()).toBe(node);
+    node.set('Ada');
+    expect(node.valid()).toBe(true);
+    node.markAsTouched();
+    node.reset('');
+    expect(node.hasError('required')).toBe(true);
+    expect(node.touched()).toBe(false);
+    expect(configure).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves nullable parent contracts before attachment and while attached', () => {
+    let observed: unknown;
+    const node = field('', (ctx) => {
+      observed = ctx.parent<ReturnType<typeof form>>();
+      return null;
+    });
+    node.errors();
+    expect(observed).toBeNull();
+    const parent = form();
+    parent.add('node', node);
+    node.errors();
+    expect(observed).toBe(parent);
+    parent.remove('node');
+    node.errors();
+    expect(observed).toBeNull();
+  });
+});
+
+it('runs asynchronous validators installed by configure outside injection context', async () => {
+  const calls: string[] = [];
+  const node = field.strict('', {
+    configure: (api) => {
+      api.setValidators(asyncValidator(async ({ value }) => {
+        calls.push(value());
+        return value() ? null : { kind: 'empty' };
+      }));
+    },
+  });
+  await vi.waitFor(() => expect(node.pending()).toBe(false));
+  expect(calls).toEqual(['']);
+  expect(node.hasError('empty')).toBe(true);
+  node.set('Ada');
+  await vi.waitFor(() => expect(calls).toEqual(['', 'Ada']));
+  await vi.waitFor(() => expect(node.pending()).toBe(false));
+  expect(node.valid()).toBe(true);
+});

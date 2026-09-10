@@ -10,7 +10,31 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
-export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+  /**
+   * Configures this instance synchronously once, after its own API and children are ready.
+   * Receives the collision-safe callable `$api`, so child names cannot hide operations.
+   * Runs untracked; install validators here to track their reads when validation executes.
+   * Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits.
+   * Ancestors may not be attached yet. Do not read the variable being initialized here.
+   * Returned values are ignored; this is not an async or cleanup lifecycle hook.
+   * An array callback configures the collection; configure its group/form template for per-row rules.
+   *
+   * @example
+   * ```ts
+   * const profile = form({
+   *   roles: array({ name: field('') }, {
+   *     configure: api => {
+   *       api.setValidators(({ value }) => {
+   *         return value().length ? null : { kind: 'emptyRoles' };
+   *       });
+   *     },
+   *   }),
+   * });
+   * ```
+   */
+  configure?: (api: TArray['$api']) => void;
+
   /**
    * One validator or an array of validators for the complete array value, not each item.
    *
@@ -693,3 +717,17 @@ export type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode =
   & ArrayIndexes<TItem, TParent>
   & ArrayApi<TItem, TParent>
   & HiddenFunctionMembers<keyof ArrayApi<TItem, TParent>>;
+
+/**
+ * Existing item node of an array, preserving its exact children and parent navigation.
+ * Unlike numeric lookup or `at()`, this type excludes the missing-index `undefined` case.
+ * Extract from an already inferred array; referencing a declaration from its own initializer
+ * can create a circular inference dependency.
+ *
+ * @example
+ * ```ts
+ * const profile = form({ roles: array({ name: field('') }) });
+ * type RoleNode = ArrayItemNode<typeof profile.roles>;
+ * ```
+ */
+export type ArrayItemNode<TArray extends { $api: { nodeType(): 'array' }; readonly [index: number]: AnyNode | undefined }> = NonNullable<TArray[number]>;

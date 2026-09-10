@@ -5492,3 +5492,115 @@ it('preserves a numeric aggregate error target when normalizing its kind', () =>
   model.resetToInitial();
   expect(model.allErrors()).toMatchObject([{ kind: '0', targetNode: start }]);
 });
+
+describe('declaration configuration', () => {
+  it('configures each cloned row independently and retains validators on moves and resets', () => {
+    const rowConfigured = vi.fn();
+    const arrayConfigured = vi.fn();
+    const profile = form({
+      nested: form({
+        roles: array(group({
+          valueType: field<number>(null),
+          value: field(''),
+          children: field('collision'),
+        }, {
+          configure: (api) => {
+            rowConfigured();
+            expect(api.children.children()).toBe('collision');
+            expect(api.children.value.$api.parent()).not.toBeNull();
+            api.children.value.setValidators(() => {
+              const type = api.children.valueType();
+              return type !== null && type > 10 ? { kind: 'invalidRole' } : null;
+            });
+          },
+        }), {
+          initialValue: 2,
+          configure: (api) => {
+            arrayConfigured();
+            expect(api.items()).toHaveLength(2);
+            expect(api.items()[0]!.$api.parent()).not.toBeNull();
+          },
+        }),
+      }),
+    }, {
+      configure: (api) => {
+        expect(api.children.nested.$api.parent()).not.toBeNull();
+      },
+    });
+    const roles = profile.nested.roles;
+    const [first, second] = roles.items();
+    expect(rowConfigured).toHaveBeenCalledTimes(3); // Independent template plus two clones.
+    first!.valueType.set(11);
+    expect(first!.value.hasError('invalidRole')).toBe(true);
+    expect(second!.value.valid()).toBe(true);
+    expect(profile.invalid()).toBe(true);
+    const third = roles.push({ valueType: 12, value: '', children: 'new' });
+    expect(third.value.hasError('invalidRole')).toBe(true);
+    expect(rowConfigured).toHaveBeenCalledTimes(4);
+    roles.move(0, 2);
+    expect(roles.at(2)).toBe(first);
+    first!.valueType.set(2);
+    roles.removeAt(1);
+    expect(profile.valid()).toBe(true);
+    profile.reset();
+    expect(rowConfigured).toHaveBeenCalledTimes(4);
+    expect(arrayConfigured).toHaveBeenCalledTimes(1);
+  });
+
+  it('reconfigures nested array and field templates with fresh APIs', () => {
+    const fieldConfigured = vi.fn();
+    const arrayConfigured = vi.fn();
+    const profile = form({
+      rows: array(array(field('', {
+        configure: (api) => {
+          fieldConfigured();
+          api.setValidators(required);
+        },
+      }), {
+        initialValue: 1,
+        configure: (api) => {
+          arrayConfigured();
+          api.setValidators(({ value }) => value().length ? null : { kind: 'empty' });
+        },
+      }), { initialValue: 2 }),
+    });
+    expect(arrayConfigured).toHaveBeenCalledTimes(3);
+    expect(fieldConfigured).toHaveBeenCalledTimes(4);
+    expect(profile.invalid()).toBe(true);
+    profile.rows.at(0)!.at(0)!.set('one');
+    expect(profile.rows.at(0)!.valid()).toBe(true);
+    expect(profile.rows.at(1)!.invalid()).toBe(true);
+    profile.rows.at(1)!.at(0)!.set('two');
+    expect(profile.valid()).toBe(true);
+    profile.rows.at(0)!.clear();
+    expect(profile.rows.at(0)!.hasError('empty')).toBe(true);
+  });
+});
+
+it('tracks configured aggregate validators without tracking configuration reads', async () => {
+  const dependency = signal(0);
+  const configure = vi.fn();
+  const calls: number[] = [];
+  const declaration = computed(() => {
+    return form({ count: field.strict(0) }, {
+      configure: (api) => {
+        configure();
+        dependency();
+        api.setValidators(asyncValidator(async ({ value }) => {
+          calls.push(value().count);
+          return value().count > 0 ? null : { kind: 'empty' };
+        }));
+      },
+    });
+  });
+  const node = declaration();
+  await vi.waitFor(() => expect(node.pending()).toBe(false));
+  expect(node.hasError('empty')).toBe(true);
+  dependency.set(1);
+  expect(declaration()).toBe(node);
+  node.count.set(1);
+  await vi.waitFor(() => expect(calls).toEqual([0, 1]));
+  await vi.waitFor(() => expect(node.pending()).toBe(false));
+  expect(node.valid()).toBe(true);
+  expect(configure).toHaveBeenCalledTimes(1);
+});

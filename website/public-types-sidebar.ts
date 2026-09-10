@@ -9,6 +9,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
       "reference/types/added-node",
       "reference/types/any-node",
       "reference/types/array-indexes",
+      "reference/types/array-item-node",
       "reference/types/array-items",
       "reference/types/array-item-with-parent",
       "reference/types/array-node",

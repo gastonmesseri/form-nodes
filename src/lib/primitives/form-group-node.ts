@@ -309,6 +309,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {
       this.refreshInjector();
+      this.options?.configure?.(this.node.$api);
       this.ensureAsyncValidationWatch();
     });
   }

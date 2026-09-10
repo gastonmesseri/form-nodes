@@ -274,7 +274,10 @@ export class FieldNode<TValue> {
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerNodeValidatorMessages(this.node, undefined, this.options?.injector);
 
-    untracked(() => this.ensureAsyncValidationWatch());
+    untracked(() => {
+      this.options?.configure?.(this.node.$api);
+      this.ensureAsyncValidationWatch();
+    });
   }
 
   getNode() {

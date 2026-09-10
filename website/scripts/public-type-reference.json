@@ -57,7 +57,7 @@
     },
     "FieldOptions": {
       "family": "configuration",
-      "usage": "Use when sharing field configuration. Let `field()` infer value and owner types for ordinary declarations instead of annotating every options object.",
+      "usage": "Use when sharing field configuration. Let `field()` infer value and owner types for ordinary declarations instead of annotating every options object. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
       "description": "Value, validation, interaction, and ownership configuration for field()."
     },
     "ValidatorOptions": {
@@ -92,7 +92,7 @@
     },
     "GroupOptions": {
       "family": "configuration",
-      "usage": "Use when a structural group needs its own validators or state options. Groups do not accept the form-specific submission workflow."
+      "usage": "Use when a structural group needs its own validators or state options. Groups do not accept the form-specific submission workflow. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md)."
     },
     "GroupPatch": {
       "family": "nodes",
@@ -261,7 +261,7 @@
     },
     "ArrayOptions": {
       "family": "configuration",
-      "usage": "Use for array initialization and reconciliation options. Keep initial records and options such as `trackBy` together in the array declaration.",
+      "usage": "Use for array initialization and reconciliation options. Keep initial records and options such as `trackBy` together in the array declaration. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
       "description": "Template, initial-data, validation, and ownership configuration for array()."
     },
     "ArrayItemWithParent": {
@@ -296,7 +296,7 @@
     },
     "FormOptions": {
       "family": "configuration",
-      "usage": "Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `onSubmitBlocked`. Let the form declaration infer its concrete value and node callback types when possible.",
+      "usage": "Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `onSubmitBlocked`. Let the form declaration infer its concrete value and node callback types when possible. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
       "description": "Value, validation, interaction, ownership, and submission configuration for form()."
     },
     "FormValueContract": {
@@ -365,7 +365,7 @@
     },
     "ValidatorContext": {
       "family": "validation",
-      "usage": "Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one."
+      "usage": "Use for a synchronous callback's context. Read its reactive `value` and navigation API rather than assuming a concrete primitive unless the generic supplies one. Use `ctx.parent<TParent>()` for an explicit immediate-parent contract; this is a type assertion with no runtime check and always preserves null. Prefer [configure](../../guides/configuring-nodes.md) for inferred sibling access."
     },
     "ValidationSuccess": {
       "family": "errors",
@@ -448,6 +448,11 @@
     "NodeErrorsSignal": {
       "family": "apis",
       "usage": "Use for a node error signal that supports both own and subtree reads. Calling `errors()` retains the owner type; `errors({ descendants: true })` includes descendant targets and matches `allErrors()`."
+    },
+    "ArrayItemNode": {
+      "family": "nodes",
+      "usage": "Extract an existing item node from an already inferred array: `ArrayItemNode<typeof profile.roles>`. Preserves child types and parent navigation while excluding the missing-index `undefined` case. See [configuring sibling rules](../../guides/configuring-nodes.md).",
+      "description": "The existing item node type of an array node, excluding undefined."
     }
   }
 }

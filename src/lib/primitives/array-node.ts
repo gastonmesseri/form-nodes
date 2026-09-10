@@ -298,6 +298,7 @@ export class ArrayNode<TItem extends AnyNode> {
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {
       this.refreshInjector();
+      this.options?.configure?.(this.node.$api);
       this.ensureAsyncValidationWatch();
     });
   }

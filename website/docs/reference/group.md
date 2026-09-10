@@ -212,6 +212,7 @@ A group can inherit `submitting()` from an ancestor form but cannot initiate sub
 
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
+| [`configure`](#configure) | `(api) => void` | Configure this instance once with its typed, collision-safe API. |
 | [`validators`](#group-validators-option) | Validator, validator array, `null`, or `undefined` | Validates the complete object value. Child validators remain independent. |
 | [`equal`](#group-equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed aggregate values; defaults to `Object.is`. |
 | [`validatorMessages`](#group-validatormessages-option) | Message catalog or reactive catalog function | Overrides built-in validator messages for this subtree. |
@@ -243,6 +244,19 @@ concerns that child's value.
 <div className="api-member-reference">
 
 ## ⚙️ Option reference {#option-reference}
+
+### configure {#configure}
+
+**Signature:** `configure?: (api: TGroup['$api']) => void`
+
+Synchronously configures each new instance with its callable, collision-safe API after its own
+structure is ready. The callback is untracked; validators installed inside it remain reactive.
+Fresh template clones run their own callback. Existing instances do not rerun it on reset or edits.
+Ancestors may not be attached yet. Return values are ignored.
+
+See [configuring nodes and sibling rules](../guides/configuring-nodes.md) for an executable example,
+parent contracts, initialization order, and lifecycle details.
+
 
 Each option includes its signature, default behavior, scope, and a complete example.
 

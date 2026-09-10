@@ -40,6 +40,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'guides/choosing-a-primitive',
         'guides/form-modeling-patterns',
+        'guides/configuring-nodes',
         'guides/validation',
         'guides/errors-and-status',
         'guides/async-validation',

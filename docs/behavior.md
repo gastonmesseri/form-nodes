@@ -3827,3 +3827,33 @@ api/rules/validation/validate.ts, validation_errors.ts, util.ts, and
  test/node/api/validators/validation_errors.spec.ts. Angular's error kind is a string and its
 normalizer does not coerce numeric identifiers. Numeric input coercion is an intentional Form Nodes
 extension. Dependency tracking, state propagation, validation scheduling and cancellation are unchanged.
+
+
+## Declaration configuration and parent contracts
+
+`configure` runs synchronously once per instance with the collision-safe callable `$api`, after
+own children/items are parented and node registration is complete, before construction returns.
+It runs untracked; installed validators retain normal dependency tracking. It works without DI,
+does not create an injection context, and does not await promises or register returned cleanup.
+Exceptions propagate. Ancestor attachment is not guaranteed at this point.
+
+Field, group, form, and array use the same node-level semantics. Configure a group/form array
+template for per-row rules; an array callback configures the collection. Independent templates
+and every fresh clone run their own callback. Existing nodes do not rerun on edits, reset, moves,
+or keyed reuse; newly constructed replacement nodes run normally. Clone recipes retain declared
+options and reinstall rules against fresh siblings. Array row values are applied after template
+construction. Configuration writes do not redefine field declaration defaults. setValidators
+replaces rather than appends to existing rules.
+
+ValidatorContext.parent remains a reactive signal, with an additional generic assertion overload
+returning TParent | null. It does not validate kind/shape or skip structural parents. Non-generic
+calls and specialized context return types remain unchanged. ArrayItemNode extracts the non-null
+numeric item type from an array, preserving navigation; it does not validate runtime indexes or
+resolve self-referential declaration inference.
+
+Angular reference: 22.1.x at da8dac62a79025fa42ae3ee5c64e3e3f1979ce54, inspected
+packages/forms/signals/src/field/context.ts (valueOf/fieldTreeOf), src/field/resolution.ts,
+src/api/structure.ts (applyEach), and test/node/api/structure.spec.ts and
+ test/node/field_context.spec.ts. Angular binds typed schema paths to each field; Form Nodes
+intentionally uses per-instance configuration instead of schema-path construction. Runtime
+validator dependencies and independent row ownership remain the relevant behavioral reference.

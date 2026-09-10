@@ -208,6 +208,7 @@ const myForm = form({
 
 | Option | Accepted value | Purpose |
 | --- | --- | --- |
+| [`configure`](#configure) | `(api) => void` | Configure this instance once with its typed, collision-safe API. |
 | [`validators`](#field-validators-option) | validator, validator array, or reactive source | Validates the field value |
 | [`equal`](#field-equal-option) | `'shallow'`, `'deep'`, or `(previous, next) => boolean` | Retains equivalent exposed values; defaults to `Object.is` |
 | [`injector`](#field-injector-option) | Angular `Injector` | Provides this node's preferred lifecycle owner |
@@ -236,6 +237,19 @@ the inherited debounce.
 <div className="api-member-reference">
 
 ## ⚙️ Option reference {#option-reference}
+
+### configure {#configure}
+
+**Signature:** `configure?: (api: FieldNode<TValue>['$api']) => void`
+
+Synchronously configures each new instance with its callable, collision-safe API after its own
+structure is ready. The callback is untracked; validators installed inside it remain reactive.
+Fresh template clones run their own callback. Existing instances do not rerun it on reset or edits.
+Ancestors may not be attached yet. Return values are ignored.
+
+See [configuring nodes and sibling rules](../guides/configuring-nodes.md) for an executable example,
+parent contracts, initialization order, and lifecycle details.
+
 
 ### ◆ Value and validation {#value-and-validation}
 

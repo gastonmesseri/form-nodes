@@ -9,7 +9,7 @@ import { createNodeDefinitionFactory } from './utils/create-node-definition-fact
 import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 import type { ArrayNode as ArrayNodeType, ArrayOptions, ArraySet, ArrayValue } from './array.type';
 
-export type { ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
+export type { ArrayItemNode, ArrayApi, ArrayIndexes, ArrayItemWithParent, ArrayItems, ArrayNode, ArrayOptions, ArrayPatch, ArrayRoot, ArraySet, ArrayValue } from './array.type';
 
 type ArrayTemplate = AnyNode | ObjectNodeDefinitions;
 type ArrayTemplateInput<TDefinition extends ArrayTemplate> =

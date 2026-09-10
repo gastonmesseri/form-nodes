@@ -68,6 +68,7 @@ export type {
   ArraySet,
   ArrayNode,
   ArrayItems,
+  ArrayItemNode,
   ArrayValue,
   ArrayPatch,
   ArrayIndexes,

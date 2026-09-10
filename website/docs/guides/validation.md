@@ -17,6 +17,10 @@ import selfReferencingValidationSource from '!!raw-loader!../../examples/self-re
 The [executable validation example](../examples/executable-examples.mdx#validation-ownership) checks
 field and form error ownership through both failing and valid states.
 
+For typed sibling access within an array row, use the [configure option](./configuring-nodes.md).
+It receives the inferred children after construction; reusable validators can alternatively declare
+an explicit `ctx.parent<TParent>()` contract.
+
 Pass validators in a node's options or as the positional validator argument:
 
 ```ts
