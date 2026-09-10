@@ -1,5 +1,5 @@
 import { computed } from '@angular/core';
-import { field, form, group, required, type Validator, type ValidationResult } from '@ngblocks/form-nodes';
+import { field, form, group, required, validator, type Validator, type ValidationResult } from '@ngblocks/form-nodes';
 
 // A reusable helper that checks the condition's return type.
 function requiredWhen(condition: () => boolean): Validator<unknown> {
@@ -56,15 +56,15 @@ export class UncheckedCallbackResult {
   isTypeVisible = computed(() => (this.form.other() ?? 0) > 30);
 }
 
-// A context-taking validator can also form a return-inference cycle with its owning group.
+// Direct declaration callbacks support self-reference; a checked helper uses an explicit result.
 export const dateRange = group({
   endDate: field<string>(null),
-  startDate: field<string>(null, ({ value }): ValidationResult => {
+  startDate: field<string>(null, validator(({ value }): ValidationResult => {
     const endDate = dateRange.endDate();
     return endDate && !value()
       ? { kind: 'missingStartDate', message: 'Enter a start date.' }
       : null;
-  }),
+  })),
 });
 
 const startDate: string | null = dateRange.startDate();

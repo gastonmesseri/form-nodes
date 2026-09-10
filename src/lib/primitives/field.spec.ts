@@ -2687,7 +2687,7 @@ it('defers mixed self-referencing helpers and resumes asynchronous validation af
 it('ignores malformed synchronous results while preserving valid errors and reactive transitions', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   try {
-    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, 42, { kind: 1 }, null]);
+    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, 42, { kind: false }, null]);
     const run = vi.fn(() => result());
     const value = field('text', [run]);
     expect(value.errors()).toMatchObject([{ kind: '', message: 'Kept', targetNode: value }]);
@@ -3150,4 +3150,40 @@ it('requires replacing a mutated reference to notify derived values, independent
   expect(name()).toBe('Ada');
   node.set({ ...initial });
   expect(name()).toBe('Grace');
+});
+
+it('normalizes numeric validator kinds through field validation, lookup and reset', () => {
+  const value = field('', ({ value }) => value() ? null : { kind: 123, message: 'Missing', detail: true });
+  expect(value.invalid()).toBe(true);
+  expect(value.getError('123')).toMatchObject({ kind: '123', message: 'Missing', detail: true, targetNode: value });
+  value.set('ready');
+  expect(value.valid()).toBe(true);
+  expect(value.errors()).toEqual([]);
+  value.resetToInitial();
+  expect(value.invalid()).toBe(true);
+  expect(value.getError('123')?.kind).toBe('123');
+});
+
+it('normalizes asynchronous numeric errors before exposing field and parent state', async () => {
+  const complete: ((result: { kind: number; message: string } | null) => void)[] = [];
+  const observed: (string | null)[] = [];
+  const value = field('', asyncValidator(({ value }) => {
+    observed.push(value());
+    return new Promise<{ kind: number; message: string } | null>((resolve) => { complete.push(resolve); });
+  }));
+  const owner = form({ value });
+  expect(value.pending()).toBe(true);
+  await vi.waitFor(() => expect(observed).toEqual(['']));
+  complete[0]!({ kind: 456, message: 'Missing' });
+  await vi.waitFor(() => expect(value.pending()).toBe(false));
+  expect(value.getError('456')).toMatchObject({ kind: '456', targetNode: value });
+  expect(owner.allErrors().map(error => error.kind)).toEqual(['456']);
+  value.set('ready');
+  await vi.waitFor(() => expect(observed).toEqual(['', 'ready']));
+  expect(value.pending()).toBe(true);
+  expect(owner.pending()).toBe(true);
+  complete[1]!(null);
+  await vi.waitFor(() => expect(value.pending()).toBe(false));
+  expect(value.valid()).toBe(true);
+  expect(owner.valid()).toBe(true);
 });

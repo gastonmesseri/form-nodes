@@ -4937,7 +4937,7 @@ it('ignores a parent node returned by a child validator and a node returned by i
 it.each([false, true])('normalizes malformed aggregate validator results and propagates valid errors (async: %s)', async (asynchronous) => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   try {
-    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, { kind: 4 }, null]);
+    const result = signal<unknown>([{ kind: '', message: 'Kept' }, {}, { kind: false }, null]);
     const run = vi.fn(() => result());
     const nested = form({ name: field('text') }, asynchronous ? [asyncValidator(async () => run())] : [run]);
     const root = form({ nested });
@@ -5455,4 +5455,40 @@ it('updates aggregate derived values when mutable child values are replaced and 
   expect(summary()).toBe('Grace:11');
   profile.resetToInitial();
   expect(summary()).toBe('Ada:10');
+});
+
+it('tracks unannotated self-referencing validators and normalized errors through nested forms', () => {
+  const model = form({
+    dates: form({
+      end: field<string>(null),
+      start: field<string>(null, ({ value }) => {
+        const end = model.dates.end();
+        return end && !value() ? { kind: 123, message: 'Enter a start date.' } : null;
+      }),
+    }),
+  });
+  expect(model.valid()).toBe(true);
+  model.dates.end.set('2026-09-10');
+  expect(model.dates.start.invalid()).toBe(true);
+  expect(model.dates.invalid()).toBe(true);
+  expect(model.invalid()).toBe(true);
+  expect(model.allErrors()).toMatchObject([{ kind: '123', targetNode: model.dates.start }]);
+  model.dates.start.set('2026-09-09');
+  expect(model.valid()).toBe(true);
+  model.dates.start.set(null);
+  expect(model.invalid()).toBe(true);
+  model.resetToInitial();
+  expect(model.valid()).toBe(true);
+  expect(model.allErrors()).toEqual([]);
+});
+
+it('preserves a numeric aggregate error target when normalizing its kind', () => {
+  const start = field<string>(null);
+  const model = form({ dates: form({ start }, ({ value }) => value().start ? null : { kind: 0, targetNode: start, message: 'Missing' }) });
+  expect(model.invalid()).toBe(true);
+  expect(model.allErrors()).toMatchObject([{ kind: '0', targetNode: start, message: 'Missing' }]);
+  start.set('2026-09-10');
+  expect(model.valid()).toBe(true);
+  model.resetToInitial();
+  expect(model.allErrors()).toMatchObject([{ kind: '0', targetNode: start }]);
 });

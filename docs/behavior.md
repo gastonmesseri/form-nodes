@@ -895,7 +895,7 @@ The same context shape is used for field-level and form-level validators. In a f
 
 Additional Angular Signal Forms context members such as `state`, `fieldTree`, `valueOf`, `stateOf`, `fieldTreeOf`, and `pathKeys` are not implemented yet. They will be designed separately instead of being included with provisional semantics.
 
-Every validation error has a `kind` string and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a message string, a single `ValidatorError`, or a readonly array of strings and error objects.
+Every exposed validation error has a `kind` string (numeric validator input kinds are normalized) and may have a human-readable `message`. Custom errors may include additional data. A validator result can be `null`, `undefined`, or `void` for success, a message string, a single `ValidatorError`, or a readonly array of strings and error objects.
 
 Validators normally omit their own target. When their results are exposed through `errors()`, the validator runner associates every untargeted error with the node being validated through `targetNode`:
 
@@ -1029,13 +1029,12 @@ block and expression callbacks support direct results and returned arrays of syn
 Validator-source arrays use contextual tuples so the compiler does not
 compare a deferred callback's return against other array entries while inferring the owner.
 
-The deliberate type-checking tradeoff is confined to parameterless callbacks supplied as validator sources
-or passed to the callback signatures of `validator()` and `asyncValidator()`,
+The deliberate type-checking tradeoff applies to all declaration callbacks supplied as validator sources
+and parameterless callbacks passed to the callback signatures of `validator()` and `asyncValidator()`,
 whose accepted return type is `any`. This also admits overloaded functions with a zero-argument
 signature, and does not check a deferred validator's value compatibility with its consumer.
-Use context-taking callbacks for checked authoring and the called form of overloaded factories such as
-`uniqueItems()` for checked value compatibility. Context-taking callbacks retain their checked contracts
-both directly and through the helpers. `ComposableValidator`, `ValidationResult`, and the parameterized
+Use context-taking helper callbacks for checked authoring and the called form of overloaded factories such as
+`uniqueItems()` for checked value compatibility. Context-taking helper callbacks retain their checked contracts. Direct declaration callbacks retain their typed context but have unchecked returns. `ComposableValidator`, `ValidationResult`, and the parameterized
 asynchronous configuration retain their checked contracts. Contextual helper overloads prevent callback
 results from participating in inference; fallback overloads still infer explicitly annotated standalone contexts. The
 runtime result/composition protocol is unchanged; arbitrary values and unmarked asynchronous
@@ -1066,15 +1065,15 @@ The same release tag was re-resolved for this change.
 Angular declares rules against a separate model/schema; this class-initializer inference pattern
 and returned-validator composition belong to Form Nodes' public API.
 
-Validator result normalization is defensive. Non-array objects with a readable string
-`kind` are accepted as validation errors; `kind: ''` is allowed. `null` and `undefined` are silent success
+Validator result normalization is defensive. Non-array objects with a readable string or numeric
+`kind` are accepted as validation errors; numeric kinds are copied and converted with String(kind); `kind: ''` is allowed. `null` and `undefined` are silent success
 results. Strings become `{ kind: 'custom', message }`, including empty and whitespace-only strings;
 no trimming or deduplication occurs. Arrays may mix strings and structured errors.
 `errors()` and `allErrors()` expose normalized objects; `getError('custom')` returns the first
 matching error, including explicitly returned objects with that kind. Use an explicit error kind
 to identify a particular rule. Other primitives, malformed objects, unreadable `kind` getters,
-and nested arrays are ignored with a development-only diagnostic. Valid error references, order,
-custom properties, and duplicate kinds are preserved. Invalid entries do not block validity.
+and nested arrays are ignored with a development-only diagnostic. String-kind error references, order,
+custom properties, and duplicate kinds are preserved. Numeric errors are shallow copies. Invalid entries do not block validity.
 Warnings are emitted per invalid entry when validation recomputes, not for repeated cached reads.
 Form Nodes returned as results are recognized before function composition and ignored without
 executing them; this includes a child validator accidentally returning `ctx.parent()`.
@@ -3805,16 +3804,26 @@ placement; a view container inside the binding scope preserves submission/reset 
 See [UI library testing](ui-library-testing.md) for the exact browser matrix and input limits.
 
 
-### Context-taking validator return inference
+### Declaration validator inference and numeric error kinds
 
-An inline context-taking validator that reads its own initializing group can produce a
-TypeScript TS7022/TS7024 cycle. An error-or-null ternary and an error-or-undefined ternary can
-both trigger it, while an `if` with implicit fallthrough can compile. This is a type-inference
-difference: null, explicit undefined, and falling through all remain successful validation
-results. Annotating the callback result as `ValidationResult` breaks the cycle without erasing
-field or group types or allowing invalid error results. Context-taking validator returns remain
-checked; only parameterless deferred callbacks have the existing unchecked return contract.
-Angular `22.1.x` at `da8dac62a79025fa42ae3ee5c64e3e3f1979ce54` was inspected in
-`api/rules/validation/validate.ts`, `util.ts`, and `test/node/api/validators/validation_errors.spec.ts`.
-Its schema-path API does not determine this library's declaration inference; no runtime validation
-or dependency-tracking behavior changes in this clarification.
+ValidatorSource uses a shared typed-context DeclarationValidator with an any return. This breaks
+self-referential group/form initializer cycles for null and undefined ternaries, with positional,
+array, and options sources. The value/context/owner and node model remain typed. Validator and
+ComposableValidator stay strict; context-taking validator() and asyncValidator() authoring stay
+strict. Parameterless helper callbacks retain their existing unchecked return. Return annotations
+ValidationResult and ComposableValidationResult provide explicit checking. Returned inline
+validators need a checked context, such as wrapping the outer callback in validator().
+
+Valid runtime results remain null/undefined/fallthrough, strings, structured errors, arrays of
+messages/errors, and synchronous compositions. Unmarked asynchronous results and malformed values
+are not newly supported. Numeric error kinds are accepted by ValidatorError and normalized using
+String(kind), including non-finite numbers and negative zero. Public ValidationError kinds remain
+strings. Numeric errors are copied with enumerable metadata/targets without mutating their source;
+string errors retain their existing identity. Sync and async pipelines share this normalization.
+Getters that cannot be read make an error malformed; valid siblings survive and development warns.
+
+Angular 22.1.x at da8dac62a79025fa42ae3ee5c64e3e3f1979ce54 was inspected in
+api/rules/validation/validate.ts, validation_errors.ts, util.ts, and
+ test/node/api/validators/validation_errors.spec.ts. Angular's error kind is a string and its
+normalizer does not coerce numeric identifiers. Numeric input coercion is an intentional Form Nodes
+extension. Dependency tracking, state propagation, validation scheduling and cancellation are unchanged.

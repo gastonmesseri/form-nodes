@@ -176,7 +176,9 @@ export type ValidationErrorWithoutTargetNode = ValidationError & {
 };
 
 /** An error returned by a validator, optionally assigned to another node. */
-export type ValidatorError<TNode extends AnyNode = AnyNode> = ValidationError & {
+export type ValidatorError<TNode extends AnyNode = AnyNode> = Omit<ValidationError, 'kind'> & {
+  /** Error identifier. Numeric inputs are normalized with String(kind); exposed errors always use strings. */
+  readonly kind: string | number;
   /**
    * Node that should own this error.
    *
@@ -190,7 +192,7 @@ export type ValidatorError<TNode extends AnyNode = AnyNode> = ValidationError & 
 /** Indicates that validation completed without errors. */
 export type ValidationSuccess = null | undefined | void;
 
-/** A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings. */
+/** A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings. Numeric error kinds are normalized to strings. */
 export type ValidationResult =
   | ValidationSuccess
   | string
@@ -417,20 +419,42 @@ export type DeferredValidator = () => any;
 /** Shared unchecked branch for parameterless conditions in contextual and overloaded signatures. */
 export type DeferredCondition = () => any;
 
+/** Typed declaration context with an unchecked return to avoid circular initializer inference. */
+type DeclarationValidator<TValue, TField extends AnyNode> = (context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => any;
+
 /**
- * One validator or a readonly list in which `null` and `undefined` represent no validator.
+ * One validator or a readonly list in which null and undefined represent no validator.
  *
- * Parameterless callbacks have an intentionally unchecked return type so a class initializer
- * can reference its own form without a return annotation. Context-taking validators retain
- * their checked context and result, including when authored through `validator()`.
- * The runner still accepts only synchronous validation results or synchronous compositions.
- * Overloaded functions callable without arguments also match the unchecked callback branch.
+ * The callback context and owning node remain fully typed. **Declaration callback returns are
+ * intentionally typed as any** so they can read their initializing form or group without a
+ * circular-inference error. This does not expand the supported runtime results.
+ *
+ * Return a {@link ValidationResult}: null/undefined/implicit fallthrough for success, a message
+ * string, an error with a string or numeric kind, or an array of messages/errors. Numeric kinds
+ * become strings. For synchronous composition, return another validator or a validator array;
+ * {@link ComposableValidationResult} describes this complete contract. Do not mix validators
+ * and errors in one returned array or return an unmarked Promise; use asyncValidator() for async work.
+ *
+ * Annotate a callback's return as ValidationResult or ComposableValidationResult to check it.
+ * The context-taking validator() helper also checks returns and preserves contextual typing
+ * for returned inline validators. Checked callbacks can still need an explicit result annotation
+ * when they reference their own initializer. Parameterless helper callbacks remain unchecked.
+ *
+ * @example
+ * ```ts
+ * const dates = group({
+ *   end: field<string>(null),
+ *   start: field<string>(null, ({ value }) => {
+ *     return dates.end() && !value() ? { kind: 'missingStart' } : null;
+ *   }),
+ * });
+ * ```
  */
 export type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> =
-  | ComposableValidator<TValue, TField>
+  | DeclarationValidator<TValue, TField>
   | DeferredValidator
   // Tuple contextual typing avoids comparing a deferred callback's return with sibling entries.
   | readonly [
-    validator?: DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess,
-    ...validators: (DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess)[]
+    validator?: DeferredValidator | DeclarationValidator<TValue, TField> | ValidationSuccess,
+    ...validators: (DeferredValidator | DeclarationValidator<TValue, TField> | ValidationSuccess)[]
   ];

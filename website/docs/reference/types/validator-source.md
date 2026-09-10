@@ -4,7 +4,7 @@ title: ValidatorSource
 
 # ValidatorSource
 
-One validator or a readonly list in which `null` and `undefined` represent no validator.
+One validator or a readonly list in which null and undefined represent no validator.
 
 ## Import
 
@@ -14,14 +14,22 @@ import type { ValidatorSource } from '@ngblocks/form-nodes';
 
 ## When to use it
 
-Use for an input accepting the same flexible validator sources as node declarations. Parameterless callbacks intentionally have unchecked returns to support class self-references.
+Use for inputs accepting declaration validator sources. Both parameterless and context-taking declaration callbacks have unchecked returns. The context and node model remain typed.
+
+The internal `DeclarationValidator<TValue, TField>` signature is `(context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => any`.
+
+:::info Supported results remain typed contracts
+
+The `any` return avoids circular initializer inference; it does not expand valid runtime results. Return `ValidationResult` for errors/messages/success, or `ComposableValidationResult<TValue, TField>` for synchronous composition. Annotate that return or use a context-taking `validator()` helper for checked authoring. Returned inline callbacks need such a checked context. See the [full result contract](../../guides/validation.md#validator-results).
+
+:::
 
 ## Declaration
 
 ```ts
-type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> = ComposableValidator<TValue, TField> | DeferredValidator | readonly [
-    validator?: DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess,
-    ...validators: (DeferredValidator | ComposableValidator<TValue, TField> | ValidationSuccess)[]
+type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> = DeclarationValidator<TValue, TField> | DeferredValidator | readonly [
+    validator?: DeferredValidator | DeclarationValidator<TValue, TField> | ValidationSuccess,
+    ...validators: (DeferredValidator | DeclarationValidator<TValue, TField> | ValidationSuccess)[]
 ];
 ```
 
@@ -37,5 +45,4 @@ type ValidatorSource<TValue, TField extends AnyNode = ValidatorNode> = Composabl
 - [Validation reference](../validation.md)
 - [Public types index](./index.md)
 - [AnyNode](./any-node.md)
-- [ComposableValidator](./composable-validator.md)
 - [ValidationSuccess](./validation-success.md)

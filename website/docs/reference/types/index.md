@@ -95,7 +95,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [ValidatorOptions](./validator-options.md) | Common options supported by built-in validators. |
 | [ValidatorReadonlyApi](./validator-readonly-api.md) | Reactive value and navigation shared by all validator context specializations. |
 | [Validators](./validators.md) | Readonly normalized collection of composable validators for a node value. |
-| [ValidatorSource](./validator-source.md) | One validator or a readonly list in which `null` and `undefined` represent no validator. |
+| [ValidatorSource](./validator-source.md) | One validator or a readonly list in which null and undefined represent no validator. |
 
 ## Validation errors and results
 
@@ -111,7 +111,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [ValidationErrorWithOptionalTargetNode](./validation-error-with-optional-target-node.md) | An error that may already define its target node. |
 | [ValidationErrorWithoutTargetNode](./validation-error-without-target-node.md) | An error returned by a field validator before its target node is assigned. |
 | [ValidationErrorWithTargetNode](./validation-error-with-target-node.md) | An error associated with a specific target node. |
-| [ValidationResult](./validation-result.md) | A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings. |
+| [ValidationResult](./validation-result.md) | A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings. Numeric error kinds are normalized to strings. |
 | [ValidationStatus](./validation-status.md) | Aggregate validation result. |
 | [ValidationSuccess](./validation-success.md) | Indicates that validation completed without errors. |
 | [ValidatorError](./validator-error.md) | An error returned by a validator, optionally assigned to another node. |

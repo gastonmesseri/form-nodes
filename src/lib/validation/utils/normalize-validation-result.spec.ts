@@ -19,10 +19,25 @@ describe('normalizeValidationResult', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it.each([{}, { kind: 0 }, { kind: null }, { kind: undefined }, 42, false, Symbol('invalid'), [[]]])('ignores malformed result %s and warns in development', (result) => {
+  it.each([{}, { kind: false }, { kind: null }, { kind: undefined }, 42, false, Symbol('invalid'), [[]]])('ignores malformed result %s and warns in development', (result) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(normalizeValidationResult(result)).toEqual([]);
-    expect(warn).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('string "kind" property'));
+    expect(warn).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('string or number "kind" property'));
+  });
+
+  it.each([0, -0, 123, -4.5, NaN, Infinity, -Infinity])('copies numeric kind %s as a string without mutating the input', (kind) => {
+    const original = Object.freeze({ kind, message: 'Numeric', extra: { detail: true } });
+    const [error] = normalizeValidationResult(original);
+    expect(error).toEqual({ ...original, kind: String(kind) });
+    expect(error).not.toBe(original);
+    expect(original.kind).toBe(kind);
+  });
+
+  it('ignores numeric errors with unreadable properties', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = { kind: 123, get message() { throw new Error('Unreadable message'); } };
+    expect(normalizeValidationResult(result)).toEqual([]);
+    expect(warn).toHaveBeenCalledOnce();
   });
 
   it('normalizes messages without trimming, deduplicating, or changing structured errors', () => {

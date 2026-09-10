@@ -50,6 +50,10 @@ export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNod
    * ```
    *
    * Put validators in the item template when every item should be validated independently.
+   *
+   * See ValidatorSource for supported results. Callback contexts remain typed; returns deliberately
+   * use any for self-reference inference. Annotate ValidationResult or ComposableValidationResult,
+   * or use a context-taking validator() helper, to check returned results.
    */
   validators?: ValidatorSource<TValue, TArray>;
   /**

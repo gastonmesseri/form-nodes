@@ -280,7 +280,7 @@ A synchronous validator may return:
 | --- | --- |
 | `null`, `undefined`, or `void` | Success |
 | `string` | One error with `kind: 'custom'` and the returned message, including `''` |
-| `{ kind, ...data }` | One validation error |
+| `{ kind, ...data }` | One validation error; a string or numeric kind is accepted and exposed as a string |
 | An array of strings and/or error objects | Several errors, preserving their order |
 | Another synchronous validator | Conditional composition |
 | An array of synchronous validators | Conditional composition of several rules |

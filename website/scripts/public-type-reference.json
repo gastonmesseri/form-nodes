@@ -329,7 +329,7 @@
     },
     "ValidatorSource": {
       "family": "validation",
-      "usage": "Use for an input accepting the same flexible validator sources as node declarations. Parameterless callbacks intentionally have unchecked returns to support class self-references."
+      "usage": "Use for inputs accepting declaration validator sources. Both parameterless and context-taking declaration callbacks have unchecked returns. The context and node model remain typed.\n\nThe internal `DeclarationValidator<TValue, TField>` signature is `(context: ValidatorContext<TValue, ValidatorApi<TValue>, TField>) => any`.\n\n:::info Supported results remain typed contracts\n\nThe `any` return avoids circular initializer inference; it does not expand valid runtime results. Return `ValidationResult` for errors/messages/success, or `ComposableValidationResult<TValue, TField>` for synchronous composition. Annotate that return or use a context-taking `validator()` helper for checked authoring. Returned inline callbacks need such a checked context. See the [full result contract](../../guides/validation.md#validator-results).\n\n:::"
     },
     "ValidationError": {
       "family": "errors",

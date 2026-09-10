@@ -5,6 +5,7 @@ title: Validation
 # Validation {#validation}
 
 import CodeBlock from '@theme/CodeBlock';
+import declarationResultsSource from '!!raw-loader!../../examples/declaration-validator-results.example.ts';
 import selfReferenceInferenceSource from '!!raw-loader!../../examples/self-reference-inference.typecheck.ts';
 import whenSelfReferenceSource from '!!raw-loader!../../examples/when-self-reference.example.ts';
 import stringValidationSource from '!!raw-loader!../../examples/string-validation.example.ts';
@@ -32,6 +33,63 @@ const myForm = form({
 Validators may be a single validator or an array. `null` and `undefined` array entries are ignored.
 The `validators()` signal returns the normalized list of directly registered functions. It does not
 execute those functions or expand returned compositions by default.
+
+## Validator arguments and return values {#validator-results}
+
+The same `ValidatorSource<TValue, TNode>` contract applies to these inputs:
+
+| Primitive | Positional validators | Options |
+| --- | --- | --- |
+| `field()` | `field(initialValue, validators, options?)` | `field(initialValue, { validators })` |
+| `form()` | `form(definition, validators, options?)` | `form(definition, { validators })` |
+| `group()` | `group(definition, validators, options?)` | `group(definition, { validators })` |
+| `array()` | `array(template, validators, options?)` or `array(template, initialValue, validators, options?)` | `array(template, { initialValue, validators })` |
+
+The argument itself accepts one callback or a readonly list of callbacks, including registered
+`asyncValidator()` functions. Nullish list entries are ignored. `setValidators()` accepts this
+same source. This also applies to strict/nullable fields and configured primitives.
+
+A synchronous callback receives a typed `ValidatorContext<TValue, ValidatorApi<TValue>, TNode>`.
+Its supported result contract is `ComposableValidationResult<TValue, TNode>`:
+
+| Returned value | Meaning |
+| --- | --- |
+| `null`, `undefined`, or implicit fallthrough (`void`) | No errors |
+| `string`, including `''` | An error with `kind: 'custom'` and that message |
+| `ValidatorError` | An error with `kind: string \| number`, optional `message: string`, and optional `targetNode` |
+| A readonly array of message strings and error objects | Several errors in order; an empty array succeeds |
+| A synchronous validator | Evaluate that validator using the same context |
+| A readonly array of synchronous validators and nullish entries | Evaluate those validators using the same context |
+
+`ValidationResult` describes the first four rows; `ComposableValidationResult<TValue, TNode>`
+also includes the composition rows. Returned arrays must not mix validators and errors.
+A bare number or boolean is not an error result. A raw Promise or Observable is not a synchronous
+result: register `asyncValidator()` to handle asynchronous work and its lifecycle.
+
+:::info Typed context, flexible declaration return
+
+**Declaration callbacks have an `any` return type in TypeScript** to allow reads from their own
+initializing form or group. The context, sibling fields, node methods, and model values remain typed.
+`any` does not make other runtime results valid, and it means malformed returns may compile.
+
+For explicit result checking, annotate the callback with `: ValidationResult`, or with
+`: ComposableValidationResult<TValue, TNode>` when composing validators. The context-taking
+`validator()` helper also checks results. For returned inline validators, wrapping the outer
+callback in `validator()` restores their contextual parameter types. A checked self-referencing
+callback may still need the return annotation to break TypeScript's inference cycle.
+
+:::
+
+<CodeBlock language="ts" title="declaration-validator-results.ts">{declarationResultsSource}</CodeBlock>
+
+### Numeric error identifiers
+
+An input error such as `{ kind: 123, message: 'Missing' }` becomes an exposed error with
+`kind: '123'`. Use `getError('123')` and `hasError('123')`; public error kinds remain strings.
+The conversion uses JavaScript `String(kind)`, including `0`, negative/decimal numbers, `NaN`,
+and infinities. Numeric errors are shallow-copied with their enumerable data, message, and target;
+the original numeric object is not mutated. Existing string-kind errors retain their identity.
+This normalization also applies to asynchronous validation results.
 
 ## ✅ Reading validation state {#reading-validation-state}
 
@@ -145,8 +203,9 @@ The same syntax works inside `validator()` and the callback signature of `asyncV
 
 <CodeBlock language="ts" title="self-referencing-validation-helpers.typecheck.ts">{selfReferencingHelpersSource}</CodeBlock>
 
-Parameterless callbacks have an intentionally unchecked return type, both as direct sources and
-inside these helpers. Context-taking callbacks retain checked context and result types. The
+Declaration callbacks have an intentionally unchecked return type, with or without a context.
+Inside the helpers, parameterless callbacks are unchecked and context-taking callbacks retain
+checked context and result types. The
 runtime contract still applies: synchronous callbacks return errors, successful results, or
 synchronous validators; asynchronous callbacks return Promise-like or Observable-like results.
 An asynchronous callback must return the validation result, not merely test whether a validator
@@ -178,7 +237,7 @@ preserved exactly; return `null` or `undefined` for success.
 
 ## 🛡️ Malformed validator results {#malformed-validator-results}
 
-Error objects need a readable string `kind`; an empty string is allowed. Malformed objects,
+Error objects need a readable string or numeric `kind`; an empty string is allowed and numeric kinds become strings. Malformed objects,
 non-string primitives, and returned form nodes are ignored with a warning in Angular development mode.
 `null` and `undefined` remain silent success results.
 Arrays retain valid errors and discard invalid entries. This applies to synchronous results,
@@ -308,12 +367,12 @@ form does not necessarily resolve a type-inference cycle.
 
 ### What the library handles
 
-Parameterless inline validators, parameterless callbacks passed to `validator()` and
+Inline declaration validators (with or without a context), parameterless callbacks passed to `validator()` and
 `asyncValidator()`, `requiredIf` conditions, and parameterless `when` conditions support these
 self-references without explicit return annotations. Their callback return types are intentionally
 unchecked. The expected runtime result still applies: conditions should return booleans, synchronous
 validators should return supported validation results, and async validators should return supported
-Promise-like or Observable-like results. Context-taking callbacks retain their checked contracts.
+Promise-like or Observable-like results. Context-taking helper callbacks retain their checked contracts.
 
 A custom helper with its own strict callback signature can reintroduce the cycle. Reactive numeric
 limits, date limits, allowed-value lists, and message callbacks also retain their existing checked
@@ -334,17 +393,12 @@ Avoid annotating the entire form as `any`, since that discards useful child and 
 
 ### Context-taking validators that read their owning group
 
-A validator such as `field<string>(null, ({ value }) => ...)` can also create a cycle when its
-body reads a sibling through the group being initialized. Annotate only the callback's result:
-`({ value }): ValidationResult => ...`. The `dateRange` example below demonstrates this with
-`group()`; the same boundary works for a class property initialized with `form()`.
-
-A ternary returning an error or `null` can trigger TS7022/TS7024. Replacing `null` with an
-explicit `undefined` can still fail, even when an `if` with an implicit fallthrough compiles.
-The latter returns `undefined` at runtime; it is not a different validation outcome. Do not
-rely on rewriting the control flow to break inference cycles. A `ValidationResult` annotation
-keeps the sibling fields, context value, and error results checked without annotating the group
-as `any`. These context-taking callbacks do not use the unchecked parameterless escape hatch.
+Direct declaration callbacks now support the sibling-reading ternary with either `null` or
+`undefined`, without annotating the callback or group. The [result contract](#validator-results)
+explains the typed context and deliberately unchecked return. A strict callback passed through
+`validator()` or another checked helper can still encounter TS7022/TS7024; annotate its result
+as `ValidationResult` in that case. Do not depend on changing a ternary into an `if` to control
+inference: implicit fallthrough and explicit undefined have the same runtime outcome.
 
 ### Design a custom helper that permits unannotated consumers
 
@@ -364,7 +418,7 @@ the cycle while retaining return checking. An `as any` cast on the whole form wo
 
 Here, `any` describes the callback's accepted return type; it is not a value to return. Document the
 expected runtime result and the lost checking when publishing such a helper. A condition returning
-a string can now compile, so the convenience has a real cost. Do not widen context-taking callbacks
+a string can now compile, so the convenience has a real cost. Do not widen checked helper callbacks
 or unrelated options unless their own use case requires a separately tested change.
 
 ### Distinguish inference errors from early execution

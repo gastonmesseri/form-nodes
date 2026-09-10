@@ -109,13 +109,13 @@ profile.email.setValidators((ctx) => {
   type _Node = Expect<Equal<ReturnType<typeof ctx.field>, FieldNode<string | null>>>;
   return null;
 });
-field('', [(ctx) => {
+field('', [validator((ctx) => {
   type _Node = Expect<Equal<ReturnType<typeof ctx.field>, FieldNode<string | null>>>;
   return [(inner) => {
     type _Nested = Expect<Equal<ReturnType<typeof inner.field>, FieldNode<string | null>>>;
     return null;
   }];
-}]);
+})]);
 
 const reusable = validator<string | null>((ctx) => {
   type _GenericNode = Expect<Equal<typeof ctx.field, ValidatorContext<string | null>['field']>>;

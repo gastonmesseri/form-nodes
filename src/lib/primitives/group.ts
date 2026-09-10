@@ -42,7 +42,7 @@ export function group(): GroupNode<{}>;
  * created, with the complete declaration path included in the error.
  *
  * @param definitions Initially declared child-node definitions.
- * @param args Validators or node configuration, optionally followed by configuration for positional validators.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
  */
 export function group<TDefinitions extends ObjectNodeDefinitions>(
   definitions: TDefinitions & GroupDefinitions<TDefinitions>,

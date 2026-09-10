@@ -50,6 +50,10 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    *
    * Use child validators for rules that belong to one field; use group validators for rules that
    * consider the object boundary as a whole.
+   *
+   * See ValidatorSource for supported results. Callback contexts remain typed; returns deliberately
+   * use any for self-reference inference. Annotate ValidationResult or ComposableValidationResult,
+   * or use a context-taking validator() helper, to check returned results.
    */
   validators?: ValidatorSource<TValue, TGroup>;
   /**

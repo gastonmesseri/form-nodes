@@ -10,6 +10,11 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Changed
+
+- Allow context-taking declaration validators to reference their initializing form or group without return annotations, including error-or-null/undefined ternaries. Context and node types stay inferred; callback returns are intentionally unchecked. Use `ValidationResult`, `ComposableValidationResult`, or a context-taking `validator()` helper for checked authoring; returned inline validators need a checked context.
+- Accept numeric validator error kinds and normalize them to strings in synchronous and asynchronous results, preserving messages and targets. Query these errors using string identifiers such as `getError('123')`.
+
 ## 📦 3.4.0 — 2026-09-10 {#340--2026-09-10}
 
 ### Changed

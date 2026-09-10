@@ -30,6 +30,13 @@ message; provide an application fallback or a configured validator message. A sy
 can also be a string, which becomes a `custom` error, or a readonly array of messages and errors.
 An empty string is still an error message. `null`, `undefined`, and `void` indicate success.
 
+`ValidatorError` accepts `kind: string | number` as input. A numeric identifier such as `123`
+is normalized to `'123'` before publication; `ValidationError` and error queries continue to
+use strings. Use `ValidatorError` or `ValidationResult` to annotate rules returning numeric
+kinds, and query them with `getError('123')`. Numeric errors are shallow copies; their source
+object is not mutated. See the [complete validator result contract](../guides/validation.md#validator-results)
+for the declaration callback's intentional `any` return and checked authoring alternatives.
+
 ## Structured built-in and custom errors
 
 | Requirement | Public type |

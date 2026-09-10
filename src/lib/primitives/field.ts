@@ -24,7 +24,7 @@ type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
  * generic such as `field<string>(null)` when the eventual value type is known.
  *
  * @param value Initial committed value.
- * @param args Validators or node configuration, optionally followed by configuration for positional validators.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
  */
 export function field(
   value: null,
@@ -45,7 +45,7 @@ export function field(
  * Use an explicit generic such as `field<string>(undefined)` when the eventual value type is known.
  *
  * @param value Initial committed value. An explicit `undefined` is preserved.
- * @param args Validators or node configuration, optionally followed by configuration for positional validators.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
  */
 export function field(
   value: undefined,
@@ -69,7 +69,7 @@ export function field(
  * Use `field.strict()` when the field must remain non-nullable.
  *
  * @param value Initial committed value.
- * @param args Validators or node configuration, optionally followed by configuration for positional validators.
+ * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
  */
 export function field<TValue>(
   value: TValue | null,
@@ -117,7 +117,7 @@ export namespace field {
    * ```
    *
    * @param value Initial committed value.
-   * @param args Validators or node configuration, optionally followed by configuration for positional validators.
+   * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
    */
   export function strict<TValue extends {}>(value: TValue,
     ...args:
@@ -159,7 +159,7 @@ export namespace field {
    * ```
    *
    * @param value Initial committed value.
-   * @param args Validators or node configuration, optionally followed by configuration for positional validators.
+   * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
    */
   export function nullable(value: null | undefined,
     ...args:

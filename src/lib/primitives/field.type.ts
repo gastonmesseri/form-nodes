@@ -166,6 +166,10 @@ export type FieldOptions<TValue = any> = {
    *
    * Arrays may also contain validators created with `asyncValidator()` and ignored `null` or
    * `undefined` entries.
+   *
+   * See ValidatorSource for supported results. Callback contexts remain typed; returns deliberately
+   * use any for self-reference inference. Annotate ValidationResult or ComposableValidationResult,
+   * or use a context-taking validator() helper, to check returned results.
    */
   validators?: ValidatorSource<TValue, FieldNode<TValue>>;
   /** Optional injector that owns the asynchronous validation watcher lifecycle. */

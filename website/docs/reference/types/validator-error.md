@@ -19,7 +19,8 @@ Use for a validator-returned error with optional target attribution. The pipelin
 ## Declaration
 
 ```ts
-type ValidatorError<TNode extends AnyNode = AnyNode> = ValidationError & {
+type ValidatorError<TNode extends AnyNode = AnyNode> = Omit<ValidationError, 'kind'> & {
+    readonly kind: string | number;
     readonly targetNode?: TNode;
     readonly formNode?: never;
 };
@@ -37,6 +38,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
+| `kind` | Error identifier. Numeric inputs are normalized with String(kind); exposed errors always use strings. |
 | `targetNode` | Node that should own this error. |
 
 ## Related reference

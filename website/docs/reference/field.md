@@ -40,6 +40,22 @@ const myForm = form({
 });
 ```
 
+## Validator input and results {#validator-results}
+
+See the [validator argument and result contract](../guides/validation.md#validator-results) for
+this primitive's positional and `options.validators` signatures. Callbacks accept the fully typed
+node context and return `ValidationResult` or `ComposableValidationResult<TValue, TNode>` at runtime:
+no error, messages, errors with string/numeric kinds, or synchronous validator compositions.
+
+:::info Declaration return inference
+
+The TypeScript callback return is intentionally `any` so self-referencing declarations compile.
+The node and context remain typed. Annotate the return with `ValidationResult` (or
+`ComposableValidationResult` for composition), or use the checked context-taking `validator()`
+helper when you want result checking. Numeric error kinds are exposed as strings.
+
+:::
+
 ## 🧭 API map {#api-map}
 
 | I want to… | Start with | Details |

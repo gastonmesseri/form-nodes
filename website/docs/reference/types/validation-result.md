@@ -4,7 +4,7 @@ title: ValidationResult
 
 # ValidationResult
 
-A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings.
+A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings. Numeric error kinds are normalized to strings.
 
 ## Import
 
