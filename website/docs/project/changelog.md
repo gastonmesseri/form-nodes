@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.5.0 — 2026-09-10 {#350--2026-09-10}
+
 ### Added
 
 - Configure each new field, group, form, or array synchronously through its typed `configure` option. Configure row templates to install sibling validators with inferred types and independent references for every clone.
