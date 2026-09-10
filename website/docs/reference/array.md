@@ -2127,3 +2127,17 @@ validators, options, or a typed value contract. `resetToInitial()` restores the 
 placeholder remains `null` even with `nullable: false`, matching an unspecified configured field.
 
 <CodeBlock language="ts" title="empty-primitives.ts">{emptyPrimitivesSource}</CodeBlock>
+
+
+## Value change callback {#onvaluechange}
+
+```ts
+onValueChange?(value: TValue, node: TArray): void;
+```
+
+Add `onValueChange` to the options to react synchronously to committed public value changes.
+The callback skips initialization, respects `equal` and control debounce, and receives the typed
+node. Aggregate operations notify after their children are updated. It runs without dependency
+tracking or an injection-context requirement and does not wait for asynchronous validation.
+See [value change callbacks](../guides/configuring-nodes.md#value-changes) for the executable example,
+reset and array behavior, callback ordering, and error handling.

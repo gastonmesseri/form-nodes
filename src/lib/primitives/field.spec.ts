@@ -3448,3 +3448,164 @@ it('gates asynchronous field validation with the last value-triggered synchronou
   expect(model.errors()).toMatchObject([{ kind: 'minimum' }]);
   expect(model.pending()).toBe(false);
 });
+
+describe('field onValueChange', () => {
+  it('notifies committed public changes synchronously and skips initialization and equal values', () => {
+    const notify = vi.fn();
+    const node = field.strict('Ada', { onValueChange: notify, equal: (a, b) => a.toLowerCase() === b.toLowerCase(), configure: api => api.set('Grace') });
+    expect(notify).not.toHaveBeenCalled();
+    node.set('GRACE');
+    expect(notify).not.toHaveBeenCalled();
+    node.set('Lin');
+    expect(notify).toHaveBeenLastCalledWith('Lin', node);
+    expect(node()).toBe('Lin');
+    node.update(value => value + '!');
+    expect(notify).toHaveBeenLastCalledWith('Lin!', node);
+    node.value.committed.set('Pat');
+    expect(notify).toHaveBeenLastCalledWith('Pat', node);
+    node.reset();
+    expect(notify).toHaveBeenCalledTimes(3);
+    node.resetToInitial();
+    expect(notify).toHaveBeenLastCalledWith('Ada', node);
+    expect(node.dirty()).toBe(false);
+    expect(node.touched()).toBe(false);
+    expect(notify).toHaveBeenCalledTimes(4);
+  });
+
+  it.each([0, 'blur', 20] as const)('respects control debounce %j and ignores canceled pending input', (debounce) => {
+    vi.useFakeTimers();
+    try {
+      const notify = vi.fn();
+      const node = field.strict('', { debounce, onValueChange: notify });
+      node.value.control.set('first');
+      expect(node.dirty()).toBe(true);
+      if (debounce === 0) expect(notify).toHaveBeenCalledOnce();
+      else {
+        expect(notify).not.toHaveBeenCalled();
+        expect(node()).toBe('');
+        expect(node.debouncing()).toBe(true);
+        if (debounce === 'blur') node.markAsTouched();
+        else vi.advanceTimersByTime(20);
+        expect(notify).toHaveBeenCalledOnce();
+      }
+      expect(notify).toHaveBeenLastCalledWith('first', node);
+      expect(node.debouncing()).toBe(false);
+      node.value.control.set('pending');
+      node.set('programmatic');
+      const calls = notify.mock.calls.length;
+      vi.runAllTimers();
+      node.flush();
+      expect(node()).toBe('programmatic');
+      expect(notify).toHaveBeenCalledTimes(calls);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not track callback reads in a surrounding computation', () => {
+    const unrelated = signal(0);
+    const trigger = signal(0);
+    const notify = vi.fn(() => unrelated());
+    const node = field.strict(0, { onValueChange: notify });
+    const schedule = vi.fn();
+    const writer = createWatch(() => node.set(trigger()), schedule, true);
+    try {
+      writer.run();
+      trigger.set(1);
+      writer.run();
+      expect(notify).toHaveBeenCalledOnce();
+      schedule.mockClear();
+      unrelated.set(2);
+      expect(schedule).not.toHaveBeenCalled();
+      expect(notify).toHaveBeenCalledOnce();
+    } finally {
+      writer.destroy();
+    }
+  });
+
+  it('delivers callback writes after the current callback and detects non-settling cycles', () => {
+    const values: number[] = [];
+    const node = field.strict(0, { onValueChange(value, current) {
+      values.push(value);
+      if (value < 3) current.set(value + 1);
+      expect(values.at(-1)).toBe(value);
+    } });
+    node.set(1);
+    expect(values).toEqual([1, 2, 3]);
+    const cyclic = field.strict(0, { onValueChange(value, current) { current.set(value + 1); } });
+    expect(() => cyclic.set(1)).toThrow(/did not settle/);
+    node.set(4);
+    expect(values).toEqual([1, 2, 3, 4]);
+  });
+
+  it('reports values before asynchronous validation completes and does not react to validation state', async () => {
+    let complete!: (result: null) => void;
+    const validate = vi.fn(() => new Promise<null>((resolve) => { complete = resolve; }));
+    const notify = vi.fn((_value: string, node: ReturnType<typeof field.strict<string>>) => {
+      expect(node.pending()).toBe(true);
+    });
+    const node = field.strict('', { onValueChange: notify, validators: asyncValidator(validate) });
+    node.set('Ada');
+    expect(notify).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledOnce());
+    complete(null);
+    await vi.waitFor(() => expect(node.pending()).toBe(false));
+    expect(node.valid()).toBe(true);
+    expect(notify).toHaveBeenCalledOnce();
+  });
+});
+
+it('notifies only the latest successful custom-debounce commit', async () => {
+  const completions: (() => void)[] = [];
+  const notify = vi.fn();
+  const node = field('', {
+    debounce: () => new Promise<void>((resolve) => { completions.push(resolve); }),
+    onValueChange: notify,
+  });
+  node.value.control.set('stale');
+  node.value.control.set('latest');
+  completions[0]!();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(notify).not.toHaveBeenCalled();
+  expect(node.debouncing()).toBe(true);
+  completions[1]!();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(notify).toHaveBeenCalledExactlyOnceWith('latest', node);
+  expect(node.debouncing()).toBe(false);
+});
+
+it('recovers value-change delivery after public equality throws', () => {
+  const notify = vi.fn();
+  const node = field.strict('Ada', {
+    equal: (previous, next) => {
+      if (next === 'bad') throw new Error('Comparison failed');
+      return previous === next;
+    },
+    onValueChange: notify,
+  });
+  expect(() => node.set('bad')).toThrow('Comparison failed');
+  expect(node.value.committed()).toBe('bad');
+  expect(notify).not.toHaveBeenCalled();
+  node.set('Grace');
+  expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+  expect(node()).toBe('Grace');
+});
+
+it('recovers a configured comparator failure before the first callback snapshot', () => {
+  const notify = vi.fn();
+  const node = field.strict('Ada', {
+    equal: (previous, next) => {
+      if (next === 'bad') throw new Error('Comparison failed');
+      return previous === next;
+    },
+    configure(api) {
+      api();
+      api.set('bad');
+    },
+    onValueChange: notify,
+  });
+  node.set('Grace');
+  expect(notify).toHaveBeenCalledExactlyOnceWith('Grace', node);
+});

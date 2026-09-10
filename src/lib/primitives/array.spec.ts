@@ -2010,3 +2010,62 @@ it('includes item errors through the descendants option without changing own err
   names.at(0)!.set('Ada');
   expect(names.errors({ descendants: true })).toEqual([]);
 });
+
+describe('array onValueChange', () => {
+  it('batches reconciliation, patches, reorders, resets, and structural edits', () => {
+    const notify = vi.fn();
+    const row = vi.fn();
+    const parent = vi.fn();
+    const items = array({ name: field.strict('', { onValueChange: row }) }, {
+      initialValue: [{ name: 'Ada' }, { name: 'Grace' }],
+      onValueChange: notify,
+    });
+    const profile = form({ items }, { onValueChange: parent });
+    expect(notify).not.toHaveBeenCalled();
+    expect(row).not.toHaveBeenCalled();
+    items.set([{ name: 'Lin' }, { name: 'Pat' }]);
+    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Lin' }, { name: 'Pat' }], items);
+    expect(parent).toHaveBeenCalledExactlyOnceWith({ items: [{ name: 'Lin' }, { name: 'Pat' }] }, profile);
+    expect(row).toHaveBeenCalledTimes(2);
+    items.patch([{ name: 'Sam' }, { name: 'Jo' }]);
+    expect(notify).toHaveBeenCalledTimes(2);
+    items.move(0, 1);
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Jo' }, { name: 'Sam' }], items);
+    items.swap(0, 1);
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Sam' }, { name: 'Jo' }], items);
+    const previousCalls = row.mock.calls.length;
+    const inserted = items.insert(1, { name: 'New' });
+    expect(row).toHaveBeenCalledTimes(previousCalls);
+    expect(notify).toHaveBeenLastCalledWith([{ name: 'Sam' }, { name: 'New' }, { name: 'Jo' }], items);
+    items.removeAt(1);
+    const calls = notify.mock.calls.length;
+    inserted.name.set('Detached');
+    expect(notify).toHaveBeenCalledTimes(calls);
+    items.resetToInitial();
+    expect(notify).toHaveBeenCalledTimes(calls + 1);
+    expect(items()).toEqual([{ name: 'Ada' }, { name: 'Grace' }]);
+    items.clear();
+    expect(notify).toHaveBeenLastCalledWith([], items);
+    const afterClear = notify.mock.calls.length;
+    items.clear();
+    expect(notify).toHaveBeenCalledTimes(afterClear);
+  });
+
+  it('retains typed group callbacks in clones and reports aggregate debounce once', () => {
+    const row = vi.fn();
+    const notify = vi.fn();
+    const items = array(group({ name: field('') }, { onValueChange: row }), {
+      initialValue: [{ name: 'Ada' }],
+      debounce: 'blur',
+      onValueChange: notify,
+    });
+    expect(row).not.toHaveBeenCalled();
+    items.value.control.set([{ name: 'Grace' }]);
+    expect(notify).not.toHaveBeenCalled();
+    items.flush();
+    expect(row).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, items[0]);
+    expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Grace' }], items);
+    items[0]!.name.set('Pat');
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+});

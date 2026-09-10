@@ -20,6 +20,7 @@ Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `on
 
 ```ts
 type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
+    onValueChange?(value: TValue, node: TForm): void;
     configure?: (api: TForm['$api']) => void;
     syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | {
         inputs: 'declared' | 'all' | readonly SyncInputName[];
@@ -55,6 +56,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
+| `onValueChange` | Runs synchronously after a committed public value changes, for control and programmatic writes. Skips initialization and values retained by equal. Control writes respect debounce. Aggregate operations notify once after their children are updated, with descendants first. Runs untracked, without requiring an injector; does not wait for asynchronous validation. Callback writes are delivered after the current callback. Return values are ignored. |
 | `configure` | Configures this instance synchronously once, after its own API and children are ready. Receives the collision-safe callable `$api`, so child names cannot hide operations. Runs untracked; install validators here to track their reads when validation executes. Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits. Ancestors may not be attached yet. Do not read the variable being initialized here. Returned values are ignored; this is not an async or cleanup lifecycle hook. |
 | `syncInputs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |
 | `bindInputOutputPairs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |

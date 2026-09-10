@@ -629,3 +629,5 @@ class MyComponent {
     return this.form.other()! > 30;
   });
 }
+
+array().length()

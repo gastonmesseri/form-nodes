@@ -5870,3 +5870,117 @@ it('gates asynchronous form validation with the last value-triggered synchronous
   expect(model.errors()).toMatchObject([{ kind: 'minimum' }]);
   expect(model.pending()).toBe(false);
 });
+
+describe('form onValueChange', () => {
+  it('batches descendant changes and exposes the complete tree to child callbacks before the parent', () => {
+    const events: unknown[] = [];
+    const first = field.strict('Ada', { onValueChange(value) { events.push(['first', value, profile()]); } });
+    const last = field.strict('Lovelace', { onValueChange(value) { events.push(['last', value, profile()]); } });
+    const profile = form({ first, last }, { onValueChange(value, node) { events.push(['form', value, node === profile]); } });
+    expect(events).toEqual([]);
+    profile.patch({ first: 'Grace', last: 'Hopper' });
+    expect(events).toEqual([
+      ['first', 'Grace', { first: 'Grace', last: 'Hopper' }],
+      ['last', 'Hopper', { first: 'Grace', last: 'Hopper' }],
+      ['form', { first: 'Grace', last: 'Hopper' }, true],
+    ]);
+    events.length = 0;
+    profile.patch({ first: 'Grace', last: 'Hopper' });
+    expect(events).toEqual([]);
+    first.set('Lin');
+    expect(events).toHaveLength(2);
+  });
+
+  it('consolidates callback writes through nested forms and supports child-name collisions', () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const profile = form({
+      contact: form({
+        name: field.strict('', { onValueChange(value) { profile.contact.slug.set(value.toLowerCase()); } }),
+        slug: field.strict(''),
+      }, { onValueChange: inner }),
+      onValueChange: field('ordinary child'),
+    }, { onValueChange: outer });
+    profile.contact.name.set('ADA');
+    expect(inner).toHaveBeenCalledExactlyOnceWith({ name: 'ADA', slug: 'ada' }, profile.contact);
+    expect(outer).toHaveBeenCalledExactlyOnceWith({ contact: { name: 'ADA', slug: 'ada' }, onValueChange: 'ordinary child' }, profile);
+  });
+
+  it('skips configured initialization, honors aggregate equality, and observes reset and structure', () => {
+    const child = vi.fn();
+    const notify = vi.fn();
+    const profile = form({ name: field.strict('Ada', { onValueChange: child }) }, {
+      configure: api => api.patch({ name: 'Grace' }),
+      equal: (a, b) => a.name.toLowerCase() === b.name.toLowerCase(),
+      onValueChange: notify,
+    });
+    expect(child).not.toHaveBeenCalled();
+    profile.name.set('GRACE');
+    expect(child).toHaveBeenCalledOnce();
+    expect(notify).not.toHaveBeenCalled();
+    profile.resetToInitial();
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, profile);
+    const dynamic = form({}, { onValueChange: notify });
+    notify.mockClear();
+    const name = dynamic.add('name', field('Ada'));
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, dynamic);
+    dynamic.remove('name');
+    expect(notify).toHaveBeenLastCalledWith({}, dynamic);
+    const calls = notify.mock.calls.length;
+    name.set('Grace');
+    expect(notify).toHaveBeenCalledTimes(calls);
+  });
+
+  it('completes other notifications when a callback throws and preserves committed writes', () => {
+    const failure = new Error('Callback failed');
+    const notify = vi.fn();
+    const profile = form({ name: field('', { onValueChange() { throw failure; } }) }, { onValueChange: notify });
+    expect(() => profile.name.set('Ada')).toThrow(failure);
+    expect(profile()).toEqual({ name: 'Ada' });
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Ada' }, profile);
+    const other = field('', { onValueChange: notify });
+    other.set('Grace');
+    expect(notify).toHaveBeenLastCalledWith('Grace', other);
+  });
+
+  it('combines callback failures without losing subsequent delivery', () => {
+    const profile = form({ name: field('', { onValueChange() { throw new Error('Child'); } }) }, {
+      onValueChange() { throw new Error('Parent'); },
+    });
+    expect(() => profile.set({ name: 'Ada' })).toThrow(AggregateError);
+    expect(profile.name()).toBe('Ada');
+  });
+
+  it('flushes all pending children as one form change and leaves state-only actions silent', () => {
+    const notify = vi.fn();
+    const profile = form({ first: field(''), last: field('') }, { debounce: 'blur', onValueChange: notify });
+    profile.first.value.control.set('Grace');
+    profile.last.value.control.set('Hopper');
+    expect(notify).not.toHaveBeenCalled();
+    profile.flush();
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ first: 'Grace', last: 'Hopper' }, profile);
+    expect(profile.debouncing()).toBe(false);
+    profile.disable();
+    profile.enable();
+    profile.markAsTouched();
+    profile.markAsPristine();
+    expect(notify).toHaveBeenCalledOnce();
+  });
+});
+
+it('notifies form value changes while async validation is pending without waiting or restarting it', async () => {
+  let complete!: (result: null) => void;
+  const validate = vi.fn(() => new Promise<null>((resolve) => { complete = resolve; }));
+  const states: boolean[] = [];
+  const profile = form({ name: field('') }, {
+    validators: asyncValidator(validate),
+    onValueChange(_value, node) { states.push(node.pending()); },
+  });
+  profile.patch({ name: 'Ada' });
+  expect(states).toEqual([true]);
+  await vi.waitFor(() => expect(validate).toHaveBeenCalledOnce());
+  complete(null);
+  await vi.waitFor(() => expect(profile.pending()).toBe(false));
+  expect(profile.valid()).toBe(true);
+  expect(states).toEqual([true]);
+});

@@ -27,6 +27,7 @@ import { registerNodeValidatorMessages } from '../validation/validator-messages'
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
+import { installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
@@ -298,9 +299,10 @@ export class ArrayNode<TItem extends AnyNode> {
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {
       this.refreshInjector();
-      this.options?.configure?.(this.node.$api);
+      withoutValueChanges(() => this.options?.configure?.(this.node.$api));
       this.ensureAsyncValidationWatch();
     });
+    installValueChangeNotifications(this.node, this.options?.onValueChange, this, ['insert', 'removeAt', 'move', 'swap', 'clear', 'set', 'patch', 'reset', 'resetToInitial', 'markAsTouched', 'flush']);
   }
 
   getNode() {
@@ -511,7 +513,7 @@ export class ArrayNode<TItem extends AnyNode> {
     if (!isNode(definition)) assertArrayObjectTemplate(definition, 'factory');
     const item = (isNode(definition) ? definition : group(definition as ObjectNodeDefinitions)) as TItem;
     untracked(() => {
-      if (args.length === 1) item.$api.reset(args[0]);
+      if (args.length === 1) withoutValueChanges(() => item.$api.reset(args[0]));
       (item as unknown as InternalNode).$api._captureInitialValue();
     });
     return item;

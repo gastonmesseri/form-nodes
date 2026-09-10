@@ -24,6 +24,7 @@ import { readStateSource, getInitialMutableState } from './utils/read-state-sour
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import type { FieldNode as PublicFieldNode, FieldApi, FieldOptions } from './field.type';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
+import { installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { isAsyncValidator, needsDeferredValidationStart } from '../validation/utils/async-validator-marker';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
@@ -275,9 +276,10 @@ export class FieldNode<TValue> {
     registerNodeValidatorMessages(this.node, undefined, this.options?.injector);
 
     untracked(() => {
-      this.options?.configure?.(this.node.$api);
+      withoutValueChanges(() => this.options?.configure?.(this.node.$api));
       this.ensureAsyncValidationWatch();
     });
+    installValueChangeNotifications(this.node, this.options?.onValueChange, this, ['set', 'setControlValue', 'reset', 'resetToInitial', 'markAsTouched', 'commitControlValue']);
   }
 
   getNode() {

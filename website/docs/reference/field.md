@@ -1361,3 +1361,17 @@ references and their in-place mutations cannot be undone.
 See [Reset and restore initial values](../guides/reset-and-restore.md) for executable examples,
 server-loaded records, nested arrays, dynamically added fields, snapshot boundaries, validation,
 and native reset buttons.
+
+
+## Value change callback {#onvaluechange}
+
+```ts
+onValueChange?(value: TValue, node: FieldNode<TValue>): void;
+```
+
+Add `onValueChange` to the options to react synchronously to committed public value changes.
+The callback skips initialization, respects `equal` and control debounce, and receives the typed
+node. Aggregate operations notify after their children are updated. It runs without dependency
+tracking or an injection-context requirement and does not wait for asynchronous validation.
+See [value change callbacks](../guides/configuring-nodes.md#value-changes) for the executable example,
+reset and array behavior, callback ordering, and error handling.

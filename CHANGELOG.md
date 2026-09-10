@@ -12,6 +12,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
+- React to committed value changes with typed `onValueChange(value, node)` options on fields, forms, groups, and arrays. Callbacks respect equality and debounce, skip initialization, and observe complete aggregate updates without requiring an injector.
+
 - Contribute reactive component errors with `useFormNodeState({ errors })`, returning one error, a message, an array, or no result. Contributions participate in bound-control validity and clean up on rebinding or destruction. Add `provideFormNodeStateErrors()` for CVAs used with Angular 22 Signal Forms.
 
 - Return field or form errors from `onSubmit` to reject a submission and expose them through normal node validation state. Errors clear on edits/reset and before retries; stale responses cannot overwrite edited, detached, or newer submitted nodes. Thrown request failures continue to reject `submit()`.

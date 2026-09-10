@@ -26,6 +26,7 @@ import { createNodeDefinitionFactory } from './utils/create-node-definition-fact
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import { captureSubmission, clearSubmissionErrors } from '../validation/submission-errors';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
+import { installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { assertValidObjectDefinition, normalizeObjectDefinition } from './form-group-node.utils';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
@@ -310,9 +311,10 @@ export class FormGroupNode<TNodes extends Nodes> {
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
     untracked(() => {
       this.refreshInjector();
-      this.options?.configure?.(this.node.$api);
+      withoutValueChanges(() => this.options?.configure?.(this.node.$api));
       this.ensureAsyncValidationWatch();
     });
+    installValueChangeNotifications(this.node, this.options?.onValueChange, this, ['add', 'remove', 'set', 'patch', 'reset', 'resetToInitial', 'markAsTouched', 'flush']);
   }
 
   getNode() {

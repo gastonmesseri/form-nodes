@@ -9,7 +9,18 @@ import type { CustomValidationError, ValidationErrorMap, ValidationStatus, Valid
 import type { AddedNode, FormApi, FormOptions, FormPatch, FormSet, FormValue, NodeWithParent, NormalizedNode as FormNormalizedNode, NormalizedNodes as FormNormalizedNodes, ObjectNodeDefinition, ObjectNodeDefinitionInput, ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
 
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
-export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'configure' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+  /**
+   * Runs synchronously after a committed public value changes, for control and programmatic writes.
+   * Skips initialization and values retained by equal. Control writes respect debounce.
+   * Aggregate operations notify once after their children are updated, with descendants first.
+   * Runs untracked, without requiring an injector; does not wait for asynchronous validation.
+   * Callback writes are delivered after the current callback. Return values are ignored.
+   * @example
+   * onValueChange: (value, node) => console.log(value, node.pending())
+   */
+  onValueChange?(value: TValue, node: TGroup): void;
+
   /**
    * Configures this instance synchronously once, after its own API and children are ready.
    * Receives the collision-safe callable `$api`, so child names cannot hide operations.

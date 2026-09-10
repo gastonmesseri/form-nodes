@@ -10,6 +10,17 @@ import type { CustomValidationError, ValidationErrorMap, ValidationStatus, Valid
 
 export type FieldOptions<TValue = any> = {
   /**
+   * Runs synchronously after a committed public value changes, for control and programmatic writes.
+   * Skips initialization and values retained by equal. Control writes respect debounce.
+   * Aggregate operations notify once after their children are updated, with descendants first.
+   * Runs untracked, without requiring an injector; does not wait for asynchronous validation.
+   * Callback writes are delivered after the current callback. Return values are ignored.
+   * @example
+   * onValueChange: (value, node) => console.log(value, node.pending())
+   */
+  onValueChange?(value: TValue, node: FieldNode<TValue>): void;
+
+  /**
    * Configures this instance synchronously once, after its own API and children are ready.
    * Receives the collision-safe callable `$api`, so child names cannot hide operations.
    * Runs untracked; install validators here to track their reads when validation executes.

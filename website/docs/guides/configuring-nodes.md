@@ -5,6 +5,7 @@ title: Configuring nodes and sibling rules
 # Configuring nodes and sibling rules
 
 import CodeBlock from '@theme/CodeBlock';
+import valueChangeSource from '!!raw-loader!../../examples/on-value-change.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
 
@@ -99,3 +100,50 @@ The node returned by `ctx.parent<TParent>()` always uses the recursive read-only
 even with an explicit generic. Read child values for conditions and return errors. Validation
 outputs, metadata queries, and mutations remain unavailable through that view; `configure` itself
 continues to receive the normal API for installing validators and initializing the node.
+
+
+## React after value changes {#value-changes}
+
+Use `onValueChange(value, node)` in the options of `field()`, `form()`, `group()`, or `array()`
+to react to a change in the node's committed public value. Both arguments retain the inferred
+value and node types. The callback runs synchronously before the operation returns; reading
+other signals inside it does not subscribe the callback to those signals. No injector is needed.
+
+<CodeBlock language="ts" title="on-value-change.ts">{valueChangeSource}</CodeBlock>
+
+The callback observes control input and programmatic changes through `set()`, `update()`, aggregate
+`patch()`, and resets that change the value. `value.committed.set()` also notifies. Control input
+waits for its debounce or an explicit flush; a canceled pending input never notifies. As with all
+public value consumers, the node's `equal` option can retain a previous value and suppress a
+notification. Installing this callback observes values at operation boundaries, so comparisons
+are evaluated then instead of waiting for an unrelated consumer to read the value.
+
+Declaration, `configure`, and initial values assigned to new array rows do not notify.
+Array template callbacks are copied to new rows and run on their later edits. Array insertions,
+removals, reorders, and reconciliation notify the array and its ancestors when their exposed value
+changes. Removed children no longer notify former ancestors. Options are captured on construction;
+callbacks are not inherited by descendants.
+
+A single aggregate `set()`, `patch()`, reset, or flush updates its children before notifying.
+Changed descendants run before their ancestors; ancestor callbacks see the complete resulting
+value once, including changes made by descendant callbacks. Separate operations notify separately.
+Calls made inside a callback queue further notifications until that callback returns. Callbacks
+that repeatedly modify their own dependencies must settle: more than 100 notifications for one
+node in a single operation throws an error and clears the pending queue.
+
+`onValueChange` does not change dirty/touched state and does not wait for asynchronous validation.
+An invalid, disabled, readonly, or hidden node can still report a programmatic value change.
+Validation completion and changes to interaction or availability alone do not notify. Return
+values are ignored; asynchronous callback work is not awaited or canceled by the library.
+
+If a synchronous callback throws, committed writes remain applied and other pending callbacks
+still run. The operation then throws that error; multiple failures use `AggregateError`. For timer- or promise-delayed commits,
+errors surface during that scheduled delivery, not from the earlier input call. A comparator
+failure can be recovered by a later write; an unreadable public value does not notify. A failed
+operation that already changed part of a tree reports the resulting changes as well. Notifications
+are released at the operation boundary, with no live watcher or global strong registration keeping
+an unreachable node alive.
+
+The callback receives the node itself. Use `node.$api` when a child name hides an API member, as
+explained in [API access](../reference/node-api.md). To observe only control-originated input, use
+the [binding outputs](../reference/form-node-binding.md) instead.

@@ -10,7 +10,18 @@ import type { HiddenFunctionMembers } from '../types/hidden-function-members.typ
 import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
-export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
+  /**
+   * Runs synchronously after a committed public value changes, for control and programmatic writes.
+   * Skips initialization and values retained by equal. Control writes respect debounce.
+   * Aggregate operations notify once after their children are updated, with descendants first.
+   * Runs untracked, without requiring an injector; does not wait for asynchronous validation.
+   * Callback writes are delivered after the current callback. Return values are ignored.
+   * @example
+   * onValueChange: (value, node) => console.log(value, node.pending())
+   */
+  onValueChange?(value: TValue, node: TArray): void;
+
   /**
    * Configures this instance synchronously once, after its own API and children are ready.
    * Receives the collision-safe callable `$api`, so child names cannot hide operations.

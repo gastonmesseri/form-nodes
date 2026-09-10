@@ -3997,3 +3997,38 @@ callbacks with unchanged null values). Classic validator lifecycle follows
 `packages/forms/src/directives/shared.ts` (setUpValidators/cleanUpValidators).
 The declarative callback, automatic classic-control registration, ownership, and flexible
 normalization are Form Nodes API additions; Angular's public CVA validator bridge remains intact.
+
+
+## Committed value change callbacks
+
+All node options accept `onValueChange(value, node)`, with the primitive's inferred exposed value
+and node type. Registration is per instance, captured at construction, and copied into template
+clones. No initial call occurs: configure-time writes and initial row assignment are suppressed.
+Committed writes, control commits after debounce, aggregate patch/reset/flush, and structural
+changes notify when the publicly exposed value changes. Pending or canceled control drafts do
+not notify. Equality uses the exposed signal's retained value; installing a callback makes the
+public value observed at operation boundaries. State-only changes and validation completion do
+not notify. Programmatic writes to noninteractive nodes still notify when their values change.
+
+Mutation methods participate in a synchronous notification transaction. The node and callback-owning
+ancestors capture previous exposed values before mutation; descendants are delivered before parents
+once the operation finishes. Composite writes do not report partial intermediate values. Callback
+writes join the queue, and affected ancestors see the resulting value. Independent operations remain
+independent notifications. Reads during delivery run untracked, and no effect or injector is needed.
+Registrations use a WeakMap and operation-local pending references, with no long-lived watcher.
+
+Callback return values are ignored, including promises; asynchronous callback work is unmanaged.
+Synchronous failures do not roll back writes or prevent delivery to other pending nodes. The operation
+throws the failure after delivery, using AggregateError for multiple failures. Partially successful
+operations still deliver their resulting changes. Non-settling callback cycles stop after 100
+notifications of a single node in one operation and clear pending state. Async validation is neither
+awaited nor restarted by notification itself; observers may see pending and/or invalid state.
+
+Angular reference: latest stable `v22.1.6`, commit `356adf749188d996a641181c56621a6285126f3c`.
+Inspected `packages/forms/signals/src/directive/control_cva.ts` and
+`packages/forms/signals/test/web/interop.spec.ts`: control input writes controlValue, debounce
+separates pending input from committed data, programmatic updates synchronize the CVA, and
+control-originated commits avoid writing the same value back. The per-node callback and explicit
+operation batching are Form Nodes additions, not an Angular Signal Forms public API imitation.
+Cached comparator failures do not block later writes from recovering; failed public value reads
+do not emit a callback, and recovery compares against the last successfully observed value.
