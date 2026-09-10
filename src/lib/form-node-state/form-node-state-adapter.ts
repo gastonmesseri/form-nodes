@@ -2,7 +2,7 @@ import type { Signal } from '@angular/core';
 
 import type { ControlState, ControlStateError, ControlStateSource } from './form-node-state';
 
-export type ControlStateAdapter<TValue> = Omit<ControlState<TValue>, 'connected' | 'source' | 'hasError' | 'getError' | 'hasValidator'> & {
+export type ControlStateAdapter<TValue> = Omit<ControlState<TValue>, 'form' | 'formSubmitted' | 'connected' | 'source' | 'hasError' | 'getError' | 'hasValidator'> & {
   readonly connected: Signal<boolean>;
   readonly source: ControlStateSource;
   /** Registers an independently owned source and returns its cleanup. */

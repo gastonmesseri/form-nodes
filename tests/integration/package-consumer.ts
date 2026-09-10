@@ -1,5 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-import { FormNodesModule, FormNodeDirective, useClosestFormState, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -15,13 +15,18 @@ class Company {
 @Component({
   selector: 'package-consumer',
   standalone: true,
-  imports: [FormNodesModule],
+  imports: [FormNodesModule, FormNodeErrors],
   providers: [provideFormNodesConfig({ syncInputs: false })],
   template: `
     <form [formNode]="profile" (formNodeSubmit)="$event.form.$api.submitted()" (formNodeSubmitBlocked)="$event.event.preventDefault()">
       <span>{{ profile.submitted() }}</span>
       @if (closestForm(); as closest) { <span>{{ closest.submitted() }}</span> }
       <input #nameBinding="formNode" [formNode]="profile.name">
+      <form-node-errors [node]="profile.name">
+        <ng-template #message let-message let-messages="messages">
+          {{ message }} ({{ messages.length }})
+        </ng-template>
+      </form-node-errors>
       <input [formNode]="dynamicAge">
       @for (address of profile.addresses; track address) {
         <input [formNode]="address.city">

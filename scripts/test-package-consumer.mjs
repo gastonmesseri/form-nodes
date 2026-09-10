@@ -51,7 +51,7 @@ try {
 
   const angularDirectory = join(temporaryDirectory, 'node_modules', '@angular');
   mkdirSync(angularDirectory, { recursive: true });
-  for (const dependency of ['compiler', 'core', 'forms', 'platform-browser']) {
+  for (const dependency of ['common', 'compiler', 'core', 'forms', 'platform-browser']) {
     symlinkSync(resolve(workspace, 'node_modules', '@angular', dependency), join(angularDirectory, dependency), 'dir');
   }
 

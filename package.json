@@ -50,6 +50,7 @@
     "test:ui:compatibility": "node scripts/test-ui-compatibility.mjs"
   },
   "peerDependencies": {
+    "@angular/common": "^21.0.7 || ^22.1.5",
     "@angular/core": "^21.0.7 || ^22.1.5",
     "@angular/forms": "^21.0.7 || ^22.1.5"
   },

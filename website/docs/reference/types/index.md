@@ -73,6 +73,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [FormNodeCheckboxControl](./form-node-checkbox-control.md) | A custom control exposing a boolean `checked` model for `[formNode]`. |
 | [FormNodeControl](./form-node-control.md) | Either a value control or, for boolean values, a checkbox control recognized by `[formNode]`. |
 | [FormNodeDirective](./form-node-directive.md) | The public instance type of the [formNode] Angular directive. |
+| [FormNodeErrorsContext](./form-node-errors-context.md) | Context supplied once to the projected #message template when visible messages exist. |
 | [FormNodeStateOptions](./form-node-state-options.md) | Reactive error contribution configured by a custom-control component. |
 | [FormNodeSubmitEvent](./form-node-submit-event.md) | A native form submission attempt. Values are exposed snapshots; `form` is the bound node. |
 | [FormNodeUiControl](./form-node-ui-control.md) | Optional state inputs and interaction hooks recognized by `[formNode]` on Angular 21 and 22. |

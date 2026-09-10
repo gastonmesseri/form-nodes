@@ -13,13 +13,16 @@ import { field } from '../primitives/field';
 import type { AnyNode } from '../types/node.type';
 import { useClosestFormState } from './use-closest-form-state';
 import { FORM_NODE, FormNodeDirective } from './form-node.directive';
+import { useFormNodeState } from '../form-node-state/form-node-state';
 import { registerSignalInputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
-@Component({ selector: 'form-state-probe', template: '{{ state.submitted() }}' })
+@Component({ selector: 'form-state-probe', template: '{{ controlState.formSubmitted() }}' })
 class Probe {
-  state = useClosestFormState();
+  controlState = useFormNodeState();
+
+  state = this.controlState.form;
 }
 
 @Component({
@@ -107,8 +110,11 @@ for (const reactive of [false, true]) {
       await fixture.whenStable();
       const element = fixture.debugElement.query(By.css('form'));
       const directive = reactive ? element.injector.get(FormGroupDirective) : element.injector.get(NgForm);
-      const state = fixture.debugElement.query(By.directive(Probe)).componentInstance.state;
-      const submitted = computed(() => state.submitted());
+      const probe = fixture.debugElement.query(By.directive(Probe)).componentInstance as Probe;
+      expect(probe.controlState.connected()).toBe(false);
+      const state = probe.state;
+      expect(probe.controlState.formSubmitted).toBe(state.submitted);
+      const submitted = computed(() => probe.controlState.formSubmitted());
       expect([state.connected(), state.source(), state.formNode(), submitted()]).toEqual([true, reactive ? 'formGroup' : 'ngForm', null, false]);
       directive.control.setErrors({ required: true });
       element.nativeElement.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -124,29 +130,29 @@ for (const reactive of [false, true]) {
       directive.onSubmit(new Event('submit'));
       fixture.componentInstance.visible.set(true);
       fixture.detectChanges();
-      const late = fixture.debugElement.query(By.directive(Probe)).componentInstance.state;
-      expect(late.submitted()).toBe(true);
+      const late = (fixture.debugElement.query(By.directive(Probe)).componentInstance as Probe).controlState;
+      expect(late.formSubmitted()).toBe(true);
       element.nativeElement.dispatchEvent(new Event('reset'));
       await Promise.resolve();
-      expect(late.submitted()).toBe(false);
+      expect(late.formSubmitted()).toBe(false);
       if (reactive) {
         fixture.componentInstance.group = new FormGroup({ details: new FormGroup({ name: new FormControl('new') }) });
         fixture.detectChanges();
         directive.onSubmit(new Event('submit'));
-        expect(late.submitted()).toBe(true);
+        expect(late.formSubmitted()).toBe(true);
         (directive as FormGroupDirective).resetForm(undefined, { emitEvent: false });
         fixture.detectChanges();
-        expect(late.submitted()).toBe(false);
+        expect(late.formSubmitted()).toBe(false);
       }
       directive.onSubmit(new Event('submit'));
       directive.resetForm();
       fixture.destroy();
       await Promise.resolve();
       // Queued work and events must stop updating an already destroyed consumer.
-      const last = late.submitted();
+      const last = late.formSubmitted();
       directive.onSubmit(new Event('submit'));
       await Promise.resolve();
-      expect(late.submitted()).toBe(last);
+      expect(late.formSubmitted()).toBe(last);
     });
   });
 }
@@ -155,24 +161,34 @@ it('prioritizes Form Nodes and falls back reactively; chooses the nearest Angula
   const fixture = TestBed.createComponent(MixedHost);
   fixture.detectChanges();
   const probes = fixture.debugElement.queryAll(By.directive(Probe));
-  const state = (probes[0]!.componentInstance as Probe).state;
+  const controlState = (probes[0]!.componentInstance as Probe).controlState;
+  const state = controlState.form;
   const nested = (probes[1]!.componentInstance as Probe).state;
   const host = fixture.componentInstance;
   const angular = fixture.debugElement.query(By.directive(FormGroupDirective)).injector.get(FormGroupDirective);
   angular.onSubmit(new Event('submit'));
   expect(state.formNode()).toBe(host.profile.$api);
   expect(state.formNode()?.children.submitted()).toBe('child');
-  expect(state.submitted()).toBe(false);
+  expect(controlState.formSubmitted()).toBe(false);
   expect(nested.source()).toBe('ngForm');
   expect(nested.submitted()).toBe(false);
   await host.profile.submit();
-  expect(state.submitted()).toBe(true);
+  expect(controlState.formSubmitted()).toBe(true);
   host.profile.reset();
-  expect(state.submitted()).toBe(false);
+  expect(controlState.formSubmitted()).toBe(false);
   host.bound.set(field('detached'));
   fixture.detectChanges();
-  expect([state.source(), state.formNode(), state.submitted()]).toEqual(['formGroup', null, true]);
+  expect([state.source(), state.formNode(), controlState.formSubmitted()]).toEqual(['formGroup', null, true]);
   host.bound.set(host.profile);
   fixture.detectChanges();
-  expect([state.source(), state.submitted()]).toEqual(['formNode', false]);
+  expect([state.source(), controlState.formSubmitted()]).toEqual(['formNode', false]);
+});
+
+it('exposes false submission state when no supported form is connected', () => {
+  const fixture = TestBed.createComponent(Probe);
+  fixture.detectChanges();
+  const state = fixture.componentInstance.controlState;
+  expect(state.form.connected()).toBe(false);
+  expect(state.formSubmitted()).toBe(false);
+  expect(state.formSubmitted).toBe(state.form.submitted);
 });

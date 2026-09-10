@@ -233,7 +233,9 @@ Main exports: `FormNodeDirective`, `FormNodeBinding`, and [`FORM_NODE`](./form-n
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |
 | `useFormNodeState<T>()` | Reads normalized state from `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`. |
 | [`useClosestFormState()`](./use-closest-form-state.md) | Shared submission history with optional reactive Form Nodes API access. |
-| `ControlState<T>` | Source-neutral signal facade returned by `useFormNodeState()`. |
+| `ControlState<T>` | Source-neutral control signals, `formSubmitted()`, and complete nearest form state returned by `useFormNodeState()`. |
+| [`FormNodeErrors`](./form-node-errors.md) | Error messages with touch-or-submit visibility, custom templates, and optional height animation. |
+| `FormNodeErrorsContext` | First message, visible messages, and error details for a nested `#message` template. |
 | `ControlStateDisabledReason` | Source-neutral disabled reason containing an optional message. |
 
 See the [`useFormNodeState()` reference](./form-node-state.md) for its complete signal surface,

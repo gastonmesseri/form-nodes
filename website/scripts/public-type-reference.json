@@ -465,6 +465,10 @@
     "FormNodeStateOptions": {
       "family": "controls",
       "usage": "Configure a reactive component-owned error source for [`useFormNodeState()`](../form-node-state.md#contribute-errors). Return an error, a message, a readonly array, or no result."
+    },
+    "FormNodeErrorsContext": {
+      "family": "controls",
+      "usage": "Context for the projected `#message` template in [`FormNodeErrors`](../form-node-errors.md#custom-template), exposing the first visible message, all visible messages, and their error details."
     }
   }
 }

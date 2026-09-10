@@ -65,8 +65,8 @@ See the [complete component example and support comparison](../guides/custom-con
 :::tip Signal-based by design
 
 `useFormNodeState()` is designed for modern signal-based Angular components. Call the hook once as
-a component field; every state member it returns—such as `required`, `disabled`, `errors`, and
-`touched`—is an Angular `Signal`.
+a component field; its control state properties—such as `required`, `disabled`, `errors`, and
+`touched`—are Angular signals. The `form` property groups the nearest form's state signals.
 
 Read those signals directly in the template or compose them with `computed()` and `effect()`.
 Angular tracks the dependencies and updates an `OnPush` component without manual subscriptions or
@@ -99,6 +99,7 @@ No provider or adapter selection is required.
 | Contribute component errors | `useFormNodeState({ errors })` | [Error contributions](#contribute-errors) |
 | Enable Signal Forms CVA errors | `provideFormNodeStateErrors()` | [Error contributions](#contribute-errors) |
 | Support a binding API | Host binding | [Component integration styles](#component-integration-styles) |
+| Read form submission history | `formSubmitted()` or `form.submitted()` | [Nearest form state](#nearest-form-state) |
 | Identify the active binding | `connected()`, `source()` | [Connection properties](#connection-properties) |
 | Read value or validation | `value()`, `errors()`, `invalid()`, `pending()` | [Value and validation properties](#value-and-validation-properties) |
 | Mirror UI state | `disabled()`, `readonly()`, `hidden()`, `required()` | [Interaction and availability properties](#interaction-and-availability-properties) |
@@ -800,3 +801,41 @@ requires a CVA and Angular 22 or newer: Angular 21 Signal Forms and Signal Forms
 cannot consume this bridge. Unsupported Signal Forms hosts throw an explanatory error instead
 of silently leaving the form valid. The hook's existing observation API remains supported on
 all its existing bindings and versions when `errors` is omitted.
+
+
+## Nearest form state {#nearest-form-state}
+
+Use **`state.formSubmitted()`** when you only need to know whether the nearest form has recorded
+a submission attempt. It is the same readonly `Signal<boolean>` as `state.form.submitted`, so
+both reads track the same state, including invalid attempts, resets, and changes of owning form.
+It returns `false` without a supported form and adds no subscriptions or independent history.
+
+For custom presentation logic, a component can derive visibility with:
+
+```ts
+state = useFormNodeState();
+
+showErrors = computed(() => this.state.touched() || this.state.formSubmitted());
+```
+
+The name `formSubmitted` refers to the owning form, not a separate submission state on the control.
+`state.form: ClosestFormState` still includes the complete
+[`useClosestFormState()`](./use-closest-form-state.md) facade:
+
+| Member | Meaning |
+| --- | --- |
+| `state.form.connected()` | Whether a supported owning form exists |
+| `state.form.source()` | `'formNode'`, `'formGroup'`, `'ngForm'`, or `null` |
+| `state.form.submitted()` | Whether that form recorded a submission attempt, even if invalid |
+| `state.form.formNode()` | Owning Form Nodes callable API, or `null` |
+
+The nearest form's connection is independent of `state.connected()`, which describes the
+binding attached to the current component host. A presentation component can observe its form
+without being a control itself. Lookup priority, nested-form ownership, rebinding, reparenting,
+Angular reset reconciliation, and cleanup match the standalone helper. An unowned Form Nodes
+binding can fall back to the surrounding Angular form. Without a supported form, flags are false
+and source/API are null. Angular Signal Forms relies on touched state after submission; it does
+not supply persistent submission history here.
+
+Pass the complete state to [`<form-node-errors [state]="state">`](./form-node-errors.md) for
+accessible messages with default touch-or-submit visibility and optional height animation.

@@ -1,3 +1,4 @@
+import { attempt } from '../../utils/attempt';
 import { isEmpty } from '../../utils/is-empty';
 import { isFieldContext } from '../utils/field-context-marker';
 import { defaultUrlMessage } from '../utils/default-validator-messages';
@@ -12,12 +13,8 @@ const validateUrl = (
   const currentValue = value();
   if (isEmpty(currentValue)) return null;
 
-  try {
-    new URL(currentValue!);
-    return null;
-  } catch {
-    return { kind: 'url', message: resolveValidatorMessage('url', {}, message, defaultUrlMessage) };
-  }
+  if (attempt(() => new URL(currentValue!), null)) return null;
+  return { kind: 'url', message: resolveValidatorMessage('url', {}, message, defaultUrlMessage) };
 };
 
 /**

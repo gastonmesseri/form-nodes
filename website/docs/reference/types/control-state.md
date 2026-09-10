@@ -20,6 +20,8 @@ Use for reusable UI that observes a binding through [`useFormNodeState()`](../fo
 
 ```ts
 type ControlState<TValue = unknown> = {
+    readonly form: ClosestFormState;
+    readonly formSubmitted: Signal<boolean>;
     readonly connected: Signal<boolean>;
     readonly source: Signal<ControlStateSource | null>;
     readonly value: Signal<TValue | undefined>;
@@ -60,6 +62,8 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
+| `form` | Nearest form submission state and optional Form Nodes API; independent of the host control connection. |
+| `formSubmitted` | Shortcut to form.submitted: whether the nearest form recorded an attempt, including an invalid one. The same readonly signal; false without a supported form. |
 | `connected` | Whether a supported form binding is attached to the component host. |
 | `source` | API currently supplying the state, or `null` when the component is not bound. |
 | `value` | Current committed bound value, independent of Form Nodes node equality and pending input, or `undefined` when disconnected. |
@@ -88,6 +92,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 - [Custom control contracts](../custom-control-contracts.md)
 - [Public types index](./index.md)
+- [ClosestFormState](./closest-form-state.md)
 - [ControlStateDisabledReason](./control-state-disabled-reason.md)
 - [ControlStateError](./control-state-error.md)
 - [ControlStateSource](./control-state-source.md)

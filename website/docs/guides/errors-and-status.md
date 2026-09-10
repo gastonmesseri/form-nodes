@@ -2,9 +2,37 @@
 title: Errors and validation status
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import errorsSource from '!!raw-loader!../../examples/form-node-errors.typecheck.ts';
+
 # Errors and validation status {#errors-and-validation-status}
 
 Form Nodes separates errors owned by one node from errors aggregated across a subtree, and every exposed error identifies its target node.
+
+Use [`FormNodeErrors`](../reference/form-node-errors.md) to display one error below a field by
+default, with touch-or-submit visibility and an optional height animation. Pass `[node]` beside a
+native input or `[state]` inside a custom control using `useFormNodeState()`.
+
+## Display errors below a native input {#display-errors}
+
+Import `FormNodeErrors` beside `FormNodeDirective`. The input binds `[formNode]="contact.email"`;
+the error component observes that same field through `[node]="contact.email"`.
+
+<CodeBlock language="ts" title="contact-form.component.ts">{errorsSource}</CodeBlock>
+
+Initially no message is visible. Blur an empty input or submit the form to reveal the required
+message. An invalid email shows the format message; a valid email removes it. The component
+shows one message by default and animates its height automatically. The reset button clears
+interaction history while keeping the value; `resetToInitial()` also restores the empty value.
+The separate submitted-email preview belongs to the application and is not reset by the form.
+
+The unique `aria-describedby` association connects the input to its error container. Keep the
+container mounted so it can handle visibility and exit animation itself. Custom controls use
+[`[state]="state"` from `useFormNodeState()`](./custom-controls.md#built-in-error-presentation)
+inside their own template. See [display options](../reference/form-node-errors.md#adjust-display)
+for multiple messages, submit-only visibility, and disabling animation. Messages use a warm red
+by default; [custom templates and colors](../reference/form-node-errors.md#custom-template) let
+you add icons, render validator metadata, and match your application theme.
 
 ## 🚨 Error shape and ownership {#error-shape-and-ownership}
 

@@ -3,12 +3,13 @@ title: Custom controls
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import customEventOrderSource from '!!raw-loader!../../examples/custom-control-event-order.typecheck.ts';
-import pairedControlSource from '!!raw-loader!../../examples/paired-control-inputs.typecheck.ts';
-import selectedInputsSource from '!!raw-loader!../../examples/selected-control-inputs.typecheck.ts';
-import syncInputsSource from '!!raw-loader!../../examples/experimental-sync-inputs.typecheck.ts';
+import customErrorsSource from '!!raw-loader!../../examples/custom-control-errors.typecheck.ts';
 import customInputsSource from '!!raw-loader!../../examples/custom-control-inputs.typecheck.ts';
+import pairedControlSource from '!!raw-loader!../../examples/paired-control-inputs.typecheck.ts';
+import syncInputsSource from '!!raw-loader!../../examples/experimental-sync-inputs.typecheck.ts';
+import selectedInputsSource from '!!raw-loader!../../examples/selected-control-inputs.typecheck.ts';
 import formNodeStateSource from '!!raw-loader!../../examples/form-node-state-form-node.typecheck.ts';
+import customEventOrderSource from '!!raw-loader!../../examples/custom-control-event-order.typecheck.ts';
 
 # Custom controls {#custom-controls}
 
@@ -282,3 +283,31 @@ or `[(formNodeValue)]` to update an application signal. Form Nodes creates an in
 `useFormNodeState()` and its error contributions continue to work. Supplying `[formNode]` as
 well reuses that node and its validators. See [Standalone values](./control-binding.md#standalone-values)
 for a complete example and the input's synchronization rules.
+
+
+## Built-in error presentation {#built-in-error-presentation}
+
+Place `FormNodeErrors` beneath the input inside your custom control and pass the full
+`useFormNodeState()` result through `[state]`. The parent continues to bind the custom control
+with `[formNode]` and declares its validators on the field.
+
+This complete example uses a signal-model control. The comments identify suggested application
+files; both components keep their templates next to their models.
+
+<CodeBlock language="ts">{customErrorsSource}</CodeBlock>
+
+The reusable component does not receive the node separately. `value` handles edits, `state`
+provides validation and availability, and blur calls `state.markAsTouched()`. The nested error
+component then shows one message after touch or an attempted form submission. Each instance uses
+a unique input/error ID pair, and the optional backup address demonstrates `[animateErrors]="false"`.
+The nested `<ng-template #message let-message>` receives the first visible message and adds a
+decorative icon. It is discovered automatically; `let-messages="messages"` also exposes the
+visible message list when you want to render several messages yourself.
+
+For an existing CVA, keep its normal change and touch callbacks and use the same
+`state = useFormNodeState()` / `<form-node-errors [state]="state">` combination. The helper also
+includes the `state.formSubmitted()` shortcut and the optional `state.form.formNode()` API; the error
+component already uses submission history, so no extra visibility condition is needed.
+
+See [FormNodeErrors](../reference/form-node-errors.md) for message limits, custom text, visibility
+policies, and the [native-input example](../reference/form-node-errors.md#native-input).

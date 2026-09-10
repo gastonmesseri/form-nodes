@@ -10,6 +10,7 @@ import { injectFormFieldControlStateAdapter } from './adapters/form-field';
 import { injectFormControlNameStateAdapter } from './adapters/form-control-name';
 import { normalizeValidationResult } from '../validation/utils/normalize-validation-result';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
+import { useClosestFormState, type ClosestFormState } from '../form-node/use-closest-form-state';
 
 /** Binding APIs that can supply a universal {@link ControlState} state facade. */
 export type ControlStateSource = 'formNode' | 'formField' | 'formControl' | 'formControlName' | 'ngModel';
@@ -54,6 +55,10 @@ export type ControlStateDisabledReason = {
  * custom-control API.
  */
 export type ControlState<TValue = unknown> = {
+  /** Nearest form submission state and optional Form Nodes API; independent of the host control connection. */
+  readonly form: ClosestFormState;
+  /** Shortcut to form.submitted: whether the nearest form recorded an attempt, including an invalid one. The same readonly signal; false without a supported form. */
+  readonly formSubmitted: Signal<boolean>;
   /** Whether a supported form binding is attached to the component host. */
   readonly connected: Signal<boolean>;
   /** API currently supplying the state, or `null` when the component is not bound. */
@@ -191,7 +196,8 @@ export type ControlState<TValue = unknown> = {
  *   isDisabled = computed(() => this.formNodeState.disabled());
  *
  *   visibleErrors = computed(() => {
- *     return this.formNodeState.touched() ? this.formNodeState.errors() : [];
+ *     const eligible = this.formNodeState.touched() || this.formNodeState.formSubmitted();
+ *     return eligible ? this.formNodeState.errors() : [];
  *   });
  * }
  * ```
@@ -205,6 +211,7 @@ export const useFormNodeState = <TValue = unknown>(options?: FormNodeStateOption
   const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   const destroyRef = inject(DestroyRef);
   const appId = inject(APP_ID);
+  const form = useClosestFormState();
   const adapters = [
     injectFormNodeControlStateAdapter<TValue>(element, destroyRef, appId),
     injectFormFieldControlStateAdapter<TValue>(),
@@ -243,6 +250,8 @@ export const useFormNodeState = <TValue = unknown>(options?: FormNodeStateOption
   }, { max: VALIDATOR_QUERY_CACHE_SIZE });
 
   return {
+    form,
+    formSubmitted: form.submitted,
     connected: computed(() => active() !== null),
     source: computed(() => active()?.source ?? null),
     value: computed(() => active()?.value()),

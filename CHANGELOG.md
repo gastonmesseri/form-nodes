@@ -12,6 +12,9 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
+- Display validation messages with `FormNodeErrors` (`<form-node-errors>`), accepting a node or custom-control state. Show one message after touch or attempted submission by default, customize visibility, message resolution, nested `#message` templates receiving the first message and the visible message list, and the default red color and compact `0.875rem` text with `1.5` line height through CSS custom properties, and animate measured height with animation enabled by default and controlled explicitly through the animate input. Invalid runtime display configuration uses safe empty/default rendering instead of throwing. Custom template rendering adds `@angular/common` as an explicit peer dependency alongside core and forms.
+- Access nearest-form submission state and the owning Form Nodes API through `useFormNodeState().form`, with `formSubmitted()` as a direct signal shortcut for submission attempts; `useClosestFormState()` remains available independently.
+
 - Bind native file inputs to `File | null` or `File[]` fields, including standalone `[formNodeValue]` bindings. Selection updates reactive values and validation; programmatic updates and resets synchronize the browser selection without assigning filesystem paths.
 
 

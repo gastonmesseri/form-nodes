@@ -22,6 +22,10 @@ other exports that are not imported.
 The published package includes TypeScript declarations, source maps, the MIT license, and a changelog.
 Use the [GitHub issue tracker](https://github.com/gastonmesseri/form-nodes/issues) to report bugs.
 
+
+Keep `@angular/common`, `@angular/core`, and `@angular/forms` on matching Angular versions.
+They are peer dependencies of Form Nodes; `@angular/common` supplies custom error-template rendering.
+
 ## 💡 Requirements {#requirements}
 
 - Angular `^21.0.7 || ^22.1.5`

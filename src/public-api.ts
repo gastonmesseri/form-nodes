@@ -132,3 +132,7 @@ export type { FormNodeSubmitEvent } from './lib/types/form-node-binding.type';
 export type { NodeErrorsSignal } from './lib/types/node-errors-signal.type';
 
 export { provideFormNodeStateErrors } from './lib/form-node-state/control-errors';
+
+export { FormNodeErrors } from './lib/form-node-errors/form-node-errors.component';
+
+export type { FormNodeErrorsContext } from './lib/form-node-errors/form-node-errors-context.type';

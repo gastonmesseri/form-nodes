@@ -59,6 +59,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
       "reference/types/form-node-checkbox-control",
       "reference/types/form-node-control",
       "reference/types/form-node-directive",
+      "reference/types/form-node-errors-context",
       "reference/types/form-node-state-options",
       "reference/types/form-node-submit-event",
       "reference/types/form-node-ui-control",

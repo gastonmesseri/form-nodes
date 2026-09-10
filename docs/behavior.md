@@ -4108,3 +4108,130 @@ programmatic FileList synchronization are intentional Form Nodes extensions; exi
 blur, buffered-value, and reset infrastructure governs their state behavior. The
 [HTML file-input API](https://html.spec.whatwg.org/multipage/input.html#dom-input-files)
 permits assigning a FileList and only permits the empty string when setting a file input's value.
+
+## Error presentation and unified control/form state
+
+`useFormNodeState().form` contains the complete `ClosestFormState` facade, retaining its
+Form Nodes > Angular form lookup priority, model ownership tracking, Angular event/reset
+reconciliation, and destruction cleanup. Its connected/source properties describe the form,
+independently of the same-host control's connected/source properties. The standalone
+`useClosestFormState()` remains supported. No new submission history is inferred for Angular
+Signal Forms; submission marks controls touched instead.
+
+`FormNodeErrors` observes either `[node]` or `[state]`; conflicting inputs render nothing. A node supplies its own
+errors, not descendant errors; a ControlState supplies errors visible to its specific binding.
+Nullish/disconnected sources render nothing. No binding, ownership lease, validation execution,
+submission, interaction mutation, or focus target is installed by the display component.
+
+The default `showWhen: 'touched-or-submit'` permits display when the source is touched or its
+nearest form has recorded an attempt, including invalid attempts. This includes new fields added
+after an attempt. Node mode uses model form ownership; state mode uses `state.form` injector-based
+ownership and fallback. Nested forms retain independent submission history; touched propagation
+continues to follow ordinary form operations. Reset clears presentation eligibility when it
+clears the relevant interaction/submission flags. Alternative policies are touched, dirty,
+submit, always, or a boolean. Disabled and hidden sources never display; readonly sources may.
+Pending validation does not hide already present errors. The component does not invent errors
+while validation is pending.
+
+Messages follow source order. A reactive resolver can return text, null to suppress an error,
+or undefined to use its string message or the configurable fallback ('Invalid value.'). Empty
+or whitespace-only results are filtered before taking `maxMessages` (default 1). Nonnegative
+integers and Infinity are accepted; zero and invalid limits render nothing without throwing. Messages are
+rendered as text in a persistent polite, atomic live region. Consumers provide unique stable IDs
+and associate the actual input using aria-describedby; custom controls associate their inner
+input. No error-content HTML is interpreted.
+
+Height animation is enabled by default and can be disabled with `[animate]="false"`. The host
+animates from 0 to the measured content height, between changed heights, and to 0 on removal.
+ResizeObserver handles wrapping/content resize; after-render measurement handles Angular
+updates. Transitions last 160 ms and use the current rendered height when interrupted. A finished
+animation uses the last target height when a subsequent render changes natural layout, even if
+its finish event has not yet fired. Natural height resumes after transitions. The animate input
+alone controls whether animation is enabled; media-query preferences are not applied automatically.
+Unavailable Web Animations display changes immediately. Disabling animate cancels active
+animations. Destruction disconnects observers and cancels animation. SSR renders text
+without starting browser measurement or animation. Host margins/padding are consumer layout and
+do not collapse with content.
+
+Behavioral reference: Angular v22.1.6, commit
+`356adf749188d996a641181c56621a6285126f3c`, inspected in
+`packages/forms/signals/src/api/structure.ts` (submit marks touched before validation gating),
+`src/api/types.ts` (own errors versus errorSummary, pending versus invalid), and
+`test/node/submit.spec.ts` (touch propagation and disabled/hidden/readonly exclusions).
+Presentation policy, persistent submission history, message limits, and animation are Form Nodes
+features layered over that state behavior. They do not change node validation or propagation.
+
+
+### Error message templates and typography
+
+`FormNodeErrors` uses `#dc2626` by default, overridable through the inherited CSS custom property
+`--form-node-errors-color`. Text defaults to `0.875rem` with unitless line-height `1.5`, configurable
+through `--form-node-errors-font-size` and `--form-node-errors-line-height`. Font family and weight
+still inherit. Root-relative sizing follows root text enlargement without compounding smaller
+ancestor text sizes. Containers grow and wrap as text is enlarged; no fixed height is introduced.
+These styles apply to default and projected message content unless that content overrides them.
+The same color applies to currentColor icons. Typography does not change visibility or validation.
+
+Typography references: Bootstrap v5.3.8 `scss/_variables.scss` uses `0.875em` for validation feedback;
+Carbon's form style guide uses `0.75rem` for error messages. The `0.875rem` choice is Form Nodes
+presentation policy, not an Angular Signal Forms behavior or a WCAG minimum font size. WCAG 2.2
+SC 1.4.4 governs 200% text enlargement without content loss; SC 1.4.3 requires 4.5:1 contrast for
+normal text. Browser coverage checks doubled root text size and inherited/per-instance overrides
+for both default and projected messages.
+
+A nested `ng-template #message` customizes the entire visible message block. A signal-based
+contentChild query reads the first matching TemplateRef. It is instantiated once when visible
+messages exist, with FormNodeErrorsContext: $implicit/message is the first resolved string,
+messages is the filtered/limited visible string list, and errors contains the corresponding
+shallow-copied error details in the same order. No template runs when the visible list is empty.
+Default maxMessages remains 1; larger custom lists require a larger limit.
+
+The template is selected automatically from content. Conditional insertion, removal and
+replacement are reactive. Missing templates or references on non-template elements use the
+built-in text layout; multiple matches use the first. Unrelated projected markup is not rendered.
+There is no additional directive or template input. Template markup is ordinary Angular content;
+interpolation retains normal escaping. The template's full height is measured for animation.
+
+Angular v22.1.6 implementation reference: `packages/common/src/directives/ng_template_outlet.ts`
+and `packages/common/test/directives/ng_template_outlet_spec.ts` govern context updates and
+replacement template views. Error ownership and submission state retain the Signal Forms
+reference recorded above; templates and theme color do not change form behavior.
+
+Custom error-template rendering uses Angular Common NgTemplateOutlet; `@angular/common` is an
+explicit peer dependency with the same supported version range as core and forms.
+
+
+### Form submission shortcut
+
+`useFormNodeState().formSubmitted` is the same readonly Signal<boolean> instance as
+`state.form.submitted`. It creates no extra watcher or independent history. Both reads observe
+invalid attempts, nearest-form ownership, rebinding, reparenting, Angular form fallback, reset
+reconciliation, and destruction cleanup. Without a supported form the shortcut is false.
+The control's connected state remains independent of form connection. Angular Signal Forms
+still supplies no persistent history here; its existing touched-on-submit behavior is unchanged.
+This is an API shortcut over the Angular v22.1.6 comparison and owning-form policy recorded above.
+
+
+### Invalid error-display configuration
+
+FormNodeErrors does not throw configuration errors. A supplied non-node, conflicting node/state
+inputs, unreadable source state, or an invalid error collection renders no messages. Error entries
+without a string kind are ignored. Zero, negative, fractional, NaN, and nonnumeric maxMessages
+render nothing. An unknown visibility policy uses touched-or-submit. Only the boolean false
+disables animation; other runtime values retain its enabled default.
+
+A non-function message resolver, synchronous callback exception, or unsupported result uses the
+existing string error message or fallback. Null still suppresses an error. Invalid fallback text
+uses 'Invalid value.'. A missing or non-template #message reference renders default text. Correcting
+configuration or changing tracked dependencies recovers rendering without changing node state.
+Public input types remain strict. These presentation fallbacks are a Form Nodes policy, above the
+Angular v22.1.6 state and NgTemplateOutlet behavior already recorded; the content query reads only TemplateRef results before reaching Angular's outlet.
+
+
+Projected template lookup was checked against Angular v22.1.6 (commit
+356adf749188d996a641181c56621a6285126f3c), including
+`packages/core/src/render3/instructions/queries_signals.ts` and
+`packages/core/test/acceptance/authoring/signal_queries_spec.ts` for signal content-query
+initialization, conditional results, and missing results. NgTemplateOutlet context/view updates
+use the common implementation and tests referenced above. This is a presentation change only;
+node validation, ownership and submission propagation are unchanged.
