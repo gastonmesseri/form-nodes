@@ -11,7 +11,7 @@ import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { ValidatorMessages } from '../validation/validator-messages';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 import type { DisabledReason, DynamicNode, AnyNode, NodeKeyInParent, NodePatch, NodeSet, Nodes, NodeValue, RootNode } from '../types/node.type';
-import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
+import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode, ValidationErrorWithOptionalTargetNode } from '../validation/validation.type';
 
 /** Values inferred as concise `field()` definitions inside an object node. */
 export type FieldShorthand = string | number | boolean | bigint | symbol | null | undefined | Date | readonly unknown[] | ((...args: any[]) => any);
@@ -372,8 +372,12 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * ```
    */
   readonly?: boolean | (() => boolean);
-  /** Runs when submitWhen permits submission. Receives the exposed value snapshot first and this form second. */
-  onSubmit?(value: TValue, form: TForm): void | PromiseLike<void>;
+  /**
+   * Runs when submitWhen permits submission. Receives the exposed value snapshot first and this form second.
+   * Return an error or readonly error array to reject the submission. Omitted targets belong to this form.
+   * Errors clear on target edits/reset or before retrying; obsolete responses are ignored. Thrown failures propagate.
+   */
+  onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
   /** Runs when validation blocks submission, including pending validation with submitWhen: 'valid'. Does not run for concurrent submissions or a missing onSubmit.
    * For native attempts, formNodeSubmitBlocked emits first and also supports forms without onSubmit.
    */
@@ -755,7 +759,10 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   submitting: Signal<boolean>;
   /**
    * Marks and flushes the subtree, then runs the configured submission action when validation
-   * allows it. Resolves to `false` without throwing when no action is configured.
+   * allows it. Clears previous subtree submission errors before checking local validation.
+   * Resolves to `false` for returned errors, blocked/concurrent attempts, or a missing action.
+   * Errors target this form or its captured descendants; edits/reset/detachment discard stale errors.
+   * Thrown or rejected action failures propagate without becoming validation errors.
    */
   submit(): Promise<boolean>;
   /** Whether any descendant field currently has a pending control-value debounce. */

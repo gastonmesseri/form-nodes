@@ -144,7 +144,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `pending` | Whether asynchronous validation is active on this form or any descendant. |
 | `submitted` | Whether `submit()` has been called on this form since its last reset. |
 | `submitting` | Whether this form or an ancestor form is currently running its submission action. |
-| `submit` | Marks and flushes the subtree, then runs the configured submission action when validation allows it. Resolves to `false` without throwing when no action is configured. |
+| `submit` | Marks and flushes the subtree, then runs the configured submission action when validation allows it. Clears previous subtree submission errors before checking local validation. Resolves to `false` for returned errors, blocked/concurrent attempts, or a missing action. Errors target this form or its captured descendants; edits/reset/detachment discard stale errors. Thrown or rejected action failures propagate without becoming validation errors. |
 | `debouncing` | Whether any descendant field currently has a pending control-value debounce. |
 | `flush` | Immediately commits every pending control value in this form's subtree. |
 | `focus` | Focuses the first bound UI control in this form's subtree, in DOM order. |

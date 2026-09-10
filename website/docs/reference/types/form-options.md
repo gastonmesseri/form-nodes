@@ -36,7 +36,7 @@ type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
     hidden?: boolean | (() => boolean);
     disabled?: boolean | string | (() => boolean | string);
     readonly?: boolean | (() => boolean);
-    onSubmit?(value: TValue, form: TForm): void | PromiseLike<void>;
+    onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
     onSubmitBlocked?(form: TForm): void;
     submitWhen?: 'valid' | 'not-invalid' | 'always';
 };
@@ -68,7 +68,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `hidden` | Initial or reactive visibility of the complete form subtree. |
 | `disabled` | Initial or reactive disabled state for the complete subtree. Return a string to record a user-facing reason. |
 | `readonly` | Initial or reactive readonly state for the complete subtree. |
-| `onSubmit` | Runs when submitWhen permits submission. Receives the exposed value snapshot first and this form second. |
+| `onSubmit` | Runs when submitWhen permits submission. Receives the exposed value snapshot first and this form second. Return an error or readonly error array to reject the submission. Omitted targets belong to this form. Errors clear on target edits/reset or before retrying; obsolete responses are ignored. Thrown failures propagate. |
 | `onSubmitBlocked` | Runs when validation blocks submission, including pending validation with submitWhen: 'valid'. Does not run for concurrent submissions or a missing onSubmit. For native attempts, formNodeSubmitBlocked emits first and also supports forms without onSubmit. |
 | `submitWhen` | When validation permits submission: 'not-invalid' (default) allows pending validation, 'valid' requires valid(), and 'always' bypasses the validation gate without disabling validators. Pending validation blocks immediately; it is not awaited. |
 
@@ -79,5 +79,6 @@ The declaration above also includes inherited contracts and overloads where appl
 - [AnyNode](./any-node.md)
 - [FormNode](./form-node.md)
 - [SyncInputName](./sync-input-name.md)
+- [ValidationErrorWithOptionalTargetNode](./validation-error-with-optional-target-node.md)
 - [ValidatorMessages](./validator-messages.md)
 - [ValidatorSource](./validator-source.md)

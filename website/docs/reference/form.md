@@ -241,7 +241,7 @@ const myForm = form({
 | [`injector`](#form-injector-option) | Angular `Injector` | Explicitly owns injector-dependent work such as asynchronous validation watchers. |
 | [`inheritInjector`](#form-inheritinjector-option) | Boolean; defaults to `true` | Allows an injector-less nested form to use the nearest ancestor injector. |
 | [`adoptBindingInjector`](#form-adoptbindinginjector-option) | Boolean; defaults to `true` | Allows direct `[formNode]` binding to provide a temporary host injector. |
-| [`onSubmit`](#form-submission-option) | `(value, form) => void \| PromiseLike<void>` | Runs the action initiated by `submit()`. |
+| [`onSubmit`](#form-submission-option) | `(value, form) => error(s) \| null \| void \| PromiseLike<…>` | Runs the action initiated by `submit()`. |
 | [`onSubmitBlocked`](#form-submission-option) | `(form) => void` | Handles attempts blocked by validation. |
 | [`submitWhen`](#form-submission-option) | `'valid' \| 'not-invalid' \| 'always'` | Controls the validation gate; defaults to `'not-invalid'`. |
 
@@ -437,10 +437,15 @@ const profile = form({
 **Signatures:**
 
 ```ts
-onSubmit?(value: TValue, form: TForm): void | PromiseLike<void>;
+onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
 onSubmitBlocked?(form: TForm): void;
 submitWhen?: 'valid' | 'not-invalid' | 'always';
 ```
+
+Return one error or a readonly error array to reject submitted data. Omitted targets belong to this
+form; explicit targets must belong to its captured subtree. `null`, `undefined`, and an empty array
+indicate success. Errors clear on edits/reset and before retrying; stale responses are ignored.
+See [Server rejection errors](../guides/submission.md#server-errors) for ownership, retry, and lifecycle rules.
 
 Configures `submit()`. `onSubmit(value, form)` runs when the current validation policy allows
 submission. `onSubmitBlocked(form)` runs when validation blocks it, including pending validation
@@ -1587,7 +1592,7 @@ const submitted = await profile.submit();
 ```
 
 The promise resolves to `true` after the action completes successfully. It resolves to `false`
-when validation blocks submission, submission is already running, or no action is configured. If
+when the action returns a nonempty error result, validation blocks submission, submission is already running, or no action is configured. If
 the action throws or rejects, `submit()` rejects with that error and still clears `submitting()`.
 
 </div>

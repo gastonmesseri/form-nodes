@@ -36,6 +36,44 @@ const dispatch = (element: HTMLElement, type: string) => {
 };
 
 describe('FormNodeDirective in Chromium', () => {
+  it('renders server errors after native submission and clears them on input and reset', async () => {
+    @Component({
+      template: `<form [formNode]="profile"><input [formNode]="profile.email"><button type="submit">Save</button><button type="reset">Reset</button></form>`,
+      imports: [FormNodeDirective],
+    })
+    class Host {
+      profile = form({ email: field('old@example.com') }, {
+        onSubmit: async (_value, node) => {
+          return { kind: 'taken', message: 'Already registered.', targetNode: node.email };
+        },
+      });
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const submit = fixture.nativeElement.querySelector('[type="submit"]') as HTMLButtonElement;
+    const reset = fixture.nativeElement.querySelector('[type="reset"]') as HTMLButtonElement;
+    submit.click();
+    await vi.waitFor(() => expect(fixture.componentInstance.profile.submitting()).toBe(false));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.profile.email.getError('taken')).toBeDefined();
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    input.value = 'new@example.com';
+    dispatch(input, 'input');
+    fixture.detectChanges();
+    expect(fixture.componentInstance.profile.email.errors()).toEqual([]);
+    expect(input.getAttribute('aria-invalid')).toBe('false');
+    submit.click();
+    await vi.waitFor(() => expect(fixture.componentInstance.profile.submitting()).toBe(false));
+    fixture.detectChanges();
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    reset.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.profile.valid()).toBe(true);
+    expect(fixture.componentInstance.profile.email.touched()).toBe(false);
+    expect(input.value).toBe('new@example.com');
+  });
+
   it('accepts parsing errors from a date CVA through NgControl.control.setErrors', () => {
     @Component({
       selector: 'imperative-date-control',

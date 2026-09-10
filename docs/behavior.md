@@ -2453,14 +2453,14 @@ Submission gating, inherited state, and concurrency were inspected against Angul
 `packages/forms/signals/`. The public API intentionally uses flat form options, a value-first
 callback, and explicit gate names: `'valid'`, `'not-invalid'` (default), and `'all'`.
 Unlike Angular, a missing action returns `false` after touching/flushing rather than throwing;
-returned server-validation errors are not interpreted. Form Nodes uses one `FormNodeDirective` directive.
+returned server-validation errors are now interpreted as described below. Form Nodes uses one `FormNodeDirective` directive.
 
 `onSubmitBlocked` runs synchronously and untracked only when the validation gate rejects the
 attempt, including pending validation with `'valid'`. Pending validation is not awaited and does
 not schedule a retry. Concurrent attempts and missing actions do not invoke this callback.
 Its exceptions reject `submit()` without starting the action. `onSubmit` also runs untracked,
-receives the exposed value snapshot followed by the exact form, and may return `void` or
-`PromiseLike<void>`. Its rejection propagates while `submitting()` clears in `finally`.
+receives the exposed value snapshot followed by the exact form, and may return an error, a readonly
+error array, null, or void, directly or through a PromiseLike. Its rejection propagates while `submitting()` clears in `finally`.
 `'all'` changes only the gate: validators and errors remain active. Submission options are
 local to each form; nested forms inherit submission state, not another form's callbacks or policy.
 The tolerant `group()` native-form binding is a deliberate library extension: Angular's `FormRoot`
@@ -3913,3 +3913,45 @@ directive-history facade. Remote Angular 22 tags were unavailable during this ch
 maintenance release could not be reverified. Angular directive timing was inspected in installed
 Angular 21.0.7 forms.mjs (NgForm and FormGroupDirective) and verified by integration tests.
 This hook does not discover Angular Signal Forms or invent submission history for them.
+
+## Submission error results
+
+`onSubmit` accepts `ValidationErrorWithOptionalTargetNode<AnyNode>`, a readonly array of those
+errors, null, or void, directly or through PromiseLike. It does not accept HTTP responses, strings,
+or numeric error kinds. Omitted targets belong to the submitted form. Nonempty results resolve
+`submit()` to false even when every returned target is obsolete; empty results resolve true.
+Thrown/rejected failures propagate and are never converted to validation errors.
+
+Submission-owned sources contribute to the existing external-error registry, independently of
+validators and control-owned errors. Own errors and descendant summaries expose the target node;
+non-interactive suppression, validity, required-kind inference, and binding state use existing rules.
+Asynchronous validator completion does not clear a submission source.
+
+Before checking the validation gate, non-concurrent attempts with an action clear submission
+sources throughout the submitted subtree. Validator/control errors remain; onSubmitBlocked is
+reserved for a rejected gate and does not run for returned server errors. Missing actions and
+concurrent attempts do not clear sources. Existing touched, flush, submitted, and submitting rules
+remain, and parent/child action ownership is unchanged.
+
+An admitted action captures all current node identities, including dynamic object children and
+array items, and advances their submission generation. Each target has a lazy reactive revision
+tracking raw committed data, pending control data, reset generation, and its complete parent chain.
+Changed or reset targets, detachments, and newer submissions on shared targets invalidate old
+responses. Captured targets are required; foreign or newly created targets are ignored. Retained
+rows keep field errors across index-only reorder. Aggregate errors also track descendant
+pending control values; an unrelated sibling edit does not invalidate a leaf error. Non-notifying in-place mutation
+cannot be detected. Reset clears errors even with unchanged values and does not cancel requests.
+
+Sources and revisions use WeakMap ownership and Angular computed/signals, without an injector or
+an effect. No submission owner is retained by a target's error source. Application-provided error
+payloads retain their own reference semantics. No public imperative setErrors API is introduced.
+
+Angular authority inspected: maintenance branch `22.1.x`, commit
+`14d6999cd773421ceafd1546f471ee4b28cad70f`. Relevant implementation is
+`packages/forms/signals/src/api/structure.ts` (`submit`, `shouldRunAction`, `setSubmissionErrors`),
+`src/field/submit.ts` (value-linked submission errors), and `src/field/node.ts` (`_reset`).
+`test/node/submit.spec.ts` covers field/global/multiple error targets, false outcomes, edit clearing,
+pending-validator completion, exceptions, concurrency, and non-interactive fields.
+Form Nodes intentionally adds pre-gate retry clearing, unchanged-value reset clearing, buffered-edit
+invalidation, captured-subtree restrictions, and stale-response protection. Angular's inspected
+implementation assigns returned errors after awaiting the action without these revision checks.

@@ -3,6 +3,7 @@ title: Form submission
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import errorsSource from '!!raw-loader!../../examples/submission-errors.example.ts';
 import historySource from '!!raw-loader!../../examples/submission-history.example.ts';
 
 # Form submission {#form-submission}
@@ -74,10 +75,11 @@ These properties belong directly in the second `form()` argument.
 
 - `'valid'` requires `valid()` to be true; errors and pending validation block the attempt immediately.
 - `'not-invalid'` is the default: pending validation permits submission unless errors make the form invalid.
-- `'always'` runs the action regardless of validation state, without disabling validators or clearing errors.
+- `'always'` runs the action regardless of validation state, without disabling validators. Previous submission errors are cleared before every non-concurrent attempt with an action.
 
 `onSubmit(value, form)` receives the exposed value snapshot first and the submitted form second.
-It may return `void` or a promise-like value; submission waits for it and propagates failures.
+It may return an error, a readonly error array, `null`, or `void`, directly or through a promise-like value.
+Submission waits for the result; thrown or rejected failures propagate.
 
 Use `onSubmitBlocked(form)` for synchronous UI feedback when validation blocks an attempt. It also
 runs for pending validation with `'valid'`; submission does not wait for validation or retry automatically.
@@ -86,6 +88,44 @@ still marks and flushes the subtree and returns `false`.
 
 Submission callbacks run without reactive dependency tracking. Options belong to the form where
 specified; nested forms retain their own callbacks and policy while inheriting `submitting()` state.
+
+## Server rejection errors {#server-errors}
+
+Return `{ kind, message?, targetNode? }` from `onSubmit` when the server rejects the submitted data.
+An omitted `targetNode` assigns the error to the submitted form. Return a readonly array to report
+multiple errors. `null`, `undefined`, implicit fallthrough, and an empty array indicate success.
+The application maps its backend response to this format; Form Nodes does not interpret HTTP responses.
+
+<CodeBlock language="typescript" title="submission-errors.ts">{errorsSource}</CodeBlock>
+
+Returned errors appear in the target's `errors()` and `getError()`, propagate through `allErrors()`,
+and affect normal validity. Targets can be fields, groups, forms, or arrays captured within the
+submitted subtree. Errors for foreign nodes or nodes added after the action starts are ignored.
+A nonempty returned error list always makes `submit()` resolve to `false`, even if all its targets
+became obsolete. `onSubmitBlocked` reports local validation gating, not a server rejection.
+
+Submission errors are separate from validator and control-owned errors:
+
+- Changing a target's committed value or pending control value invalidates its submission errors.
+  An unrelated sibling edit leaves a field error intact. Aggregate errors depend on the aggregate's
+  committed value and descendant pending inputs; use an aggregate target for a rejection involving several fields.
+- Resetting a subtree clears its submission errors, including when values do not change, and makes
+  in-flight errors for those reset nodes obsolete. Reset does not cancel the request.
+- Before a non-concurrent attempt with an action checks validity, it clears previous submission
+  errors throughout that subtree. Normal validator and control errors still enforce `submitWhen`.
+  This permits retrying a global rejection without inventing a value change.
+- Responses are checked against captured node identities and reactive revisions, using committed
+  and control values rather than exposed-value equality. Changed/reset/detached targets are ignored.
+  Retained array rows keep their errors when reordered; removed rows lose them. A newer admitted
+  parent submission supersedes an older nested submission for their shared targets.
+- Disabled, readonly, and hidden nodes suppress these errors through the existing non-interactive
+  rules. Suppression does not itself erase a stored error. Normal signal identity rules apply:
+  mutating an object in place without a notifying write cannot invalidate a response.
+
+Use thrown/rejected failures for technical problems such as a disconnected request. They continue
+rejecting `submit()` and clear `submitting()` in `finally`; they do not become validation errors.
+When an API returns a response object on success, consume that response in `onSubmit` and return
+nothing, rather than returning the response as an error result.
 
 ## Submission history {#submission-history}
 
@@ -98,7 +138,7 @@ Native submission through `<form [formNode]>` uses the same operation.
 | --- | --- |
 | `submitted()` | An attempt occurred since reset, regardless of success |
 | `submitting()` | An action on this form or an ancestor is currently running |
-| `await submit()` | True when the action completed; false when skipped; rejects when the action fails |
+| `await submit()` | True when the action completed without returned errors; false when skipped or rejected by returned errors; rejects on thrown/rejected failures |
 
 Editing, `set()`, `patch()`, touching/untouching, and action completion leave history intact.
 `reset()`, `reset(value)`, and `resetToInitial()` clear it. A native reset through `[formNode]`

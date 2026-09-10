@@ -24,6 +24,7 @@ import { registerNodeValidatorMessages } from '../validation/validator-messages'
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
+import { captureSubmission, clearSubmissionErrors } from '../validation/submission-errors';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
 import { assertValidObjectDefinition, normalizeObjectDefinition } from './form-group-node.utils';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
@@ -483,6 +484,7 @@ export class FormGroupNode<TNodes extends Nodes> {
         notifications.attempted();
       }
       if (!onSubmit && !notifications) return false;
+      if (onSubmit) clearSubmissionErrors(this.node);
       const shouldRun = this.options?.submitWhen === 'always'
         || (this.options?.submitWhen === 'valid' ? untracked(this.node.$api.valid) : !untracked(this.node.$api.invalid));
       if (!shouldRun) {
@@ -496,8 +498,9 @@ export class FormGroupNode<TNodes extends Nodes> {
       this.preparingSubmission = false;
     }
     try {
-      await untracked(() => onSubmit(this.exposedValue(), this.node));
-      return true;
+      const complete = captureSubmission(this.node);
+      const result = await untracked(() => onSubmit(this.exposedValue(), this.node));
+      return complete(result);
     } finally {
       this.selfSubmitting.set(false);
     }

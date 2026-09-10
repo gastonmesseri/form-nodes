@@ -24,6 +24,170 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe('submission error results', () => {
+  it('invalidates aggregate rejection errors when a descendant has an uncommitted draft', async () => {
+    let finish!: () => void;
+    const wait = new Promise<void>((resolve) => { finish = resolve; });
+    const profile = form({ details: { name: field('Ada', { debounce: 'blur' }) } }, {
+      onSubmit: async () => {
+        await wait;
+        return { kind: 'conflict' };
+      },
+    });
+    const pending = profile.submit();
+    profile.details.name.value.control.set('Grace');
+    expect(profile().details.name).toBe('Ada');
+    finish();
+    expect(await pending).toBe(false);
+    expect(profile.errors()).toEqual([]);
+    expect(profile.details.name.value.control()).toBe('Grace');
+  });
+
+  it('clears only server errors before a retry blocked by reactive local validation', async () => {
+    const localInvalid = signal(false);
+    const action = vi.fn(() => ({ kind: 'server' }));
+    const blocked = vi.fn();
+    const profile = form({ name: field('Ada') }, {
+      validators: () => localInvalid() ? { kind: 'local' } : null,
+      onSubmit: action,
+      onSubmitBlocked: blocked,
+    });
+    expect(await profile.submit()).toBe(false);
+    localInvalid.set(true);
+    expect(profile.errors().map(error => error.kind)).toEqual(['local', 'server']);
+    expect(await profile.submit()).toBe(false);
+    expect(profile.errors().map(error => error.kind)).toEqual(['local']);
+    expect(action).toHaveBeenCalledTimes(1);
+    expect(blocked).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a newer parent submission result when an older nested action finishes', async () => {
+    let finish!: () => void;
+    const wait = new Promise<void>((resolve) => { finish = resolve; });
+    const nested = form({ name: field('Ada') }, {
+      onSubmit: async (_value, node) => {
+        await wait;
+        return { kind: 'old', targetNode: node.name };
+      },
+    });
+    const profile = form({ nested }, {
+      onSubmit: (_value, node) => ({ kind: 'new', targetNode: node.nested.name }),
+    });
+    const pending = nested.submit();
+    expect(await profile.submit()).toBe(false);
+    finish();
+    expect(await pending).toBe(false);
+    expect(nested.name.errors().map(error => error.kind)).toEqual(['new']);
+  });
+
+  it.each([undefined, null, []])('accepts an empty successful result: %j', async (result) => {
+    const profile = form({}, { onSubmit: () => result });
+    expect(await profile.submit()).toBe(true);
+    expect(profile.errors()).toEqual([]);
+  });
+
+  it('supports global errors and retries unchanged values without treating rejection as a blocked attempt', async () => {
+    const blocked = vi.fn();
+    let attempts = 0;
+    const profile = form({ name: field('Ada', [required]) }, {
+      onSubmit: () => {
+        attempts++;
+        return attempts === 1 ? { kind: 'conflict' } : undefined;
+      },
+      onSubmitBlocked: blocked,
+    });
+    expect(await profile.submit()).toBe(false);
+    expect(profile.errors()).toEqual([{ kind: 'conflict', targetNode: profile }]);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.submitted()).toBe(true);
+    expect(profile.submitting()).toBe(false);
+    expect(blocked).not.toHaveBeenCalled();
+    expect(await profile.submit()).toBe(true);
+    expect(profile.valid()).toBe(true);
+    expect(attempts).toBe(2);
+    profile.name.set('');
+    expect(await profile.submit()).toBe(false);
+    expect(blocked).toHaveBeenCalledTimes(1);
+    expect(attempts).toBe(2);
+  });
+
+  it('aggregates errors across nested forms, groups, arrays, and dynamic children', async () => {
+    const profile = form({
+      details: form({ name: field('Ada') }),
+      address: { city: field('Zurich') },
+      rows: array({ code: field('a') }, { initialValue: 1 }),
+    }, {
+      onSubmit: (_value, node) => [
+        { kind: 'nested', targetNode: node.details },
+        { kind: 'city', targetNode: node.address.city },
+        { kind: 'rows', targetNode: node.rows },
+        { kind: 'row', targetNode: node.rows[0]!.code },
+        { kind: 'dynamic', targetNode: node.get('extra')! },
+      ],
+    });
+    const extra = field('extra');
+    profile.add('extra', extra);
+    expect(await profile.submit()).toBe(false);
+    expect(profile.allErrors()).toHaveLength(5);
+    expect(profile.details.invalid()).toBe(true);
+    expect(profile.rows.invalid()).toBe(true);
+    profile.details.name.set('Grace');
+    expect(profile.details.errors()).toEqual([]);
+    expect(profile.allErrors()).toHaveLength(4);
+    profile.rows.resetToInitial();
+    expect(profile.rows.allErrors()).toEqual([]);
+    profile.remove('extra');
+    expect(extra.errors()).toEqual([]);
+    profile.reset();
+    expect(profile.valid()).toBe(true);
+  });
+
+  it('ignores foreign, newly added, detached, and reset targets in late results', async () => {
+    let finish!: () => void;
+    const wait = new Promise<void>((resolve) => { finish = resolve; });
+    const foreign = field('foreign');
+    const removed = form({ name: field('Ada') });
+    const profile = form({ name: field('old') }, {
+      onSubmit: async (_value, node) => {
+        await wait;
+        return [
+          { kind: 'foreign', targetNode: foreign },
+          { kind: 'new', targetNode: node.get('new')! },
+          { kind: 'removed', targetNode: removed.name },
+          { kind: 'reset' },
+        ];
+      },
+    });
+    profile.add('removed', removed);
+    const pending = profile.submit();
+    profile.remove('removed');
+    profile.reset();
+    profile.add('new', field('new'));
+    finish();
+    expect(await pending).toBe(false);
+    expect(profile.allErrors()).toEqual([]);
+    expect(removed.allErrors()).toEqual([]);
+    expect(foreign.errors()).toEqual([]);
+  });
+
+  it('retains errors by row identity across reorder and allows nested retries', async () => {
+    const profile = form({ rows: array({ name: field('Ada') }, { initialValue: 2 }) }, {
+      onSubmit: (_value, node) => ({ kind: 'row', targetNode: node.rows[0]!.name }),
+    });
+    const first = profile.rows[0]!;
+    expect(await profile.submit()).toBe(false);
+    profile.rows.move(0, 1);
+    expect(first.name.getError('row')).toBeDefined();
+    expect(profile.rows[0]!.name.errors()).toEqual([]);
+    const nested = form({ name: field('Ada') }, { onSubmit: () => ({ kind: 'nested' }) });
+    profile.add('nested', nested);
+    expect(await nested.submit()).toBe(false);
+    expect(nested.errors()).toHaveLength(1);
+    nested.name.set('Grace');
+    expect(nested.errors()).toEqual([]);
+  });
+});
+
 const nodeTypeOf = (node: AnyNode): NodeType => {
   return node.$api.nodeType();
 };

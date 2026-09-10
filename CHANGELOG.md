@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Return field or form errors from `onSubmit` to reject a submission and expose them through normal node validation state. Errors clear on edits/reset and before retries; stale responses cannot overwrite edited, detached, or newer submitted nodes. Thrown request failures continue to reject `submit()`.
+
 ### Changed
 
 - **Breaking:** Replace `useClosestForm()` with `useClosestFormState()` for shared submission history across Form Nodes, Reactive Forms, and NgForm. Form Nodes takes priority; access its callable API through the reactive `formNode()` property when available. This breaking change is planned for the next minor release at the maintainer's explicit request, as an exception to the default Semantic Versioning policy. It remains unreleased.

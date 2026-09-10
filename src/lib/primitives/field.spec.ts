@@ -29,6 +29,94 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe('field submission errors', () => {
+  it('exposes targeted errors, preserves siblings, and clears only edited values', async () => {
+    const profile = form({ email: field('old@example.com'), name: field('Ada') }, {
+      onSubmit: (_value, node) => [
+        { kind: 'taken', message: 'Already registered.', targetNode: node.email },
+        { kind: 'reserved', targetNode: node.email },
+        { kind: 'name', targetNode: node.name },
+      ],
+    });
+    expect(await profile.submit()).toBe(false);
+    expect(profile.email.errors().map(error => error.kind)).toEqual(['taken', 'reserved']);
+    expect(profile.email.getError('taken')?.message).toBe('Already registered.');
+    expect(profile.email.touched()).toBe(true);
+    expect(profile.email.dirty()).toBe(false);
+    expect(profile.email.invalid()).toBe(true);
+    expect(profile.allErrors()).toHaveLength(3);
+    profile.email.set('old@example.com');
+    expect(profile.email.errors()).toHaveLength(2);
+    profile.email.set('new@example.com');
+    expect(profile.email.valid()).toBe(true);
+    expect(profile.name.invalid()).toBe(true);
+    profile.name.reset();
+    expect(profile.valid()).toBe(true);
+  });
+
+  it.each(['edit', 'revert', 'reset', 'initial', 'draft'] as const)('discards a late field error after %s', async (change) => {
+    let finish!: () => void;
+    const wait = new Promise<void>((resolve) => { finish = resolve; });
+    const profile = form({ email: field('old', { debounce: 'blur', equal: () => true }) }, {
+      onSubmit: async (_value, node) => {
+        await wait;
+        return { kind: 'taken', targetNode: node.email };
+      },
+    });
+    const pending = profile.submit();
+    expect(profile.email.submitting()).toBe(true);
+    if (change === 'edit' || change === 'revert') profile.email.set('new');
+    if (change === 'revert') profile.email.set('old');
+    if (change === 'reset') profile.email.reset();
+    if (change === 'initial') profile.email.resetToInitial();
+    if (change === 'draft') profile.email.value.control.set('new');
+    finish();
+    expect(await pending).toBe(false);
+    expect(profile.email.errors()).toEqual([]);
+    expect(profile.email.submitting()).toBe(false);
+    expect(profile.valid()).toBe(true);
+  });
+
+  it('clears accepted errors on buffered edits without waiting for committed validation', async () => {
+    const validate = vi.fn(({ value }: Context<string | null>) => { value(); return null; });
+    const profile = form({ email: field('old', { debounce: 'blur', validators: validate }) }, {
+      onSubmit: (_value, node) => ({ kind: 'taken', targetNode: node.email }),
+    });
+    expect(await profile.submit()).toBe(false);
+    const count = validate.mock.calls.length;
+    profile.email.value.control.set('new');
+    expect(profile.email()).toBe('old');
+    expect(profile.email.value.control()).toBe('new');
+    expect(profile.email.errors()).toEqual([]);
+    expect(profile.email.dirty()).toBe(true);
+    expect(validate).toHaveBeenCalledTimes(count);
+    profile.email.flush();
+    expect(profile.email.valid()).toBe(true);
+    expect(validate).toHaveBeenCalledTimes(count + 1);
+  });
+
+  it('keeps submission errors when async validation finishes and suppresses them while disabled', async () => {
+    let finish!: (value: null) => void;
+    const validate = vi.fn(() => new Promise<null>((resolve) => { finish = resolve; }));
+    const profile = form({ email: field('old', [asyncValidator(validate)]) }, {
+      onSubmit: (_value, node) => ({ kind: 'taken', targetNode: node.email }),
+    });
+    expect(profile.email.pending()).toBe(true);
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(1));
+    expect(await profile.submit()).toBe(false);
+    expect(profile.email.pending()).toBe(true);
+    finish(null);
+    await vi.waitFor(() => expect(profile.email.pending()).toBe(false));
+    expect(profile.email.getError('taken')).toBeDefined();
+    profile.email.disable();
+    expect(profile.email.errors()).toEqual([]);
+    profile.email.enable();
+    expect(profile.email.getError('taken')).toBeDefined();
+    profile.reset();
+    expect(profile.email.errors()).toEqual([]);
+  });
+});
+
 it.each(['object', 'factory'])('inherits %s message providers without requiring a binding', (source) => {
   const message = signal('Parent message');
   const catalog = { required: () => message() };
