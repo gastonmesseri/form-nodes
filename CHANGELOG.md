@@ -10,13 +10,18 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [3.8.0] - 2026-09-11
+
 ### Added
 
-- Display validation messages with `FormNodeErrors` (`<form-node-errors>`), accepting a node or custom-control state. Show one message after touch or attempted submission by default, customize visibility, message resolution, nested `#message` templates receiving the first message and the visible message list, and the default red color and compact `0.875rem` text with `1.5` line height through CSS custom properties, and animate measured height with animation enabled by default and controlled explicitly through the animate input. Invalid runtime display configuration uses safe empty/default rendering instead of throwing. Custom template rendering adds `@angular/common` as an explicit peer dependency alongside core and forms.
-- Access nearest-form submission state and the owning Form Nodes API through `useFormNodeState().form`, with `formSubmitted()` as a direct signal shortcut for submission attempts; `useClosestFormState()` remains available independently.
-
+- Display validation messages with `FormNodeErrors` (`<form-node-errors>`) for a node or custom-control state. Show one message after touch or attempted submission by default, with customizable visibility, message resolution, and safe defaults for invalid runtime configuration.
+- Customize error markup with a nested `#message` template receiving the first message, visible message list, and error details. Error text defaults to red, `0.875rem` font size, and `1.5` line height, all configurable through CSS custom properties. Measured height animation is enabled by default and controlled through the `animate` input.
+- Access nearest-form submission state and the owning Form Nodes API through `useFormNodeState().form`, with `formSubmitted()` as a direct signal shortcut for submission attempts. `useClosestFormState()` remains available independently.
 - Bind native file inputs to `File | null` or `File[]` fields, including standalone `[formNodeValue]` bindings. Selection updates reactive values and validation; programmatic updates and resets synchronize the browser selection without assigning filesystem paths.
 
+### Changed
+
+- Add `@angular/common` as an explicit peer dependency alongside Angular core and forms to support custom error templates.
 
 ## [3.7.0] - 2026-09-11
 
@@ -341,7 +346,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.7.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.8.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -367,3 +372,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.6.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.5.0...v3.6.0
 
 [3.7.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.6.0...v3.7.0
+
+[3.8.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.7.0...v3.8.0
