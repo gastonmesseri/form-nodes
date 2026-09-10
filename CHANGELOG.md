@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [3.7.0] - 2026-09-11
+
 ### Added
 
 - Bind raw values with `[formNodeValue]` or use `[(formNodeValue)]` for committed two-way updates. Controls create one independent field when no `[formNode]` is supplied, reuse explicit nodes when provided, and expose the same state and CVA error integration in both modes.
@@ -22,7 +24,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Changed
 
-- **Breaking:** Replace `useClosestForm()` with `useClosestFormState()` for shared submission history across Form Nodes, Reactive Forms, and NgForm. Form Nodes takes priority; access its callable API through the reactive `formNode()` property when available. This breaking change is planned for the next minor release at the maintainer's explicit request, as an exception to the default Semantic Versioning policy. It remains unreleased.
+- **Breaking:** Replace `useClosestForm()` with `useClosestFormState()` for shared submission history across Form Nodes, Reactive Forms, and NgForm. Form Nodes takes priority; access its callable API through the reactive `formNode()` property when available. This breaking change ships in minor version 3.7.0 at the maintainer's explicit request, as an exception to the default Semantic Versioning policy.
 
 ## [3.6.0] - 2026-09-10
 
@@ -331,7 +333,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.6.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.7.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -355,3 +357,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.5.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.4.0...v3.5.0
 
 [3.6.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.5.0...v3.6.0
+
+[3.7.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.6.0...v3.7.0

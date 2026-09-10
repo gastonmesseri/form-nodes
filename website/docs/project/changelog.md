@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.7.0 — 2026-09-11 {#370--2026-09-11}
+
 ### Added
 
 - Bind raw values with `[formNodeValue]` or use `[(formNodeValue)]` for committed two-way updates. Controls create one independent field when no `[formNode]` is supplied, reuse explicit nodes when provided, and expose the same state and CVA error integration in both modes.
@@ -22,7 +24,7 @@ canonical release record.
 
 ### Changed
 
-- **Breaking:** Replace `useClosestForm()` with `useClosestFormState()` for shared submission history across Form Nodes, Reactive Forms, and NgForm. Form Nodes takes priority; access its callable API through the reactive `formNode()` property when available. This breaking change is planned for the next minor release at the maintainer's explicit request, as an exception to the default Semantic Versioning policy. It remains unreleased.
+- **Breaking:** Replace `useClosestForm()` with `useClosestFormState()` for shared submission history across Form Nodes, Reactive Forms, and NgForm. Form Nodes takes priority; access its callable API through the reactive `formNode()` property when available. This breaking change ships in minor version 3.7.0 at the maintainer's explicit request, as an exception to the default Semantic Versioning policy.
 
 ## 📦 3.6.0 — 2026-09-10 {#360--2026-09-10}
 

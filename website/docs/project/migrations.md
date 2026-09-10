@@ -4,7 +4,7 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
-## Unreleased: closest form state {#closest-form-state}
+## Moving to 3.7.0: closest form state {#closest-form-state}
 
 `useClosestFormState()` replaces the removed `useClosestForm()` export. The new hook returns a
 stable facade rather than a signal of the form API. Its properties are reactive signals:

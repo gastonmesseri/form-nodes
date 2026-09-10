@@ -72,3 +72,9 @@ explicit request. This is an exception to the default Semantic Versioning policy
 outputs and mutations are omitted from context node types; existing validators using those
 members must follow the [3.6.0 migration guide](./migrations.md#read-only-validator-contexts).
 The changelog identifies this as a breaking type change.
+
+## Closest form state exception: 3.7.0 {#closest-form-state-exception}
+
+Version **3.7.0** replaces `useClosestForm()` with `useClosestFormState()` at the maintainer's explicit request. This breaking change ships in a minor release as an exception to the
+default Semantic Versioning policy. Follow the [migration guide](./migrations.md#closest-form-state)
+before upgrading.
