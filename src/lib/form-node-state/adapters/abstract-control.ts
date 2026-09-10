@@ -1,6 +1,7 @@
-import { DestroyRef, Injector, afterEveryRender, booleanAttribute, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injector, afterEveryRender, booleanAttribute, computed, inject, signal, untracked } from '@angular/core';
 import { NG_VALIDATORS, NgControl, RequiredValidator, Validators, type AbstractControl, type ValidatorFn, type AsyncValidatorFn } from '@angular/forms';
 
+import { toAngularControlErrors } from '../control-errors';
 import type { ControlStateSource } from '../form-node-state';
 import type { ControlStateAdapter } from '../form-node-state-adapter';
 import { readValidatorConstraint, resolveValidatorConstraints } from './validator-constraints';
@@ -76,6 +77,21 @@ export const injectAbstractControlStateAdapter = <TValue>(
 
   return {
     source,
+    registerErrors(errors) {
+      const target = control()!;
+      const validator: ValidatorFn = () => toAngularControlErrors(errors());
+      return untracked(() => {
+        target.addValidators(validator);
+        target.updateValueAndValidity();
+        return () => {
+          target.removeValidators(validator);
+          target.updateValueAndValidity();
+        };
+      });
+    },
+    refreshErrors() {
+      control()?.updateValueAndValidity();
+    },
     connected: computed(() => control() !== null),
     value: computed(() => currentControl().value as TValue),
     disabled: computed(() => currentControl().disabled),

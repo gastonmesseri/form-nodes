@@ -3955,3 +3955,45 @@ pending-validator completion, exceptions, concurrency, and non-interactive field
 Form Nodes intentionally adds pre-gate retry clearing, unchanged-value reset clearing, buffered-edit
 invalidation, captured-subtree restrictions, and stale-response protection. Angular's inspected
 implementation assigns returned errors after awaiting the action without these revision checks.
+
+
+## Component-owned error contributions
+
+`useFormNodeState({ errors })` accepts a synchronous reactive callback returning a string, an
+object with a string `kind`, a readonly array of strings/errors, or null/undefined/void. Strings,
+including empty strings, normalize to `{ kind: 'custom', message }`; empty results remove only
+this hook's contribution. The callback has no validation context and reads the component's local
+signals. Reading the resulting binding errors/invalid state creates a circular dependency and is
+not supported. Cross-node targets and promises are excluded from the public input type.
+
+Each invocation owns a separate contribution. Form Nodes registers it as external validation;
+node errors and ancestor validity include it, while disabled/readonly/hidden suppress it using
+normal state rules. Interaction state and configured validators remain unchanged. Local errors alone do not restart
+Form Nodes asynchronous validators; pending and invalid can coexist, and asynchronous completion
+does not remove local errors. Rebinding and
+destruction release the previous owner. Reset synchronizes the CVA through writeValue; the control
+must update its own parsing state. An active local error is not cleared independently of its source.
+Callbacks are not evaluated while disconnected. Existing read-only state behavior is unchanged.
+
+Reactive Forms and ngModel register a synchronous validator using addValidators/removeValidators,
+revalidate on source changes, and use Angular's ordinary parent propagation, disabled behavior,
+event emission, async cancellation, and pending rules. Consumers must preserve contributed
+validators when modifying validator configuration. Angular maps keep the last value per kind;
+Form Nodes retains all entries. Clearing a source restores colliding errors from other sources.
+
+Angular Signal Forms requires an explicit `provideFormNodeStateErrors()` component provider and
+a CVA on Angular 22+. The provider exposes independently registered sources via NG_VALIDATORS,
+with registerOnValidatorChange notifications. Unsupported hosts throw clearly. Angular 21 Signal
+Forms does not support this feature; state observation still does. This explicit version restriction
+avoids writing Angular's private parseErrorsSource or patching its internals. Signal Forms converts
+the payload into its legacy error context representation.
+
+Reference: latest stable Angular 22 tag `v22.1.6`, commit
+`356adf749188d996a641181c56621a6285126f3c`. Inspected
+`packages/forms/signals/src/directive/control_cva.ts`, `src/directive/form_field.ts`,
+`src/directive/control_custom.ts`, `src/field/validation.ts`, and
+`packages/forms/signals/test/web/interop.spec.ts` (legacy parse errors and validator-change
+callbacks with unchanged null values). Classic validator lifecycle follows
+`packages/forms/src/directives/shared.ts` (setUpValidators/cleanUpValidators).
+The declarative callback, automatic classic-control registration, ownership, and flexible
+normalization are Form Nodes API additions; Angular's public CVA validator bridge remains intact.

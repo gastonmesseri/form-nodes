@@ -1,5 +1,5 @@
 import { Validators } from '@angular/forms';
-import { APP_ID, DestroyRef, ElementRef, computed, inject, type Signal } from '@angular/core';
+import { APP_ID, DestroyRef, ElementRef, computed, effect, inject, untracked, type Signal } from '@angular/core';
 
 import { required } from '../validation/validators/required';
 import { computedFunction } from '../utils/computed-function';
@@ -8,6 +8,7 @@ import { injectFormControlStateAdapter } from './adapters/form-control';
 import { injectFormNodeControlStateAdapter } from './adapters/form-node';
 import { injectFormFieldControlStateAdapter } from './adapters/form-field';
 import { injectFormControlNameStateAdapter } from './adapters/form-control-name';
+import { normalizeValidationResult } from '../validation/utils/normalize-validation-result';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
 
 /** Binding APIs that can supply a universal {@link ControlState} state facade. */
@@ -17,6 +18,27 @@ export type ControlStateSource = 'formNode' | 'formField' | 'formControl' | 'for
 export type ControlStateError = {
   readonly kind: string;
   readonly [property: string]: unknown;
+};
+
+/** Errors a custom control may contribute without targeting another control. */
+export type ControlError = ControlStateError & {
+  readonly message?: string;
+  readonly targetNode?: never;
+  readonly fieldTree?: never;
+  readonly formField?: never;
+  readonly formNode?: never;
+};
+
+/** Reactive error contribution configured by a custom-control component. */
+export type FormNodeStateOptions = {
+  /**
+   * Contributes component-owned errors to the current binding. Strings become kind 'custom'.
+   * null, undefined, void, and [] mean no errors. Reads track signal dependencies, even if the
+   * bound value stays unchanged. Read local control state, never the resulting state.errors().
+   * Returning no errors removes only this contribution; destruction and rebinding clean it up.
+   * CVAs using Angular 22 Signal Forms also need provideFormNodeStateErrors().
+   */
+  errors?: () => ControlError | string | null | undefined | void | readonly (ControlError | string)[];
 };
 
 /** A source-neutral explanation for why the bound control is disabled. */
@@ -141,6 +163,11 @@ export type ControlState<TValue = unknown> = {
  * disabled, touched, dirty, pending, errors, and other state. `markAsTouched()` also targets that binding.
  * No manual adapter selection is needed, and Angular forms do not need to use Form Nodes primitives.
  *
+ * Pass an errors callback to contribute component-owned validation errors. It accepts an error
+ * with kind, a message string, a readonly array, or null/undefined/void. Contributions follow the
+ * current binding and clean up on destruction. Angular 22 Signal Forms CVAs additionally require
+ * provideFormNodeStateErrors(); other supported bindings register contributions directly.
+ *
  * This is a state integration utility; retain the value contract required by the chosen forms API,
  * such as a value model or ControlValueAccessor. Metadata unavailable from a source uses neutral
  * defaults. Reactive Forms and ngModel recognize Angular Validators.required / requiredTrue and
@@ -169,9 +196,12 @@ export type ControlState<TValue = unknown> = {
  * }
  * ```
  *
- * @throws When called outside an Angular injection context.
+ * @reactive The optional errors callback tracks signal reads and memoizes its normalized result.
+ * @param options Optional component-owned reactive errors, combined with binding validation.
+ * @throws When called outside an Angular injection context, or when contributing errors to an
+ * unsupported Angular Signal Forms host (requires Angular 22+, CVA, and provideFormNodeStateErrors()).
  */
-export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
+export const useFormNodeState = <TValue = unknown>(options?: FormNodeStateOptions): ControlState<TValue> => {
   const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   const destroyRef = inject(DestroyRef);
   const appId = inject(APP_ID);
@@ -183,6 +213,20 @@ export const useFormNodeState = <TValue = unknown>(): ControlState<TValue> => {
     injectNgModelControlStateAdapter<TValue>(),
   ];
   const active = computed(() => adapters.find(adapter => adapter.connected()) ?? null);
+  const evaluateErrors = options?.errors;
+  if (evaluateErrors) {
+    const source = computed(() => normalizeValidationResult(evaluateErrors()).map(error => ({ ...error })));
+    effect((onCleanup) => {
+      const adapter = active();
+      if (adapter) onCleanup(adapter.registerErrors(source));
+    });
+    effect(() => {
+      const adapter = active();
+      if (!adapter) return;
+      source();
+      untracked(() => adapter.refreshErrors?.());
+    });
+  }
   const errors = computed(() => active()?.errors() ?? []);
   const hasError = computedFunction((kind: string) => {
     return errors().some(error => error.kind === kind);

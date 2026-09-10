@@ -1,9 +1,10 @@
-import { computed, signal, type DestroyRef, type Signal, type WritableSignal } from '@angular/core';
+import { computed, signal, untracked, type DestroyRef, type Signal, type WritableSignal } from '@angular/core';
 
 import type { InternalNode } from '../../types/node.type';
 import type { ControlStateAdapter } from '../form-node-state-adapter';
 import { getFormNodeName } from '../../form-node/utils/form-node-name';
 import type { FormNodeBinding } from '../../types/form-node-binding.type';
+import { registerExternalValidationErrors } from '../../validation/external-validation-errors';
 
 type FormNodeEntry = {
   binding: FormNodeBinding | null;
@@ -41,6 +42,10 @@ export const injectFormNodeControlStateAdapter = <TValue>(element: HTMLElement, 
   };
   return {
     source: 'formNode',
+    registerErrors(source) {
+      const target = node();
+      return untracked(() => registerExternalValidationErrors(target, {}, source));
+    },
     connected: computed(() => binding() !== null),
     value: computed(() => (node() as InternalNode).$api._value() as TValue),
     disabled: computed(() => node().$api.disabled()),

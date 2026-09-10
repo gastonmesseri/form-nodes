@@ -12,6 +12,8 @@ canonical release record.
 
 ### Added
 
+- Contribute reactive component errors with `useFormNodeState({ errors })`, returning one error, a message, an array, or no result. Contributions participate in bound-control validity and clean up on rebinding or destruction. Add `provideFormNodeStateErrors()` for CVAs used with Angular 22 Signal Forms.
+
 - Return field or form errors from `onSubmit` to reject a submission and expose them through normal node validation state. Errors clear on edits/reset and before retries; stale responses cannot overwrite edited, detached, or newer submitted nodes. Thrown request failures continue to reject `submit()`.
 
 ### Changed

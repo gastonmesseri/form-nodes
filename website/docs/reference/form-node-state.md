@@ -3,6 +3,7 @@ title: useFormNodeState()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import controlErrorsSource from '!!raw-loader!../../examples/form-node-state-errors.typecheck.ts';
 import validatorQueriesSource from '!!raw-loader!../../examples/form-node-state-validator-queries.typecheck.ts';
 import constraintSource from '!!raw-loader!../../examples/form-node-state-constraints.typecheck.ts';
 import formNodeStateComponentSource from '!!raw-loader!../../examples/form-node-state-component.typecheck.ts';
@@ -92,7 +93,9 @@ No provider or adapter selection is required.
 
 | I want to… | Start with | Details |
 | --- | --- | --- |
-| Create the state facade | `useFormNodeState<TValue>()` | [Signature](#signature) |
+| Create the state facade | `useFormNodeState<TValue>(options?)` | [Signature](#signature) |
+| Contribute component errors | `useFormNodeState({ errors })` | [Error contributions](#contribute-errors) |
+| Enable Signal Forms CVA errors | `provideFormNodeStateErrors()` | [Error contributions](#contribute-errors) |
 | Support a binding API | Host binding | [Component integration styles](#component-integration-styles) |
 | Identify the active binding | `connected()`, `source()` | [Connection properties](#connection-properties) |
 | Read value or validation | `value()`, `errors()`, `invalid()`, `pending()` | [Value and validation properties](#value-and-validation-properties) |
@@ -106,7 +109,7 @@ No provider or adapter selection is required.
 ## 📐 Signature {#signature}
 
 ```ts
-useFormNodeState<TValue = unknown>(): ControlState<TValue>;
+useFormNodeState<TValue = unknown>(options?: FormNodeStateOptions): ControlState<TValue>;
 ```
 
 The hook has no arguments or configuration object. `TValue` affects only the type returned by
@@ -722,3 +725,76 @@ registry. Always use `connected()` when behavior depends on an active source.
 - [`FormNodeDirective` binding API](./form-node-binding.md)
 - [Control binding](../guides/control-binding.md)
 - [API overview](./api-overview.md)
+
+
+## Contribute component errors {#contribute-errors}
+
+Pass `errors` to contribute a reactive validation result from your component. A signal is also
+accepted because it is callable. `options.errors()` describes only local errors; `state.errors()`
+continues to return the binding's combined errors. Read local input or parsing state in the callback,
+never `state.errors()` or `state.invalid()`, which would create a validation cycle.
+
+```ts
+state = useFormNodeState({
+  errors: () => this.parseError() ? 'Enter a valid date.' : null,
+});
+```
+
+| Callback result | Meaning |
+| --- | --- |
+| `{ kind: 'invalidDate', message: 'Enter a valid date.' }` | One structured error; `message` is optional. |
+| `'Enter a valid date.'` | One error with `kind: 'custom'` and that message. An empty string is also an error. |
+| `['First problem', { kind: 'invalidDate' }]` | Several errors or messages, including readonly arrays. |
+| `null`, `undefined`, `void`, or `[]` | No errors from this callback. |
+
+The callback is synchronous and tracks signal dependencies even when the CVA's value stays `null`.
+Promises are not supported. If the component wraps an Angular `FormControl`, its plain `errors`
+property is not reactive: convert `statusChanges` to a signal with `toSignal()`, read that signal
+in the callback, and map the Angular error dictionary to `{ kind, ...details }` objects. Errors belong to the current host binding and cannot target another
+node. Returning no errors removes only this hook's contribution. Other validators and other
+hook instances retain their errors. Destroying the component or changing its binding releases the
+old contribution. Without a binding the callback is not evaluated and state remains neutral.
+
+For Form Nodes, these errors participate in normal node validity, ancestor validity, `allErrors()`,
+and submission checks. They are suppressed while the node is disabled, readonly, or hidden.
+Contributing an error does not mark a node dirty or touched or restart its asynchronous validators.
+An existing asynchronous validation can remain pending while the node is invalid from a local
+error; its completion does not remove that local error. Resetting the node writes its value
+back through the CVA; `writeValue()` must update the local state from which errors are derived.
+A reset does not blindly erase a still-active local error condition.
+
+Reactive Forms and `ngModel` register an independently removable synchronous validator and rerun
+validation when the callback changes. Angular's normal disabled and asynchronous-validation rules
+apply. As with Angular's own validator-change callbacks, revalidation can emit control events.
+Avoid replacing all validators with `setValidators()` while the contribution is attached; use
+`addValidators()` and `removeValidators()` to preserve other registrations. Angular represents
+errors as a map, so the last error with a given kind wins; use distinct kinds when all errors must
+remain visible. Form Nodes retains all error entries.
+
+### CVA example
+
+<CodeBlock language="ts" title="appointment-editor.component.ts">{controlErrorsSource}</CodeBlock>
+
+The input accepts date text understood by JavaScript's `Date` parser; use your date adapter for
+locale-specific or strict calendar parsing. Validation and rendering share the same local text.
+
+### Angular Signal Forms provider
+
+```ts
+provideFormNodeStateErrors(): Provider[];
+```
+
+For a CVA used with **Angular 22+ `[formField]`**, add `provideFormNodeStateErrors()` to the
+component's `providers` alongside `NG_VALUE_ACCESSOR`, as in the example. This installs the
+`NG_VALIDATORS` bridge without requiring `validate()` or `registerOnValidatorChange()` on your CVA.
+It is safe to keep this provider on reusable CVAs used with the other bindings; those bindings
+register the hook contribution directly. Existing CVA validators remain registered separately.
+Angular Signal Forms may expose the structured payload under an error's `context` property;
+`kind` remains available at the top level.
+
+The provider is unnecessary for `[formNode]`, `[formControl]`, `[formControlName]`, and `ngModel`.
+`[formNode]` also supports this option on signal-model custom controls. The Signal Forms bridge
+requires a CVA and Angular 22 or newer: Angular 21 Signal Forms and Signal Forms model controls
+cannot consume this bridge. Unsupported Signal Forms hosts throw an explanatory error instead
+of silently leaving the form valid. The hook's existing observation API remains supported on
+all its existing bindings and versions when `errors` is omitted.

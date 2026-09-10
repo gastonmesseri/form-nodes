@@ -50,6 +50,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
     "label": "Controls and bindings",
     "items": [
       "reference/types/closest-form-state",
+      "reference/types/control-error",
       "reference/types/control-state",
       "reference/types/control-state-disabled-reason",
       "reference/types/control-state-error",
@@ -58,6 +59,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
       "reference/types/form-node-checkbox-control",
       "reference/types/form-node-control",
       "reference/types/form-node-directive",
+      "reference/types/form-node-state-options",
       "reference/types/form-node-submit-event",
       "reference/types/form-node-ui-control",
       "reference/types/form-node-value-control"

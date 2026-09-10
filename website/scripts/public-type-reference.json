@@ -457,6 +457,14 @@
     "ClosestFormState": {
       "family": "controls",
       "usage": "Use for shared submission UI built with [`useClosestFormState()`](../use-closest-form-state.md). Its signals normalize Form Nodes, Reactive Forms, and NgForm while retaining optional Form Nodes API access."
+    },
+    "ControlError": {
+      "family": "controls",
+      "usage": "Use for structured component errors contributed through [`useFormNodeState({ errors })`](../form-node-state.md#contribute-errors). Errors belong to the host binding and cannot target another node."
+    },
+    "FormNodeStateOptions": {
+      "family": "controls",
+      "usage": "Configure a reactive component-owned error source for [`useFormNodeState()`](../form-node-state.md#contribute-errors). Return an error, a message, a readonly array, or no result."
     }
   }
 }

@@ -48,6 +48,8 @@ export {
 } from './lib/primitives/create-form-primitives';
 export {
   useFormNodeState,
+  type ControlError,
+  type FormNodeStateOptions,
   type ControlState,
   type ControlStateError,
   type ControlStateSource,
@@ -128,3 +130,5 @@ export type { CallableNodeApi } from './lib/types/callable-node-api.type';
 export type { FormNodeSubmitEvent } from './lib/types/form-node-binding.type';
 
 export type { NodeErrorsSignal } from './lib/types/node-errors-signal.type';
+
+export { provideFormNodeStateErrors } from './lib/form-node-state/control-errors';

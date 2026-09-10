@@ -262,3 +262,15 @@ For mutable model values such as `Date`, `Moment`, or objects, follow the
 IME composition is tested with synthetic composition events; browser fill/clear does not
 simulate saved-profile autofill or password managers. Playwright WebKit coverage does not
 replace testing Safari on the devices your application supports.
+
+
+## Report errors from inside a control
+
+Use `useFormNodeState({ errors: () => ... })` when the component knows that its current input
+cannot be interpreted, such as invalid date text. Return one `{ kind }` error, a message, an array,
+or `null`/`undefined`/`void` for success. The callback is reactive and contributes to the bound
+control's actual validity without replacing its configured validators.
+
+See [component error contributions](../reference/form-node-state.md#contribute-errors) for a complete
+CVA example, lifecycle behavior, and the `provideFormNodeStateErrors()` provider required for CVAs
+used with Angular 22 Signal Forms.

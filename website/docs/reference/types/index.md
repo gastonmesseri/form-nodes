@@ -64,6 +64,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | Type | Purpose |
 | --- | --- |
 | [ClosestFormState](./closest-form-state.md) | Shared submission state of the form visible through Angular dependency injection. |
+| [ControlError](./control-error.md) | Errors a custom control may contribute without targeting another control. |
 | [ControlState](./control-state.md) | Read-only state of the form binding attached to a custom-control component. |
 | [ControlStateDisabledReason](./control-state-disabled-reason.md) | A source-neutral explanation for why the bound control is disabled. |
 | [ControlStateError](./control-state-error.md) | A validation error normalized across supported Angular form-binding APIs. |
@@ -72,6 +73,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [FormNodeCheckboxControl](./form-node-checkbox-control.md) | A custom control exposing a boolean `checked` model for `[formNode]`. |
 | [FormNodeControl](./form-node-control.md) | Either a value control or, for boolean values, a checkbox control recognized by `[formNode]`. |
 | [FormNodeDirective](./form-node-directive.md) | The public instance type of the [formNode] Angular directive. |
+| [FormNodeStateOptions](./form-node-state-options.md) | Reactive error contribution configured by a custom-control component. |
 | [FormNodeSubmitEvent](./form-node-submit-event.md) | A native form submission attempt. Values are exposed snapshots; `form` is the bound node. |
 | [FormNodeUiControl](./form-node-ui-control.md) | Optional state inputs and interaction hooks recognized by `[formNode]` on Angular 21 and 22. |
 | [FormNodeValueControl](./form-node-value-control.md) | A custom control exposing a `value` model for `[formNode]`. |
