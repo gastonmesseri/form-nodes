@@ -13,9 +13,9 @@ import { group } from '../primitives/group';
 import type { AnyNode } from '../types/node.type';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
-import { useClosestForm } from './use-closest-form';
 import { FormNodeDirective } from './form-node.directive';
 import { required } from '../validation/validators/required';
+import { useClosestFormState } from './use-closest-form-state';
 import { asyncValidator } from '../validation/async-validator';
 import { provideFormNodesConfig } from './provide-form-nodes-config';
 import { useFormNodeState } from '../form-node-state/form-node-state';
@@ -2194,12 +2194,12 @@ describe('FormNodeDirective in Chromium', () => {
 it('exposes native submission and reset history to same-host and late descendant form observers', async () => {
   @Directive({ selector: '[closestFormProbe]', exportAs: 'closestFormProbe' })
   class ClosestFormProbe {
-    closest = useClosestForm();
+    closest = useClosestFormState().formNode;
   }
 
   @Component({ selector: 'submission-probe', template: `@if (closest(); as owner) { {{ owner.submitted() }} } @else { false }` })
   class SubmissionProbe {
-    closest = useClosestForm();
+    closest = useClosestFormState().formNode;
   }
 
   @Component({

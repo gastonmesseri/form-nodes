@@ -3636,15 +3636,12 @@ not cancel the action; its finalization does not set history again. A subsequent
 sets the flag again even when concurrency blocks its action. Fresh clones/items start false. The
 property is form-only; use `$api.submitted()` for a form with a child named `submitted`.
 
-`useClosestForm()` requires an injection context and returns a `Signal<CallableNodeApi<FormApi<any>> | null>`.
-It injects the nearest `FORM_NODE` once with optional resolution, including the current host, then
-reactively resolves `binding.node().$api.form()?.$api`. It follows rebinding, attachment, detachment, and
-reparenting. Forms return their callable API; unowned nodes and missing bindings return null. A nearest
-unowned binding prevents fallback to farther bindings. Angular DI boundaries apply; this is not
-DOM traversal, HTML form-owner lookup, or NgForm compatibility. The signal must not be read before
-the binding's required input is initialized. Components created after an attempt observe existing
-history without an event replay or subscription. Binding scope and the model tree can differ;
-a separately supplied node input does not change the hook's chosen binding.
+`useClosestFormState()` requires an injection context and exposes the owning form API through
+its reactive `formNode` property. It injects the nearest `FORM_NODE` once with optional resolution,
+including the current host, then resolves `binding.node().$api.form()?.$api`. It follows rebinding,
+attachment, detachment, and reparenting. An unowned binding does not skip to farther bindings.
+The shared submitted facade falls back to the nearest supported Angular form; see the shared
+closest-form state section for source priority, defaults, and lifecycle.
 
 Angular reference: `22.1.x` at `05a05f59657f048a87f3d4eb9ddb7968cfe8060e`.
 Inspected `packages/forms/signals/src/directive/form_root.ts`,
@@ -3669,11 +3666,10 @@ non-writable built-in property. `CallableNodeApi<TApi>` preserves read types and
 function members on concrete views. Common AnyNode APIs stay structurally callable to accept both
 ordinary APIs and arrays whose `length` overrides the native function property.
 
-`useClosestForm()` now returns the owning form's callable API rather than its collision-prone node.
-Consumers read history with `closest()?.submitted()` and values with `closest()?.()`. Ownership,
-rebinding, initialization, and null-resolution rules are unchanged. Unlike Angular Signal Forms'
-field tree API, this callable API facade is a Form Nodes public design choice; no underlying
-submission or state propagation rules change.
+`useClosestFormState().formNode()` exposes the owning form's callable API. Consumers read common
+history with `formState.submitted()` and Form Nodes values with `formState.formNode()?.()`.
+Unlike Angular Signal Forms' field tree API, this callable facade is a Form Nodes public design
+choice; no underlying submission or state propagation rules change.
 
 ## Native submission outputs
 
@@ -3836,7 +3832,7 @@ Field and form regressions verify reference replacement and reset through their 
 
 Real-control coverage also exercises formatted/incomplete input, date ranges, moved/removed
 array rows during editing and overlays, shared-node controls, composite OnPush CVAs, and dialog
-injector ownership. `useClosestForm()` follows the injector supplied to a dialog, not its DOM
+injector ownership. `useClosestFormState()` follows the injector supplied to a dialog, not its DOM
 placement; a view container inside the binding scope preserves submission/reset visibility.
 See [UI library testing](ui-library-testing.md) for the exact browser matrix and input limits.
 
@@ -3894,3 +3890,26 @@ src/api/structure.ts (applyEach), and test/node/api/structure.spec.ts and
  test/node/field_context.spec.ts. Angular binds typed schema paths to each field; Form Nodes
 intentionally uses per-instance configuration instead of schema-path construction. Runtime
 validator dependencies and independent row ownership remain the relevant behavioral reference.
+
+## Shared closest-form submission state
+
+`useClosestFormState()` is an Angular DI hook returning stable `connected`, `source`, `submitted`,
+and `formNode` signals. It prioritizes the nearest FORM_NODE binding's model form owner; otherwise
+it uses the nearest ControlContainer's NgForm or FormGroupDirective. Nested Angular containers
+resolve their root form. An unowned binding falls back to Angular, not a farther FORM_NODE.
+The neutral state is false/false with null source and formNode. The formNode value is the same
+callable, collision-safe form API, or null. Model rebinding and reparenting remain
+reactive. This replaces the former useClosestForm hook.
+
+Form Nodes reads submission history directly. Angular adapters initialize from public submitted,
+subscribe to ngSubmit and control events, reconcile control events in a microtask after resetForm
+clears the flag, and reconcile silent resets and control replacements after rendering. Initial
+late-consumer state is available immediately. Destroying the consumer releases subscriptions and
+suppresses queued updates. AbstractControl.reset alone preserves directive submission history.
+
+Reference review: cached Angular 22.1.5 packages/forms/signals/src/field/submit.ts and
+packages/forms/signals/test/node/submit.spec.ts describe in-flight submission, not this common
+directive-history facade. Remote Angular 22 tags were unavailable during this change, so the latest
+maintenance release could not be reverified. Angular directive timing was inspected in installed
+Angular 21.0.7 forms.mjs (NgForm and FormGroupDirective) and verified by integration tests.
+This hook does not discover Angular Signal Forms or invent submission history for them.

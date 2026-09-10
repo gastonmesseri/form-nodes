@@ -1,5 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-import { FormNodesModule, FormNodeDirective, useClosestForm, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, useClosestFormState, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -30,7 +30,7 @@ class Company {
   `,
 })
 export class PackageConsumer {
-  closestForm = useClosestForm();
+  closestForm = useClosestFormState().formNode;
   readonly nullableOverride: string | null = configuredForms.field.nullable('Marco')();
   readonly nonNullableOverride: string = field.strict('Marco')();
   readonly configuredProfile = configuredForms.form({ name: configuredForms.field(''), city: '' });

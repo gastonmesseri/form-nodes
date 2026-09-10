@@ -453,6 +453,10 @@
       "family": "nodes",
       "usage": "Extract an existing item node from an already inferred array: `ArrayItemNode<typeof profile.roles>`. Preserves child types and parent navigation while excluding the missing-index `undefined` case. See [configuring sibling rules](../../guides/configuring-nodes.md).",
       "description": "The existing item node type of an array node, excluding undefined."
+    },
+    "ClosestFormState": {
+      "family": "controls",
+      "usage": "Use for shared submission UI built with [`useClosestFormState()`](../use-closest-form-state.md). Its signals normalize Form Nodes, Reactive Forms, and NgForm while retaining optional Form Nodes API access."
     }
   }
 }

@@ -4,6 +4,26 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## Unreleased: closest form state {#closest-form-state}
+
+`useClosestFormState()` replaces the removed `useClosestForm()` export. The new hook returns a
+stable facade rather than a signal of the form API. Its properties are reactive signals:
+
+```ts
+// Before:
+closestForm = useClosestForm();
+// After:
+formState = useClosestFormState();
+```
+
+Replace `closestForm()?.submitted()` with `formState.submitted()`. Replace calls to the old
+API signal with `formState.formNode()`: for example, `formState.formNode()?.reset()` or
+`formState.formNode()?.()` for the exposed form value.
+
+`submitted()` now also supports the nearest Angular Reactive Forms or `NgForm` root when no
+Form Nodes owner is available. `formNode()` remains null for those sources. Without any source,
+`submitted()` is false. See [resolution and reset timing](../reference/use-closest-form-state.md).
+
 ## Moving to 3.6.0: read-only validator contexts {#read-only-validator-contexts}
 
 Nodes returned by `ctx.node()`, `ctx.field()`, and `ctx.parent<TParent>()` now expose a recursive

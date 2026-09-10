@@ -7,7 +7,7 @@ import { group } from '../primitives/group';
 import { array } from '../primitives/array';
 import { FORM_NODE } from './form-node.directive';
 import type { AnyNode } from '../types/node.type';
-import { useClosestForm } from './use-closest-form';
+import { useClosestFormState } from './use-closest-form-state';
 
 const bind = (node: AnyNode, parent?: Injector) => {
   const current = signal(node);
@@ -15,10 +15,10 @@ const bind = (node: AnyNode, parent?: Injector) => {
   return { current, injector };
 };
 
-describe('useClosestForm', () => {
+describe('useClosestFormState model ownership', () => {
   it('requires an injection context and returns a null signal without a binding', () => {
-    expect(() => useClosestForm()).toThrow(/injection context/);
-    const closest = runInInjectionContext(Injector.create({ providers: [] }), useClosestForm);
+    expect(() => useClosestFormState()).toThrow(/injection context/);
+    const closest = runInInjectionContext(Injector.create({ providers: [] }), useClosestFormState).formNode;
     expect(isSignal(closest)).toBe(true);
     expect(closest()).toBeNull();
   });
@@ -26,7 +26,7 @@ describe('useClosestForm', () => {
   it('tracks rebinding to forms, groups, arrays, and detached nodes', () => {
     const profile = form({ name: field('Ada'), address: { city: field('Zurich') }, items: array(field('')) });
     const bound = bind(profile);
-    const closest = runInInjectionContext(bound.injector, useClosestForm);
+    const closest = runInInjectionContext(bound.injector, useClosestFormState).formNode;
     expect(closest()).toBe(profile.$api);
     for (const node of [profile.name, profile.address, profile.items]) {
       bound.current.set(node);
@@ -44,7 +44,7 @@ describe('useClosestForm', () => {
     first.add('name', name);
     const second = form({ nested: form({}) });
     const bound = bind(name);
-    const closest = runInInjectionContext(bound.injector, useClosestForm);
+    const closest = runInInjectionContext(bound.injector, useClosestFormState).formNode;
     const attempted = computed(() => closest()?.submitted() ?? false);
     expect(closest()).toBe(first.$api);
     first.remove('name');
@@ -63,9 +63,9 @@ describe('useClosestForm', () => {
     const outer = form({});
     const parent = bind(outer);
     const child = Injector.create({ providers: [], parent: parent.injector });
-    expect(runInInjectionContext(child, useClosestForm)()).toBe(outer.$api);
+    expect(runInInjectionContext(child, useClosestFormState).formNode()).toBe(outer.$api);
     const nearer = bind(field(''), child);
-    const closest = runInInjectionContext(nearer.injector, useClosestForm);
+    const closest = runInInjectionContext(nearer.injector, useClosestFormState).formNode;
     expect(closest()).toBeNull();
     const other = form({});
     nearer.current.set(other);
@@ -76,7 +76,7 @@ describe('useClosestForm', () => {
 it('returns a callable, collision-safe API even when form children shadow its state', async () => {
   const profile = form({ submitted: field('child'), value: field('value child'), api: field('api child') });
   const bound = bind(profile);
-  const closest = runInInjectionContext(bound.injector, useClosestForm);
+  const closest = runInInjectionContext(bound.injector, useClosestFormState).formNode;
   expect(closest()).toBe(profile.$api);
   expect(isSignal(closest()!)).toBe(true);
   expect(closest()?.()).toEqual(profile());

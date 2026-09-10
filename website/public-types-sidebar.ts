@@ -49,6 +49,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
     "type": "category",
     "label": "Controls and bindings",
     "items": [
+      "reference/types/closest-form-state",
       "reference/types/control-state",
       "reference/types/control-state-disabled-reason",
       "reference/types/control-state-error",

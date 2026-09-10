@@ -63,6 +63,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 
 | Type | Purpose |
 | --- | --- |
+| [ClosestFormState](./closest-form-state.md) | Shared submission state of the form visible through Angular dependency injection. |
 | [ControlState](./control-state.md) | Read-only state of the form binding attached to a custom-control component. |
 | [ControlStateDisabledReason](./control-state-disabled-reason.md) | A source-neutral explanation for why the bound control is disabled. |
 | [ControlStateError](./control-state-error.md) | A validation error normalized across supported Angular form-binding APIs. |

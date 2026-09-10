@@ -1,14 +1,14 @@
 import type { Signal } from '@angular/core';
 
 import type { Equal, Expect } from './assert.types';
-import { form, field, group, array, useClosestForm, type FormNode } from '../../src/public-api';
+import { form, field, group, array, useClosestFormState, type FormNode } from '../../src/public-api';
 
 const profile = form({ name: field('Ada') });
 const submitted: Signal<boolean> = profile.submitted;
 type _Submitted = Expect<Equal<ReturnType<typeof profile.submitted>, boolean>>;
 const generic: FormNode = profile;
 const genericSubmitted: Signal<boolean> = generic.$api.submitted;
-const closest = useClosestForm();
+const closest = useClosestFormState().formNode;
 const closestSubmitted: boolean | undefined = closest()?.submitted();
 const submittedAction: Promise<boolean> | undefined = closest()?.submit();
 // @ts-expect-error submitted is a readonly signal

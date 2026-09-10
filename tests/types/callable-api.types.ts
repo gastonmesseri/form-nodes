@@ -1,7 +1,7 @@
 import type { Signal } from '@angular/core';
 
 import type { Equal, Expect } from './assert.types';
-import { field, form, group, array, useClosestForm, type AnyNode, type FieldNode, type FormNode, type CallableNodeApi, type FieldApi } from '../../src/public-api';
+import { field, form, group, array, useClosestFormState, type AnyNode, type FieldNode, type FormNode, type CallableNodeApi, type FieldApi } from '../../src/public-api';
 
 const acceptSignal = <T>(value: Signal<T>): T => value();
 const name: FieldNode<string | null> = field('Ada');
@@ -23,7 +23,7 @@ const arbitrary: AnyNode = names;
 acceptSignal(arbitrary.$api);
 const generic: FormNode = profile;
 acceptSignal(generic.$api);
-const closest = useClosestForm();
+const closest = useClosestFormState().formNode;
 closest()?.();
 closest()?.submitted();
 closest()?.value.committed();

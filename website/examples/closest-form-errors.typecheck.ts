@@ -1,5 +1,5 @@
 import { Component, computed, input } from '@angular/core';
-import { field, form, required, useClosestForm, FormNodeDirective, type FieldNode } from '@ngblocks/form-nodes';
+import { field, form, required, useClosestFormState, FormNodeDirective, type FieldNode } from '@ngblocks/form-nodes';
 
 // submission-errors.component.ts
 @Component({
@@ -14,10 +14,10 @@ import { field, form, required, useClosestForm, FormNodeDirective, type FieldNod
 })
 export class SubmissionErrors {
   node = input.required<FieldNode>();
-  closestForm = useClosestForm();
+  formState = useClosestFormState();
   showErrors = computed(() => {
     const node = this.node();
-    return node.invalid() && (node.touched() || this.closestForm()?.submitted() === true);
+    return node.invalid() && (node.touched() || this.formState.submitted());
   });
 }
 

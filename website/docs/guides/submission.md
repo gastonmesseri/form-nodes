@@ -115,9 +115,9 @@ dirty/touched state, debounce, or the submission policy; existing `submit()` int
 <CodeBlock language="typescript" title="submission-history.ts">{historySource}</CodeBlock>
 
 For an error component, combine field invalidity with `field.touched()` or its owner's `submitted()`.
-This also covers fields created after an attempt. [useClosestForm()](../reference/use-closest-form.md)
+This also covers fields created after an attempt. [useClosestFormState()](../reference/use-closest-form-state.md)
 observes the owning form through the nearest binding, including components created after submission.
-Its signal removes the need to subscribe to `NgForm.ngSubmit` and copy a boolean locally.
+Its `submitted()` signal also supports Reactive Forms and `NgForm`, without manually copying submission events.
 
 ## Observe submission in the template
 

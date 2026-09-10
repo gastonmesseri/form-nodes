@@ -232,6 +232,7 @@ Main exports: `FormNodeDirective`, `FormNodeBinding`, and [`FORM_NODE`](./form-n
 | `FormNodeValueControl<T>` | Signal control whose main model is `value`. |
 | `FormNodeCheckboxControl` | Boolean signal control whose main model is `checked`. |
 | `useFormNodeState<T>()` | Reads normalized state from `[formNode]`, `[formField]`, `[formControl]`, `formControlName`, or `ngModel`. |
+| [`useClosestFormState()`](./use-closest-form-state.md) | Shared submission history with optional reactive Form Nodes API access. |
 | `ControlState<T>` | Source-neutral signal facade returned by `useFormNodeState()`. |
 | `ControlStateDisabledReason` | Source-neutral disabled reason containing an optional message. |
 
@@ -294,8 +295,8 @@ For behavioral details that are intentionally too specialized for the normal ref
 
 ## Submission context
 
-[useClosestForm()](./use-closest-form.md) finds the owning form through the nearest injectable
-`[formNode]` binding. Observe [submitted()](./form.md#submitted) for attempts since reset and
-`submitting()` for an action currently in progress.
+[useClosestFormState()](./use-closest-form-state.md) exposes shared `submitted()` state from Form Nodes,
+Reactive Forms, or NgForm. Its reactive `formNode()` property provides the owning Form Nodes API
+when available, including `submitting()` for an action currently in progress.
 
 See [Public types](./types/index.md) for every exported type alias and interface. For integration workflows, start with [custom control contracts](./custom-control-contracts.md) or [validation error types](./validation-errors.md).

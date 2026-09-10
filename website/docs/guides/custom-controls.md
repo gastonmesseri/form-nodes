@@ -255,7 +255,7 @@ Autocomplete search text can differ from its selected model: user-value outputs 
 CVA's reported value, so typing a search does not necessarily select a new value.
 
 Dialogs follow Angular's injector hierarchy. Pass the appropriate `viewContainerRef` when
-opening a Material dialog that needs [useClosestForm()](../reference/use-closest-form.md).
+opening a Material dialog that needs [useClosestFormState()](../reference/use-closest-form-state.md).
 For mutable model values such as `Date`, `Moment`, or objects, follow the
 [new-instance update pattern](../concepts/values-and-state.md#mutable-values).
 

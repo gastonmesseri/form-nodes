@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Changed
+
+- **Breaking:** Replace `useClosestForm()` with `useClosestFormState()` for shared submission history across Form Nodes, Reactive Forms, and NgForm. Form Nodes takes priority; access its callable API through the reactive `formNode()` property when available. This breaking change is planned for the next minor release at the maintainer's explicit request, as an exception to the default Semantic Versioning policy. It remains unreleased.
+
 ## 📦 3.6.0 — 2026-09-10 {#360--2026-09-10}
 
 ### Added

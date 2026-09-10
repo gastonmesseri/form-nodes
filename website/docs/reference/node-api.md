@@ -183,5 +183,5 @@ JavaScript's function prototype or make unsupported properties part of the publi
 
 <CodeBlock language="typescript" title="callable-api.ts">{callableApiSource}</CodeBlock>
 
-[useClosestForm()](./use-closest-form.md) returns this callable API directly, so its consumers can
-read `closestForm()?.submitted()` without child-name collisions.
+[useClosestFormState()](./use-closest-form-state.md) exposes this callable API through its reactive
+`formNode` property. Read `formState.formNode()?.submitted()` without child-name collisions.

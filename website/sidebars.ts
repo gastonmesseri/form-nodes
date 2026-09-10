@@ -68,7 +68,7 @@ const sidebars: SidebarsConfig = {
         'reference/array',
         'reference/group',
         { type: 'doc', id: 'reference/form-node-state', label: 'useFormNodeState()' },
-        'reference/use-closest-form',
+        'reference/use-closest-form-state',
         { type: 'doc', id: 'reference/form-node-binding', label: '[formNode]' },
         'reference/form-nodes-module',
         'reference/is-form-node',

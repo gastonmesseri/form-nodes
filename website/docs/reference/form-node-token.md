@@ -60,5 +60,5 @@ updated node value or touched state. Configured debounce still applies. The toke
 resolve to the concrete directive instance.
 See [custom output ordering](../guides/custom-controls.md#output-handler-order).
 
-For a reactive owning-form lookup, use [useClosestForm()](./use-closest-form.md). It wraps optional
+For a reactive owning-form lookup, use [useClosestFormState()](./use-closest-form-state.md). It wraps optional
 injection and model ownership resolution, and exposes the form's submission history through its result.

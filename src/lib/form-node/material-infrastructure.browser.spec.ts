@@ -13,7 +13,7 @@ import { FormControl, ReactiveFormsModule, NG_VALUE_ACCESSOR, NG_VALIDATORS } fr
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { Component, signal, inject, ViewContainerRef, forwardRef, ChangeDetectionStrategy, type Type } from '@angular/core';
 
-import { field, form, array, FormNodeDirective, useClosestForm } from '../../../src/public-api';
+import { field, form, array, FormNodeDirective, useClosestFormState } from '../../../src/public-api';
 import { registerSignalInputForJit, registerSignalOutputForJit } from '../../../tests/helpers/register-signal-input-for-jit';
 
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
@@ -244,7 +244,7 @@ it('initializes and resets an OnPush date CVA with an inner FormControl and prop
 
 @Component({ selector: 'dialog-form-probe', template: '{{ closest()?.submitted() ?? "none" }}' })
 class DialogProbe {
-  closest = useClosestForm();
+  closest = useClosestFormState().formNode;
 }
 @Component({ selector: 'dialog-form-launcher', template: '', imports: [MatDialogModule] })
 class DialogLauncher {
