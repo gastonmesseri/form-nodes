@@ -225,9 +225,9 @@ myForm.contacts.push({ label: 'Work', email: 'ada@example.com' });
 myForm.valid();
 ```
 
-Use `.$api` for generic infrastructure or a form child name collision. Use `$api` only when the
-`api` name itself collides or infrastructure needs a guaranteed path. See
-[Tree navigation and API access](../concepts/tree-and-api.md).
+Use `.$api` for generic infrastructure or a form child name collision. See
+[API access for collisions and generic code](../concepts/tree-and-api.md#api-for-collisions-and-generic-code)
+for examples.
 
 ## 📚 Recreating array items when identity matters {#recreating-array-items-when-identity-matters}
 
@@ -317,6 +317,6 @@ Synchronous `NG_VALIDATORS` from a CVA participate in node validation. `NG_ASYNC
 adapted because async work needs node-owned cancellation, debounce, dependency tracking, and stale
 result protection. Declare it through [`asyncValidator()`](../reference/async-validator.md) instead.
 
-If the problem is already happening and its cause is unclear, continue with the upcoming
-Troubleshooting guide. For a compact map of the complete public surface, see the
+If the problem is already happening and its cause is unclear, continue with
+[Troubleshooting](./troubleshooting.md). For a compact map of the complete public surface, see the
 [API overview](../reference/api-overview.md).

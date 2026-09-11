@@ -1,10 +1,13 @@
 ---
 title: Your first form
+description: Create a typed Angular form, bind its controls, read reactive state, and find the next guide for your application.
 ---
 
 # Your first form {#your-first-form}
 
-Define and bind the form in an Angular component:
+After [installing the package](./installation.md), define and bind a registration form in one
+Angular component. This example introduces the model, control binding, and reactive value reads;
+the guides at the end add error messages and submission.
 
 ```ts
 import { Component } from '@angular/core';
@@ -106,6 +109,21 @@ export class SharedModule {}
 
 Every NgModule or standalone component that imports `SharedModule` can then use `[formNode]` in its templates. Angular does not provide an application-wide import for template directives through `ApplicationConfig`; standalone components must import `FormNodeDirective` themselves, either directly or through a shared NgModule.
 
-When you are ready to see the same syntax at application scale, continue with the [complete form example](../examples/complex-form.md).
 The [executable first-form example](../examples/executable-examples.mdx#first-form) is compiled and
 run during documentation verification.
+
+## Next steps {#next-steps}
+
+Choose the next piece your form needs:
+
+| I want to… | Continue with |
+| --- | --- |
+| Show validation messages below an input | [`form-node-errors`: native-input example](../reference/form-node-errors.md#native-input) |
+| Save the form and show submission progress | [Form submission](../guides/submission.md) |
+| Add repeatable rows | [Dynamic arrays](../guides/dynamic-arrays.md) |
+| Use a custom input component | [Custom controls](../guides/custom-controls.md) |
+| Load an existing record for editing | [Edit server data](../cookbook/edit-server-data.md) |
+
+For a guided progression, follow the [customer profile tutorial](../tutorial/index.md). For a
+larger example with the pieces already connected, explore the
+[complete form example](../examples/complex-form.md).

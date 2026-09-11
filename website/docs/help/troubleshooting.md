@@ -8,6 +8,23 @@ description: Diagnose common Form Nodes symptoms and apply concrete fixes.
 Start with the symptom you can observe. Each solution links to the guide that explains the
 underlying behavior in more detail.
 
+## Find your symptom {#find-your-symptom}
+
+| What you see | Start here |
+| --- | --- |
+| Angular rejects `[formNode]` | [Missing directive import](#angular-does-not-recognize-formnode) or [unsupported host](#a-formnode-host-is-rejected) |
+| Typing does not update the value you read | [Pending control values](#the-node-value-has-not-changed-after-typing) |
+| The form is invalid but has no errors of its own | [Own and descendant errors](#a-form-is-invalid-but-errors-is-empty) |
+| An async check does not rerun as expected | [Reactive validator dependencies](#an-asynchronous-validator-does-not-react-as-expected) |
+| State follows the wrong row after reordering | [Array identity](#array-rows-keep-the-wrong-touched-or-pending-state) |
+| Reset keeps the edited value | [Reset values explicitly](#calling-reset-did-not-restore-the-original-value) |
+| The submit action never runs | [Submission checks](#native-form-submission-does-not-run-the-action) |
+
+For help configuring the error component, see its
+[source examples](../reference/form-node-errors.md#native-input),
+[display options](../reference/form-node-errors.md#adjust-display), and
+[safe configuration defaults](../reference/form-node-errors.md#safe-defaults).
+
 ## 🔌 Angular does not recognize [formNode] {#angular-does-not-recognize-formnode}
 
 **Symptom:** Angular reports that it cannot bind to `formNode`, or the directive does not run.
@@ -181,7 +198,7 @@ model applies to readonly and hidden state. See
 Check these conditions:
 
 1. The native form has `[formNode]="myForm"` and the component imports `FormNodeDirective`.
-2. The node was created with [`form()`](../reference/form.md), not [`group()`](../reference/group.md), and has a `onSubmit`. A group binding
+2. The node was created with [`form()`](../reference/form.md), not [`group()`](../reference/group.md), and has an `onSubmit` callback. A group binding
    remains functional but intentionally has no action to run.
 3. The submit button has `type="submit"`.
 4. Validation is not blocking submission. Submission marks the tree touched and resolves to
