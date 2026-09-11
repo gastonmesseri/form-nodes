@@ -1,6 +1,6 @@
 {
   "name": "@ngblocks/form-nodes",
-  "version": "3.8.1",
+  "version": "3.9.0",
   "description": "Typed, signal-based forms for Angular with reactive validation, dynamic arrays, and native and custom control integration.",
   "license": "MIT",
   "homepage": "https://gastonmesseri.github.io/form-nodes/",

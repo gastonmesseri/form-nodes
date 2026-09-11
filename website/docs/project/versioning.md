@@ -78,3 +78,11 @@ The changelog identifies this as a breaking type change.
 Version **3.7.0** replaces `useClosestForm()` with `useClosestFormState()` at the maintainer's explicit request. This breaking change ships in a minor release as an exception to the
 default Semantic Versioning policy. Follow the [migration guide](./migrations.md#closest-form-state)
 before upgrading.
+
+## Boolean required exception: 3.9.0 {#boolean-required-exception}
+
+Version **3.9.0** allows `false` to satisfy `required` and active `requiredIf` validators.
+The maintainer explicitly requested a minor release despite this breaking behavior change,
+as an exception to the default Semantic Versioning policy. Use `requiredTrue` for mandatory
+acceptance and update its error handling and messages as described in the
+[3.9.0 migration guide](./migrations.md#boolean-required).

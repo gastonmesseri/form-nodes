@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-09-11
+
+This breaking change ships in minor version **3.9.0** at the maintainer's explicit request, as an exception to the default Semantic Versioning policy.
+
 ### Added
 
 - Add `requiredTrue` for values that must be exactly `true`, and `notNil` for values that must only be non-null and defined. Both support reactive conditions, custom errors, and configurable messages with their own error kinds.
@@ -17,7 +21,6 @@ exception authorized by the maintainer while the library has no other consumers.
 ### Changed
 
 - **Breaking:** `required` and active `requiredIf` now accept `false`. Use `requiredTrue` for terms, consent, and other mandatory checked values; migrate error handling and message catalogs to the `requiredTrue` kind. Both presence and acceptance contribute logical required state, while native checkboxes and custom controls exposing a `checked` input synchronize HTML-style required constraints only for acceptance. `notNil` contributes no required metadata or native required constraint.
-
 
 ## [3.8.1] - 2026-09-11
 
@@ -359,7 +362,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.8.1...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v3.9.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -389,3 +392,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [3.8.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.7.0...v3.8.0
 
 [3.8.1]: https://github.com/gastonmesseri/form-nodes/compare/v3.8.0...v3.8.1
+
+[3.9.0]: https://github.com/gastonmesseri/form-nodes/compare/v3.8.1...v3.9.0

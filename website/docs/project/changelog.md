@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.9.0 — 2026-09-11 {#390--2026-09-11}
+
+This breaking change ships in minor version **3.9.0** at the maintainer's explicit request, as an exception to the default Semantic Versioning policy.
+
 ### Added
 
 - Add `requiredTrue` for values that must be exactly `true`, and `notNil` for values that must only be non-null and defined. Both support reactive conditions, custom errors, and configurable messages with their own error kinds.
@@ -17,7 +21,6 @@ canonical release record.
 ### Changed
 
 - **Breaking:** `required` and active `requiredIf` now accept `false`. Use `requiredTrue` for terms, consent, and other mandatory checked values; migrate error handling and message catalogs to the `requiredTrue` kind. Both presence and acceptance contribute logical required state, while native checkboxes and custom controls exposing a `checked` input synchronize HTML-style required constraints only for acceptance. `notNil` contributes no required metadata or native required constraint.
-
 
 ## 📦 3.8.1 — 2026-09-11 {#381--2026-09-11}
 

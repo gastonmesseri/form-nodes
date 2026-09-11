@@ -4,7 +4,9 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
-## Unreleased: boolean presence and acceptance {#boolean-required}
+## Moving to 3.9.0: boolean presence and acceptance {#boolean-required}
+
+This breaking change ships in minor version **3.9.0** at the maintainer's explicit request, as an exception to the default Semantic Versioning policy.
 
 `required` and active `requiredIf` now accept `false`. They still reject `null`, `undefined`,
 empty strings, and `NaN`. Initialize a yes/no answer to `null` when the user must choose an answer.
