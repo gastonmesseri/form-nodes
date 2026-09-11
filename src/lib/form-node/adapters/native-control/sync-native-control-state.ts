@@ -36,7 +36,11 @@ export const syncNativeControlState = <TNode extends AnyNode>({ binding, rendere
         else renderer.setProperty(element, 'maxLength', maximumValue);
       }
     }
-    if (!inputNames.has('pattern') && 'pattern' in element) renderer.setProperty(element, 'pattern', formatNativePattern(field.pattern?.() ?? []));
+    if (!inputNames.has('pattern') && 'pattern' in element) {
+      const patterns = field.pattern?.() ?? [];
+      if (patterns.length) renderer.setProperty(element, 'pattern', formatNativePattern(patterns));
+      else renderer.removeAttribute(element, 'pattern');
+    }
     renderer.setAttribute(element, 'aria-invalid', String(node.$api.invalid()));
   }, { injector });
 };

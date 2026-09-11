@@ -147,6 +147,7 @@ and the `fieldset` and `legend` identify the group.
 - Numeric and date `min`/`max` are written to number, range, date, and month inputs.
 - `minLength` and `maxLength` apply to inputs and textareas, not selects.
 - Multiple pattern validators become one native pattern requiring every expression.
+- Without active pattern validators, the native `pattern` attribute is removed. An empty HTML pattern would incorrectly reject every nonempty value. Removing or disabling the final pattern validator also clears the native restriction.
 - Node validation remains authoritative; browser constraints improve native UI interoperability.
 - Time, week, and datetime-local currently do not receive `min`/`max`, matching Angular 22 Signal Forms behavior.
 

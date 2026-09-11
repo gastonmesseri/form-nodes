@@ -4278,3 +4278,20 @@ and combines presence and checkbox acceptance in required; Form Nodes intentiona
 these API semantics into required and requiredTrue. The condition/metadata lifecycle follows the
 Angular implementation. The different acceptance metadata and notNil model-only rule are covered
 by field/form integration, helper-state, native browser, checked-model, and Material CVA tests.
+
+## Native pattern constraint removal
+
+Native inputs receive a pattern attribute only while active pattern metadata exists. With no
+patterns, the binding removes the attribute instead of writing an empty string: pattern="" is
+an active browser constraint that rejects nonempty text. Removing or disabling the final pattern
+validator therefore clears both its model validation error and its native pattern restriction.
+Other native constraints remain active. This preserves native requestSubmit behavior for forms
+whose submit events are handled by application code. Model values, interaction state, and submit
+ownership are unaffected.
+
+Reference inspected: Angular v22.1.6 (356adf749188d996a641181c56621a6285126f3c),
+packages/forms/signals/src/directive/form_field.ts (elementAcceptsNativeProperty) and
+packages/forms/signals/test/node/api/validators/pattern.spec.ts (dynamic values and metadata).
+Angular excludes pattern from native property synchronization; Form Nodes intentionally syncs
+active patterns. Angular's pattern tests confirm that disabling a pattern clears errors and
+metadata. Our browser tests additionally check native validity, removal, and manual submission.

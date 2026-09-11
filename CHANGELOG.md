@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Fixed
+
+- Native text inputs without pattern validators no longer receive an empty `pattern` attribute that rejects nonempty values during browser validation. Removing the final pattern validator also removes its native restriction.
+
 ## [3.9.0] - 2026-09-11
 
 This breaking change ships in minor version **3.9.0** at the maintainer's explicit request, as an exception to the default Semantic Versioning policy.
