@@ -53,7 +53,7 @@ import { SelectModule } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { DatePickerModule } from 'primeng/datepicker';
-import { ANGULAR_FORMS_STATUS_CLASSES, FormNodeDirective, email, field, form, maxDate, provideFormNodesConfig, required } from '@ngblocks/form-nodes';
+import { ANGULAR_FORMS_STATUS_CLASSES, FormNodeDirective, email, field, form, maxDate, provideFormNodesConfig, required, requiredTrue } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-primeng-profile-editor',
@@ -119,7 +119,7 @@ export class PrimeNgProfileEditor {
     email: field('', [required, email]),
     countryCode: field('', [required]),
     birthDate: field<Date>(null, [maxDate(() => new Date())]),
-    acceptedTerms: field.strict(false, [required]),
+    acceptedTerms: field.strict(false, [requiredTrue]),
   }, {
     onSubmit: value => saveProfile(value),
   });

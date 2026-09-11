@@ -1511,7 +1511,9 @@ const age = field<number>(null, {
 
 | Validator | Accepted value | Empty value behavior | Error shape |
 | --- | --- | --- | --- |
-| `required` | Any value | Fails for `null`, `undefined`, `''`, `false`, and `NaN` | `{ kind: 'required', message }` |
+| `required` | Any value | Fails for `null`, `undefined`, `''`, and `NaN`; accepts `false` | `{ kind: 'required', message }` |
+| `requiredTrue` | Any value | Passes only for exactly `true` | `{ kind: 'requiredTrue', message }` |
+| `notNil` | Any value | Fails only for `null` and `undefined`; no required metadata | `{ kind: 'notNil', message }` |
 | `min(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'min', min, actual, message }` |
 | `max(limit)` | `number | null` | Passes for `null` and `NaN` | `{ kind: 'max', max, actual, message }` |
 | `between(minimum, maximum)` | `number | null` | Passes for `null` and `NaN`; disabled if either bound is absent or `NaN` | `{ kind: 'between', min, max, actual, message }` |
@@ -3395,7 +3397,7 @@ checkbox subclass. Directive inputs use Angular's public `booleanAttribute()` no
 an empty attribute is true and false or the string 'false' is false. These sources are combined
 with OR; a valid value or disabled control does not erase the rule. No validator functions are
 executed to discover metadata. The facade also reports required while its existing normalized own
-errors contain the exact kind `required`, including custom, composed, async, and manual errors.
+errors contain the exact kind `required` or `requiredTrue`, including custom, composed, async, and manual errors.
 This fallback applies to all supported sources and counts Angular error keys regardless of their
 payload, matching `hasError`. It does not aggregate descendant errors; it clears when the error
 clears unless metadata still supplies required state. The two semantic `hasValidator(required)`
@@ -4235,3 +4237,44 @@ Projected template lookup was checked against Angular v22.1.6 (commit
 initialization, conditional results, and missing results. NgTemplateOutlet context/view updates
 use the common implementation and tests referenced above. This is a presentation change only;
 node validation, ownership and submission propagation are unchanged.
+
+## Presence and boolean acceptance
+
+`required` and active `requiredIf` reject only null, undefined, the empty string, and NaN.
+False is a present answer. Empty collections, objects, zero, and whitespace remain valid.
+`requiredTrue` passes only the boolean true; `notNil` rejects only null and undefined, accepting
+empty strings, false, zero, NaN, and empty collections. Validation does not narrow value types.
+Optional format validators retain their existing empty-value behavior; their shared emptiness
+helper has not changed.
+
+Both new validators follow the existing synchronous validator pipeline, including direct and
+configured use, reactive when predicates, lazy tracked messages, error replacements, scoped message
+catalogs, and suppression on disabled, readonly, or hidden nodes. They work outside injection
+contexts. Error kinds are requiredTrue and notNil; defaults are "This field must be accepted."
+and "Please provide a value." Conditions gate both validation and metadata. Replacing an error
+preserves active validator metadata, even if the replacement suppresses the failure.
+
+Active requiredTrue contributes required metadata even when valid or non-interactive, plus
+internal acceptance metadata. notNil contributes neither, since native required would reject
+values it allows. Own errors of kind required or requiredTrue supply the existing required-state
+fallback on fields, groups, forms, arrays, and useFormNodeState. Descendant errors affect ancestor
+validity but do not make the ancestor itself required. Set, patch, conditional updates, reset,
+and submission retain ordinary error aggregation, interaction, and submission-blocking rules.
+
+Native checkbox required synchronization reads acceptance metadata or an own requiredTrue error;
+ordinary required metadata alone leaves the native checkbox constraint false. Native non-checkbox
+controls continue using logical required state. Selected experimental syncInputs required writes
+use the same acceptance behavior for a component exposing a public checked input (including CVAs),
+and logical required state for other controls. A computed required value prevents equal metadata
+recomputations from repeatedly invoking component setters and validator-change callbacks.
+Conditions, validator removal, and rebinding update constraints. External CVA validators keep
+their own behavior. A custom checkbox manually consuming useFormNodeState().required() must not
+assume that the flag always means native checkbox acceptance.
+
+Reference inspected: Angular v22.1.6, commit 356adf749188d996a641181c56621a6285126f3c,
+packages/forms/signals/src/api/rules/validation/required.ts and util.ts, plus
+packages/forms/signals/test/node/api/validators/required.spec.ts. Angular treats false as empty
+and combines presence and checkbox acceptance in required; Form Nodes intentionally separates
+these API semantics into required and requiredTrue. The condition/metadata lifecycle follows the
+Angular implementation. The different acceptance metadata and notNil model-only rule are covered
+by field/form integration, helper-state, native browser, checked-model, and Material CVA tests.

@@ -237,7 +237,7 @@ export class ArrayNode<TItem extends AnyNode> {
 
   required = computed(() => {
     return readMetadata(this.metadata(), REQUIRED_METADATA)
-      || this.errors().some(error => error.kind === 'required');
+      || this.errors().some(error => error.kind === 'required' || error.kind === 'requiredTrue');
   });
 
   constructor(

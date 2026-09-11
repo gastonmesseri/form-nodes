@@ -210,7 +210,7 @@ export class FieldNode<TValue> {
 
   required = computed(() => {
     return readMetadata(this.metadata(), REQUIRED_METADATA)
-      || this.errors().some(error => error.kind === 'required');
+      || this.errors().some(error => error.kind === 'required' || error.kind === 'requiredTrue');
   });
 
   min = computed(() => {

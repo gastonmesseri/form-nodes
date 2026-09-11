@@ -402,14 +402,19 @@ Reports whether editing should be prevented without disabling interaction.
 
 #### – required {#form-node-state-required}
 
+This is logical required state. For Form Nodes, `required` permits `false`, while `requiredTrue`
+requires acceptance. A custom checkbox should not blindly forward this shared flag to native
+`[required]`; see [boolean control binding](../guides/control-binding.md#boolean-presence-and-acceptance).
+
+
 **Signature:** `required: Signal<boolean>`
 
 Returns true when a required rule is detected **or the bound control currently has an own error
-whose normalized `kind` is exactly `'required'`**.
+whose normalized `kind` is `'required'` or `'requiredTrue'`**.
 
 **Works with every supported binding, including Angular Reactive Forms and `[(ngModel)]`.**
 
-- `[formNode]` reads the node's required metadata; `[formField]` reads Angular Signal Forms state.
+- `[formNode]` recognizes `required`, active `requiredIf`, and `requiredTrue` metadata; `notNil` supplies no required metadata; `[formField]` reads Angular Signal Forms state.
 - `[formControl]`, `[formControlName]`, and `[(ngModel)]` recognize a directly registered
   `Validators.required` / `Validators.requiredTrue` or an active Angular `required` / `[required]` validator directive on the
   same host. An empty `required` attribute enables it; `[required]="false"` disables the directive.
@@ -421,7 +426,7 @@ changing Angular validators as usual. Normal control events update the hook; sil
 
 The error fallback works with every supported binding, including custom, composed, asynchronous,
 and manually assigned errors. It reads only the existing own errors, not descendant errors.
-For Angular error maps, the `required` key counts regardless of its payload, consistently with
+For Angular error maps, either the `required` or `requiredTrue` key counts regardless of its payload, consistently with
 `hasError('required')`. When that error disappears, the flag becomes false unless a required rule
 is also detected. This means an error-only indicator can disappear once the value is valid.
 

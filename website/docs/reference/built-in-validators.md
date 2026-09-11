@@ -89,7 +89,7 @@ const myForm = form({
 });
 ```
 
-It rejects `null`, `undefined`, `''`, `false`, and `NaN`. It does **not** reject empty arrays, sets, maps, or objects. Use `minLength(1)` when a collection must contain an item:
+It rejects `null`, `undefined`, `''`, and `NaN`. It does **not** reject empty arrays, sets, maps, or objects. Use `minLength(1)` when a collection must contain an item:
 
 ```ts
 const myForm = form({
@@ -101,6 +101,32 @@ const myForm = form({
 ```
 
 A failure is `{ kind: 'required', message }`. The validator contributes `required() === true` metadata to its node.
+
+## Presence and acceptance
+
+| Value | `required` | `requiredTrue` | `notNil` |
+| --- | --- | --- | --- |
+| `null`, `undefined` | Invalid | Invalid | Invalid |
+| `false` | Valid | Invalid | Valid |
+| `true` | Valid | Valid | Valid |
+| `''`, `NaN` | Invalid | Invalid | Valid |
+| `0`, whitespace, empty collections | Valid | Invalid | Valid |
+
+`requiredIf` follows `required` while its condition is true. For a nullable boolean question,
+`required` accepts both answers. For terms and consent, use `requiredTrue`.
+See the [complete example](./validators/required.md#boolean-answers-and-acceptance).
+
+## ✅ requiredTrue {#requiredtrue}
+
+[`requiredTrue`](./validators/required-true.md) requires exactly `true` and reports
+`{ kind: 'requiredTrue', message }`. It supports direct use, a message string, or options with
+`message`, `error`, and `when`. It contributes required metadata and native checkbox acceptance.
+
+## ✅ notNil {#notnil}
+
+[`notNil`](./validators/not-nil.md) rejects only `null` and `undefined`, reporting
+`{ kind: 'notNil', message }`. It supports the same call styles and options. It contributes no
+required metadata or native required attribute, because empty values remain valid.
 
 ## ✅ requiredIf {#requiredif}
 

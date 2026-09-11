@@ -207,6 +207,9 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
    * signal-controls, or an explicit list. Every enabled selection updates reactively, not by polling.
    * Conditional constraints and validator removal update selected inputs to their current/neutral
    * values. Selected writes may replace component defaults and explicit template bindings.
+   * A control exposing a public checked input receives acceptance-specific required state from
+   * requiredTrue; ordinary required permits false. Other controls receive logical required state.
+   * notNil contributes no required constraint.
    *
    * Native DOM controls retain normal value and state synchronization. CVAs retain writeValue,
    * change/touch callbacks, and setDisabledState independently of this option. Selecting a CVA's

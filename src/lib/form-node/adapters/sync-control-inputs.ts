@@ -1,6 +1,7 @@
-import { APP_ID, effect, reflectComponentType, untracked, type Injector, type Type } from '@angular/core';
+import { APP_ID, computed, effect, reflectComponentType, untracked, type Injector, type Type } from '@angular/core';
 
 import type { AnyNode } from '../../types/node.type';
+import { controlRequired } from './control-required';
 import { readMetadata } from '../../metadata/metadata';
 import { getFormNodeName } from '../utils/form-node-name';
 import { FORM_NODE_SYNC_INPUTS } from '../provide-form-nodes-config';
@@ -20,7 +21,7 @@ const inputNamesToSync = [
 
 type ControlInput = typeof inputNamesToSync[number];
 
-const readBindingValue = (node: AnyNode, name: ControlInput, appId: string) => {
+const readBindingValue = (node: AnyNode, name: ControlInput, appId: string, required: () => boolean) => {
   const metadata = getNodeInputConfig(node).metadata;
   const readers = {
     disabled: () => node.$api.disabled(),
@@ -37,7 +38,7 @@ const readBindingValue = (node: AnyNode, name: ControlInput, appId: string) => {
     pattern: () => readMetadata(metadata(), PATTERN_METADATA),
     pending: () => node.$api.pending(),
     readonly: () => node.$api.readonly(),
-    required: () => node.$api.required(),
+    required,
     touched: () => node.$api.touched(),
   };
   return readers[name]();
@@ -73,6 +74,7 @@ export const connectControlInputs = <TNode extends AnyNode>(
   });
   if (!bindings.length) return { inputNames };
 
+  const required = computed(() => controlRequired(node(), inputNames.has('checked')));
   effect(() => {
     if (!isConnected()) return;
     const currentNode = node();
@@ -89,7 +91,7 @@ export const connectControlInputs = <TNode extends AnyNode>(
       return selection.inputs === 'all'
         || (selection.inputs === 'declared' ? config.declared.has(name) : selection.inputs.includes(name));
     });
-    const values = selected.map(binding => ({ ...binding, value: readBindingValue(currentNode, binding.name, appId) }));
+    const values = selected.map(binding => ({ ...binding, value: readBindingValue(currentNode, binding.name, appId, required) }));
     untracked(() => {
       return values.forEach(({ name, property, value }) => {
         const written = mirror

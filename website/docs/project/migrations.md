@@ -4,6 +4,31 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+## Unreleased: boolean presence and acceptance {#boolean-required}
+
+`required` and active `requiredIf` now accept `false`. They still reject `null`, `undefined`,
+empty strings, and `NaN`. Initialize a yes/no answer to `null` when the user must choose an answer.
+
+For terms, consent, and mandatory checkboxes, replace `[required]` with `[requiredTrue]` in the
+validator list. Replace `requiredIf(condition)` with `requiredTrue({ when: condition })` when
+acceptance is conditional. Import `requiredTrue` from `@ngblocks/form-nodes`.
+
+Update `getError('required')`, `hasError('required')`, error templates, and message-catalog entries
+for those acceptance fields to the `requiredTrue` kind. Its default message is
+"This field must be accepted." Existing custom messages can be passed to the new validator.
+
+Both rules keep `node.required()` and `useFormNodeState().required()` true while active. Native
+checkboxes and custom controls with a public `checked` input receive a required constraint only
+for acceptance; the latter requires `syncInputs` to select `required`. Custom wrappers that
+manually bind logical required state to an inner native checkbox should follow the
+[checkbox binding guidance](../guides/control-binding.md#boolean-presence-and-acceptance).
+
+The new `notNil` validator rejects only null and undefined. It permits empty strings and `NaN`
+and contributes no required metadata. See the [validator comparison](../reference/built-in-validators.md#presence-and-acceptance).
+
+Angular Reactive Forms and Signal Forms controls observed independently through `useFormNodeState()`
+keep their own validator semantics. This change applies to Form Nodes validators.
+
 ## Moving to 3.7.0: closest form state {#closest-form-state}
 
 `useClosestFormState()` replaces the removed `useClosestForm()` export. The new hook returns a

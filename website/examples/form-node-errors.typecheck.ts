@@ -7,14 +7,8 @@ import { email, field, form, required, FormNodeErrors, FormNodeDirective } from 
   template: `
     <form [formNode]="contact">
       <label for="contact-email">Email</label>
-      <input
-        id="contact-email"
-        type="email"
-        autocomplete="email"
-        aria-describedby="contact-email-errors"
-        [formNode]="contact.email"
-      />
-      <form-node-errors id="contact-email-errors" [node]="contact.email" />
+      <input id="contact-email" type="email" autocomplete="email" [formNode]="contact.email" />
+      <form-node-errors [node]="contact.email" />
 
       <button type="submit">Continue</button>
       <button type="reset">Hide errors</button>

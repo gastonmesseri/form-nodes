@@ -56,8 +56,9 @@ myForm.companyName.getError('required'); // { kind: 'required', ... }
 
 When the condition returns `false`, the validator passes and contributes
 `required() === false` metadata. When it returns `true`, it behaves exactly like
-[`required()`](./required.md): it rejects `null`, `undefined`, `''`, `false`, and `NaN`, while
-empty arrays, sets, maps, and objects remain present values.
+[`required()`](./required.md): it rejects `null`, `undefined`, `''`, and `NaN`, while
+both `false` and empty arrays, sets, maps, and objects remain present values.
+For conditional acceptance, use `requiredTrue({ when: () => condition() })`.
 
 The condition may also depend on a sibling node declared in the same form:
 

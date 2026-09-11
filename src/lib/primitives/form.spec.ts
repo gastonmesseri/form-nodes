@@ -8,6 +8,7 @@ import { group } from './group';
 import { form, type FormNode } from './form';
 import { validator } from '../validation/validator';
 import { oneOf } from '../validation/validators/one-of';
+import { notNil } from '../validation/validators/not-nil';
 import { between } from '../validation/validators/between';
 import { equalTo } from '../validation/validators/equal-to';
 import { required } from '../validation/validators/required';
@@ -17,6 +18,7 @@ import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
+import { requiredTrue } from '../validation/validators/required-true';
 import type { InternalNode, AnyNode, NodeType } from '../types/node.type';
 import type { ValidatorNodeView } from '../validation/validator-node-view.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
@@ -6006,5 +6008,80 @@ describe('file form values', () => {
     expect(upload.invalid()).toBe(true);
     expect(upload.touched()).toBe(false);
     expect(upload.dirty()).toBe(false);
+  });
+});
+
+describe('presence and acceptance in form trees', () => {
+  it('propagates independent answers and acceptance through nested forms and submission', async () => {
+    const submit = vi.fn();
+    const checkout = form({
+      details: form({
+        needsInvoice: field<boolean>(null, [required]),
+        acceptsTerms: field(false, [requiredTrue]),
+        reference: field<string>(null, [notNil]),
+      }),
+    }, { onSubmit: submit });
+    expect(checkout.errors()).toEqual([]);
+    expect(checkout.allErrors().map(error => error.kind)).toEqual(['required', 'requiredTrue', 'notNil']);
+    expect(checkout.details.invalid()).toBe(true);
+    expect(checkout.invalid()).toBe(true);
+    expect(await checkout.submit()).toBe(false);
+    expect(submit).not.toHaveBeenCalled();
+    expect(checkout.details.needsInvoice.touched()).toBe(true);
+    checkout.details.patch({ needsInvoice: false, reference: '' });
+    expect(checkout.details.needsInvoice.valid()).toBe(true);
+    expect(checkout.details.reference.valid()).toBe(true);
+    expect(checkout.allErrors().map(error => error.kind)).toEqual(['requiredTrue']);
+    checkout.details.acceptsTerms.set(true);
+    expect(checkout.details.valid()).toBe(true);
+    expect(checkout.valid()).toBe(true);
+    expect(await checkout.submit()).toBe(true);
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(checkout()).toEqual({ details: { needsInvoice: false, acceptsTerms: true, reference: '' } });
+    checkout.reset({ details: { needsInvoice: null, acceptsTerms: false, reference: null } });
+    expect(checkout.allErrors().map(error => error.kind)).toEqual(['required', 'requiredTrue', 'notNil']);
+    expect(checkout.touched()).toBe(false);
+    expect(checkout.dirty()).toBe(false);
+    expect(checkout.submitted()).toBe(false);
+  });
+
+  it('tracks conditional acceptance and messages through ancestor availability', () => {
+    const enabled = signal(true);
+    const message = signal('Accept the conditions.');
+    const checkout = form({
+      details: form({ accepted: field(false, [requiredTrue({ when: () => enabled() })]) }),
+      reference: field<string>(null, [notNil]),
+    }, { validatorMessages: { requiredTrue: () => message(), notNil: 'Provide a reference.' } });
+    expect(checkout.details.accepted.getError('requiredTrue')?.message).toBe('Accept the conditions.');
+    expect(checkout.reference.getError('notNil')?.message).toBe('Provide a reference.');
+    message.set('Acceptance needed.');
+    expect(checkout.allErrors()[0]?.message).toBe('Acceptance needed.');
+    checkout.disable();
+    expect(checkout.allErrors()).toEqual([]);
+    enabled.set(false);
+    expect(checkout.details.accepted.required()).toBe(false);
+    checkout.enable();
+    expect(checkout.allErrors().map(error => error.kind)).toEqual(['notNil']);
+    checkout.reference.set('');
+    expect(checkout.valid()).toBe(true);
+    enabled.set(true);
+    expect(checkout.invalid()).toBe(true);
+    checkout.details.hide();
+    expect(checkout.valid()).toBe(true);
+    checkout.details.show();
+    expect(checkout.invalid()).toBe(true);
+  });
+
+  it('validates aggregate values and exposes own acceptance error metadata', () => {
+    const profile = form({ name: field('') }, [required, notNil]);
+    expect(profile.valid()).toBe(true);
+    expect(profile.required()).toBe(true);
+    const rejected = form({}, [requiredTrue]);
+    expect(rejected.hasError('requiredTrue')).toBe(true);
+    expect(rejected.required()).toBe(true);
+    const custom = form({}, [() => ({ kind: 'requiredTrue' })]);
+    expect(custom.required()).toBe(true);
+    const collection = array(field(''), [() => ({ kind: 'requiredTrue' })]);
+    expect(collection.required()).toBe(true);
   });
 });

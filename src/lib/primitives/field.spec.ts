@@ -9,6 +9,7 @@ import { min } from '../validation/validators/min';
 import { url } from '../validation/validators/url';
 import { validator } from '../validation/validator';
 import { email } from '../validation/validators/email';
+import { notNil } from '../validation/validators/not-nil';
 import { pattern } from '../validation/validators/pattern';
 import { integer } from '../validation/validators/integer';
 import { between } from '../validation/validators/between';
@@ -23,6 +24,7 @@ import { maxLength } from '../validation/validators/max-length';
 import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { dateBetween } from '../validation/validators/date-between';
+import { requiredTrue } from '../validation/validators/required-true';
 import type { ValidatorNodeView } from '../validation/validator-node-view.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
@@ -3645,5 +3647,99 @@ describe('file field values', () => {
     node.resetToInitial();
     expect(node()).toEqual([original]);
     expect(node()![0]).toBe(original);
+  });
+});
+
+describe('presence and acceptance validation', () => {
+  it.each([false, true])('separates empty, absent, and unaccepted values with injection=%s', (injection) => {
+    const check = () => {
+      const presence = field<unknown>(null, [required]);
+      const acceptance = field<unknown>(null, [requiredTrue]);
+      const existence = field<unknown>(null, [notNil]);
+      const cases = [
+        { value: null, requiredValid: false, trueValid: false, nilValid: false },
+        { value: undefined, requiredValid: false, trueValid: false, nilValid: false },
+        { value: '', requiredValid: false, trueValid: false, nilValid: true },
+        { value: Number.NaN, requiredValid: false, trueValid: false, nilValid: true },
+        { value: false, requiredValid: true, trueValid: false, nilValid: true },
+        { value: true, requiredValid: true, trueValid: true, nilValid: true },
+        { value: 0, requiredValid: true, trueValid: false, nilValid: true },
+        { value: 1, requiredValid: true, trueValid: false, nilValid: true },
+        { value: 'true', requiredValid: true, trueValid: false, nilValid: true },
+        { value: ' ', requiredValid: true, trueValid: false, nilValid: true },
+        { value: [], requiredValid: true, trueValid: false, nilValid: true },
+        { value: {}, requiredValid: true, trueValid: false, nilValid: true },
+        { value: new Set(), requiredValid: true, trueValid: false, nilValid: true },
+        { value: new Map(), requiredValid: true, trueValid: false, nilValid: true },
+      ];
+      for (const { value, requiredValid, trueValid, nilValid } of cases) {
+        for (const [node, valid, kind, isRequired] of [
+          [presence, requiredValid, 'required', true],
+          [acceptance, trueValid, 'requiredTrue', true],
+          [existence, nilValid, 'notNil', false],
+        ] as const) {
+          node.set(value);
+          expect(node()).toBe(value);
+          expect(node.valid()).toBe(valid);
+          expect(node.invalid()).toBe(!valid);
+          expect(node.validationStatus()).toBe(valid ? 'valid' : 'invalid');
+          expect(node.errors().map(error => error.kind)).toEqual(valid ? [] : [kind]);
+          expect(node.required()).toBe(isRequired);
+          expect(node.pending()).toBe(false);
+          expect(node.dirty()).toBe(false);
+          expect(node.touched()).toBe(false);
+        }
+      }
+    };
+    if (injection) runInInjectionContext(Injector.create({ providers: [] }), check);
+    else check();
+  });
+
+  it.each([requiredTrue, notNil])('tracks conditions and messages through disable, edits, and reset', (rule) => {
+    const enabled = signal(true);
+    const message = signal('Please answer.');
+    const node = field<unknown>(null, [rule({ when: () => enabled(), message: () => message() })]);
+    expect(node.errors()[0]?.message).toBe('Please answer.');
+    message.set('Answer needed.');
+    expect(node.errors()[0]?.message).toBe('Answer needed.');
+    node.markAsTouched();
+    node.markAsDirty();
+    node.disable();
+    expect(node.errors()).toEqual([]);
+    enabled.set(false);
+    expect(node.required()).toBe(false);
+    node.enable();
+    expect(node.valid()).toBe(true);
+    enabled.set(true);
+    expect(node.invalid()).toBe(true);
+    node.set(true);
+    expect(node.valid()).toBe(true);
+    expect(node.required()).toBe(rule === requiredTrue);
+    node.reset(null);
+    expect(node.invalid()).toBe(true);
+    expect(node.touched()).toBe(false);
+    expect(node.dirty()).toBe(false);
+    expect(node.pending()).toBe(false);
+  });
+
+  it('keeps requiredIf presence semantics when its condition changes', () => {
+    const enabled = signal(true);
+    const node = field<boolean>(false, [requiredIf(() => enabled())]);
+    expect(node.valid()).toBe(true);
+    expect(node.required()).toBe(true);
+    node.set(null);
+    expect(node.hasError('required')).toBe(true);
+    enabled.set(false);
+    expect(node.valid()).toBe(true);
+    expect(node.required()).toBe(false);
+    enabled.set(true);
+    expect(node.invalid()).toBe(true);
+    node.set(false);
+    expect(node.valid()).toBe(true);
+  });
+
+  it('recognizes an explicit acceptance error as required state', () => {
+    const node = field(true, [() => ({ kind: 'requiredTrue' })]);
+    expect(node.required()).toBe(true);
   });
 });

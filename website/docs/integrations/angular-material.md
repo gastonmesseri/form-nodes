@@ -33,7 +33,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { FormNodeDirective, email, field, form, maxDate, required } from '@ngblocks/form-nodes';
+import { FormNodeDirective, email, field, form, maxDate, required, requiredTrue } from '@ngblocks/form-nodes';
 
 @Component({
   selector: 'app-material-profile-editor',
@@ -97,7 +97,7 @@ export class MaterialProfileEditor {
     email: field('', [required, email]),
     countryCode: field('', [required]),
     birthDate: field<Date>(null, [maxDate(() => new Date())]),
-    acceptedTerms: field.strict(false, [required]),
+    acceptedTerms: field.strict(false, [requiredTrue]),
   }, {
     onSubmit: value => saveProfile(value),
   });

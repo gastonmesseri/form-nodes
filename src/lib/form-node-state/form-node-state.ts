@@ -97,7 +97,7 @@ export type ControlState<TValue = unknown> = {
    * Whether the bound control requires a non-empty value. For Reactive Forms and ngModel,
    * recognizes directly registered Angular Validators.required / Validators.requiredTrue and an active required
    * directive on the same host. Reads rule presence even when the current value is valid or
-   * disabled. Also true while the bound control has an own normalized error with kind `required`,
+   * disabled. Also true while the bound control has an own normalized error with kind `required` or `requiredTrue`,
    * on any supported source. Arbitrary composed validators are not executed to discover this state.
    */
   readonly required: Signal<boolean>;
@@ -241,7 +241,7 @@ export const useFormNodeState = <TValue = unknown>(options?: FormNodeStateOption
   const getError = computedFunction((kind: string) => {
     return errors().find(error => error.kind === kind);
   }, { max: ERROR_QUERY_CACHE_SIZE });
-  const requiredState = computed(() => (active()?.required() ?? false) || hasError('required'));
+  const requiredState = computed(() => (active()?.required() ?? false) || hasError('required') || hasError('requiredTrue'));
   const hasValidator = computedFunction((validator: unknown, resolve: boolean) => {
     const adapter = active();
     if (!adapter || typeof validator !== 'function') return undefined;

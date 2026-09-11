@@ -16,14 +16,15 @@ const validateRequired = (
   context: FieldContext<unknown>,
   message?: string | (() => string | undefined),
 ): ValidationError | null => {
-  if (!isEmpty(context.value())) return null;
+  const value = context.value();
+  if (value === false || !isEmpty(value)) return null;
   return { kind: 'required', message: resolveValidatorMessage('required', {}, message, defaultRequiredMessage) };
 };
 
 /**
  * Creates a required validator with an optional custom message.
  *
- * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. A failure produces
+ * The validator rejects `null`, `undefined`, `''`, and `NaN`; `false` and `0` are valid. A failure produces
  * `{ kind: 'required', message }`.
  *
  * ℹ️ `required` does not reject empty arrays, sets, maps, or objects. Combine it with
@@ -56,7 +57,7 @@ export function required(options: string | ({
 /**
  * Validates required presence when passed directly in a validators array.
  *
- * The validator rejects `null`, `undefined`, `''`, `false`, and `NaN`. A failure produces
+ * The validator rejects `null`, `undefined`, `''`, and `NaN`; `false` and `0` are valid. A failure produces
  * `{ kind: 'required', message }` using the default message.
  *
  * ℹ️ `required` does not reject empty arrays, sets, maps, or objects. Combine it with

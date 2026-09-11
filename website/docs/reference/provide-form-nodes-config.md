@@ -333,3 +333,13 @@ Configuration precedence and snapshots follow the independent rules above. Use t
 fields, forms, groups, arrays, factory defaults, providers, or global configuration. A parent node
 option does not enable pairs on its descendants. See the
 [complete paired component example](../guides/custom-controls.md#separate-input-output-pairs).
+
+### Required inputs on checkbox controls
+
+When `required` is selected, a component exposing a public `checked` input receives the
+acceptance constraint from `requiredTrue`, including conditional changes. A regular `required`
+rule accepts `false` and leaves that checkbox input false. Other components receive the node's
+logical `required()` state. `notNil` contributes no required metadata.
+
+See [boolean presence and acceptance](../guides/control-binding.md#boolean-presence-and-acceptance)
+for native controls and custom wrappers using `useFormNodeState()`.

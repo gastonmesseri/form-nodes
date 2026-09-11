@@ -245,17 +245,17 @@ class RequiredSignalControl {
 registerSignalModelForJit(RequiredSignalControl, 'value', 'value');
 registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 
-it.each(['formNode', 'formField'] as const)('recognizes existing required errors on %s without a declared required rule', (source) => {
+it.each([['formNode', 'required'], ['formField', 'required'], ['formNode', 'requiredTrue'], ['formField', 'requiredTrue']] as const)('recognizes existing %s %s errors without a declared required rule', (source, kind) => {
   @Component({ template: '', imports: [RequiredSignalControl, FormNodeDirective, FormField] })
   class SignalHost {
     missing = signal(true);
 
     value = signal('');
 
-    local = field('', [() => this.missing() ? { kind: 'required' } : null]);
+    local = field('', [() => this.missing() ? { kind } : null]);
 
     angular = angularForm(this.value, (path) => {
-      validate(path, () => this.missing() ? { kind: 'required' } : null);
+      validate(path, () => this.missing() ? { kind } : null);
     });
   }
   TestBed.overrideComponent(SignalHost, { set: {

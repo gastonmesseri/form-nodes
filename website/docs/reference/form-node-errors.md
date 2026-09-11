@@ -1,5 +1,5 @@
 ---
-title: form-node-errors
+title: <form-node-errors>
 ---
 
 import CodeBlock from '@theme/CodeBlock';
@@ -20,7 +20,10 @@ Bind the input with `[formNode]` and place `<form-node-errors>` immediately belo
 same field through `[node]`. Import both `FormNodeDirective` and `FormNodeErrors` in the component.
 Keep the error component mounted: it decides when to display messages and animates its height.
 
-<CodeBlock language="ts" title="contact-form.component.ts">{errorsSource}</CodeBlock>
+<CodeBlock language="ts" title="contact-form.component.ts" metastring="{11}">{errorsSource}</CodeBlock>
+
+The error component does not require an `id`. To associate its messages with an input through
+`aria-describedby`, add a matching ID as shown in the [custom-control example](#custom-control).
 
 Try this sequence:
 
@@ -95,7 +98,6 @@ messages, wait for a submission attempt, and disable animation:
 
 ```html
 <form-node-errors
-  id="contact-email-errors"
   [node]="contact.email"
   [maxMessages]="2"
   showWhen="submit"

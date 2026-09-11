@@ -5,6 +5,7 @@ title: Control binding
 import CodeBlock from '@theme/CodeBlock';
 import fileValuesSource from '!!raw-loader!../../examples/file-values.example.ts';
 import nativeFileSource from '!!raw-loader!../../examples/native-file-binding.typecheck.ts';
+import presenceBindingSource from '!!raw-loader!../../examples/presence-binding.typecheck.ts';
 import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.typecheck.ts';
 import standaloneSource from '!!raw-loader!../../examples/standalone-control-value.typecheck.ts';
 
@@ -265,3 +266,25 @@ the control from displaying new input. Rendering uses `value.control()`, while
 Consequently, [`formNodeValueChange`](../reference/form-node-binding.md#value-outputs) can emit the retained public value for an edit that compares
 equal; `formNodeControlValueChange` carries the latest control value. Debounce still determines
 when input is committed. See [value outputs](../reference/form-node-binding.md#value-outputs).
+
+## Boolean presence and acceptance {#boolean-presence-and-acceptance}
+
+Use `required` for a yes/no question initialized to `null`, so `false` is a valid answer.
+Use `requiredTrue` for a checkbox that must be checked. `notNil` only rejects null and undefined.
+
+<CodeBlock language="ts" title="checkout.component.ts">{presenceBindingSource}</CodeBlock>
+
+A native checkbox receives HTML `required` for `requiredTrue`, including its reactive `when`
+condition. A presence-only `required` rule leaves the native checkbox constraint false, while
+`node.required()` remains true. This keeps the browser's `checkValidity()` consistent with a
+valid negative answer. `notNil` does not add HTML `required` to any control.
+
+When experimental `syncInputs` includes `required`, custom controls exposing a public `checked`
+input receive the same acceptance-specific value, including checkbox CVAs such as Angular Material.
+Other custom controls receive the node's logical `required()` state. Existing CVA validators
+still apply their own rules.
+
+Inside a custom checkbox, use `useFormNodeState().required()` for a required indicator, but do
+not automatically copy it to an inner native checkbox's `[required]`: the logical flag also
+represents presence-only rules. Let Form Nodes errors drive validation, use the synchronized
+`required` input on a `checked` control, or expose an explicit acceptance option in your wrapper.

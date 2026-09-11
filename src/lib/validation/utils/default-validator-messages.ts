@@ -2,6 +2,14 @@ export const defaultRequiredMessage = (): string => {
   return 'This field is required.';
 };
 
+export const defaultRequiredTrueMessage = (): string => {
+  return 'This field must be accepted.';
+};
+
+export const defaultNotNilMessage = (): string => {
+  return 'Please provide a value.';
+};
+
 export const defaultEmailMessage = (): string => {
   return 'Please enter a valid email address.';
 };

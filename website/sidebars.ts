@@ -112,6 +112,8 @@ const sidebars: SidebarsConfig = {
               items: [
                 'reference/validators/required',
                 'reference/validators/required-if',
+                'reference/validators/required-true',
+                'reference/validators/not-nil',
                 'reference/validators/min',
                 'reference/validators/max',
                 'reference/validators/between',

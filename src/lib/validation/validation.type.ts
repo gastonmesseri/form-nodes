@@ -24,6 +24,8 @@ export interface ValidationError {
 /** Built-in validation errors keyed by their discriminating `kind`. */
 export interface BuiltInValidationErrorMap {
   readonly required: ValidationError & { readonly kind: 'required' };
+  readonly requiredTrue: ValidationError & { readonly kind: 'requiredTrue' };
+  readonly notNil: ValidationError & { readonly kind: 'notNil' };
   readonly email: ValidationError & { readonly kind: 'email' };
   readonly url: ValidationError & { readonly kind: 'url' };
   readonly equalTo: ValidationError & { readonly kind: 'equalTo' };

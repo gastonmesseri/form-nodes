@@ -12,7 +12,7 @@ describe('required', () => {
     fieldNode.set('');
     expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set(false);
-    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toEqual([]);
     fieldNode.set(Number.NaN);
     expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
     fieldNode.set('David');

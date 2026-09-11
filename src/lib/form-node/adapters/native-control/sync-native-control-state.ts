@@ -1,5 +1,6 @@
 import { APP_ID, effect } from '@angular/core';
 
+import { controlRequired } from '../control-required';
 import type { FieldNode } from '../../../primitives/field';
 import { getFormNodeName } from '../../utils/form-node-name';
 import type { ControlAdapterContext } from '../control-adapter';
@@ -18,7 +19,7 @@ export const syncNativeControlState = <TNode extends AnyNode>({ binding, rendere
     if (nativeControl && !inputNames.has('name')) renderer.setProperty(nativeControl, 'name', getFormNodeName(node, appId));
     if (nativeControl && !inputNames.has('disabled')) renderer.setProperty(nativeControl, 'disabled', node.$api.disabled());
     if (nativeControl && !inputNames.has('readonly') && 'readOnly' in nativeControl) renderer.setProperty(nativeControl, 'readOnly', node.$api.readonly());
-    if (nativeControl && !inputNames.has('required') && 'required' in nativeControl) renderer.setProperty(nativeControl, 'required', node.$api.required());
+    if (nativeControl && !inputNames.has('required') && 'required' in nativeControl) renderer.setProperty(nativeControl, 'required', controlRequired(node, nativeControl.type === 'checkbox'));
     if (elementAcceptsMinMax(element)) {
       if (!inputNames.has('min')) renderer.setProperty(element, 'min', formatNativeLimit(field.min?.(), element.type) ?? '');
       if (!inputNames.has('max')) renderer.setProperty(element, 'max', formatNativeLimit(field.max?.(), element.type) ?? '');

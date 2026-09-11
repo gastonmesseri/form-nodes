@@ -32,6 +32,11 @@ const createMaximumMetadata = <TValue extends number | Date>() => {
   });
 };
 
+export const REQUIRED_TRUE_METADATA = createMetadataKey<boolean, boolean>({
+  getInitial: () => false,
+  reduce: (current, contribution) => current || contribution,
+});
+
 export const MIN_METADATA = createMinimumMetadata<number>();
 export const MAX_METADATA = createMaximumMetadata<number>();
 export const MIN_DATE_METADATA = createMinimumMetadata<Date>();

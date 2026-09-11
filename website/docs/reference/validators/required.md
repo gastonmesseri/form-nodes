@@ -2,6 +2,9 @@
 title: required()
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import presenceSource from '!!raw-loader!../../../examples/presence-validation.example.ts';
+
 # required() {#required}
 
 ## 🧭 API map {#api-map}
@@ -10,6 +13,7 @@ title: required()
 | --- | --- |
 | See every accepted call style | [Signatures](#signatures) |
 | See common and advanced usage | [Usage and behavior](#usage-and-behavior) |
+| Compare presence validators | [required versus notNil](#required-vs-not-nil) |
 | Customize messages | [Message configuration](#message-configuration) |
 | Understand reactive constraints | [Reactive behavior](#reactive-behavior) |
 | Return to the complete catalog | [Built-in validators](../built-in-validators.md) |
@@ -36,7 +40,7 @@ const myForm = form({
 });
 ```
 
-It rejects `null`, `undefined`, `''`, `false`, and `NaN`. It does **not** reject empty arrays, sets, maps, or objects. Use `minLength(1)` when a collection must contain an item:
+It rejects `null`, `undefined`, `''`, and `NaN`. It does **not** reject empty arrays, sets, maps, or objects. Use `minLength(1)` when a collection must contain an item:
 
 ```ts
 const myForm = form({
@@ -45,6 +49,51 @@ const myForm = form({
 ```
 
 A failure is `{ kind: 'required', message }`. The validator contributes `required() === true` metadata to its node.
+
+### Boolean answers and acceptance
+
+:::info Boolean behavior compared with Angular
+
+Form Nodes `required` accepts both `true` and `false`. This matches **Angular Reactive Forms'
+`Validators.required` for booleans**, but differs from **Angular Signal Forms' `required`**, which
+rejects `false`.
+
+Use [`requiredTrue`](./required-true.md) when the value must be exactly `true`, such as accepting
+terms or giving consent. Use `required` for a yes/no question where either answer is valid.
+
+This comparison is specific to booleans; the validators do not share every empty-value rule.
+Verified against Angular **v22.1.6**: [Signal Forms emptiness](https://github.com/angular/angular/blob/v22.1.6/packages/forms/signals/src/api/rules/validation/util.ts)
+and [Reactive Forms validators](https://github.com/angular/angular/blob/v22.1.6/packages/forms/src/validators.ts).
+
+:::
+
+Initialize a yes/no question with `field<boolean>(null, [required])`: `null` means unanswered,
+and either boolean is valid. These validators do not narrow the field's TypeScript value type
+after validation.
+
+<CodeBlock language="ts" title="checkout-model.ts">{presenceSource}</CodeBlock>
+
+A native checkbox receives the HTML `required` constraint only for `requiredTrue`, because
+HTML requires a required checkbox to be checked. The node's logical `required()` flag remains
+true for both validators. See [control binding](../../guides/control-binding.md#boolean-presence-and-acceptance).
+
+### required versus notNil {#required-vs-not-nil}
+
+Use `required` when an empty string or `NaN` should count as missing. Use
+[`notNil`](./not-nil.md#not-nil-vs-required) when only `null` and `undefined` are forbidden:
+
+| Value | `required` | `notNil` |
+| --- | --- | --- |
+| `null`, `undefined` | Invalid | Invalid |
+| `''`, `NaN` | Invalid | Valid |
+| `false`, `true`, `0` | Valid | Valid |
+| Whitespace-only strings | Valid | Valid |
+| Empty arrays, sets, maps, or objects | Valid | Valid |
+
+An active `required` rule contributes `node.required() === true`; `notNil` contributes no
+required metadata or native required constraint. This distinction still matters on boolean
+fields, even though both rules accept either boolean. Failures use different error kinds and
+message-catalog keys: `required` and `notNil`.
 
 ## 💬 Message configuration {#message-configuration}
 
