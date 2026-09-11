@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 3.8.1 — 2026-09-11 {#381--2026-09-11}
+
+Documentation maintenance release. The package API and runtime behavior are unchanged from 3.8.0.
+
 ## 📦 3.8.0 — 2026-09-11 {#380--2026-09-11}
 
 ### Added
