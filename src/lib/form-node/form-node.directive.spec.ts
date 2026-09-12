@@ -2325,7 +2325,8 @@ describe('native control conversion', () => {
     expect(readNativeControlValue(input, () => 0)).toBe(42);
     expect(readNativeControlValue(input, () => '')).toBe('42');
     input.value = '';
-    expect(readNativeControlValue(input, () => null)).toBeNull();
+    expect(readNativeControlValue(input, () => null)).toBe('');
+    expect(readNativeControlValue(input, () => null, true)).toBeNull();
     input.value = 'invalid';
     expect(readNativeControlValue(input, () => 23)).toBe(23);
   });
@@ -2342,7 +2343,8 @@ describe('native control conversion', () => {
     expect(parseNativeControlValue(input, () => 23)).toEqual({ error: { kind: 'parse' } });
     Object.defineProperty(input, 'validity', { configurable: true, value: { badInput: false } });
     input.value = 'invalid';
-    expect(parseNativeControlValue(input, () => null)).toEqual({ error: { kind: 'parse' } });
+    expect(parseNativeControlValue(input, () => null)).toEqual({ value: 'invalid' });
+    expect(parseNativeControlValue(input, () => null, true)).toEqual({ error: { kind: 'parse' } });
   });
 
   it('writes all supported native value representations', () => {

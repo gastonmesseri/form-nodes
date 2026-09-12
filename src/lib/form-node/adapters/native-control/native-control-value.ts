@@ -29,6 +29,7 @@ const readSelectedValues = (select: HTMLSelectElement): string[] => {
 export const readNativeControlValue = (
   element: NativeFormNodeControl,
   currentValue: () => unknown,
+  numericText = false,
 ): unknown => {
   if (isNativeSelect(element) && element.multiple) return readSelectedValues(element);
   if (!isNativeInput(element)) return element.value;
@@ -59,7 +60,7 @@ export const readNativeControlValue = (
     }
     case 'text': {
       const value = untracked(currentValue);
-      if (typeof value !== 'number' && value !== null) return element.value;
+      if (typeof value !== 'number' && !numericText) return element.value;
       if (element.value === '') return null;
       const parsed = Number(element.value);
       return Number.isNaN(parsed) ? value : parsed;
@@ -73,17 +74,18 @@ export const readNativeControlValue = (
 export const parseNativeControlValue = (
   element: NativeFormNodeControl,
   currentValue: () => unknown,
+  numericText = false,
 ): NativeControlParseResult => {
   if (isNativeInput(element) && (element.validity?.badInput ?? false)) {
     return { error: { kind: 'parse' } };
   }
   if (isNativeInput(element) && element.type === 'text') {
     const value = untracked(currentValue);
-    if ((typeof value === 'number' || value === null) && element.value !== '' && Number.isNaN(Number(element.value))) {
+    if ((typeof value === 'number' || numericText) && element.value !== '' && Number.isNaN(Number(element.value))) {
       return { error: { kind: 'parse' } };
     }
   }
-  return { value: readNativeControlValue(element, currentValue) };
+  return { value: readNativeControlValue(element, currentValue, numericText) };
 };
 
 const writeNumber = (element: HTMLInputElement, value: number) => {

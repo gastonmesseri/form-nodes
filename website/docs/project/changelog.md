@@ -12,6 +12,7 @@ canonical release record.
 
 ### Fixed
 
+- Native text inputs bound to fields initialized or reset to `null` now accept text without numeric parse errors. Text remains text, including numeric-looking strings; established numeric text bindings retain numeric parsing through clearing and reset, and rebinding starts fresh.
 - Native text inputs without pattern validators no longer receive an empty `pattern` attribute that rejects nonempty values during browser validation. Removing the final pattern validator also removes its native restriction.
 
 ## 📦 3.9.0 — 2026-09-11 {#390--2026-09-11}

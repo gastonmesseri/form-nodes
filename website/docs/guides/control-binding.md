@@ -2,6 +2,7 @@
 title: Control binding
 ---
 
+import nullableTextSource from '!!raw-loader!../../examples/nullable-text-binding.typecheck.ts';
 import CodeBlock from '@theme/CodeBlock';
 import fileValuesSource from '!!raw-loader!../../examples/file-values.example.ts';
 import nativeFileSource from '!!raw-loader!../../examples/native-file-binding.typecheck.ts';
@@ -139,6 +140,21 @@ so you do not need to set `name` or `checked` yourself.
 Standard delivery starts selected. Selecting Express delivery updates `checkout.delivery()`
 to `'express'` and updates the displayed selection. The labels make each option clickable,
 and the `fieldset` and `legend` identify the group.
+
+### Nullable text and numeric fields {#nullable-text}
+
+A text input bound to `field<string>(null)` accepts strings immediately, including after
+`reset(null)`. Typing `007` keeps the string `'007'`; whitespace is preserved, and clearing the
+input writes `''`. The declared null remains in the model until the user edits it.
+
+<CodeBlock language="ts" title="nullable-text-binding.typecheck.ts">{nullableTextSource}</CodeBlock>
+
+For a numeric field that starts at null, use `<input type="number">`. Generic types disappear at
+runtime, so `field<number>(null)` alone cannot tell a text input that it should parse numbers.
+Text inputs already bound to a numeric value keep their numeric parsing through clearing and
+`reset(null)` while that binding remains connected. An observed string value switches back to text;
+rebinding to another node starts inference again. Invalid numeric text retains the last committed
+value and exposes a `parse` error.
 
 ## ✅ Native constraints {#native-constraints}
 

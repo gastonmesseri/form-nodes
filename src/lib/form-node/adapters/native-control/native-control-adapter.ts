@@ -1,5 +1,6 @@
 import { CSP_NONCE, DestroyRef, afterEveryRender, computed, effect, signal, untracked } from '@angular/core';
 
+import { isNotNil } from '../../../utils/is-nil';
 import type { FieldNode } from '../../../primitives/field';
 import { shallowEqual } from '../../../utils/shallow-equal';
 import type { InternalNode, AnyNode, NodeValue } from '../../../types/node.type';
@@ -15,6 +16,8 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
   const destroyRef = injector.get(DestroyRef);
   const cspNonce = injector.get(CSP_NONCE, null);
   const parsingOwner = {};
+  let valueField: FieldNode<NodeValue<TNode>> | undefined;
+  let numericText = false;
   let composing = false;
   let destroyed = false;
   destroyRef.onDestroy(() => { destroyed = true; });
@@ -24,6 +27,16 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
       throw new Error('formNode: native controls require a field node');
     }
     return node as FieldNode<NodeValue<TNode>>;
+  };
+
+  const readValue = (field: FieldNode<NodeValue<TNode>>) => {
+    const value = field.value.control();
+    // Nullish text starts as a string; an established numeric binding survives clearing.
+    if (field !== valueField || isNotNil(value)) {
+      numericText = typeof value === 'number';
+      valueField = field;
+    }
+    return value;
   };
 
   const parseErrors = signal<readonly ValidationErrorWithoutTargetNode[]>([]);
@@ -38,7 +51,8 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
     if (isNativeInput(control) && control.type === 'radio' && !control.checked) return;
     const field = getNativeField();
     field.markAsDirty();
-    const result = parseNativeControlValue(control, () => field.value.control());
+    const value = readValue(field);
+    const result = parseNativeControlValue(control, () => value, numericText);
     parseErrors.set(result.error ? [result.error] : []);
     if ('value' in result) {
       const previous: unknown = field.value.control();
@@ -56,12 +70,12 @@ export const connectNativeControlAdapter = <TNode extends AnyNode>({ binding, re
     onCleanup(registerExternalValidationErrors(field, parsingOwner, bindingParseErrors, {
       onReset: () => {
         parseErrors.set([]);
-        writeNativeControlValue(control, field.value.control());
+        writeNativeControlValue(control, readValue(field));
       },
     }));
   }, { injector });
   effect(() => {
-    const value = getNativeField().value.control();
+    const value = readValue(getNativeField());
     untracked(() => {
       parseErrors.set([]);
       writeNativeControlValue(control, value);

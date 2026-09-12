@@ -2915,6 +2915,24 @@ hosts instead of relying on Angular internals.
 
 ### Native parse errors
 
+Native text inputs with no established value representation interpret null/undefined as an empty
+text model. Edits produce strings, including leading zeros and whitespace; clearing produces ''.
+A numeric current control value still enables numeric text parsing. The binding remembers its last
+observed non-nullish representation through clearing and reset(null), so an established numeric
+text control continues to produce number/null and reports invalid numeric input as parse errors.
+An observed non-nullish string switches the binding back to text. Rebinding to another node clears
+this remembered representation. For a numeric field initially null, use type="number"; TypeScript
+generics cannot select runtime parsing. Native numeric/date-like input rules are otherwise unchanged.
+
+This intentionally differs from Angular v22.1.6 (356adf749188d996a641181c56621a6285126f3c), whose
+packages/forms/signals/src/directive/native.ts getNativeControlValue treats null as numeric even
+for text inputs. Its packages/forms/signals/test/web/form_field.spec.ts native parser reset test
+confirms last-valid-value/error/reset behavior for numeric text, which remains supported. Reactive
+Forms' src/directives/default_value_accessor.ts uses strings for text. Browser regressions cover
+standalone and nested fields, null/undefined, required state, inherited blur debounce, reset,
+numeric preservation, numeric input types and rebinding.
+
+
 Native controls parse their raw UI state before calling `value.control.set()`. If the browser reports
 `ValidityState.badInput`, or a numeric model is bound to a text input containing a non-numeric value,
 the field receives an external validation error with `kind: 'parse'`. The failed raw value remains in
