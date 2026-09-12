@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [3.9.1] - 2026-09-12
+
 ### Fixed
 
 - Native text inputs bound to fields initialized or reset to `null` now accept text without numeric parse errors. Text remains text, including numeric-looking strings; established numeric text bindings retain numeric parsing through clearing and reset, and rebinding starts fresh.
