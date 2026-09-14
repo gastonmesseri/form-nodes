@@ -19,6 +19,7 @@ import { requiredIf } from '../validation/validators/required-if';
 import { uniqueItems } from '../validation/validators/unique-items';
 import { dateBetween } from '../validation/validators/date-between';
 import { requiredTrue } from '../validation/validators/required-true';
+import { lengthBetween } from '../validation/validators/length-between';
 import type { InternalNode, AnyNode, NodeType } from '../types/node.type';
 import type { ValidatorNodeView } from '../validation/validator-node-view.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
@@ -6147,4 +6148,87 @@ describe('presence and acceptance in form trees', () => {
     const collection = array(field(''), [() => ({ kind: 'requiredTrue' })]);
     expect(collection.required()).toBe(true);
   });
+});
+
+describe('form lengthBetween', () => {
+  it('propagates field and array constraints through nested forms, edits, and resets', () => {
+    const profile = form({
+      details: form({
+        username: field('ab', [lengthBetween(2, 4)]),
+        members: array({ name: field('Ada') }, { initialValue: 1, validators: [lengthBetween(1, 2)] }),
+      }),
+    });
+    expect(profile.valid()).toBe(true);
+    const { username, members } = profile.details;
+    members.push();
+    expect(profile.valid()).toBe(true);
+    members.push();
+    expect(members.errors()).toMatchObject([{ kind: 'maxLength', actual: 3, targetNode: members }]);
+    expect(profile.details.invalid()).toBe(true);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'maxLength', targetNode: members }]);
+    expect(profile.pending()).toBe(false);
+    members.removeAt(2);
+    expect(profile.valid()).toBe(true);
+    members.clear();
+    username.value.control.set('');
+    expect(profile.allErrors().map(error => error.kind)).toEqual(['minLength', 'minLength']);
+    expect(profile.dirty()).toBe(true);
+    profile.markAsTouched();
+    expect(username.touched()).toBe(true);
+    profile.disable();
+    expect(profile.allErrors()).toEqual([]);
+    profile.enable();
+    expect(profile.allErrors()).toHaveLength(2);
+    profile.resetToInitial();
+    expect(profile()).toEqual({ details: { username: 'ab', members: [{ name: 'Ada' }] } });
+    expect(profile.valid()).toBe(true);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+  });
+
+  it('tracks reactive limits and conditions on descendant fields and arrays without interaction changes', () => {
+    const minimum = signal<number | undefined>(1);
+    const maximum = signal<number | undefined>(2);
+    const active = signal(true);
+    const profile = form({
+      details: form({
+        name: field('ab', [lengthBetween(minimum, maximum, { when: active })]),
+        members: array({ name: field('Ada') }, {
+          initialValue: 2,
+          validators: [lengthBetween(minimum, maximum, { when: active })],
+        }),
+      }),
+    });
+    expect(profile.valid()).toBe(true);
+    maximum.set(1);
+    expect(profile.allErrors().map(error => error.kind)).toEqual(['maxLength', 'maxLength']);
+    maximum.set(undefined);
+    expect(profile.valid()).toBe(true);
+    minimum.set(3);
+    expect(profile.allErrors().map(error => error.kind)).toEqual(['minLength', 'minLength']);
+    active.set(false);
+    expect(profile.valid()).toBe(true);
+    expect(profile.details.name.minLength()).toBeNull();
+    expect(profile.details.members.errors()).toEqual([]);
+    active.set(true);
+    expect(profile.invalid()).toBe(true);
+    minimum.set(2);
+    expect(profile.valid()).toBe(true);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+  });
+});
+
+it('resolves lengthBetween messages from the existing per-bound form catalogs', () => {
+  const profile = form({
+    details: form({ name: field('a', [lengthBetween(2, 4)]) }),
+  }, {
+    validatorMessages: {
+      minLength: ({ minLength, actual }) => `Need ${minLength}, received ${actual}`,
+      maxLength: ({ maxLength, actual }) => `Allow ${maxLength}, received ${actual}`,
+    },
+  });
+  expect(profile.details.name.getError('minLength')?.message).toBe('Need 2, received 1');
+  profile.details.name.set('abcde');
+  expect(profile.details.name.getError('maxLength')?.message).toBe('Allow 4, received 5');
 });

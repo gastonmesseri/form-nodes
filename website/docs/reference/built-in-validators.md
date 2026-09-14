@@ -69,7 +69,7 @@ evaluated.
 | --- | --- |
 | Presence | [`required`](./validators/required.md), [`requiredIf`](./validators/required-if.md) |
 | Numeric limits and shape | [`min`](./validators/min.md), [`max`](./validators/max.md), [`between`](./validators/between.md), [`integer`](./validators/integer.md) |
-| Text or collection size | [`minLength`](./validators/min-length.md), [`maxLength`](./validators/max-length.md) |
+| Text or collection size | [`minLength`](./validators/min-length.md), [`maxLength`](./validators/max-length.md), [`lengthBetween`](./validators/length-between.md) |
 | Word count | [`minWords`](./validators/min-words.md), [`maxWords`](./validators/max-words.md) |
 | Text format | [`pattern`](./validators/pattern.md), [`email`](./validators/email.md), [`url`](./validators/url.md) |
 | Date limits | [`minDate`](./validators/min-date.md), [`maxDate`](./validators/max-date.md), [`dateBetween`](./validators/date-between.md) |
@@ -245,6 +245,23 @@ const myForm = form({
 ```
 
 It supports the same `length` and `size` values as `minLength`. `null` and `''` pass, while empty collections are measured normally. A reactive maximum returning `undefined` disables the constraint. A failure is `{ kind: 'maxLength', maxLength, actual, message }`. The resolved limit contributes to `maxLength()` metadata.
+
+## ✅ lengthBetween {#lengthbetween}
+
+Combines inclusive minimum and maximum text or collection lengths:
+
+```ts
+lengthBetween(1, 5)
+lengthBetween(() => minimumLength(), () => maximumLength())
+lengthBetween(1, 5, 'Use between one and five characters.')
+```
+
+It supports the same values as `minLength`, including nullish values, which pass. Empty strings
+and collections fail a positive minimum. Failures retain the `minLength` or `maxLength` kind,
+parameters, and message fallbacks. Each bound contributes its corresponding constraint metadata;
+returning `undefined` or `NaN` disables only that bound. A false `when` disables both bounds.
+See [lengthBetween()](./validators/length-between.md) for executable form and array examples,
+custom errors, and edge cases.
 
 ## ✅ minWords {#minwords}
 

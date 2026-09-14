@@ -120,6 +120,7 @@ const sidebars: SidebarsConfig = {
                 'reference/validators/integer',
                 'reference/validators/min-length',
                 'reference/validators/max-length',
+                'reference/validators/length-between',
                 'reference/validators/min-words',
                 'reference/validators/max-words',
                 'reference/validators/pattern',

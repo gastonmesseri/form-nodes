@@ -20,6 +20,7 @@ import { maxLength } from '../validators/max-length';
 import { minLength } from '../validators/min-length';
 import { dateBetween } from '../validators/date-between';
 import { uniqueItems } from '../validators/unique-items';
+import { lengthBetween } from '../validators/length-between';
 
 describe('built-in validator when option', () => {
   it('reactively enables every built-in validator', () => {
@@ -32,6 +33,7 @@ describe('built-in validator when option', () => {
       () => field(3, [between(4, 5, { when })]),
       () => field(1.5, [integer({ when })]),
       () => field('a', [minLength(2, { when })]),
+      () => field('a', [lengthBetween(2, 5, { when })]),
       () => field('abc', [maxLength(2, { when })]),
       () => field('one', [minWords(2, { when })]),
       () => field('one two', [maxWords(1, { when })]),

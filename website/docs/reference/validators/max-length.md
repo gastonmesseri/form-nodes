@@ -67,6 +67,8 @@ stop contributing their error and metadata.
 The validator runs synchronously as part of its node's validator source. Disabled, readonly, and
 hidden nodes skip validation until they become interactive again.
 
+For an inclusive range in one validator, use [`lengthBetween()`](./length-between.md).
+
 ## 🔗 Related reference {#related-reference}
 
 - [Built-in validators](../built-in-validators.md)

@@ -26,6 +26,7 @@ export { minWords } from './lib/validation/validators/min-words';
 export { asyncValidator } from './lib/validation/async-validator';
 export { maxLength } from './lib/validation/validators/max-length';
 export { minLength } from './lib/validation/validators/min-length';
+export { lengthBetween } from './lib/validation/validators/length-between';
 export { dateBetween } from './lib/validation/validators/date-between';
 export { uniqueItems } from './lib/validation/validators/unique-items';
 export type { FormNodeBinding } from './lib/types/form-node-binding.type';

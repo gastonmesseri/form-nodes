@@ -22,6 +22,7 @@ import { minLength } from '../validators/min-length';
 import { requiredIf } from '../validators/required-if';
 import { dateBetween } from '../validators/date-between';
 import { uniqueItems } from '../validators/unique-items';
+import { lengthBetween } from '../validators/length-between';
 import { applyValidatorWhen } from '../utils/validator-options';
 
 describe('built-in validator error option', () => {
@@ -35,6 +36,7 @@ describe('built-in validator error option', () => {
       () => field(3, [between(4, 5, { error: customError })]),
       () => field(1.5, [integer({ error: customError })]),
       () => field('a', [minLength(2, { error: customError })]),
+      () => field('a', [lengthBetween(2, 5, { error: customError })]),
       () => field('abc', [maxLength(2, { error: customError })]),
       () => field('one', [minWords(2, { error: customError })]),
       () => field('one two', [maxWords(1, { error: customError })]),

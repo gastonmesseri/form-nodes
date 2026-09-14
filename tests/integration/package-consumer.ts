@@ -1,5 +1,5 @@
 import { Component, viewChild } from '@angular/core';
-import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, array, createFormPrimitives, field, form, group, required, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
+import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, array, createFormPrimitives, field, form, group, required, lengthBetween, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
 
@@ -113,3 +113,10 @@ configuredRow.label.setValidators((ctx) => {
   const count: number | null | undefined = parent?.count();
   return count === null ? { kind: 'missingCount' } : null;
 });
+
+const lengthLimited = field('Ada', [lengthBetween(1, 5)]);
+lengthLimited.set('Longer');
+const lengthFailure = lengthLimited.getError('maxLength');
+if (lengthFailure?.maxLength !== 5 || lengthFailure.actual !== 6) {
+  throw new Error('The package must export lengthBetween with typed length errors.');
+}

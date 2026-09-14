@@ -1521,6 +1521,7 @@ const age = field<number>(null, {
 | `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
 | `uniqueItems(keySelector?)` | A readonly array, `null`, or `undefined` | Absent, empty, and one-item arrays pass | `{ kind: 'uniqueItems', duplicateIndexes, message }` |
 | `minLength(limit)` | A value with numeric `length` or `size`, or `null` / `undefined` | Passes for nullish values; measures empty strings and collections as zero | `{ kind: 'minLength', minLength, actual, message }` |
+| `lengthBetween(minimum, maximum)` | A value with numeric `length` or `size`, or `null` / `undefined` | Passes for nullish values; empty text and collections fail a positive minimum | Existing `minLength` and/or `maxLength` errors |
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
@@ -4343,3 +4344,38 @@ packages/forms/signals/test/node/api/validators/pattern.spec.ts (dynamic values 
 Angular excludes pattern from native property synchronization; Form Nodes intentionally syncs
 active patterns. Angular's pattern tests confirm that disabling a pattern clears errors and
 metadata. Our browser tests additionally check native validity, removal, and manual submission.
+
+
+## Combined length bounds
+
+`lengthBetween(minimum, maximum, options?)` combines the inclusive constraints of `minLength`
+and `maxLength` without introducing a new error kind. Both arguments accept a number or a
+reactively tracked zero-argument function returning a number or undefined. Each bound is independent:
+undefined or NaN removes only its validation effect and metadata contribution, unlike the whole-range
+suspension of `between` and `dateBetween`. Bounds are not reordered, rounded, or clamped; reversed
+bounds can produce both errors, with minimum first. Numeric length takes precedence over size.
+String length uses UTF-16 code units without trimming, matching the separate length validators.
+
+Nullish values pass. Empty strings and collections measure as zero for the minimum. The upper
+constraint retains `maxLength`'s empty-string exemption, including for negative maximums; empty
+collections are still checked. No required metadata is added. Active bounds contribute MIN_LENGTH
+and MAX_LENGTH metadata, exposed through field minLength()/maxLength() and the existing control
+constraint mechanism. Other validators combine by largest minimum and smallest maximum.
+
+Messages use the existing per-kind minLength/maxLength catalog parameters and fallbacks. A custom
+message applies to either failure. `error` replaces all failures and its callback runs once per
+failing validation execution, even for reversed bounds that produce both errors. A false `when`
+suppresses both constraints and metadata; a replacement success result suppresses errors only.
+Reactive dependency tracking works without an injector. Validation follows committed values,
+including debounced control commits, and does not itself change dirty/touched state. Descendant
+errors propagate through arrays and nested forms. Reset and ancestor availability follow existing
+node rules, with no new asynchronous work or notification semantics.
+
+Angular reference: latest stable `v22.1.6`, commit `356adf749188d996a641181c56621a6285126f3c`.
+Inspected `packages/forms/signals/src/api/rules/validation/min_length.ts`, `max_length.ts`, and
+`packages/forms/signals/test/node/api/validators/min_length.spec.ts`, `max_length.spec.ts`.
+These establish inclusive length/size checks, independent undefined constraints, conditional
+metadata, custom errors/messages, and strongest-bound metadata merging. Their empty-string tests
+confirm Angular skips empty text. Form Nodes intentionally keeps its existing positive-minimum
+rejection for empty strings. The combined factory and existing Form Nodes error shapes are library
+API decisions. Tests cover the intentional difference, both constraints, and parent propagation.
