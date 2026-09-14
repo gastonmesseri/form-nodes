@@ -328,6 +328,54 @@ Evidence paths below are relative to `packages/forms/` at the pinned tag:
 Local verification: 701 existing tests passed across `field.spec.ts`, `form.spec.ts`,
 `array.spec.ts`, and `form-node.directive.form.spec.ts`. No library behavior changed in this review.
 
+## Three-way comparison — Items 20–29 (2026-09-14)
+
+Reviewed against the latest stable Angular 22 tag **v22.1.6**, commit
+`356adf749188d996a641181c56621a6285126f3c`. These items remain pending decisions.
+
+| # | Reactive Forms | Signal Forms | Form Nodes |
+| --- | --- | --- | --- |
+| 20 | updateOn: 'submit' integrates with the form directive to defer view changes until submission. | Uses debounce and separate control/model signals rather than an equivalent updateOn strategy. submit() calls markAsTouched() on the submitted node; its internal traversal does not individually flush pending descendants. | No updateOn: 'submit' equivalent. submit() recursively touches and commits interactive descendants; the native binding notification path additionally calls flush() on the subtree. See item 19 for the deliberate group-touch difference. |
+| 21 | valueChanges is an event stream; same-value programmatic writes and enable/disable normally emit. | Model changes use signals and their equality rules; an effect is not a synchronous log of every write. There is no equivalent onValueChange option on the ordinary field state. | Signal reads plus synchronous onValueChange callbacks for changed exposed committed values. Equal writes and availability-only changes do not emit those callbacks. |
+| 22 | valueChanges combines programmatic and control-originated updates; updateOn influences timing. | Consumers observe value/controlValue signals. FormField does not expose outputs equivalent to formNodeValueChange/formNodeControlValueChange. | Binding outputs report adapter-originated committed/control values; programmatic node writes alone do not emit them. The NgControl bridge is a separate event surface. |
+| 23 | emitEvent, onlySelf, emitModelToViewChange, and emitViewToModelChange control imperative notification/propagation. | Writable model signals have no equivalent per-write flags; parents derive values reactively. | No interchangeable mutation flags. onValueChange callbacks are synchronous, and composite operations batch their notifications. |
+| 24 | setValue normally recomputes and emits even with the same reference. | deepSignal checks Object.is for child writes, and normal signal equality suppresses unchanged values. Child updates create new ancestor containers. | Default signal equality likewise makes same-reference mutation unsafe for reactive consumers. Optional exposed-value equality is a library-specific layer, not identical to Signal Forms' model-signal equality. |
+| 25 | Validators receive AbstractControl and return a keyed error map or null. | validate(path, callback) provides a FieldContext with value() and returns kind-bearing validation errors. | Same context/error concept, with different APIs and additional result forms such as message strings. Existing Reactive ValidatorFn functions need adaptation. |
+| 26 | errors is an error map or null; minlength/maxlength are lowercase keys. requiredTrue reports required. | errors() is an array; errors have kind, and getError() returns undefined when absent. Names include minLength/maxLength; built-in required itself rejects false. | Array/kind/missing-error conventions are similar to Signal Forms. requiredTrue has its own kind; targets use targetNode rather than fieldTree, and length errors include actual in addition to the limit. |
+| 27 | Validator composition merges maps, so duplicate keys overwrite each other. Group errors are distinct from descendant errors. | Keeps separate errors with matching kinds; getError() returns the first. errorSummary() includes descendants and sorts by DOM order on the client. | Keeps duplicate kinds and returns the first match. allErrors() traverses own errors followed by children; it does not adopt Signal Forms' DOM ordering. |
+| 28 | Validation follows imperative control updates; external mutable rule inputs typically require updateValueAndValidity(). | Validation is computed from signals and tracks reactive dependencies, including other fields. | Same reactive principle. Validators must be pure; plain mutable variables do not establish dependencies. Invocation timing/counts are not interchangeable with Reactive Forms. |
+| 29 | AsyncValidatorFn returns a Promise or Observable through the imperative validation pipeline. | validateAsync uses explicit params and a Resource factory plus onSuccess/onError; resource params are gated by synchronous validity and availability. validateHttp is also provided. | asyncValidator supports Promise/Observable callbacks, synchronous dependency capture before the first await, and an explicit params mode. Initial invocation is deferred to a microtask; pending state is exposed synchronously. Resource ownership and scheduling are not identical to Signal Forms. |
+
+Angular evidence, relative to `packages/forms/`: `signals/src/api/structure.ts` and
+`signals/test/node/submit.spec.ts`; `signals/src/directive/form_field.ts`;
+`signals/src/field/{node,validation}.ts`; `signals/src/util/deep_signal.ts` and
+`signals/test/node/deep_signal.spec.ts`; `signals/src/api/rules/validation/{validate,validate_async,validation_errors}.ts`
+and `signals/test/node/validation_status.spec.ts`. The parent-touch/submit flushing distinction
+is based on implementation inspection; upstream leaf-touch tests do not establish identical
+group behavior. This review did not add or change runtime behavior.
+
+Local verification: 628 existing tests passed across the public field/form suites, standalone
+binding-value tests, async-validator tests, and synchronous-validator composition tests.
+
+### Item 20 review: commit on submission versus defer until submission
+
+The current submission commit behavior and a possible submit-only editing strategy are separate
+decisions. Committing interactive pending edits before applying the submission gate avoids
+validating or sending stale committed data. Keeping this behavior is the recommendation; item 20
+remains pending a maintainer decision.
+
+An equivalent to Reactive Forms `updateOn: 'submit'` would additionally need to preserve drafts
+across blur, define dirty/touched timing, and resolve nested submission ownership. Mapping it to
+`debounce: 'blur'` is not equivalent, since blur commits earlier. Signal Forms v22.1.6 also has no
+same-named updateOn strategy. A future submit-only strategy would be a separate public feature,
+not a change required to retain the current submit behavior.
+
+Rechecked `FormControl._syncPendingControls()` in Angular Reactive Forms and Signal Forms
+`submit()` / `markAsTouched()` against the same pinned tag. In Form Nodes, the explicit subtree
+flush is specific to the native notification path; ordinary programmatic submit reaches pending
+interactive descendants through recursive touch. Do not infer identical handling of pending
+input in noninteractive branches from the ordinary interactive-field comparison.
+
 ## Suggested migration acceptance suite
 
 Use real application examples rather than testing only method renames:

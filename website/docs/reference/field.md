@@ -1369,6 +1369,17 @@ and native reset buttons.
 onValueChange?(value: TValue, node: FieldNode<TValue>): void;
 ```
 
+:::info Node callback and binding outputs
+
+`onValueChange` observes committed value changes from both control edits and programmatic writes,
+including `set()`, `update()`, and resets that change the value.
+The [binding outputs](./form-node-binding.md#value-outputs) report only control-originated edits:
+`(formNodeValueChange)` reports the committed value after debounce, while
+`(formNodeControlValueChange)` reports the control value immediately, before debounce.
+Use the callback for model changes from either source, or the outputs for edits from a specific control.
+
+:::
+
 Add `onValueChange` to the options to react synchronously to committed public value changes.
 The callback skips initialization, respects `equal` and control debounce, and receives the typed
 node. Aggregate operations notify after their children are updated. It runs without dependency

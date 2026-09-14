@@ -123,6 +123,17 @@ Pass-through wrappers that delegate their own `formNode` input still require tha
 
 ## 🔔 Value outputs {#value-outputs}
 
+:::info Control edits and programmatic changes
+
+These outputs report edits from the bound control. Programmatic `set()`, `patch()`, `update()`,
+and reset calls do not emit them. To observe committed value changes from both control edits and
+programmatic writes, use [`onValueChange` in the node options](../guides/configuring-nodes.md#value-changes),
+such as [`field('', { onValueChange })`](./field.md#onvaluechange).
+Both `onValueChange` and `(formNodeValueChange)` wait for control input to commit under the debounce
+rules; `(formNodeControlValueChange)` reports the control value immediately, before debounce.
+
+:::
+
 Prefer `(formNodeValueChange)` over native `(input)` or `(change)` when your handler needs
 an updated node value. The selected adapter handles the appropriate native events, parsing,
 CVA callback, or custom control output. `$event` is the value, not a DOM event.

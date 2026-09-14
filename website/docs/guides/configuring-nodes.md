@@ -104,6 +104,16 @@ continues to receive the normal API for installing validators and initializing t
 
 ## React after value changes {#value-changes}
 
+:::info Observe the node or a specific control
+
+`onValueChange` observes committed value changes from both control edits and programmatic writes.
+Use the [binding outputs](../reference/form-node-binding.md#value-outputs) to observe only edits from
+a specific control: `(formNodeValueChange)` reports committed input after debounce, and
+`(formNodeControlValueChange)` reports the control value immediately, before debounce.
+Programmatic writes do not emit either output.
+
+:::
+
 Use `onValueChange(value, node)` in the options of `field()`, `form()`, `group()`, or `array()`
 to react to a change in the node's committed public value. Both arguments retain the inferred
 value and node types. The callback runs synchronously before the operation returns; reading
