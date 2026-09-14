@@ -1902,8 +1902,9 @@ Focuses the first bound UI control in the array subtree, following DOM order. St
 
 **Signature:** `markAsTouched(options?: { skipDescendants?: boolean }): void`
 
-Marks the array and all current item subtrees as touched. Pass `skipDescendants: true` to mark only
-the array's own state.
+Marks the array and its interactive item subtrees as touched and commits their pending control
+input for every debounce strategy. Pass `skipDescendants: true` to skip recursive touching and
+committing; the array still commits its own pending input.
 
 ```ts
 const usernames = array(field(''), {

@@ -177,7 +177,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `validationStatus` | Aggregated validation phase for this array and its item subtrees: `'valid'`, `'invalid'`, or `'unknown'`. |
 | `touched` | Whether this array or any current item subtree has been marked touched. |
 | `untouched` | Logical inverse of `touched()`. |
-| `markAsTouched` | Marks this array and, by default, every item subtree as touched, making their effective `touched()` true and `untouched()` false while they are interactive. |
+| `markAsTouched` | Marks this array and, by default, every interactive item subtree as touched and commits their pending control values for every debounce strategy. |
 | `markAsUntouched` | Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. |
 | `dirty` | Whether this array currently reports user-modified state. |
 | `pristine` | Logical inverse of `dirty()`. |

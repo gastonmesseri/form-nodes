@@ -84,7 +84,7 @@ are grouped to avoid treating API renames as equivalent in severity to silent be
 | 16 | Interaction suppression | Form Nodes hides dirty/touched for noninteractive nodes and restores stored state when they become interactive. Reactive disabled controls retain their own flags. | Test unsaved-change guards, error visibility and disable/enable cycles. | Pending review |
 | 17 | Touch propagation | Reactive group.markAsTouched() marks that group and ancestors; markAllAsTouched() traverses descendants. Form Nodes markAsTouched() traverses by default. Its skipDescendants is not Reactive onlySelf. | Audit every touch call, including nested forms and custom aggregate controls. | Pending review |
 | 18 | Clearing interaction | Reactive markAsPristine()/markAsUntouched() clear descendants. Form Nodes aggregate versions clear only own flags, so descendant state may keep the aggregate dirty/touched. | Do not use value-resetting APIs casually to fix flags; choose explicit descendant clearing or a deliberate reset. | Pending review |
-| 19 | Blur commits | Reactive updateOn: 'blur' delays the view write and dirty transition until the accessor's blur callback. Form Nodes control state changes and becomes dirty immediately; committed data waits. markAsTouched() itself flushes pending data in Form Nodes. | Test autosave, error timing, repeated blur and programmatic touch while editing. | Pending review |
+| 19 | Blur commits | Reactive updateOn: 'blur' delays the view write and dirty transition until the accessor's blur callback. Form Nodes control state changes and becomes dirty immediately; committed data waits. markAsTouched() flushes pending input, including interactive descendants when invoked recursively. | Retained intentionally. IntelliSense and consumer documentation now explicitly explain commits, repeated touch, callbacks, and skipDescendants. | Completed |
 | 20 | Submit commits | Reactive updateOn: 'submit' is a directive-integrated strategy, not a time debounce. Form Nodes has no same-named strategy; node submit/touch/flush commits buffers. Parent control-value reads do not collect all descendant drafts. | Recreate the intended commit boundary; do not mechanically map submit to blur. | Pending review |
 | 21 | Events versus signals | Reactive valueChanges emits for normal programmatic setValue, including equal values, and normally on enable/disable. Form Nodes onValueChange reports changed exposed committed values; equal writes and state-only changes do not notify. Effects can coalesce writes and are not a synchronous event log. | Audit side effects, dependent requests, analytics and tests that count emissions. | Pending review |
 | 22 | Binding outputs | formNodeValueChange/formNodeControlValueChange are initiated by bound control adapters. Programmatic node writes do not independently emit them. NgControl bridge streams observe control values, including pending drafts. | Select onValueChange, signal observation, binding outputs or bridge streams according to the needed source/timing. | Pending review |
@@ -226,6 +226,25 @@ are grouped to avoid treating API renames as equivalent in severity to silent be
   template checks, package build/consumer checks, and the documentation build passed;
   59 executable documentation examples passed.
 
+### Item 19 — Touch commits pending values
+
+- **Date:** 2026-09-14.
+- **Decision:** retain the current recursive touch-and-commit behavior and clarify its IntelliSense
+  documentation; no runtime or signature change.
+- **Rationale:** applying a field's touch operation recursively also applies its pending-value
+  commit. This can update the committed model and trigger validation and value-change callbacks,
+  even for an already-touched node. Noninteractive subtrees are skipped.
+- **Scope:** clarified field, form/group, array, generic node, validator API, and
+  `MarkAsTouchedOptions` documentation. `skipDescendants` skips recursive touch and commit calls,
+  while the current node still commits its own pending input.
+- **Angular comparison:** same leaf behavior as Signal Forms v22.1.6, but an intentional
+  group-level difference; its internal descendant touch traversal does not flush each child's
+  pending value. See the source evidence in the comparison below.
+- **Verification:** 69 focused existing interaction/debounce tests and all 1,827 unit tests passed.
+  Type checking, lint, public type and template checks, package build, generated type-reference
+  synchronization, and documentation checks/build passed, including 59 executable examples.
+  Inspected the built declarations to confirm that the expanded documentation is published.
+
 ## Review notes — Items 7–9 (2026-09-14)
 
 Items 7 and 8 are accepted as **No change** above. Item 9's approved change is reflected in the
@@ -268,6 +287,46 @@ Signal Forms `src/api/rules/validation/{required,min_length,util}.ts` plus
 The complete edge-case table follows the implementations; the upstream tests do not assert
 every table cell. Before implementation, local verification ran the existing required/min-length
 validator suites and the public field/form suites: 570 tests across four files.
+
+## Signal Forms comparison — Items 10–19 (2026-09-14)
+
+The latest stable Angular 22 tag was rechecked: **v22.1.6**, commit
+`356adf749188d996a641181c56621a6285126f3c`. These comparisons add Signal Forms context to the
+Reactive Forms migration findings; they do not close review items automatically. The later item 19
+decision above retains its behavior and completes the agreed documentation clarification.
+
+| # | Angular Signal Forms behavior | Relationship to Form Nodes |
+| --- | --- | --- |
+| 10 | Submission defaults to ignoring pending validators, but blocks known errors. `ignoreValidators: 'none'` requires valid state and immediately rejects a pending attempt; it does not wait or retry. | Same gate semantics: `submitWhen: 'not-invalid'` by default, `'valid'` for strict gating, and `'always'` to bypass the gate. |
+| 11 | `form[formRoot]` explicitly binds a tree, adds novalidate, prevents native submission, and calls submit when submission options exist. A child FormField does not bind its parent HTML form. | Same explicit binding principle. Form Nodes additionally manages native reset and provides attempt/blocked outputs. The maintainer chose to keep `[formNode]` explicit; outputs do not activate or infer the binding. |
+| 12 | Schema readonly/hidden states suppress validation and retain model data; native HTML attributes or CSS are not equivalent to schema state. | Same state semantics. |
+| 13 | Disabled fields skip validation and report valid; disabled is independent of the valid/invalid/unknown validation status. | Same node-state semantics; Angular-shaped NgControl bridges remain a separate surface. |
+| 14 | Disabled reasons flow from ancestors to descendants, not upward. An enabled parent can retain its own validation even if every child is disabled. | Same default propagation. |
+| 15 | There is no equivalent imperative enable() operation on ordinary Signal Forms field state. Disabled rules depend on schema conditions; removing a parent's condition does not remove an independent child condition. | Same ownership principle, with different APIs. Form Nodes enable() clears its imperative own reason, preserving child reasons and reactive conditions. |
+| 16 | Dirty/touched signals suppress stored own flags while noninteractive and reveal them again when interactive. Descendant state contributes to aggregates. | Same default suppression/restoration behavior. |
+| 17 | markAsTouched() traverses descendants unless skipDescendants is true; noninteractive subtrees are skipped. Ancestor touched state is derived from descendants. | Same interaction-state propagation. Pending-value flushing is a separate distinction noted below. |
+| 18 | markAsPristine() and markAsUntouched() clear only own stored flags; descendant flags can keep a group dirty/touched. reset() clears the subtree. | Same behavior; this is not an accidental departure from Signal Forms. |
+| 19 | Writing controlValue marks dirty immediately and may delay the committed value through debounce. Calling a leaf's markAsTouched() flushes its pending synchronization. | Same leaf behavior. Group-level touch has an implementation difference: Form Nodes recursively calls children's public markAsTouched() and flushes their pending values; Signal Forms recursively marks children internally and flushes only the directly invoked node. |
+
+The group-level flushing distinction in item 19 follows source inspection of Angular
+`signals/src/field/node.ts` (`markAsTouched`, `markAsTouchedInternal`, `flushSync`) and Form Nodes
+`form-group-node.ts` / `field-node.ts`. Angular's existing touch-flush test covers a leaf, not the
+group-level distinction. Treat a dedicated cross-library group/debounce experiment as follow-up
+before proposing any change to that boundary; the comparison does not claim identical submission
+or flush behavior throughout the tree.
+
+Evidence paths below are relative to `packages/forms/` at the pinned tag:
+
+- Submission: `signals/src/api/structure.ts`, `signals/test/node/submit.spec.ts`.
+- Explicit form integration: `signals/src/directive/form_root.ts`,
+  `signals/test/node/form_root.spec.ts`.
+- Availability, validity, and interaction: `signals/src/field/state.ts`, `validation.ts`,
+  `node.ts`, and `signals/src/api/rules/disabled.ts`; tests in
+  `signals/test/node/field_node.spec.ts`, `api/hidden.spec.ts`, `api/readonly.spec.ts`, and
+  `compat/extract_value.spec.ts` (including an explicit all-children-disabled parent case).
+
+Local verification: 701 existing tests passed across `field.spec.ts`, `form.spec.ts`,
+`array.spec.ts`, and `form-node.directive.form.spec.ts`. No library behavior changed in this review.
 
 ## Suggested migration acceptance suite
 

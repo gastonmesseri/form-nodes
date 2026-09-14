@@ -84,7 +84,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `update` | Replaces the value with the result of applying `updater` to its current committed value. |
 | `flush` | Commits any buffered control value immediately and runs validation that was waiting for it. |
 | `reset` | Clears interaction state; preserves the current value unless a replacement is provided. |
-| `markAsTouched` | Marks this node as touched and, unless skipped, propagates the operation to descendants. |
+| `markAsTouched` | Marks this node and, unless skipped, its interactive descendants as touched and commits their pending control values for every debounce strategy. |
 | `markAsUntouched` | Marks this node as untouched without changing its value. |
 | `markAsDirty` | Marks this node as dirty without changing its value. |
 | `markAsPristine` | Clears stored dirty state without changing the current value. |

@@ -11,7 +11,7 @@ import type { HiddenFunctionMembers } from './hidden-function-members.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type MarkAsTouchedOptions = {
-  /** When true, marks only the current node and leaves its descendants untouched. */
+  /** Skips recursively touching and committing descendants; the current node still commits its own pending input. */
   skipDescendants?: boolean;
 };
 
@@ -185,11 +185,14 @@ export type NodeApi = {
    */
   untouched: Signal<boolean>;
   /**
-   * Marks this node and, by default, its descendants as touched, making effective `touched()` true
-   * and `untouched()` false while those nodes are interactive.
+   * Marks this node and, by default, its interactive descendants as touched and commits their
+   * pending control values for every debounce strategy.
+   *
+   * This can change committed values and trigger validation and value-change callbacks,
+   * even when nodes are already touched. Noninteractive subtrees ignore this operation.
    */
   markAsTouched(options?: {
-    /** When true, marks only the current node and leaves its descendants untouched. */
+    /** Skips recursively touching and committing descendants; the current node still commits its own pending input. */
     skipDescendants?: boolean;
   }): void;
   /** Clears touched state, making `touched()` false and `untouched()` true throughout the affected scope. */

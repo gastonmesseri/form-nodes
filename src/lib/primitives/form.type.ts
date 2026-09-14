@@ -807,11 +807,14 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    */
   untouched: Signal<boolean>;
   /**
-   * Marks this form and, by default, every descendant as touched, making their effective
-   * `touched()` true and `untouched()` false while they are interactive.
+   * Marks this form and, by default, every interactive descendant as touched and commits their
+   * pending control values for every debounce strategy.
+   *
+   * This can change committed values and trigger validation and value-change callbacks,
+   * even when nodes are already touched. Noninteractive subtrees ignore this operation.
    */
   markAsTouched(options?: {
-    /** When true, marks only this form and leaves every descendant untouched. */
+    /** Skips recursively touching and committing descendants; this form still commits its own pending input. */
     skipDescendants?: boolean;
   }): void;
   /** Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. */

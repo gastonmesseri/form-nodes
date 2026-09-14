@@ -113,6 +113,13 @@ callbacks, values, or injectors keep their normal ownership.
 
 Marking an interactive node touched commits its pending control value for every debounce strategy. Touching a form or array recursively does the same for descendants unless `{ skipDescendants: true }` is used.
 
+This can change committed values, run validators, and notify `onValueChange`, even when the nodes
+are already touched. `skipDescendants` skips recursive touch and commit calls; it does not prevent
+the current node from committing its own pending input. Noninteractive subtrees are skipped.
+
+This recursive commit is intentional. Angular Signal Forms v22.1.6 also flushes a touched leaf,
+but its group operation marks descendants internally and only flushes the directly invoked node.
+
 `reset()` without a value behaves differently: it cancels pending debounce, discards the buffered value, and restores `value.control()` and rendered controls from the committed model.
 
 When `equal` retains an older exposed value, reset still restores the latest internally committed

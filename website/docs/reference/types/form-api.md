@@ -151,7 +151,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `validationStatus` | Aggregated validation phase for this form subtree: `'valid'`, `'invalid'`, or `'unknown'`. |
 | `touched` | Whether this form or any descendant has been marked touched. |
 | `untouched` | Logical inverse of `touched()`. |
-| `markAsTouched` | Marks this form and, by default, every descendant as touched, making their effective `touched()` true and `untouched()` false while they are interactive. |
+| `markAsTouched` | Marks this form and, by default, every interactive descendant as touched and commits their pending control values for every debounce strategy. |
 | `markAsUntouched` | Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. |
 | `dirty` | Whether this form currently reports user-modified state. |
 | `pristine` | Logical inverse of `dirty()`. |

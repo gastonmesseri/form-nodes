@@ -137,7 +137,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `validationStatus` | Current validation phase: `'valid'`, `'invalid'`, or `'unknown'`. |
 | `touched` | Whether this field has been marked touched. |
 | `untouched` | Logical inverse of `touched()`. |
-| `markAsTouched` | Marks this field as touched, making `touched()` true and `untouched()` false while it is interactive. |
+| `markAsTouched` | Marks this field as touched and commits its pending control value for every debounce strategy while it is interactive. |
 | `markAsUntouched` | Clears stored touched state, making `touched()` false and `untouched()` true. |
 | `dirty` | Whether this field currently reports user-modified state. |
 | `pristine` | Logical inverse of `dirty()`. |

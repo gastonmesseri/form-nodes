@@ -113,7 +113,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `focus` | Focuses the first control bound to this node or its descendants, when one exists. |
 | `touched` | Whether this node or any descendant has been marked touched. |
 | `untouched` | Logical inverse of `touched()`. |
-| `markAsTouched` | Marks this node and, by default, its descendants as touched, making effective `touched()` true and `untouched()` false while those nodes are interactive. |
+| `markAsTouched` | Marks this node and, by default, its interactive descendants as touched and commits their pending control values for every debounce strategy. |
 | `markAsUntouched` | Clears touched state, making `touched()` false and `untouched()` true throughout the affected scope. |
 | `dirty` | Whether this node currently reports user-modified state. |
 | `pristine` | Logical inverse of `dirty()`. |

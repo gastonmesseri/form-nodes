@@ -307,9 +307,15 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   flush(): void;
   /** Clears interaction state; preserves the current value unless a replacement is provided. */
   reset(...args: [] | [value: TValue]): void;
-  /** Marks this node as touched and, unless skipped, propagates the operation to descendants. */
+  /**
+   * Marks this node and, unless skipped, its interactive descendants as touched and commits their
+   * pending control values for every debounce strategy.
+   *
+   * This can change committed values and trigger validation and value-change callbacks,
+   * even when nodes are already touched. Noninteractive subtrees ignore this operation.
+   */
   markAsTouched(options?: {
-    /** When true, marks only the validated node and leaves its descendants untouched. */
+    /** Skips recursively touching and committing descendants; the validated node still commits its own pending input. */
     skipDescendants?: boolean;
   }): void;
   /** Marks this node as untouched without changing its value. */

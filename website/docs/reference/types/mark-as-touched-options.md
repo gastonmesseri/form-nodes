@@ -30,7 +30,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `skipDescendants` | When true, marks only the current node and leaves its descendants untouched. |
+| `skipDescendants` | Skips recursively touching and committing descendants; the current node still commits its own pending input. |
 
 ## Related reference
 

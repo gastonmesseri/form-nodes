@@ -515,9 +515,15 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * Whether this field currently reports that it has not been touched.
    */
   untouched: Signal<boolean>;
-  /** Marks this field as touched, making `touched()` true and `untouched()` false while it is interactive. */
+  /**
+   * Marks this field as touched and commits its pending control value for every debounce strategy
+   * while it is interactive.
+   *
+   * This can change the committed value and trigger validation and value-change callbacks,
+   * even when the field is already touched. Noninteractive fields ignore this operation.
+   */
   markAsTouched(options?: {
-    /** When true, marks only this field. Fields have no descendants, so this is accepted for API consistency. */
+    /** Accepted for API consistency; fields have no descendants, so this never skips their own pending-value commit. */
     skipDescendants?: boolean;
   }): void;
   /** Clears stored touched state, making `touched()` false and `untouched()` true. */

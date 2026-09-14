@@ -1898,6 +1898,15 @@ A form keeps its own touched state and also aggregates touched state from descen
 - Any touched interactive descendant makes all its ancestor forms touched.
 - `form.$api.markAsTouched()` marks the form and walks the subtree, marking every interactive descendant touched.
 - `form.$api.markAsTouched({ skipDescendants: true })` marks only the form, including when it is empty.
+- Touching an interactive node also commits its pending control value for every debounce strategy,
+  even when it is already touched. Recursive touch applies this to interactive descendants, so it
+  can change committed values and trigger validation and `onValueChange`. `skipDescendants`
+  skips recursive calls; the current node still commits its own pending input.
+- Recursive descendant commits are an intentional difference from Angular Signal Forms v22.1.6
+  (commit `356adf749188d996a641181c56621a6285126f3c`): `markAsTouchedInternal()` propagates
+  touched state there, while `flushSync()` runs only on the directly invoked node. The upstream
+  `signals/test/node/field_node.spec.ts` touch-flush test covers a leaf. Form Nodes covers its
+  recursive commits in the public form tests, including `skipDescendants` and pending child input.
 - `form.$api.markAsUntouched()` clears only the form's own touched state; touched descendants can keep its aggregate state touched.
 - Calling either action on a nested form affects only that subtree.
 - Reset is the recursive clearing operation and clears touched throughout the reset subtree.

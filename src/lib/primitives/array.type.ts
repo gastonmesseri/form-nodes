@@ -604,11 +604,14 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    */
   untouched: Signal<boolean>;
   /**
-   * Marks this array and, by default, every item subtree as touched, making their effective
-   * `touched()` true and `untouched()` false while they are interactive.
+   * Marks this array and, by default, every interactive item subtree as touched and commits their
+   * pending control values for every debounce strategy.
+   *
+   * This can change committed values and trigger validation and value-change callbacks,
+   * even when nodes are already touched. Noninteractive subtrees ignore this operation.
    */
   markAsTouched(options?: {
-    /** When true, marks only this array and leaves every current item subtree untouched. */
+    /** Skips recursively touching and committing item subtrees; this array still commits its own pending input. */
     skipDescendants?: boolean;
   }): void;
   /** Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. */
