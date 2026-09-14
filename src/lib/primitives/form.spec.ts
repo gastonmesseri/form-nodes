@@ -26,6 +26,69 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe('minimum length propagation', () => {
+  it('propagates empty-string errors through nested forms and submission', async () => {
+    const save = vi.fn();
+    const profile = form({
+      details: form({ name: field<string>(null, [minLength(1)]) }),
+    }, { onSubmit: save });
+    expect(profile.valid()).toBe(true);
+    const name = profile.details.name;
+
+    name.set('');
+    expect(profile()).toEqual({ details: { name: '' } });
+    expect(profile.details.invalid()).toBe(true);
+    expect(profile.invalid()).toBe(true);
+    expect(profile.pending()).toBe(false);
+    expect(profile.errors()).toEqual([]);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'minLength', actual: 0, targetNode: name }]);
+    expect(profile.dirty()).toBe(false);
+    expect(await profile.submit()).toBe(false);
+    expect(save).not.toHaveBeenCalled();
+    expect(profile.submitted()).toBe(true);
+    expect(name.touched()).toBe(true);
+
+    name.disable();
+    expect(profile.valid()).toBe(true);
+    name.enable();
+    expect(profile.invalid()).toBe(true);
+    profile.reset();
+    expect(name()).toBe('');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.submitted()).toBe(false);
+    expect(profile.touched()).toBe(false);
+
+    name.set('A');
+    expect(profile.allErrors()).toEqual([]);
+    expect(profile.details.valid()).toBe(true);
+    expect(await profile.submit()).toBe(true);
+    expect(save).toHaveBeenCalledOnce();
+    profile.resetToInitial();
+    expect(name()).toBeNull();
+    expect(profile.valid()).toBe(true);
+    expect(profile.submitted()).toBe(false);
+  });
+
+  it('discards pending empty text on reset and validates it when committed', () => {
+    const profile = form({ details: { name: field('Ada', [minLength(1)], { debounce: 'blur' }) } });
+    const name = profile.details.name;
+    name.value.control.set('');
+    expect(name()).toBe('Ada');
+    expect(profile.valid()).toBe(true);
+    profile.reset();
+    expect(name.value.control()).toBe('Ada');
+    expect(name.debouncing()).toBe(false);
+    name.value.control.set('');
+    name.markAsTouched();
+    expect(name()).toBe('');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.details.invalid()).toBe(true);
+    profile.resetToInitial();
+    expect(profile.valid()).toBe(true);
+    expect(name()).toBe('Ada');
+  });
+});
+
 describe('submission error results', () => {
   it('invalidates aggregate rejection errors when a descendant has an uncommitted draft', async () => {
     let finish!: () => void;

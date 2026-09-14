@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `minLength` now measures empty strings as length zero, so a positive minimum rejects `''`, consistently with empty collections. Nullish values still pass and `minLength(0)` still allows empty text; its types now also accept explicitly undefined-valued fields. Use `when` to keep optional empty strings valid; combining `required` and `minLength` now reports both errors for empty text.
+
 ## [3.9.1] - 2026-09-12
 
 ### Fixed

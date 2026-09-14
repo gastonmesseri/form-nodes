@@ -1520,7 +1520,7 @@ const age = field<number>(null, {
 | `integer` | `number | null` | Passes for `null` | `{ kind: 'integer', actual, message }` |
 | `equalTo(expected)` | The expected value type, `null`, or `undefined` | Compares `null` and `undefined` normally | `{ kind: 'equalTo', message }` |
 | `uniqueItems(keySelector?)` | A readonly array, `null`, or `undefined` | Absent, empty, and one-item arrays pass | `{ kind: 'uniqueItems', duplicateIndexes, message }` |
-| `minLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'minLength', minLength, actual, message }` |
+| `minLength(limit)` | A value with numeric `length` or `size`, or `null` / `undefined` | Passes for nullish values; measures empty strings and collections as zero | `{ kind: 'minLength', minLength, actual, message }` |
 | `maxLength(limit)` | A value with numeric `length` or `size`, or `null` | Passes for `null` and `''` | `{ kind: 'maxLength', maxLength, actual, message }` |
 | `pattern(expression)` | `string | null` | Passes for `null` and `''` | `{ kind: 'pattern', pattern, actual, message }` |
 | `email` | `string | null` | Passes for `null` and `''` | `{ kind: 'email', message }` |
@@ -1830,7 +1830,28 @@ const biography = field('', [
 
 These validators deliberately use a small internal Unicode tokenizer instead of Lodash or locale-dependent `Intl.Segmenter` behavior. Angular 22.1.4 Signal Forms has no equivalent built-in word-count validators.
 
-The required emptiness rules follow Angular 22 Signal Forms. Empty arrays, empty sets, and empty objects are not considered empty by `required`. Length validators inspect `length` or `size`, so `minLength(1)` can reject an empty array or set.
+The required collection-emptiness rules follow Angular 22 Signal Forms. Empty arrays, empty sets, and empty objects are not considered empty by `required`. Form Nodes intentionally accepts `false` for presence, using `requiredTrue` for acceptance.
+
+`minLength` measures a present value's `length` or `size`, including zero. Empty strings and
+collections fail a positive minimum; `minLength(0)` allows them. Nullish values pass and whitespace
+is counted without trimming. This deliberately differs from Angular Signal Forms **v22.1.6**
+(commit `356adf749188d996a641181c56621a6285126f3c`, latest stable Angular 22 checked on 2026-09-14):
+`packages/forms/signals/src/api/rules/validation/min_length.ts` skips empty strings via `isEmpty`,
+and `signals/test/node/api/validators/min_length.spec.ts` explicitly tests that exemption.
+Reactive Forms also skips empty strings and additionally skips empty arrays/Sets.
+
+Use `minLength(3, { when: ({ value }) => value() !== '' })` to explicitly allow optional empty text.
+The inactive rule removes its errors and constraint metadata. Reactive minimums, conditions, and
+messages continue tracking dependencies while the current string is empty. A minimum returning
+`undefined` disables the rule; the validator contributes minimum-length metadata, never required
+metadata. Combining `required` and a positive `minLength` produces both errors for `''`.
+
+Nullable fields can start valid with `null` but become invalid when a native text control is cleared
+to `''`. The resulting error propagates to ancestor validity and blocks the default submission gate.
+Value writes do not themselves mark a node dirty or touched. Debounced drafts are validated when
+committed; reset discards them. `reset()` preserves an empty committed value and its length error,
+while `resetToInitial()` validates the restored initial value. Disabled, readonly, and hidden nodes
+continue suppressing validation. These changes do not alter collection or `maxLength` behavior.
 
 Numeric, length, date, and pattern constraints can be static values or zero-argument functions:
 

@@ -31,6 +31,91 @@ import { configureGlobalFormNodes } from '../configuration/configure-global-form
 
 type Context<TValue> = { readonly value: Signal<TValue> };
 
+describe('minimum length for empty strings', () => {
+  it('validates empty text while retaining nullish absence through edits and resets', () => {
+    const name = field<string>(undefined, [minLength(1)]);
+    expect(name()).toBeUndefined();
+    expect(name.valid()).toBe(true);
+    expect(name.required()).toBe(false);
+    expect(name.minLength()).toBe(1);
+
+    name.set('');
+    expect(name.errors()).toMatchObject([{ kind: 'minLength', minLength: 1, actual: 0 }]);
+    expect(name.invalid()).toBe(true);
+    expect(name.pending()).toBe(false);
+    expect(name.dirty()).toBe(false);
+    expect(name.touched()).toBe(false);
+
+    name.set('A');
+    expect(name.valid()).toBe(true);
+    name.set('');
+    name.markAsDirty();
+    name.markAsTouched();
+    name.reset();
+    expect(name()).toBe('');
+    expect(name.hasError('minLength')).toBe(true);
+    expect(name.pristine()).toBe(true);
+    expect(name.untouched()).toBe(true);
+
+    name.reset(null);
+    expect(name.valid()).toBe(true);
+    name.resetToInitial();
+    expect(name()).toBeUndefined();
+    expect(name.errors()).toEqual([]);
+  });
+
+  it('tracks reactive minimums and conditions even while the string is empty', () => {
+    const minimum = signal<number | undefined>(1);
+    const active = signal(true);
+    const message = signal('Enter a name');
+    const name = field('', [minLength(minimum, { when: active, message })]);
+    expect(name.getError('minLength')?.message).toBe('Enter a name');
+    message.set('Name is too short');
+    expect(name.getError('minLength')?.message).toBe('Name is too short');
+
+    minimum.set(0);
+    expect(name.valid()).toBe(true);
+    expect(name.minLength()).toBe(0);
+    minimum.set(2);
+    expect(name.getError('minLength')).toMatchObject({ minLength: 2, actual: 0 });
+    minimum.set(undefined);
+    expect(name.valid()).toBe(true);
+    expect(name.minLength()).toBeNull();
+    minimum.set(1);
+    expect(name.invalid()).toBe(true);
+    active.set(false);
+    expect(name.valid()).toBe(true);
+    expect(name.minLength()).toBeNull();
+    active.set(true);
+    expect(name.invalid()).toBe(true);
+
+    name.disable();
+    expect(name.errors()).toEqual([]);
+    name.enable();
+    expect(name.hasError('minLength')).toBe(true);
+  });
+
+  it('supports optional empty text and reports presence and length errors independently', () => {
+    const optional = field('', [minLength(3, { when: ({ value }) => value() !== '' })]);
+    expect(optional.valid()).toBe(true);
+    expect(optional.minLength()).toBeNull();
+    optional.set('ab');
+    expect(optional.hasError('minLength')).toBe(true);
+    expect(optional.minLength()).toBe(3);
+    optional.set('abc');
+    expect(optional.valid()).toBe(true);
+    optional.set('');
+    expect(optional.valid()).toBe(true);
+
+    const mandatory = field('', [required, minLength(1)]);
+    expect(mandatory.errors().map(error => error.kind)).toEqual(['required', 'minLength']);
+    mandatory.set(' ');
+    expect(mandatory.valid()).toBe(true);
+    mandatory.set(null);
+    expect(mandatory.errors().map(error => error.kind)).toEqual(['required']);
+  });
+});
+
 describe('field submission errors', () => {
   it('exposes targeted errors, preserves siblings, and clears only edited values', async () => {
     const profile = form({ email: field('old@example.com'), name: field('Ada') }, {

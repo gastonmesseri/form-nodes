@@ -223,7 +223,11 @@ const myForm = form({
 });
 ```
 
-It supports strings, arrays, sets, maps, and other values with numeric `length` or `size`. `null` and `''` pass, but empty collections are measured normally. A reactive minimum returning `undefined` disables the constraint. A failure is `{ kind: 'minLength', minLength, actual, message }`. The resolved limit contributes to `minLength()` metadata.
+It supports strings, arrays, sets, maps, and other values with numeric `length` or `size`. `null` and `undefined` pass; empty strings and collections have length zero and fail a positive minimum. A reactive minimum returning `undefined` disables the constraint. A failure is `{ kind: 'minLength', minLength, actual, message }`. The resolved limit contributes to `minLength()` metadata without marking the node as required.
+
+Unlike Angular Reactive Forms and Signal Forms v22.1.6, empty strings are measured. Use
+[`when` for optional empty text](./validators/min-length.md#optional-empty-text), or combine with
+`required` to also reject nullish values. An empty string then produces both error kinds.
 
 ## ✅ maxLength {#maxlength}
 

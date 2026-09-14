@@ -12,6 +12,9 @@ const nameValidator = (context: ValidatorContext<string | null>) => {
 };
 
 const name = field('David', [required, nameValidator]);
+const missingText = field<string>(undefined, [minLength(1, { when: ({ value }) => value() !== '' })]);
+type _MissingText = Expect<Equal<ReturnType<typeof missingText>, string | null | undefined>>;
+form({ nickname: field<string>(undefined, [minLength(3)]) });
 name.setValidators(nameValidator);
 name.setValidators([required, null, nameValidator]);
 field('', [required({}), email({ message: 'Invalid email' }), maxLength(30, { message: 'Too long' })]);

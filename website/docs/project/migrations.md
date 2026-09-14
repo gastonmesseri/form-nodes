@@ -4,6 +4,34 @@ title: Migration guides
 
 # Migration guides {#migration-guides}
 
+import CodeBlock from '@theme/CodeBlock';
+import optionalMinimumSource from '!!raw-loader!../../examples/min-length-optional.example.ts';
+
+## Unreleased: minimum length checks empty text {#minimum-length-empty-text}
+
+**Breaking:** `minLength(n)` now measures an empty string as length zero, just like an empty
+collection. With a positive minimum, `''` produces a `minLength` error with `actual: 0`.
+`minLength(0)` still allows `''`; `null` and `undefined` still pass.
+
+Previously, empty strings bypassed this validator, as they do in Angular Reactive Forms and
+Signal Forms v22.1.6. Optional text fields initialized or cleared to `''` can now make a form
+invalid and block its submission. Preserve the previous empty-or-long-enough behavior with `when`:
+
+<CodeBlock language="ts" title="min-length-optional.example.ts">{optionalMinimumSource}</CodeBlock>
+
+The condition also removes the rule's constraint metadata while empty. Required text fields
+can keep `[required, minLength(n)]`; they remain invalid when empty, but now expose both
+`required` and `minLength` errors. Review error presenters that display every error or rely on counts.
+
+A nullable field initialized with `field<string>()` starts with `null`, so `minLength` alone
+permits it. Clearing a native text input writes `''`, which fails a positive minimum.
+Use `required` as well when both nullish and empty text values must fail. `minLength` alone
+does not set required metadata or the native `required` attribute.
+
+`reset()` preserves the committed value, so it preserves an empty string's length error.
+`resetToInitial()` restores the initial value: an initial `''` fails a positive minimum,
+while an initial `null` passes `minLength` alone. Whitespace is still counted without trimming.
+
 ## Moving to 3.9.0: boolean presence and acceptance {#boolean-required}
 
 This breaking change ships in minor version **3.9.0** at the maintainer's explicit request, as an exception to the default Semantic Versioning policy.

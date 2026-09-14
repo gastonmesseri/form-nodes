@@ -9,7 +9,7 @@ import type { ComposableValidationResult, ComposableValidator } from './validati
 describe('runSyncValidators', () => {
   it('combines validators in fields', () => {
     const fieldNode = field('', [required, minLength(3)]);
-    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }]);
+    expect(fieldNode.errors()).toMatchObject([{ kind: 'required' }, { kind: 'minLength', actual: 0 }]);
     fieldNode.set('ab');
     expect(fieldNode.errors()).toMatchObject([{ kind: 'minLength', minLength: 3 }]);
     fieldNode.set('David');
