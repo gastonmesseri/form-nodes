@@ -2314,7 +2314,7 @@ sons.clear();
 - `removeAt()` and `clear()` detach removed nodes from the tree. A removed node retained by application code remains usable independently: its parent and path are cleared, inherited state is removed, and subsequent value, validation, dirty, or touched changes do not affect the former array.
 - Invalid insertion and movement indexes throw `RangeError`. `removeAt()` returns `undefined` for a missing index.
 
-`set(values)` preserves existing node identities by index for the common prefix, creates or removes trailing nodes to match the requested length, and preserves existing interaction state. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
+`set(values)` and `patch(values)` preserve existing node identities by index for the common prefix, create or remove trailing nodes to match the requested length, and preserve existing interaction state. `reset(values)` performs the same length reconciliation but leaves the array and every item pristine and untouched. `reset()` without a value keeps the current structure and values while resetting interaction state.
 
 An `array()` node always exposes an array value even when an input source represents absence with `null` or `undefined`. Nullish values passed through `initialValue`, `set()`, the result of `update()`, or `reset(value)` normalize to `[]`; reconciliation then removes and detaches every current item. `reset(null)` and `reset(undefined)` additionally clear interaction state like any other reset with a value. This normalization also applies when `form.set()` supplies a nullish value for a nested array. Individual item values may independently be nullable when their templates allow it.
 
@@ -3084,7 +3084,7 @@ These boundaries describe the current codebase and are not commitments to a part
 
 All Form Nodes `console.warn` diagnostics go through the internal `warnInDevMode()` helper,
 which uses Angular's public `isDevMode()` and requires no injection context. This covers ignored
-form/group keys, extra array patch indexes, unsupported adapter reset options, hidden rendered
+form/group keys, unsupported adapter reset options, hidden rendered
 nodes, and failed custom-control input synchronization. Production mode suppresses these
 warnings without changing the associated operation, validation, cleanup, or existing warning
 frequency in development. The hidden-node diagnostic still avoids installing its watcher in
@@ -4379,3 +4379,33 @@ metadata, custom errors/messages, and strongest-bound metadata merging. Their em
 confirm Angular skips empty text. Form Nodes intentionally keeps its existing positive-minimum
 rejection for empty strings. The combined factory and existing Form Nodes error shapes are library
 API decisions. Tests cover the intentional difference, both constraints, and parent propagation.
+
+
+## Array patch replacement
+
+`array.patch(values)` delegates to `set(values)`. `ArrayPatch<TItem>` is the complete
+`ArraySet<TItem>` sequence, and the patch parameter also accepts null and undefined, which clear
+the collection. Parent form/group patches remain recursive partial objects, but every supplied
+array requires complete item set values, including nested groups and arrays. Omitted branches
+remain unchanged; explicit undefined still writes undefined to fields that support it.
+
+Incoming length/order determines the collection. Existing index/trackBy reconciliation reuses
+matching nodes, creates new nodes, detaches missing ones, updates paths/ownership, and preserves
+interaction state for reused nodes. Duplicate trackBy keys fail before reconciliation mutates
+nodes. Nullish/empty arrays remove all items. Sparse holes no longer skip positions; input uses
+set() semantics and should be a dense sequence of complete values. Completeness is a public type
+contract, not new runtime validation of unsafe casts. Partial object-row edits use the row's patch().
+
+Patching cancels pending direct collection input and replaces drafts on reused descendants like
+set(). Validation follows the complete resulting values; stale aggregate async validation is
+cancelled and ignored. Detached items no longer contribute errors, pending, or interaction state
+to the previous ancestors; their independent lifecycle follows existing detachment rules. Batched
+onValueChange delivery reports complete updates, and reset behavior remains unchanged.
+
+Reference: Angular v22.1.6, commit 356adf749188d996a641181c56621a6285126f3c, reverified from release
+tags. Inspected packages/forms/signals/src/field/structure.ts (child creation, stale child removal,
+object identity tracking) and packages/forms/signals/test/node/dynamic.spec.ts (writes after moves
+and undefined-valued children). Angular derives structure from model values; Form Nodes retains
+its template/factory construction and explicit index/trackBy ownership. Unlike Angular's undefined
+child removal, Form Nodes keeps declared fields whose values are undefined. The patch API and its
+complete-array boundary are intentional library semantics, not Angular Reactive Forms patchValue.

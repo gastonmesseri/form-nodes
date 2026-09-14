@@ -128,7 +128,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `value` | Exposed aggregate of public child values. The `equal` option may retain a previous snapshot. |
 | `set` | Assigns a complete form value immediately without marking the form or its descendants dirty. |
 | `update` | Computes and sets the complete form value from its current value without marking nodes dirty. |
-| `patch` | Assigns the supplied subset of child values immediately and ignores unknown runtime keys. |
+| `patch` | Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored. |
 | `reset` | Recursively clears touched and dirty state and cancels pending control input. Passing a complete value also assigns it; omitting the value preserves all current committed values. |
 | `resetToInitial` | Restores the initial values of the current form/group subtree and resets interaction state. |
 | `validators` | Current normalized validators assigned directly to this form, in declaration order. |

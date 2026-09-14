@@ -94,7 +94,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `keyInParent` | Property or array index under which this node is stored, or `null` when it is a root node. |
 | `set` | Assigns a complete committed value immediately without marking the node dirty. |
 | `update` | Computes and assigns a complete committed value without marking the node dirty. |
-| `patch` | Applies a node-specific partial update without marking the node dirty. |
+| `patch` | Updates supplied object branches or replaces complete array/field values without marking the node dirty. |
 | `reset` | Clears interaction state and pending control input throughout the reset scope, optionally assigning a new complete value first. |
 | `resetToInitial` | Restores captured initial values, cancels buffered input, and clears subtree dirty/touched state. Object nodes keep their current schema; arrays restore their initial values, count, and order. Programmatic writes do not redefine the baseline. Current validators and availability remain. Supported data containers are copied; opaque instances and accessor state retain references. This does not emit control-originated value outputs. See concrete node APIs for full details. |
 | `validationStatus` | Aggregated validation phase for this node and its subtree. |

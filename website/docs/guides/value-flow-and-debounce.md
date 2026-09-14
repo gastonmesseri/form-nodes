@@ -51,7 +51,7 @@ including changes hidden by public equality. Validation and submission receive t
 | --- | --- | --- | --- |
 | `set(value)` | Replaces a complete value | Preserved | Preserved |
 | `update(updater)` | Computes and replaces a complete value | Preserved | Preserved |
-| `patch(value)` | Replaces supplied branches or positions | Preserved | Preserved |
+| `patch(value)` | Updates supplied object branches; supplied arrays reconcile complete collections | Preserved | Preserved |
 | `reset()` | Preserves the committed value | Cleared recursively | Cleared recursively |
 | `reset(value)` | Replaces the complete value | Cleared recursively | Cleared recursively |
 | `resetToInitial()` | Restores captured initial values | Cleared recursively | Cleared recursively |

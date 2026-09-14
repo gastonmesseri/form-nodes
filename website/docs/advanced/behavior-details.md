@@ -216,7 +216,7 @@ details and do not change node behavior outside the browser.
 ## 📖 Defensive runtime behavior {#defensive-runtime-behavior}
 
 TypeScript rejects incomplete complete-value writes and unknown object keys. If unsafe casts or
-untyped data bypass those checks, unknown form keys and array patch indexes are ignored with a
+untyped data bypass those checks, unknown form keys are ignored with a
 console warning in development mode rather than becoming new nodes.
 
 Array movement and insertion indexes must identify valid positions and throw `RangeError` when they
@@ -237,7 +237,7 @@ Continue with [Async validation](../guides/async-validation.md),
 ## 🔍 Development diagnostics {#development-diagnostics}
 
 Form Nodes console warnings are emitted only in Angular development mode. This includes unknown
-form keys, extra array patch indexes, unsupported reset options, hidden rendered nodes, and
+form keys, unsupported reset options, hidden rendered nodes, and
 custom-control input synchronization warnings. Angular production mode suppresses these messages;
 the underlying operations keep the same behavior. This also applies to standalone nodes declared
 outside an injection context. Angular's optimized CLI builds enable production mode automatically.

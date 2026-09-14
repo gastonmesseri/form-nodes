@@ -6,7 +6,6 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
 import { form } from '../primitives/form';
-import { array } from '../primitives/array';
 import { field } from '../primitives/field';
 import { FormNodeNgControl } from './form-node-ng-control';
 import { warnFailedInputWrite } from './ng-internals/component-input-writer';
@@ -29,9 +28,6 @@ describe('FormNodeDirective production AOT discovery in Chromium', () => {
       profile.patch({ name: 'patched', extra: true } as never);
       profile.details.patch({ city: 'Bern', extra: true } as never);
       expect(profile()).toEqual({ name: 'patched', details: { city: 'Bern' } });
-      const items = array(field.strict(''), { initialValue: ['initial'] });
-      items.patch(['updated', 'ignored']);
-      expect(items()).toEqual(['updated']);
       const adapter = new FormNodeNgControl(() => profile.name, TestBed.inject(Injector));
       profile.name.markAsTouched();
       adapter.setErrors({ parsing: true });

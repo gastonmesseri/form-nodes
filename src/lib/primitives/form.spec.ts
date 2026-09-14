@@ -6232,3 +6232,104 @@ it('resolves lengthBetween messages from the existing per-bound form catalogs', 
   profile.details.name.set('abcde');
   expect(profile.details.name.getError('maxLength')?.message).toBe('Allow 4, received 5');
 });
+
+describe('form patch array replacement', () => {
+  it('keeps omitted branches and replaces complete nested collections through growth, shrinking, and clearing', () => {
+    const changed = vi.fn();
+    const profile = form({
+      username: field('Ada'),
+      age: field<number>(undefined),
+      details: form({
+        note: field('Keep'),
+        cities: array({ city: field('', required), country: field(''), aliases: array(field('')) }, {
+          initialValue: [{ city: 'Madrid', country: 'Spain', aliases: ['M', 'Old'] }],
+        }),
+      }),
+    }, { onValueChange: changed });
+    const first = profile.details.cities[0]!;
+    profile.patch({ username: 'Juanjo', details: { cities: [
+      { city: 'Rabat', country: 'Morocco', aliases: ['R'] },
+      { city: 'Valencia', country: 'Spain', aliases: [] },
+    ] } });
+    expect(profile()).toEqual({ username: 'Juanjo', age: undefined, details: {
+      note: 'Keep', cities: [{ city: 'Rabat', country: 'Morocco', aliases: ['R'] }, { city: 'Valencia', country: 'Spain', aliases: [] }],
+    } });
+    expect(profile.details.cities[0]).toBe(first);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(changed).toHaveBeenCalledExactlyOnceWith(profile(), profile);
+    profile.patch({ age: 39 });
+    expect(profile.details.cities.length()).toBe(2);
+    profile.patch({ age: undefined, details: { cities: [{ city: '', country: '', aliases: [] }] } });
+    expect(profile.age()).toBeUndefined();
+    expect(profile.details.cities.length()).toBe(1);
+    expect(profile.allErrors()).toMatchObject([{ kind: 'required', targetNode: first.city }]);
+    expect(profile.details.invalid()).toBe(true);
+    profile.patch({ details: { cities: null } });
+    expect(profile.details.cities()).toEqual([]);
+    expect(profile.valid()).toBe(true);
+    expect(first.parent()).toBeNull();
+    profile.patch({ details: { cities: [{ city: 'Paris', country: 'France', aliases: [] }] } });
+    profile.patch({ details: { cities: undefined } });
+    expect(profile.details.cities()).toEqual([]);
+  });
+
+  it('preserves keyed row identity through a parent patch and supports explicit partial row edits', () => {
+    const profile = form({ rows: array({ id: field.strict(''), name: field(''), age: field(0) }, {
+      initialValue: [{ id: 'a', name: 'Ada', age: 18 }, { id: 'b', name: 'Grace', age: 28 }],
+      trackBy: 'id',
+    }) });
+    const grace = profile.rows[1]!;
+    grace.name.markAsDirty();
+    grace.name.markAsTouched();
+    profile.patch({ rows: [{ id: 'b', name: 'Grace Hopper', age: 29 }] });
+    expect(profile.rows[0]).toBe(grace);
+    expect(grace.path()).toEqual(['rows', '0']);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(true);
+    grace.patch({ name: 'Grace' });
+    expect(profile.rows()).toEqual([{ id: 'b', name: 'Grace', age: 29 }]);
+    profile.resetToInitial();
+    expect(profile.rows.length()).toBe(2);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+  });
+});
+
+it('restarts aggregate async validation for replaced arrays and ignores stale results', async () => {
+  const runs: { abortSignal: AbortSignal; finish: (result: null | { kind: string }) => void }[] = [];
+  const profile = form({ names: array(field.strict(''), ['Ada']) }, {
+    validators: [asyncValidator(({ abortSignal, value }) => {
+      value();
+      return new Promise<null | { kind: string }>((finish) => { runs.push({ abortSignal, finish }); });
+    })],
+  });
+  expect(profile.pending()).toBe(true);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(1);
+  profile.patch({ names: ['Grace', 'Lin'] });
+  expect(profile.names()).toEqual(['Grace', 'Lin']);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(2);
+  expect(runs[0]!.abortSignal.aborted).toBe(true);
+  runs[0]!.finish({ kind: 'stale' });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(profile.pending()).toBe(true);
+  expect(profile.errors()).toEqual([]);
+  runs[1]!.finish(null);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(profile.pending()).toBe(false);
+  expect(profile.valid()).toBe(true);
+  profile.patch({ names: [] });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(runs).toHaveLength(3);
+  runs[2]!.finish(null);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(profile.valid()).toBe(true);
+});

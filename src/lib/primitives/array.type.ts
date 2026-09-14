@@ -7,7 +7,7 @@ import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodePatch, NodeSet, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
@@ -228,8 +228,8 @@ export type ArrayValue<TItem extends AnyNode> =
       : NodeValue<TItem>[];
 /** Complete readonly sequence accepted by an array node's `set()`. */
 export type ArraySet<TItem extends AnyNode> = readonly NodeSet<TItem>[];
-/** Readonly sequence accepted by an array node's `patch()`, mapped through the item patch type. */
-export type ArrayPatch<TItem extends AnyNode> = readonly NodePatch<TItem>[];
+/** Complete readonly sequence accepted by an array node's `patch()`, identical to its set value. */
+export type ArrayPatch<TItem extends AnyNode> = ArraySet<TItem>;
 
 export type ArrayRoot<TItem extends AnyNode, TParent extends AnyNode> = AnyNode extends TParent
   ? AnyNode extends TItem ? AnyNode : ArrayNode<TItem, TParent>
@@ -430,36 +430,26 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    */
   update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
   /**
-   * Partially updates existing item nodes by array index without changing the array structure.
+   * Reconciles the complete array value, exactly like `set()`.
    *
-   * Each supplied index delegates to that item's own `patch()` operation. This is most useful for
-   * arrays of forms, where individual object properties can be updated without supplying complete
-   * item values. A field item treats its patch as a normal value assignment.
+   * The incoming collection determines the length and order. Every item must supply its complete
+   * set value, including nested arrays. Matching nodes are reused by index or `trackBy`, new nodes
+   * are created, and missing nodes are detached. Reused nodes retain interaction state.
+   * `null` and `undefined` clear the array. This also applies to arrays passed to `form.patch()`.
    *
-   * The patch array's length does not resize this array: missing trailing indexes and sparse holes
-   * are skipped, while supplied indexes beyond the current structure are ignored with a console
-   * warning. Existing node identity and interaction state are preserved.
+   * To partially edit one existing object row, call that row's `patch()` instead.
    *
-   * ℹ️ `patch()` is positional. Use `set()` or `update()` for complete value reconciliation, and
-   * use `insert()`, `removeAt()`, `move()`, or `swap()` for explicit structural changes.
-   *
-   * @example Patch selected properties of the first item.
+   * @example
    * ```ts
-   * const people = array(
-   *   { name: field(''), age: field(0) },
-   *   [{ name: 'Marco', age: 30 }],
-   * );
-   *
-   * people.patch([{ age: 31 }]);
-   * // people() === [{ name: 'Marco', age: 31 }]
-   * ```
-   *
-   * @example Skip the first item and patch only the second.
-   * ```ts
-   * people.patch([, { name: 'Lia' }]);
+   * const profile = form({
+   *   people: array({ name: field(''), age: field<number>(null) }),
+   * });
+   * profile.patch({ people: [{ name: 'Lia', age: 31 }] });
+   * profile.people(); // [{ name: 'Lia', age: 31 }]
+   * profile.people.at(0)?.patch({ age: 32 });
    * ```
    */
-  patch(value: ArrayPatch<TItem>): void;
+  patch(value: ArrayPatch<TItem> | null | undefined): void;
   /**
    * Resets state, optionally reconciling a complete value first.
    *

@@ -4,7 +4,7 @@ title: FormPatch
 
 # FormPatch
 
-Partial object accepted by a form's `patch()`; omitted child properties remain unchanged.
+Partial object accepted by a form's `patch()`; omitted properties remain unchanged, but supplied arrays require complete item values and reconcile like set().
 
 ## Import
 

@@ -184,7 +184,7 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
 export type GroupValue<TNodes extends Nodes> = FormValue<TNodes>;
 /** Complete object accepted by a group's `set()`, recursively using each child's set type. */
 export type GroupSet<TNodes extends Nodes> = FormSet<TNodes>;
-/** Partial object accepted by a group's `patch()`; omitted child properties remain unchanged. */
+/** Partial object accepted by a group's `patch()`; omitted child properties remain unchanged and supplied arrays require complete item values. */
 export type GroupPatch<TNodes extends Nodes> = FormPatch<TNodes>;
 
 export type NormalizedNode<TNode extends ObjectNodeDefinition> = FormNormalizedNode<TNode>;

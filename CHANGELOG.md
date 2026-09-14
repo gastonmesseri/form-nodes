@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Changed
+
+- Array `patch()` now reconciles a complete collection like `set()`, including when nested inside form/group patches. Incoming arrays determine length and order, reuse nodes by index or `trackBy`, and require complete item values. Empty arrays, `null`, and `undefined` clear the collection. Use a row's `patch()` to update selected properties without replacing the collection.
+
 ## [4.0.0] - 2026-09-14
 
 ### Added

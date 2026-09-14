@@ -12,7 +12,8 @@ Every field, group, form, and array exposes `value`, a [`NodeValueSignal<TValue,
 `TValue` is its read type; `TSet` is the complete input accepted by `node.set()`.
 This distinction preserves optional input defaults and array normalization. Array setters also
 accept `null` or `undefined` to clear the array. Group/form setters accept complete objects,
-not patches; use `patch()` for partial updates.
+not patches; use `patch()` for partial object updates. Supplied arrays in a patch still require
+complete collections; use an individual row's `patch()` for partial row edits.
 
 | Read | Configured custom equality | Pending input |
 | --- | --- | --- |

@@ -26,7 +26,7 @@ if (myForm.people[0] !== graceNode || myForm.people[1] !== adaNode) {
   throw new Error('trackBy should preserve nodes across reordering.');
 }
 
-myForm.people.patch([{ age: 46 }]);
+myForm.people.at(0)?.patch({ age: 46 });
 myForm.people.swap(0, 1);
 myForm.people.push({ id: 'linus', name: 'Linus', age: 32 });
 

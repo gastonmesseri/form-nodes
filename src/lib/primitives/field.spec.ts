@@ -3905,3 +3905,19 @@ describe('field lengthBetween', () => {
     expect(calls).toHaveBeenCalledTimes(7);
   });
 });
+
+it('replaces an array-valued field through patch while preserving explicit undefined values', () => {
+  const items = field<{ name: string; age: number | undefined }[]>([{ name: 'Ada', age: 18 }]);
+  items.markAsDirty();
+  items.markAsTouched();
+  items.$api.patch([{ name: 'Grace', age: undefined }]);
+  expect(items()).toEqual([{ name: 'Grace', age: undefined }]);
+  expect(items.dirty()).toBe(true);
+  expect(items.touched()).toBe(true);
+  items.$api.patch([]);
+  expect(items()).toEqual([]);
+  items.resetToInitial();
+  expect(items()).toEqual([{ name: 'Ada', age: 18 }]);
+  expect(items.pristine()).toBe(true);
+  expect(items.untouched()).toBe(true);
+});

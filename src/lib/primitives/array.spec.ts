@@ -200,7 +200,7 @@ describe('array', () => {
 
     set(['Ana', 'Leo']);
     update(values => values.map(value => value?.toUpperCase() ?? ''));
-    patch(['Ada']);
+    patch(['Ada', 'LEO']);
     expect(observed()).toEqual({ names: ['Ada', 'LEO'] });
     expect(profile.names.items()).toEqual([lia, noa]);
 
@@ -1751,15 +1751,19 @@ describe('array', () => {
     expect(profile.sons.at(0)!.name.form()).toBe(profile);
   });
 
-  it('patches existing indexes and warns for indexes outside the current structure', () => {
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => { });
+  it('patches complete collections by adding and removing nodes to match their length', () => {
     const names = array(field(''), ['Mono']);
-
-    names.patch(['Lia', 'ignored']);
-
-    expect(names()).toEqual(['Lia']);
-    expect(warning).toHaveBeenCalledWith('array: unknown index 1 ignored on patch');
-    warning.mockRestore();
+    const first = names.at(0)!;
+    names.patch(['Lia', 'Ada']);
+    const removed = names.at(1)!;
+    expect(names()).toEqual(['Lia', 'Ada']);
+    expect(names.at(0)).toBe(first);
+    names.patch(['Grace']);
+    expect(names()).toEqual(['Grace']);
+    expect(removed.parent()).toBeNull();
+    names.patch([]);
+    expect(names()).toEqual([]);
+    expect(first.parent()).toBeNull();
   });
 
   it('replaces validators and exposes required metadata and required errors', () => {
@@ -2067,5 +2071,65 @@ describe('array onValueChange', () => {
     expect(notify).toHaveBeenCalledExactlyOnceWith([{ name: 'Grace' }], items);
     items[0]!.name.set('Pat');
     expect(notify).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('array patch replacement', () => {
+  it.each([null, undefined, []])('clears and detaches the collection for %j', (value) => {
+    const names = array(field(''), ['Ada']);
+    const first = names[0]!;
+    names.patch(value);
+    expect(names()).toEqual([]);
+    expect(names.length()).toBe(0);
+    expect(first.parent()).toBeNull();
+    expect(first.keyInParent()).toBeNull();
+    expect(names.pristine()).toBe(true);
+  });
+
+  it('reconciles keyed complete rows, preserves reused state, and batches notifications', () => {
+    const changed = vi.fn();
+    const people = array({ id: field.strict(''), name: field('', required), age: field<number>(undefined) }, {
+      initialValue: [{ id: 'a', name: 'Ada', age: 18 }, { id: 'b', name: 'Grace', age: 28 }],
+      trackBy: 'id',
+      onValueChange: changed,
+    });
+    const ada = people[0]!;
+    const grace = people[1]!;
+    grace.name.markAsDirty();
+    grace.name.markAsTouched();
+    people.patch([{ id: 'b', name: 'Grace Hopper', age: undefined }, { id: 'c', name: '', age: null }]);
+    expect(people()).toEqual([{ id: 'b', name: 'Grace Hopper', age: undefined }, { id: 'c', name: '', age: null }]);
+    expect(people[0]).toBe(grace);
+    expect(grace.path()).toEqual(['0']);
+    expect(grace.name.dirty()).toBe(true);
+    expect(grace.name.touched()).toBe(true);
+    expect(ada.parent()).toBeNull();
+    expect(people[1]!.pristine()).toBe(true);
+    expect(people.allErrors()).toMatchObject([{ kind: 'required', targetNode: people[1]!.name }]);
+    expect(changed).toHaveBeenCalledExactlyOnceWith(people(), people);
+    const before = people.items();
+    expect(() => people.patch([{ id: 'b', name: 'One', age: 1 }, { id: 'b', name: 'Two', age: 2 }])).toThrow();
+    expect(people.items()).toBe(before);
+    expect(changed).toHaveBeenCalledTimes(1);
+    people.patch([{ id: 'b', name: 'Grace', age: 29 }]);
+    expect(people.valid()).toBe(true);
+    people.resetToInitial();
+    expect(people()).toEqual([{ id: 'a', name: 'Ada', age: 18 }, { id: 'b', name: 'Grace', age: 28 }]);
+    expect(people.pristine()).toBe(true);
+    expect(people.untouched()).toBe(true);
+  });
+
+  it('cancels pending direct array input and descendant drafts on reused rows', () => {
+    const names = array(field(''), { initialValue: ['Ada'], debounce: 'blur' });
+    names[0]!.value.control.set('Draft');
+    names.value.control.set(['Buffered', 'Extra']);
+    expect(names.debouncing()).toBe(true);
+    names.patch(['Grace']);
+    expect(names()).toEqual(['Grace']);
+    expect(names.value.control()).toEqual(['Grace']);
+    expect(names[0]!.value.control()).toBe('Grace');
+    expect(names.debouncing()).toBe(false);
+    names.flush();
+    expect(names()).toEqual(['Grace']);
   });
 });

@@ -98,7 +98,7 @@ export type NodeApi = {
    * ```
    */
   update(updater: (value: any) => any): void;
-  /** Applies a node-specific partial update without marking the node dirty. */
+  /** Updates supplied object branches or replaces complete array/field values without marking the node dirty. */
   patch(value: any): void;
   /**
    * Clears interaction state and pending control input throughout the reset scope, optionally

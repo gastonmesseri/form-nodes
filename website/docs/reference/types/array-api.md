@@ -58,7 +58,7 @@ type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
     clear(): void;
     set(value: ArraySet<TItem> | null | undefined): void;
     update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
-    patch(value: ArrayPatch<TItem>): void;
+    patch(value: ArrayPatch<TItem> | null | undefined): void;
     reset(...args: [
     ] | [
         value: ArraySet<TItem> | null | undefined
@@ -156,7 +156,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `clear` | Removes and detaches every current item node without marking the array dirty. |
 | `set` | Reconciles the complete array value while preserving matching item nodes. |
 | `update` | Computes the complete array value using the configured index or `trackBy` reconciliation. |
-| `patch` | Partially updates existing item nodes by array index without changing the array structure. |
+| `patch` | Reconciles the complete array value, exactly like `set()`. |
 | `reset` | Resets state, optionally reconciling a complete value first. |
 | `resetToInitial` | Restores captured initial item values, count and order, and resets subtree interaction state. |
 | `validators` | Current normalized validators assigned directly to this array, in declaration order. |

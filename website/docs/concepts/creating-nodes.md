@@ -261,8 +261,9 @@ The closest configured node provides inherited `disabled`, `readonly`, `hidden`,
 ## 📐 Compile-time value safety {#compile-time-value-safety}
 
 TypeScript recursively infers the complete form value from the node tree. `set()` and
-`reset(value)` require a complete value, while `patch()` accepts only known recursive partial
-branches:
+`reset(value)` require a complete value, while `patch()` accepts partial object branches with known
+keys. Supplied arrays are complete collections, including every item's set value; omit an array
+property to preserve it.
 
 ```ts
 profile.set({

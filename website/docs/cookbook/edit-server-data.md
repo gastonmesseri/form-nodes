@@ -53,4 +53,9 @@ this.myForm.patch({
 
 All three operations are programmatic, synchronous, and never control-debounced. `set()` and `reset(value)` require the complete inferred shape; `patch()` rejects unknown keys but permits omitted branches.
 
+When a server event includes an array, provide the complete collection and complete item values.
+Its length and order replace the previous collection, including arrays nested inside a parent
+patch. For a partial edit to one row, call that row's `patch()` instead. See
+[array patching](../reference/array.md#complete-and-partial-value-updates).
+
 See [Value flow and debounce](../guides/value-flow-and-debounce.md).

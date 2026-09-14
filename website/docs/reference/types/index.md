@@ -29,7 +29,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [ArrayItems](./array-items.md) | The typed collection of item nodes exposed by an array node. |
 | [ArrayItemWithParent](./array-item-with-parent.md) | An array item node whose parent is typed as the owning array. |
 | [ArrayNode](./array-node.md) | Array node model. Omit the first type argument for an unspecified structure, or provide it to preserve exact item types. Generic array nodes retain array operations. |
-| [ArrayPatch](./array-patch.md) | Readonly sequence accepted by an array node's `patch()`, mapped through the item patch type. |
+| [ArrayPatch](./array-patch.md) | Complete readonly sequence accepted by an array node's `patch()`, identical to its set value. |
 | [ArraySet](./array-set.md) | Complete readonly sequence accepted by an array node's `set()`. |
 | [ArrayValue](./array-value.md) | Mutable array value produced by an array node, with every item mapped to its readable value. |
 | [DynamicFormChildren](./dynamic-form-children.md) | Readonly runtime-key map of dynamic and initially declared children. |
@@ -37,12 +37,12 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [FieldNode](./field-node.md) | A field node. Omit TValue for an unspecified value, or supply it to constrain reads and writes. |
 | [FormNode](./form-node.md) | Form node model. Omit the first type argument for an unspecified structure, or provide it to preserve exact child types. |
 | [FormNodeValue](./form-node-value.md) | Committed value inferred from any `form()`, `group()`, `array()`, or `field()` instance. Equivalent to `ReturnType&lt;TNode&gt;`; preserves nested values and field nullability. |
-| [FormPatch](./form-patch.md) | Partial object accepted by a form's `patch()`; omitted child properties remain unchanged. |
+| [FormPatch](./form-patch.md) | Partial object accepted by a form's `patch()`; omitted properties remain unchanged, but supplied arrays require complete item values and reconcile like set(). |
 | [FormSet](./form-set.md) | Complete object accepted by a form's `set()`, recursively using each child's set type. |
 | [FormValue](./form-value.md) | Object value produced by a form, with each child node mapped to its readable value. |
 | [FormValueContract](./form-value-contract.md) | Structural contract for checking a form or group against an aggregate value type without replacing its inferred child-node types. |
 | [GroupNode](./group-node.md) | An object-shaped structural node without its own submission workflow. Omit the first type argument for an unspecified structure, or provide it to preserve exact child types. |
-| [GroupPatch](./group-patch.md) | Partial object accepted by a group's `patch()`; omitted child properties remain unchanged. |
+| [GroupPatch](./group-patch.md) | Partial object accepted by a group's `patch()`; omitted child properties remain unchanged and supplied arrays require complete item values. |
 | [GroupSet](./group-set.md) | Complete object accepted by a group's `set()`, recursively using each child's set type. |
 | [GroupValue](./group-value.md) | Object value produced by a group, with each child node mapped to its readable value. |
 | [NodeValueSignal](./node-value-signal.md) | Reactive value views shared by fields, groups, forms, and arrays. Calling this signal is equivalent to calling the node: configured `equal` checks can retain an earlier equivalent value. Prefer calling the node for ordinary application reads. |

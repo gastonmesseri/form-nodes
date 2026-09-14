@@ -137,7 +137,7 @@ TypeScript and Angular reject misspelled direct properties.
 | `removeAt(index)` / `clear()` | Removes items |
 | `moveUp(index)` / `moveDown(index)` | Moves one position |
 | `move(from, to)` / `swap(a, b)` | Reorders nodes without recreating them |
-| `patch(values)` | Positionally patches existing items |
+| `patch(values)` | Reconciles a complete collection, like `set()` |
 
 Arrays are iterable and expose `forEach`, `map`, `filter`, `find`, `findIndex`, `some`, `every`, `includes`, and `indexOf` over item nodes.
 

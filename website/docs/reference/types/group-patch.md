@@ -4,7 +4,7 @@ title: GroupPatch
 
 # GroupPatch
 
-Partial object accepted by a group's `patch()`; omitted child properties remain unchanged.
+Partial object accepted by a group's `patch()`; omitted child properties remain unchanged and supplied arrays require complete item values.
 
 ## Import
 

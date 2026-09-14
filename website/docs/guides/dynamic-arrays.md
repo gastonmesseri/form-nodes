@@ -2,6 +2,9 @@
 title: Dynamic arrays
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import arrayPatchSource from '!!raw-loader!../../examples/array-patch.example.ts';
+
 # Dynamic arrays {#dynamic-arrays}
 
 For a complete program whose assertions verify keyed reconciliation and structural operations, see
@@ -190,16 +193,18 @@ Matching keys reuse and move existing nodes. Keys must be unique among current a
 
 Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying it to `reset(value)` clears the collection. The observable array value itself remains `[]`, never nullish.
 
-## 📝 Positional patching {#positional-patching}
+## 📝 Patching collections and individual rows {#positional-patching}
 
-`patch()` partially updates existing nodes by index without resizing the array:
+`patch()` reconciles a complete array, exactly like `set()`. This includes arrays supplied to
+`form.patch()` or `group.patch()`: omitted object branches remain unchanged, but supplied arrays
+set the collection's length and order and require complete item values. Matching nodes are reused
+by index or `trackBy`; missing nodes detach and new nodes are created.
 
-```ts
-people.patch([{ name: 'Ada Byron' }]);
-people.patch([, { name: 'Grace Murray Hopper' }]);
-```
+<CodeBlock language="ts" title="array-patch.example.ts">{arrayPatchSource}</CodeBlock>
 
-Sparse positions are skipped. Values beyond the current structure are ignored with a warning. Use `set()` for complete reconciliation and structural methods for explicit collection changes.
+For a partial edit to one existing object row, call that row's `patch()`. Empty arrays, `null`,
+and `undefined` clear the collection. Sparse arrays no longer express skipped positional updates.
+See the [array patch reference](../reference/array.md#patch).
 
 ## ⚡ State aggregation {#state-aggregation}
 

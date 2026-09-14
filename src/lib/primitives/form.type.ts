@@ -434,7 +434,7 @@ export type FormSet<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeSet<TNodes[K]>;
 };
 
-/** Partial object accepted by a form's `patch()`; omitted child properties remain unchanged. */
+/** Partial object accepted by a form's `patch()`; omitted properties remain unchanged, but supplied arrays require complete item values and reconcile like set(). */
 export type FormPatch<TNodes extends Nodes> = {
   [K in keyof TNodes]?: NodePatch<TNodes[K]>;
 };
@@ -636,7 +636,7 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * ```
    */
   update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;
-  /** Assigns the supplied subset of child values immediately and ignores unknown runtime keys. */
+  /** Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored. */
   patch(value: FormPatch<TNodes>): void;
   /**
    * Recursively clears touched and dirty state and cancels pending control input. Passing a complete

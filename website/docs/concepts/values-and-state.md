@@ -150,7 +150,8 @@ profileForm.update(value => ({ ...value, age: (value.age ?? 0) + 1 }));
 profileForm.patch({ name: 'Grace' });
 ```
 
-Use `set()` to replace a field value. Array `patch()` is positional and does not resize the array;
+Use `set()` to replace a field value. Supplied arrays in `patch()` reconcile exactly like `set()`,
+requiring complete item values and adjusting length and order. Use an individual row's `patch()` for partial row edits;
 see [Dynamic arrays](../guides/dynamic-arrays.md).
 
 Programmatic writes preserve dirty and touched state.

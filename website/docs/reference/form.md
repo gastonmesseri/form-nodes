@@ -1293,6 +1293,12 @@ profile.username(); // 'ada'
 
 **Signature:** `patch(value: FormPatch): void`
 
+Supplied arrays are complete collection values: their length and order replace the previous
+collection, and every item requires its complete set value. Matching nodes are reused by index
+or `trackBy`; empty arrays, `null`, and `undefined` clear the collection. Omit an array property
+to leave it unchanged. For partial row edits, call that row's `patch()`.
+See [array patching](./array.md#complete-and-partial-value-updates).
+
 Recursively updates supplied child branches and leaves omitted branches unchanged. It does not mark
 nodes dirty.
 

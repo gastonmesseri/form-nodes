@@ -4,7 +4,7 @@ title: ArrayPatch
 
 # ArrayPatch
 
-Readonly sequence accepted by an array node's `patch()`, mapped through the item patch type.
+Complete readonly sequence accepted by an array node's `patch()`, identical to its set value.
 
 ## Import
 
@@ -19,7 +19,7 @@ Use to derive the patch value contract from the array's child or item node types
 ## Declaration
 
 ```ts
-type ArrayPatch<TItem extends AnyNode> = readonly NodePatch<TItem>[];
+type ArrayPatch<TItem extends AnyNode> = ArraySet<TItem>;
 ```
 
 ## Type parameters
@@ -33,3 +33,4 @@ type ArrayPatch<TItem extends AnyNode> = readonly NodePatch<TItem>[];
 - [Choosing node types](../node-types.md)
 - [Public types index](./index.md)
 - [AnyNode](./any-node.md)
+- [ArraySet](./array-set.md)

@@ -3,6 +3,7 @@ title: array()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import arrayPatchSource from '!!raw-loader!../../examples/array-patch.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
 import emptyPrimitivesSource from '!!raw-loader!../../examples/empty-primitives.example.ts';
@@ -564,7 +565,7 @@ and the shared node state API. Signal properties must be called to read their cu
 | **Value updates** | |
 | [`set(value)`](#set) | Reconciles the complete collection. A nullish value clears it. |
 | [`update(updater)`](#update) | Derives and reconciles a complete value from the current plain value. |
-| [`patch(values)`](#patch) | Partially updates existing items by index without resizing. |
+| [`patch(values)`](#patch) | Reconciles the complete collection, exactly like `set()`. |
 | [`reset(value?)`](#reset) | Optionally reconciles a value, then recursively clears interaction state. |
 | [`resetToInitial()`](#reset-to-initial) | Restores captured initial values and clears subtree interaction state. |
 | **Validation** | |
@@ -668,28 +669,15 @@ myForm.people.clear();
 
 ## 📝 Complete and partial value updates {#complete-and-partial-value-updates}
 
-`set()` and `update()` reconcile the complete collection. `patch()` updates existing items by
-position without changing the structure.
+`set()`, `patch()`, and `update()` reconcile complete collections. Each supplied item must
+provide its complete set value. The incoming length and order replace the previous structure,
+while matching nodes retain their identities and interaction state.
 
-```ts
-myForm.people.set([
-  { name: 'Ada', age: 36 },
-  { name: 'Grace', age: 44 },
-]);
+<CodeBlock language="ts" title="array-patch.example.ts">{arrayPatchSource}</CodeBlock>
 
-myForm.people.update(people => [
-  ...people,
-  { name: 'Linus', age: 32 },
-]);
-
-myForm.people.patch([
-  { age: 37 },
-  { name: 'Grace Hopper' },
-]);
-```
-
-Sparse patch entries are skipped, extra indexes are ignored with a warning in development mode, and existing nodes are
-not recreated. Passing `null` or `undefined` to `set()`, returning it from `update()`, or supplying
+Call an individual object row's `patch()` to update selected properties without changing the
+collection. Sparse arrays are not positional patches; supply a complete dense collection.
+Passing `null` or `undefined` to `set()` or `patch()`, returning it from `update()`, or supplying
 it to `reset(value)` clears the array.
 
 ## 📚 Reconciliation and trackBy {#reconciliation-and-trackby}
@@ -782,8 +770,7 @@ submission members.
 
 Each entry includes its consumer-facing signature, what it represents or returns, and a complete
 example. In the signatures below, `ItemNode` means the node cloned from the array template,
-`ItemValue` means that node's plain value, `ItemPatch` means the partial value accepted by that
-node's `patch()`, and [`ArrayValue`](./types/array-value.md) means `ItemValue[]`. `ParentNode` and `RootNode` represent the
+`ItemValue` means that node's plain value, `ItemSet` means its complete set value, and [`ArrayValue`](./types/array-value.md) means `ItemValue[]`. `ParentNode` and `RootNode` represent the
 precise parent and root types inferred from where the array is declared.
 
 `min()` is not included because it is a field constraint signal, not an array property; see the
@@ -1792,30 +1779,21 @@ users();
 
 #### – patch() {#patch}
 
-**Signature:** `patch(value: readonly ItemPatch[]): void`
+**Signature:** `patch(value: readonly ItemSet[] | null | undefined): void`
 
-Partially updates existing nodes by index without resizing the array. Sparse entries are skipped,
-and entries beyond the current length are ignored with a warning in development mode.
+Equivalent to `set()`: requires complete item values, adjusts length and order, and reuses nodes
+by index or `trackBy`. Missing nodes detach; new values create nodes from the template/factory.
+Reused nodes keep dirty/touched state. Empty arrays and nullish values clear the collection.
+This also applies when a containing form or group receives the array through `patch()`.
 
-```ts
-const users = array({
-  username: field(''),
-  active: field(false),
-}, {
-  initialValue: [
-    { username: 'ada', active: false },
-    { username: 'grace', active: false },
-  ],
-});
+Completeness is enforced by TypeScript, not by a new runtime schema validator. Untyped data and
+unsafe casts follow the existing runtime behavior of `set()`; validate external payloads before
+assigning them. Field-valued properties still distinguish omission from explicit `undefined`:
+omission preserves the value, while explicit `undefined` assigns it when the field type permits it.
+Array nodes always expose arrays, so nullish array values clear them. Unlike JSON Merge Patch,
+`null` does not delete declared form properties.
 
-users.patch([
-  { active: true },
-  { username: 'grace-hopper' },
-]);
-
-users();
-// [{ username: 'ada', active: true }, { username: 'grace-hopper', active: false }]
-```
+See the [complete example](#complete-and-partial-value-updates).
 
 #### – reset() {#reset}
 

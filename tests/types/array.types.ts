@@ -60,7 +60,8 @@ people.moveDown(0);
 people.move(0, 1);
 people.swap(0, 1);
 people.set([{ id: 'three', name: 'Ada', age: 37 }]);
-people.patch([{ name: 'Grace' }]);
+people.patch([{ id: 'grace', name: 'Grace', age: 30 }]);
+people.at(0)?.patch({ name: 'Grace' });
 people.update((value) => [...value, { id: 'four', name: null, age: null }]);
 people.focus({ preventScroll: true });
 

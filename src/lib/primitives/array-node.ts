@@ -8,7 +8,6 @@ import { isPlainObject } from '../utils/is-plain-object';
 import { isNode, markAsNode } from './utils/node-marker';
 import type { ObjectNodeDefinitions } from './form.type';
 import { assertArrayObjectTemplate } from './array.utils';
-import { warnInDevMode } from '../utils/warn-in-dev-mode';
 import { computedFunction } from '../utils/computed-function';
 import { cloneInitialValue } from './utils/clone-initial-value';
 import { createValidatorQuery } from '../validation/validator-query';
@@ -403,13 +402,8 @@ export class ArrayNode<TItem extends AnyNode> {
     this.reconcile(this.normalizeArrayValue(value), 'set');
   }
 
-  patch(value: ArrayPatch<TItem>) {
-    this.controlValueBuffer.cancel();
-    value.forEach((itemValue, index) => {
-      const item = this.items()[index];
-      if (item) item.$api.patch(itemValue);
-      else warnInDevMode(`array: unknown index ${index} ignored on patch`);
-    });
+  patch(value: ArrayPatch<TItem> | null | undefined) {
+    this.set(value);
   }
 
   reset(...args: [] | [value: ArraySet<TItem> | null | undefined]) {
