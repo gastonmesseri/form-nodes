@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 4.0.0 — 2026-09-14 {#400--2026-09-14}
+
 ### Added
 
 - Add `lengthBetween(minimum, maximum)` to validate inclusive text or collection lengths with reactive bounds, conditional activation, and custom messages or errors. It preserves the existing `minLength` and `maxLength` errors and constraint metadata.

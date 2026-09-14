@@ -7,7 +7,7 @@ title: Migration guides
 import CodeBlock from '@theme/CodeBlock';
 import optionalMinimumSource from '!!raw-loader!../../examples/min-length-optional.example.ts';
 
-## Unreleased: minimum length checks empty text {#minimum-length-empty-text}
+## Moving to 4.0.0: minimum length checks empty text {#minimum-length-empty-text}
 
 **Breaking:** `minLength(n)` now measures an empty string as length zero, just like an empty
 collection. With a positive minimum, `''` produces a `minLength` error with `actual: 0`.
