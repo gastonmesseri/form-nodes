@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 4.2.1 — 2026-09-15 {#421--2026-09-15}
+
 ### Changed
 
 - Documentation links in the package now point to `https://form-nodes.js.org/`.
