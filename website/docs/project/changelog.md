@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 4.2.0 — 2026-09-15 {#420--2026-09-15}
+
 ### Added
 
 - Validator contexts now expose `root()` as a reactive shortcut to node root navigation, available in inline validators, `validator()`, and every `asyncValidator()` callback with the same readonly root types.
