@@ -1,0 +1,2 @@
+Pillow==11.3.0
+Pygments==2.19.2

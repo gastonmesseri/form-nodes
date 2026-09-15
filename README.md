@@ -39,6 +39,13 @@
   <a href="https://form-nodes.js.org/reference/api-overview">API reference</a>
 </p>
 
+<p align="center">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/gastonmesseri/form-nodes/master/website/static/img/form-nodes-typing.png" />
+    <img src="https://raw.githubusercontent.com/gastonmesseri/form-nodes/master/website/static/img/form-nodes-typing.gif" alt="Create a profile form with username and email fields, then bind both inputs with [formNode]." width="760" height="510" />
+  </picture>
+</p>
+
 <!-- example: quick-start.typecheck.ts -->
 ```ts
 import { Component } from '@angular/core';
