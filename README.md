@@ -227,7 +227,7 @@ and operations such as `reset()`.
 | --- | --- |
 | `field(value)` | One editable value: a string, number, boolean, date, object, or array. |
 | `form({ ... })` | An object of children with a submission workflow. Usually the root. |
-| `{ ... }` or `group({ ... })` | A nested object of children. Use explicit `group()` when that branch needs validators or options. |
+| `group({ ... })` | A nested object of children. Use explicit `group()` when that branch needs validators or options. |
 | `array(template, options?)` | A dynamic collection whose items have their own nodes and state. |
 
 For example, `address: { city: field('London') }` creates a structural group with an independently
