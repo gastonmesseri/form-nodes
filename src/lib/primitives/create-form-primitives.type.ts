@@ -237,7 +237,7 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
    * ```
    *
    * @experimental Optional component input writes depend on Angular internals.
-   * @see {@link https://gastonmesseri.github.io/form-nodes/reference/provide-form-nodes-config#custom-control-inputs | Input synchronization and adapter selection}
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#custom-control-inputs | Input synchronization and adapter selection}
    */
   syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' | undefined } | null | undefined;
 
@@ -278,7 +278,7 @@ export type FormPrimitivesOptions<TNullable extends boolean = true> = {
    * ```
    *
    * @experimental Pair input writes depend on Angular internals.
-   * @see {@link https://gastonmesseri.github.io/form-nodes/reference/provide-form-nodes-config#bind-input-output-pairs | Paired control configuration}
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#bind-input-output-pairs | Paired control configuration}
    */
   bindInputOutputPairs?: boolean | null | undefined;
   /** Default nullability for fields created by this primitive set. Defaults to `true`. */

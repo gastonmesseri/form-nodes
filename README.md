@@ -34,9 +34,9 @@
 </p>
 
 <p align="center">
-  <a href="https://gastonmesseri.github.io/form-nodes/"><strong>Documentation</strong></a> ·
-  <a href="https://gastonmesseri.github.io/form-nodes/tutorial">Step-by-step tutorial</a> ·
-  <a href="https://gastonmesseri.github.io/form-nodes/reference/api-overview">API reference</a>
+  <a href="https://form-nodes.js.org/"><strong>Documentation</strong></a> ·
+  <a href="https://form-nodes.js.org/tutorial">Step-by-step tutorial</a> ·
+  <a href="https://form-nodes.js.org/reference/api-overview">API reference</a>
 </p>
 
 <!-- example: quick-start.typecheck.ts -->
@@ -131,7 +131,7 @@ import { form, field, array } from '@ngblocks/form-nodes';
 ```
 
 The current `3.0.x` development line supports Angular `^21.0.7 || ^22.1.5`. Both `@angular/core` and `@angular/forms` must use
-compatible Angular versions. See [Compatibility](https://gastonmesseri.github.io/form-nodes/project/compatibility)
+compatible Angular versions. See [Compatibility](https://form-nodes.js.org/project/compatibility)
 for the Node.js and TypeScript requirements.
 
 ## 📝 Your first form
@@ -208,7 +208,7 @@ A few things to notice:
 Inside the component, `this.myForm.name()` reads the name and `this.myForm()` reads the complete
 object. You do not need subscriptions to keep those values current.
 
-For an even smaller introduction, see [Your first form](https://gastonmesseri.github.io/form-nodes/getting-started/first-form).
+For an even smaller introduction, see [Your first form](https://form-nodes.js.org/getting-started/first-form).
 For NgModule applications, import and optionally re-export `FormNodeDirective` from a shared module.
 
 ## 🧱 The four building blocks
@@ -233,7 +233,7 @@ A form model can be declared and used outside an Angular injection context. Angu
 injection is available for integrations that need it; it is not a prerequisite for creating the
 model or reading and updating its values.
 
-[Choosing a primitive](https://gastonmesseri.github.io/form-nodes/guides/choosing-a-primitive)
+[Choosing a primitive](https://form-nodes.js.org/guides/choosing-a-primitive)
 explains the differences with more examples.
 
 ## 🔄 Read and update values
@@ -313,7 +313,7 @@ profile.name(); // 'Ada'
 Resetting a nested node affects only its subtree. Validators stay configured and evaluate the
 resulting value.
 
-See [Values and state](https://gastonmesseri.github.io/form-nodes/concepts/values-and-state)
+See [Values and state](https://form-nodes.js.org/concepts/values-and-state)
 for the complete value flow and reset rules.
 
 ## 🧩 Types and nullability
@@ -342,7 +342,7 @@ type ProfileValue = FormNodeValue<typeof profile>;
 ```
 
 `FormNodeValue` works with fields, groups, arrays, and forms. Applications that prefer a different
-nullability default can use [`createFormPrimitives()`](https://gastonmesseri.github.io/form-nodes/reference/create-form-primitives)
+nullability default can use [`createFormPrimitives()`](https://form-nodes.js.org/reference/create-form-primitives)
 to create a configured set of factories.
 
 ## ✅ Validation
@@ -424,7 +424,7 @@ reusable validator with an explicit value type.
 Asynchronous rules use `asyncValidator()`. They support reactive dependencies, pending state,
 validation debounce, cancellation through an `AbortSignal`, and error mapping. Read values and
 other signal dependencies before the first `await`, or declare them with `params`.
-See [Asynchronous validation](https://gastonmesseri.github.io/form-nodes/guides/async-validation)
+See [Asynchronous validation](https://form-nodes.js.org/guides/async-validation)
 for a complete server-check example.
 
 ### 🔸 Messages and application defaults
@@ -444,8 +444,8 @@ Use `configureGlobalFormNodes()` for a process-wide fallback, including models c
 outside DI. In an Angular application, call it once in `main.ts` before bootstrapping. Keep a larger
 catalog in a separate file and import it at the configuration point.
 
-See [Validator messages and i18n](https://gastonmesseri.github.io/form-nodes/guides/validator-messages)
-and the [Built-in validator reference](https://gastonmesseri.github.io/form-nodes/reference/built-in-validators).
+See [Validator messages and i18n](https://form-nodes.js.org/guides/validator-messages)
+and the [Built-in validator reference](https://form-nodes.js.org/reference/built-in-validators).
 
 ## ⚡ Reactive rules and state
 
@@ -514,7 +514,7 @@ non-interactive subtree. They do not remove values from the model or prevent pro
 Hidden state does not remove DOM elements automatically: use `@if (node.visible())` when that is
 what the UI needs.
 
-[Interaction and availability](https://gastonmesseri.github.io/form-nodes/guides/interaction-and-availability)
+[Interaction and availability](https://form-nodes.js.org/guides/interaction-and-availability)
 covers the propagation rules and how configured state interacts with imperative operations.
 
 ## 📚 Dynamic arrays
@@ -565,7 +565,7 @@ When replacing an array with data from a server, use a stable `trackBy` property
 items should retain their nodes across reordering. Array `set()` reconciles a complete collection;
 array `patch()` updates existing positions without resizing it.
 
-See [Dynamic arrays](https://gastonmesseri.github.io/form-nodes/guides/dynamic-arrays) for templates,
+See [Dynamic arrays](https://form-nodes.js.org/guides/dynamic-arrays) for templates,
 factories, keyed reconciliation, and the complete operations API.
 
 ## 🚀 Submission
@@ -593,7 +593,7 @@ This is an options fragment: `accounts` represents your application's service. B
 - `submit()` resolves to `true` after a successful action and `false` when blocked or already running.
   A rejected action rejects the promise and still clears submission state.
 
-See [Form submission](https://gastonmesseri.github.io/form-nodes/guides/submission) for validation
+See [Form submission](https://form-nodes.js.org/guides/submission) for validation
 policies and composing native forms with Angular controls.
 
 ## ⏱️ Control-value debounce
@@ -612,20 +612,20 @@ Use `debounce: 'blur'` to commit on touch/blur instead. Programmatic `set()`, `u
 and `reset(value)` are never delayed by control-value debounce.
 
 This is separate from an asynchronous validator's `debounce` option, which delays validation work.
-See [Value flow and debounce](https://gastonmesseri.github.io/form-nodes/guides/value-flow-and-debounce).
+See [Value flow and debounce](https://form-nodes.js.org/guides/value-flow-and-debounce).
 
 ## 🧭 Where to go next
 
 | I want to… | Start here |
 | --- | --- |
-| Learn by building one form step by step | [Tutorial](https://gastonmesseri.github.io/form-nodes/tutorial) |
-| See a larger model with real Angular bindings | [Complete form example](https://gastonmesseri.github.io/form-nodes/examples/complex-form) |
-| Find an API or all its options | [API overview](https://gastonmesseri.github.io/form-nodes/reference/api-overview) |
-| Solve a focused application problem | [Cookbook](https://gastonmesseri.github.io/form-nodes/cookbook) |
-| Navigate parents, paths, and child-name collisions | [Tree navigation and API access](https://gastonmesseri.github.io/form-nodes/concepts/tree-and-api) |
-| Compare values with shallow, deep, or custom equality | [Values and state](https://gastonmesseri.github.io/form-nodes/concepts/values-and-state) |
-| Extract a value type from any node | [FormNodeValue](https://gastonmesseri.github.io/form-nodes/reference/form-node-value) |
-| Check an upgrade | [Changelog](https://gastonmesseri.github.io/form-nodes/project/changelog) and [Migration guides](https://gastonmesseri.github.io/form-nodes/project/migrations) |
+| Learn by building one form step by step | [Tutorial](https://form-nodes.js.org/tutorial) |
+| See a larger model with real Angular bindings | [Complete form example](https://form-nodes.js.org/examples/complex-form) |
+| Find an API or all its options | [API overview](https://form-nodes.js.org/reference/api-overview) |
+| Solve a focused application problem | [Cookbook](https://form-nodes.js.org/cookbook) |
+| Navigate parents, paths, and child-name collisions | [Tree navigation and API access](https://form-nodes.js.org/concepts/tree-and-api) |
+| Compare values with shallow, deep, or custom equality | [Values and state](https://form-nodes.js.org/concepts/values-and-state) |
+| Extract a value type from any node | [FormNodeValue](https://form-nodes.js.org/reference/form-node-value) |
+| Check an upgrade | [Changelog](https://form-nodes.js.org/project/changelog) and [Migration guides](https://form-nodes.js.org/project/migrations) |
 
 ## 🤖 Coding agents
 
@@ -640,7 +640,7 @@ node_modules/@ngblocks/form-nodes/AGENTS.md before making changes.
 
 Adjust the path for your workspace's dependency layout. Package installation does not configure
 your agent automatically. The guide travels with the installed version; use it together with the
-package's declarations. See [Coding agents](https://gastonmesseri.github.io/form-nodes/getting-started/ai-agents)
+package's declarations. See [Coding agents](https://form-nodes.js.org/getting-started/ai-agents)
 for setup and alternatives.
 
 ## 🛠️ Development

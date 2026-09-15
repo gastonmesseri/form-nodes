@@ -3,7 +3,7 @@
   "version": "4.2.0",
   "description": "Typed, signal-based forms for Angular with reactive validation, dynamic arrays, and native and custom control integration.",
   "license": "MIT",
-  "homepage": "https://gastonmesseri.github.io/form-nodes/",
+  "homepage": "https://form-nodes.js.org/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gastonmesseri/form-nodes.git"

@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation links in the package now point to `https://form-nodes.js.org/`.
+
 ## [4.2.0] - 2026-09-15
 
 ### Added

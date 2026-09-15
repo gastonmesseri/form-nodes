@@ -87,13 +87,13 @@ Do not assume that the library repository's development commands exist in a cons
 
 ## Documentation by task
 
-- [First form](https://gastonmesseri.github.io/form-nodes/getting-started/first-form)
-- [Public API](https://gastonmesseri.github.io/form-nodes/reference/api-overview)
-- [Values and state](https://gastonmesseri.github.io/form-nodes/concepts/values-and-state)
-- [Dynamic arrays](https://gastonmesseri.github.io/form-nodes/guides/dynamic-arrays)
-- [Control binding](https://gastonmesseri.github.io/form-nodes/reference/form-node-binding)
-- [Custom controls](https://gastonmesseri.github.io/form-nodes/guides/custom-controls)
-- [Control state](https://gastonmesseri.github.io/form-nodes/reference/form-node-state)
-- [Value flow](https://gastonmesseri.github.io/form-nodes/guides/value-flow)
-- [Async validation](https://gastonmesseri.github.io/form-nodes/guides/async-validation)
-- [Submission](https://gastonmesseri.github.io/form-nodes/guides/submission)
+- [First form](https://form-nodes.js.org/getting-started/first-form)
+- [Public API](https://form-nodes.js.org/reference/api-overview)
+- [Values and state](https://form-nodes.js.org/concepts/values-and-state)
+- [Dynamic arrays](https://form-nodes.js.org/guides/dynamic-arrays)
+- [Control binding](https://form-nodes.js.org/reference/form-node-binding)
+- [Custom controls](https://form-nodes.js.org/guides/custom-controls)
+- [Control state](https://form-nodes.js.org/reference/form-node-state)
+- [Value flow](https://form-nodes.js.org/guides/value-flow)
+- [Async validation](https://form-nodes.js.org/guides/async-validation)
+- [Submission](https://form-nodes.js.org/guides/submission)

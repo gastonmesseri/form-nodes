@@ -161,7 +161,7 @@ gh release create "v$RELEASE_VERSION" --repo gastonmesseri/form-nodes --verify-t
 
 Write and review the notes file before running that command. Finally verify the GitHub Release is
 public, its tag is correct, npm serves the expected version, and the
-[documentation site](https://gastonmesseri.github.io/form-nodes/) is reachable.
+[documentation site](https://form-nodes.js.org/) is reachable.
 
 ## Troubleshooting
 
