@@ -22,6 +22,7 @@ import { registerNodeInputConfig } from '../configuration/node-input-config';
 import { markAsFieldContext } from '../validation/utils/field-context-marker';
 import { createAsyncValidation } from '../validation/create-async-validation';
 import { normalizeValidatorSource } from '../validation/utils/validator-source';
+import { createItemValueNormalizer } from './utils/create-item-value-normalizer';
 import { registerNodeValidatorMessages } from '../validation/validator-messages';
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
@@ -62,6 +63,8 @@ export class ArrayNode<TItem extends AnyNode> {
   equal: (previous: ArrayValue<TItem>, next: ArrayValue<TItem>) => boolean = Object.is;
 
   usedDefinitions = new WeakSet<object>();
+
+  itemValueNormalizers = new WeakMap<TItem, (value: NodeSet<TItem>) => NodeSet<TItem>>();
 
   usesTrackBy: boolean;
 
@@ -507,7 +510,9 @@ export class ArrayNode<TItem extends AnyNode> {
     if (!isNode(definition)) assertArrayObjectTemplate(definition, 'factory');
     const item = (isNode(definition) ? definition : group(definition as ObjectNodeDefinitions)) as TItem;
     untracked(() => {
-      if (args.length === 1) withoutValueChanges(() => item.$api.reset(args[0]));
+      const normalize = createItemValueNormalizer(item);
+      this.itemValueNormalizers.set(item, normalize);
+      if (args.length === 1) withoutValueChanges(() => item.$api.reset(normalize(args[0])));
       (item as unknown as InternalNode).$api._captureInitialValue();
     });
     return item;
@@ -537,7 +542,7 @@ export class ArrayNode<TItem extends AnyNode> {
     for (let index = 0; index < commonLength; index++) {
       if (mode === 'initial') (current[index] as unknown as InternalNode).$api._resetToInitial(values[index]!);
       else if (mode === 'reset') current[index]!.$api.reset(values[index]!);
-      else current[index]!.$api.set(values[index]!);
+      else current[index]!.$api.set(this.itemValueNormalizers.get(current[index]!)!(values[index]!));
     }
     while (current.length > values.length) this.detachItem(current.pop()!);
     while (current.length < values.length) {
@@ -564,7 +569,7 @@ export class ArrayNode<TItem extends AnyNode> {
         remainingItemsByKey.delete(key);
         if (mode === 'initial') (item as unknown as InternalNode).$api._resetToInitial(value);
         else if (mode === 'reset') item.$api.reset(value);
-        else item.$api.set(value);
+        else item.$api.set(this.itemValueNormalizers.get(item)!(value));
       }
       return item;
     });

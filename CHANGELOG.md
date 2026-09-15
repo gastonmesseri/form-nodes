@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Fixed
+
+- Array `set()` and `patch()` now fill omitted item properties in untyped data from template/factory defaults, consistently for new and reused rows. Explicit `undefined` remains explicit, and TypeScript still requires complete items.
+
 ## [4.1.0] - 2026-09-14
 
 ### Changed

@@ -401,6 +401,7 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * ]);
    * ```
    *
+   * Untyped item properties omitted at runtime use construction defaults; explicit `undefined` is preserved.
    * ℹ️ Passing `null` or `undefined` clears the array.
    */
   set(value: ArraySet<TItem> | null | undefined): void;
@@ -431,6 +432,8 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
   /**
    * Reconciles the complete array value, exactly like `set()`.
+   * Untyped omitted item properties use template/factory defaults, including on reused rows.
+   * Explicit `undefined` remains explicit; TypeScript still requires complete items.
    *
    * The incoming collection determines the length and order. Every item must supply its complete
    * set value, including nested arrays. Matching nodes are reused by index or `trackBy`, new nodes

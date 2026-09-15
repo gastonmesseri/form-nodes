@@ -6333,3 +6333,31 @@ it('restarts aggregate async validation for replaced arrays and ignores stale re
   await Promise.resolve();
   expect(profile.valid()).toBe(true);
 });
+
+describe('form patch array declaration defaults', () => {
+  it('fills omitted nested branches without merging object fields or preserving previous row data', () => {
+    const model = form({
+      note: field('keep'),
+      details: {
+        people: array({
+          username: field(''),
+          address: { city: field('Madrid'), country: field('Spain') },
+          tags: array({ label: field('default') }, { initialValue: 1 }),
+        }, { initialValue: [{ username: 'old', address: { city: 'Paris', country: 'France' }, tags: [] }] }),
+      },
+    });
+    model.patch({ details: { people: [
+      { username: 'a', address: { city: 'Rabat' }, tags: [{}] },
+      { username: 'b' },
+    ] } } as unknown as Parameters<typeof model.patch>[0]);
+    expect(model()).toEqual({ note: 'keep', details: { people: [
+      { username: 'a', address: { city: 'Rabat', country: 'Spain' }, tags: [{ label: 'default' }] },
+      { username: 'b', address: { city: 'Madrid', country: 'Spain' }, tags: [{ label: 'default' }] },
+    ] } });
+    expect(model.dirty()).toBe(false);
+    expect(model.touched()).toBe(false);
+    model.patch({ details: { people: [{ username: 'a', address: { city: 'Bern' }, tags: [] }] } } as unknown as Parameters<typeof model.patch>[0]);
+    expect(model.details.people[0]!.address.country()).toBe('Spain');
+    expect(model.details.people[0]!.tags()).toEqual([]);
+  });
+});

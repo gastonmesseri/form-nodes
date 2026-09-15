@@ -4409,3 +4409,27 @@ and undefined-valued children). Angular derives structure from model values; For
 its template/factory construction and explicit index/trackBy ownership. Unlike Angular's undefined
 child removal, Form Nodes keeps declared fields whose values are undefined. The patch API and its
 complete-array boundary are intentional library semantics, not Angular Reactive Forms patchValue.
+
+
+### Array item defaults for untyped replacements
+
+Array set()/patch()/update() keep their complete-item type contracts. At runtime, omitted
+properties of object rows use a snapshot of construction defaults, before incoming initialValue
+or inserted row data is applied. New and index/key-reused rows behave consistently. Factories
+capture defaults separately for each created row. Nested form/group omissions are filled
+recursively; supplied nested arrays reconcile through their own templates. Supplied field values
+are atomic, including object-valued fields and explicit undefined. Defaults are copied for each
+use so mutation of a previous fallback does not change future defaults. Newly constructed items
+also receive these defaults before their initial reset baseline is captured.
+
+This does not reset reused interaction state or change row.patch(), ordinary form.patch(), or
+resetToInitial() baselines. Validation observes the resulting values using existing batched write
+behavior. Incoming trackBy keys are still checked before any reconciliation; defaults do not
+supply missing identity keys during matching. This is fallback behavior, not runtime validation.
+
+Reference rechecked: Angular v22.1.6 (356adf749188d996a641181c56621a6285126f3c),
+packages/forms/signals/src/field/structure.ts and packages/forms/signals/test/node/dynamic.spec.ts.
+Angular tracks model structure and object identity and removes undefined-valued children; it has
+no template-default merge operation. Template fallback and retention of declared undefined-valued
+fields are intentional Form Nodes semantics. Existing node reuse, propagation, validation and
+interaction rules are preserved.

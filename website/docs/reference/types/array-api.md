@@ -156,7 +156,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `clear` | Removes and detaches every current item node without marking the array dirty. |
 | `set` | Reconciles the complete array value while preserving matching item nodes. |
 | `update` | Computes the complete array value using the configured index or `trackBy` reconciliation. |
-| `patch` | Reconciles the complete array value, exactly like `set()`. |
+| `patch` | Reconciles the complete array value, exactly like `set()`. Untyped omitted item properties use template/factory defaults, including on reused rows. Explicit `undefined` remains explicit; TypeScript still requires complete items. |
 | `reset` | Resets state, optionally reconciling a complete value first. |
 | `resetToInitial` | Restores captured initial item values, count and order, and resets subtree interaction state. |
 | `validators` | Current normalized validators assigned directly to this array, in declaration order. |

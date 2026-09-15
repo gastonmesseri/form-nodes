@@ -2133,3 +2133,51 @@ describe('array patch replacement', () => {
     expect(names()).toEqual(['Grace']);
   });
 });
+
+describe('array replacement defaults for untyped data', () => {
+  it.each(['set', 'patch'] as const)('restores declaration defaults with %s on new and reused rows', (operation) => {
+    const people = array({ username: field(''), age: field<number | null | undefined>(null, required) }, {
+      initialValue: [{ username: 'old', age: 28 }],
+    });
+    const first = people[0]!;
+    first.age.markAsDirty();
+    first.age.markAsTouched();
+    const unsafe = [{ username: 'tobi', age: 18 }, { username: 'andrew' }] as unknown as Parameters<typeof people.set>[0];
+    people[operation](unsafe);
+    expect(people()).toEqual([{ username: 'tobi', age: 18 }, { username: 'andrew', age: null }]);
+    expect(people[1]!.age.valid()).toBe(false);
+    people[operation]([{ username: 'andrew' }] as unknown as Parameters<typeof people.set>[0]);
+    expect(people()).toEqual([{ username: 'andrew', age: null }]);
+    expect(people[0]).toBe(first);
+    expect(first.age.dirty()).toBe(true);
+    expect(first.age.touched()).toBe(true);
+    expect(people.valid()).toBe(false);
+    people[operation]([{ username: 'andrew', age: undefined }]);
+    expect(first.age()).toBeUndefined();
+    first.patch({ username: 'renamed' });
+    expect(first.age()).toBeUndefined();
+    people.resetToInitial();
+    expect(people()).toEqual([{ username: 'old', age: 28 }]);
+  });
+
+  it('keeps factory defaults with keyed rows and treats object-valued fields atomically', () => {
+    let nextDefault = 10;
+    const people = array(() => {
+      return form({
+        username: field(''),
+        age: field(nextDefault++),
+        settings: field({ theme: 'light', language: 'en' }),
+      });
+    }, { trackBy: 'username', initialValue: [{ username: 'a', age: 40, settings: { theme: 'dark', language: 'es' } }] });
+    const first = people[0]!;
+    people.patch([{ username: 'b' }, { username: 'a', settings: { theme: 'blue' } }] as unknown as Parameters<typeof people.patch>[0]);
+    expect(people()).toEqual([
+      { username: 'b', age: 11, settings: { theme: 'light', language: 'en' } },
+      { username: 'a', age: 10, settings: { theme: 'blue' } },
+    ]);
+    expect(people[1]).toBe(first);
+    people[0]!.settings()!.theme = 'mutated';
+    people.patch([{ username: 'b' }] as unknown as Parameters<typeof people.patch>[0]);
+    expect(people[0]!.settings()).toEqual({ theme: 'light', language: 'en' });
+  });
+});

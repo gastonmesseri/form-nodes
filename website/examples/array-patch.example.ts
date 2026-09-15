@@ -40,3 +40,19 @@ if (profile.details.cities[0]?.city() !== 'Lyon' || profile.details.cities[0]?.c
 profile.patch({ details: { cities: [] } });
 profile.details.cities(); // []
 if (profile.details.cities.length() !== 0) throw new Error('An empty array patch must clear the collection.');
+
+// Runtime fallback for data that bypasses the complete-item TypeScript contract.
+const people = form({
+  users: array({
+    username: field(''),
+    age: field<number | null>(null),
+  }, {
+    initialValue: [{ username: 'previous', age: 28 }],
+  }),
+});
+const externalData = JSON.parse('[{"username":"tobi"},{"username":"andrew"}]');
+people.patch({ users: externalData });
+people.users(); // [{ username: 'tobi', age: null }, { username: 'andrew', age: null }]
+if (people.users.length() !== 2 || people.users().some(user => user.age !== null)) {
+  throw new Error('Omitted properties must use declaration defaults for both reused and new rows.');
+}

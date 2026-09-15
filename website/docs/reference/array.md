@@ -1786,12 +1786,16 @@ by index or `trackBy`. Missing nodes detach; new values create nodes from the te
 Reused nodes keep dirty/touched state. Empty arrays and nullish values clear the collection.
 This also applies when a containing form or group receives the array through `patch()`.
 
-Completeness is enforced by TypeScript, not by a new runtime schema validator. Untyped data and
-unsafe casts follow the existing runtime behavior of `set()`; validate external payloads before
-assigning them. Field-valued properties still distinguish omission from explicit `undefined`:
-omission preserves the value, while explicit `undefined` assigns it when the field type permits it.
-Array nodes always expose arrays, so nullish array values clear them. Unlike JSON Merge Patch,
-`null` does not delete declared form properties.
+TypeScript still requires complete items. If untyped data or a cast bypasses this contract,
+omitted row properties fall back to the template/factory defaults: `age: field(null)` produces
+`age: null`. This works for new rows and reused rows, including nested object groups. Defaults
+come from item construction, before incoming `initialValue` data is applied; previous row values
+are not defaults. Factories retain the defaults captured when each row was created.
+
+Explicit `undefined` on a field remains `undefined`. Object-valued fields are assigned atomically,
+without merging their internal properties. An individual row's `patch()` still preserves omitted
+properties. Nullish array values clear arrays; `null` does not delete declared form properties.
+These fallback rules also apply to `set()` and `update()`, and to newly constructed items.
 
 See the [complete example](#complete-and-partial-value-updates).
 
