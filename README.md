@@ -627,6 +627,22 @@ See [Value flow and debounce](https://gastonmesseri.github.io/form-nodes/guides/
 | Extract a value type from any node | [FormNodeValue](https://gastonmesseri.github.io/form-nodes/reference/form-node-value) |
 | Check an upgrade | [Changelog](https://gastonmesseri.github.io/form-nodes/project/changelog) and [Migration guides](https://gastonmesseri.github.io/form-nodes/project/migrations) |
 
+## 🤖 Coding agents
+
+The npm package includes an `AGENTS.md` guide for agents using Form Nodes in an application.
+Add this instruction to your application's existing `AGENTS.md` (or your agent's equivalent
+project instructions):
+
+```markdown
+When working with @ngblocks/form-nodes, read
+node_modules/@ngblocks/form-nodes/AGENTS.md before making changes.
+```
+
+Adjust the path for your workspace's dependency layout. Package installation does not configure
+your agent automatically. The guide travels with the installed version; use it together with the
+package's declarations. See [Coding agents](https://gastonmesseri.github.io/form-nodes/getting-started/ai-agents)
+for setup and alternatives.
+
 ## 🛠️ Development
 
 For development, use Node.js 22.22.3 from `.nvmrc` (`nvm use`). The package builds with Angular 21.0.7 and TypeScript 5.9.3 and is also tested with Angular 22.1.5.

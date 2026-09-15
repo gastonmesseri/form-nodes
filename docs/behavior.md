@@ -4433,3 +4433,11 @@ Angular tracks model structure and object identity and removes undefined-valued 
 no template-default merge operation. Template fallback and retention of declared undefined-valued
 fields are intentional Form Nodes semantics. Existing node reuse, propagation, validation and
 interaction rules are preserved.
+
+## Consumer agent guidance
+
+The npm artifact includes `AGENTS.md`, copied from `docs/consumer/AGENTS.md`. It is consumer
+usage guidance, distinct from the repository-root contributor instructions. Consumers explicitly
+reference the installed guide from their application's agent instructions or task prompt; package
+installation does not alter project instructions or promise automatic agent discovery. Guidance
+ships with the package, points to its installed declarations, and has no runtime effect.

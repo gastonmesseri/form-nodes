@@ -5,6 +5,11 @@
     "entryFile": "src/public-api.ts"
   },
   "assets": [
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    {
+      "glob": "AGENTS.md",
+      "input": "docs/consumer",
+      "output": "."
+    }
   ]
 }

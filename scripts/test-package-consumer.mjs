@@ -28,6 +28,9 @@ try {
   if (!packedPaths.has('fesm2022/ngblocks-form-nodes.mjs') || !packedPaths.has('types/ngblocks-form-nodes.d.ts')) {
     throw new Error('The published package does not contain its JavaScript bundle and public typings.');
   }
+  if (!packedPaths.has('AGENTS.md')) {
+    throw new Error('The published package does not contain its consumer agent guide.');
+  }
   if ([...packedPaths].some((path) => path.startsWith('src/'))) {
     throw new Error('The published package unexpectedly contains library source files.');
   }
@@ -35,6 +38,10 @@ try {
   const packageDirectory = join(temporaryDirectory, 'node_modules', '@ngblocks', 'form-nodes');
   mkdirSync(packageDirectory, { recursive: true });
   run('tar', ['-xzf', join(temporaryDirectory, packed.filename), '--strip-components=1', '-C', packageDirectory]);
+  const consumerGuide = readFileSync(resolve(workspace, 'docs/consumer/AGENTS.md'), 'utf8');
+  if (readFileSync(join(packageDirectory, 'AGENTS.md'), 'utf8') !== consumerGuide) {
+    throw new Error('The published agent guide must match the consumer guide rather than contributor instructions.');
+  }
   const packageManifest = JSON.parse(readFileSync(join(packageDirectory, 'package.json'), 'utf8'));
   if (packageManifest.name !== '@ngblocks/form-nodes') {
     throw new Error('The published package must use the @ngblocks/form-nodes name.');

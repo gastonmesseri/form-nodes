@@ -44,7 +44,8 @@ If Angular does not recognize a binding, check the
 
 The package is distributed as side-effect-free ESM. Consumer bundlers can remove validators and
 other exports that are not imported. The published package includes TypeScript declarations,
-source maps, the MIT license, and a changelog.
+source maps, the MIT license, a changelog, and a consumer `AGENTS.md` guide. See
+[Coding agents](./ai-agents.md) to connect the guide to your application instructions.
 
 :::tip Forms work outside Angular DI
 

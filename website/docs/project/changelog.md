@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Added
+
+- The npm package now includes a consumer `AGENTS.md` guide, with setup instructions for connecting coding agents to the installed library API.
+
 ### Fixed
 
 - Array `set()` and `patch()` now fill omitted item properties in untyped data from template/factory defaults, consistently for new and reused rows. Explicit `undefined` remains explicit, and TypeScript still requires complete items.

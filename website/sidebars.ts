@@ -8,7 +8,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Getting started',
-      items: ['getting-started/installation', 'getting-started/first-form'],
+      items: ['getting-started/installation', 'getting-started/first-form', 'getting-started/ai-agents'],
     },
     {
       type: 'category',
