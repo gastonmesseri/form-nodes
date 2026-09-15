@@ -13,6 +13,7 @@ export const createValidatorContext = <TValue>(
   const api = field.$api as unknown as ValidatorApi<TValue>;
   const node = signal(field).asReadonly();
   Object.defineProperties(validatorContext, {
+    root: { enumerable: true, value: api.root },
     parent: { enumerable: true, value: api.parent },
     path: { enumerable: true, value: api.path },
     field: { enumerable: true, value: node },

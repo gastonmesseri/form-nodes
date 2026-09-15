@@ -20,6 +20,7 @@ Use for a synchronous callback's context. Read its reactive `value` and navigati
 
 ```ts
 type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & {
+    readonly root: ValidatorRootSignal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
     readonly parent: Pick<TApi['parent'], keyof TApi['parent']> & {
         <TParent extends {
             $api: {
@@ -48,6 +49,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
+| `root` | Reactive structural root, identical to `ctx.node().$api.root()`. Returns the validated node itself when standalone and follows attachment and detachment. The returned node retains the same read-only validation view as node navigation. |
 | `parent` | Reactive immediate parent, or null before attachment and after detachment. Supply a parent node type to declare a structural contract: `ctx.parent&lt;RoleNode&gt;()`. Indexed row types may include null or undefined: `ctx.parent&lt;PageForm['roles'][number]&gt;()`. The generic removes those nullish members; the result is the read-only node view or null, never undefined. This is a type assertion, not inference or runtime validation; null and the read-only validation view are always preserved, including when an explicit generic is supplied. Prefer configure option callbacks for inferred sibling access without an assertion. |
 | `value` | Current committed value of the node being validated. |
 | `field` | Readonly signal of the node being validated, with validation outputs and mutations omitted recursively from its type, including navigation and child access. `ctx.node()` and `ctx.field()` return the same node. Read its value with `ctx.value()`. |

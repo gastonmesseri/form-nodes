@@ -5,6 +5,7 @@ title: Validation
 # Validation {#validation}
 
 import CodeBlock from '@theme/CodeBlock';
+import validatorRootSource from '!!raw-loader!../../examples/validator-root.example.ts';
 import declarationResultsSource from '!!raw-loader!../../examples/declaration-validator-results.example.ts';
 import selfReferenceInferenceSource from '!!raw-loader!../../examples/self-reference-inference.typecheck.ts';
 import whenSelfReferenceSource from '!!raw-loader!../../examples/when-self-reference.example.ts';
@@ -37,6 +38,12 @@ const myForm = form({
 Validators may be a single validator or an array. `null` and `undefined` array entries are ignored.
 The `validators()` signal returns the normalized list of directly registered functions. It does not
 execute those functions or expand returned compositions by default.
+
+`ctx.root()` is a shortcut for `ctx.node().root()` in inline validators, `validator()`, and
+all `asyncValidator()` callbacks. It returns the same readonly node view and tracks structural
+attachment and detachment. Standalone nodes return themselves; nested forms resolve the outermost root.
+
+<CodeBlock language="ts" title="validator-root.example.ts">{validatorRootSource}</CodeBlock>
 
 ## Validator arguments and return values {#validator-results}
 

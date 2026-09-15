@@ -158,6 +158,7 @@ See [Inline node inference](../concepts/tree-and-api.md#inline-node-inference).
 | [`value()`](#custom-validator-context-value) | Current committed node value with its inferred type. |
 | [`node`](#custom-validator-context-node) | Readonly signal of the inferred validated node; identical to `field`. |
 | [`field`](#custom-validator-context-field) | Readonly signal returning the validated field, form, group, or array. |
+| [`root()`](#custom-validator-context-root) | Complete structural root; identical to node root navigation. |
 | [`parent()`](#custom-validator-context-parent) | Direct parent node, or `null` at the root. |
 | [`path()`](#custom-validator-context-path) | Reactive path from the root. |
 | [Node state](#custom-validator-context-state) | Read interaction and availability signals through `ctx.node()` or `ctx.field()`. |
@@ -186,6 +187,7 @@ create a cycle at runtime. `ValidatorNodeView` is an internal helper name, not a
 | [`value`](#custom-validator-context-value) | `Signal<TValue>` | Current committed value |
 | [`node`](#custom-validator-context-node) | `Signal<ValidatorNodeView<TField>>` | Real node being validated |
 | [`field`](#custom-validator-context-field) | `Signal<ValidatorNodeView<TField>>` | Real node being validated |
+| [`root`](#custom-validator-context-root) | root-node signal | Complete structural root |
 | [`parent`](#custom-validator-context-parent) | parent-node signal | Direct parent or `null` |
 | [`path`](#custom-validator-context-path) | path signal | Location from the root |
 
@@ -246,10 +248,12 @@ See [API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code
 Use `context.node().form()` (or `context.field().form()`) for the nearest explicit form workflow.
 It returns `null` when no form owns the node. There is no flat `context.form` property.
 
-#### – node().root() {#custom-validator-context-root}
+#### – root {#custom-validator-context-root}
 
-Use `context.node().root()` (or `context.field().root()`) for the complete structural root.
-It never returns `null`. There is no flat `context.root` property.
+Use `context.root()` as a shortcut for `context.node().root()` to read the complete structural root.
+It is the same readonly signal as `context.node().$api.root`, including when a child is named `root`.
+It never returns `null`: standalone nodes return themselves. Attachment and detachment update the
+signal reactively. The returned node has the same readonly validation view as node navigation.
 
 #### – parent {#custom-validator-context-parent}
 

@@ -294,6 +294,7 @@ executions, and `params` only to parameterized `validate`.
 | [`value`](#async-validator-context-value) | `Signal<TValue>` | All callbacks |
 | [`node`](#async-validator-context-node) | `Signal<ValidatorNodeView<TField>>` | All callbacks |
 | [`field`](#async-validator-context-field) | `Signal<ValidatorNodeView<TField>>` | All callbacks |
+| [`root`](#async-validator-context-root) | root-node signal | All callbacks |
 | [`parent`](#async-validator-context-parent) | parent-node signal | All callbacks |
 | [`path`](#async-validator-context-path) | path signal | All callbacks |
 | [`abortSignal`](#async-validator-context-abortsignal) | `AbortSignal` | `validate` |
@@ -359,10 +360,12 @@ See [API access](../concepts/tree-and-api.md#api-for-collisions-and-generic-code
 Use `context.node().form()` (or `context.field().form()`) for the nearest explicit form workflow.
 It returns `null` when no form owns the node. There is no flat `context.form` property.
 
-#### – node().root() {#async-validator-context-root}
+#### – root {#async-validator-context-root}
 
-Use `context.node().root()` (or `context.field().root()`) for the complete structural root.
-It never returns `null`. There is no flat `context.root` property.
+Use `context.root()` as a shortcut for `context.node().root()` to read the complete structural root.
+It is the same readonly signal as `context.node().$api.root`, including when a child is named `root`.
+It never returns `null`: standalone nodes return themselves. Attachment and detachment update the
+signal reactively. The returned node has the same readonly validation view as node navigation.
 
 #### – parent {#async-validator-context-parent}
 

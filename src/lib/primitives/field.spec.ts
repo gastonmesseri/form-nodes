@@ -26,6 +26,7 @@ import { requiredIf } from '../validation/validators/required-if';
 import { dateBetween } from '../validation/validators/date-between';
 import { requiredTrue } from '../validation/validators/required-true';
 import { lengthBetween } from '../validation/validators/length-between';
+import type { ValidatorContext } from '../validation/validation.type';
 import type { ValidatorNodeView } from '../validation/validator-node-view.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
@@ -1301,10 +1302,35 @@ describe('field', () => {
     expect(name.keyInParent()).toBeNull();
   });
 
+  it.each([false, true])('exposes reactive root navigation in synchronous validators (helper: %s)', (useHelper) => {
+    const roots: unknown[] = [];
+    const validate = vi.fn((ctx: ValidatorContext<string | null>) => {
+      expect(ctx.root).toBe(ctx.node().$api.root);
+      expect(isSignal(ctx.root)).toBe(true);
+      roots.push(ctx.root());
+      return ctx.root().$api.nodeType() === 'field' ? { kind: 'standalone' } : null;
+    });
+    const name = field('David', useHelper ? validator(validate) : validate);
+    expect(name.hasError('standalone')).toBe(true);
+    expect(roots).toEqual([name]);
+    const profile = form({ fixed: field(true) });
+    profile.add('name', name);
+    expect(name.valid()).toBe(true);
+    expect(roots).toEqual([name, profile]);
+    profile.remove('name');
+    expect(name.hasError('standalone')).toBe(true);
+    expect(roots).toEqual([name, profile, name]);
+    expect(validate).toHaveBeenCalledTimes(3);
+    expect(name.pending()).toBe(false);
+    expect(name.dirty()).toBe(false);
+    expect(name.touched()).toBe(false);
+  });
+
   it('reactively updates validator ancestry when a field is attached and detached', async () => {
     const ancestry: [unknown, unknown][] = [];
-    const name = field('David', [asyncValidator(async ({ node }) => {
-      ancestry.push([node().form(), node().root()]);
+    const name = field('David', [asyncValidator(async ({ node, root }) => {
+      expect(root).toBe(node().$api.root);
+      ancestry.push([node().form(), root()]);
       return null;
     })]);
     const profile = form({ fixed: field(true) });

@@ -349,6 +349,8 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
   readonly path: Signal<readonly string[]>;
 };
 
+type ValidatorRootSignal<TNode> = TNode extends { $api: { root: Signal<infer TRoot> } } ? Signal<ValidatorNodeView<TRoot>> : never;
+
 /**
  * Reactive context provided to synchronous validators.
  * Generic public owners retain TValue on their node value reads. Concrete owners and partial
@@ -356,6 +358,12 @@ export type ValidatorReadonlyApi<TValue> = FieldContext<TValue> & {
  * view. Validation outputs, metadata queries, and mutations are omitted recursively.
  */
 export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> = ValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = Pick<TApi, 'path'> & {
+  /**
+   * Reactive structural root, identical to `ctx.node().$api.root()`.
+   * Returns the validated node itself when standalone and follows attachment and detachment.
+   * The returned node retains the same read-only validation view as node navigation.
+   */
+  readonly root: ValidatorRootSignal<ValidatorNode extends TField ? 'nodeType' extends keyof TField ? ValidatorNode<TValue> : TField : TField>;
   /**
    * Reactive immediate parent, or null before attachment and after detachment.
    * Supply a parent node type to declare a structural contract: `ctx.parent<RoleNode>()`.

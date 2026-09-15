@@ -1186,8 +1186,8 @@ roots; reattaching or reparenting them updates both signals immediately.
 
 Both lookups are reactive. Attaching, detaching, or reparenting a node retriggers automatic async
 validators that read the affected signal. Validator callbacks use `context.node().form()` and
-`context.node().root()`. Flat `context.form` and `context.root` properties are absent at runtime and
-in the public types; `parent` remains flat. The full `context.node().$api` retains node navigation.
+`context.root()` (identical to `context.node().$api.root()`). The flat `context.form` property is absent;
+`root` and `parent` are directly available on the context. The full `context.node().$api` retains node navigation.
 
 `context.node` and `context.field` are the same readonly Angular signal of the validated node.
 Neither returns `null`. Inline callbacks, including inline `validator()` and `asyncValidator()`
@@ -4441,3 +4441,20 @@ usage guidance, distinct from the repository-root contributor instructions. Cons
 reference the installed guide from their application's agent instructions or task prompt; package
 installation does not alter project instructions or promise automatic agent discovery. Guidance
 ships with the package, points to its installed declarations, and has no runtime effect.
+
+
+## Validator root shortcut
+
+`ValidatorContext.root` is the existing readonly root signal of the validated node, exposed
+by inline validators, `validator()`, and all `asyncValidator()` callbacks (`when`, `params`,
+`validate`, and `onError`). It has exactly the type of `ctx.node().$api.root`, preserving
+specialized root types and recursive readonly validation views. It remains usable when a child
+is named `root`. Standalone nodes return themselves; nested forms resolve the outermost
+structural root. Reads track attachment/detachment just as existing node root navigation does.
+No value, interaction, validation aggregation, or async scheduling rules change.
+
+Angular reference: `v22.1.6` (`356adf749188d996a641181c56621a6285126f3c`), re-resolved
+for this change. Inspected `packages/forms/signals/src/field/context.ts` and
+`packages/forms/signals/test/node/field_context.spec.ts` (field identity, paths, and schema
+navigation). Angular uses schema-path navigation; this shortcut is a Form Nodes public API
+convenience over its existing structural navigation, with no corresponding Angular API change.

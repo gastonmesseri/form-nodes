@@ -12,6 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
+- Validator contexts now expose `root()` as a reactive shortcut to node root navigation, available in inline validators, `validator()`, and every `asyncValidator()` callback with the same readonly root types.
 - The npm package now includes a consumer `AGENTS.md` guide, with setup instructions for connecting coding agents to the installed library API.
 
 ### Fixed

@@ -41,7 +41,14 @@ const checkAncestry = (ctx: ValidatorContext<string | null>) => {
     // @ts-expect-error An unknown form does not infer its enclosing declaration's children.
     owner.subGroup;
   }
-  const root = api.root();
+  type _RootShortcut = Expect<Equal<typeof ctx.root, typeof api.root>>;
+  // @ts-expect-error Root navigation cannot mutate nodes during validation.
+  ctx.root().$api.markAsTouched();
+  // @ts-expect-error Root navigation cannot read validation outputs.
+  ctx.root().$api.valid();
+  // @ts-expect-error The root signal is readonly.
+  ctx.root.set(ctx.node());
+  const root = ctx.root();
   root.$api.touched();
   root();
   const parent = ctx.parent();
@@ -101,6 +108,7 @@ form({ email: field('') }, {
 const exactValidator = (ctx: ValidatorContext<string | null, typeof profile.nested.subForm.subGroup.email.$api, typeof profile.nested.subForm.subGroup.email>) => {
   const api = ctx.node().$api;
   type _ExactForm = Expect<Equal<ReturnType<typeof api.form>, ValidatorNodeView<typeof profile.nested.subForm> | null>>;
+  type _ExactRootShortcut = Expect<Equal<typeof ctx.root, typeof api.root>>;
   type _ExactRoot = Expect<Equal<ReturnType<typeof api.root>, ValidatorNodeView<typeof profile>>>;
   type _ExactParent = Expect<Equal<ReturnType<typeof ctx.parent>, ValidatorNodeView<typeof profile.nested.subForm.subGroup> | null>>;
   return null;
@@ -109,6 +117,7 @@ void exactValidator;
 asyncValidator<string | null, typeof profile.nested.subForm.subGroup.email.$api, typeof profile.nested.subForm.subGroup.email>(async (ctx) => {
   const api = ctx.node().$api;
   type _ExactForm = Expect<Equal<ReturnType<typeof api.form>, ValidatorNodeView<typeof profile.nested.subForm> | null>>;
+  type _ExactRootShortcut = Expect<Equal<typeof ctx.root, typeof api.root>>;
   type _ExactRoot = Expect<Equal<ReturnType<typeof api.root>, ValidatorNodeView<typeof profile>>>;
   type _ExactParent = Expect<Equal<ReturnType<typeof ctx.parent>, ValidatorNodeView<typeof profile.nested.subForm.subGroup> | null>>;
   return null;

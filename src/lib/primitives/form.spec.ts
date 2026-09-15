@@ -2668,7 +2668,8 @@ describe('form', () => {
           validatorApi = context.node().$api;
           validatorField = context.field();
           validatorForm = context.node().form();
-          validatorRoot = context.node().root();
+          validatorRoot = context.root();
+          expect(context.root).toBe(context.node().$api.root);
           validatorParent = context.parent();
           validatorPath = context.path();
           return null;
@@ -2686,6 +2687,50 @@ describe('form', () => {
     expect(profile.address.city.$api.path()).toEqual(['address', 'city']);
     expect(profile.address.city.$api.parent()).toBe(profile.address);
     expect(profile.address.city.$api.form()).toBe(profile);
+  });
+
+  it.each([false, true])('tracks nested form root in synchronous validators (helper: %s)', (useHelper) => {
+    const roots: unknown[] = [];
+    const rule = vi.fn(({ root }: { root: Signal<unknown> }) => {
+      roots.push(root());
+      return null;
+    });
+    const nested = form({ root: field('ordinary child') }, useHelper ? validator(rule) : rule);
+    expect(nested.valid()).toBe(true);
+    expect(roots).toEqual([nested]);
+    const owner = form({ fixed: field(true) });
+    owner.add('nested', nested);
+    expect(owner.valid()).toBe(true);
+    expect(roots).toEqual([nested, owner]);
+    owner.remove('nested');
+    expect(nested.valid()).toBe(true);
+    expect(roots).toEqual([nested, owner, nested]);
+    expect(rule).toHaveBeenCalledTimes(3);
+    expect(nested.root()).toBe('ordinary child');
+  });
+
+  it.each(['field', 'form'])('exposes root in every async %s callback', async (kind) => {
+    const roots: unknown[] = [];
+    const inspect = (ctx: { root: Signal<unknown>; node: Signal<ValidatorNodeView<AnyNode>> }) => {
+      expect(ctx.root).toBe(ctx.node().$api.root);
+      roots.push(ctx.root());
+    };
+    const when = vi.fn((ctx) => { inspect(ctx); return true; });
+    const params = vi.fn((ctx) => { inspect(ctx); return 'request'; });
+    const validate = vi.fn(async (ctx) => { inspect(ctx); throw new Error('Unavailable'); });
+    const onError = vi.fn((_error, ctx) => { inspect(ctx); return { kind: 'unavailable' }; });
+    const rule = asyncValidator({ when, params, validate, onError });
+    const target = kind === 'field' ? field('', rule) : form({ name: field('') }, rule);
+    const owner = form({ target });
+    expect(target.pending()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(target.hasError('unavailable')).toBe(true);
+    expect(owner.invalid()).toBe(true);
+    expect(target.pending()).toBe(false);
+    expect(roots).toEqual([owner, owner, owner, owner]);
+    for (const callback of [when, params, validate, onError]) expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('exposes form and root ancestry to synchronous form validators', () => {
@@ -2708,8 +2753,9 @@ describe('form', () => {
   it('keeps a nested form as validator workflow owner while tracking its structural root', async () => {
     const ancestry: [unknown, unknown][] = [];
     const payment = form({ card: field('4242') }, {
-      validators: asyncValidator(async ({ node }) => {
-        ancestry.push([node().form(), node().root()]);
+      validators: asyncValidator(async ({ node, root }) => {
+        expect(root).toBe(node().$api.root);
+        ancestry.push([node().form(), root()]);
         return null;
       }),
     });

@@ -158,7 +158,7 @@ example also covers standalone fields, groups, and arrays:
 <CodeBlock language="ts" title="ancestry-lookups.example.ts">{ancestryLookupsSource}</CodeBlock>
 
 Both signals are stable and reactive, so validators and effects can observe a node being attached,
-detached, or moved. Validators access those signals through `ctx.node().form()` and `ctx.node().root()`.
+detached, or moved. Validators access those signals through `ctx.node().form()` and `ctx.root()` (the shortcut for `ctx.node().root()`).
 
 ### ◆ Navigation inside validators {#navigation-inside-validators}
 
@@ -169,12 +169,12 @@ return `null`. Prefer `ctx.node()` when writing validation that can apply to dif
 | --- | --- |
 | `ctx.node()` or `ctx.field()` | The validated node |
 | `ctx.node().form()` | Nearest explicit form workflow, or `null` |
-| `ctx.node().root()` | Complete structural root; never `null` |
+| `ctx.root()` / `ctx.node().root()` | Complete structural root; never `null` |
 | `ctx.parent()` | Direct parent, or `null` |
 | `ctx.value()` | Committed value with its inferred type |
 | `ctx.node().touched()` / `ctx.node().dirty()` | Interaction state of the validated node |
 
-There are no flat `ctx.form()` or `ctx.root()` properties. Read a value with `ctx.value()`, or use
+`ctx.root()` is a direct shortcut; form workflow navigation remains `ctx.node().form()`. Read a value with `ctx.value()`, or use
 `ctx.node().value()` / `ctx.field().value()` when accessing it through the node. The node signal
 and its result stay stable across value changes and tree moves. Reading only `ctx.node()` does
 not subscribe to the value; read the returned node's value, state, or ancestry to track it.
