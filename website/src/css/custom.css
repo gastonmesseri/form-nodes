@@ -68,9 +68,8 @@ body {
 }
 
 .docs-header-logo {
-  object-fit: cover;
-  border-radius: 0.5rem;
-  background: #fff;
+  width: auto;
+  object-fit: contain;
 }
 
 .navbar__title {

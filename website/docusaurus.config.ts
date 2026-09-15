@@ -60,7 +60,7 @@ const config: Config = {
       logo: {
         alt: 'Form Nodes documentation',
         src: 'img/form-nodes-logo-header.png',
-        width: 170,
+        width: 112,
         height: 40,
         className: 'docs-header-logo',
       },

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./website/static/img/form-nodes-logo-big.png" alt="Form Nodes logo" width="280" height="280" />
+  <img src="./website/static/img/form-nodes-logo.png" alt="Form Nodes logo" width="280" height="210" />
 </p>
 
 <h1 align="center">Easy Signal-based forms for Angular</h1>
