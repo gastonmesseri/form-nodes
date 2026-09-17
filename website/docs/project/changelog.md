@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 4.4.0 — 2026-09-17 {#440--2026-09-17}
+
 ### Added
 
 - Nodes and their callable `$api` now support Angular `WritableSignal<T>` utilities while preserving form writes, validation, and propagation. Add `asReadonly()` for a stable live readonly value signal; use `$api` when child names shadow signal operations.

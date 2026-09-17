@@ -2,5 +2,5 @@ import type { Signal, WritableSignal } from '@angular/core';
 
 type WritableSignalBrand = Exclude<keyof WritableSignal<unknown>, keyof Signal<unknown> | 'set' | 'update' | 'asReadonly'>;
 
-/** Keeps Angular's type-only writable brand while node APIs define their own operations. */
-export type NodeSignal<TValue> = Signal<TValue> & { [K in WritableSignalBrand]: TValue };
+/** Uses a named interface to cache recursive comparisons while retaining Angular's writable brand. */
+export interface NodeSignal<TValue> extends Signal<TValue>, Pick<WritableSignal<TValue>, WritableSignalBrand> {}

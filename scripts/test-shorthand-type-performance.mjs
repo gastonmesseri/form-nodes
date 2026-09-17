@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 
 // Full inline node contexts retain concrete aggregate children and array item APIs.
 // This source-based fixture also counts the internal FieldNode and ArrayNode implementations.
-// Writable signal brands and readonly views bring this fixture to 90,121 types
-// and 633,133 instantiations; retain roughly the previous 1,100-type headroom.
+// Writable signal interfaces keep recursive comparisons cached: this fixture uses
+// 91,149 types and 560,981 instantiations, within the existing writable-signal budgets.
 const maximumTypes = 91_200;
 const maximumInstantiations = 1_100_000;
 const result = spawnSync(

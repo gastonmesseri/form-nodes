@@ -4504,7 +4504,8 @@ only a readonly type, Form Nodes returns a separate callable without runtime wri
 matching the public Angular `signal().asReadonly()` contract. Form-specific writing semantics
 remain intentional, including equality behavior and aggregate reconciliation.
 
-The declaration shorthand performance fixture grows from 87,102 types / 603,773 instantiations
-before this feature to 90,121 types / 633,133 instantiations with writable branding and readonly
-views. Its type-count budget is rebased to 91,200 with comparable headroom; the existing
-instantiation ceiling remains in force.
+The declaration shorthand performance fixture uses 91,149 types / 560,981 instantiations with
+writable branding and readonly views, compared with 87,102 types / 603,773 instantiations before
+this feature. A named signal interface lets TypeScript cache recursive comparisons and avoids stack
+overflow in complex options completions on Node 22. The type-count budget remains 91,200;
+the existing instantiation ceiling remains in force.
