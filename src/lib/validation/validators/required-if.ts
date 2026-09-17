@@ -52,7 +52,7 @@ export const requiredIf = (
      * const profile = form({
      *   company: field('', [
      *     requiredIf(() => true, {
-     *       error: { kind: 'companyMissing' },
+     *       error: () => ({ kind: 'missing' }),
      *     }),
      *   ]),
      * });

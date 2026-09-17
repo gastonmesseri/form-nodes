@@ -8,16 +8,17 @@ import type { ValidationError } from '../validation/validation.type';
  * Optional state inputs and interaction hooks recognized by `[formNode]` on Angular 21 and 22.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { model } from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @ng.Component({
+ * @Component({
  *   selector: 'custom-control',
  *   template: '',
  * })
  * export class CustomControl
  *   implements FormNodeValueControl<string>
  * {
- *   value = ng.model('');
+ *   value = model('');
  * }
  * ```
  */
@@ -28,16 +29,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   disabled = ng.input(false);
+   *   disabled = input(false);
    * }
    * ```
    */
@@ -49,16 +52,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   readonly = ng.input(false);
+   *   readonly = input(false);
    * }
    * ```
    */
@@ -70,16 +75,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   hidden = ng.input(false);
+   *   hidden = input(false);
    * }
    * ```
    */
@@ -91,16 +98,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   invalid = ng.input(false);
+   *   invalid = input(false);
    * }
    * ```
    */
@@ -112,16 +121,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   pending = ng.input(false);
+   *   pending = input(false);
    * }
    * ```
    */
@@ -133,16 +144,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   touched = ng.input(false);
+   *   touched = input(false);
    * }
    * ```
    */
@@ -154,16 +167,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   dirty = ng.input(false);
+   *   dirty = input(false);
    * }
    * ```
    */
@@ -175,16 +190,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   required = ng.input(false);
+   *   required = input(false);
    * }
    * ```
    */
@@ -196,16 +213,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   errors = ng.input<
+   *   errors = input<
    *     readonly ValidationError[]
    *   >([]);
    * }
@@ -219,16 +238,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   disabledReasons = ng.input<
+   *   disabledReasons = input<
    *     readonly DisabledReason[]
    *   >([]);
    * }
@@ -242,16 +263,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   name = ng.input('');
+   *   name = input('');
    * }
    * ```
    */
@@ -263,16 +286,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   min = ng.input<number | undefined>(
+   *   min = input<number | undefined>(
    *     undefined,
    *   );
    * }
@@ -286,16 +311,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   max = ng.input<number | undefined>(
+   *   max = input<number | undefined>(
    *     undefined,
    *   );
    * }
@@ -309,16 +336,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   minLength = ng.input<number | undefined>(
+   *   minLength = input<number | undefined>(
    *     undefined,
    *   );
    * }
@@ -332,16 +361,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   maxLength = ng.input<number | undefined>(
+   *   maxLength = input<number | undefined>(
    *     undefined,
    *   );
    * }
@@ -355,16 +386,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No matching input is written when omitted. Optional input synchronization is disabled unless `syncInputs` selects it.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { input } from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   pattern = ng.input<readonly RegExp[]>([]);
+   *   pattern = input<readonly RegExp[]>([]);
    * }
    * ```
    */
@@ -376,16 +409,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No touch output; the control may call its state facade to report touch instead.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { output } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   touch = ng.output<void>();
+   *   touch = output<void>();
    *
    *   onBlur() {
    *     this.touch.emit();
@@ -401,18 +436,21 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** Focus the component host when no hook is implemented.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
+   * import { viewChild } from '@angular/core';
+   * import { ElementRef } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '<input #input />',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
    *   element =
-   *     ng.viewChild<
-   *       ng.ElementRef<HTMLInputElement>
+   *     viewChild<
+   *       ElementRef<HTMLInputElement>
    *     >('input');
    *
    *   focus(options?: FocusOptions) {
@@ -431,16 +469,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No component-specific reset hook.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { signal } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   expanded = ng.signal(false);
+   *   expanded = signal(false);
    *
    *   reset() {
    *     this.expanded.set(false);
@@ -456,16 +496,18 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
    * **Default:** No writable node reference is populated.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { signal } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    *
-   *   node = ng.signal<FieldNode<string> | null>(
+   *   node = signal<FieldNode<string> | null>(
    *     null,
    *   );
    * }
@@ -478,16 +520,17 @@ export type FormNodeUiControl<TValue, TNode extends AnyNode = FieldNode<TValue>>
  * A custom control exposing a `value` model for `[formNode]`.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { model } from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @ng.Component({
+ * @Component({
  *   selector: 'custom-control',
  *   template: '',
  * })
  * export class CustomControl
  *   implements FormNodeValueControl<string>
  * {
- *   value = ng.model('');
+ *   value = model('');
  * }
  * ```
  */
@@ -496,14 +539,15 @@ export type FormNodeValueControl<TValue, TNode extends AnyNode = FieldNode<TValu
    * The rendered value, including pending debounced input.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   value = ng.model('');
+   *   value = model('');
    * }
    * ```
    */
@@ -516,16 +560,17 @@ export type FormNodeValueControl<TValue, TNode extends AnyNode = FieldNode<TValu
  * A custom control exposing a boolean `checked` model for `[formNode]`.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { model } from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @ng.Component({
+ * @Component({
  *   selector: 'custom-control',
  *   template: '',
  * })
  * export class CustomControl
  *   implements FormNodeCheckboxControl
  * {
- *   checked = ng.model(false);
+ *   checked = model(false);
  * }
  * ```
  */
@@ -534,14 +579,15 @@ export type FormNodeCheckboxControl<TNode extends AnyNode = FieldNode<boolean>> 
    * The rendered checked state.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { model } from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   selector: 'custom-control',
    *   template: '',
    * })
    * export class CustomControl {
-   *   checked = ng.model(false);
+   *   checked = model(false);
    * }
    * ```
    */
@@ -554,16 +600,17 @@ export type FormNodeCheckboxControl<TNode extends AnyNode = FieldNode<boolean>> 
  * Either a value control or, for boolean values, a checkbox control recognized by `[formNode]`.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { model } from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @ng.Component({
+ * @Component({
  *   selector: 'custom-control',
  *   template: '',
  * })
  * export class CustomControl
  *   implements FormNodeValueControl<string>
  * {
- *   value = ng.model('');
+ *   value = model('');
  * }
  * ```
  */

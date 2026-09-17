@@ -78,8 +78,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.nodeType(); // 'field'
+   * profile.name.nodeType(); // 'field'
    * ```
    */
   nodeType(): NodeType;
@@ -90,8 +89,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.form() === profile; // true
+   * profile.name.form() === profile; // true
    * ```
    */
   form: Signal<AnyNode | null>;
@@ -102,8 +100,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.root() === profile; // true
+   * profile.name.root() === profile; // true
    * ```
    */
   root: Signal<AnyNode>;
@@ -114,8 +111,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.parent() === profile; // true
+   * profile.name.parent() === profile; // true
    * ```
    */
   parent: Signal<AnyNode | null>;
@@ -127,8 +123,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.path(); // ['name']
+   * profile.name.path(); // ['name']
    * ```
    */
   path: Signal<readonly string[]>;
@@ -141,8 +136,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node(); // 'Ada'
+   * profile.name(); // 'Ada'
    * ```
    */
   value: NodeValueSignal<any>;
@@ -153,8 +147,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.keyInParent(); // 'name'
+   * profile.name.keyInParent(); // 'name'
    * ```
    */
   keyInParent: Signal<string | number | null>;
@@ -165,9 +158,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node(); // 'Lia'
+   * profile.name.set('Lia');
+   * profile.name(); // 'Lia'
    * ```
    */
   set(value: any): void;
@@ -178,9 +170,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.update(() => 'Lia');
-   * node(); // 'Lia'
+   * profile.name.update(name => `${name}!`);
+   * profile.name(); // 'Ada!'
    * ```
    */
   update(updater: (value: any) => any): void;
@@ -202,12 +193,11 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node.markAsDirty();
-   * node.reset();
-   * node(); // 'Lia'
-   * node.dirty(); // false
+   * profile.name.set('Lia');
+   * profile.name.markAsDirty();
+   * profile.name.reset();
+   * profile.name(); // 'Lia'
+   * profile.name.dirty(); // false
    * ```
    */
   reset(...args: [] | [value: any]): void;
@@ -222,10 +212,9 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node.resetToInitial();
-   * node(); // 'Ada'
+   * profile.name.set('Lia');
+   * profile.name.resetToInitial();
+   * profile.name(); // 'Ada'
    * ```
    */
   resetToInitial(): void;
@@ -236,8 +225,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.validationStatus(); // 'valid'
+   * profile.name.validationStatus(); // 'valid'
    * ```
    */
   validationStatus: Signal<'valid' | 'invalid' | 'unknown'>;
@@ -248,8 +236,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.valid(); // true
+   * profile.name.valid(); // true
    * ```
    */
   valid: Signal<boolean>;
@@ -260,8 +247,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.invalid(); // false
+   * profile.name.invalid(); // false
    * ```
    */
   invalid: Signal<boolean>;
@@ -273,11 +259,11 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.errors().map(error => error.kind);
+   * profile.name.errors()
+   *   .map(error => error.kind);
    * // ['blocked']
    * ```
    *
@@ -291,11 +277,11 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.allErrors().map(error => error.kind);
+   * profile.name.allErrors()
+   *   .map(error => error.kind);
    * // ['blocked']
    * ```
    */
@@ -307,11 +293,10 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.getError('blocked')?.kind;
+   * profile.name.getError('blocked')?.kind;
    * // 'blocked'
    * ```
    *
@@ -325,11 +310,10 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.hasError('blocked'); // true
+   * profile.name.hasError('blocked'); // true
    * ```
    *
    * @reactive Tracks current errors.
@@ -342,10 +326,9 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
    * const rule = validator(() => null);
-   * node.setValidators(rule);
-   * node.hasValidator(rule); // true
+   * profile.name.setValidators(rule);
+   * profile.name.hasValidator(rule); // true
    * ```
    *
    * @reactive Tracks registration changes and, with resolve, synchronous composition dependencies.
@@ -358,8 +341,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.required(); // false
+   * profile.name.required(); // false
    * ```
    */
   required: Signal<boolean>;
@@ -370,8 +352,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.pending(); // false
+   * profile.name.pending(); // false
    * ```
    */
   pending: Signal<boolean>;
@@ -383,8 +364,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.submitting(); // false
+   * profile.name.submitting(); // false
    * ```
    */
   submitting: Signal<boolean>;
@@ -395,8 +375,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.debouncing(); // false
+   * profile.name.debouncing(); // false
    * ```
    */
   debouncing: Signal<boolean>;
@@ -417,9 +396,9 @@ export type NodeApi = {
    * Focuses the first control bound to this node or its descendants, when one exists.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
    *     <input [formNode]="profile.name" />
@@ -443,8 +422,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.touched(); // false
+   * profile.name.touched(); // false
    * ```
    */
   touched: Signal<boolean>;
@@ -457,8 +435,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.untouched(); // true
+   * profile.name.untouched(); // true
    * ```
    */
   untouched: Signal<boolean>;
@@ -473,9 +450,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsTouched();
-   * node.touched(); // true
+   * profile.name.markAsTouched();
+   * profile.name.touched(); // true
    * ```
    */
   markAsTouched(options?: {
@@ -503,10 +479,9 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsTouched();
-   * node.markAsUntouched();
-   * node.touched(); // false
+   * profile.name.markAsTouched();
+   * profile.name.markAsUntouched();
+   * profile.name.touched(); // false
    * ```
    */
   markAsUntouched(): void;
@@ -520,8 +495,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.dirty(); // false
+   * profile.name.dirty(); // false
    * ```
    */
   dirty: Signal<boolean>;
@@ -534,8 +508,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.pristine(); // true
+   * profile.name.pristine(); // true
    * ```
    */
   pristine: Signal<boolean>;
@@ -546,9 +519,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsDirty();
-   * node.dirty(); // true
+   * profile.name.markAsDirty();
+   * profile.name.dirty(); // true
    * ```
    */
   markAsDirty(): void;
@@ -560,10 +532,9 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsDirty();
-   * node.markAsPristine();
-   * node.dirty(); // false
+   * profile.name.markAsDirty();
+   * profile.name.markAsPristine();
+   * profile.name.dirty(); // false
    * ```
    */
   markAsPristine(): void;
@@ -574,8 +545,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disabled(); // false
+   * profile.name.disabled(); // false
    * ```
    */
   disabled: Signal<boolean>;
@@ -586,9 +556,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable('Locked');
-   * node.disabledReasons()[0]?.message;
+   * profile.name.disable('Locked');
+   * profile.name.disabledReasons()[0]?.message;
    * // 'Locked'
    * ```
    */
@@ -602,8 +571,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.enabled(); // true
+   * profile.name.enabled(); // true
    * ```
    */
   enabled: Signal<boolean>;
@@ -615,9 +583,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable('Locked');
-   * node.disabled(); // true
+   * profile.name.disable('Locked');
+   * profile.name.disabled(); // true
    * ```
    */
   disable(message?: string): void;
@@ -629,10 +596,9 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable();
-   * node.enable();
-   * node.disabled(); // false
+   * profile.name.disable();
+   * profile.name.enable();
+   * profile.name.disabled(); // false
    * ```
    */
   enable(): void;
@@ -643,8 +609,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.readonly(); // false
+   * profile.name.readonly(); // false
    * ```
    */
   readonly: Signal<boolean>;
@@ -657,8 +622,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.writable(); // true
+   * profile.name.writable(); // true
    * ```
    */
   writable: Signal<boolean>;
@@ -669,9 +633,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsReadonly();
-   * node.readonly(); // true
+   * profile.name.markAsReadonly();
+   * profile.name.readonly(); // true
    * ```
    */
   markAsReadonly(): void;
@@ -683,10 +646,9 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsReadonly();
-   * node.markAsWritable();
-   * node.readonly(); // false
+   * profile.name.markAsReadonly();
+   * profile.name.markAsWritable();
+   * profile.name.readonly(); // false
    * ```
    */
   markAsWritable(): void;
@@ -697,8 +659,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hidden(); // false
+   * profile.name.hidden(); // false
    * ```
    */
   hidden: Signal<boolean>;
@@ -711,8 +672,7 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.visible(); // true
+   * profile.name.visible(); // true
    * ```
    */
   visible: Signal<boolean>;
@@ -723,9 +683,8 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hide();
-   * node.hidden(); // true
+   * profile.name.hide();
+   * profile.name.hidden(); // true
    * ```
    */
   hide(): void;
@@ -737,10 +696,9 @@ export type NodeApi = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hide();
-   * node.show();
-   * node.hidden(); // false
+   * profile.name.hide();
+   * profile.name.show();
+   * profile.name.hidden(); // false
    * ```
    */
   show(): void;
@@ -761,7 +719,9 @@ export type NodeApi = {
  * Value types are unspecified; retain the inferred node type when value precision is needed.
  *
  * ```ts
- * const node = form({ name: field('Ada') });
+ * const node: AnyNode = form({
+ *   name: field('Ada'),
+ * });
  * node.$api.valid(); // true
  * ```
  */
@@ -770,8 +730,10 @@ export type AnyNode = Signal<any> & {
    * Returns this node's exposed value after configured equality and participates in signal dependency tracking.
    *
    * ```ts
-   * const node = form({ name: field('Ada') });
-   * node.$api.valid(); // true
+   * const node: AnyNode = form({
+   *   name: field('Ada'),
+   * });
+   * node(); // { name: 'Ada' }
    * ```
    */
   (): any;
@@ -783,7 +745,9 @@ export type AnyNode = Signal<any> & {
    * be child nodes, while `$api` always refers to the node's state and operations.
    *
    * ```ts
-   * const node = form({ name: field('Ada') });
+   * const node: AnyNode = form({
+   *   name: field('Ada'),
+   * });
    * node.$api.valid(); // true
    * ```
    */

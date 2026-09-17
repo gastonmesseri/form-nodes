@@ -100,10 +100,11 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    *
    * ```ts
    * field('', {
-   *   validators: asyncValidator(
-   *     async () => null,
-   *     { debounce: 300 },
-   *   ),
+   *   validators: asyncValidator({
+   *     params: ({ value }) => value(),
+   *     validate: async () => null,
+   *     debounce: 300,
+   *   }),
    * });
    * ```
    */
@@ -121,10 +122,11 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    *
    * const enabled = signal(true);
    * field('', {
-   *   validators: asyncValidator(
-   *     async () => null,
-   *     { when: () => enabled() },
-   *   ),
+   *   validators: asyncValidator({
+   *     params: ({ value }) => value(),
+   *     validate: async () => null,
+   *     when: () => enabled(),
+   *   }),
    * });
    * ```
    *
@@ -140,14 +142,13 @@ export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyAp
    *
    * ```ts
    * field('', {
-   *   validators: asyncValidator(
-   *     async () => {
+   *   validators: asyncValidator({
+   *     params: ({ value }) => value(),
+   *     validate: async () => {
    *       throw new Error('Unavailable');
    *     },
-   *     {
-   *       onError: () => ({ kind: 'offline' }),
-   *     },
-   *   ),
+   *     onError: () => ({ kind: 'offline' }),
+   *   }),
    * });
    * ```
    */

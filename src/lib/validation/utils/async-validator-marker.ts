@@ -5,15 +5,10 @@ import type { DeferredCondition, AsyncValidator, AsyncValidatorApi, AsyncValidat
  * Scheduling, activation, and failure-handling options for `asyncValidator()`.
  *
  * ```ts
- * field('', {
+ * field('Ada', {
  *   validators: asyncValidator(
- *     async ({ value }) => {
- *       const name = value();
- *       await Promise.resolve();
- *       return name === 'reserved'
- *         ? { kind: 'unavailable' }
- *         : null;
- *     },
+ *     async () => null,
+ *     { debounce: 300 },
  *   ),
  * });
  * ```

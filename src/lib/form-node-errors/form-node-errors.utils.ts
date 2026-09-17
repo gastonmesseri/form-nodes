@@ -9,9 +9,9 @@ export type FormNodeErrorsContext = {
    * First visible resolved message, available through let-message.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors
@@ -38,9 +38,9 @@ export type FormNodeErrorsContext = {
    * Named alias of the first visible resolved message.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors
@@ -67,9 +67,9 @@ export type FormNodeErrorsContext = {
    * Visible resolved messages, after filtering and maxMessages.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors
@@ -96,9 +96,9 @@ export type FormNodeErrorsContext = {
    * Error details corresponding to the visible messages, in the same order.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeErrors],
    *   template: `
    *     <form-node-errors

@@ -530,8 +530,6 @@ export type ValidationErrorWithTargetNode<TNode = unknown> = ValidationError & {
 /**
  * An error that may already define its target node.
  *
- * **Default:** `undefined`; the validation pipeline supplies the current node as the target.
- *
  * ```ts
  * const node = field('Ada');
  * const error = {
@@ -708,8 +706,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.submitting(); // false
+   * profile.name.submitting(); // false
    * ```
    */
   readonly submitting: Signal<boolean>;
@@ -720,8 +717,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.touched(); // false
+   * profile.name.touched(); // false
    * ```
    */
   readonly touched: Signal<boolean>;
@@ -732,8 +728,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.untouched(); // true
+   * profile.name.untouched(); // true
    * ```
    */
   readonly untouched: Signal<boolean>;
@@ -744,8 +739,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.dirty(); // false
+   * profile.name.dirty(); // false
    * ```
    */
   readonly dirty: Signal<boolean>;
@@ -756,8 +750,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.pristine(); // true
+   * profile.name.pristine(); // true
    * ```
    */
   readonly pristine: Signal<boolean>;
@@ -769,8 +762,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disabled(); // false
+   * profile.name.disabled(); // false
    * ```
    */
   readonly disabled: Signal<boolean>;
@@ -781,9 +773,8 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable('Locked');
-   * node.disabledReasons()[0]?.message;
+   * profile.name.disable('Locked');
+   * profile.name.disabledReasons()[0]?.message;
    * // 'Locked'
    * ```
    */
@@ -795,8 +786,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.enabled(); // true
+   * profile.name.enabled(); // true
    * ```
    */
   readonly enabled: Signal<boolean>;
@@ -807,8 +797,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.readonly(); // false
+   * profile.name.readonly(); // false
    * ```
    */
   readonly readonly: Signal<boolean>;
@@ -819,8 +808,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.writable(); // true
+   * profile.name.writable(); // true
    * ```
    */
   readonly writable: Signal<boolean>;
@@ -831,8 +819,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hidden(); // false
+   * profile.name.hidden(); // false
    * ```
    */
   readonly hidden: Signal<boolean>;
@@ -843,8 +830,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.visible(); // true
+   * profile.name.visible(); // true
    * ```
    */
   readonly visible: Signal<boolean>;
@@ -855,8 +841,7 @@ export type AsyncValidatorState = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.required(); // false
+   * profile.name.required(); // false
    * ```
    */
   readonly required: Signal<boolean>;
@@ -890,8 +875,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    *
    * ```ts
    * const profile = form({ name: field('Ada') });
-   * const node = profile.name;
-   * node.form() === profile; // true
+   * profile.name.form() === profile; // true
    * ```
    */
   readonly form: Signal<ValidatorForm | null>;
@@ -901,8 +885,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    *
    * ```ts
    * const profile = form({ name: field('Ada') });
-   * const node = profile.name;
-   * node.root() === profile; // true
+   * profile.name.root() === profile; // true
    * ```
    */
   readonly root: Signal<ValidatorNode>;
@@ -912,8 +895,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    *
    * ```ts
    * const profile = form({ name: field('Ada') });
-   * const node = profile.name;
-   * node.parent() === profile; // true
+   * profile.name.parent() === profile; // true
    * ```
    */
   readonly parent: Signal<ValidatorForm | ValidatorGroup | ArrayNode<DynamicNode> | null>;
@@ -924,8 +906,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.path(); // ['name']
+   * profile.name.path(); // ['name']
    * ```
    */
   readonly path: Signal<readonly string[]>;
@@ -935,8 +916,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    *
    * ```ts
    * const profile = form({ name: field('Ada') });
-   * const node = profile.name;
-   * node(); // 'Ada'
+   * profile.name(); // 'Ada'
    * ```
    */
   readonly value: Signal<TValue>;
@@ -947,11 +927,11 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.errors().map(error => error.kind);
+   * profile.name.errors()
+   *   .map(error => error.kind);
    * // ['blocked']
    * ```
    */
@@ -963,11 +943,11 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.allErrors().map(error => error.kind);
+   * profile.name.allErrors()
+   *   .map(error => error.kind);
    * // ['blocked']
    * ```
    */
@@ -979,8 +959,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.valid(); // true
+   * profile.name.valid(); // true
    * ```
    */
   readonly valid: Signal<boolean>;
@@ -991,8 +970,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.invalid(); // false
+   * profile.name.invalid(); // false
    * ```
    */
   readonly invalid: Signal<boolean>;
@@ -1003,8 +981,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.pending(); // false
+   * profile.name.pending(); // false
    * ```
    */
   readonly pending: Signal<boolean>;
@@ -1016,8 +993,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.debouncing(); // false
+   * profile.name.debouncing(); // false
    * ```
    */
   readonly debouncing: Signal<boolean>;
@@ -1028,8 +1004,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.validationStatus(); // 'valid'
+   * profile.name.validationStatus(); // 'valid'
    * ```
    */
   readonly validationStatus: Signal<ValidationStatus>;
@@ -1052,9 +1027,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node(); // 'Lia'
+   * profile.name.set('Lia');
+   * profile.name(); // 'Lia'
    * ```
    */
   set(value: TValue): void;
@@ -1065,9 +1039,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.update(() => 'Lia');
-   * node(); // 'Lia'
+   * profile.name.update(name => `${name}!`);
+   * profile.name(); // 'Ada!'
    * ```
    */
   update(updater: (value: TValue) => TValue): void;
@@ -1091,12 +1064,11 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node.markAsDirty();
-   * node.reset();
-   * node(); // 'Lia'
-   * node.dirty(); // false
+   * profile.name.set('Lia');
+   * profile.name.markAsDirty();
+   * profile.name.reset();
+   * profile.name(); // 'Lia'
+   * profile.name.dirty(); // false
    * ```
    */
   reset(...args: [] | [value: TValue]): void;
@@ -1111,22 +1083,22 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsTouched();
-   * node.touched(); // true
+   * profile.name.markAsTouched();
+   * profile.name.touched(); // true
    * ```
    */
   markAsTouched(options?: {
     /**
      * Skips recursively touching and committing descendants; the validated node still commits its own pending input.
      *
+     * **Default:** `false`; visit interactive descendants too.
+     *
      * ```ts
-     * const profile = form({
-     *   name: field('Ada'),
+     * const profile = form({ name: field('Ada') });
+     * profile.markAsTouched({
+     *   skipDescendants: true,
      * });
-     * const node = profile.name;
-     * node.markAsTouched();
-     * node.touched(); // true
+     * profile.name.touched(); // false
      * ```
      */
     skipDescendants?: boolean;
@@ -1140,10 +1112,9 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsTouched();
-   * node.markAsUntouched();
-   * node.touched(); // false
+   * profile.name.markAsTouched();
+   * profile.name.markAsUntouched();
+   * profile.name.touched(); // false
    * ```
    */
   markAsUntouched(): void;
@@ -1154,9 +1125,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsDirty();
-   * node.dirty(); // true
+   * profile.name.markAsDirty();
+   * profile.name.dirty(); // true
    * ```
    */
   markAsDirty(): void;
@@ -1167,10 +1137,9 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsDirty();
-   * node.markAsPristine();
-   * node.dirty(); // false
+   * profile.name.markAsDirty();
+   * profile.name.markAsPristine();
+   * profile.name.dirty(); // false
    * ```
    */
   markAsPristine(): void;
@@ -1182,9 +1151,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable('Locked');
-   * node.disabled(); // true
+   * profile.name.disable('Locked');
+   * profile.name.disabled(); // true
    * ```
    */
   disable(message?: string): void;
@@ -1196,10 +1164,9 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable();
-   * node.enable();
-   * node.disabled(); // false
+   * profile.name.disable();
+   * profile.name.enable();
+   * profile.name.disabled(); // false
    * ```
    */
   enable(): void;
@@ -1210,9 +1177,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsReadonly();
-   * node.readonly(); // true
+   * profile.name.markAsReadonly();
+   * profile.name.readonly(); // true
    * ```
    */
   markAsReadonly(): void;
@@ -1224,10 +1190,9 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsReadonly();
-   * node.markAsWritable();
-   * node.readonly(); // false
+   * profile.name.markAsReadonly();
+   * profile.name.markAsWritable();
+   * profile.name.readonly(); // false
    * ```
    */
   markAsWritable(): void;
@@ -1238,9 +1203,8 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hide();
-   * node.hidden(); // true
+   * profile.name.hide();
+   * profile.name.hidden(); // true
    * ```
    */
   hide(): void;
@@ -1252,10 +1216,9 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hide();
-   * node.show();
-   * node.hidden(); // false
+   * profile.name.hide();
+   * profile.name.show();
+   * profile.name.hidden(); // false
    * ```
    */
   show(): void;
@@ -1413,11 +1376,15 @@ export type ValidatorContext<TValue, TApi extends ValidatorReadonlyApi<TValue> =
  * Reactive context shared by asynchronous validator conditions, params, and handlers.
  *
  * ```ts
- * field('', {
- *   validators: ({ value }) => {
- *     console.log(value());
- *     return null;
- *   },
+ * field('Ada', {
+ *   validators: asyncValidator({
+ *     params: ({ value }) => value(),
+ *     validate: async ({ params }) => {
+ *       return params === 'reserved'
+ *         ? { kind: 'unavailable' }
+ *         : null;
+ *     },
+ *   }),
  * });
  * ```
  */

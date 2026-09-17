@@ -14,14 +14,14 @@ type NonNullableFieldOptions<TValue> = FieldOptions<TValue>;
 /**
  * Creates a nullable field whose future value type is not yet known.
  *
+ * Literal `null` and `undefined` initial values both use this safe inference. Use an explicit
+ * generic such as `field<string>(null)` when the eventual value type is known.
+ *
  * ```ts
  * const value = field(null);
  *
  * value(); // null
  * ```
- *
- * Literal `null` and `undefined` initial values both use this safe inference. Use an explicit
- * generic such as `field<string>(null)` when the eventual value type is known.
  *
  * @param value Initial committed value.
  * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
@@ -38,11 +38,11 @@ export function field(
 /**
  * Creates a nullable field whose future value type is not yet known from an `undefined` initial value.
  *
+ * Use an explicit generic such as `field<string>(undefined)` when the eventual value type is known.
+ *
  * ```ts
  * const value = field(undefined);
  * ```
- *
- * Use an explicit generic such as `field<string>(undefined)` when the eventual value type is known.
  *
  * @param value Initial committed value. An explicit `undefined` is preserved.
  * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).
@@ -59,14 +59,14 @@ export function field(
 /**
  * Creates a nullable field from an initial value and optional configuration.
  *
+ * The inferred value type includes `null`. Omitting the value initializes the field to `null`.
+ * Use `field.strict()` when the field must remain non-nullable.
+ *
  * ```ts
  * const name = field('Marco');
  *
  * name(); // 'Marco'
  * ```
- *
- * The inferred value type includes `null`. Omitting the value initializes the field to `null`.
- * Use `field.strict()` when the field must remain non-nullable.
  *
  * @param value Initial committed value.
  * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).

@@ -166,12 +166,11 @@ export function oneOf<TValue = never>(
  * Infers the constraint value type when no consuming node provides a context.
  *
  * ```ts
- * const profile = form({
- *   value: field('draft', [
- *     oneOf(['published', 'archived']),
- *   ]),
+ * const statusRule = oneOf(['published']);
+ * const article = form({
+ *   status: field('draft', [statusRule]),
  * });
- * profile.value.invalid(); // true
+ * article.status.invalid(); // true
  * ```
  *
  * ```ts

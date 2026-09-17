@@ -36,11 +36,11 @@ Use this order, omitting sections that do not apply:
 
 Separate sections and examples with one blank JSDoc line (` *`). Keep related list items together. Do not invent defaults for required arguments or inspected properties. Explain whether omission inherits a value, preserves existing configuration, derives a value, or disables a feature.
 
-Use `@reactive` for public parameterized functions that participate in dependency tracking, describing their tracking or memoization semantics. Do not add it to ordinary `Signal` properties. Explain return values in prose or checked output comments rather than adding redundant tags to properties.
+Mark public parameterized functions that participate in signal dependency tracking with a JSDoc `@reactive` tag. Briefly describe the tracking or memoization semantics after the tag. Do not add the tag to ordinary `Signal` properties, whose type already communicates reactivity. Explain return values in prose or checked output comments rather than adding redundant tags to properties.
 
 ### Markdown examples, not `@example`
 
-Write examples directly in the description using ordinary Markdown fences. Never introduce them with `@example`. Keep every example before `@param`: content after a parameter tag can become part of that parameter's description.
+Write examples directly in the description using ordinary Markdown fences. Never introduce them with `@example`. Place JSDoc examples before all `@param` tags. Content after a `@param` may be rendered as part of that parameter description instead of as function-level documentation.
 
 The outer `text` fences below illustrate literal JSDoc and preserve its narrow layout. Actual source examples use `ts` fences.
 
@@ -89,7 +89,9 @@ Every fenced block must have the setup needed to understand and compile it indep
 
 Show configuration inside the factory where consumers use it. For example, document `trackBy` with `array({ ... }, { trackBy: ... })`, rather than a disconnected `const options: ArrayOptions<...>`. Typed objects are appropriate when the reusable options contract or preset is itself the subject.
 
-Prefer realistic form models, explicit `field()` declarations, and ordinary structural groups:
+Prefer showing fields, arrays, and their features as children of a realistic `form({ ... })` in consumer documentation, because that is their most common application context. Keep standalone-node examples when they communicate a signature or isolated behavior more clearly, but use form-context examples frequently throughout each guide. Periodically show the form as a property of an Angular `@Component` so consumers can recognize how declarations fit into application code.
+
+Use explicit fields and ordinary structural groups:
 
 ```text
 const profile = form({
@@ -99,11 +101,38 @@ const profile = form({
 profile.address.city(); // 'Zurich'
 ```
 
-Use explicit `group()` when its own options, validators, or primitive contract are the subject. Keep field-value shorthands in their dedicated examples. Introduce object-template arrays before primitive templates; retain standalone nodes when they explain a signature or isolated behavior more clearly.
+Use explicit leaf and root primitives such as `field('Mark')`, `form({ ... })`, and `array(...)` in website and IntelliSense examples by default. Keep field-value shorthands such as `'Mark'` confined to their dedicated documentation sections unless a later documentation decision deliberately introduces them elsewhere. Prefer the structural object shorthand for ordinary groups, such as `address: { city: field('Zurich') }`; use explicit `group({ ... })` only when that branch needs group validators, options, validator messages, or when the example specifically teaches the `group()` primitive.
+
+When introducing `array()` in consumer documentation, show a simple form-object template before primitive field templates. The dynamic-array guide should also introduce numeric `initialValue` with a form-object template so consumers immediately see how multiple items are created from readable defaults.
 
 Keep required setup and the option being taught; omit unrelated callbacks, settings, and operations. A debounce example does not need submission configuration. Each example must demonstrate its own member, not a similarly named operation on a different primitive.
 
-Use direct reads and actions: `profile.name()`, `profile.valid()`, and `profile.patch()`. Use `.$api` when explaining child-name collisions or generic infrastructure. Show `value.committed` and `value.control` only when their distinct value views are relevant.
+Read committed node values by calling the node directly in consumer documentation examples, such as `myForm.name()` or `myForm()`. Do not use `node.value()` or `node.$api.value()` as the ordinary example style. Keep those equivalent paths documented together in the dedicated alternative-value-access section for generic infrastructure. This rule does not apply to a validator context's `value()` signal or to unrelated Angular signals such as a custom control's `model()` value.
+
+Access node state and operations directly in consumer documentation examples, including forms: use `myForm.patch()`, `myForm.valid()`, and `myForm.submit()` instead of their `.$api` equivalents. Document and demonstrate `.$api` in the dedicated API-access section, where it solves a child-name collision or provides a uniform surface for generic node infrastructure. `.$api` is the only API facade; `api` is an ordinary child name. Show `value.committed` and `value.control` only when their distinct value views are relevant.
+
+### Keep everyday examples simple
+
+Use the smallest realistic setup that makes the operation clear. Do not introduce counters, heterogeneous node kinds, helper predicates, or `NonNullable`/`ReturnType`/`Extract` combinations merely to demonstrate `filter()` or `find()`. Prefer a direct predicate on a named child. Type-guard overloads may share the simple usage example; explain narrowing in prose instead of constructing an artificial scenario solely to exercise that overload.
+
+In JSDoc examples, use an `array()` template, preferably an object such as `array({ username: field('') })`. Do not use an array factory function. Document factory-specific signatures and requirements in prose and refer to the template overload for everyday usage.
+
+Preferred:
+
+```text
+const users = array({
+  username: field(''),
+}, {
+  initialValue: [
+    { username: 'Ada' },
+    { username: 'Lia' },
+  ],
+});
+const matches = users.filter(user => {
+  return user.username() === 'Ada';
+});
+matches[0]?.username(); // 'Ada'
+```
 
 ### Access child nodes through their model path
 
@@ -120,7 +149,11 @@ Keep a separate node binding only when the binding itself teaches something, suc
 
 ### Angular component context
 
-For `[formNode]` examples, normally keep the node declaration and HTML together in an Angular component with an inline template. Show the necessary injection context for hooks that require it. Prefer modern signal-based Angular APIs and do not mark ordinary component node declarations `readonly`.
+When a documentation example binds `[formNode]`, prefer showing the associated node model and HTML together in one Angular `@Component` with an inline `template`. This keeps the view and view-model visually adjacent and gives the template HTML highlighting inside the TypeScript example. Keep a separate HTML fragment only when the component model is already unambiguous from the immediately surrounding example or when combining a large template and model would make the example harder to read.
+
+Show the necessary injection context for hooks that require it and prefer modern signal-based Angular APIs.
+
+Do not mark `form()`, `field()`, or `array()` properties as `readonly` in consumer-facing Angular component examples. The extra modifier adds visual clutter without teaching the library and conflicts with the documentation's concise style. Keep `readonly` only where it communicates a relevant contract outside ordinary form-node declarations.
 
 ### Declare options directly
 
@@ -159,6 +192,8 @@ export class ProfilePage {
 }
 ```
 
+In website documentation examples, including `website/examples/` and code blocks under `website/docs/`, keep consecutive imports together without blank lines. Put package imports (including Angular and `@ngblocks/form-nodes`) before local relative or absolute-path imports such as `./validator-message-catalog`. Retain ascending line-length order within those categories. Do not combine imports across comments marking different hypothetical files.
+
 Omit a binding when its name or subsequent use adds nothing. Keep useful names when demonstrating state, a return value, or a sequence of operations.
 
 Omit explicit generics when inference already communicates the contract. Retain them when needed, such as `field<Date>(null)`, or when teaching type inference. Do not replace meaningful types with `any`, assertions, or type-error suppressions to make an example fit or compile.
@@ -192,7 +227,9 @@ array({
 
 ### Calls with consecutive object arguments
 
-Keep consecutive object-literal arguments attached to the call: open with `form({` or `array({`, separate definition and options with `}, {`, and close with `});`. Apply this to root and nested forms. Prefer `options.initialValue` for array data; use positional initial values when teaching that overload.
+In consumer documentation examples, format multiline object-array declarations as `array({ ... }, { ... })`, with the template object and options object opened directly in the call and their properties indented one level. Prefer `options.initialValue` in these examples so initial data and options such as `trackBy` remain grouped together; mention positional initial values only when documenting the available signatures.
+
+Format every multiline `form()` example as `form({ ... }, { ... })`: open the definition object on the same line as `form({`, place an options object after `}, {`, and indent both objects consistently. Apply this style to root and explicit nested forms alike.
 
 ```text
 array({
@@ -265,11 +302,11 @@ array(field.strict(0), {
 
 Here `field.strict(0)` makes the numeric input contract explicit. Ordinary `field(0)` also accepts `null`; retain null handling when the declared type requires it. Do not remove a meaningful check just to shorten the example or silently change the field's nullability to make a formatter happy. Simplifying predicates and wording is an authoring decision, not permission for a formatter to rewrite semantics or error identifiers.
 
-Keep validator examples focused: demonstrate static constraints, reactive constraints, and static constraints with a custom message separately. Do not combine reactivity and message configuration unnecessarily. For validators without reactive constraints, normally show default use and custom-message use separately.
+Keep validator documentation examples focused on one concept at a time. For validators with reactive constraints, show separate uncluttered examples for a static constraint, a reactive constraint, and a static constraint with a custom message instead of combining reactivity and message options in the same example. For validators without reactive constraints, normally show direct/default use and custom-message use separately.
 
 ## Show observable results
 
-Show deterministic results immediately after the expression being inspected; printing is not required. Follow this repository's convention from AGENTS.md: `node(); // 'Ada'`. Do not require migration to another project's `// => value` convention; the local checker accepts both forms.
+Show deterministic results immediately after the expression being inspected; printing is not required. When a consumer documentation snippet demonstrates reading a node value, show the concrete result in a concise right-side comment, such as `myForm.name(); // 'Marco'`. For long results, place an `// Expected output:` comment on the following line instead of making the code line difficult to scan. Do not add output comments to calls shown for their side effects or as part of application logic. The local checker also accepts `// => value`; do not require migration to the source project's notation.
 
 ```text
 const name = field('Ada');
@@ -279,13 +316,13 @@ name.set('Lia');
 name(); // 'Lia'
 ```
 
-Keep the output inline when the complete line fits within 45 characters. For a long result, put `// Expected output:` and the result comment below the expression as specified in AGENTS.md. Never duplicate the output inline and below. Do not add output comments to calls shown only for their side effects or as application logic.
+Keep the output inline when the complete line fits within 45 characters. For a long result, put `// Expected output:` and the result comment below the expression. Never duplicate the output inline and below. Do not add output comments to calls shown only for their side effects or as application logic.
 
 For `console.log(expression)`, the annotation describes the printed argument, not the `undefined` return value of `console.log`. Prefer inspecting a relevant scalar or mapped list over dumping a large instance. Show transitions or snapshot independence when they explain the member.
 
 The local checker executes supported literal output annotations on top-level expressions in examples without class declarations, including direct reads and single-value `console.log` calls. Supported cases include scalar, array, and object literals, `undefined`, `false`, zero, and empty text. It does not execute component examples, nested callback assertions, or explanatory prose. An `Expected output:` heading is explanatory text, so verify that case with an explicit assertion or an executable website example. Never assume a successful compilation verified every output comment.
 
-For values depending on real external context or callback timing, use `// Output: explanation` and state the dependency. Do not use variable-output prose to avoid checking a reproducible result. Keep output assertions in the website's executable examples as required by AGENTS.md.
+For values depending on real external context or callback timing, use `// Output: explanation` and state the dependency. Do not use variable-output prose to avoid checking a reproducible result. Keep output assertions in the website's executable examples as required by the Source and website synchronization section.
 
 ## Accepted values and type details
 
@@ -534,7 +571,11 @@ Author JSDoc in source. Do not patch generated reference pages instead of their 
 
 [The public-type reference generator](../website/scripts/sync-public-type-reference.mjs) generates declarations and member summaries under `website/docs/reference/types/`. It does not publish every complete hover example automatically. Keep detailed guides and reference pages current when consumers need additional explanation.
 
-Complete website examples belong in `website/examples/*.example.ts` with meaningful assertions, or `*.typecheck.ts` for Angular and inference examples that cannot run meaningfully in plain Node. Render canonical examples from those files rather than duplicating them in Markdown. Keep partial signatures and deliberately invalid examples inline where appropriate. Website examples follow their own import and layout conventions rather than the hover's 45-character limit.
+Put complete consumer examples that claim observable runtime behavior in `website/examples/*.example.ts`; they must contain meaningful assertions and pass the executable documentation harness. Put complete Angular or public-inference examples that cannot run meaningfully in plain Node in `website/examples/*.typecheck.ts`. Render canonical examples directly from those files instead of duplicating their source in Markdown. Keep partial signatures, short alternatives, HTML fragments, and deliberately invalid examples inline when turning them into standalone programs would reduce clarity. Website examples follow their own import and layout conventions rather than the hover's 45-character limit.
+
+When one consumer documentation code block represents multiple application files, add a JavaScript comment such as `// main.ts` or `// app.component.ts` before each logical file section. Keep code belonging to the same file together, including global configuration and bootstrap calls in the `main.ts` section. Keep shared imports together and explain that the comments identify suggested files. For a block representing a single file, use its filename as the block title without a redundant filename comment. Keep pure signatures and isolated expressions free of invented filenames.
+
+End each progressive tutorial step with a concise `Related guides and reference` section linking to the most relevant concept pages, detailed guides, API references, and cookbook recipes. Keep these links curated and contextual rather than repeating the complete sidebar on every page.
 
 Keep stable anchors, inherited contracts, cross-page links, and sidebar entries synchronized. Preserve source and published declaration hovers, overloads, generics, and readonly contracts. A narrow hover supplements the complete guide rather than replacing it.
 
@@ -567,7 +608,7 @@ Keep this guide current when a new preference is agreed. Do not edit `TODO.md` a
 
 These examples preserve the owner's original positive and negative illustrations. They supplement the Form Nodes examples above; keep the distinctions between preferred and rejected layouts. APIs from the source project are illustrative only and are not compiled against Form Nodes.
 
-For Form Nodes examples, the local rules still apply: direct model paths, named Angular imports, verified nullability, and the output-comment convention in AGENTS.md. In particular, use the `field.strict(0)` example above when illustrating a numeric predicate without null handling. The retained `// =>` comments show the original project's notation, not a requirement to change existing Form Nodes output comments.
+For Form Nodes examples, the local rules still apply: direct model paths, named Angular imports, verified nullability, and the output-comment convention in this guide. In particular, use the `field.strict(0)` example above when illustrating a numeric predicate without null handling. The retained `// =>` comments show the original project's notation, not a requirement to change existing Form Nodes output comments.
 
 ### Write examples as Markdown, not JSDoc tags
 

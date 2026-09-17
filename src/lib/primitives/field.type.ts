@@ -423,8 +423,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.nodeType(); // 'field'
+   * profile.name.nodeType(); // 'field'
    * ```
    */
   nodeType(): 'field';
@@ -436,8 +435,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.form() === profile; // true
+   * profile.name.form() === profile; // true
    * ```
    */
   form: Signal<NearestForm<TParent> | null>;
@@ -449,8 +447,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.root() === profile; // true
+   * profile.name.root() === profile; // true
    * ```
    */
   root: Signal<AnyNode extends TParent ? NavigationRoot : RootNode<TParent>>;
@@ -461,8 +458,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.parent() === profile; // true
+   * profile.name.parent() === profile; // true
    * ```
    */
   parent: Signal<TParent | null>;
@@ -473,8 +469,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.path(); // ['name']
+   * profile.name.path(); // ['name']
    * ```
    */
   path: Signal<readonly string[]>;
@@ -485,8 +480,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.keyInParent(); // 'name'
+   * profile.name.keyInParent(); // 'name'
    * ```
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
@@ -504,8 +498,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node(); // 'Ada'
+   * profile.name(); // 'Ada'
    * ```
    */
   value: NodeValueSignal<TValue, TValue>;
@@ -516,9 +509,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node(); // 'Lia'
+   * profile.name.set('Lia');
+   * profile.name(); // 'Lia'
    * ```
    */
   set(value: TValue): void;
@@ -529,9 +521,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.update(() => 'Lia');
-   * node(); // 'Lia'
+   * profile.name.update(name => `${name}!`);
+   * profile.name(); // 'Ada!'
    * ```
    */
   update(updater: (value: TValue) => TValue): void;
@@ -543,8 +534,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.debouncing(); // false
+   * profile.name.debouncing(); // false
    * ```
    */
   debouncing: Signal<boolean>;
@@ -574,9 +564,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * `FocusOptions` are forwarded unchanged to the selected native element or custom focus hook.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
    *     <input [formNode]="profile.name" />
@@ -592,12 +582,14 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    */
   focus(options?: FocusOptions): void;
   /**
-   * Assigns a committed value like `set()`. Provided for a uniform node API.
+   * Assigns a committed value like `set()`. Available through `$api` for generic infrastructure; ordinary field updates use `set()`.
    *
    * ```ts
-   * const node = form({ name: field('Ada') });
-   * node.patch({ name: 'Lia' });
-   * node.name(); // 'Lia'
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * profile.name.$api.patch('Lia');
+   * profile.name(); // 'Lia'
    * ```
    */
   patch(value: TValue): void;
@@ -610,12 +602,11 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node.markAsDirty();
-   * node.reset();
-   * node(); // 'Lia'
-   * node.dirty(); // false
+   * profile.name.set('Lia');
+   * profile.name.markAsDirty();
+   * profile.name.reset();
+   * profile.name(); // 'Lia'
+   * profile.name.dirty(); // false
    * ```
    */
   reset(...args: [] | [value: TValue]): void;
@@ -644,10 +635,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.set('Lia');
-   * node.resetToInitial();
-   * node(); // 'Ada'
+   * profile.name.set('Lia');
+   * profile.name.resetToInitial();
+   * profile.name(); // 'Ada'
    * ```
    */
   resetToInitial(): void;
@@ -658,11 +648,10 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
    * const rule = validator(() => null);
-   * node.setValidators(() => [rule]);
-   * node.validators({ resolve: true })[0] ===
-   *   rule; // true
+   * profile.name.setValidators(rule);
+   * profile.name.validators()[0] === rule;
+   * // true
    * ```
    */
   validators: Signal<Validators<TValue>> & {
@@ -673,11 +662,11 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
      * const profile = form({
      *   name: field('Ada'),
      * });
-     * const node = profile.name;
      * const rule = validator(() => null);
-     * node.setValidators(() => [rule]);
-     * node.validators({ resolve: true })[0] ===
-     *   rule; // true
+     * profile.name.setValidators(() => [rule]);
+     * profile.name.validators({
+     *   resolve: true,
+     * })[0] === rule; // true
      * ```
      *
      * @reactive Tracks composition dependencies and shares synchronous validation evaluation.
@@ -691,11 +680,10 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.invalid(); // true
+   * profile.name.invalid(); // true
    * ```
    */
   setValidators(validators: ValidatorSource<TValue, FieldNode<TValue>>): void;
@@ -710,11 +698,11 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.errors().map(error => error.kind);
+   * profile.name.errors()
+   *   .map(error => error.kind);
    * // ['blocked']
    * ```
    *
@@ -733,11 +721,11 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.allErrors().map(error => error.kind);
+   * profile.name.allErrors()
+   *   .map(error => error.kind);
    * // ['blocked']
    * ```
    */
@@ -749,8 +737,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.valid(); // true
+   * profile.name.valid(); // true
    * ```
    */
   valid: Signal<boolean>;
@@ -761,8 +748,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.invalid(); // false
+   * profile.name.invalid(); // false
    * ```
    */
   invalid: Signal<boolean>;
@@ -785,11 +771,10 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.getError('blocked')?.kind;
+   * profile.name.getError('blocked')?.kind;
    * // 'blocked'
    * ```
    *
@@ -803,11 +788,10 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.setValidators(() => ({
+   * profile.name.setValidators(() => ({
    *   kind: 'blocked',
    * }));
-   * node.hasError('blocked'); // true
+   * profile.name.hasError('blocked'); // true
    * ```
    *
    * @reactive Memoizes by kind and tracks the node's current errors.
@@ -821,10 +805,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
    * const rule = validator(() => null);
-   * node.setValidators(rule);
-   * node.hasValidator(rule); // true
+   * profile.name.setValidators(rule);
+   * profile.name.hasValidator(rule); // true
    * ```
    *
    * @reactive Memoizes by function identity and resolution mode; resolved queries track composition dependencies.
@@ -892,8 +875,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.required(); // false
+   * profile.name.required(); // false
    * ```
    */
   required: Signal<boolean>;
@@ -904,8 +886,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.pending(); // false
+   * profile.name.pending(); // false
    * ```
    */
   pending: Signal<boolean>;
@@ -916,8 +897,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.submitting(); // false
+   * profile.name.submitting(); // false
    * ```
    */
   submitting: Signal<boolean>;
@@ -932,8 +912,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.validationStatus(); // 'valid'
+   * profile.name.validationStatus(); // 'valid'
    * ```
    */
   validationStatus: Signal<ValidationStatus>;
@@ -946,8 +925,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.touched(); // false
+   * profile.name.touched(); // false
    * ```
    */
   touched: Signal<boolean>;
@@ -960,8 +938,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.untouched(); // true
+   * profile.name.untouched(); // true
    * ```
    */
   untouched: Signal<boolean>;
@@ -976,23 +953,26 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsTouched();
-   * node.touched(); // true
+   * profile.name.markAsTouched();
+   * profile.name.touched(); // true
    * ```
    */
   markAsTouched(options?: {
     /**
      * Accepted for API consistency; fields have no descendants, so this never skips their own pending-value commit.
      *
-     * **Default:** `false`; visit interactive descendants too.
+     * **Default:** `false`; either value touches and commits this field.
      *
      * ```ts
-     * const profile = form({ name: field('Ada') });
-     * profile.markAsTouched({
+     * const profile = form({
+     *   name: field('Ada', { debounce: 'blur' }),
+     * });
+     * profile.name.value.control.set('Lia');
+     * profile.name.markAsTouched({
      *   skipDescendants: true,
      * });
-     * profile.name.touched(); // false
+     * profile.name(); // 'Lia'
+     * profile.name.touched(); // true
      * ```
      */
     skipDescendants?: boolean;
@@ -1004,10 +984,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsTouched();
-   * node.markAsUntouched();
-   * node.touched(); // false
+   * profile.name.markAsTouched();
+   * profile.name.markAsUntouched();
+   * profile.name.touched(); // false
    * ```
    */
   markAsUntouched(): void;
@@ -1022,8 +1001,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.dirty(); // false
+   * profile.name.dirty(); // false
    * ```
    */
   dirty: Signal<boolean>;
@@ -1036,8 +1014,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.pristine(); // true
+   * profile.name.pristine(); // true
    * ```
    */
   pristine: Signal<boolean>;
@@ -1048,9 +1025,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsDirty();
-   * node.dirty(); // true
+   * profile.name.markAsDirty();
+   * profile.name.dirty(); // true
    * ```
    */
   markAsDirty(): void;
@@ -1061,10 +1037,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsDirty();
-   * node.markAsPristine();
-   * node.dirty(); // false
+   * profile.name.markAsDirty();
+   * profile.name.markAsPristine();
+   * profile.name.dirty(); // false
    * ```
    */
   markAsPristine(): void;
@@ -1075,8 +1050,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disabled(); // false
+   * profile.name.disabled(); // false
    * ```
    */
   disabled: Signal<boolean>;
@@ -1087,9 +1061,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable('Locked');
-   * node.disabledReasons()[0]?.message;
+   * profile.name.disable('Locked');
+   * profile.name.disabledReasons()[0]?.message;
    * // 'Locked'
    * ```
    */
@@ -1103,8 +1076,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.enabled(); // true
+   * profile.name.enabled(); // true
    * ```
    */
   enabled: Signal<boolean>;
@@ -1116,9 +1088,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable('Locked');
-   * node.disabled(); // true
+   * profile.name.disable('Locked');
+   * profile.name.disabled(); // true
    * ```
    */
   disable(message?: string): void;
@@ -1130,10 +1101,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.disable();
-   * node.enable();
-   * node.disabled(); // false
+   * profile.name.disable();
+   * profile.name.enable();
+   * profile.name.disabled(); // false
    * ```
    */
   enable(): void;
@@ -1144,8 +1114,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.readonly(); // false
+   * profile.name.readonly(); // false
    * ```
    */
   readonly: Signal<boolean>;
@@ -1158,8 +1127,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.writable(); // true
+   * profile.name.writable(); // true
    * ```
    */
   writable: Signal<boolean>;
@@ -1170,9 +1138,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsReadonly();
-   * node.readonly(); // true
+   * profile.name.markAsReadonly();
+   * profile.name.readonly(); // true
    * ```
    */
   markAsReadonly(): void;
@@ -1184,10 +1151,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.markAsReadonly();
-   * node.markAsWritable();
-   * node.readonly(); // false
+   * profile.name.markAsReadonly();
+   * profile.name.markAsWritable();
+   * profile.name.readonly(); // false
    * ```
    */
   markAsWritable(): void;
@@ -1198,8 +1164,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hidden(); // false
+   * profile.name.hidden(); // false
    * ```
    */
   hidden: Signal<boolean>;
@@ -1212,8 +1177,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.visible(); // true
+   * profile.name.visible(); // true
    * ```
    */
   visible: Signal<boolean>;
@@ -1224,9 +1188,8 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hide();
-   * node.hidden(); // true
+   * profile.name.hide();
+   * profile.name.hidden(); // true
    * ```
    */
   hide(): void;
@@ -1238,10 +1201,9 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * const profile = form({
    *   name: field('Ada'),
    * });
-   * const node = profile.name;
-   * node.hide();
-   * node.show();
-   * node.hidden(); // false
+   * profile.name.hide();
+   * profile.name.show();
+   * profile.name.hidden(); // false
    * ```
    */
   show(): void;

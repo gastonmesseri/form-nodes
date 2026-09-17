@@ -200,9 +200,9 @@ export const FORM_NODE_BIND_INPUT_OUTPUT_PAIRS = new InjectionToken<boolean>('FO
  * Angular's `provideSignalFormsConfig()` independently configures `[formField]` bindings.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * export const config: ng.ApplicationConfig = {
+ * @Component({
  *   providers: [
  *     provideFormNodesConfig({
  *       validatorMessages: {
@@ -210,7 +210,9 @@ export const FORM_NODE_BIND_INPUT_OUTPUT_PAIRS = new InjectionToken<boolean>('FO
  *       },
  *     }),
  *   ],
- * };
+ *   template: '',
+ * })
+ * export class ProfilePage {}
  * ```
  *
  * @param config Message and binding configuration installed in the current Angular injector scope.

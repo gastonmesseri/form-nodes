@@ -63,11 +63,12 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    * asynchronous validation may still be pending.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { inject } from '@angular/core';
+   * import { Directive } from '@angular/core';
    *
-   * @ng.Directive({ selector: '[observeNode]' })
+   * @Directive({ selector: '[observeNode]' })
    * export class ObserveNode {
-   *   binding = ng.inject(FORM_NODE);
+   *   binding = inject(FORM_NODE);
    *
    *   constructor() {
    *     const changes =
@@ -87,11 +88,12 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    * This does not guarantee a physical user interaction: custom controls can emit from code.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { inject } from '@angular/core';
+   * import { Directive } from '@angular/core';
    *
-   * @ng.Directive({ selector: '[observeNode]' })
+   * @Directive({ selector: '[observeNode]' })
    * export class ObserveNode {
-   *   binding = ng.inject(FORM_NODE);
+   *   binding = inject(FORM_NODE);
    *
    *   constructor() {
    *     const changes =
@@ -113,11 +115,12 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    * Programmatic submit() does not emit. Async listeners are not awaited.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { inject } from '@angular/core';
+   * import { Directive } from '@angular/core';
    *
-   * @ng.Directive({ selector: '[observeNode]' })
+   * @Directive({ selector: '[observeNode]' })
    * export class ObserveNode {
-   *   binding = ng.inject(FORM_NODE);
+   *   binding = inject(FORM_NODE);
    *
    *   constructor() {
    *     const changes =
@@ -138,11 +141,12 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    * group bindings, and programmatic submit() do not emit this output.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { inject } from '@angular/core';
+   * import { Directive } from '@angular/core';
    *
-   * @ng.Directive({ selector: '[observeNode]' })
+   * @Directive({ selector: '[observeNode]' })
    * export class ObserveNode {
-   *   binding = ng.inject(FORM_NODE);
+   *   binding = inject(FORM_NODE);
    *
    *   constructor() {
    *     const changes =
@@ -197,11 +201,12 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    * Reactive reference to the node currently bound to the host.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { inject } from '@angular/core';
+   * import { Directive } from '@angular/core';
    *
-   * @ng.Directive({ selector: '[observeNode]' })
+   * @Directive({ selector: '[observeNode]' })
    * export class ObserveNode {
-   *   binding = ng.inject(FORM_NODE);
+   *   binding = inject(FORM_NODE);
    *
    *   inspect() {
    *     return this.binding.node();
@@ -457,9 +462,9 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
  * CVA user callbacks update control state synchronously, with debounce governing commits.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @ng.Component({
+ * @Component({
  *   imports: [FormNodeDirective],
  *   template: `
  *     <input [formNode]="profile.name" />
@@ -476,9 +481,9 @@ export const FormNodeDirective = _FormNode;
  * Public instance view exposed by `[formNode]` template references and queries.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @ng.Component({
+ * @Component({
  *   imports: [FormNodeDirective],
  *   template: `
  *     <input [formNode]="profile.name" />

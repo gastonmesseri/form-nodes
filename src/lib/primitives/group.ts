@@ -22,6 +22,14 @@ export function group(): GroupNode<{}>;
 /**
  * Creates an object-shaped structural node without an independent submission workflow.
  *
+ * Concise values, including arrays, are normalized to fields, and plain nested object definitions
+ * become groups. Only an explicit `array(...)` creates a dynamic array node. Use an explicit group when the
+ * object aggregate needs validators, state configuration, debounce, or validator messages. Use
+ * `form()` instead when this exact node must own `onSubmit` and `submit()`.
+ * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
+ * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
+ * created, with the complete declaration path included in the error.
+ *
  * ```ts
  * const address = group({
  *   city: field('Zurich'),
@@ -31,14 +39,6 @@ export function group(): GroupNode<{}>;
  * address();
  * // { city: 'Zurich', country: 'Switzerland' }
  * ```
- *
- * Concise values, including arrays, are normalized to fields, and plain nested object definitions
- * become groups. Only an explicit `array(...)` creates a dynamic array node. Use an explicit group when the
- * object aggregate needs validators, state configuration, debounce, or validator messages. Use
- * `form()` instead when this exact node must own `onSubmit` and `submit()`.
- * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
- * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
- * created, with the complete declaration path included in the error.
  *
  * @param definitions Initially declared child-node definitions.
  * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).

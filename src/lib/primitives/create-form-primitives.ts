@@ -16,6 +16,10 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
 /**
  * Creates an isolated set of form primitives with shared defaults.
  *
+ * The default also applies to field shorthands, dynamic children, and nodes created from array
+ * templates or factories. Use `field.strict()` or `field.nullable()` for a local override.
+ * Existing nodes keep the policy of the factory that created them.
+ *
  * ```ts
  * const { form, field } = createFormPrimitives(
  *   { nullable: false },
@@ -28,10 +32,6 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
  * profile.username(); // ''
  * profile.nickname(); // ''
  * ```
- *
- * The default also applies to field shorthands, dynamic children, and nodes created from array
- * templates or factories. Use `field.strict()` or `field.nullable()` for a local override.
- * Existing nodes keep the policy of the factory that created them.
  *
  * @param options Defaults shared by the returned primitive factories.
  */

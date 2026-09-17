@@ -13,9 +13,9 @@ import { resolveMessage, shouldShowMessages, setupErrorHeightAnimation, type For
  * Read-only validation messages for a node or a custom control's useFormNodeState() facade.
  *
  * ```ts
- * import * as ng from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @ng.Component({
+ * @Component({
  *   imports: [FormNodeErrors],
  *   template: `
  *     <form-node-errors

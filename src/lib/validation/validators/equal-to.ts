@@ -154,10 +154,11 @@ export function equalTo<TValue = never>(
  * Infers the constraint value type when no consuming node provides a context.
  *
  * ```ts
+ * const nameRule = equalTo('Ada');
  * const profile = form({
- *   value: field('Lia', [equalTo('Ada')]),
+ *   name: field('Lia', [nameRule]),
  * });
- * profile.value.invalid(); // true
+ * profile.name.invalid(); // true
  * ```
  *
  * ```ts

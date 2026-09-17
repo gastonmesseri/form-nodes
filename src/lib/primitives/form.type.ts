@@ -372,13 +372,15 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * See {@link ValidatorMessages} for error-specific callback parameters.
    *
    * ```ts
-   * form({
-   *   name: field(''),
+   * const profile = form({
+   *   name: field('', [required]),
    * }, {
    *   validatorMessages: {
    *     required: 'Enter a value.',
    *   },
    * });
+   * profile.name.getError('required')?.message;
+   * // 'Enter a value.'
    * ```
    */
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
@@ -569,14 +571,15 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    * **Default:** `undefined`; no blocked-submission callback.
    *
    * ```ts
-   * form({
-   *   name: field(''),
+   * const profile = form({
+   *   name: field('', [required]),
    * }, {
    *   onSubmit() {},
    *   onSubmitBlocked(node) {
    *     node.focus();
    *   },
    * });
+   * await profile.submit(); // false
    * ```
    */
   onSubmitBlocked?(form: TForm): void;
@@ -936,11 +939,15 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Computes and sets the complete form value from its current value without marking nodes dirty.
    *
    * ```ts
-   * const node = form({
+   * const profile = form({
    *   name: field('Ada'),
+   *   visits: field.strict(0),
    * });
-   * node.update(() => ({ name: 'Lia' }));
-   * node(); // { name: 'Lia' }
+   * profile.update(value => ({
+   *   ...value,
+   *   visits: value.visits + 1,
+   * }));
+   * profile.visits(); // 1
    * ```
    */
   update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;
@@ -1012,9 +1019,8 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    *   name: field('Ada'),
    * });
    * const rule = validator(() => null);
-   * node.setValidators(() => [rule]);
-   * node.validators({ resolve: true })[0] ===
-   *   rule; // true
+   * node.setValidators(rule);
+   * node.validators()[0] === rule; // true
    * ```
    */
   validators: Signal<Validators<FormValue<TNodes>>> & {
@@ -1115,8 +1121,11 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Returns the first validation error belonging directly to this form and matching `kind`.
    *
    * ```ts
-   * const node = field('', [required]);
-   * node.getError('required')?.kind;
+   * const profile = form({
+   *   name: field('', [required]),
+   * });
+   * profile.getError('required'); // undefined
+   * profile.name.getError('required')?.kind;
    * // 'required'
    * ```
    *
@@ -1263,7 +1272,7 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    *   name: field('Ada', { debounce: 'blur' }),
    * });
    * profile.name.value.control.set('Lia');
-   * profile.name.flush();
+   * profile.flush();
    * profile.name(); // 'Lia'
    * ```
    */
@@ -1272,9 +1281,9 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Focuses the first bound UI control in this form's subtree, in DOM order.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
    *     <input [formNode]="profile.name" />

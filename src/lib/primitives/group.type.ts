@@ -21,14 +21,11 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    *
    * ```ts
    * const values: unknown[] = [];
-   * const node = group(
-   *   { name: field('Ada') },
-   *   {
-   *     onValueChange(value) {
-   *       values.push(value);
-   *     },
+   * const node = group({ name: field('Ada') }, {
+   *   onValueChange(value) {
+   *     values.push(value);
    *   },
-   * );
+   * });
    * node.set({ name: 'Lia' });
    * values.length; // 1
    * ```
@@ -46,16 +43,13 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * **Default:** `undefined`; no initialization callback.
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
+   * group({
+   *   name: field(''),
+   * }, {
+   *   configure(api) {
+   *     api.setValidators(() => null);
    *   },
-   *   {
-   *     configure(api) {
-   *       api.setValidators(() => null);
-   *     },
-   *   },
-   * );
+   * });
    * ```
    */
   configure?: (api: TGroup['$api']) => void;
@@ -78,39 +72,30 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * See {@link ValidatorSource}, {@link ValidationResult}, and {@link ComposableValidationResult}.
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     validators: () => null,
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   validators: () => null,
+   * });
    * ```
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     validators: () => ({ kind: 'blocked' }),
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   validators: () => ({ kind: 'blocked' }),
+   * });
    * ```
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     validators: asyncValidator(async () => {
-   *       await Promise.resolve();
-   *       return null;
-   *     }),
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   validators: asyncValidator(async () => {
+   *     await Promise.resolve();
+   *     return null;
+   *   }),
+   * });
    * ```
    */
   validators?: ValidatorSource<TValue, TGroup>;
@@ -128,39 +113,30 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * - **Functions**: Commit after the returned promise settles successfully; receive the cancellation signal.
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     debounce: 300,
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   debounce: 300,
+   * });
    * ```
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     debounce: 'blur',
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   debounce: 'blur',
+   * });
    * ```
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
+   * group({
+   *   name: field(''),
+   * }, {
+   *   debounce: async abortSignal => {
+   *     await Promise.resolve();
+   *     if (abortSignal.aborted) return;
    *   },
-   *   {
-   *     debounce: async abortSignal => {
-   *       await Promise.resolve();
-   *       if (abortSignal.aborted) return;
-   *     },
-   *   },
-   * );
+   * });
    * ```
    */
   debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
@@ -177,28 +153,22 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * - **Functions**: Reevaluate tracked signal reads to derive the local state.
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     hidden: true,
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   hidden: true,
+   * });
    * ```
    *
    * ```ts
    * import { signal } from '@angular/core';
    *
    * const active = signal(false);
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     hidden: () => active(),
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   hidden: () => active(),
+   * });
    * ```
    */
   hidden?: boolean | (() => boolean);
@@ -217,39 +187,30 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * - **Strings**: Disable locally and record the text in `disabledReasons()`.
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     disabled: true,
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   disabled: true,
+   * });
    * ```
    *
    * ```ts
    * import { signal } from '@angular/core';
    *
    * const active = signal(false);
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     disabled: () => active(),
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   disabled: () => active(),
+   * });
    * ```
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     disabled: 'Locked',
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   disabled: 'Locked',
+   * });
    * ```
    */
   disabled?: boolean | string | (() => boolean | string);
@@ -266,28 +227,22 @@ export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> 
    * - **Functions**: Reevaluate tracked signal reads to derive the local state.
    *
    * ```ts
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     readonly: true,
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   readonly: true,
+   * });
    * ```
    *
    * ```ts
    * import { signal } from '@angular/core';
    *
    * const active = signal(false);
-   * group(
-   *   {
-   *     name: field(''),
-   *   },
-   *   {
-   *     readonly: () => active(),
-   *   },
-   * );
+   * group({
+   *   name: field(''),
+   * }, {
+   *   readonly: () => active(),
+   * });
    * ```
    */
   readonly?: boolean | (() => boolean);
@@ -402,7 +357,9 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * Callback errors propagate and stop iteration.
      *
      * ```ts
-     * const profile = form({ name: field('Ada') });
+     * const profile = group({
+     *   name: field('Ada'),
+     * });
      * const keys: string[] = [];
      * profile.forEachChild((child, key) => {
      *   keys.push(key);
@@ -421,7 +378,9 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * to visit their added children.
      *
      * ```ts
-     * const profile = form({ name: field('Ada') });
+     * const profile = group({
+     *   name: field('Ada'),
+     * });
      * const keys: string[] = [];
      * profile.add('age', field(36));
      * profile.forEachChild(
@@ -482,7 +441,9 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * Detaches a dynamically added child. Initially declared children cannot be removed.
      *
      * ```ts
-     * const profile = form({ name: field('Ada') });
+     * const profile = group({
+     *   name: field('Ada'),
+     * });
      * profile.add('age', field(36));
      * const age = profile.remove('age');
      * age?.(); // 36
@@ -554,8 +515,11 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * Returns the first validation error belonging directly to this group and matching `kind`.
      *
      * ```ts
-     * const node = field('', [required]);
-     * node.getError('required')?.kind;
+     * const profile = group({
+     *   name: field('', [required]),
+     * });
+     * profile.getError('required'); // undefined
+     * profile.name.getError('required')?.kind;
      * // 'required'
      * ```
      *

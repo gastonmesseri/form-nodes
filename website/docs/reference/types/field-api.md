@@ -114,7 +114,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `debouncing` | Whether a control-originated value is waiting to be committed by this field's numeric, blur-based, or asynchronous debounce. Programmatic writes do not activate this signal. |
 | `flush` | Immediately commits the pending value.control(), ending its configured debounce. Has no observable effect when no control update is pending. |
 | `focus` | Focuses the first `[formNode]` control currently bound to this field in DOM order. |
-| `patch` | Assigns a committed value like `set()`. Provided for a uniform node API. |
+| `patch` | Assigns a committed value like `set()`. Available through `$api` for generic infrastructure; ordinary field updates use `set()`. |
 | `reset` | Clears touched and dirty state and cancels pending control input. Passing a value also replaces internally committed value; omitting it preserves that value even when `equal` retains an older exposed value. Controls reset to the internally committed value. |
 | `resetToInitial` | Restores the field's captured initial value and resets its interaction state. |
 | `validators` | Current normalized validators assigned directly to this field, in declaration order. |

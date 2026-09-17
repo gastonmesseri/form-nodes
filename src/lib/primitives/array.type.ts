@@ -555,17 +555,18 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Returns the current item nodes accepted by a type-guard predicate.
    *
    * ```ts
-   * const items = array(field(''), {
-   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * const users = array({
+   *   username: field(''),
+   * }, {
+   *   initialValue: [
+   *     { username: 'Ada' },
+   *     { username: 'Lia' },
+   *   ],
    * });
-   * const isAda = (
-   *   item: NonNullable<
-   *     ReturnType<typeof items.at>
-   *   >,
-   * ): item is NonNullable<
-   *   ReturnType<typeof items.at>
-   * > => item() === 'Ada';
-   * items.filter(isAda).length; // 1
+   * const matches = users.filter(user => {
+   *   return user.username() === 'Ada';
+   * });
+   * matches[0]?.username(); // 'Ada'
    * ```
    */
   filter<TFiltered extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFiltered): TFiltered[];
@@ -573,11 +574,18 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Returns the current item nodes for which `predicate` produces a truthy result.
    *
    * ```ts
-   * const items = array(field(''), {
-   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * const users = array({
+   *   username: field(''),
+   * }, {
+   *   initialValue: [
+   *     { username: 'Ada' },
+   *     { username: 'Lia' },
+   *   ],
    * });
-   * items.filter(item => item() === 'Ada')
-   *   .length; // 1
+   * const matches = users.filter(user => {
+   *   return user.username() === 'Ada';
+   * });
+   * matches[0]?.username(); // 'Ada'
    * ```
    */
   filter(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>[];
@@ -585,17 +593,18 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Returns the first current item node accepted by a type-guard predicate, or `undefined`.
    *
    * ```ts
-   * const items = array(field(''), {
-   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * const users = array({
+   *   username: field(''),
+   * }, {
+   *   initialValue: [
+   *     { username: 'Ada' },
+   *     { username: 'Lia' },
+   *   ],
    * });
-   * const isAda = (
-   *   item: NonNullable<
-   *     ReturnType<typeof items.at>
-   *   >,
-   * ): item is NonNullable<
-   *   ReturnType<typeof items.at>
-   * > => item() === 'Ada';
-   * items.find(isAda)?.(); // 'Ada'
+   * const match = users.find(user => {
+   *   return user.username() === 'Ada';
+   * });
+   * match?.username(); // 'Ada'
    * ```
    */
   find<TFound extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFound): TFound | undefined;
@@ -603,11 +612,18 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Returns the first current item node for which `predicate` is truthy, or `undefined`.
    *
    * ```ts
-   * const items = array(field(''), {
-   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * const users = array({
+   *   username: field(''),
+   * }, {
+   *   initialValue: [
+   *     { username: 'Ada' },
+   *     { username: 'Lia' },
+   *   ],
    * });
-   * items.find(item => item() === 'Lia')?.();
-   * // 'Lia'
+   * const match = users.find(user => {
+   *   return user.username() === 'Ada';
+   * });
+   * match?.username(); // 'Ada'
    * ```
    */
   find(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
@@ -816,15 +832,14 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * ℹ️ Returning `null` or `undefined` clears the array.
    *
    * ```ts
-   * const node = array({
+   * const people = array({
    *   name: field('Ada'),
-   * }, {
-   *   initialValue: 1,
-   * });
-   * node.update(() => [
+   * }, { initialValue: 1 });
+   * people.update(rows => [
+   *   ...rows,
    *   { name: 'Lia' },
    * ]);
-   * node(); // [{ name: 'Lia' }]
+   * people.length(); // 2
    * ```
    */
   update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
@@ -922,9 +937,8 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    *   initialValue: 1,
    * });
    * const rule = validator(() => null);
-   * node.setValidators(() => [rule]);
-   * node.validators({ resolve: true })[0] ===
-   *   rule; // true
+   * node.setValidators(rule);
+   * node.validators()[0] === rule; // true
    * ```
    */
   validators: Signal<Validators<ArrayValue<TItem>>> & {
@@ -1037,9 +1051,12 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Returns the first validation error belonging directly to this array and matching `kind`.
    *
    * ```ts
-   * const node = field('', [required]);
-   * node.getError('required')?.kind;
-   * // 'required'
+   * const people = array({
+   *   name: field(''),
+   * }, {
+   *   validators: minLength(1),
+   * });
+   * people.getError('minLength')?.minLength; // 1
    * ```
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
@@ -1156,12 +1173,15 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Immediately commits every pending control value in this array's current item subtrees.
    *
    * ```ts
-   * const profile = form({
-   *   name: field('Ada', { debounce: 'blur' }),
+   * const people = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   *   debounce: 'blur',
    * });
-   * profile.name.value.control.set('Lia');
-   * profile.name.flush();
-   * profile.name(); // 'Lia'
+   * people.at(0)!.name.value.control.set('Lia');
+   * people.flush();
+   * people.at(0)!.name(); // 'Lia'
    * ```
    */
   flush(): void;
@@ -1169,9 +1189,9 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Focuses the first bound UI control in this array's current item subtrees, in DOM order.
    *
    * ```ts
-   * import * as ng from '@angular/core';
+   * import { Component } from '@angular/core';
    *
-   * @ng.Component({
+   * @Component({
    *   imports: [FormNodeDirective],
    *   template: `
    *     @for (row of people; track row) {
@@ -1263,11 +1283,14 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
      * **Default:** `false`; visit interactive descendants too.
      *
      * ```ts
-     * const profile = form({ name: field('Ada') });
-     * profile.markAsTouched({
+     * const people = array({
+     *   name: field('Ada'),
+     * }, { initialValue: 1 });
+     * people.markAsTouched({
      *   skipDescendants: true,
      * });
-     * profile.name.touched(); // false
+     * people.touched(); // true
+     * people.at(0)!.name.touched(); // false
      * ```
      */
     skipDescendants?: boolean;

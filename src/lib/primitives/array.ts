@@ -91,16 +91,7 @@ export function array<TDefinition extends ArrayTemplate>(
 /**
  * Creates an array node from a node-definition factory.
  *
- * ```ts
- * const people = array(
- *   () => ({
- *     name: field(''),
- *   }),
- *   {
- *     initialValue: 2,
- *   },
- * );
- * ```
+ * Prefer an object template for ordinary declarations; see the template overload of {@link array}.
  *
  * @param factory Creates the declarative shape for each item. Use a factory when construction
  * should be deferred or customized. Every call must return a fresh `field()`, `form()`, `array()`,
@@ -119,9 +110,7 @@ export function array<TDefinition extends ArrayTemplate>(
 /**
  * Creates an array node from a factory and positional initial contents.
  *
- * ```ts
- * const names = array(() => field(''), 2);
- * ```
+ * Prefer an object template for ordinary declarations; see the template overload of {@link array}.
  *
  * @param factory Creates one fresh `field()`, `form()`, `array()`, or shorthand object per item.
  * Returning the same definition from multiple calls throws.

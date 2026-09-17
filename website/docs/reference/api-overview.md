@@ -16,6 +16,10 @@ If you already have a concrete failure or unexpected state, use the symptom-orie
 Editor hovers include focused examples for individual options and operations. Import the Form Nodes
 symbols used in each example from `@ngblocks/form-nodes`; Angular imports are shown explicitly.
 Examples include their own model or component setup, and value comments describe the expected result.
+Child operations use their model path, such as `profile.name.set(...)`. Examples on aggregate
+operations call the form, group, or array itself, so you can see which part of the tree is affected.
+Direct validator registration and resolved compositions have separate examples. Collection-query
+examples use object templates and predicates on children, such as `user.username() === 'Ada'`.
 
 Option descriptions explain defaults, inheritance, and accepted input forms. For broader workflows,
 follow the references below, especially [node value views](./node-value.md),
