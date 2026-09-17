@@ -212,7 +212,12 @@ export class FormNodeNgControl {
     return Object.hasOwn(errors, errorCode) ? errors[errorCode] : undefined;
   }
 
-  /** @reactive Tracks the error query and follows Angular's payload truthiness check. */
+  /**
+   * Returns whether the selected Angular error payload is truthy. Missing nodes or errors
+   * return `false`; use the Form Nodes node API for kind-presence queries.
+   *
+   * @reactive Tracks the error query and follows Angular payload truthiness.
+   */
   hasError(errorCode: string, path?: string | (string | number)[]): boolean {
     return !!this.getError(errorCode, path);
   }

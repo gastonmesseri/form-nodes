@@ -5,11 +5,79 @@ import type { ValidationErrorWithTargetNode } from '../validation/validation.typ
 
 /** A native form submission attempt. Values are exposed snapshots; `form` is the bound node. */
 export type FormNodeSubmitEvent<TNode extends AnyNode = AnyNode> = {
-  /** Exposed form value after pending control input has been flushed. */
+  /**
+   * Exposed form value after pending control input has been flushed.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({
+   *   selector: '[observeSubmit]',
+   * })
+   * export class ObserveSubmit {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeSubmit;
+   *     changes.subscribe(event => {
+   *       console.log(event.value);
+   *       // Output: native submission data.
+   *     });
+   *   }
+   * }
+   * ```
+   */
   readonly value: NodeValue<TNode>;
-  /** Bound form node. Use `$api` for collision-safe state and operations. */
+  /**
+   * Bound form node. Use `$api` for collision-safe state and operations.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({
+   *   selector: '[observeSubmit]',
+   * })
+   * export class ObserveSubmit {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeSubmit;
+   *     changes.subscribe(event => {
+   *       console.log(
+   *         event.form.$api.nodeType(),
+   *       );
+   *       // Output: native submission data.
+   *     });
+   *   }
+   * }
+   * ```
+   */
   readonly form: TNode;
-  /** Original native submit event, including SubmitEvent.submitter when available. */
+  /**
+   * Original native submit event, including SubmitEvent.submitter when available.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({
+   *   selector: '[observeSubmit]',
+   * })
+   * export class ObserveSubmit {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeSubmit;
+   *     changes.subscribe(event => {
+   *       console.log(event.event.type);
+   *       // Output: native submission data.
+   *     });
+   *   }
+   * }
+   * ```
+   */
   readonly event: Event;
 };
 
@@ -19,45 +87,212 @@ export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
    * Control-originated value after it is committed, respecting debounce and flush.
    * Programmatic node writes do not emit. Synchronous state is current in the handler;
    * asynchronous validation may still be pending.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeValueChange;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
    */
   readonly formNodeValueChange: OutputRef<NodeValue<TNode>>;
   /**
    * Latest parsed value received from the selected control adapter, before waiting for debounce.
    * This does not guarantee a physical user interaction: custom controls can emit from code.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding
+   *         .formNodeControlValueChange;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
    */
   readonly formNodeControlValueChange: OutputRef<NodeValue<TNode>>;
   /**
    * Native submission attempt on a form() binding, after preparing values and interaction state,
    * before the validation gate and declared action. Emits even without onSubmit or when blocked.
    * Programmatic submit() does not emit. Async listeners are not awaited.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeSubmit;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
    */
   readonly formNodeSubmit: OutputRef<FormNodeSubmitEvent<TNode>>;
   /**
    * Native attempt rejected by submitWhen, including pending validation with 'valid'.
    * Emits after formNodeSubmit, even without a declared onSubmit action. Concurrent attempts,
    * group bindings, and programmatic submit() do not emit this output.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeSubmitBlocked;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
    */
   readonly formNodeSubmitBlocked: OutputRef<FormNodeSubmitEvent<TNode>>;
-  /** Host element carrying the `[formNode]` directive. */
+  /**
+   * Host element carrying the `[formNode]` directive.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   inspect() {
+   *     return this.binding.element;
+   *   }
+   * }
+   * ```
+   */
   readonly element: HTMLElement;
-  /** Injector belonging to the binding's host element. */
+  /**
+   * Injector belonging to the binding's host element.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   inspect() {
+   *     return this.binding.injector;
+   *   }
+   * }
+   * ```
+   */
   readonly injector: Injector;
-  /** Reactive reference to the node currently bound to the host. */
+  /**
+   * Reactive reference to the node currently bound to the host.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   inspect() {
+   *     return this.binding.node();
+   *   }
+   * }
+   * ```
+   */
   readonly node: Signal<TNode>;
   /**
    * Errors visible to this binding, excluding errors owned by another binding.
    *
-   * @example
    * ```ts
-   * binding.errors();
-   * // [{ kind: 'required', message: 'Value is required.', targetNode: binding.node() }]
+   * provideFormNodesConfig({
+   *   classes: {
+   *     'has-errors': binding => {
+   *       return binding.errors().length > 0;
+   *     },
+   *   },
+   * });
    * ```
    */
   readonly errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]>;
-  /** Focuses this binding using its native or custom-control focus behavior. */
+  /**
+   * Focuses this binding using its native or custom-control focus behavior.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   inspect() {
+   *     this.binding.focus();
+   *   }
+   * }
+   * ```
+   */
   focus(options?: FocusOptions): void;
-  /** Commits pending control-originated values for the bound node. */
+  /**
+   * Commits pending control-originated values for the bound node.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   inspect() {
+   *     this.binding.flush();
+   *   }
+   * }
+   * ```
+   */
   flush(): void;
-  /** Resets interaction state and control-specific parsing state. */
+  /**
+   * Resets interaction state and control-specific parsing state.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   inspect() {
+   *     this.binding.reset();
+   *   }
+   * }
+   * ```
+   */
   reset(): void;
 };

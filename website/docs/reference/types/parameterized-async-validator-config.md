@@ -39,7 +39,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `validate` | Validates one stable params snapshot. Signals read here are not tracked automatically. |
+| `validate` | Validates one stable `params` snapshot. Signal reads inside this callback do not register dependencies; declare them in `params`. Return a Promise-like or Observable-like validation result. Use `abortSignal` to cancel external work; obsolete results are ignored. |
 
 ## Related reference
 

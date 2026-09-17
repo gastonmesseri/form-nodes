@@ -11,7 +11,19 @@ import type { HiddenFunctionMembers } from './hidden-function-members.type';
 import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type MarkAsTouchedOptions = {
-  /** Skips recursively touching and committing descendants; the current node still commits its own pending input. */
+  /**
+   * Skips recursively touching and committing descendants; the current node still commits its own pending input.
+   *
+   * **Default:** `false`; visit interactive descendants too.
+   *
+   * ```ts
+   * const profile = form({ name: field('Ada') });
+   * profile.markAsTouched({
+   *   skipDescendants: true,
+   * });
+   * profile.name.touched(); // false
+   * ```
+   */
   skipDescendants?: boolean;
 };
 
@@ -23,9 +35,29 @@ export type ControlDebounce = number | 'blur' | ((abortSignal: AbortSignal) => v
 
 /** Identifies one active cause of a node's disabled state. */
 export type DisabledReason<TNode extends AnyNode = AnyNode> = {
-  /** Node on which this reason originated. Descendants retain the original source node. */
+  /**
+   * Node on which this reason originated. Descendants retain the original source node.
+   *
+   * ```ts
+   * const profile = form({ name: field('Ada') });
+   * profile.disable('Locked');
+   * const reason =
+   *   profile.name.disabledReasons()[0];
+   * reason?.sourceNode === profile; // true
+   * ```
+   */
   readonly sourceNode: TNode;
-  /** Optional user-facing explanation supplied by the disabled option or disable(). */
+  /**
+   * Optional user-facing explanation supplied by the disabled option or disable().
+   *
+   * ```ts
+   * const profile = form({ name: field('Ada') });
+   * profile.disable('Locked');
+   * const reason =
+   *   profile.name.disabledReasons()[0];
+   * reason?.message; // 'Locked'
+   * ```
+   */
   readonly message?: string;
 };
 
@@ -39,22 +71,64 @@ export type NodeControlBinding = {
 };
 
 export type NodeApi = {
-  /** Returns the concrete primitive represented by this node. */
+  /**
+   * Returns the concrete primitive represented by this node.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.nodeType(); // 'field'
+   * ```
+   */
   nodeType(): NodeType;
-  /** Nearest explicit `form()` containing this node, or `null` when no form workflow owns it. */
+  /**
+   * Nearest explicit `form()` containing this node, or `null` when no form workflow owns it.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.form() === profile; // true
+   * ```
+   */
   form: Signal<AnyNode | null>;
-  /** Complete root node containing this node. A root node returns itself. */
+  /**
+   * Complete root node containing this node. A root node returns itself.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.root() === profile; // true
+   * ```
+   */
   root: Signal<AnyNode>;
-  /** Immediate structural parent of this node, or `null` when it is a root or has been detached. */
+  /**
+   * Immediate structural parent of this node, or `null` when it is a root or has been detached.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.parent() === profile; // true
+   * ```
+   */
   parent: Signal<AnyNode | null>;
   /**
    * Property and array-index segments from the complete root to this node. Root nodes use `[]`.
    * Array indexes are represented as strings.
    *
-   * @example
    * ```ts
-   * myForm.contacts[0]?.email.path();
-   * // ['contacts', '0', 'email']
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.path(); // ['name']
    * ```
    */
   path: Signal<readonly string[]>;
@@ -63,46 +137,78 @@ export type NodeApi = {
    *
    * Prefer calling the node directly instead of using `name.value()` for ordinary value reads:
    *
-   * @example
    * ```ts
-   * const name = field('Marco');
-   *
-   * name(); // 'Marco'
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node(); // 'Ada'
    * ```
    */
   value: NodeValueSignal<any>;
   /**
    * Property or array index under which this node is stored, or `null` when it is a root node.
    *
-   * @example
    * ```ts
-   * myForm.age.keyInParent(); // 'age'
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.keyInParent(); // 'name'
    * ```
    */
   keyInParent: Signal<string | number | null>;
   /**
    * Assigns a complete committed value immediately without marking the node dirty.
    *
-   * @example
    * ```ts
-   * name.set('Lia');
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.set('Lia');
+   * node(); // 'Lia'
    * ```
    */
   set(value: any): void;
   /**
    * Computes and assigns a complete committed value without marking the node dirty.
    *
-   * @example
    * ```ts
-   * count.update(value => value + 1);
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.update(() => 'Lia');
+   * node(); // 'Lia'
    * ```
    */
   update(updater: (value: any) => any): void;
-  /** Updates supplied object branches or replaces complete array/field values without marking the node dirty. */
+  /**
+   * Updates supplied object branches or replaces complete array/field values without marking the node dirty.
+   *
+   * ```ts
+   * const node = form({ name: field('Ada') });
+   * node.patch({ name: 'Lia' });
+   * node.name(); // 'Lia'
+   * ```
+   */
   patch(value: any): void;
   /**
    * Clears interaction state and pending control input throughout the reset scope, optionally
    * assigning a new complete value first.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.set('Lia');
+   * node.markAsDirty();
+   * node.reset();
+   * node(); // 'Lia'
+   * node.dirty(); // false
+   * ```
    */
   reset(...args: [] | [value: any]): void;
   /**
@@ -111,77 +217,249 @@ export type NodeApi = {
    * Programmatic writes do not redefine the baseline. Current validators and availability remain.
    * Supported data containers are copied; opaque instances and accessor state retain references.
    * This does not emit control-originated value outputs. See concrete node APIs for full details.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.set('Lia');
+   * node.resetToInitial();
+   * node(); // 'Ada'
+   * ```
    */
   resetToInitial(): void;
-  /** Aggregated validation phase for this node and its subtree. */
+  /**
+   * Aggregated validation phase for this node and its subtree.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.validationStatus(); // 'valid'
+   * ```
+   */
   validationStatus: Signal<'valid' | 'invalid' | 'unknown'>;
-  /** Whether this node and its descendants have completed validation without errors. */
+  /**
+   * Whether this node and its descendants have completed validation without errors.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.valid(); // true
+   * ```
+   */
   valid: Signal<boolean>;
-  /** Whether this node or any descendant currently contributes a validation error. */
+  /**
+   * Whether this node or any descendant currently contributes a validation error.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.invalid(); // false
+   * ```
+   */
   invalid: Signal<boolean>;
   /**
    * Validation errors belonging directly to this node by default.
    * Pass `{ descendants: true }` to include descendants, exactly as `allErrors()`.
-   * @reactive Tracks the selected own or subtree error signal.
    *
-   * @example
    * ```ts
-   * node.errors();
-   * // [{ kind: 'required', message: 'Value is required.', targetNode: node }]
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.errors().map(error => error.kind);
+   * // ['blocked']
    * ```
+   *
+   * @reactive Tracks the selected own or subtree error signal.
    */
   errors: NodeErrorsSignal<AnyNode>;
   /**
    * Validation errors from this node and its complete subtree in structural order.
    *
-   * @example
    * ```ts
-   * node.allErrors();
-   * // [{ kind: 'required', message: 'Value is required.', targetNode: node }]
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.allErrors().map(error => error.kind);
+   * // ['blocked']
    * ```
    */
   allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
   /**
    * Returns the first error belonging directly to this node and matching `kind`.
    *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.getError('blocked')?.kind;
+   * // 'blocked'
+   * ```
+   *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<AnyNode> & { readonly kind: TKind }) | undefined;
   /**
    * Whether this node's own errors include the kind; does not search descendants.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.hasError('blocked'); // true
+   * ```
+   *
    * @reactive Tracks current errors.
    */
   hasError(kind: string): boolean;
   /**
    * Whether this exact validator is directly registered, or resolved when resolve is true.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * const rule = validator(() => null);
+   * node.setValidators(rule);
+   * node.hasValidator(rule); // true
+   * ```
+   *
    * @reactive Tracks registration changes and, with resolve, synchronous composition dependencies.
    */
   hasValidator(validator: (context: any) => unknown, options?: { resolve?: boolean }): boolean;
-  /** Whether active validation metadata currently marks this node as required. */
+  /**
+   * Whether active validation metadata currently marks this node as required.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.required(); // false
+   * ```
+   */
   required: Signal<boolean>;
-  /** Whether asynchronous validation is active on this node or any descendant. */
+  /**
+   * Whether asynchronous validation is active on this node or any descendant.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.pending(); // false
+   * ```
+   */
   pending: Signal<boolean>;
   /**
    * Whether this node is a form running its submission action, or has an ancestor form that is
    * currently running one.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.submitting(); // false
+   * ```
    */
   submitting: Signal<boolean>;
-  /** Whether a control-originated value is awaiting commit on this node or any descendant. */
+  /**
+   * Whether a control-originated value is awaiting commit on this node or any descendant.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.debouncing(); // false
+   * ```
+   */
   debouncing: Signal<boolean>;
-  /** Immediately commits pending control-originated values on this node and its flush scope. */
+  /**
+   * Immediately commits pending control-originated values on this node and its flush scope.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada', { debounce: 'blur' }),
+   * });
+   * profile.name.value.control.set('Lia');
+   * profile.name.flush();
+   * profile.name(); // 'Lia'
+   * ```
+   */
   flush(): void;
-  /** Focuses the first control bound to this node or its descendants, when one exists. */
+  /**
+   * Focuses the first control bound to this node or its descendants, when one exists.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Component({
+   *   imports: [FormNodeDirective],
+   *   template: `
+   *     <input [formNode]="profile.name" />
+   *     <button (click)="profile.name.focus()">
+   *       Focus name
+   *     </button>
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   profile = form({ name: field('Ada') });
+   * }
+   * ```
+   */
   focus(options?: FocusOptions): void;
   /**
    * Whether this node or any descendant has been marked touched.
    *
    * ℹ️ Disabled, readonly, or hidden nodes report `false` and do not contribute touched state to ancestors.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.touched(); // false
+   * ```
    */
   touched: Signal<boolean>;
   /**
    * Logical inverse of `touched()`.
    *
    * Whether neither this node nor any contributing descendant currently reports having been touched.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.untouched(); // true
+   * ```
    */
   untouched: Signal<boolean>;
   /**
@@ -190,47 +468,128 @@ export type NodeApi = {
    *
    * This can change committed values and trigger validation and value-change callbacks,
    * even when nodes are already touched. Noninteractive subtrees ignore this operation.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.markAsTouched();
+   * node.touched(); // true
+   * ```
    */
   markAsTouched(options?: {
-    /** Skips recursively touching and committing descendants; the current node still commits its own pending input. */
+    /**
+     * Skips recursively touching and committing descendants; the current node still commits its own pending input.
+     *
+     * **Default:** `false`; visit interactive descendants too.
+     *
+     * ```ts
+     * const profile = form({ name: field('Ada') });
+     * profile.markAsTouched({
+     *   skipDescendants: true,
+     * });
+     * profile.name.touched(); // false
+     * ```
+     */
     skipDescendants?: boolean;
   }): void;
-  /** Clears touched state, making `touched()` false and `untouched()` true throughout the affected scope. */
+  /**
+   * Clears this node's own touched marker without changing descendant markers or values.
+   * An interactive touched descendant can keep an aggregate `touched()` true. Use `reset()`
+   * to clear interaction state throughout the subtree.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.markAsTouched();
+   * node.markAsUntouched();
+   * node.touched(); // false
+   * ```
+   */
   markAsUntouched(): void;
   /**
    * Whether this node currently reports user-modified state.
    *
    * Control-originated updates and `markAsDirty()` record dirty state; programmatic value updates
    * do not. Aggregate nodes also report `true` when an interactive descendant is dirty.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.dirty(); // false
+   * ```
    */
   dirty: Signal<boolean>;
   /**
    * Logical inverse of `dirty()`.
    *
    * Whether neither this node nor any contributing descendant reports modification through user interaction.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.pristine(); // true
+   * ```
    */
   pristine: Signal<boolean>;
-  /** Marks this node's own state dirty, making `dirty()` true and `pristine()` false while it is interactive. */
+  /**
+   * Marks this node's own state dirty, making `dirty()` true and `pristine()` false while it is interactive.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.markAsDirty();
+   * node.dirty(); // true
+   * ```
+   */
   markAsDirty(): void;
   /**
    * Clears this node's own dirty state. `pristine()` becomes true and `dirty()` false only when no
    * contributing descendant remains dirty.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.markAsDirty();
+   * node.markAsPristine();
+   * node.dirty(); // false
+   * ```
    */
   markAsPristine(): void;
-  /** Whether this node is effectively disabled by a local or inherited reason. */
+  /**
+   * Whether this node is effectively disabled by a local or inherited reason.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.disabled(); // false
+   * ```
+   */
   disabled: Signal<boolean>;
   /**
    * Parent reasons followed by the active reasons originating on this node.
    *
-   * @example
    * ```ts
-   * node.disabledReasons();
-   * // [
-   * //   {
-   * //     sourceNode: parent,
-   * //     message: 'Section is unavailable',
-   * //   },
-   * // ]
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.disable('Locked');
+   * node.disabledReasons()[0]?.message;
+   * // 'Locked'
    * ```
    */
   disabledReasons: Signal<readonly DisabledReason[]>;
@@ -238,56 +597,151 @@ export type NodeApi = {
    * Logical inverse of `disabled()`.
    *
    * Whether this node has no active local or inherited disabled reason and can participate normally.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.enabled(); // true
+   * ```
    */
   enabled: Signal<boolean>;
   /**
    * Disables this node, optionally recording a user-facing reason.
    * Sets `disabled()` to true and `enabled()` to false on this node and its effective subtree.
    *
-   * @example Disable without a reason
    * ```ts
-   * node.disable();
-   * ```
-   *
-   * @example Disable with a reason
-   * ```ts
-   * node.disable('Unavailable');
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.disable('Locked');
+   * node.disabled(); // true
    * ```
    */
   disable(message?: string): void;
   /**
-   * Clears the imperative disabled state created by `disable()`. `enabled()` becomes true only
-   * where no configured or inherited disabled reason remains active.
+   * Clears local disabled state, including a static initial `disabled` option. Continuing
+   * reactive conditions and inherited reasons remain effective, so `enabled()` may stay false.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.disable();
+   * node.enable();
+   * node.disabled(); // false
+   * ```
    */
   enable(): void;
-  /** Whether this node is effectively readonly through local configuration or an ancestor. */
+  /**
+   * Whether this node is effectively readonly through local configuration or an ancestor.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.readonly(); // false
+   * ```
+   */
   readonly: Signal<boolean>;
   /**
    * Logical inverse of `readonly()`.
    *
    * Whether this node accepts value changes from a control bound directly to it.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.writable(); // true
+   * ```
    */
   writable: Signal<boolean>;
-  /** Marks this node and its subtree readonly, making `readonly()` true and `writable()` false. */
+  /**
+   * Marks this node and its subtree readonly, making `readonly()` true and `writable()` false.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.markAsReadonly();
+   * node.readonly(); // true
+   * ```
+   */
   markAsReadonly(): void;
   /**
-   * Clears this node's imperative readonly state. `writable()` becomes true only where no
-   * configured or inherited readonly state remains active.
+   * Clears local readonly state, including a static initial `readonly` option. Reactive
+   * conditions and ancestor readonly state can still prevent the node from becoming writable.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.markAsReadonly();
+   * node.markAsWritable();
+   * node.readonly(); // false
+   * ```
    */
   markAsWritable(): void;
-  /** Whether this node is effectively hidden through local configuration or an ancestor. */
+  /**
+   * Whether this node is effectively hidden through local configuration or an ancestor.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.hidden(); // false
+   * ```
+   */
   hidden: Signal<boolean>;
   /**
    * Logical inverse of `hidden()`.
    *
    * Whether this node is currently intended to be shown to the user.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.visible(); // true
+   * ```
    */
   visible: Signal<boolean>;
-  /** Hides this node and its subtree, making `hidden()` true and `visible()` false. */
+  /**
+   * Hides this node and its subtree, making `hidden()` true and `visible()` false.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.hide();
+   * node.hidden(); // true
+   * ```
+   */
   hide(): void;
   /**
-   * Clears this node's imperative hidden state. `visible()` becomes true only where no configured
-   * or inherited hidden state remains active.
+   * Clears local hidden state, including a static initial `hidden` option. Reactive
+   * conditions and ancestor hidden state can still keep the node hidden.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const node = profile.name;
+   * node.hide();
+   * node.show();
+   * node.hidden(); // false
+   * ```
    */
   show(): void;
 };
@@ -305,9 +759,21 @@ export type NodeApi = {
  * Native function members may appear in IntelliSense. They are not guaranteed node operations;
  * hiding them with `HiddenFunctionMembers` would exclude nodes that override those names.
  * Value types are unspecified; retain the inferred node type when value precision is needed.
+ *
+ * ```ts
+ * const node = form({ name: field('Ada') });
+ * node.$api.valid(); // true
+ * ```
  */
 export type AnyNode = Signal<any> & {
-  /** Returns this node's current committed value and participates in signal dependency tracking. */
+  /**
+   * Returns this node's exposed value after configured equality and participates in signal dependency tracking.
+   *
+   * ```ts
+   * const node = form({ name: field('Ada') });
+   * node.$api.valid(); // true
+   * ```
+   */
   (): any;
 } & {
   /**
@@ -315,6 +781,11 @@ export type AnyNode = Signal<any> & {
    *
    * **Use this property for all state and operations on `AnyNode`.** Direct names may
    * be child nodes, while `$api` always refers to the node's state and operations.
+   *
+   * ```ts
+   * const node = form({ name: field('Ada') });
+   * node.$api.valid(); // true
+   * ```
    */
   $api: Signal<any> & NodeApi;
 };
@@ -331,6 +802,14 @@ export type PublicNode<TNode extends AnyNode> = AnyNode extends TNode
  * Use this direct-member view only when the declaration is known not to shadow its members.
  * For an arbitrary node with unknown child names, use `AnyNode` and access state and operations
  * through `$api`. A type assertion to `DynamicNode` does not make colliding members safe.
+ *
+ * ```ts
+ * const profile = form({ name: field('Ada') });
+ * profile.add('age', field(36));
+ * const age = profile.get('age');
+ * age?.(); // 36
+ * age?.valid(); // true
+ * ```
  */
 export type DynamicNode =
   & PublicNode<AnyNode>
@@ -381,7 +860,6 @@ export interface NodeDefinitions {
  * Committed value inferred from any `form()`, `group()`, `array()`, or `field()` instance.
  * Equivalent to `ReturnType<TNode>`; preserves nested values and field nullability.
  *
- * @example
  * ```ts
  * const profile = form({
  *   name: field('Marco'),
@@ -389,10 +867,18 @@ export interface NodeDefinitions {
  *   contacts: array({ email: field('') }),
  * });
  *
- * type ProfileValue = FormNodeValue<typeof profile>;
- * type NameValue = FormNodeValue<typeof profile.name>; // string | null
- * type AddressValue = FormNodeValue<typeof profile.address>; // { city: string | null }
- * type ContactsValue = FormNodeValue<typeof profile.contacts>; // { email: string | null }[]
+ * type ProfileValue = FormNodeValue<
+ *   typeof profile
+ * >;
+ * type NameValue = FormNodeValue<
+ *   typeof profile.name
+ * >; // string | null
+ * type AddressValue = FormNodeValue<
+ *   typeof profile.address
+ * >; // { city: string | null }
+ * type ContactsValue = FormNodeValue<
+ *   typeof profile.contacts
+ * >; // { email: string | null }[]
  * ```
  */
 export type FormNodeValue<TNode extends AnyNode> = ReturnType<TNode>;

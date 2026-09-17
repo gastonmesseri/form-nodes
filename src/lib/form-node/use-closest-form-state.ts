@@ -7,13 +7,85 @@ import type { CallableNodeApi } from '../types/callable-node-api.type';
 
 /** Shared submission state of the form visible through Angular dependency injection. */
 export type ClosestFormState = {
-  /** Whether a supported form is available. */
+  /**
+   * Whether a supported form is available.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'save-status',
+   *   template: '',
+   * })
+   * export class SaveStatus {
+   *   state = useClosestFormState();
+   *
+   *   readState() {
+   *     return this.state.connected();
+   *   }
+   * }
+   * ```
+   */
   readonly connected: Signal<boolean>;
-  /** Active forms API, or null when disconnected. Form Nodes takes precedence. */
+  /**
+   * Active forms API, or null when disconnected. Form Nodes takes precedence.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'save-status',
+   *   template: '',
+   * })
+   * export class SaveStatus {
+   *   state = useClosestFormState();
+   *
+   *   readState() {
+   *     return this.state.source();
+   *   }
+   * }
+   * ```
+   */
   readonly source: Signal<'formNode' | 'formGroup' | 'ngForm' | null>;
-  /** Whether the active form has recorded a submission attempt, including an invalid attempt. */
+  /**
+   * Whether the active form has recorded a submission attempt, including an invalid attempt.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'save-status',
+   *   template: '',
+   * })
+   * export class SaveStatus {
+   *   state = useClosestFormState();
+   *
+   *   readState() {
+   *     return this.state.submitted();
+   *   }
+   * }
+   * ```
+   */
   readonly submitted: Signal<boolean>;
-  /** The owning Form Nodes form's callable, collision-safe API; null for Angular forms or no form. */
+  /**
+   * The owning Form Nodes form's callable, collision-safe API; null for Angular forms or no form.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'save-status',
+   *   template: '',
+   * })
+   * export class SaveStatus {
+   *   state = useClosestFormState();
+   *
+   *   readState() {
+   *     return this.state.formNode();
+   *   }
+   * }
+   * ```
+   */
   readonly formNode: Signal<CallableNodeApi<FormApi<any>> | null>;
 };
 
@@ -34,11 +106,17 @@ export type ClosestFormState = {
  * reconciliation also observes silent resets and replacement controls. Subscriptions are released
  * with the consumer. A late-created consumer reads the current submitted flag immediately.
  *
- * @example
- * const formState = useClosestFormState();
- * const showErrors = computed(() => formState.submitted());
- * // Form Nodes-specific access when available:
- * formState.formNode()?.reset();
+ * ```ts
+ * import { Component } from '@angular/core';
+ *
+ * @Component({
+ *   selector: 'save-status',
+ *   template: `{{ state.submitted() }}`,
+ * })
+ * export class SaveStatus {
+ *   state = useClosestFormState();
+ * }
+ * ```
  */
 export function useClosestFormState(): ClosestFormState {
   assertInInjectionContext(useClosestFormState);

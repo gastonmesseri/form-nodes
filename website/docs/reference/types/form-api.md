@@ -137,7 +137,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `allErrors` | A signal containing the validation errors of **this form node and its descendants**. |
 | `valid` | Whether this form and every descendant have completed validation without errors. |
 | `invalid` | Whether this form or any descendant currently contributes a validation error. |
-| `getError` | Returns the first validation error belonging directly to this form and matching `kind`. Returns the first custom error belonging directly to this form and matching `kind`. |
+| `getError` | Returns the first validation error belonging directly to this form and matching `kind`. |
 | `hasError` | Whether this node's own errors contain the given kind. Does not search descendants. |
 | `hasValidator` | Whether the same validator function is directly registered on this node, including async validators. By default, does not run validators. Set resolve to true to inspect resolved leaf references. |
 | `required` | Whether active validation metadata marks this form itself as required. |
@@ -152,7 +152,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `touched` | Whether this form or any descendant has been marked touched. |
 | `untouched` | Logical inverse of `touched()`. |
 | `markAsTouched` | Marks this form and, by default, every interactive descendant as touched and commits their pending control values for every debounce strategy. |
-| `markAsUntouched` | Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. |
+| `markAsUntouched` | Clears this node's own touched marker without changing descendant markers or values. An interactive touched descendant can keep an aggregate `touched()` true. Use `reset()` to clear interaction state throughout the subtree. |
 | `dirty` | Whether this form currently reports user-modified state. |
 | `pristine` | Logical inverse of `dirty()`. |
 | `markAsDirty` | Marks this form's own state dirty, making `dirty()` true and `pristine()` false while it is interactive. |
@@ -161,15 +161,15 @@ The declaration above also includes inherited contracts and overloads where appl
 | `disabledReasons` | Active inherited and local causes of this form's disabled state. |
 | `enabled` | Logical inverse of `disabled()`. |
 | `disable` | Disables this form subtree, optionally recording a user-facing reason. Sets `disabled()` to true and `enabled()` to false on this form and its descendants. |
-| `enable` | Clears the imperative disabled state created by `disable()`. `enabled()` becomes true only on nodes without another configured or inherited disabled reason. |
+| `enable` | Clears local disabled state, including a static initial `disabled` option. Continuing reactive conditions and inherited reasons remain effective, so `enabled()` may stay false. |
 | `readonly` | Whether this form is effectively readonly through its own state or an ancestor. |
 | `writable` | Logical inverse of `readonly()`. |
 | `markAsReadonly` | Marks this form subtree readonly, making `readonly()` true and `writable()` false throughout it. |
-| `markAsWritable` | Clears this form's imperative readonly state. `writable()` becomes true only on nodes without another configured or inherited readonly state. |
+| `markAsWritable` | Clears local readonly state, including a static initial `readonly` option. Reactive conditions and ancestor readonly state can still prevent the node from becoming writable. |
 | `hidden` | Whether this form is effectively hidden through its own state or an ancestor. |
 | `visible` | Logical inverse of `hidden()`. |
 | `hide` | Hides this form subtree, making `hidden()` true and `visible()` false throughout it. |
-| `show` | Clears this form's imperative hidden state. `visible()` becomes true only on nodes without another configured or inherited hidden state. |
+| `show` | Clears local hidden state, including a static initial `hidden` option. Reactive conditions and ancestor hidden state can still keep the node hidden. |
 
 ## Related reference
 

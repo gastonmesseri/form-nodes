@@ -80,7 +80,16 @@ export function field<TValue>(
       options: NoInfer<NullableFieldOptions<TValue>> | undefined
     ]
 ): FieldNode<TValue | null>;
-/** Creates a nullable field that preserves an explicitly typed `undefined` initial value. */
+/**
+ * Creates a nullable field that preserves an explicitly typed `undefined` initial value.
+ *
+ * ```ts
+ * const name = field<string>(undefined);
+ * name(); // undefined
+ * name.set('Ada');
+ * name(); // 'Ada'
+ * ```
+ */
 export function field<TValue>(
   value: undefined,
   ...args:

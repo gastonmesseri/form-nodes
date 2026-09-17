@@ -12,15 +12,17 @@ import type { ValidationResult, Validator, ValidatorContext } from '../validatio
  * without explicit return annotations. The form and computed retain their inferred types.
  * Parameterless `when` callbacks on other validators support the same inference convention.
  *
- * @example Require a company name only for business accounts.
+ * Require a company name only for business accounts.
+ *
  * ```ts
+ * import { signal } from '@angular/core';
+ *
  * const businessAccount = signal(false);
  *
  * const companyName = field('', [
  *   requiredIf(() => businessAccount()),
  * ]);
  * ```
- *
  * @reactive Tracks signals read by `condition` and by a custom message function while active.
  * @param condition Reactive boolean condition. Its return type is unchecked to support class self-references.
  * @param options Optional static message string, or an object containing a static or reactive message.
@@ -29,7 +31,33 @@ export const requiredIf = (
   condition: () => any,
   options?: string | {
     message?: string | (() => string | undefined);
-    /** Custom error or errors returned instead of the built-in error. */
+    /**
+     * Replaces a failing conditional required rule with custom errors. A callback receives
+     * the validation context; a nullish callback result suppresses the error. This option
+     * takes precedence over `message` when explicitly supplied.
+     *
+     * **Default:** The built-in required error.
+     *
+     * ```ts
+     * const profile = form({
+     *   company: field('', [
+     *     requiredIf(() => true, {
+     *       error: { kind: 'companyMissing' },
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   company: field('', [
+     *     requiredIf(() => true, {
+     *       error: { kind: 'companyMissing' },
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     error?: ValidationResult | ((context: ValidatorContext<unknown>) => ValidationResult);
   },
 ): Validator<unknown> => {

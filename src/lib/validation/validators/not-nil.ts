@@ -19,35 +19,128 @@ const validateNotNil = (
  *
  * Supports direct use, custom messages, custom errors, and a reactive `when` condition.
  *
- * @example
  * ```ts
- * const checkout = form({
- *   reference: field<string>(null, [notNil]),
+ * const profile = form({
+ *   value: field(null, [
+ *     notNil({ message: 'Check this value.' }),
+ *   ]),
  * });
+ * profile.value.invalid(); // true
  * ```
  *
  * @reactive Tracks the active condition and custom message signals.
  * @param options Optional message or configuration. Returning undefined from a message uses configured fallbacks.
  */
 export function notNil(options: string | ({
-  /** Static or reactive message; undefined uses configured fallbacks. */
+  /**
+   * Overrides the message of a failing built-in validation error. A reactive function
+   * is evaluated only while the rule fails; returning `undefined` continues through the
+   * node, provider, global, and built-in message fallbacks. Cannot be combined with `error`.
+   *
+   * **Default:** `undefined`; use the configured fallback message.
+   *
+   * **Accepted values:**
+   *
+   * - **Strings**: Use the supplied text, including an empty string.
+   * - **Functions**: Track signals read while resolving the message.
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field(null, [
+   *     notNil({ message: 'Check this value.' }),
+   *   ]),
+   * });
+   * ```
+   *
+   * ```ts
+   * import { signal } from '@angular/core';
+   *
+   * const text = signal('Check this value.');
+   * const profile = form({
+   *   value: field(null, [
+   *     notNil({ message: () => text() }),
+   *   ]),
+   * });
+   * ```
+   */
   message?: string | (() => string | undefined);
   error?: never;
 } | {
   message?: never;
-  /** Custom error or errors replacing the built-in error. */
+  /**
+   * Replaces the built-in failure with a custom error or error array. A callback
+   * receives the current validation context and runs only when the built-in rule fails.
+   * A callback may return nullish/empty results to suppress the failure. A static nullish
+   * value preserves the built-in result. Cannot be combined with `message`.
+   *
+   * **Default:** `undefined`; retain the built-in error.
+   *
+   * See {@link ValidationResult} for supported error shapes.
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field(null, [
+   *     notNil({
+   *       error: { kind: 'custom' },
+   *     }),
+   *   ]),
+   * });
+   * ```
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field(null, [
+   *     notNil({
+   *       error: () => ({ kind: 'custom' }),
+   *     }),
+   *   ]),
+   * });
+   * ```
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field(null, [
+   *     notNil({
+   *       error: [
+   *         { kind: 'custom' },
+   *       ],
+   *     }),
+   *   ]),
+   * });
+   * ```
+   */
   error?: ValidationResult | ((context: ValidatorContext<unknown>) => ValidationResult);
 }) & {
-  /** Reactive activation condition. Parameterless callbacks have unchecked returns for class self-references; return a boolean. */
+  /**
+   * Enables the validator and its constraint metadata only while the condition is true.
+   * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
+   * Parameterless callbacks support class self-references with unchecked returns; return
+   * a boolean. Context-taking callbacks retain boolean checking.
+   *
+   * **Default:** `undefined`; the validator remains active.
+   *
+   * ```ts
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(true);
+   * const profile = form({
+   *   value: field(null, [
+   *     notNil({ when: () => active() }),
+   *   ]),
+   * });
+   * ```
+   */
   when?: NoInfer<DeferredCondition | ((context: ValidatorContext<unknown>) => boolean)>;
 }): Validator<unknown>;
 /**
  * Rejects only `null` and `undefined`. Empty strings, `false`, zero, `NaN`, and empty collections pass.
  * Does not contribute required metadata or an HTML required constraint.
  *
- * @example
  * ```ts
- * field(null, [notNil]);
+ * const profile = form({
+ *   value: field(null, [notNil]),
+ * });
+ * profile.value.invalid(); // true
  * ```
  *
  * @param context Reactive context supplied by the validation pipeline.

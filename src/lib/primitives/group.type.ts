@@ -11,180 +11,335 @@ import type { AddedNode, FormApi, FormOptions, FormPatch, FormSet, FormValue, No
 /** Configuration shared by object-shaped groups, excluding form submission behavior. */
 export type GroupOptions<TValue = any, TGroup extends AnyNode = GroupNode<any>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
-   * Runs synchronously after a committed public value changes, for control and programmatic writes.
-   * Skips initialization and values retained by equal. Control writes respect debounce.
-   * Aggregate operations notify once after their children are updated, with descendants first.
-   * Runs untracked, without requiring an injector; does not wait for asynchronous validation.
-   * Callback writes are delivered after the current callback. Return values are ignored.
-   * @example
-   * onValueChange: (value, node) => console.log(value, node.pending())
+   * Runs synchronously after the exposed value changes, including programmatic writes.
+   * Initialization and writes retained by `equal` do not notify. Control writes wait for debounce.
+   * Callbacks run untracked, without requiring an injector or waiting for async validation.
+   * Aggregate writes notify descendants before their parent, once after child updates.
+   * Reentrant writes are delivered after the current callback; returned values are ignored.
+   *
+   * **Default:** `undefined`; no callback.
+   *
+   * ```ts
+   * const values: unknown[] = [];
+   * const node = group(
+   *   { name: field('Ada') },
+   *   {
+   *     onValueChange(value) {
+   *       values.push(value);
+   *     },
+   *   },
+   * );
+   * node.set({ name: 'Lia' });
+   * values.length; // 1
+   * ```
    */
   onValueChange?(value: TValue, node: TGroup): void;
 
   /**
-   * Configures this instance synchronously once, after its own API and children are ready.
-   * Receives the collision-safe callable `$api`, so child names cannot hide operations.
-   * Runs untracked; install validators here to track their reads when validation executes.
-   * Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits.
-   * Ancestors may not be attached yet. Do not read the variable being initialized here.
-   * Returned values are ignored; this is not an async or cleanup lifecycle hook.
+   * Configures each new instance once, synchronously after its API and children are ready.
+   * Receives the collision-safe callable `$api`. Runs untracked; validators installed here
+   * track dependencies when they execute. Ancestors may not be attached yet.
+   * Use the callback argument rather than the variable being initialized. Fresh template
+   * clones run their own callback; reset, reordering, and edits do not rerun it.
+   * Returned values are ignored; this is neither an async hook nor a cleanup registration.
    *
-   * @example
+   * **Default:** `undefined`; no initialization callback.
+   *
    * ```ts
-   * const roles = array(group({
-   *   valueType: field<number>(null),
-   *   value: field<string>(null),
-   * }, {
-   *   configure: ({ children }) => {
-   *     children.value.setValidators(() => {
-   *       const type = children.valueType();
-   *       return type !== null && type > 10 && !children.value()
-   *         ? { kind: 'roleValue', message: 'Enter a role value.' }
-   *         : null;
-   *     });
+   * group(
+   *   {
+   *     name: field(''),
    *   },
-   * }));
+   *   {
+   *     configure(api) {
+   *       api.setValidators(() => null);
+   *     },
+   *   },
+   * );
    * ```
    */
   configure?: (api: TGroup['$api']) => void;
 
   /**
-   * One validator or an array of validators for the complete group value.
+   * Registers rules on this node's exposed value. Aggregate rules receive the complete
+   * object or array; put per-field rules on children. A synchronous composition may return
+   * validators; asynchronous rules must be wrapped with `asyncValidator()`.
+   * Null and undefined entries are ignored. Contexts are typed; inline returns intentionally
+   * allow self-reference inference. Use `validator()` or an explicit result annotation
+   * when returned errors also need strict checking.
    *
-   * @example Start with a named reusable validator.
+   * **Default:** `[]`; no own validators.
+   *
+   * **Accepted values:**
+   *
+   * - **Functions**: One rule or synchronous composition.
+   * - **Arrays**: Rules in declaration order; nullish entries are skipped.
+   *
+   * See {@link ValidatorSource}, {@link ValidationResult}, and {@link ComposableValidationResult}.
+   *
    * ```ts
-   * group({
-   *   start: field<Date>(),
-   *   end: field<Date>(),
-   * }, {
-   *   validators: validDateRange,
-   * });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     validators: () => null,
+   *   },
+   * );
    * ```
    *
-   * @example Declare a small group rule inline.
    * ```ts
-   * group({
-   *   city: field(''),
-   *   country: field(''),
-   * }, {
-   *   validators: [({ value }) => value().city || value().country
-   *     ? null
-   *     : { kind: 'emptyAddress', message: 'Enter a city or country.' }],
-   * });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     validators: () => ({ kind: 'blocked' }),
+   *   },
+   * );
    * ```
    *
-   * @example Add one asynchronous group validator.
    * ```ts
-   * group({
-   *   city: field(''),
-   *   country: field(''),
-   * }, {
-   *   validators: asyncValidator(async ({ value }) => {
-   *     const supported = await isAddressSupported(value());
-   *     return supported ? null : { kind: 'unsupportedAddress' };
-   *   }),
-   * });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     validators: asyncValidator(async () => {
+   *       await Promise.resolve();
+   *       return null;
+   *     }),
+   *   },
+   * );
    * ```
-   *
-   * Use child validators for rules that belong to one field; use group validators for rules that
-   * consider the object boundary as a whole.
-   *
-   * See ValidatorSource for supported results. Callback contexts remain typed; returns deliberately
-   * use any for self-reference inference. Annotate ValidationResult or ComposableValidationResult,
-   * or use a context-taking validator() helper, to check returned results.
    */
   validators?: ValidatorSource<TValue, TGroup>;
   /**
-   * Default control-value debounce inherited by descendants of this object branch.
+   * Delays control-originated value commits. Descendants inherit this strategy unless
+   * they supply their own. Programmatic writes commit immediately. A later edit aborts
+   * the previous delay; `flush()` or an interactive `markAsTouched()` commits pending input.
    *
-   * @example Give address controls a 300-millisecond debounce by default.
+   * **Default:** `undefined`; inherit the nearest configured strategy, otherwise commit immediately.
+   *
+   * **Accepted values:**
+   *
+   * - **Numbers**: Wait this many milliseconds after the latest control edit.
+   * - `blur`: Commit on touch/focus loss.
+   * - **Functions**: Commit after the returned promise settles successfully; receive the cancellation signal.
+   *
    * ```ts
-   * group({
-   *   city: field(''),
-   *   country: field(''),
-   * }, { debounce: 300 });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     debounce: 300,
+   *   },
+   * );
    * ```
    *
-   * @example Commit address values when their controls lose focus.
    * ```ts
-   * group({
-   *   city: field(''),
-   *   country: field(''),
-   * }, { debounce: 'blur' });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     debounce: 'blur',
+   *   },
+   * );
+   * ```
+   *
+   * ```ts
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     debounce: async abortSignal => {
+   *       await Promise.resolve();
+   *       if (abortSignal.aborted) return;
+   *     },
+   *   },
+   * );
    * ```
    */
   debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /**
-   * Initial or reactive visibility of the complete object branch.
+   * Controls this node's local hidden state. Descendants inherit active hidden state;
+   * programmatic writes remain available. Hidden nodes suppress their own validation
+   * and reported interaction state. Hiding does not delete values or stored dirty/touched state.
    *
-   * @example Create an object branch that starts hidden.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   *
    * ```ts
-   * group({
-   *   city: field(''),
-   * }, { hidden: true });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     hidden: true,
+   *   },
+   * );
    * ```
    *
-   * @example Hide the shipping address when it matches the billing address.
    * ```ts
-   * group({
-   *   city: field(''),
-   *   country: field(''),
-   * }, {
-   *   hidden: () => useBillingAddress(),
-   * });
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     hidden: () => active(),
+   *   },
+   * );
    * ```
    */
   hidden?: boolean | (() => boolean);
   /**
-   * Initial or reactive disabled state for the branch and its children. Return a string to record
-   * a user-facing reason.
+   * Controls this node's local disabled state, inherited by descendants. A string disables
+   * the node and contributes a user-facing reason, including an empty string.
+   * Disabled nodes retain their values and accept programmatic writes; their own validation
+   * and reported interaction state are suppressed. Ancestor reasons cannot be cleared locally.
    *
-   * @example Create an object branch that starts disabled.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Strings**: Disable locally and record the text in `disabledReasons()`.
+   *
    * ```ts
-   * group({
-   *   city: field(''),
-   * }, { disabled: 'This address is managed by your organization.' });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     disabled: true,
+   *   },
+   * );
    * ```
    *
-   * @example Disable an address branch when the current user cannot edit it.
    * ```ts
-   * group({
-   *   city: field(''),
-   *   country: field(''),
-   * }, {
-   *   disabled: () => canEditAddress() ? false : 'You cannot edit this address.',
-   * });
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     disabled: () => active(),
+   *   },
+   * );
+   * ```
+   *
+   * ```ts
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     disabled: 'Locked',
+   *   },
+   * );
    * ```
    */
   disabled?: boolean | string | (() => boolean | string);
   /**
-   * Initial or reactive readonly state for the branch and its children.
+   * Controls this node's local readonly state. Descendants inherit active readonly state.
+   * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
+   * their own validation and reported dirty/touched state without discarding stored interaction.
    *
-   * @example Create an object branch that starts in readonly mode.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   *
    * ```ts
-   * group({
-   *   legalName: field(''),
-   * }, { readonly: true });
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     readonly: true,
+   *   },
+   * );
    * ```
    *
-   * @example Keep verified identity details visible but immutable.
    * ```ts
-   * group({
-   *   legalName: field(''),
-   *   documentNumber: field(''),
-   * }, {
-   *   readonly: () => identityVerified(),
-   * });
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
+   * group(
+   *   {
+   *     name: field(''),
+   *   },
+   *   {
+   *     readonly: () => active(),
+   *   },
+   * );
    * ```
    */
   readonly?: boolean | (() => boolean);
 };
 
-/** Object value produced by a group, with each child node mapped to its readable value. */
+/**
+ * Object value produced by a group, with each child node mapped to its readable value.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const profile = group({ name });
+ * const value: GroupValue<{
+ *   name: typeof name;
+ * }> = {
+ *   name: 'Lia',
+ * };
+ * profile.set(value);
+ * profile.name(); // 'Lia'
+ * ```
+ */
 export type GroupValue<TNodes extends Nodes> = FormValue<TNodes>;
-/** Complete object accepted by a group's `set()`, recursively using each child's set type. */
+/**
+ * Complete object accepted by a group's `set()`, recursively using each child's set type.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const profile = group({ name });
+ * const value: GroupSet<{
+ *   name: typeof name;
+ * }> = {
+ *   name: 'Lia',
+ * };
+ * profile.set(value);
+ * profile.name(); // 'Lia'
+ * ```
+ */
 export type GroupSet<TNodes extends Nodes> = FormSet<TNodes>;
-/** Partial object accepted by a group's `patch()`; omitted child properties remain unchanged and supplied arrays require complete item values. */
+/**
+ * Partial object accepted by a group's `patch()`; omitted child properties remain unchanged and supplied arrays require complete item values.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const profile = group({ name });
+ * const value: GroupPatch<{
+ *   name: typeof name;
+ * }> = {
+ *   name: 'Lia',
+ * };
+ * profile.patch(value);
+ * profile.name(); // 'Lia'
+ * ```
+ */
 export type GroupPatch<TNodes extends Nodes> = FormPatch<TNodes>;
 
 export type NormalizedNode<TNode extends ObjectNodeDefinition> = FormNormalizedNode<TNode>;
@@ -202,11 +357,41 @@ export type GroupChildren<TNodes extends Nodes, TParent extends AnyNode> = {
 export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
   & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitted' | 'submitting' | 'validationStatus'>
   & {
-    /** Returns the concrete primitive represented by this node. */
+    /**
+     * Returns the concrete primitive represented by this node.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.nodeType(); // 'group'
+     * ```
+     */
     nodeType(): 'group';
-    /** Replaces this group's validators while preserving its node type in inline callbacks. */
+    /**
+     * Replaces this group's validators while preserving its node type in inline callbacks.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.setValidators(() => ({
+     *   kind: 'blocked',
+     * }));
+     * node.invalid(); // true
+     * ```
+     */
     setValidators(validators: ValidatorSource<GroupValue<TNodes>, GroupNode<TNodes, TParent>>): void;
-    /** Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode. */
+    /**
+     * Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.children.name(); // 'Ada'
+     * ```
+     */
     readonly children: GroupChildren<TNodes, TParent> & Readonly<Record<string, DynamicNode>>;
     /**
      * **Dynamically added nodes are excluded by default.** Pass `{ includeDynamic: true }` to visit them.
@@ -215,6 +400,16 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * The callback type is the declared-child union, or DynamicNode for an empty declaration.
      * Additions during iteration are deferred; removed snapshot entries are still visited.
      * Callback errors propagate and stop iteration.
+     *
+     * ```ts
+     * const profile = form({ name: field('Ada') });
+     * const keys: string[] = [];
+     * profile.forEachChild((child, key) => {
+     *   keys.push(key);
+     * });
+     * keys; // ['name']
+     * ```
+     *
      * @reactive Tracks child additions and removals, plus signals read by the callback.
      */
     forEachChild(callback: (child: keyof TNodes extends never ? DynamicNode : GroupChildren<TNodes, TParent>[keyof TNodes], key: string) => void, options?: { includeDynamic?: false }): void;
@@ -224,17 +419,35 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * Includes children added with `add()` when enabled. A runtime boolean uses
      * DynamicNode callbacks because added nodes may be visited. Empty declarations require true
      * to visit their added children.
+     *
+     * ```ts
+     * const profile = form({ name: field('Ada') });
+     * const keys: string[] = [];
+     * profile.add('age', field(36));
+     * profile.forEachChild(
+     *   (child, key) => {
+     *     keys.push(key);
+     *   },
+     *   { includeDynamic: true },
+     * );
+     * keys; // ['name', 'age']
+     * ```
+     *
      * @reactive Tracks structure changes and reactive reads performed by the callback.
      */
     forEachChild(callback: (child: DynamicNode, key: string) => void, options: { includeDynamic?: boolean }): void;
     /**
      * Adds one child at runtime and returns the attached node with its exact inferred type.
      *
-     * @example Add one named child to a group.
+     * Add one named child to a group.
+     *
      * ```ts
      * const filters = group({ query: field('') });
      *
-     * const category = filters.add('category', field('all'));
+     * const category = filters.add(
+     *   'category',
+     *   field('all'),
+     * );
      * category(); // 'all'
      * filters.get('category') === category; // true
      * ```
@@ -244,7 +457,8 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * Adds several child definitions atomically and returns an exact keyed map of their attached
      * live nodes.
      *
-     * @example Add several children to a group in one structural update.
+     * Add several children to a group in one structural update.
+     *
      * ```ts
      * const filters = group({ query: field('') });
      *
@@ -264,51 +478,103 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
     add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {
       readonly [TKey in keyof TDefinitions]: AddedNode<TDefinitions[TKey], GroupNode<TNodes, TParent>>;
     };
-    /** Detaches a dynamically added child. Initially declared children cannot be removed. */
+    /**
+     * Detaches a dynamically added child. Initially declared children cannot be removed.
+     *
+     * ```ts
+     * const profile = form({ name: field('Ada') });
+     * profile.add('age', field(36));
+     * const age = profile.remove('age');
+     * age?.(); // 36
+     * age?.parent(); // null
+     * ```
+     */
     remove(key: string): DynamicNode | undefined;
     /**
      * Nearest explicit `form()` containing this group, or `null` when no form workflow owns it.
      * A nested explicit form is the workflow owner instead of the complete structural root.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.form(); // null
+     * ```
      */
     form: Signal<NearestForm<TParent> | null>;
     /**
      * Complete structural root containing this group. A root or detached group returns itself.
      * Use this signal when traversal must cross nested form workflow boundaries.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.root() === node; // true
+     * ```
      */
     root: Signal<GroupRoot<TNodes, TParent>>;
     /**
      * Validation errors belonging directly to this group, excluding descendant-owned errors.
      *
      * Pass `{ descendants: true }` to read the same subtree errors as `allErrors()`.
-   *
-   * @example
+     *
      * ```ts
-     * address.errors();
-     * // [{ kind: 'unsupportedCountry', message: 'Country is unavailable.', targetNode: address }]
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.setValidators(() => ({
+     *   kind: 'blocked',
+     * }));
+     * node.errors().map(error => error.kind);
+     * // ['blocked']
      * ```
-       * @reactive Tracks own errors by default, or subtree errors when descendants is true.
+     *
+     * @reactive Tracks own errors by default, or subtree errors when descendants is true.
      */
     errors: NodeErrorsSignal<GroupNode<TNodes, TParent>>;
     /**
      * Validation errors from this group and its complete subtree in structural order.
      *
      * Shortcut for `errors({ descendants: true })`, returning the same cached array.
-   *
-   * @example
+     *
      * ```ts
-     * address.allErrors();
-     * // [{ kind: 'required', message: 'City is required.', targetNode: address.city }]
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.setValidators(() => ({
+     *   kind: 'blocked',
+     * }));
+     * node.allErrors().map(error => error.kind);
+     * // ['blocked']
      * ```
      */
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     /**
      * Returns the first validation error belonging directly to this group and matching `kind`.
      *
+     * ```ts
+     * const node = field('', [required]);
+     * node.getError('required')?.kind;
+     * // 'required'
+     * ```
+     *
      * @reactive Maintains an independent reactive computation for each `kind`.
      */
     getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
     /**
      * Returns the first custom error belonging directly to this group and matching `kind`.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.setValidators(() => ({
+     *   kind: 'blocked',
+     * }));
+     * node.getError('blocked')?.kind;
+     * // 'blocked'
+     * ```
      *
      * @reactive Maintains an independent reactive computation for each `kind`.
      */
@@ -320,9 +586,25 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * error is currently available in the subtree. While unknown, `pending()` is true and both
      * `valid()` and `invalid()` are false. Any available error makes the status `'invalid'`, even
      * if other validation remains pending.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.validationStatus(); // 'valid'
+     * ```
      */
     validationStatus: Signal<ValidationStatus>;
-    /** Whether an ancestor form is currently running its submission action. Groups cannot initiate submission. */
+    /**
+     * Whether an ancestor form is currently running its submission action. Groups cannot initiate submission.
+     *
+     * ```ts
+     * const node = group({
+     *   name: field('Ada'),
+     * });
+     * node.submitting(); // false
+     * ```
+     */
     submitting: Signal<boolean>;
   };
 
@@ -332,6 +614,11 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
    *
    * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
    * Child names never replace members on this API; access children through `children` when available.
+   *
+   * ```ts
+   * const node = group({ name: field('Ada') });
+   * node.$api.valid(); // true
+   * ```
    */
   $api: CallableNodeApi<GroupApi<TNodes, TParent>>;
 };
@@ -342,12 +629,24 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
  * to preserve exact child types.
  *
  * **Without generic arguments, use `$api` for state and operations because child names may collide.**
+ *
+ * ```ts
+ * const node = group({ name: field('Ada') });
+ * node(); // { name: 'Ada' }
+ * ```
  */
 export type GroupNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
   [TNodes] extends [never] ? GenericGroupNode
     : Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
-    /** Returns the group's current aggregate committed value and participates in signal dependency tracking. */
+    /**
+     * Returns the group's exposed aggregate value after configured equality and participates in signal dependency tracking.
+     *
+     * ```ts
+     * const node = group({ name: field('Ada') });
+     * node(); // { name: 'Ada' }
+     * ```
+     */
     (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };
   }
   & GroupApiProperty<TNodes, TParent>

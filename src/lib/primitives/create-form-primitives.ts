@@ -17,7 +17,9 @@ export type { ArrayFactory, FieldFactory, FormFactory, FormPrimitives, FormPrimi
  * Creates an isolated set of form primitives with shared defaults.
  *
  * ```ts
- * const { form, field } = createFormPrimitives({ nullable: false });
+ * const { form, field } = createFormPrimitives(
+ *   { nullable: false },
+ * );
  * const profile = form({
  *   username: field(''),
  *   nickname: field.nullable(''),

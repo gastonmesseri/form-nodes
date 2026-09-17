@@ -9,7 +9,28 @@ import { isFormNode } from '../primitives/is-form-node';
 import type { ControlState, ControlStateError } from '../form-node-state/form-node-state';
 import { resolveMessage, shouldShowMessages, setupErrorHeightAnimation, type FormNodeErrorsContext } from './form-node-errors.utils';
 
-/** Read-only validation messages for a node or a custom control's useFormNodeState() facade. */
+/**
+ * Read-only validation messages for a node or a custom control's useFormNodeState() facade.
+ *
+ * ```ts
+ * import * as ng from '@angular/core';
+ *
+ * @ng.Component({
+ *   imports: [FormNodeErrors],
+ *   template: `
+ *     <form-node-errors
+ *       [node]="profile.name"
+ *       showWhen="always"
+ *     />
+ *   `,
+ * })
+ * export class ProfilePage {
+ *   profile = form({
+ *     name: field('', [required]),
+ *   });
+ * }
+ * ```
+ */
 @Component({
   selector: 'form-node-errors',
   template: `

@@ -114,7 +114,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `touched` | Whether this node or any descendant has been marked touched. |
 | `untouched` | Logical inverse of `touched()`. |
 | `markAsTouched` | Marks this node and, by default, its interactive descendants as touched and commits their pending control values for every debounce strategy. |
-| `markAsUntouched` | Clears touched state, making `touched()` false and `untouched()` true throughout the affected scope. |
+| `markAsUntouched` | Clears this node's own touched marker without changing descendant markers or values. An interactive touched descendant can keep an aggregate `touched()` true. Use `reset()` to clear interaction state throughout the subtree. |
 | `dirty` | Whether this node currently reports user-modified state. |
 | `pristine` | Logical inverse of `dirty()`. |
 | `markAsDirty` | Marks this node's own state dirty, making `dirty()` true and `pristine()` false while it is interactive. |
@@ -123,15 +123,15 @@ The declaration above also includes inherited contracts and overloads where appl
 | `disabledReasons` | Parent reasons followed by the active reasons originating on this node. |
 | `enabled` | Logical inverse of `disabled()`. |
 | `disable` | Disables this node, optionally recording a user-facing reason. Sets `disabled()` to true and `enabled()` to false on this node and its effective subtree. |
-| `enable` | Clears the imperative disabled state created by `disable()`. `enabled()` becomes true only where no configured or inherited disabled reason remains active. |
+| `enable` | Clears local disabled state, including a static initial `disabled` option. Continuing reactive conditions and inherited reasons remain effective, so `enabled()` may stay false. |
 | `readonly` | Whether this node is effectively readonly through local configuration or an ancestor. |
 | `writable` | Logical inverse of `readonly()`. |
 | `markAsReadonly` | Marks this node and its subtree readonly, making `readonly()` true and `writable()` false. |
-| `markAsWritable` | Clears this node's imperative readonly state. `writable()` becomes true only where no configured or inherited readonly state remains active. |
+| `markAsWritable` | Clears local readonly state, including a static initial `readonly` option. Reactive conditions and ancestor readonly state can still prevent the node from becoming writable. |
 | `hidden` | Whether this node is effectively hidden through local configuration or an ancestor. |
 | `visible` | Logical inverse of `hidden()`. |
 | `hide` | Hides this node and its subtree, making `hidden()` true and `visible()` false. |
-| `show` | Clears this node's imperative hidden state. `visible()` becomes true only where no configured or inherited hidden state remains active. |
+| `show` | Clears local hidden state, including a static initial `hidden` option. Reactive conditions and ancestor hidden state can still keep the node hidden. |
 
 ## Related reference
 

@@ -37,8 +37,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | Member | Meaning |
 | --- | --- |
 | `validatorMessages` | Static or reactive fallback catalog. Null clears it; omission preserves the current catalog. |
-| `syncInputs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |
-| `bindInputOutputPairs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |
+| `syncInputs` | Reactively copies node state and constraints into matching custom-control inputs. This is one-way node-to-component synchronization; it does not enable value binding, execute validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs. |
+| `bindInputOutputPairs` | Connects recognized value/valueChange or checked/checkedChange input/output pairs. CVAs and actual model signals keep priority. Enabling a pair connects values and interaction hooks; optional state inputs are selected independently by `syncInputs`. |
 | `classes` | Default class map for new bindings. Null clears it; explicit maps replace rather than merge. |
 
 ## Related reference

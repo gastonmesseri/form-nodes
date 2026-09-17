@@ -62,13 +62,13 @@ The declaration above also includes inherited contracts and overloads where appl
 | `setValidators` | Replaces this group's validators while preserving its node type in inline callbacks. |
 | `children` | Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode. |
 | `forEachChild` | **Dynamically added nodes are excluded by default.** Pass `{ includeDynamic: true }` to visit them. |
-| `add` | Adds one child at runtime and returns the attached node with its exact inferred type. Adds several child definitions atomically and returns an exact keyed map of their attached live nodes. |
+| `add` | Adds one child at runtime and returns the attached node with its exact inferred type. |
 | `remove` | Detaches a dynamically added child. Initially declared children cannot be removed. |
 | `form` | Nearest explicit `form()` containing this group, or `null` when no form workflow owns it. A nested explicit form is the workflow owner instead of the complete structural root. |
 | `root` | Complete structural root containing this group. A root or detached group returns itself. Use this signal when traversal must cross nested form workflow boundaries. |
 | `errors` | Validation errors belonging directly to this group, excluding descendant-owned errors. |
 | `allErrors` | Validation errors from this group and its complete subtree in structural order. |
-| `getError` | Returns the first validation error belonging directly to this group and matching `kind`. Returns the first custom error belonging directly to this group and matching `kind`. |
+| `getError` | Returns the first validation error belonging directly to this group and matching `kind`. |
 | `validationStatus` | Aggregated validation phase for this group subtree: `'valid'`, `'invalid'`, or `'unknown'`. |
 | `submitting` | Whether an ancestor form is currently running its submission action. Groups cannot initiate submission. |
 

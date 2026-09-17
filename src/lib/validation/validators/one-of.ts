@@ -14,68 +14,408 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext }
  * `{ kind: 'oneOf', options, actual, message }`, where `options` contains the resolved allowed
  * values and `actual` contains the rejected value.
  *
- * @reactive Tracks signals read by the allowed-values and message sources while they are active.
- *
- * @example
  * ```ts
- * const myForm = form({
- *   status: field<string>('a', [oneOf(['a', 'b', 'c'])]),
- *   role: field('guest', [oneOf(['admin', 'editor'], 'Choose an allowed role')]),
+ * const profile = form({
+ *   value: field('draft', [
+ *     oneOf(['published', 'archived']),
+ *   ]),
  * });
+ * profile.value.invalid(); // true
+ * ```
  *
- * const reactiveForm = form({
- *   status: field('draft', [
- *     oneOf(() => availableStatuses(), { message: 'Choose an available status' }),
+ * ```ts
+ * import { signal } from '@angular/core';
+ *
+ * const limit = signal([
+ *   'published',
+ *   'archived',
+ * ]);
+ * const profile = form({
+ *   value: field('draft', [
+ *     oneOf(() => limit()),
  *   ]),
  * });
  * ```
  *
+ * ```ts
+ * const profile = form({
+ *   value: field('draft', [
+ *     oneOf(
+ *       ['published', 'archived'],
+ *       'Check this value.',
+ *     ),
+ *   ]),
+ * });
+ * ```
+ *
+ * @reactive Tracks signals read by the allowed-values and message sources while they are active.
  * @param allowedValues Static allowed values or a reactive function returning them.
  * @param options Optional static message string, or an object containing a static or reactive message.
  */
 export function oneOf<TValue = never>(
   allowedValues: readonly NoInfer<TValue>[] | (() => readonly NoInfer<TValue>[] | undefined),
   options?: string | ({
-    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    /**
+     * Overrides the message of a failing built-in validation error. A reactive function
+     * is evaluated only while the rule fails; returning `undefined` continues through the
+     * node, provider, global, and built-in message fallbacks. Cannot be combined with `error`.
+     *
+     * **Default:** `undefined`; use the configured fallback message.
+     *
+     * **Accepted values:**
+     *
+     * - **Strings**: Use the supplied text, including an empty string.
+     * - **Functions**: Track signals read while resolving the message.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       message: 'Check this value.',
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const text = signal('Check this value.');
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       message: () => text(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     message?: string | (() => string | undefined);
     error?: never;
   } | {
     message?: never;
-    /** Custom error or errors returned instead of the built-in error. */
+    /**
+     * Replaces the built-in failure with a custom error or error array. A callback
+     * receives the current validation context and runs only when the built-in rule fails.
+     * A callback may return nullish/empty results to suppress the failure. A static nullish
+     * value preserves the built-in result. Cannot be combined with `message`.
+     *
+     * **Default:** `undefined`; retain the built-in error.
+     *
+     * See {@link ValidationResult} for supported error shapes.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: { kind: 'custom' },
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: () => ({ kind: 'custom' }),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: [
+     *         { kind: 'custom' },
+     *       ],
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    /**
+     * Enables the validator and its constraint metadata only while the condition is true.
+     * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
+     * Parameterless callbacks support class self-references with unchecked returns; return
+     * a boolean. Context-taking callbacks retain boolean checking.
+     *
+     * **Default:** `undefined`; the validator remains active.
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const active = signal(true);
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       when: () => active(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     when?: NoInfer<DeferredCondition | ((context: ValidatorContext<TValue | null | undefined>) => boolean)>;
   },
 ): Validator<TValue | null | undefined>;
-/** Infers the constraint value type when no consuming node provides a context. */
+/**
+ * Infers the constraint value type when no consuming node provides a context.
+ *
+ * ```ts
+ * const profile = form({
+ *   value: field('draft', [
+ *     oneOf(['published', 'archived']),
+ *   ]),
+ * });
+ * profile.value.invalid(); // true
+ * ```
+ *
+ * ```ts
+ * import { signal } from '@angular/core';
+ *
+ * const limit = signal([
+ *   'published',
+ *   'archived',
+ * ]);
+ * const profile = form({
+ *   value: field('draft', [
+ *     oneOf(() => limit()),
+ *   ]),
+ * });
+ * ```
+ *
+ * ```ts
+ * const profile = form({
+ *   value: field('draft', [
+ *     oneOf(
+ *       ['published', 'archived'],
+ *       'Check this value.',
+ *     ),
+ *   ]),
+ * });
+ * ```
+ */
 export function oneOf<TValue>(
   allowedValues: readonly TValue[] | (() => readonly TValue[] | undefined),
   options?: string | ({
-    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    /**
+     * Overrides the message of a failing built-in validation error. A reactive function
+     * is evaluated only while the rule fails; returning `undefined` continues through the
+     * node, provider, global, and built-in message fallbacks. Cannot be combined with `error`.
+     *
+     * **Default:** `undefined`; use the configured fallback message.
+     *
+     * **Accepted values:**
+     *
+     * - **Strings**: Use the supplied text, including an empty string.
+     * - **Functions**: Track signals read while resolving the message.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       message: 'Check this value.',
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const text = signal('Check this value.');
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       message: () => text(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     message?: string | (() => string | undefined);
     error?: never;
   } | {
     message?: never;
-    /** Custom error or errors returned instead of the built-in error. */
+    /**
+     * Replaces the built-in failure with a custom error or error array. A callback
+     * receives the current validation context and runs only when the built-in rule fails.
+     * A callback may return nullish/empty results to suppress the failure. A static nullish
+     * value preserves the built-in result. Cannot be combined with `message`.
+     *
+     * **Default:** `undefined`; retain the built-in error.
+     *
+     * See {@link ValidationResult} for supported error shapes.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: { kind: 'custom' },
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: () => ({ kind: 'custom' }),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: [
+     *         { kind: 'custom' },
+     *       ],
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    /**
+     * Enables the validator and its constraint metadata only while the condition is true.
+     * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
+     * Parameterless callbacks support class self-references with unchecked returns; return
+     * a boolean. Context-taking callbacks retain boolean checking.
+     *
+     * **Default:** `undefined`; the validator remains active.
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const active = signal(true);
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       when: () => active(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     when?: NoInfer<DeferredCondition | ((context: ValidatorContext<TValue | null | undefined>) => boolean)>;
   },
 ): Validator<TValue | null | undefined>;
 export function oneOf<TValue>(
   allowedValues: readonly TValue[] | (() => readonly TValue[] | undefined),
   options?: string | ({
-    /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+    /**
+     * Overrides the message of a failing built-in validation error. A reactive function
+     * is evaluated only while the rule fails; returning `undefined` continues through the
+     * node, provider, global, and built-in message fallbacks. Cannot be combined with `error`.
+     *
+     * **Default:** `undefined`; use the configured fallback message.
+     *
+     * **Accepted values:**
+     *
+     * - **Strings**: Use the supplied text, including an empty string.
+     * - **Functions**: Track signals read while resolving the message.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       message: 'Check this value.',
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const text = signal('Check this value.');
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       message: () => text(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     message?: string | (() => string | undefined);
     error?: never;
   } | {
     message?: never;
-    /** Custom error or errors returned instead of the built-in error. */
+    /**
+     * Replaces the built-in failure with a custom error or error array. A callback
+     * receives the current validation context and runs only when the built-in rule fails.
+     * A callback may return nullish/empty results to suppress the failure. A static nullish
+     * value preserves the built-in result. Cannot be combined with `message`.
+     *
+     * **Default:** `undefined`; retain the built-in error.
+     *
+     * See {@link ValidationResult} for supported error shapes.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: { kind: 'custom' },
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: () => ({ kind: 'custom' }),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       error: [
+     *         { kind: 'custom' },
+     *       ],
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     error?: ValidationResult | ((context: ValidatorContext<TValue | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate deciding whether this validator and its constraint metadata are active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    /**
+     * Enables the validator and its constraint metadata only while the condition is true.
+     * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
+     * Parameterless callbacks support class self-references with unchecked returns; return
+     * a boolean. Context-taking callbacks retain boolean checking.
+     *
+     * **Default:** `undefined`; the validator remains active.
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const active = signal(true);
+     * const profile = form({
+     *   value: field('draft', [
+     *     oneOf(['published', 'archived'], {
+     *       when: () => active(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     when?: NoInfer<DeferredCondition | ((context: ValidatorContext<TValue | null | undefined>) => boolean)>;
   },
 ): Validator<TValue | null | undefined> {

@@ -4,7 +4,7 @@ title: ValidationStatus
 
 # ValidationStatus
 
-Aggregate validation result.
+Aggregate result of validation; it does not describe the node's value type.
 
 ## Import
 

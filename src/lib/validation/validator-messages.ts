@@ -4,7 +4,21 @@ import type { AnyNode } from '../types/node.type';
 import type { BuiltInValidationErrorMap, ValidationError } from './validation.type';
 import { getGlobalValidatorMessages } from '../configuration/configure-global-form-nodes';
 
-/** Structured built-in error data available to a configured message function. */
+/**
+ * Structured built-in error data available to a configured message function.
+ *
+ * ```ts
+ * const messages: ValidatorMessages = {
+ *   required: 'Required.',
+ *   min: ({ min }) => `Minimum: ${min}`,
+ * };
+ * const profile = form({
+ *   age: field(16, [min(18)]),
+ * }, { validatorMessages: messages });
+ * profile.age.getError('min')?.message;
+ * // 'Minimum: 18'
+ * ```
+ */
 export type ValidatorMessageParameters<TKind extends keyof BuiltInValidationErrorMap> = Omit<
   BuiltInValidationErrorMap[TKind],
   keyof ValidationError | 'targetNode' | 'formNode'
@@ -15,6 +29,18 @@ export type ValidatorMessageParameters<TKind extends keyof BuiltInValidationErro
  *
  * A string is reused verbatim. A function receives that validator's typed constraint and actual
  * values, and may return `undefined` to continue searching parent, DI, and global catalogs.
+ *
+ * ```ts
+ * const messages: ValidatorMessages = {
+ *   required: 'Required.',
+ *   min: ({ min }) => `Minimum: ${min}`,
+ * };
+ * const profile = form({
+ *   age: field(16, [min(18)]),
+ * }, { validatorMessages: messages });
+ * profile.age.getError('min')?.message;
+ * // 'Minimum: 18'
+ * ```
  */
 export type ValidatorMessages = {
   -readonly [TKind in keyof BuiltInValidationErrorMap]?: string | ((parameters: ValidatorMessageParameters<TKind>) => string | undefined);

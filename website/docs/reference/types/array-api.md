@@ -138,8 +138,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | `at` | Returns the live item node at `index`, or `undefined` when no item exists there. |
 | `forEach` | Invokes `callback` once for each current item node, in index order. |
 | `map` | Transforms each current item node and returns the collected results without changing the array. |
-| `filter` | Returns the current item nodes accepted by a type-guard predicate. Returns the current item nodes for which `predicate` produces a truthy result. |
-| `find` | Returns the first current item node accepted by a type-guard predicate, or `undefined`. Returns the first current item node for which `predicate` is truthy, or `undefined`. |
+| `filter` | Returns the current item nodes accepted by a type-guard predicate. |
+| `find` | Returns the first current item node accepted by a type-guard predicate, or `undefined`. |
 | `findIndex` | Returns the index of the first item node matching `predicate`, or `-1` when none matches. |
 | `some` | Whether at least one current item node matches `predicate`. |
 | `every` | Whether every current item node matches `predicate`. Returns `true` for an empty array. |
@@ -165,7 +165,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `allErrors` | A signal containing the validation errors of **this array node and its descendants**. |
 | `valid` | Whether this array and every current item subtree have completed validation without errors. |
 | `invalid` | Whether this array or any current item subtree contributes a validation error. |
-| `getError` | Returns the first validation error belonging directly to this array and matching `kind`. Returns the first custom error belonging directly to this array and matching `kind`. |
+| `getError` | Returns the first validation error belonging directly to this array and matching `kind`. |
 | `hasError` | Whether this node's own errors contain the given kind. Does not search descendants. |
 | `hasValidator` | Whether the same validator function is directly registered on this node, including async validators. By default, does not run validators. Set resolve to true to inspect resolved leaf references. |
 | `required` | Whether active validation metadata marks this array itself as required. |
@@ -178,7 +178,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `touched` | Whether this array or any current item subtree has been marked touched. |
 | `untouched` | Logical inverse of `touched()`. |
 | `markAsTouched` | Marks this array and, by default, every interactive item subtree as touched and commits their pending control values for every debounce strategy. |
-| `markAsUntouched` | Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. |
+| `markAsUntouched` | Clears this node's own touched marker without changing descendant markers or values. An interactive touched descendant can keep an aggregate `touched()` true. Use `reset()` to clear interaction state throughout the subtree. |
 | `dirty` | Whether this array currently reports user-modified state. |
 | `pristine` | Logical inverse of `dirty()`. |
 | `markAsDirty` | Marks this array's own state dirty, making `dirty()` true and `pristine()` false while it is interactive. |
@@ -187,15 +187,15 @@ The declaration above also includes inherited contracts and overloads where appl
 | `disabledReasons` | Active inherited and local causes of this array's disabled state. |
 | `enabled` | Logical inverse of `disabled()`. |
 | `disable` | Disables this array subtree, optionally recording a user-facing reason. Sets `disabled()` to true and `enabled()` to false on this array and its item subtrees. |
-| `enable` | Clears the imperative disabled state created by `disable()`. `enabled()` becomes true only on nodes without another configured or inherited disabled reason. |
+| `enable` | Clears local disabled state, including a static initial `disabled` option. Continuing reactive conditions and inherited reasons remain effective, so `enabled()` may stay false. |
 | `readonly` | Whether this array is effectively readonly through its own state or an ancestor. |
 | `writable` | Logical inverse of `readonly()`. |
 | `markAsReadonly` | Marks this array subtree readonly, making `readonly()` true and `writable()` false throughout it. |
-| `markAsWritable` | Clears this array's imperative readonly state. `writable()` becomes true only on nodes without another configured or inherited readonly state. |
+| `markAsWritable` | Clears local readonly state, including a static initial `readonly` option. Reactive conditions and ancestor readonly state can still prevent the node from becoming writable. |
 | `hidden` | Whether this array is effectively hidden through its own state or an ancestor. |
 | `visible` | Logical inverse of `hidden()`. |
 | `hide` | Hides this array subtree, making `hidden()` true and `visible()` false throughout it. |
-| `show` | Clears this array's imperative hidden state. `visible()` becomes true only on nodes without another configured or inherited hidden state. |
+| `show` | Clears local hidden state, including a static initial `hidden` option. Reactive conditions and ancestor hidden state can still keep the node hidden. |
 
 ## Related reference
 

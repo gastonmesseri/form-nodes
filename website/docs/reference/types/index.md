@@ -84,7 +84,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | Type | Purpose |
 | --- | --- |
 | [AsyncValidator](./async-validator.md) | Validator marked by `asyncValidator()` for asynchronous scheduling and cancellation. |
-| [AsyncValidatorApi](./async-validator-api.md) | Mutable node API exposed to asynchronous validators by default. |
+| [AsyncValidatorApi](./async-validator-api.md) | Default owner API shape used to specialize asynchronous validator contexts. The context exposes a readonly validation view; its node cannot be mutated through that view. |
 | [AsyncValidatorBaseContext](./async-validator-base-context.md) | Reactive context shared by asynchronous validator conditions, params, and handlers. |
 | [AsyncValidatorContext](./async-validator-context.md) | Reactive node context and cancellation signal provided to an asynchronous validator run. |
 | [AsyncValidatorOptions](./async-validator-options.md) | Scheduling, activation, and failure-handling options for `asyncValidator()`. |
@@ -117,7 +117,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [ValidationErrorWithoutTargetNode](./validation-error-without-target-node.md) | An error returned by a field validator before its target node is assigned. |
 | [ValidationErrorWithTargetNode](./validation-error-with-target-node.md) | An error associated with a specific target node. |
 | [ValidationResult](./validation-result.md) | A successful result, an error or message, or several errors and messages. Strings become errors with kind 'custom', including empty strings. Numeric error kinds are normalized to strings. |
-| [ValidationStatus](./validation-status.md) | Aggregate validation result. |
+| [ValidationStatus](./validation-status.md) | Aggregate result of validation; it does not describe the node's value type. |
 | [ValidationSuccess](./validation-success.md) | Indicates that validation completed without errors. |
 | [ValidatorError](./validator-error.md) | An error returned by a validator, optionally assigned to another node. |
 

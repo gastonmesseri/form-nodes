@@ -51,29 +51,43 @@ type WidenFieldShorthand<TValue> =
 
 export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
   /**
-   * Runs synchronously after a committed public value changes, for control and programmatic writes.
-   * Skips initialization and values retained by equal. Control writes respect debounce.
-   * Aggregate operations notify once after their children are updated, with descendants first.
-   * Runs untracked, without requiring an injector; does not wait for asynchronous validation.
-   * Callback writes are delivered after the current callback. Return values are ignored.
-   * @example
-   * onValueChange: (value, node) => console.log(value, node.pending())
+   * Runs synchronously after the exposed value changes, including programmatic writes.
+   * Initialization and writes retained by `equal` do not notify. Control writes wait for debounce.
+   * Callbacks run untracked, without requiring an injector or waiting for async validation.
+   * Aggregate writes notify descendants before their parent, once after child updates.
+   * Reentrant writes are delivered after the current callback; returned values are ignored.
+   *
+   * **Default:** `undefined`; no callback.
+   *
+   * ```ts
+   * const values: unknown[] = [];
+   * const node = form({ name: field('Ada') }, {
+   *   onValueChange(value) {
+   *     values.push(value);
+   *   },
+   * });
+   * node.set({ name: 'Lia' });
+   * values.length; // 1
+   * ```
    */
   onValueChange?(value: TValue, node: TForm): void;
 
   /**
-   * Configures this instance synchronously once, after its own API and children are ready.
-   * Receives the collision-safe callable `$api`, so child names cannot hide operations.
-   * Runs untracked; install validators here to track their reads when validation executes.
-   * Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits.
-   * Ancestors may not be attached yet. Do not read the variable being initialized here.
-   * Returned values are ignored; this is not an async or cleanup lifecycle hook.
+   * Configures each new instance once, synchronously after its API and children are ready.
+   * Receives the collision-safe callable `$api`. Runs untracked; validators installed here
+   * track dependencies when they execute. Ancestors may not be attached yet.
+   * Use the callback argument rather than the variable being initialized. Fresh template
+   * clones run their own callback; reset, reordering, and edits do not rerun it.
+   * Returned values are ignored; this is neither an async hook nor a cleanup registration.
    *
-   * @example
+   * **Default:** `undefined`; no initialization callback.
+   *
    * ```ts
-   * const profile = form({ name: field('') }, {
-   *   configure: ({ children }) => {
-   *     children.name.setValidators(required);
+   * form({
+   *   name: field(''),
+   * }, {
+   *   configure(api) {
+   *     api.setValidators(() => null);
    *   },
    * });
    * ```
@@ -81,13 +95,14 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
   configure?: (api: TForm['$api']) => void;
 
   /**
-   * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
-   *
    * Reactively copies node state and constraints into matching custom-control inputs. This is
    * one-way node-to-component synchronization; it does not enable value binding, execute
    * validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs.
    *
-   * Selections:
+   * **Default:** Omission inherits the next configuration layer; the final fallback is `false`.
+   *
+   * **Accepted values:**
+   *
    * - `false` or `null`: no additional input writes, even if inherited configuration enables them.
    * - `'declared'`: initial `disabled`, `readonly`, and `hidden` node options select their inputs.
    *   Explicit false counts; undefined does not. Declaring disabled also selects disabledReasons.
@@ -101,306 +116,509 @@ export type FormOptions<TValue = any, TForm extends AnyNode = FormNode<any>> = {
    *   The signal-controls preset is shorthand for `{ inputs: 'all', target: 'signal-controls' }`.
    * - `[]` or `{ inputs: [] }`: no additional writes. Empty lists never enable value connections.
    *
-   * Supported input names: disabled, disabledReasons, readonly, hidden, dirty, touched, invalid,
-   * pending, errors, name, required, min, max, minLength, maxLength, and pattern. Lists use public
-   * input names, including aliases. Missing inputs are ignored. Selecting disabled in a list does
-   * not implicitly select disabledReasons. Derived states and validator constraints require all,
-   * signal-controls, or an explicit list. Every enabled selection updates reactively, not by polling.
-   * Conditional constraints and validator removal update selected inputs to their current/neutral
-   * values. Selected writes may replace component defaults and explicit template bindings.
-   * A control exposing a public checked input receives acceptance-specific required state from
-   * requiredTrue; ordinary required permits false. Other controls receive logical required state.
-   * notNil contributes no required constraint.
+   * Provider and global defaults are captured on connection. Node options override providers;
+   * parent node options do not configure descendants. Lists and objects replace inherited selections.
+   * Rebinding applies the new selection; inputs no longer selected retain their last values.
    *
-   * Native DOM controls retain normal value and state synchronization. CVAs retain writeValue,
-   * change/touch callbacks, and setDisabledState independently of this option. Selecting a CVA's
-   * disabled input may write it in addition to calling setDisabledState. Model values and their
-   * touch/focus/reset hooks remain connected in every mode. Pair controls must first be enabled
-   * with bindInputOutputPairs; only target all can synchronize their optional state inputs.
+   * Selected writes may replace component defaults and explicit template bindings. CVA value and
+   * disabled-state integration remain independent. Use {@link useFormNodeState} for state observation.
    *
-   * Each option resolves independently: node option (including factory defaults), nearest explicit
-   * provider, global fallback, then false. Omission/undefined inherits; null/false disables. Objects
-   * and lists replace inherited selections without merging. A parent node option does not configure
-   * descendants; use providers or factory defaults for shared settings. Provider/global fallbacks
-   * are captured on connection; changing globals does not reconfigure existing bindings. Rebinding
-   * uses the replacement node's configuration. Inputs no longer selected retain their last values.
-   * Treat selection objects and lists as fixed configuration, not reactive sources.
-   *
-   * To read state without experimental writes, combine a value/checked model with useFormNodeState()
-   * and render its signals. The hook does not populate the component's input properties.
-   *
-   * @example Select constraints only on model controls.
    * ```ts
-   * field('', {
-   *   syncInputs: { inputs: ['required', 'minLength'], target: 'signal-controls' },
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   syncInputs: false,
    * });
-   * provideFormNodesConfig({ syncInputs: 'signal-controls' });
    * ```
    *
-   * @experimental Optional component input writes depend on Angular internals.
-   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#custom-control-inputs | Input synchronization and adapter selection}
+   * ```ts
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   syncInputs: 'declared',
+   * });
+   * ```
+   *
+   * ```ts
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   syncInputs: 'all',
+   * });
+   * ```
+   *
+   * ```ts
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   syncInputs: 'signal-controls',
+   * });
+   * ```
+   *
+   * ```ts
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   syncInputs: ['required', 'minLength'],
+   * });
+   * ```
+   *
+   * ```ts
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   syncInputs: {
+   *     inputs: ['required'],
+   *     target: 'cva',
+   *   },
+   * });
+   * ```
+   *
+   * @experimental Custom-control input writes depend on Angular internals.
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config | Binding configuration}
    */
   syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' | undefined } | null | undefined;
 
   /**
-   * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
+   * Connects recognized value/valueChange or checked/checkedChange input/output pairs.
+   * CVAs and actual model signals keep priority. Enabling a pair connects values and interaction
+   * hooks; optional state inputs are selected independently by `syncInputs`.
    *
-   * Enables a recognized `value`/`valueChange` or `checked`/`checkedChange` input/output pair when
-   * the selected control has neither a CVA nor an actual value/checked model. Supports signal
-   * inputs, decorator inputs, and their public aliases. Recognition uses runtime inputs/outputs;
-   * an implements declaration is not required. CVAs and real models always take precedence and
-   * keep their standard connections regardless of this option.
+   * **Default:** Omission inherits the next configuration layer; the final fallback is `false`.
    *
-   * True enables the pair's complete connection: node-to-input value writes, output-to-node edits,
-   * touch output, optional focus/reset hooks, and optional writable node reference. Changes follow
-   * normal validation, dirty state, and pending/committed debounce rules; touch commits blur updates.
-   * False/null keeps the pair inactive: no value or state-input writes, no change/touch processing,
-   * and no calls to its focus/reset hooks. Inactive pairs remain recognizable hosts, not errors.
-   * Model/CVA/native connections and validation continue normally.
+   * **Accepted values:**
    *
-   * This option does not select optional state inputs. Use syncInputs separately; for example,
-   * bindInputOutputPairs true with syncInputs false connects only value and interaction. Neither all nor
-   * an empty syncInputs list enables a pair. Active pairs accept syncInputs selections targeting all;
-   * targets signal-controls and cva exclude them.
+   * - `true`: Connect the pair, including touch and optional focus/reset/node hooks.
+   * - `false` or `null`: Disable pair connections, overriding inherited settings.
+   * - `undefined`: Inherit factory, provider, or global configuration as applicable.
    *
-   * Node options (including factory defaults) override the nearest explicit provider, then the
-   * global fallback, then false. Undefined/omission inherits independently of syncInputs; null/false
-   * disables. Parent node options do not configure descendants. Provider/global defaults are captured
-   * on connection. Rebinding to an inactive node pauses the pair and releases its writable node
-   * reference; existing component input values remain unchanged. Returning to an active node writes
-   * its current control value again even if equal to the last value written before pausing. Cleanup
-   * releases subscriptions when the binding is destroyed. Use initialized value inputs, not required
-   * inputs, since an inactive pair supplies no value.
+   * Provider/global defaults are captured on connection; parent node options do not configure
+   * descendants. Rebinding releases old subscriptions and node references. Inactive pairs retain
+   * component input values, so use initialized inputs rather than required inputs.
    *
-   * @example Enable paired value binding independently of state inputs.
    * ```ts
-   * field('', { bindInputOutputPairs: true, syncInputs: false });
-   * configureGlobalFormNodes({ bindInputOutputPairs: true });
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   bindInputOutputPairs: true,
+   * });
    * ```
    *
-   * @experimental Pair input writes depend on Angular internals.
-   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#bind-input-output-pairs | Paired control configuration}
+   * ```ts
+   * form({
+   *   name: field('Ada'),
+   * }, {
+   *   bindInputOutputPairs: false,
+   * });
+   * ```
+   *
+   * @experimental Custom-control input writes depend on Angular internals.
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config | Binding configuration}
    */
   bindInputOutputPairs?: boolean | null | undefined;
   /**
-   * Equality for the exposed aggregate value. Defaults to `Object.is`.
-   * Equal results retain the previous public value for callable/value reads, value-dependent
-   * validation, submission values, and update callbacks. Child writes and internal control
-   * synchronization still use the latest committed values. The comparator is captured at
-   * construction and runs untracked when the exposed computed value is evaluated.
+   * Compares exposed values and retains the previous exposed value when they are equal.
+   * Validators, submission, and `update()` read that exposed value. Committed storage and
+   * controls still accept new writes. The comparator is captured at construction and runs
+   * untracked when the exposed computed value evaluates; comparison errors propagate.
    *
-   * @example
+   * **Default:** `Object.is`.
+   *
+   * **Accepted values:**
+   *
+   * - `shallow`: Compare the immediate supported container contents.
+   * - `deep`: Compare supported nested containers recursively.
+   * - **Functions**: Return `true` to keep the previous exposed value.
+   *
    * ```ts
    * form({
-   *   name: field('Marco'),
-   *   age: field(18),
-   * }, { equal: 'deep' });
-   * 
-   * // or
-   * 
+   *   name: field(''),
+   * }, {
+   *   equal: 'shallow',
+   * });
+   * ```
+   *
+   * ```ts
    * form({
-   *   name: field('Marco')
+   *   name: field(''),
+   * }, {
+   *   equal: 'deep',
+   * });
+   * ```
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
    * }, {
    *   equal: (previous, next) => {
-   *     return previous.name.toLowerCase() === next.name.toLowerCase();
-   *   }
+   *     return previous === next;
+   *   },
    * });
-   * 
    * ```
    */
   equal?: 'shallow' | 'deep' | ((previous: TValue, next: TValue) => boolean);
 
   /**
-   * One validator or an array of validators that validate the complete form value.
+   * Registers rules on this node's exposed value. Aggregate rules receive the complete
+   * object or array; put per-field rules on children. A synchronous composition may return
+   * validators; asynchronous rules must be wrapped with `asyncValidator()`.
+   * Null and undefined entries are ignored. Contexts are typed; inline returns intentionally
+   * allow self-reference inference. Use `validator()` or an explicit result annotation
+   * when returned errors also need strict checking.
    *
-   * Start with a named validator when the rule is reused:
+   * **Default:** `[]`; no own validators.
    *
-   * @example
+   * **Accepted values:**
+   *
+   * - **Functions**: One rule or synchronous composition.
+   * - **Arrays**: Rules in declaration order; nullish entries are skipped.
+   *
+   * See {@link ValidatorSource}, {@link ValidationResult}, and {@link ComposableValidationResult}.
+   *
    * ```ts
    * form({
-   *   email: field(''),
-   *   marketingConsent: field(false),
+   *   name: field(''),
    * }, {
-   *   validators: [profilePolicy],
+   *   validators: () => null,
    * });
    * ```
    *
-   * A small form-specific rule can be declared inline:
-   *
-   * @example
    * ```ts
    * form({
-   *   acceptTerms: field(false),
+   *   name: field(''),
    * }, {
-   *   validators: ({ value }) => {
-   *     return value().acceptTerms
-   *       ? null
-   *       : { kind: 'termsRequired', message: 'Accept the terms to continue.' };
-   *   },
+   *   validators: () => ({ kind: 'blocked' }),
    * });
    * ```
    *
-   * Form validators are also useful for cross-field rules:
-   *
-   * @example
    * ```ts
    * form({
-   *   password: field(''),
-   *   confirmation: field(''),
+   *   name: field(''),
    * }, {
-   *   validators: [
-   *     ({ value }) => {
-   *       return value().password === value().confirmation
-   *         ? null
-   *         : { kind: 'passwordMismatch', message: 'Passwords must match.' };
-   *     },
-   *   ],
-   * });
-   * ```
-   *
-   * Asynchronous rules must be wrapped with `asyncValidator()`:
-   *
-   * @example
-   * ```ts
-   * form({
-   *   username: field(''),
-   * }, {
-   *   validators: asyncValidator(async ({ value }) => {
-   *     const available = await isAccountAvailable(value());
-   *     return available ? null : { kind: 'accountUnavailable' };
+   *   validators: asyncValidator(async () => {
+   *     await Promise.resolve();
+   *     return null;
    *   }),
    * });
    * ```
-   *
-   * Use an array when the form needs multiple validators. Arrays may contain synchronous
-   * validators, validators created with `asyncValidator()`, and ignored `null` or `undefined`
-   * entries.
-   *
-   * See ValidatorSource for supported results. Callback contexts remain typed; returns deliberately
-   * use any for self-reference inference. Annotate ValidationResult or ComposableValidationResult,
-   * or use a context-taking validator() helper, to check returned results.
    */
   validators?: ValidatorSource<TValue, TForm>;
-  /** Optional injector that owns the asynchronous validation watcher lifecycle. */
+  /**
+   * Provides an explicit owner for injector-dependent work, including async-validator watchers.
+   * Without one, construction captures the current injection context when available;
+   * binding adoption and ancestor inheritance provide temporary fallback ownership.
+   * Standalone nodes remain usable without dependency injection.
+   *
+   * **Default:** `undefined`; resolve ownership from the construction or attachment context.
+   *
+   * See {@link FieldOptions.inheritInjector} and {@link FieldOptions.adoptBindingInjector}.
+   *
+   * ```ts
+   * import { Injector } from '@angular/core';
+   *
+   * const owner = Injector.create({
+   *   providers: [],
+   * });
+   * form({
+   *   name: field(''),
+   * }, {
+   *   injector: owner,
+   * });
+   * owner.destroy();
+   * ```
+   */
   injector?: Injector;
   /**
-   * Whether this node may use the injector of its parent or another ancestor when it has no
-   * injector of its own. Defaults to `true`. Set to `false` to create an injector-inheritance
-   * boundary while preserving an explicit or currently captured injector on this node.
+   * Allows an otherwise unowned node to inherit its nearest ancestor injector.
+   * An explicit or construction-time injector takes precedence. Setting `false` creates
+   * an ancestor boundary; it does not disable an injector already owned by this node.
+   *
+   * **Default:** `true`.
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   inheritInjector: false,
+   * });
+   * ```
    */
   inheritInjector?: boolean;
   /**
-   * Whether this node may temporarily adopt the injector of a directly bound `[formNode]` host
-   * when it has no injector of its own. Defaults to `true`. The binding injector takes precedence
-   * over an inherited ancestor injector and is released when the binding is destroyed or rebound.
+   * Allows an otherwise unowned node to borrow the injector of its directly bound
+   * `[formNode]` host. This binding owner takes precedence over an inherited ancestor.
+   * The lease ends on rebinding or destruction. Explicit and construction-time owners
+   * still take precedence. Setting `false` prevents only direct binding adoption.
+   *
+   * **Default:** `true`.
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   adoptBindingInjector: false,
+   * });
+   * ```
    */
   adoptBindingInjector?: boolean;
   /**
-   * Partial validator message catalog inherited by this form or array and its descendants.
+   * Overrides built-in validator messages for this scope and its descendants.
+   * An explicit validator message takes precedence. Returning `undefined` from the catalog
+   * or a selected message continues to ancestor, provider, global, and built-in fallbacks.
+   * Signals are tracked while the corresponding failing validator resolves its message.
    *
-   * ℹ️ This scope overrides provider and global catalogs. A validator's own `message` option has
-   * higher priority. Returning `undefined` from the catalog source or a message function continues
-   * through the fallback chain.
+   * **Default:** `undefined`; inherit the surrounding message catalogs.
    *
-   * @reactive Tracks signals read by the catalog source and the selected message function while a
-   * built-in validator is failing.
+   * See {@link ValidatorMessages} for error-specific callback parameters.
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   validatorMessages: {
+   *     required: 'Enter a value.',
+   *   },
+   * });
+   * ```
    */
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages | undefined);
   /**
-   * Default control-value debounce inherited by descendants: milliseconds, `'blur'`, or a
-   * cancelable asynchronous function.
+   * Delays control-originated value commits. Descendants inherit this strategy unless
+   * they supply their own. Programmatic writes commit immediately. A later edit aborts
+   * the previous delay; `flush()` or an interactive `markAsTouched()` commits pending input.
    *
-   * @example Give descendant controls a 300-millisecond debounce by default.
+   * **Default:** `undefined`; inherit the nearest configured strategy, otherwise commit immediately.
+   *
+   * **Accepted values:**
+   *
+   * - **Numbers**: Wait this many milliseconds after the latest control edit.
+   * - `blur`: Commit on touch/focus loss.
+   * - **Functions**: Commit after the returned promise settles successfully; receive the cancellation signal.
+   *
    * ```ts
    * form({
-   *   searchTerm: field(''),
-   * }, { debounce: 300 });
+   *   name: field(''),
+   * }, {
+   *   debounce: 300,
+   * });
    * ```
    *
-   * @example Commit descendant control values when their controls lose focus.
    * ```ts
    * form({
-   *   displayName: field(''),
-   * }, { debounce: 'blur' });
+   *   name: field(''),
+   * }, {
+   *   debounce: 'blur',
+   * });
+   * ```
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   debounce: async abortSignal => {
+   *     await Promise.resolve();
+   *     if (abortSignal.aborted) return;
+   *   },
+   * });
    * ```
    */
   debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /**
-   * Initial or reactive visibility of the complete form subtree.
+   * Controls this node's local hidden state. Descendants inherit active hidden state;
+   * programmatic writes remain available. Hidden nodes suppress their own validation
+   * and reported interaction state. Hiding does not delete values or stored dirty/touched state.
    *
-   * @example Create a form that starts hidden.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   *
    * ```ts
    * form({
-   *   internalNotes: field(''),
-   * }, { hidden: true });
+   *   name: field(''),
+   * }, {
+   *   hidden: true,
+   * });
    * ```
    *
-   * @example Hide a business-details workflow for personal accounts.
    * ```ts
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
    * form({
-   *   companyName: field(''),
+   *   name: field(''),
    * }, {
-   *   hidden: () => accountType() !== 'business',
+   *   hidden: () => active(),
    * });
    * ```
    */
   hidden?: boolean | (() => boolean);
   /**
-   * Initial or reactive disabled state for the complete subtree. Return a string to record a
-   * user-facing reason.
+   * Controls this node's local disabled state, inherited by descendants. A string disables
+   * the node and contributes a user-facing reason, including an empty string.
+   * Disabled nodes retain their values and accept programmatic writes; their own validation
+   * and reported interaction state are suppressed. Ancestor reasons cannot be cleared locally.
    *
-   * @example Create a form that starts disabled.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Strings**: Disable locally and record the text in `disabledReasons()`.
+   *
    * ```ts
    * form({
-   *   email: field(''),
-   * }, { disabled: 'This workflow is not available yet.' });
+   *   name: field(''),
+   * }, {
+   *   disabled: true,
+   * });
    * ```
    *
-   * @example Disable a checkout workflow while its order is being submitted.
+   * ```ts
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
+   * form({
+   *   name: field(''),
+   * }, {
+   *   disabled: () => active(),
+   * });
+   * ```
+   *
    * ```ts
    * form({
-   *   email: field(''),
+   *   name: field(''),
    * }, {
-   *   disabled: () => submittingOrder() ? 'The order is being submitted.' : false,
+   *   disabled: 'Locked',
    * });
    * ```
    */
   disabled?: boolean | string | (() => boolean | string);
   /**
-   * Initial or reactive readonly state for the complete subtree.
+   * Controls this node's local readonly state. Descendants inherit active readonly state.
+   * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
+   * their own validation and reported dirty/touched state without discarding stored interaction.
    *
-   * @example Create a form that starts in readonly mode.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   *
    * ```ts
    * form({
-   *   displayName: field(''),
-   * }, { readonly: true });
+   *   name: field(''),
+   * }, {
+   *   readonly: true,
+   * });
    * ```
    *
-   * @example Present an archived record without allowing edits.
    * ```ts
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
    * form({
-   *   displayName: field(''),
+   *   name: field(''),
    * }, {
-   *   readonly: () => recordStatus() === 'archived',
+   *   readonly: () => active(),
    * });
    * ```
    */
   readonly?: boolean | (() => boolean);
   /**
-   * Runs when submitWhen permits submission. Receives the exposed value snapshot first and this form second.
-   * Return an error or readonly error array to reject the submission. Omitted targets belong to this form.
-   * Errors clear on target edits/reset or before retrying; obsolete responses are ignored. Thrown failures propagate.
+   * Handles permitted submissions with the exposed value snapshot and this form.
+   * Return void/null for success, or an error/error array to reject the attempt.
+   * Untargeted errors belong to this form. Errors clear on target edits/reset or retry;
+   * obsolete async responses are ignored. Rejections and thrown exceptions propagate.
+   * Only one submission runs at a time.
+   *
+   * **Default:** `undefined`; `submit()` has no submission handler to run.
+   *
+   * See {@link FormOptions.submitWhen} and {@link ValidationErrorWithOptionalTargetNode}.
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   onSubmit(value) {
+   *     console.log(value.name);
+   *   },
+   * });
+   * ```
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   onSubmit() {
+   *     return { kind: 'serverRejected' };
+   *   },
+   * });
+   * ```
    */
   onSubmit?(value: TValue, form: TForm): void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[] | PromiseLike<void | null | ValidationErrorWithOptionalTargetNode<AnyNode> | readonly ValidationErrorWithOptionalTargetNode<AnyNode>[]>;
-  /** Runs when validation blocks submission, including pending validation with submitWhen: 'valid'. Does not run for concurrent submissions or a missing onSubmit.
-   * For native attempts, formNodeSubmitBlocked emits first and also supports forms without onSubmit.
+  /**
+   * Runs when validation blocks a submission, including pending validation under `valid`.
+   * Does not run for concurrent attempts or when `onSubmit` is absent. Native attempts
+   * emit `formNodeSubmitBlocked` first; that output also works without a submission handler.
+   *
+   * **Default:** `undefined`; no blocked-submission callback.
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   onSubmit() {},
+   *   onSubmitBlocked(node) {
+   *     node.focus();
+   *   },
+   * });
+   * ```
    */
   onSubmitBlocked?(form: TForm): void;
-  /** When validation permits submission: 'not-invalid' (default) allows pending validation, 'valid' requires valid(), and 'always' bypasses the validation gate without disabling validators. Pending validation blocks immediately; it is not awaited. */
+  /**
+   * Selects the validation gate for submission. Pending validation is checked immediately
+   * and is not awaited. This option never disables validators.
+   *
+   * **Default:** `'not-invalid'`.
+   *
+   * **Accepted values:**
+   *
+   * - `not-invalid`: Allow valid or unknown status, including pending validation.
+   * - `valid`: Require completed validation with no errors.
+   * - `always`: Bypass the validity gate.
+   *
+   * ```ts
+   * form({
+   *   name: field(''),
+   * }, {
+   *   submitWhen: 'valid',
+   *   onSubmit() {},
+   * });
+   * ```
+   */
   submitWhen?: 'valid' | 'not-invalid' | 'always';
 };
 
-/** Object value produced by a form, with each child node mapped to its readable value. */
+/**
+ * Object value produced by a form, with each child node mapped to its readable value.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const profile = form({ name });
+ * const value: FormValue<{
+ *   name: typeof name;
+ * }> = {
+ *   name: 'Lia',
+ * };
+ * profile.set(value);
+ * profile.name(); // 'Lia'
+ * ```
+ */
 export type FormValue<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeValue<TNodes[K]>;
 };
@@ -409,7 +627,8 @@ export type FormValue<TNodes extends Nodes> = {
  * Structural contract for checking a form or group against an aggregate value type without
  * replacing its inferred child-node types.
  *
- * @example Validate a named model while preserving an `ArrayNode` child.
+ * Validate a named model while preserving an `ArrayNode` child.
+ *
  * ```ts
  * type Profile = {
  *   username: string | null;
@@ -429,12 +648,39 @@ export type FormValueContract<TValue extends object> = {
   value: Signal<TValue>;
 };
 
-/** Complete object accepted by a form's `set()`, recursively using each child's set type. */
+/**
+ * Complete object accepted by a form's `set()`, recursively using each child's set type.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const profile = form({ name });
+ * const value: FormSet<{ name: typeof name }> =
+ *   {
+ *     name: 'Lia',
+ *   };
+ * profile.set(value);
+ * profile.name(); // 'Lia'
+ * ```
+ */
 export type FormSet<TNodes extends Nodes> = {
   [K in keyof TNodes]: NodeSet<TNodes[K]>;
 };
 
-/** Partial object accepted by a form's `patch()`; omitted properties remain unchanged, but supplied arrays require complete item values and reconcile like set(). */
+/**
+ * Partial object accepted by a form's `patch()`; omitted properties remain unchanged, but supplied arrays require complete item values and reconcile like set().
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const profile = form({ name });
+ * const value: FormPatch<{
+ *   name: typeof name;
+ * }> = {
+ *   name: 'Lia',
+ * };
+ * profile.patch(value);
+ * profile.name(); // 'Lia'
+ * ```
+ */
 export type FormPatch<TNodes extends Nodes> = {
   [K in keyof TNodes]?: NodePatch<TNodes[K]>;
 };
@@ -470,9 +716,27 @@ export type FormRoot<TNodes extends Nodes, TParent extends AnyNode> = AnyNode ex
   : RootNode<TParent>;
 
 export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
-  /** Returns the concrete primitive represented by this node. */
+  /**
+   * Returns the concrete primitive represented by this node.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.nodeType(); // 'form'
+   * ```
+   */
   nodeType(): 'form';
-  /** Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode. */
+  /**
+   * Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.children.name(); // 'Ada'
+   * ```
+   */
   readonly children: FormChildren<TNodes, TParent> & Readonly<Record<string, DynamicNode>>;
   /**
    * **Dynamically added nodes are excluded by default.** Pass `{ includeDynamic: true }` to visit them.
@@ -482,10 +746,13 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Additions during iteration are deferred; removed snapshot entries are still visited.
    * Callback errors propagate and stop iteration.
    *
-   * @example Visit each immediate child.
    * ```ts
-   * const profile = form({ name: field('Marco'), age: field(30) });
-   * profile.forEachChild((child, key) => console.log(key, child()));
+   * const profile = form({ name: field('Ada') });
+   * const keys: string[] = [];
+   * profile.forEachChild((child, key) => {
+   *   keys.push(key);
+   * });
+   * keys; // ['name']
    * ```
    *
    * @reactive Tracks child additions and removals, plus signals read by the callback.
@@ -498,25 +765,33 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Includes children added with `add()` when enabled. A runtime boolean uses
    * DynamicNode callbacks because added nodes may be visited. Empty declarations require true
    * to visit their added children.
+   *
+   * ```ts
+   * const profile = form({ name: field('Ada') });
+   * const keys: string[] = [];
+   * profile.add('age', field(36));
+   * profile.forEachChild(
+   *   (child, key) => {
+   *     keys.push(key);
+   *   },
+   *   { includeDynamic: true },
+   * );
+   * keys; // ['name', 'age']
+   * ```
+   *
    * @reactive Tracks structure changes and reactive reads performed by the callback.
    */
   forEachChild(callback: (child: DynamicNode, key: string) => void, options: { includeDynamic?: boolean }): void;
   /**
    * Returns a child by runtime key, or `undefined` when no current child has that key.
    *
-   * @example Look up children attached through either `add()` signature.
+   * Look up children attached through either `add()` signature.
+   *
    * ```ts
    * const profile = form({ name: field('Ada') });
-   *
    * profile.add('age', field(36));
-   * profile.get('age')?.value(); // 36
-   *
-   * profile.add({
-   *   nickname: field('countess'),
-   *   address: { city: field('London') },
-   * });
-   * profile.get('nickname')?.value(); // 'countess'
-   * profile.get('address')?.value(); // { city: 'London' }
+   * profile.get('age')?.(); // 36
+   * profile.get('missing'); // undefined
    * ```
    */
   get(key: string): DynamicNode | undefined;
@@ -528,7 +803,6 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Dynamic children are not installed as direct properties. Read them through `get()` or
    * the exact node returned by this method.
    *
-   * @example Add one named child and retain its exact node type.
    * ```ts
    * const profile = form({ name: field('Ada') });
    *
@@ -542,7 +816,6 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Adds several child definitions atomically and returns an exact keyed map of their attached
    * live nodes.
    *
-   * @example Add several children in one structural update.
    * ```ts
    * const profile = form({ name: field('Ada') });
    *
@@ -553,7 +826,8 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    *
    * added.age(); // 36
    * added.address.city(); // 'London'
-   * profile.get('address') === added.address; // true
+   * profile.get('address') === added.address;
+   * // true
    * ```
    */
   add<TDefinitions extends ObjectNodeDefinitions>(definitions: TDefinitions & ObjectNodeDefinitionInputs<TDefinitions> & Partial<Record<keyof TNodes | '$api', never>>): {
@@ -562,36 +836,70 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   /**
    * Detaches and returns a dynamically added child, or `undefined` when the key is absent.
    * Initially declared children are fixed and cannot be removed.
+   *
+   * ```ts
+   * const profile = form({ name: field('Ada') });
+   * profile.add('age', field(36));
+   * const age = profile.remove('age');
+   * age?.(); // 36
+   * age?.parent(); // null
+   * ```
    */
   remove(key: string): DynamicNode | undefined;
   /**
    * This explicit form workflow. Descendants resolve this form until another nested form begins.
    * Unlike `root()`, this signal deliberately does not cross the form's workflow boundary.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.form() === node; // true
+   * ```
    */
   form: Signal<FormNode<TNodes, TParent>>;
   /**
    * Complete structural root containing this form. A root or detached form returns itself.
    * A nested form therefore returns itself from `form()` and its outermost ancestor from `root()`.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.root() === node; // true
+   * ```
    */
   root: Signal<FormRoot<TNodes, TParent>>;
-  /** Immediate structural parent of this form, or `null` when it is a root or has been detached. */
+  /**
+   * Immediate structural parent of this form, or `null` when it is a root or has been detached.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.parent(); // null
+   * ```
+   */
   parent: Signal<TParent | null>;
   /**
    * Property and array-index segments from the complete root to this form. Root forms use `[]`.
    *
-   * @example
    * ```ts
-   * myForm.address.path();
-   * // ['address']
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.path(); // []
    * ```
    */
   path: Signal<readonly string[]>;
   /**
    * Property or array index under which this form is stored, or `null` when it is a root form.
    *
-   * @example
    * ```ts
-   * myForm.address.keyInParent(); // 'address'
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.keyInParent(); // null
    * ```
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
@@ -604,43 +912,64 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    *
    * Prefer calling the form directly instead of using `profile.value()` for ordinary value reads:
    *
-   * @example
    * ```ts
-   * const profile = form({ name: field('Marco') });
-   *
-   * profile(); // { name: 'Marco' }
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node(); // { name: 'Ada' }
    * ```
    */
   value: NodeValueSignal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }, FormSet<TNodes>>;
   /**
    * Assigns a complete form value immediately without marking the form or its descendants dirty.
    *
-   * @example
    * ```ts
-   * profile.set({
-   *   name: 'Lia',
-   *   age: 28,
+   * const node = form({
+   *   name: field('Ada'),
    * });
+   * node.set({ name: 'Lia' });
+   * node(); // { name: 'Lia' }
    * ```
    */
   set(value: FormSet<TNodes>): void;
   /**
    * Computes and sets the complete form value from its current value without marking nodes dirty.
    *
-   * @example
    * ```ts
-   * profile.update(value => ({
-   *   ...value,
-   *   name: 'Lia',
-   * }));
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.update(() => ({ name: 'Lia' }));
+   * node(); // { name: 'Lia' }
    * ```
    */
   update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;
-  /** Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored. */
+  /**
+   * Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.patch({ name: 'Lia' });
+   * node(); // { name: 'Lia' }
+   * ```
+   */
   patch(value: FormPatch<TNodes>): void;
   /**
    * Recursively clears touched and dirty state and cancels pending control input. Passing a complete
    * value also assigns it; omitting the value preserves all current committed values.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.set({ name: 'Lia' });
+   * node.markAsDirty();
+   * node.reset();
+   * node(); // { name: 'Lia' }
+   * node.dirty(); // false
+   * ```
    */
   reset(...args: [] | [value: FormSet<TNodes>]): void;
   /**
@@ -665,63 +994,131 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * preserved without invoking getters; their external state is not captured. Prefer immutable
    * values or reset(applicationOwnedSnapshot) when a custom snapshot policy is needed.
    *
-   * @example
    * ```ts
-   * const profile = form({
-   *   name: field('Marco'),
-   *   address: { city: field('Zurich') },
+   * const node = form({
+   *   name: field('Ada'),
    * });
-   * profile.reset({ name: 'Server value', address: { city: 'Madrid' } });
-   * profile.resetToInitial();
-   * profile(); // { name: 'Marco', address: { city: 'Zurich' } }
+   * node.set({ name: 'Lia' });
+   * node.resetToInitial();
+   * node(); // { name: 'Ada' }
    * ```
    */
   resetToInitial(): void;
-  /** Current normalized validators assigned directly to this form, in declaration order. */
+  /**
+   * Current normalized validators assigned directly to this form, in declaration order.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * const rule = validator(() => null);
+   * node.setValidators(() => [rule]);
+   * node.validators({ resolve: true })[0] ===
+   *   rule; // true
+   * ```
+   */
   validators: Signal<Validators<FormValue<TNodes>>> & {
     /**
      * Resolves returned synchronous compositions; async validators remain unexecuted references.
+     *
+     * ```ts
+     * const node = form({
+     *   name: field('Ada'),
+     * });
+     * const rule = validator(() => null);
+     * node.setValidators(() => [rule]);
+     * node.validators({ resolve: true })[0] ===
+     *   rule; // true
+     * ```
+     *
      * @reactive Tracks composition dependencies and shares synchronous validation evaluation.
      */
     (options: { resolve?: boolean }): Validators<FormValue<TNodes>>;
   };
-  /** Replaces validators owned by this form and immediately validates its current aggregate value. */
+  /**
+   * Replaces validators owned by this form and immediately validates its current aggregate value.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.invalid(); // true
+   * ```
+   */
   setValidators(validators: ValidatorSource<FormValue<TNodes>, FormNode<TNodes, TParent>>): void;
   /**
-  * A signal containing the validation errors of **this form node itself, excluding its descendants**.
-  *
-  * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
+   * A signal containing the validation errors of **this form node itself, excluding its descendants**.
+   *
+   * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
    *
    * Pass `{ descendants: true }` to read the same subtree errors as `allErrors()`.
    *
-   * @example
    * ```ts
-   * profile.errors();
-   * // [{ kind: 'profileLocked', message: 'This profile cannot be edited.', targetNode: profile }]
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.errors().map(error => error.kind);
+   * // ['blocked']
    * ```
+   *
    * @reactive Tracks own errors by default, or subtree errors when descendants is true.
-  */
+   */
   errors: NodeErrorsSignal<FormNode<TNodes, TParent>>;
   /**
-  * A signal containing the validation errors of **this form node and its descendants**.
-  *
-  * ℹ️ To read only errors belonging directly to this form node, use `errors()` instead.
+   * A signal containing the validation errors of **this form node and its descendants**.
+   *
+   * ℹ️ To read only errors belonging directly to this form node, use `errors()` instead.
    *
    * Shortcut for `errors({ descendants: true })`, returning the same cached array.
    *
-   * @example
    * ```ts
-   * profile.allErrors();
-   * // [{ kind: 'required', message: 'Name is required.', targetNode: profile.name }]
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.allErrors().map(error => error.kind);
+   * // ['blocked']
    * ```
-  */
+   */
   allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
-  /** Whether this form and every descendant have completed validation without errors. */
+  /**
+   * Whether this form and every descendant have completed validation without errors.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.valid(); // true
+   * ```
+   */
   valid: Signal<boolean>;
-  /** Whether this form or any descendant currently contributes a validation error. */
+  /**
+   * Whether this form or any descendant currently contributes a validation error.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.invalid(); // false
+   * ```
+   */
   invalid: Signal<boolean>;
   /**
    * Returns the first validation error belonging directly to this form and matching `kind`.
+   *
+   * ```ts
+   * const node = field('', [required]);
+   * node.getError('required')?.kind;
+   * // 'required'
+   * ```
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
@@ -729,23 +1126,73 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
   /**
    * Returns the first custom error belonging directly to this form and matching `kind`.
    *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.getError('blocked')?.kind;
+   * // 'blocked'
+   * ```
+   *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<FormNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
   /**
    * Whether this node's own errors contain the given kind. Does not search descendants.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.hasError('blocked'); // true
+   * ```
+   *
    * @reactive Memoizes by kind and tracks the node's current errors.
    */
   hasError(kind: string): boolean;
   /**
    * Whether the same validator function is directly registered on this node, including async validators.
    * By default, does not run validators. Set resolve to true to inspect resolved leaf references.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * const rule = validator(() => null);
+   * node.setValidators(rule);
+   * node.hasValidator(rule); // true
+   * ```
+   *
    * @reactive Memoizes by function identity and resolution mode; resolved queries track composition dependencies.
    */
   hasValidator(validator: (context: any) => unknown, options?: { resolve?: boolean }): boolean;
-  /** Whether active validation metadata marks this form itself as required. */
+  /**
+   * Whether active validation metadata marks this form itself as required.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.required(); // false
+   * ```
+   */
   required: Signal<boolean>;
-  /** Whether asynchronous validation is active on this form or any descendant. */
+  /**
+   * Whether asynchronous validation is active on this form or any descendant.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.pending(); // false
+   * ```
+   */
   pending: Signal<boolean>;
   /**
    * Whether `submit()` has been called on this form since its last reset.
@@ -759,17 +1206,26 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * its own history: submitting an ancestor or descendant does not set this form's flag.
    * A reset during an asynchronous action stays cleared when that action settles.
    *
-   * @example
    * ```ts
    * const profile = form({ name: field('') });
    * await profile.submit();
-   * profile.submitted(); // true, even without an onSubmit action
+   * profile.submitted();
+   * // true, even without an onSubmit action
    * profile.reset();
    * profile.submitted(); // false
    * ```
    */
   submitted: Signal<boolean>;
-  /** Whether this form or an ancestor form is currently running its submission action. */
+  /**
+   * Whether this form or an ancestor form is currently running its submission action.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.submitting(); // false
+   * ```
+   */
   submitting: Signal<boolean>;
   /**
    * Marks and flushes the subtree, then runs the configured submission action when validation
@@ -777,13 +1233,61 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Resolves to `false` for returned errors, blocked/concurrent attempts, or a missing action.
    * Errors target this form or its captured descendants; edits/reset/detachment discard stale errors.
    * Thrown or rejected action failures propagate without becoming validation errors.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * }, {
+   *   onSubmit: async () => null,
+   * });
+   * await profile.submit(); // true
+   * ```
    */
   submit(): Promise<boolean>;
-  /** Whether any descendant field currently has a pending control-value debounce. */
+  /**
+   * Whether any descendant field currently has a pending control-value debounce.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.debouncing(); // false
+   * ```
+   */
   debouncing: Signal<boolean>;
-  /** Immediately commits every pending control value in this form's subtree. */
+  /**
+   * Immediately commits every pending control value in this form's subtree.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada', { debounce: 'blur' }),
+   * });
+   * profile.name.value.control.set('Lia');
+   * profile.name.flush();
+   * profile.name(); // 'Lia'
+   * ```
+   */
   flush(): void;
-  /** Focuses the first bound UI control in this form's subtree, in DOM order. */
+  /**
+   * Focuses the first bound UI control in this form's subtree, in DOM order.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Component({
+   *   imports: [FormNodeDirective],
+   *   template: `
+   *     <input [formNode]="profile.name" />
+   *     <button (click)="profile.focus()">
+   *       Focus name
+   *     </button>
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   profile = form({ name: field('Ada') });
+   * }
+   * ```
+   */
   focus(options?: FocusOptions): void;
   /**
    * Aggregated validation phase for this form subtree: `'valid'`, `'invalid'`, or `'unknown'`.
@@ -792,18 +1296,39 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * is currently available anywhere in the subtree. While unknown, `pending()` is true and both
    * `valid()` and `invalid()` are false. Any available error makes the status `'invalid'`, even if
    * other validation remains pending.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.validationStatus(); // 'valid'
+   * ```
    */
   validationStatus: Signal<ValidationStatus>;
   /**
    * Whether this form or any descendant has been marked touched.
    *
    * ℹ️ Disabled, readonly, or hidden nodes report `false` and do not contribute touched state to ancestors.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.touched(); // false
+   * ```
    */
   touched: Signal<boolean>;
   /**
    * Logical inverse of `touched()`.
    *
    * Whether neither this form nor any contributing descendant currently reports touched state.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.untouched(); // true
+   * ```
    */
   untouched: Signal<boolean>;
   /**
@@ -812,12 +1337,45 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    *
    * This can change committed values and trigger validation and value-change callbacks,
    * even when nodes are already touched. Noninteractive subtrees ignore this operation.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.markAsTouched();
+   * node.touched(); // true
+   * ```
    */
   markAsTouched(options?: {
-    /** Skips recursively touching and committing descendants; this form still commits its own pending input. */
+    /**
+     * Skips recursively touching and committing descendants; this form still commits its own pending input.
+     *
+     * **Default:** `false`; visit interactive descendants too.
+     *
+     * ```ts
+     * const profile = form({ name: field('Ada') });
+     * profile.markAsTouched({
+     *   skipDescendants: true,
+     * });
+     * profile.name.touched(); // false
+     * ```
+     */
     skipDescendants?: boolean;
   }): void;
-  /** Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. */
+  /**
+   * Clears this node's own touched marker without changing descendant markers or values.
+   * An interactive touched descendant can keep an aggregate `touched()` true. Use `reset()`
+   * to clear interaction state throughout the subtree.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.markAsTouched();
+   * node.markAsUntouched();
+   * node.touched(); // true
+   * ```
+   */
   markAsUntouched(): void;
   /**
    * Whether this form currently reports user-modified state.
@@ -825,35 +1383,75 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * This becomes `true` when the form's own state is marked dirty or an interactive descendant is
    * dirty. Programmatic value updates do not mark nodes dirty. `markAsPristine()` clears only this
    * form's own state, so a dirty descendant can keep the result `true`.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.dirty(); // false
+   * ```
    */
   dirty: Signal<boolean>;
   /**
    * Logical inverse of `dirty()`.
    *
    * Whether neither this form nor any contributing descendant currently reports user-modified state.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.pristine(); // true
+   * ```
    */
   pristine: Signal<boolean>;
-  /** Marks this form's own state dirty, making `dirty()` true and `pristine()` false while it is interactive. */
+  /**
+   * Marks this form's own state dirty, making `dirty()` true and `pristine()` false while it is interactive.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.markAsDirty();
+   * node.dirty(); // true
+   * ```
+   */
   markAsDirty(): void;
   /**
    * Clears this form's own dirty state. `pristine()` becomes true and `dirty()` false only when no
    * contributing descendant remains dirty.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.markAsDirty();
+   * node.markAsPristine();
+   * node.dirty(); // false
+   * ```
    */
   markAsPristine(): void;
-  /** Whether this form is effectively disabled by its own state or an ancestor reason. */
+  /**
+   * Whether this form is effectively disabled by its own state or an ancestor reason.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.disabled(); // false
+   * ```
+   */
   disabled: Signal<boolean>;
   /**
    * Active inherited and local causes of this form's disabled state.
    *
-   * @example
    * ```ts
-   * profile.disabledReasons();
-   * // [
-   * //   {
-   * //     sourceNode: profile,
-   * //     message: 'Profile is locked',
-   * //   },
-   * // ]
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.disable('Locked');
+   * node.disabledReasons()[0]?.message;
+   * // 'Locked'
    * ```
    */
   disabledReasons: Signal<readonly DisabledReason[]>;
@@ -861,56 +1459,140 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    * Logical inverse of `disabled()`.
    *
    * Whether this form has no active local or inherited disabled reason and can participate normally.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.enabled(); // true
+   * ```
    */
   enabled: Signal<boolean>;
   /**
    * Disables this form subtree, optionally recording a user-facing reason.
    * Sets `disabled()` to true and `enabled()` to false on this form and its descendants.
    *
-   * @example Disable without a reason
    * ```ts
-   * profile.disable();
-   * ```
-   *
-   * @example Disable with a reason
-   * ```ts
-   * profile.disable('Locked');
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.disable('Locked');
+   * node.disabled(); // true
    * ```
    */
   disable(message?: string): void;
   /**
-   * Clears the imperative disabled state created by `disable()`. `enabled()` becomes true only on
-   * nodes without another configured or inherited disabled reason.
+   * Clears local disabled state, including a static initial `disabled` option. Continuing
+   * reactive conditions and inherited reasons remain effective, so `enabled()` may stay false.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.disable();
+   * node.enable();
+   * node.disabled(); // false
+   * ```
    */
   enable(): void;
-  /** Whether this form is effectively readonly through its own state or an ancestor. */
+  /**
+   * Whether this form is effectively readonly through its own state or an ancestor.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.readonly(); // false
+   * ```
+   */
   readonly: Signal<boolean>;
   /**
    * Logical inverse of `readonly()`.
    *
    * Whether this form accepts value changes from a control bound directly to it.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.writable(); // true
+   * ```
    */
   writable: Signal<boolean>;
-  /** Marks this form subtree readonly, making `readonly()` true and `writable()` false throughout it. */
+  /**
+   * Marks this form subtree readonly, making `readonly()` true and `writable()` false throughout it.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.markAsReadonly();
+   * node.readonly(); // true
+   * ```
+   */
   markAsReadonly(): void;
   /**
-   * Clears this form's imperative readonly state. `writable()` becomes true only on nodes without
-   * another configured or inherited readonly state.
+   * Clears local readonly state, including a static initial `readonly` option. Reactive
+   * conditions and ancestor readonly state can still prevent the node from becoming writable.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.markAsReadonly();
+   * node.markAsWritable();
+   * node.readonly(); // false
+   * ```
    */
   markAsWritable(): void;
-  /** Whether this form is effectively hidden through its own state or an ancestor. */
+  /**
+   * Whether this form is effectively hidden through its own state or an ancestor.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.hidden(); // false
+   * ```
+   */
   hidden: Signal<boolean>;
   /**
    * Logical inverse of `hidden()`.
    *
    * Whether this form is currently intended to be shown to the user.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.visible(); // true
+   * ```
    */
   visible: Signal<boolean>;
-  /** Hides this form subtree, making `hidden()` true and `visible()` false throughout it. */
+  /**
+   * Hides this form subtree, making `hidden()` true and `visible()` false throughout it.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.hide();
+   * node.hidden(); // true
+   * ```
+   */
   hide(): void;
   /**
-   * Clears this form's imperative hidden state. `visible()` becomes true only on nodes without
-   * another configured or inherited hidden state.
+   * Clears local hidden state, including a static initial `hidden` option. Reactive
+   * conditions and ancestor hidden state can still keep the node hidden.
+   *
+   * ```ts
+   * const node = form({
+   *   name: field('Ada'),
+   * });
+   * node.hide();
+   * node.show();
+   * node.hidden(); // false
+   * ```
    */
   show(): void;
 };
@@ -931,6 +1613,11 @@ type FormApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
    *
    * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
    * Child names never replace members on this API; access children through `children` when available.
+   *
+   * ```ts
+   * const node = form({ name: field('Ada') });
+   * node.$api.valid(); // true
+   * ```
    */
   $api: CallableNodeApi<FormApi<TNodes, TParent>>;
 };
@@ -940,12 +1627,24 @@ type FormApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
  * to preserve exact child types.
  *
  * **Without generic arguments, use `$api` for state and operations because child names may collide.**
+ *
+ * ```ts
+ * const node = form({ name: field('Ada') });
+ * node(); // { name: 'Ada' }
+ * ```
  */
 export type FormNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
   [TNodes] extends [never] ? GenericFormNode
     : Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
-    /** Returns the form's current aggregate committed value and participates in signal dependency tracking. */
+    /**
+     * Returns the form's exposed aggregate value after configured equality and participates in signal dependency tracking.
+     *
+     * ```ts
+     * const node = form({ name: field('Ada') });
+     * node(); // { name: 'Ada' }
+     * ```
+     */
     (): { [K in keyof TNodes]: NodeValue<TNodes[K]> };
   }
   & FormApiProperty<TNodes, TParent>

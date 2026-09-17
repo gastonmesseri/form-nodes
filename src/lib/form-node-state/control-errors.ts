@@ -46,8 +46,9 @@ export const CONTROL_ERRORS_BRIDGE = new InjectionToken<ControlErrorsBridge>('Fo
  * Add this to the custom component's providers alongside NG_VALUE_ACCESSOR. Form Nodes,
  * Reactive Forms, and ngModel register contributions directly and do not require this provider.
  * Signal Forms on Angular 21 and signal-model controls do not support this bridge.
- * @example
- * providers: [provideFormNodeStateErrors()]
+ * ```ts
+ * providers: [provideFormNodeStateErrors()];
+ * ```
  */
 export const provideFormNodeStateErrors = (): Provider[] => [
   { provide: CONTROL_ERRORS_BRIDGE, useFactory: () => new ControlErrorsBridge() },

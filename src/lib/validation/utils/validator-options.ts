@@ -11,7 +11,9 @@ export type ValidatorOptions<TValue = unknown> = ({
    * provider, global, and built-in fallback messages.
    */
   message?: string | (() => string | undefined);
-  /** Custom error or errors returned instead of the built-in error. */
+  /**
+   * Unavailable when `message` is selected; configure a message or a replacement error.
+   */
   error?: never;
 } | {
   message?: never;

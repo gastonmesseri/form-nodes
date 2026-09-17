@@ -24,7 +24,6 @@ type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNodeType<AnyNo
  * `push()` without a value adds null; supplied values remain field values, including objects.
  * Use an explicit template when item structure or validators are known.
  *
- * @example
  * ```ts
  * const values = array();
  * values(); // []
@@ -35,33 +34,20 @@ type PositionalArrayOptions<TValue, TArray extends AnyNode = ArrayNodeType<AnyNo
 export function array(): ArrayNodeType<FieldNode<unknown>>;
 /**
  * Creates a dynamic array by cloning a declarative node template for every item.
- * 
- * ```ts
- * const people = array({
- *   name: field(''),
- * }, 1);
- *
- * people(); // [{ name: '' }]
- * 
- * 
- * const people = array({
- *   name: field(''),
- * }, {
- *   initialValue: [{ name: 'Marco' }],
- * });
- *
- * people(); // [{ name: 'Marco' }]
- * 
- * 
- * const people = array({
- *   name: field(''),
- * }, [{ name: 'Marco' }]);
- *
- * people(); // [{ name: 'Marco' }]
- * ```
  *
  * The template itself remains independent; each item is a fresh clone. Use a factory overload
  * when item construction must be deferred or customized.
+ *
+ * ```ts
+ * const people = array({
+ *   name: field(''),
+ * }, {
+ *   initialValue: [
+ *     { name: 'Ada' },
+ *   ],
+ * });
+ * people(); // [{ name: 'Ada' }]
+ * ```
  *
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
  * `array()`, or shorthand object. The supplied definition remains an independent node and is not
@@ -81,7 +67,10 @@ export function array<TDefinition extends ArrayTemplate>(
  * Creates an array node from a declarative node template and positional initial contents.
  *
  * ```ts
- * const names = array(field(''), ['Marco', 'Lia']);
+ * const names = array(field(''), [
+ *   'Marco',
+ *   'Lia',
+ * ]);
  * ```
  *
  * @param template Declarative shape cloned for every item. Pass a `field()`, `form()`, nested
@@ -103,11 +92,14 @@ export function array<TDefinition extends ArrayTemplate>(
  * Creates an array node from a node-definition factory.
  *
  * ```ts
- * const people = array(() => ({
- *   name: field(''),
- * }), {
- *   initialValue: 2,
- * });
+ * const people = array(
+ *   () => ({
+ *     name: field(''),
+ *   }),
+ *   {
+ *     initialValue: 2,
+ *   },
+ * );
  * ```
  *
  * @param factory Creates the declarative shape for each item. Use a factory when construction

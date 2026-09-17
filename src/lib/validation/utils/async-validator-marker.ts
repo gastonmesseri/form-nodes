@@ -1,75 +1,128 @@
 import type { AnyNode } from '../../types/node.type';
 import type { DeferredCondition, AsyncValidator, AsyncValidatorApi, AsyncValidatorBaseContext, ValidationResult, ValidatorNode, ValidatorReadonlyApi } from '../validation.type';
 
-/** Scheduling, activation, and failure-handling options for `asyncValidator()`. */
+/**
+ * Scheduling, activation, and failure-handling options for `asyncValidator()`.
+ *
+ * ```ts
+ * field('', {
+ *   validators: asyncValidator(
+ *     async ({ value }) => {
+ *       const name = value();
+ *       await Promise.resolve();
+ *       return name === 'reserved'
+ *         ? { kind: 'unavailable' }
+ *         : null;
+ *     },
+ *   ),
+ * });
+ * ```
+ */
 export type AsyncValidatorOptions<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = {
   /**
-   * Delay in milliseconds before each execution. A newer trigger cancels the pending delay.
+   * Delays asynchronous execution or publication by this many milliseconds. A new trigger
+   * cancels the previous delay. Parameterized validators wait before calling `validate`.
+   * A direct validator's first call discovers dependencies immediately; its result is held
+   * until the initial delay ends. Later direct executions wait before calling the validator.
+   * This does not delay committed node values; use the node's `debounce` option for that.
    *
-   * @example Wait 300 milliseconds after the latest change.
+   * **Default:** `0`; no asynchronous validation delay.
+   *
    * ```ts
-   * asyncValidator(
-   *   () => Promise.resolve(null),
-   *   { debounce: 300 },
-   * );
+   * field('', {
+   *   validators: asyncValidator(
+   *     async () => null,
+   *     { debounce: 300 },
+   *   ),
+   * });
    * ```
    */
   debounce?: number;
   /**
-   * Reactive condition controlling whether validation is active. Signals read here are tracked.
+   * Enables asynchronous validation while the condition is true. A false result
+   * cancels active work and clears this validator's contribution. Signal reads are tracked.
+   * Parameterless callbacks support self-references with unchecked returns; return a boolean.
+   * Context-taking callbacks retain boolean checking.
    *
-   * @example Check availability only after three characters are entered.
+   * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
+   *
    * ```ts
-   * asyncValidator(
-   *   () => Promise.resolve(null),
-   *   { when: () => usernameChecksEnabled() },
-   * );
+   * import { signal } from '@angular/core';
+   *
+   * const enabled = signal(true);
+   * field('', {
+   *   validators: asyncValidator(
+   *     async () => null,
+   *     { when: () => enabled() },
+   *   ),
+   * });
    * ```
    *
-   * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
-   * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
+   * @reactive Tracks condition reads and restarts or cancels work when they change.
    */
   when?: DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, TField>) => boolean);
   /**
-   * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
+   * Maps a rejected Promise, thrown execution error, or failed Observable to validation
+   * errors. The original error and current base context are supplied. Cancelled or
+   * obsolete executions do not publish mapped results. Return null/undefined to omit errors.
    *
-   * @example Present a domain-friendly error when the remote check fails.
+   * **Default:** `undefined`; an execution failure contributes no validation error.
+   *
    * ```ts
-   * asyncValidator(
-   *   () => checkUsername().then(() => null),
-   *   {
-   *     onError: () => ({
-   *       kind: 'usernameCheckUnavailable',
-   *       message: 'The username could not be checked. Try again later.',
-   *     }),
-   *   },
-   * );
+   * field('', {
+   *   validators: asyncValidator(
+   *     async () => {
+   *       throw new Error('Unavailable');
+   *     },
+   *     {
+   *       onError: () => ({ kind: 'offline' }),
+   *     },
+   *   ),
+   * });
    * ```
    */
   onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi, TField>) => ValidationResult;
 };
 
-/** Options for an async validator whose tracked dependencies are exposed as a typed snapshot. */
+/**
+ * Options for an async validator whose tracked dependencies are exposed as a typed snapshot.
+ *
+ * ```ts
+ * field('', {
+ *   validators: asyncValidator({
+ *     params: ({ value }) => value(),
+ *     validate: async ({ params }) => {
+ *       return params === 'reserved'
+ *         ? { kind: 'unavailable' }
+ *         : null;
+ *     },
+ *   }),
+ * });
+ * ```
+ */
 export type ParameterizedAsyncValidatorOptions<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = ValidatorNode> = AsyncValidatorOptions<TValue, TApi, TField> & {
   /**
-   * Reactively derives the explicit dependency snapshot passed to the validator. Signals read by
-   * this function are tracked, while object and array results are compared shallowly.
+   * Derives the dependency snapshot passed to `validate`. Signals read here are tracked.
+   * Objects and arrays are compared shallowly, so an unchanged first-level snapshot
+   * does not restart validation even if a source signal emits. Scalars use value equality.
    *
-   * @example
    * ```ts
-   * const location = signal({ city: 'Zurich', country: 'Switzerland' });
+   * import { signal } from '@angular/core';
    *
-   * const options: ParameterizedAsyncValidatorOptions<string, { where: string }> = {
-   *   params: () => ({
-   *     where: location().city,
+   * const city = signal('Zurich');
+   * field('', {
+   *   validators: asyncValidator({
+   *     params: () => city(),
+   *     validate: async ({ params }) => {
+   *       return params === 'reserved'
+   *         ? { kind: 'unavailable' }
+   *         : null;
+   *     },
    *   }),
-   * };
+   * });
    * ```
    *
-   * A `location` emission reevaluates `params`, but validation restarts only when the resulting
-   * first-level `where` value changes.
-   *
-   * @reactive Tracks signals read by this function and compares the returned snapshot shallowly.
+   * @reactive Tracks reads and compares the returned snapshot shallowly.
    */
   params: (context: AsyncValidatorBaseContext<TValue, TApi, TField>) => TParams;
 };

@@ -7,11 +7,14 @@ import { FormNodeDirective } from './form-node/form-node.directive';
  * Currently includes `FormNodeDirective`. It does not configure providers or global defaults.
  * Standalone components may import either this module or individual directives.
  *
- * @example
  * ```ts
+ * import { Component } from '@angular/core';
+ *
  * @Component({
  *   imports: [FormNodesModule],
- *   template: `<input [formNode]="profile.name" />`,
+ *   template: `<input
+ *     [formNode]="profile.name"
+ *   />`,
  * })
  * export class ProfileComponent {
  *   profile = form({ name: field('Marco') });

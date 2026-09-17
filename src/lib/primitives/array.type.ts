@@ -12,201 +12,304 @@ import type { CustomValidationError, ValidationErrorMap, ValidationStatus, Valid
 
 export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
   /**
-   * Runs synchronously after a committed public value changes, for control and programmatic writes.
-   * Skips initialization and values retained by equal. Control writes respect debounce.
-   * Aggregate operations notify once after their children are updated, with descendants first.
-   * Runs untracked, without requiring an injector; does not wait for asynchronous validation.
-   * Callback writes are delivered after the current callback. Return values are ignored.
-   * @example
-   * onValueChange: (value, node) => console.log(value, node.pending())
+   * Runs synchronously after the exposed value changes, including programmatic writes.
+   * Initialization and writes retained by `equal` do not notify. Control writes wait for debounce.
+   * Callbacks run untracked, without requiring an injector or waiting for async validation.
+   * Aggregate writes notify descendants before their parent, once after child updates.
+   * Reentrant writes are delivered after the current callback; returned values are ignored.
+   *
+   * **Default:** `undefined`; no callback.
+   *
+   * ```ts
+   * const values: unknown[] = [];
+   * const node = array({ name: field('Ada') }, {
+   *   onValueChange(value) {
+   *     values.push(value);
+   *   },
+   * });
+   * node.set([
+   *   { name: 'Lia' },
+   * ]);
+   * values.length; // 1
+   * ```
    */
   onValueChange?(value: TValue, node: TArray): void;
 
   /**
-   * Configures this instance synchronously once, after its own API and children are ready.
-   * Receives the collision-safe callable `$api`, so child names cannot hide operations.
-   * Runs untracked; install validators here to track their reads when validation executes.
-   * Runs for every fresh template clone. Existing instances do not rerun on reset, moves, or edits.
-   * Ancestors may not be attached yet. Do not read the variable being initialized here.
-   * Returned values are ignored; this is not an async or cleanup lifecycle hook.
-   * An array callback configures the collection; configure its group/form template for per-row rules.
+   * Configures each new instance once, synchronously after its API and children are ready.
+   * Receives the collision-safe callable `$api`. Runs untracked; validators installed here
+   * track dependencies when they execute. Ancestors may not be attached yet.
+   * Use the callback argument rather than the variable being initialized. Fresh template
+   * clones run their own callback; reset, reordering, and edits do not rerun it.
+   * Returned values are ignored; this is neither an async hook nor a cleanup registration.
    *
-   * @example
+   * **Default:** `undefined`; no initialization callback.
+   *
    * ```ts
-   * const profile = form({
-   *   roles: array({ name: field('') }, {
-   *     configure: api => {
-   *       api.setValidators(({ value }) => {
-   *         return value().length ? null : { kind: 'emptyRoles' };
-   *       });
-   *     },
-   *   }),
+   * array({
+   *   name: field(''),
+   * }, {
+   *   configure(api) {
+   *     api.setValidators(() => null);
+   *   },
    * });
    * ```
    */
   configure?: (api: TArray['$api']) => void;
 
   /**
-   * One validator or an array of validators for the complete array value, not each item.
+   * Registers rules on this node's exposed value. Aggregate rules receive the complete
+   * object or array; put per-field rules on children. A synchronous composition may return
+   * validators; asynchronous rules must be wrapped with `asyncValidator()`.
+   * Null and undefined entries are ignored. Contexts are typed; inline returns intentionally
+   * allow self-reference inference. Use `validator()` or an explicit result annotation
+   * when returned errors also need strict checking.
    *
-   * @example Validate the collection with one built-in validator.
+   * **Default:** `[]`; no own validators.
+   *
+   * **Accepted values:**
+   *
+   * - **Functions**: One rule or synchronous composition.
+   * - **Arrays**: Rules in declaration order; nullish entries are skipped.
+   *
+   * See {@link ValidatorSource}, {@link ValidationResult}, and {@link ComposableValidationResult}.
+   *
    * ```ts
-   * array(field(''), {
-   *   validators: minLength(1),
+   * array({
+   *   name: field(''),
+   * }, {
+   *   validators: () => null,
    * });
    * ```
    *
-   * @example Combine collection validators.
    * ```ts
-   * array(field(''), {
-   *   validators: [minLength(1), uniqueItems],
+   * array({
+   *   name: field(''),
+   * }, {
+   *   validators: () => ({ kind: 'blocked' }),
    * });
    * ```
    *
-   * @example Declare a custom collection rule inline.
    * ```ts
-   * array(field(0), {
-   *   validators: ({ value }) => {
-   *     return value().some(amount => amount !== null && amount < 0)
-   *       ? { kind: 'negativeAmount', message: 'Amounts cannot be negative.' }
-   *       : null;
-   *   },
-   * });
-   * ```
-   *
-   * @example Add one asynchronous collection validator.
-   * ```ts
-   * array(field(''), {
-   *   validators: asyncValidator(async ({ value }) => {
-   *     const allowed = await areTagsAllowed(value());
-   *     return allowed ? null : { kind: 'tagsNotAllowed' };
+   * array({
+   *   name: field(''),
+   * }, {
+   *   validators: asyncValidator(async () => {
+   *     await Promise.resolve();
+   *     return null;
    *   }),
    * });
    * ```
-   *
-   * Put validators in the item template when every item should be validated independently.
-   *
-   * See ValidatorSource for supported results. Callback contexts remain typed; returns deliberately
-   * use any for self-reference inference. Annotate ValidationResult or ComposableValidationResult,
-   * or use a context-taking validator() helper, to check returned results.
    */
   validators?: ValidatorSource<TValue, TArray>;
   /**
-   * Default control-value debounce inherited by every current and future item.
+   * Delays control-originated value commits. Descendants inherit this strategy unless
+   * they supply their own. Programmatic writes commit immediately. A later edit aborts
+   * the previous delay; `flush()` or an interactive `markAsTouched()` commits pending input.
    *
-   * @example Give item controls a 300-millisecond debounce by default.
-   * ```ts
-   * array(field(''), { debounce: 300 });
-   * ```
+   * **Default:** `undefined`; inherit the nearest configured strategy, otherwise commit immediately.
    *
-   * @example Commit item control values when their controls lose focus.
+   * **Accepted values:**
+   *
+   * - **Numbers**: Wait this many milliseconds after the latest control edit.
+   * - `blur`: Commit on touch/focus loss.
+   * - **Functions**: Commit after the returned promise settles successfully; receive the cancellation signal.
+   *
    * ```ts
-   * array(field(''), { debounce: 'blur' });
+   * array({
+   *   name: field(''),
+   * }, {
+   *   debounce: 300,
+   * });
+   *
+   * array({
+   *   name: field(''),
+   * }, {
+   *   debounce: 'blur',
+   * });
+   *
+   * array({
+   *   name: field(''),
+   * }, {
+   *   debounce: async abortSignal => {
+   *     await Promise.resolve();
+   *     if (abortSignal.aborted) return;
+   *   },
+   * });
    * ```
    */
   debounce?: number | 'blur' | ((abortSignal: AbortSignal) => void | PromiseLike<void>);
   /**
-   * Initial or reactive visibility of the complete collection.
+   * Controls this node's local hidden state. Descendants inherit active hidden state;
+   * programmatic writes remain available. Hidden nodes suppress their own validation
+   * and reported interaction state. Hiding does not delete values or stored dirty/touched state.
    *
-   * @example Create a collection that starts hidden.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   *
    * ```ts
-   * array(field(''), { hidden: true });
+   * array({
+   *   name: field(''),
+   * }, {
+   *   hidden: true,
+   * });
    * ```
    *
-   * @example Hide contact rows when the user opts out of providing contacts.
    * ```ts
-   * array(field(''), {
-   *   hidden: () => !collectContacts(),
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
+   * array({
+   *   name: field(''),
+   * }, {
+   *   hidden: () => active(),
    * });
    * ```
    */
   hidden?: boolean | (() => boolean);
   /**
-   * Initial or reactive disabled state for the collection and its items. Return a string to record
-   * a user-facing reason.
+   * Controls this node's local disabled state, inherited by descendants. A string disables
+   * the node and contributes a user-facing reason, including an empty string.
+   * Disabled nodes retain their values and accept programmatic writes; their own validation
+   * and reported interaction state are suppressed. Ancestor reasons cannot be cleared locally.
    *
-   * @example Create a collection that starts disabled.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   * - **Strings**: Disable locally and record the text in `disabledReasons()`.
+   *
    * ```ts
-   * array(orderLineTemplate, { disabled: 'Order lines are managed externally.' });
+   * array({
+   *   name: field(''),
+   * }, {
+   *   disabled: true,
+   * });
    * ```
    *
-   * @example Lock order lines after the order is submitted.
    * ```ts
-   * array(orderLineTemplate, {
-   *   disabled: () => orderSubmitted() ? 'The order has already been submitted.' : false,
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
+   * array({
+   *   name: field(''),
+   * }, {
+   *   disabled: () => active(),
+   * });
+   * ```
+   *
+   * ```ts
+   * array({
+   *   name: field(''),
+   * }, {
+   *   disabled: 'Locked',
    * });
    * ```
    */
   disabled?: boolean | string | (() => boolean | string);
   /**
-   * Initial or reactive readonly state for the collection and its items.
+   * Controls this node's local readonly state. Descendants inherit active readonly state.
+   * It prevents control-originated edits, not programmatic writes. Readonly nodes suppress
+   * their own validation and reported dirty/touched state without discarding stored interaction.
    *
-   * @example Create a collection that starts in readonly mode.
+   * **Default:** `false` locally; active ancestor state still applies.
+   *
+   * **Accepted values:**
+   *
+   * - **Booleans**: Enable or clear the local configured state.
+   * - **Functions**: Reevaluate tracked signal reads to derive the local state.
+   *
    * ```ts
-   * array(auditEntryTemplate, { readonly: true });
+   * array({
+   *   name: field(''),
+   * }, {
+   *   readonly: true,
+   * });
    * ```
    *
-   * @example Show audit entries without allowing them to be edited.
    * ```ts
-   * array(auditEntryTemplate, {
-   *   readonly: () => auditFinalized(),
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(false);
+   * array({
+   *   name: field(''),
+   * }, {
+   *   readonly: () => active(),
    * });
    * ```
    */
   readonly?: boolean | (() => boolean);
   /**
-   * **Initial array contents.** Accepts either:
+   * Initializes collection items from complete values or the template defaults.
+   * Null and undefined normalize to an empty array; the collection value is never nullable.
+   * A positional initial value excludes this option to prevent conflicting initial sources.
    *
-   * - An array containing the initial value of every item.
-   * - A non-negative integer specifying how many items to create from the template defaults.
+   * **Default:** `[]`; no items.
    *
-   * ℹ️ `null` and `undefined` normalize to `[]`; the observable array value itself is never
-   * nullable. Individual item values may still be nullable when their templates allow it.
+   * **Accepted values:**
    *
-   * This option is available in the `array(template, options)` and
-   * `array(template, validators, options)` signatures. When an initial value is supplied as a
-   * positional argument, TypeScript intentionally omits this property to prevent two conflicting
-   * initial-value sources.
+   * - **Arrays**: Create one item for each supplied value.
+   * - **Non-negative integers**: Create this many items from the template.
+   * - **Nullish values**: Create no items.
    *
-   * @defaultValue `[]`
+   * ```ts
+   * array({
+   *   name: field(''),
+   * }, {
+   *   initialValue: [
+   *     { name: 'Ada' },
+   *   ],
+   * });
+   * ```
    *
-   * @example
-   * `array(personTemplate, { initialValue: [{ name: 'Marco' }] })`
-   *
-   * @example
-   * `array(personTemplate, { initialValue: 3 })`
+   * ```ts
+   * array({
+   *   name: field(''),
+   * }, {
+   *   initialValue: 3,
+   * });
+   * ```
    */
   initialValue?: TValue | number | null;
   /**
-   * Selects the stable identity of an item when `set()`, `update()`, or `reset(value)` reconciles
-   * incoming values with the array's current nodes. Pass either a typed property name such as
-   * `'id'` or a callback for computed or non-property keys.
+   * Selects stable item identity during `set()`, `patch()`, `update()`, and value-reset reconciliation.
+   * Matching keys retain and move existing nodes; new keys create nodes and removed keys detach them.
+   * Retained nodes keep their identity and interaction state while their values and paths update.
+   * Every current and incoming key must be unique; duplicate keys throw before mutation.
    *
-   * Items with matching keys reuse and, when necessary, move their existing nodes. This
-   * preserves node identity and state such as touched, dirty, and pending validation while
-   * updating the node's value and path. New keys create nodes and removed keys detach nodes.
+   * **Default:** `undefined`; reuse existing nodes by array index.
    *
-   * Use a stable domain identifier such as `value.id` when values may be reordered or replaced
-   * by new objects from a server. Every current and incoming item must return a unique key;
-   * duplicate keys throw before the array is changed.
+   * **Accepted values:**
    *
-   * When omitted, reconciliation is positional: existing nodes are reused by index. `move()`
-   * can be used instead when the source and destination indexes are already known.
+   * - **Property names**: Read a typed key from each object item.
+   * - **Functions**: Derive a key from the complete item value and index.
    *
-   * @example
    * ```ts
-   * array(personTemplate, initialPeople, {
+   * array({
+   *   id: field(0),
+   *   name: field(''),
+   * }, {
+   *   initialValue: [
+   *     { id: 1, name: 'Ada' },
+   *   ],
    *   trackBy: 'id',
    * });
    * ```
    *
-   * @example
    * ```ts
-   * array(personTemplate, initialPeople, {
-   *   trackBy: person => person.id,
+   * array({
+   *   id: field(0),
+   * }, {
+   *   trackBy: value => value.id,
    * });
    * ```
-  */
+   */
   trackBy?: TValue extends readonly (infer TItemValue)[]
     ? ((value: TItemValue, index: number) => unknown)
       | (TItemValue extends object ? Extract<keyof TItemValue, string> : never)
@@ -219,16 +322,52 @@ export type ArrayItemWithParent<TItem extends AnyNode, TParent extends AnyNode> 
       : TItem extends GroupNode<infer TNodes, AnyNode> ? GroupNode<TNodes, TParent>
         : TItem extends ArrayNode<infer TNestedItem, AnyNode> ? ArrayNode<TNestedItem, TParent> : TItem;
 
-/** Mutable array value produced by an array node, with every item mapped to its readable value. */
+/**
+ * Mutable array value produced by an array node, with every item mapped to its readable value.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const names = array(name);
+ * const values: ArrayValue<typeof name> = [
+ *   'Lia',
+ * ];
+ * names.set(values);
+ * names(); // ['Lia']
+ * ```
+ */
 export type ArrayValue<TItem extends AnyNode> =
   TItem extends FormNode<infer TNodes, AnyNode>
     ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
     : TItem extends GroupNode<infer TNodes, AnyNode>
       ? { [K in keyof TNodes]: NodeValue<TNodes[K]> }[]
       : NodeValue<TItem>[];
-/** Complete readonly sequence accepted by an array node's `set()`. */
+/**
+ * Complete readonly sequence accepted by an array node's `set()`.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const names = array(name);
+ * const values: ArraySet<typeof name> = [
+ *   'Lia',
+ * ];
+ * names.set(values);
+ * names(); // ['Lia']
+ * ```
+ */
 export type ArraySet<TItem extends AnyNode> = readonly NodeSet<TItem>[];
-/** Complete readonly sequence accepted by an array node's `patch()`, identical to its set value. */
+/**
+ * Complete readonly sequence accepted by an array node's `patch()`, identical to its set value.
+ *
+ * ```ts
+ * const name = field('Ada');
+ * const names = array(name);
+ * const values: ArrayPatch<typeof name> = [
+ *   'Lia',
+ * ];
+ * names.patch(values);
+ * names(); // ['Lia']
+ * ```
+ */
 export type ArrayPatch<TItem extends AnyNode> = ArraySet<TItem>;
 
 export type ArrayRoot<TItem extends AnyNode, TParent extends AnyNode> = AnyNode extends TParent
@@ -244,50 +383,113 @@ export type ArrayIndexes<TItem extends AnyNode, TParent extends AnyNode> = {
 };
 
 export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
-  /** Returns the concrete primitive represented by this node. */
+  /**
+   * Returns the concrete primitive represented by this node.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.nodeType(); // 'array'
+   * ```
+   */
   nodeType(): 'array';
   /**
    * Readonly signal containing the array node's current item nodes.
    * Reading it participates in reactive tracking, and its array reference changes when the
    * structure changes. The contained nodes are the live nodes owned by this array, not clones.
    * Use spread syntax or Array.from() when a mutable copy of the node list is needed.
+   *
+   * ```ts
+   * const profile = form({
+   *   people: array({ name: field('Ada') }, {
+   *     initialValue: 1,
+   *   }),
+   * });
+   * profile.people.items()[0]?.name();
+   * // 'Ada'
+   * ```
    */
   items: Signal<ArrayItems<TItem, TParent>>;
-  /** Current number of live item nodes. Equivalent to `items().length`. */
+  /**
+   * Current number of live item nodes. Equivalent to `items().length`.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.length(); // 1
+   * ```
+   */
   length: Signal<number>;
   /**
    * Nearest explicit `form()` containing this array, or `null` when no form workflow owns it.
    * A nested explicit form is the workflow owner instead of the complete structural root.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.form(); // null
+   * ```
    */
   form: Signal<NearestForm<TParent> | null>;
   /**
    * Complete structural root containing this array. A root or detached array returns itself.
    * Use this signal when traversal must cross nested form workflow boundaries.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.root() === node; // true
+   * ```
    */
   root: Signal<ArrayRoot<TItem, TParent>>;
-  /** Immediate structural parent of this array, or `null` when it is a root or has been detached. */
+  /**
+   * Immediate structural parent of this array, or `null` when it is a root or has been detached.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.parent(); // null
+   * ```
+   */
   parent: Signal<TParent | null>;
   /**
    * Property and array-index segments from the complete root to this array. Root arrays use `[]`.
    *
-   * @example
    * ```ts
-   * myForm.contacts.path();
-   * // ['contacts']
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.path(); // []
    * ```
    */
   path: Signal<readonly string[]>;
   /**
    * Property or array index under which this array is stored, or `null` when it is a root array.
    *
-   * @example
    * ```ts
-   * myForm.items.keyInParent(); // 'items'
-   * ```
-   *
-   * @example
-   * ```ts
-   * myForm.items[0]?.keyInParent(); // 0
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.keyInParent(); // null
    * ```
    */
   keyInParent: Signal<NodeKeyInParent<TParent>>;
@@ -301,60 +503,250 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    *
    * Prefer calling the array directly instead of using `names.value()` for ordinary value reads:
    *
-   * @example
    * ```ts
-   * const names = array(field(''), {
-   *   initialValue: ['Marco', 'Lia'],
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
    * });
-   *
-   * names(); // ['Marco', 'Lia']
+   * node(); // [{ name: 'Ada' }]
    * ```
    */
   value: NodeValueSignal<ArrayValue<TItem>, ArraySet<TItem> | null | undefined>;
-  /** Returns the live item node at `index`, or `undefined` when no item exists there. */
+  /**
+   * Returns the live item node at `index`, or `undefined` when no item exists there.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.at(0)?.(); // 'Ada'
+   * ```
+   */
   at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
-  /** Invokes `callback` once for each current item node, in index order. */
+  /**
+   * Invokes `callback` once for each current item node, in index order.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * const names: (string | null)[] = [];
+   * items.forEach(item => {
+   *   names.push(item());
+   * });
+   * names; // ['Ada', 'Lia', 'Max']
+   * ```
+   */
   forEach(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => void): void;
-  /** Transforms each current item node and returns the collected results without changing the array. */
+  /**
+   * Transforms each current item node and returns the collected results without changing the array.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.map(item => item());
+   * // ['Ada', 'Lia', 'Max']
+   * ```
+   */
   map<TResult>(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => TResult): TResult[];
-  /** Returns the current item nodes accepted by a type-guard predicate. */
+  /**
+   * Returns the current item nodes accepted by a type-guard predicate.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * const isAda = (
+   *   item: NonNullable<
+   *     ReturnType<typeof items.at>
+   *   >,
+   * ): item is NonNullable<
+   *   ReturnType<typeof items.at>
+   * > => item() === 'Ada';
+   * items.filter(isAda).length; // 1
+   * ```
+   */
   filter<TFiltered extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFiltered): TFiltered[];
-  /** Returns the current item nodes for which `predicate` produces a truthy result. */
+  /**
+   * Returns the current item nodes for which `predicate` produces a truthy result.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.filter(item => item() === 'Ada')
+   *   .length; // 1
+   * ```
+   */
   filter(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>[];
-  /** Returns the first current item node accepted by a type-guard predicate, or `undefined`. */
+  /**
+   * Returns the first current item node accepted by a type-guard predicate, or `undefined`.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * const isAda = (
+   *   item: NonNullable<
+   *     ReturnType<typeof items.at>
+   *   >,
+   * ): item is NonNullable<
+   *   ReturnType<typeof items.at>
+   * > => item() === 'Ada';
+   * items.find(isAda)?.(); // 'Ada'
+   * ```
+   */
   find<TFound extends ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => item is TFound): TFound | undefined;
-  /** Returns the first current item node for which `predicate` is truthy, or `undefined`. */
+  /**
+   * Returns the first current item node for which `predicate` is truthy, or `undefined`.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.find(item => item() === 'Lia')?.();
+   * // 'Lia'
+   * ```
+   */
   find(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
-  /** Returns the index of the first item node matching `predicate`, or `-1` when none matches. */
+  /**
+   * Returns the index of the first item node matching `predicate`, or `-1` when none matches.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.findIndex(item => item() === 'Lia');
+   * // 1
+   * ```
+   */
   findIndex(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): number;
-  /** Whether at least one current item node matches `predicate`. */
+  /**
+   * Whether at least one current item node matches `predicate`.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.some(item => item() === 'Ada');
+   * // true
+   * ```
+   */
   some(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): boolean;
-  /** Whether every current item node matches `predicate`. Returns `true` for an empty array. */
+  /**
+   * Whether every current item node matches `predicate`. Returns `true` for an empty array.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.every(item => item() !== null);
+   * // true
+   * ```
+   */
   every(predicate: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => unknown): boolean;
-  /** Whether the exact item-node instance occurs at or after `fromIndex`. */
+  /**
+   * Whether the exact item-node instance occurs at or after `fromIndex`.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * const first = items.at(0)!;
+   * items.includes(first); // true
+   * ```
+   */
   includes(item: AnyNode, fromIndex?: number): boolean;
-  /** Returns the index of the exact item-node instance, or `-1` when it is absent. */
+  /**
+   * Returns the index of the exact item-node instance, or `-1` when it is absent.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * const first = items.at(0)!;
+   * items.indexOf(first); // 0
+   * ```
+   */
   indexOf(item: AnyNode, fromIndex?: number): number;
-  /** Iterates over a stable snapshot of the current item nodes in index order. */
+  /**
+   * Iterates over a stable snapshot of the current item nodes in index order.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * [...items].map(item => item());
+   * // ['Ada', 'Lia', 'Max']
+   * ```
+   */
   [Symbol.iterator](): IterableIterator<ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>>;
   /**
    * Creates and appends an item node, optionally initializing it with `value`, and returns the new
    * live node. The new item starts pristine and untouched.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * const added = items.push('Sam');
+   * added(); // 'Sam'
+   * items.length(); // 4
+   * ```
    */
   push(...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
   /**
    * Creates an item node at `index`, optionally initializes it with `value`, shifts later items,
    * and returns the new live node. Throws `RangeError` when `index` is outside `0..length`.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.insert(1, 'Sam');
+   * items.at(1)?.(); // 'Sam'
+   * ```
    */
   insert(index: number, ...args: [] | [value: NodeSet<TItem>]): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>;
   /**
    * Removes, detaches, and returns the item at `index`, or returns `undefined` for an invalid index.
    * A retained removed node remains independently usable.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * const removed = items.removeAt(0);
+   * removed?.(); // 'Ada'
+   * removed?.parent(); // null
+   * ```
    */
   removeAt(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
-  /** Moves the item one position toward the start. The first item remains in place. */
+  /**
+   * Moves the item one position toward the start. The first item remains in place.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.moveUp(1);
+   * items(); // ['Lia', 'Ada', 'Max']
+   * ```
+   */
   moveUp(index: number): void;
-  /** Moves the item one position toward the end. The last item remains in place. */
+  /**
+   * Moves the item one position toward the end. The last item remains in place.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.moveDown(1);
+   * items(); // ['Ada', 'Max', 'Lia']
+   * ```
+   */
   moveDown(index: number): void;
   /**
    * Moves an item from `fromIndex` to `toIndex`, shifting the intervening items by one position.
@@ -363,8 +755,13 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Its path and the paths of affected siblings update to reflect their new indexes. Moving an
    * item to its current index is a no-op. Both indexes must identify existing items.
    *
-   * @example
-   * `items.move(3, 1)` moves the fourth item into the second position.
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.move(2, 0);
+   * items(); // ['Max', 'Ada', 'Lia']
+   * ```
    */
   move(fromIndex: number, toIndex: number): void;
   /**
@@ -373,61 +770,62 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Both nodes retain their identity and state, while their paths update to their new indexes.
    * Passing the same index twice is a no-op. Both indexes must identify existing items.
    *
-   * @example
-   * `items.swap(0, 2)` exchanges the first and third items.
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.swap(0, 2);
+   * items(); // ['Max', 'Lia', 'Ada']
+   * ```
    */
   swap(firstIndex: number, secondIndex: number): void;
-  /** Removes and detaches every current item node without marking the array dirty. */
+  /**
+   * Removes and detaches every current item node without marking the array dirty.
+   *
+   * ```ts
+   * const items = array(field(''), {
+   *   initialValue: ['Ada', 'Lia', 'Max'],
+   * });
+   * items.clear();
+   * items(); // []
+   * ```
+   */
   clear(): void;
   /**
    * Reconciles the complete array value while preserving matching item nodes.
    *
-   * **Field items**
-   *
-   * ```ts
-   * const names = array(field(''));
-   *
-   * names.set(['Marco', 'Lia']);
-   * ```
-   *
-   * **Group items**
-   *
-   * ```ts
-   * const people = array({ name: field('') });
-   *
-   * people.set([
-   *   { name: 'Marco' },
-   *   { name: 'Lia' },
-   * ]);
-   * ```
-   *
    * Untyped item properties omitted at runtime use construction defaults; explicit `undefined` is preserved.
    * ℹ️ Passing `null` or `undefined` clears the array.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.set([
+   *   { name: 'Lia' },
+   * ]);
+   * node(); // [{ name: 'Lia' }]
+   * ```
    */
   set(value: ArraySet<TItem> | null | undefined): void;
   /**
    * Computes the complete array value using the configured index or `trackBy` reconciliation.
    *
-   * **Field items**
+   * ℹ️ Returning `null` or `undefined` clears the array.
    *
    * ```ts
-   * const names = array(field(''));
-   *
-   * names.update(value => [...value, 'Lia']);
-   * ```
-   *
-   * **Group items**
-   *
-   * ```ts
-   * const people = array({ name: field('') });
-   *
-   * people.update(value => [
-   *   ...value,
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.update(() => [
    *   { name: 'Lia' },
    * ]);
+   * node(); // [{ name: 'Lia' }]
    * ```
-   *
-   * ℹ️ Returning `null` or `undefined` clears the array.
    */
   update(updater: (value: ArrayValue<TItem>) => ArraySet<TItem> | null | undefined): void;
   /**
@@ -442,14 +840,16 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    *
    * To partially edit one existing object row, call that row's `patch()` instead.
    *
-   * @example
    * ```ts
-   * const profile = form({
-   *   people: array({ name: field(''), age: field<number>(null) }),
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
    * });
-   * profile.patch({ people: [{ name: 'Lia', age: 31 }] });
-   * profile.people(); // [{ name: 'Lia', age: 31 }]
-   * profile.people.at(0)?.patch({ age: 32 });
+   * node.patch([
+   *   { name: 'Lia' },
+   * ]);
+   * node(); // [{ name: 'Lia' }]
    * ```
    */
   patch(value: ArrayPatch<TItem> | null | undefined): void;
@@ -457,6 +857,21 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Resets state, optionally reconciling a complete value first.
    *
    * ℹ️ Passing `null` or `undefined` clears the array before resetting its state.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.set([
+   *   { name: 'Lia' },
+   * ]);
+   * node.markAsDirty();
+   * node.reset();
+   * node(); // [{ name: 'Lia' }]
+   * node.dirty(); // false
+   * ```
    */
   reset(...args: [] | [value: ArraySet<TItem> | null | undefined]): void;
   /**
@@ -483,64 +898,149 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * preserved without invoking getters; their external state is not captured. Prefer immutable
    * values or reset(applicationOwnedSnapshot) when a custom snapshot policy is needed.
    *
-   * @example
    * ```ts
-   * const profile = form({
-   *   contacts: array({ name: field('') }, {
-   *     initialValue: [{ name: 'Ada' }],
-   *   }),
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
    * });
-   * profile.contacts.push({ name: 'Lin' });
-   * profile.contacts.resetToInitial();
-   * profile.contacts(); // [{ name: 'Ada' }]
+   * node.set([
+   *   { name: 'Lia' },
+   * ]);
+   * node.resetToInitial();
+   * node(); // [{ name: 'Ada' }]
    * ```
    */
   resetToInitial(): void;
-  /** Current normalized validators assigned directly to this array, in declaration order. */
+  /**
+   * Current normalized validators assigned directly to this array, in declaration order.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * const rule = validator(() => null);
+   * node.setValidators(() => [rule]);
+   * node.validators({ resolve: true })[0] ===
+   *   rule; // true
+   * ```
+   */
   validators: Signal<Validators<ArrayValue<TItem>>> & {
     /**
      * Resolves returned synchronous compositions; async validators remain unexecuted references.
+     *
+     * ```ts
+     * const node = array({
+     *   name: field('Ada'),
+     * }, {
+     *   initialValue: 1,
+     * });
+     * const rule = validator(() => null);
+     * node.setValidators(() => [rule]);
+     * node.validators({ resolve: true })[0] ===
+     *   rule; // true
+     * ```
+     *
      * @reactive Tracks composition dependencies and shares synchronous validation evaluation.
      */
     (options: { resolve?: boolean }): Validators<ArrayValue<TItem>>;
   };
-  /** Replaces validators owned by this array and immediately validates its current aggregate value. */
+  /**
+   * Replaces validators owned by this array and immediately validates its current aggregate value.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.invalid(); // true
+   * ```
+   */
   setValidators(validators: ValidatorSource<ArrayValue<TItem>, ArrayNode<TItem, TParent>>): void;
   /**
-  * A signal containing the validation errors of **this array node itself, excluding its descendants**.
-  *
-  * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
+   * A signal containing the validation errors of **this array node itself, excluding its descendants**.
+   *
+   * ℹ️ To collect errors from the complete subtree, use `allErrors()` instead.
    *
    * Pass `{ descendants: true }` to read the same subtree errors as `allErrors()`.
    *
-   * @example
    * ```ts
-   * names.errors();
-   * // [{ kind: 'uniqueItems', duplicateIndexes: [0, 2], targetNode: names }]
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.errors().map(error => error.kind);
+   * // ['blocked']
    * ```
+   *
    * @reactive Tracks own errors by default, or subtree errors when descendants is true.
-  */
+   */
   errors: NodeErrorsSignal<ArrayNode<TItem, TParent>>;
   /**
-  * A signal containing the validation errors of **this array node and its descendants**.
-  *
-  * ℹ️ To read only errors belonging directly to this array node, use `errors()` instead.
+   * A signal containing the validation errors of **this array node and its descendants**.
+   *
+   * ℹ️ To read only errors belonging directly to this array node, use `errors()` instead.
    *
    * Shortcut for `errors({ descendants: true })`, returning the same cached array.
    *
-   * @example
    * ```ts
-   * names.allErrors();
-   * // [{ kind: 'required', message: 'Name is required.', targetNode: names[0] }]
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.allErrors().map(error => error.kind);
+   * // ['blocked']
    * ```
-  */
+   */
   allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
-  /** Whether this array and every current item subtree have completed validation without errors. */
+  /**
+   * Whether this array and every current item subtree have completed validation without errors.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.valid(); // true
+   * ```
+   */
   valid: Signal<boolean>;
-  /** Whether this array or any current item subtree contributes a validation error. */
+  /**
+   * Whether this array or any current item subtree contributes a validation error.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.invalid(); // false
+   * ```
+   */
   invalid: Signal<boolean>;
   /**
    * Returns the first validation error belonging directly to this array and matching `kind`.
+   *
+   * ```ts
+   * const node = field('', [required]);
+   * node.getError('required')?.kind;
+   * // 'required'
+   * ```
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
@@ -548,31 +1048,147 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   /**
    * Returns the first custom error belonging directly to this array and matching `kind`.
    *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.getError('blocked')?.kind;
+   * // 'blocked'
+   * ```
+   *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
   getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
   /**
    * Whether this node's own errors contain the given kind. Does not search descendants.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.setValidators(() => ({
+   *   kind: 'blocked',
+   * }));
+   * node.hasError('blocked'); // true
+   * ```
+   *
    * @reactive Memoizes by kind and tracks the node's current errors.
    */
   hasError(kind: string): boolean;
   /**
    * Whether the same validator function is directly registered on this node, including async validators.
    * By default, does not run validators. Set resolve to true to inspect resolved leaf references.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * const rule = validator(() => null);
+   * node.setValidators(rule);
+   * node.hasValidator(rule); // true
+   * ```
+   *
    * @reactive Memoizes by function identity and resolution mode; resolved queries track composition dependencies.
    */
   hasValidator(validator: (context: any) => unknown, options?: { resolve?: boolean }): boolean;
-  /** Whether active validation metadata marks this array itself as required. */
+  /**
+   * Whether active validation metadata marks this array itself as required.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.required(); // false
+   * ```
+   */
   required: Signal<boolean>;
-  /** Whether asynchronous validation is active on this array or any current item subtree. */
+  /**
+   * Whether asynchronous validation is active on this array or any current item subtree.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.pending(); // false
+   * ```
+   */
   pending: Signal<boolean>;
-  /** Whether an ancestor form is currently running its submission action. Arrays cannot initiate submission. */
+  /**
+   * Whether an ancestor form is currently running its submission action. Arrays cannot initiate submission.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.submitting(); // false
+   * ```
+   */
   submitting: Signal<boolean>;
-  /** Whether this array or any current item subtree has a control-originated value awaiting commit. */
+  /**
+   * Whether this array or any current item subtree has a control-originated value awaiting commit.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.debouncing(); // false
+   * ```
+   */
   debouncing: Signal<boolean>;
-  /** Immediately commits every pending control value in this array's current item subtrees. */
+  /**
+   * Immediately commits every pending control value in this array's current item subtrees.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada', { debounce: 'blur' }),
+   * });
+   * profile.name.value.control.set('Lia');
+   * profile.name.flush();
+   * profile.name(); // 'Lia'
+   * ```
+   */
   flush(): void;
-  /** Focuses the first bound UI control in this array's current item subtrees, in DOM order. */
+  /**
+   * Focuses the first bound UI control in this array's current item subtrees, in DOM order.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Component({
+   *   imports: [FormNodeDirective],
+   *   template: `
+   *     @for (row of people; track row) {
+   *       <input [formNode]="row.name" />
+   *     }
+   *     <button (click)="people.focus()">
+   *       Focus first person
+   *     </button>
+   *   `,
+   * })
+   * export class PeoplePage {
+   *   people = array({ name: field('Ada') }, {
+   *     initialValue: 1,
+   *   });
+   * }
+   * ```
+   */
   focus(options?: FocusOptions): void;
   /**
    * Aggregated validation phase for this array and its item subtrees: `'valid'`, `'invalid'`, or
@@ -582,18 +1198,45 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * currently available anywhere in the subtree. While unknown, `pending()` is true and both
    * `valid()` and `invalid()` are false. Any available error makes the status `'invalid'`, even if
    * other validation remains pending.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.validationStatus(); // 'valid'
+   * ```
    */
   validationStatus: Signal<ValidationStatus>;
   /**
    * Whether this array or any current item subtree has been marked touched.
    *
    * ℹ️ Disabled, readonly, or hidden nodes report `false` and do not contribute touched state to ancestors.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.touched(); // false
+   * ```
    */
   touched: Signal<boolean>;
   /**
    * Logical inverse of `touched()`.
    *
    * Whether neither this array nor any contributing item subtree currently reports touched state.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.untouched(); // true
+   * ```
    */
   untouched: Signal<boolean>;
   /**
@@ -602,12 +1245,49 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    *
    * This can change committed values and trigger validation and value-change callbacks,
    * even when nodes are already touched. Noninteractive subtrees ignore this operation.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.markAsTouched();
+   * node.touched(); // true
+   * ```
    */
   markAsTouched(options?: {
-    /** Skips recursively touching and committing item subtrees; this array still commits its own pending input. */
+    /**
+     * Skips recursively touching and committing item subtrees; this array still commits its own pending input.
+     *
+     * **Default:** `false`; visit interactive descendants too.
+     *
+     * ```ts
+     * const profile = form({ name: field('Ada') });
+     * profile.markAsTouched({
+     *   skipDescendants: true,
+     * });
+     * profile.name.touched(); // false
+     * ```
+     */
     skipDescendants?: boolean;
   }): void;
-  /** Recursively clears touched state, making `touched()` false and `untouched()` true throughout the subtree. */
+  /**
+   * Clears this node's own touched marker without changing descendant markers or values.
+   * An interactive touched descendant can keep an aggregate `touched()` true. Use `reset()`
+   * to clear interaction state throughout the subtree.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.markAsTouched();
+   * node.markAsUntouched();
+   * node.touched(); // true
+   * ```
+   */
   markAsUntouched(): void;
   /**
    * Whether this array currently reports user-modified state.
@@ -615,35 +1295,87 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * This becomes `true` when the array's own state is marked dirty or an interactive item subtree
    * is dirty. Programmatic value and structural operations do not mark nodes dirty.
    * `markAsPristine()` clears only this array's own state, so a dirty item can keep the result true.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.dirty(); // false
+   * ```
    */
   dirty: Signal<boolean>;
   /**
    * Logical inverse of `dirty()`.
    *
    * Whether neither this array nor any contributing item subtree currently reports user-modified state.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.pristine(); // true
+   * ```
    */
   pristine: Signal<boolean>;
-  /** Marks this array's own state dirty, making `dirty()` true and `pristine()` false while it is interactive. */
+  /**
+   * Marks this array's own state dirty, making `dirty()` true and `pristine()` false while it is interactive.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.markAsDirty();
+   * node.dirty(); // true
+   * ```
+   */
   markAsDirty(): void;
   /**
    * Clears this array's own dirty state. `pristine()` becomes true and `dirty()` false only when no
    * contributing item remains dirty.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.markAsDirty();
+   * node.markAsPristine();
+   * node.dirty(); // false
+   * ```
    */
   markAsPristine(): void;
-  /** Whether this array is effectively disabled by its own state or an ancestor reason. */
+  /**
+   * Whether this array is effectively disabled by its own state or an ancestor reason.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.disabled(); // false
+   * ```
+   */
   disabled: Signal<boolean>;
   /**
    * Active inherited and local causes of this array's disabled state.
    *
-   * @example
    * ```ts
-   * names.disabledReasons();
-   * // [
-   * //   {
-   * //     sourceNode: profile,
-   * //     message: 'Profile is locked',
-   * //   },
-   * // ]
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.disable('Locked');
+   * node.disabledReasons()[0]?.message;
+   * // 'Locked'
    * ```
    */
   disabledReasons: Signal<readonly DisabledReason[]>;
@@ -651,56 +1383,162 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * Logical inverse of `disabled()`.
    *
    * Whether this array has no active local or inherited disabled reason and can participate normally.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.enabled(); // true
+   * ```
    */
   enabled: Signal<boolean>;
   /**
    * Disables this array subtree, optionally recording a user-facing reason.
    * Sets `disabled()` to true and `enabled()` to false on this array and its item subtrees.
    *
-   * @example Disable without a reason
    * ```ts
-   * names.disable();
-   * ```
-   *
-   * @example Disable with a reason
-   * ```ts
-   * names.disable('Locked');
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.disable('Locked');
+   * node.disabled(); // true
    * ```
    */
   disable(message?: string): void;
   /**
-   * Clears the imperative disabled state created by `disable()`. `enabled()` becomes true only on
-   * nodes without another configured or inherited disabled reason.
+   * Clears local disabled state, including a static initial `disabled` option. Continuing
+   * reactive conditions and inherited reasons remain effective, so `enabled()` may stay false.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.disable();
+   * node.enable();
+   * node.disabled(); // false
+   * ```
    */
   enable(): void;
-  /** Whether this array is effectively readonly through its own state or an ancestor. */
+  /**
+   * Whether this array is effectively readonly through its own state or an ancestor.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.readonly(); // false
+   * ```
+   */
   readonly: Signal<boolean>;
   /**
    * Logical inverse of `readonly()`.
    *
    * Whether this array accepts value changes from a control bound directly to it.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.writable(); // true
+   * ```
    */
   writable: Signal<boolean>;
-  /** Marks this array subtree readonly, making `readonly()` true and `writable()` false throughout it. */
+  /**
+   * Marks this array subtree readonly, making `readonly()` true and `writable()` false throughout it.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.markAsReadonly();
+   * node.readonly(); // true
+   * ```
+   */
   markAsReadonly(): void;
   /**
-   * Clears this array's imperative readonly state. `writable()` becomes true only on nodes without
-   * another configured or inherited readonly state.
+   * Clears local readonly state, including a static initial `readonly` option. Reactive
+   * conditions and ancestor readonly state can still prevent the node from becoming writable.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.markAsReadonly();
+   * node.markAsWritable();
+   * node.readonly(); // false
+   * ```
    */
   markAsWritable(): void;
-  /** Whether this array is effectively hidden through its own state or an ancestor. */
+  /**
+   * Whether this array is effectively hidden through its own state or an ancestor.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.hidden(); // false
+   * ```
+   */
   hidden: Signal<boolean>;
   /**
    * Logical inverse of `hidden()`.
    *
    * Whether this array is currently intended to be shown to the user.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.visible(); // true
+   * ```
    */
   visible: Signal<boolean>;
-  /** Hides this array subtree, making `hidden()` true and `visible()` false throughout it. */
+  /**
+   * Hides this array subtree, making `hidden()` true and `visible()` false throughout it.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.hide();
+   * node.hidden(); // true
+   * ```
+   */
   hide(): void;
   /**
-   * Clears this array's imperative hidden state. `visible()` becomes true only on nodes without
-   * another configured or inherited hidden state.
+   * Clears local hidden state, including a static initial `hidden` option. Reactive
+   * conditions and ancestor hidden state can still keep the node hidden.
+   *
+   * ```ts
+   * const node = array({
+   *   name: field('Ada'),
+   * }, {
+   *   initialValue: 1,
+   * });
+   * node.hide();
+   * node.show();
+   * node.hidden(); // false
+   * ```
    */
   show(): void;
 };
@@ -708,16 +1546,33 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
 /**
  * Array node model. Omit the first type argument for an unspecified structure, or provide it
  * to preserve exact item types. Generic array nodes retain array operations.
+ *
+ * ```ts
+ * const node = array(field('Ada'), 1);
+ * node(); // ['Ada']
+ * ```
  */
 export type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode = AnyNode> =
   & Signal<ArrayValue<TItem>>
   & {
-    /** Returns the exposed array value, applying configured equality, and participates in signal dependency tracking. */
+    /**
+     * Returns the exposed array value, applying configured equality, and participates in signal dependency tracking.
+     *
+     * ```ts
+     * const node = array(field('Ada'), 1);
+     * node(); // ['Ada']
+     * ```
+     */
     (): ArrayValue<TItem>;
     /**
      * Callable, collision-safe access to the array API.
      * Calling `$api()` reads the same exposed value as the node and tracks signal dependencies.
      * Use direct members for application code and `$api` for generic code or child-name collisions.
+     *
+     * ```ts
+     * const node = array(field('Ada'), 1);
+     * node.$api.valid(); // true
+     * ```
      */
     $api: CallableNodeApi<ArrayApi<TItem, TParent>>;
   }
@@ -731,10 +1586,13 @@ export type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode =
  * Extract from an already inferred array; referencing a declaration from its own initializer
  * can create a circular inference dependency.
  *
- * @example
  * ```ts
- * const profile = form({ roles: array({ name: field('') }) });
- * type RoleNode = ArrayItemNode<typeof profile.roles>;
+ * const profile = form({
+ *   roles: array({ name: field('') }),
+ * });
+ * type RoleNode = ArrayItemNode<
+ *   typeof profile.roles
+ * >;
  * ```
  */
 export type ArrayItemNode<TArray extends { $api: { nodeType(): 'array' }; readonly [index: number]: AnyNode | undefined }> = NonNullable<TArray[number]>;

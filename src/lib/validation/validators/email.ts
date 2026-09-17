@@ -24,27 +24,117 @@ const validateEmail = (
  * `null` and `''` pass so this validator can be composed with `required`. Non-empty strings use
  * Angular's standard email-address format. A failure produces `{ kind: 'email', message }`.
  *
- * @example
  * ```ts
- * field('', [email('Enter a valid work email')]);
- * field('', [email({ message: 'Enter a valid work email' })]);
- * field('', [email({ message: () => translatedEmailMessage() })]);
+ * const profile = form({
+ *   value: field('invalid', [
+ *     email({ message: 'Check this value.' }),
+ *   ]),
+ * });
+ * profile.value.invalid(); // true
  * ```
  *
  * @reactive Tracks signals read by a custom message function while validation is failing.
- *
  * @param options Optional static message string, or an object containing a static or reactive message. Omitting `message`, or returning `undefined`, uses the default.
  */
 export function email(options: string | ({
-  /** Static or reactive custom message. Returning `undefined` continues through the configured fallbacks. */
+  /**
+   * Overrides the message of a failing built-in validation error. A reactive function
+   * is evaluated only while the rule fails; returning `undefined` continues through the
+   * node, provider, global, and built-in message fallbacks. Cannot be combined with `error`.
+   *
+   * **Default:** `undefined`; use the configured fallback message.
+   *
+   * **Accepted values:**
+   *
+   * - **Strings**: Use the supplied text, including an empty string.
+   * - **Functions**: Track signals read while resolving the message.
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field('invalid', [
+   *     email({ message: 'Check this value.' }),
+   *   ]),
+   * });
+   * ```
+   *
+   * ```ts
+   * import { signal } from '@angular/core';
+   *
+   * const text = signal('Check this value.');
+   * const profile = form({
+   *   value: field('invalid', [
+   *     email({ message: () => text() }),
+   *   ]),
+   * });
+   * ```
+   */
   message?: string | (() => string | undefined);
   error?: never;
 } | {
   message?: never;
-  /** Custom error or errors returned instead of the built-in error. */
+  /**
+   * Replaces the built-in failure with a custom error or error array. A callback
+   * receives the current validation context and runs only when the built-in rule fails.
+   * A callback may return nullish/empty results to suppress the failure. A static nullish
+   * value preserves the built-in result. Cannot be combined with `message`.
+   *
+   * **Default:** `undefined`; retain the built-in error.
+   *
+   * See {@link ValidationResult} for supported error shapes.
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field('invalid', [
+   *     email({
+   *       error: { kind: 'custom' },
+   *     }),
+   *   ]),
+   * });
+   * ```
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field('invalid', [
+   *     email({
+   *       error: () => ({ kind: 'custom' }),
+   *     }),
+   *   ]),
+   * });
+   * ```
+   *
+   * ```ts
+   * const profile = form({
+   *   value: field('invalid', [
+   *     email({
+   *       error: [
+   *         { kind: 'custom' },
+   *       ],
+   *     }),
+   *   ]),
+   * });
+   * ```
+   */
   error?: ValidationResult | ((context: ValidatorContext<string | null>) => ValidationResult);
 }) & {
-  /** Reactive predicate deciding whether this validator is active. Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+  /**
+   * Enables the validator and its constraint metadata only while the condition is true.
+   * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
+   * Parameterless callbacks support class self-references with unchecked returns; return
+   * a boolean. Context-taking callbacks retain boolean checking.
+   *
+   * **Default:** `undefined`; the validator remains active.
+   *
+   * ```ts
+   * import { signal } from '@angular/core';
+   *
+   * const active = signal(true);
+   * const profile = form({
+   *   value: field('invalid', [
+   *     email({ when: () => active() }),
+   *   ]),
+   * });
+   * ```
+   */
   when?: NoInfer<DeferredCondition | ((context: ValidatorContext<string | null>) => boolean)>;
 }): Validator<string | null>;
 /**
@@ -53,9 +143,11 @@ export function email(options: string | ({
  * `null` and `''` pass so this validator can be composed with `required`. A failure produces
  * `{ kind: 'email', message }` using the default message.
  *
- * @example
  * ```ts
- * field('', [required, email]);
+ * const profile = form({
+ *   value: field('invalid', [email]),
+ * });
+ * profile.value.invalid(); // true
  * ```
  *
  * @param context Reactive field context supplied by the validation pipeline.
@@ -64,7 +156,25 @@ export function email(context: FieldContext<string | null>): ValidationResult;
 export function email(
   contextOrOptions: FieldContext<string | null> | string | {
     message?: string | (() => string | undefined);
-    /** Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking. */
+    /**
+     * Enables the validator and its constraint metadata only while the condition is true.
+     * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
+     * Parameterless callbacks support class self-references with unchecked returns; return
+     * a boolean. Context-taking callbacks retain boolean checking.
+     *
+     * **Default:** `undefined`; the validator remains active.
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const active = signal(true);
+     * const profile = form({
+     *   value: field('invalid', [
+     *     email({ when: () => active() }),
+     *   ]),
+     * });
+     * ```
+     */
     when?: NoInfer<DeferredCondition | ((context: ValidatorContext<string | null>) => boolean)>;
   },
 ): Validator<string | null> | ValidationResult {

@@ -123,7 +123,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `allErrors` | A signal containing the validation errors of **this field and its descendants**. Fields have no descendants, so this contains the same errors as `errors()`. |
 | `valid` | Whether this field has completed validation without errors. False while validity is unknown. |
 | `invalid` | Whether this field currently has at least one validation error. |
-| `getError` | Returns the first validation error of this field matching `kind`. Returns the first custom error belonging directly to this field and matching `kind`. |
+| `getError` | Returns the first validation error of this field matching `kind`. |
 | `hasError` | Whether this node's own errors contain the given kind. Does not search descendants. |
 | `hasValidator` | Whether the same validator function is directly registered on this node, including async validators. By default, does not run validators. Set resolve to true to inspect resolved leaf references. |
 | `min` | Strictest minimum value contributed by active numeric or date validators, or `null` when absent. |
@@ -147,15 +147,15 @@ The declaration above also includes inherited contracts and overloads where appl
 | `disabledReasons` | Active inherited and local causes of this field's disabled state. |
 | `enabled` | Logical inverse of `disabled()`. |
 | `disable` | Disables this field, optionally recording a user-facing reason. Sets `disabled()` to true and `enabled()` to false. |
-| `enable` | Clears the imperative disabled state created by `disable()`. This makes `enabled()` true and `disabled()` false only when no configured or inherited disabled reason remains active. |
+| `enable` | Clears local disabled state, including a static initial `disabled` option. Continuing reactive conditions and inherited reasons remain effective, so `enabled()` may stay false. |
 | `readonly` | Whether this field is effectively readonly through its own state or an ancestor. |
 | `writable` | Logical inverse of `readonly()`. |
 | `markAsReadonly` | Marks this field readonly, making `readonly()` true and `writable()` false. |
-| `markAsWritable` | Clears the imperative readonly state. This makes `writable()` true and `readonly()` false only when no configured or inherited readonly state remains active. |
+| `markAsWritable` | Clears local readonly state, including a static initial `readonly` option. Reactive conditions and ancestor readonly state can still prevent the node from becoming writable. |
 | `hidden` | Whether this field is effectively hidden through its own state or an ancestor. |
 | `visible` | Logical inverse of `hidden()`. |
 | `hide` | Hides this field, making `hidden()` true and `visible()` false without changing its value. |
-| `show` | Clears the imperative hidden state. This makes `visible()` true and `hidden()` false only when no configured or inherited hidden state remains active. |
+| `show` | Clears local hidden state, including a static initial `hidden` option. Reactive conditions and ancestor hidden state can still keep the node hidden. |
 
 ## Related reference
 

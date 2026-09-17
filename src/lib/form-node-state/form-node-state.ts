@@ -38,6 +38,29 @@ export type FormNodeStateOptions = {
    * bound value stays unchanged. Read local control state, never the resulting state.errors().
    * Returning no errors removes only this contribution; destruction and rebinding clean it up.
    * CVAs using Angular 22 Signal Forms also need provideFormNodeStateErrors().
+   *
+   * **Default:** No component-owned error contribution.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   * import { model } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'name-control',
+   *   template: '',
+   * })
+   * export class NameControl {
+   *   value = model('');
+   *
+   *   state = useFormNodeState({
+   *     errors: () => {
+   *       return this.value() === '?'
+   *         ? { kind: 'incomplete' }
+   *         : null;
+   *     },
+   *   });
+   * }
+   * ```
    */
   errors?: () => ControlError | string | null | undefined | void | readonly (ControlError | string)[];
 };
@@ -55,43 +78,385 @@ export type ControlStateDisabledReason = {
  * custom-control API.
  */
 export type ControlState<TValue = unknown> = {
-  /** Nearest form submission state and optional Form Nodes API; independent of the host control connection. */
+  /**
+   * Nearest form submission state and optional Form Nodes API; independent of the host control connection.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.form.submitted();
+   *   }
+   * }
+   * ```
+   */
   readonly form: ClosestFormState;
-  /** Shortcut to form.submitted: whether the nearest form recorded an attempt, including an invalid one. The same readonly signal; false without a supported form. */
+  /**
+   * Shortcut to form.submitted: whether the nearest form recorded an attempt, including an invalid one. The same readonly signal; false without a supported form.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.formSubmitted();
+   *   }
+   * }
+   * ```
+   */
   readonly formSubmitted: Signal<boolean>;
-  /** Whether a supported form binding is attached to the component host. */
+  /**
+   * Whether a supported form binding is attached to the component host.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.connected();
+   *   }
+   * }
+   * ```
+   */
   readonly connected: Signal<boolean>;
-  /** API currently supplying the state, or `null` when the component is not bound. */
+  /**
+   * API currently supplying the state, or `null` when the component is not bound.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.source();
+   *   }
+   * }
+   * ```
+   */
   readonly source: Signal<ControlStateSource | null>;
-  /** Current committed bound value, independent of Form Nodes node equality and pending input, or `undefined` when disconnected. */
+  /**
+   * Current committed bound value, independent of Form Nodes node equality and pending input, or `undefined` when disconnected.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.value();
+   *   }
+   * }
+   * ```
+   */
   readonly value: Signal<TValue | undefined>;
-  /** Whether the bound control is disabled. */
+  /**
+   * Whether the bound control is disabled.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.disabled();
+   *   }
+   * }
+   * ```
+   */
   readonly disabled: Signal<boolean>;
-  /** Reasons currently disabling the bound control. */
+  /**
+   * Reasons currently disabling the bound control.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.disabledReasons();
+   *   }
+   * }
+   * ```
+   */
   readonly disabledReasons: Signal<readonly ControlStateDisabledReason[]>;
-  /** Whether the user has changed the bound control. */
+  /**
+   * Whether the user has changed the bound control.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.dirty();
+   *   }
+   * }
+   * ```
+   */
   readonly dirty: Signal<boolean>;
-  /** Validation errors normalized to objects containing a `kind`. */
+  /**
+   * Validation errors normalized to objects containing a `kind`.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.errors();
+   *   }
+   * }
+   * ```
+   */
   readonly errors: Signal<readonly ControlStateError[]>;
-  /** Whether the bound control is hidden by form state. */
+  /**
+   * Whether the bound control is hidden by form state.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.hidden();
+   *   }
+   * }
+   * ```
+   */
   readonly hidden: Signal<boolean>;
-  /** Whether the bound control is invalid. */
+  /**
+   * Whether the bound control is invalid.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.invalid();
+   *   }
+   * }
+   * ```
+   */
   readonly invalid: Signal<boolean>;
-  /** Effective maximum numeric or date constraint. Angular control bindings read the host MaxValidator input. */
+  /**
+   * Effective maximum numeric or date constraint. Angular control bindings read the host MaxValidator input.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.max();
+   *   }
+   * }
+   * ```
+   */
   readonly max: Signal<number | Date | undefined>;
-  /** Effective maximum-length constraint, including the host Angular MaxLengthValidator input. */
+  /**
+   * Effective maximum-length constraint, including the host Angular MaxLengthValidator input.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.maxLength();
+   *   }
+   * }
+   * ```
+   */
   readonly maxLength: Signal<number | undefined>;
-  /** Effective minimum numeric or date constraint. Angular control bindings read the host MinValidator input. */
+  /**
+   * Effective minimum numeric or date constraint. Angular control bindings read the host MinValidator input.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.min();
+   *   }
+   * }
+   * ```
+   */
   readonly min: Signal<number | Date | undefined>;
-  /** Effective minimum-length constraint, including the host Angular MinLengthValidator input. */
+  /**
+   * Effective minimum-length constraint, including the host Angular MinLengthValidator input.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.minLength();
+   *   }
+   * }
+   * ```
+   */
   readonly minLength: Signal<number | undefined>;
-  /** Generated name associated with the binding, or `undefined` when disconnected. */
+  /**
+   * Generated name associated with the binding, or `undefined` when disconnected.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.name();
+   *   }
+   * }
+   * ```
+   */
   readonly name: Signal<string | undefined>;
-  /** Effective regular-expression patterns. Angular PatternValidator strings are anchored; RegExp objects retain their flags and identity. */
+  /**
+   * Effective regular-expression patterns. Angular PatternValidator strings are anchored; RegExp objects retain their flags and identity.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.pattern();
+   *   }
+   * }
+   * ```
+   */
   readonly pattern: Signal<readonly RegExp[]>;
-  /** Whether validation is currently pending. */
+  /**
+   * Whether validation is currently pending.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.pending();
+   *   }
+   * }
+   * ```
+   */
   readonly pending: Signal<boolean>;
-  /** Whether the bound control is readonly. */
+  /**
+   * Whether the bound control is readonly.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.readonly();
+   *   }
+   * }
+   * ```
+   */
   readonly readonly: Signal<boolean>;
   /**
    * Whether the bound control requires a non-empty value. For Reactive Forms and ngModel,
@@ -99,16 +464,68 @@ export type ControlState<TValue = unknown> = {
    * directive on the same host. Reads rule presence even when the current value is valid or
    * disabled. Also true while the bound control has an own normalized error with kind `required` or `requiredTrue`,
    * on any supported source. Arbitrary composed validators are not executed to discover this state.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.required();
+   *   }
+   * }
+   * ```
    */
   readonly required: Signal<boolean>;
-  /** Whether the user has interacted with and left the bound control. */
+  /**
+   * Whether the user has interacted with and left the bound control.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readState() {
+   *     return this.state.touched();
+   *   }
+   * }
+   * ```
+   */
   readonly touched: Signal<boolean>;
   /**
    * Whether the current normalized error list contains an exact, case-sensitive kind.
    * Returns false when absent or disconnected, regardless of an error payload's truthiness.
    * Queries only errors() and does not traverse child paths or explicitly trigger validation.
-   * @example
-   * const showRequired = computed(() => state.touched() && state.hasError('required'));
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   showError() {
+   *     return (
+   *       this.state.touched() &&
+   *       this.state.hasError('required')
+   *     );
+   *   }
+   * }
+   * ```
+   *
    * @reactive Memoizes each error kind in a bounded cache and tracks the current binding's errors.
    * Unchanged results do not propagate to dependent computations.
    * @param kind Error kind as exposed by errors(); names are not translated between forms APIs.
@@ -118,8 +535,23 @@ export type ControlState<TValue = unknown> = {
    * Returns the first normalized error with an exact, case-sensitive kind, or undefined when
    * absent or disconnected. Returns the same object as errors(), including kind and details.
    * Queries only errors() and does not traverse child paths or explicitly trigger validation.
-   * @example
-   * const minimumLengthError = computed(() => state.getError('minlength'));
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readError() {
+   *     return this.state.getError('required');
+   *   }
+   * }
+   * ```
+   *
    * @reactive Memoizes each error kind in a bounded cache and tracks the current binding's errors.
    * Unchanged results do not propagate to dependent computations; error objects use reference equality.
    * @param kind Error kind as exposed by errors(); Angular uses minlength, Form Nodes uses minLength.
@@ -143,10 +575,22 @@ export type ControlState<TValue = unknown> = {
    * resolution is unavailable. The two required-export queries are unchanged by this option.
    * No Angular internals are inspected.
    *
-   * @example
-   * const isRequired = computed(() => state.hasValidator(Validators.required));
-   * const hasRule = computed(() => state.hasValidator(myRegisteredValidator));
-   * const hasResolvedRule = computed(() => state.hasValidator(myLeafValidator, { resolve: true }));
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   readRule() {
+   *     return this.state.hasValidator(required);
+   *   }
+   * }
+   * ```
+   *
    * @reactive Memoizes by validator reference and normalized resolve boolean in a bounded cache.
    * Unchanged results do not propagate to dependent computations. Tracks the active binding and its rules. Angular control events update queries;
    * silent registration changes are reconciled after rendering. Use updateValueAndValidity()
@@ -155,7 +599,25 @@ export type ControlState<TValue = unknown> = {
    * @param options Resolve synchronous compositions for [formNode] only; defaults to false.
    */
   hasValidator(validator: unknown, options?: { resolve?: boolean }): boolean | undefined;
-  /** Marks the bound control touched. Does nothing when no supported binding is connected. */
+  /**
+   * Marks the bound control touched. Does nothing when no supported binding is connected.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({
+   *   selector: 'status-control',
+   *   template: ``,
+   * })
+   * export class StatusControl {
+   *   state = useFormNodeState<string>();
+   *
+   *   onBlur() {
+   *     this.state.markAsTouched();
+   *   }
+   * }
+   * ```
+   */
   markAsTouched(): void;
 };
 
@@ -186,19 +648,30 @@ export type ControlState<TValue = unknown> = {
  * safe neutral values.
  *
  * ```ts
- * export class DatePicker {
+ * import { Component } from '@angular/core';
+ * import { model } from '@angular/core';
+ *
+ * @Component({
+ *   selector: 'name-control',
+ *   template: `
+ *     <input
+ *       [value]="value()"
+ *       [disabled]="state.disabled()"
+ *       (input)="onInput($event)"
+ *       (blur)="state.markAsTouched()"
+ *     />
+ *   `,
+ * })
+ * export class NameControl {
  *   value = model<string | null>(null);
  *
- *   formNodeState = useFormNodeState();
+ *   state = useFormNodeState<string | null>();
  *
- *   shouldDisplayRequiredAsterisk = computed(() => this.formNodeState.required());
- *
- *   isDisabled = computed(() => this.formNodeState.disabled());
- *
- *   visibleErrors = computed(() => {
- *     const eligible = this.formNodeState.touched() || this.formNodeState.formSubmitted();
- *     return eligible ? this.formNodeState.errors() : [];
- *   });
+ *   onInput(event: Event) {
+ *     const input =
+ *       event.target as HTMLInputElement;
+ *     this.value.set(input.value);
+ *   }
  * }
  * ```
  *

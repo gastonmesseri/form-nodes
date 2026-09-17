@@ -44,12 +44,12 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `syncInputs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |
-| `bindInputOutputPairs` | **EXPERIMENTAL — uses Angular internals. Disabled by default.** |
-| `nullable` | Default nullability for fields created by this primitive set. Defaults to `true`. |
+| `syncInputs` | Reactively copies node state and constraints into matching custom-control inputs. This is one-way node-to-component synchronization; it does not enable value binding, execute validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs. |
+| `bindInputOutputPairs` | Connects recognized value/valueChange or checked/checkedChange input/output pairs. CVAs and actual model signals keep priority. Enabling a pair connects values and interaction hooks; optional state inputs are selected independently by `syncInputs`. |
+| `nullable` | Default nullability for fields created by this primitive set. |
 | `validatorMessages` | Default built-in validator messages for nodes created by these factories. |
-| `inheritInjector` | Default injector-inheritance policy for nodes created by these factories. Defaults to `true`. |
-| `adoptBindingInjector` | Default host-injector adoption policy for nodes created by these factories. Defaults to `true`. |
+| `inheritInjector` | Default injector-inheritance policy for nodes created by these factories. |
+| `adoptBindingInjector` | Default host-injector adoption policy for nodes created by these factories. |
 
 ## Related reference
 

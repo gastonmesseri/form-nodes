@@ -47,7 +47,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `untouched` | Logical inverse of `touched()`; true until this node is marked as touched. |
 | `dirty` | Whether user interaction or `markAsDirty()` has recorded this node as modified. |
 | `pristine` | Logical inverse of `dirty()`; true while the node does not report user modification. |
-| `disabled` | Whether this node is excluded from validation and aggregate values. |
+| `disabled` | Whether local or inherited disabled state suppresses this node's own validation. The node value remains present in its parent aggregate. |
 | `disabledReasons` | Active reasons that currently make this node disabled. |
 | `enabled` | Logical inverse of `disabled()`; true while the node participates normally. |
 | `readonly` | Whether consumers should prevent the user from editing this node. |

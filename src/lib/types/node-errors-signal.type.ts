@@ -9,10 +9,13 @@ import type { ValidationErrorWithTargetNode } from '../validation/validation.typ
  * descendants:true includes the subtree and is equivalent to allErrors(); descendant targets
  * retain their original nodes and therefore have the broader AnyNode type.
  *
- * @example
  * ```ts
- * profile.errors();
- * profile.errors({ descendants: true });
+ * const profile = form({
+ *   name: field('', [required]),
+ * });
+ * profile.errors().length; // 0
+ * profile.errors({ descendants: true }).length;
+ * // 1
  * ```
  *
  * @reactive Reads the existing own-error or subtree-error signal without creating per-call caches.

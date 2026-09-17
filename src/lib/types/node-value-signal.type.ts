@@ -17,9 +17,10 @@ import type { HiddenFunctionMembers } from './hidden-function-members.type';
  * and their `set` methods remain easy to discover. Bare `FieldNode` annotations retain these views
  * with `any` values; specify `FieldNode<TValue>` when the value type is known.
  *
- * @example
  * ```ts
- * const name = field('Ada', { debounce: 'blur' });
+ * const name = field('Ada', {
+ *   debounce: 'blur',
+ * });
  * name.value.control.set('Grace');
  * name.value.control(); // 'Grace'
  * name.value.committed(); // 'Ada'
@@ -33,6 +34,14 @@ export type NodeValueSignal<TValue, TSet = TValue> = Signal<TValue> & HiddenFunc
    * **Pending debounce is still respected:** this signal does not read uncommitted control input.
    * Aggregate snapshots use committed child data, including writes hidden by child equality.
    * Angular's ordinary signal identity checks still apply; this is not an event for every write.
+   *
+   * ```ts
+   * const name = field('Ada', {
+   *   debounce: 'blur',
+   * });
+   * name.value.committed.set('Lia');
+   * name.value.committed(); // 'Lia'
+   * ```
    */
   committed: Signal<TValue> & HiddenFunctionMembers & {
     /**
@@ -41,9 +50,12 @@ export type NodeValueSignal<TValue, TSet = TValue> = Signal<TValue> & HiddenFunc
      * Configured `equal` still governs exposed reads; this method does not disable that option.
      * Does not emit `[formNode]` value-change outputs by itself.
      *
-     * @example
      * ```ts
-     * name.value.committed.set('Grace');
+     * const name = field('Ada', {
+     *   debounce: 'blur',
+     * });
+     * name.value.committed.set('Lia');
+     * name.value.committed(); // 'Lia'
      * ```
      */
     set(value: TSet): void;
@@ -53,6 +65,15 @@ export type NodeValueSignal<TValue, TSet = TValue> = Signal<TValue> & HiddenFunc
    * **For an aggregate this is its own control buffer, not a recursive collection of child drafts.**
    * Without its own pending input, an aggregate reads committed child data. Read each child's
    * `value.control()` separately when pending descendant input is needed.
+   *
+   * ```ts
+   * const name = field('Ada', {
+   *   debounce: 'blur',
+   * });
+   * name.value.control.set('Lia');
+   * name.value.control(); // 'Lia'
+   * name(); // 'Ada'
+   * ```
    */
   control: Signal<TValue> & HiddenFunctionMembers & {
     /**
@@ -62,9 +83,13 @@ export type NodeValueSignal<TValue, TSet = TValue> = Signal<TValue> & HiddenFunc
      * A subsequent committed write or reset cancels pending input.
      * Does not emit `[formNode]` value-change outputs by itself: those belong to bound adapters.
      *
-     * @example
      * ```ts
-     * name.value.control.set('Grace');
+     * const name = field('Ada', {
+     *   debounce: 'blur',
+     * });
+     * name.value.control.set('Lia');
+     * name.value.control(); // 'Lia'
+     * name(); // 'Ada'
      * ```
      */
     set(value: TSet): void;

@@ -4,6 +4,7 @@ title: Node API
 
 import CodeBlock from '@theme/CodeBlock';
 import callableApiSource from '!!raw-loader!../../examples/callable-api.example.ts';
+import interactionMarkersSource from '!!raw-loader!../../examples/interaction-markers.example.ts';
 
 # Node API {#node-api}
 
@@ -112,6 +113,12 @@ Fields also expose constraint metadata through `min()`, `max()`, `minLength()`, 
 | `debouncing()` | `flush()` |
 
 `disabledReasons()` lists inherited and local causes with their source nodes.
+
+`markAsUntouched()` and `markAsPristine()` clear only the selected node's own marker. A touched
+or dirty descendant can keep a form, group, or array's aggregate state active. Use `reset()` to
+clear interaction state throughout a subtree while preserving its committed values.
+
+<CodeBlock language="typescript" title="interaction-markers.ts">{interactionMarkersSource}</CodeBlock>
 
 ## 🧩 Form-specific API {#form-specific-api}
 

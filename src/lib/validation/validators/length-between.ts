@@ -17,21 +17,37 @@ import type { DeferredCondition, ValidationResult, Validator, ValidatorContext, 
  * Failures retain the `minLength` and `maxLength` error kinds, parameters, and message fallbacks.
  * Both limits contribute to the corresponding node metadata without making the node required.
  *
- * @reactive Tracks signals read by active limits, conditions, and failing message or error sources.
- *
- * @example
  * ```ts
  * const profile = form({
- *   username: field('', [lengthBetween(3, 20)]),
+ *   value: field('ab', [lengthBetween(3, 20)]),
+ * });
+ * profile.value.invalid(); // true
+ * ```
+ *
+ * ```ts
+ * import { signal } from '@angular/core';
+ *
+ * const limit = signal(3);
+ * const profile = form({
+ *   value: field('ab', [
+ *     lengthBetween(() => limit(), 20),
+ *   ]),
  * });
  * ```
  *
- * @example
  * ```ts
- * lengthBetween(() => minimumLength(), () => maximumLength());
- * lengthBetween(3, 20, 'Enter between 3 and 20 characters');
+ * const profile = form({
+ *   value: field('ab', [
+ *     lengthBetween(
+ *       3,
+ *       20,
+ *       'Check this value.',
+ *     ),
+ *   ]),
+ * });
  * ```
  *
+ * @reactive Tracks signals read by active limits, conditions, and failing message or error sources.
  * @param minimum Static inclusive minimum length or size, or a reactive function returning it.
  * @param maximum Static inclusive maximum length or size, or a reactive function returning it.
  * @param options Custom message or options for a reactive condition, message, or replacement error.
@@ -40,15 +56,110 @@ export const lengthBetween = (
   minimum: number | (() => number | undefined),
   maximum: number | (() => number | undefined),
   options?: string | ({
-    /** Static or reactive message used for either failing limit. Undefined uses the existing fallbacks. */
+    /**
+     * Overrides the message of a failing built-in validation error. A reactive function
+     * is evaluated only while the rule fails; returning `undefined` continues through the
+     * node, provider, global, and built-in message fallbacks. Cannot be combined with `error`.
+     *
+     * **Default:** `undefined`; use the configured fallback message.
+     *
+     * **Accepted values:**
+     *
+     * - **Strings**: Use the supplied text, including an empty string.
+     * - **Functions**: Track signals read while resolving the message.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('ab', [
+     *     lengthBetween(3, 20, {
+     *       message: 'Check this value.',
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const text = signal('Check this value.');
+     * const profile = form({
+     *   value: field('ab', [
+     *     lengthBetween(3, 20, {
+     *       message: () => text(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     message?: string | (() => string | undefined);
     error?: never;
   } | {
     message?: never;
-    /** Custom error or errors replacing all failures, evaluated once when either limit fails. */
+    /**
+     * Replaces the built-in failure with a custom error or error array. A callback
+     * receives the current validation context and runs only when the built-in rule fails.
+     * A callback may return nullish/empty results to suppress the failure. A static nullish
+     * value preserves the built-in result. Cannot be combined with `message`.
+     *
+     * **Default:** `undefined`; retain the built-in error.
+     *
+     * See {@link ValidationResult} for supported error shapes.
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('ab', [
+     *     lengthBetween(3, 20, {
+     *       error: { kind: 'custom' },
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('ab', [
+     *     lengthBetween(3, 20, {
+     *       error: () => ({ kind: 'custom' }),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     *
+     * ```ts
+     * const profile = form({
+     *   value: field('ab', [
+     *     lengthBetween(3, 20, {
+     *       error: [
+     *         { kind: 'custom' },
+     *       ],
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     error?: ValidationResult | ((context: ValidatorContext<ValueWithLengthOrSize | null | undefined>) => ValidationResult);
   }) & {
-    /** Reactive predicate controlling both validation and constraint metadata. */
+    /**
+     * Enables the validator and its constraint metadata only while the condition is true.
+     * Signal reads are tracked. A false result skips the rule, message, and error callbacks.
+     * Parameterless callbacks support class self-references with unchecked returns; return
+     * a boolean. Context-taking callbacks retain boolean checking.
+     *
+     * **Default:** `undefined`; the validator remains active.
+     *
+     * ```ts
+     * import { signal } from '@angular/core';
+     *
+     * const active = signal(true);
+     * const profile = form({
+     *   value: field('ab', [
+     *     lengthBetween(3, 20, {
+     *       when: () => active(),
+     *     }),
+     *   ]),
+     * });
+     * ```
+     */
     when?: NoInfer<DeferredCondition | ((context: ValidatorContext<ValueWithLengthOrSize | null | undefined>) => boolean)>;
   },
 ): Validator<ValueWithLengthOrSize | null | undefined> => {

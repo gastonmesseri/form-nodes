@@ -27,12 +27,26 @@ type GenericGroupApi = Omit<GroupApi<any>, UnknownChildrenMembers | keyof Generi
 /**
  * A form node with unspecified children. Use `$api` for form operations because child names may
  * collide with direct members. Use `FormNode<TChildren>` when the child structure is known.
+ *
+ * ```ts
+ * const node: FormNode = form({
+ *   valid: field('child'),
+ * });
+ * node.$api.valid(); // true
+ * ```
  */
 export type GenericFormNode = Signal<any> & { (): any; $api: CallableNodeApi<GenericFormApi> };
 
 /**
  * A group node with unspecified children. Use `$api` for group operations because child names may
  * collide with direct members. Use `GroupNode<TChildren>` when the child structure is known.
+ *
+ * ```ts
+ * const node: GroupNode = group({
+ *   valid: field('child'),
+ * });
+ * node.$api.valid(); // true
+ * ```
  */
 export type GenericGroupNode = Signal<any> & { (): any; $api: CallableNodeApi<GenericGroupApi> };
 

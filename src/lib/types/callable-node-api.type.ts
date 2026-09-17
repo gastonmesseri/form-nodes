@@ -14,9 +14,10 @@ import type { HiddenFunctionMembers } from './hidden-function-members.type';
  * from IntelliSense, except where the API defines a member itself (such as array `length`).
  * It is a signal and an API, not a form-node declaration; `isFormNode(api)` is false.
  *
- * @example
  * ```ts
- * const profile = form({ submitted: field('draft') });
+ * const profile = form({
+ *   submitted: field('draft'),
+ * });
  * profile.$api(); // { submitted: 'draft' }
  * profile.$api.submitted(); // false
  * profile.$api.children.submitted(); // 'draft'

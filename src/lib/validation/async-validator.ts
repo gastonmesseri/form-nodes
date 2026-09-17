@@ -4,17 +4,20 @@ import type { DeferredCondition, DeferredValidator, AsyncValidationResult, Async
 
 export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode> = ParameterizedAsyncValidatorOptions<TValue, TParams, TApi, ValidatorOwner<TField>> & {
   /**
-   * Validates one stable params snapshot. Signals read here are not tracked automatically.
+   * Validates one stable `params` snapshot. Signal reads inside this callback do not
+   * register dependencies; declare them in `params`. Return a Promise-like or Observable-like
+   * validation result. Use `abortSignal` to cancel external work; obsolete results are ignored.
    *
-   * @example Return a Promise directly.
    * ```ts
-   * asyncValidator({
-   *   params: ({ value }) => ({ username: value() }),
-   *   validate: ({ params }) => {
-   *     return api.isUsernameAvailable(params.username).then(available =>
-   *       available ? null : { kind: 'usernameTaken' },
-   *     );
-   *   },
+   * field('', {
+   *   validators: asyncValidator({
+   *     params: ({ value }) => value(),
+   *     validate: async ({ params }) => {
+   *       return params === 'reserved'
+   *         ? { kind: 'unavailable' }
+   *         : null;
+   *     },
+   *   }),
    * });
    * ```
    */
@@ -22,254 +25,307 @@ export type ParameterizedAsyncValidatorConfig<TValue, TParams, TApi extends Vali
 };
 
 /**
- * Creates a Promise- or Observable-based validator with an explicit reactive params snapshot.
+ * Creates asynchronous validation with explicitly tracked parameters. `params` is
+ * reactive and compared shallowly; `validate` receives a stable parameter snapshot
+ * and its own signal reads are not tracked. New parameters abort stale work.
+ * Return a Promise-like or Observable-like validation result. No injector is required.
  *
- * Use this signature when the request depends on a small, explicit set of values. `params` is
- * tracked reactively and compared shallowly; `validate` receives one stable snapshot.
- *
- * @example Validate a username within the currently selected city.
  * ```ts
- * const location = signal({ city: 'Zurich' });
- *
- * const username = field('', {
+ * field('', {
  *   validators: asyncValidator({
- *     params: ({ value }) => ({
- *       username: value(),
- *       city: location().city,
- *     }),
- *     validate: async ({ params, abortSignal }) => {
- *       const available = await api.isUsernameAvailable(params, abortSignal);
- *       return available
- *         ? null
- *         : { kind: 'usernameTaken', message: 'This username is already in use.' };
+ *     params: ({ value }) => value(),
+ *     validate: async ({ params }) => {
+ *       return params === 'reserved'
+ *         ? { kind: 'unavailable' }
+ *         : null;
  *     },
  *   }),
  * });
  * ```
  *
- * @reactive Tracks signals read by `params` and `when`. Only shallow params changes trigger a new execution.
+ * @reactive Tracks `params` and `when`; changed first-level parameters restart validation.
  */
 export function asyncValidator<TValue, TParams, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(config: {
   /**
-   * Reactively derives the explicit dependency snapshot passed to `validate`. Signals read here
-   * are tracked. Object and array results are compared shallowly, so validation reruns only when a
-   * first-level parameter changes.
+   * Derives the dependency snapshot passed to `validate`. Signals read here are tracked.
+   * Objects and arrays are compared shallowly, so an unchanged first-level snapshot
+   * does not restart validation even if a source signal emits. Scalars use value equality.
    *
-   * @example Track only the selected city as the request's `where` parameter.
    * ```ts
-   * const location = signal({ city: 'Zurich', country: 'Switzerland' });
+   * import { signal } from '@angular/core';
    *
-   * asyncValidator({
-   *   params: () => ({
-   *     where: location().city,
+   * const city = signal('Zurich');
+   * field('', {
+   *   validators: asyncValidator({
+   *     params: () => city(),
+   *     validate: async ({ params }) => {
+   *       return params === 'reserved'
+   *         ? { kind: 'unavailable' }
+   *         : null;
+   *     },
    *   }),
-   *   validate: ({ params }) => checkAvailability(params.where),
    * });
    * ```
    *
-   * Reading `location().city` tracks the `location` signal. Whenever `location` emits, `params`
-   * is evaluated again. If only `country` changed, the shallow result is still
-   * `{ where: 'Zurich' }`, so validation does not rerun. Changing `city` changes `where` and starts
-   * a new validation execution.
-   *
-   * @reactive Tracks signals read by this function and compares the returned snapshot shallowly.
+   * @reactive Tracks reads and compares the returned snapshot shallowly.
    */
   params: (context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => TParams;
   /**
-   * Validates one stable params snapshot. Signals read here are not tracked automatically.
+   * Validates one stable `params` snapshot. Signal reads inside this callback do not
+   * register dependencies; declare them in `params`. Return a Promise-like or Observable-like
+   * validation result. Use `abortSignal` to cancel external work; obsolete results are ignored.
    *
-   * @example Return a Promise directly.
    * ```ts
-   * asyncValidator({
-   *   params: ({ value }) => ({ username: value() }),
-   *   validate: ({ params }) => {
-   *     return api.isUsernameAvailable(params.username).then(available =>
-   *       available ? null : { kind: 'usernameTaken' },
-   *     );
-   *   },
+   * field('', {
+   *   validators: asyncValidator({
+   *     params: ({ value }) => value(),
+   *     validate: async ({ params }) => {
+   *       return params === 'reserved'
+   *         ? { kind: 'unavailable' }
+   *         : null;
+   *     },
+   *   }),
    * });
    * ```
    */
   validate: (context: ParameterizedAsyncValidatorContext<TValue, TParams, TApi, ValidatorOwner<TField>>) => AsyncValidationResult;
   /**
-   * Delay in milliseconds before each execution. A newer params snapshot cancels the pending delay.
+   * Delays asynchronous execution or publication by this many milliseconds. A new trigger
+   * cancels the previous delay. Parameterized validators wait before calling `validate`.
+   * A direct validator's first call discovers dependencies immediately; its result is held
+   * until the initial delay ends. Later direct executions wait before calling the validator.
+   * This does not delay committed node values; use the node's `debounce` option for that.
    *
-   * @example
+   * **Default:** `0`; no asynchronous validation delay.
+   *
    * ```ts
-   * asyncValidator({
-   *   params: () => ({ username: 'marco' }),
-   *   validate: () => Promise.resolve(null),
-   *   debounce: 300,
+   * field('', {
+   *   validators: asyncValidator(
+   *     async () => null,
+   *     { debounce: 300 },
+   *   ),
    * });
    * ```
    */
   debounce?: number;
   /**
-   * Reactive condition controlling whether validation is active. Signals read here are tracked.
+   * Enables asynchronous validation while the condition is true. A false result
+   * cancels active work and clears this validator's contribution. Signal reads are tracked.
+   * Parameterless callbacks support self-references with unchecked returns; return a boolean.
+   * Context-taking callbacks retain boolean checking.
    *
-   * @example
+   * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
+   *
    * ```ts
-   * asyncValidator({
-   *   params: ({ value }) => ({ username: value() }),
-   *   validate: () => Promise.resolve(null),
-   *   when: () => usernameChecksEnabled(),
+   * import { signal } from '@angular/core';
+   *
+   * const enabled = signal(true);
+   * field('', {
+   *   validators: asyncValidator(
+   *     async () => null,
+   *     { when: () => enabled() },
+   *   ),
    * });
    * ```
    *
-   * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
-   * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
+   * @reactive Tracks condition reads and restarts or cancels work when they change.
    */
   when?: NoInfer<DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean)>;
   /**
-   * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
+   * Maps a rejected Promise, thrown execution error, or failed Observable to validation
+   * errors. The original error and current base context are supplied. Cancelled or
+   * obsolete executions do not publish mapped results. Return null/undefined to omit errors.
    *
-   * @example
+   * **Default:** `undefined`; an execution failure contributes no validation error.
+   *
    * ```ts
-   * asyncValidator({
-   *   params: () => ({ username: 'marco' }),
-   *   validate: ({ params }) => checkUsername(params.username).then(() => null),
-   *   onError: () => ({
-   *     kind: 'usernameCheckUnavailable',
-   *     message: 'The username could not be checked. Try again later.',
-   *   }),
+   * field('', {
+   *   validators: asyncValidator(
+   *     async () => {
+   *       throw new Error('Unavailable');
+   *     },
+   *     {
+   *       onError: () => ({ kind: 'offline' }),
+   *     },
+   *   ),
    * });
    * ```
    */
   onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => ValidationResult;
 }): AsyncValidator<TValue, TField>;
 /**
- * Creates a Promise- or Observable-based validator whose callback dependencies are tracked automatically.
+ * Creates asynchronous validation from a Promise-like or Observable-like callback.
+ * Synchronous reads before the first await become dependencies; read needed values
+ * before awaiting. New dependencies or values cancel stale runs. Async validation
+ * requires an interactive node and no blocking synchronous errors.
+ * Parameterless callbacks support self-referencing declarations with unchecked returns;
+ * context-taking callbacks check their asynchronous result type. No injector is required.
  *
- * Pass the asynchronous callback directly for the simplest form:
- *
- * @example Validate a username with a Promise.
  * ```ts
- * const username = field('', {
- *   validators: asyncValidator(async ({ value, abortSignal }) => {
- *     const available = await api.isUsernameAvailable(value(), abortSignal);
- *     return available
- *       ? null
- *       : { kind: 'usernameTaken', message: 'This username is already in use.' };
- *   }),
+ * field('', {
+ *   validators: asyncValidator(
+ *     async ({ value }) => {
+ *       const name = value();
+ *       await Promise.resolve();
+ *       return name === 'reserved'
+ *         ? { kind: 'unavailable' }
+ *         : null;
+ *     },
+ *   ),
  * });
  * ```
  *
- * Pass a second object when the direct callback needs debounce, a condition, or error mapping:
- *
- * @example Add simple execution options.
- * ```ts
- * const username = field('', {
- *   validators: asyncValidator( async ({ value, abortSignal }) => {
- *     const available = await api.isUsernameAvailable(value(), abortSignal);
- *     return available ? null : { kind: 'usernameTaken' };
- *   }, {
- *     debounce: 300,
- *     when: ({ value }) => (value()?.length ?? 0) >= 3,
- *     onError: () => ({ kind: 'usernameCheckUnavailable' }),
- *   }),
- * });
- * ```
- *
- * Parameterless callbacks accept unchecked returns to support class form self-references.
- * They must still return a Promise-like or Observable-like validation result at runtime.
- * Callbacks receiving a context retain checked asynchronous results.
- *
- * @reactive Tracks signals read by the validator and `when`; changes cancel stale work and trigger a new execution.
+ * @reactive Tracks synchronous callback and `when` reads; superseded work is aborted.
  */
 export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(
   validator: NoInfer<DeferredValidator | ((context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult)>,
   options?: {
     /**
-     * Delay in milliseconds before each execution. A newer trigger cancels the pending delay.
+     * Delays asynchronous execution or publication by this many milliseconds. A new trigger
+     * cancels the previous delay. Parameterized validators wait before calling `validate`.
+     * A direct validator's first call discovers dependencies immediately; its result is held
+     * until the initial delay ends. Later direct executions wait before calling the validator.
+     * This does not delay committed node values; use the node's `debounce` option for that.
      *
-     * @example
+     * **Default:** `0`; no asynchronous validation delay.
+     *
      * ```ts
-     * asyncValidator(
-     *   () => Promise.resolve(null),
-     *   { debounce: 300 },
-     * );
+     * field('', {
+     *   validators: asyncValidator(
+     *     async () => null,
+     *     { debounce: 300 },
+     *   ),
+     * });
      * ```
      */
     debounce?: number;
     /**
-     * Reactive condition controlling whether validation is active. Signals read here are tracked.
+     * Enables asynchronous validation while the condition is true. A false result
+     * cancels active work and clears this validator's contribution. Signal reads are tracked.
+     * Parameterless callbacks support self-references with unchecked returns; return a boolean.
+     * Context-taking callbacks retain boolean checking.
      *
-     * @example
+     * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
+     *
      * ```ts
-     * asyncValidator(
-     *   () => Promise.resolve(null),
-     *   { when: () => usernameChecksEnabled() },
-     * );
+     * import { signal } from '@angular/core';
+     *
+     * const enabled = signal(true);
+     * field('', {
+     *   validators: asyncValidator(
+     *     async () => null,
+     *     { when: () => enabled() },
+     *   ),
+     * });
      * ```
      *
-     * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
-     * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
+     * @reactive Tracks condition reads and restarts or cancels work when they change.
      */
     when?: NoInfer<DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean)>;
     /**
-     * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
+     * Maps a rejected Promise, thrown execution error, or failed Observable to validation
+     * errors. The original error and current base context are supplied. Cancelled or
+     * obsolete executions do not publish mapped results. Return null/undefined to omit errors.
      *
-     * @example
+     * **Default:** `undefined`; an execution failure contributes no validation error.
+     *
      * ```ts
-     * asyncValidator(
-     *   () => checkUsername().then(() => null),
-     *   {
-     *     onError: () => ({
-     *       kind: 'usernameCheckUnavailable',
-     *       message: 'The username could not be checked. Try again later.',
-     *     }),
-     *   },
-     * );
+     * field('', {
+     *   validators: asyncValidator(
+     *     async () => {
+     *       throw new Error('Unavailable');
+     *     },
+     *     {
+     *       onError: () => ({ kind: 'offline' }),
+     *     },
+     *   ),
+     * });
      * ```
      */
     onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => ValidationResult;
   },
 ): AsyncValidator<TValue, TField>;
-/** Infers the value from an explicitly typed callback when no consuming node provides a context. */
+/**
+ * Infers the value type from an explicitly annotated callback when no consuming node
+ * provides contextual inference. The callback must return a Promise-like or Observable-like
+ * validation result.
+ *
+ * ```ts
+ * const rule = asyncValidator(
+ *   async (
+ *     ctx: AsyncValidatorContext<string>,
+ *   ) => {
+ *     return ctx.value() ? null : 'Required';
+ *   },
+ * );
+ * field.strict('', [rule]);
+ * ```
+ *
+ * @reactive Tracks synchronous callback reads made before the first await.
+ */
 export function asyncValidator<TValue, TApi extends ValidatorReadonlyApi<TValue> = AsyncValidatorApi<TValue>, TField extends AnyNode = AnyNode>(
   validator: (context: AsyncValidatorContext<TValue, TApi, ValidatorOwner<TField>>) => AsyncValidationResult,
   options?: {
     /**
-     * Delay in milliseconds before each execution. A newer trigger cancels the pending delay.
+     * Delays asynchronous execution or publication by this many milliseconds. A new trigger
+     * cancels the previous delay. Parameterized validators wait before calling `validate`.
+     * A direct validator's first call discovers dependencies immediately; its result is held
+     * until the initial delay ends. Later direct executions wait before calling the validator.
+     * This does not delay committed node values; use the node's `debounce` option for that.
      *
-     * @example
+     * **Default:** `0`; no asynchronous validation delay.
+     *
      * ```ts
-     * asyncValidator(
-     *   () => Promise.resolve(null),
-     *   { debounce: 300 },
-     * );
+     * field('', {
+     *   validators: asyncValidator(
+     *     async () => null,
+     *     { debounce: 300 },
+     *   ),
+     * });
      * ```
      */
     debounce?: number;
     /**
-     * Reactive condition controlling whether validation is active. Signals read here are tracked.
+     * Enables asynchronous validation while the condition is true. A false result
+     * cancels active work and clears this validator's contribution. Signal reads are tracked.
+     * Parameterless callbacks support self-references with unchecked returns; return a boolean.
+     * Context-taking callbacks retain boolean checking.
      *
-     * @example
+     * **Default:** `undefined`; enabled when the normal validation prerequisites are met.
+     *
      * ```ts
-     * asyncValidator(
-     *   () => Promise.resolve(null),
-     *   { when: () => usernameChecksEnabled() },
-     * );
+     * import { signal } from '@angular/core';
+     *
+     * const enabled = signal(true);
+     * field('', {
+     *   validators: asyncValidator(
+     *     async () => null,
+     *     { when: () => enabled() },
+     *   ),
+     * });
      * ```
      *
-     * @reactive Tracks signals read by this condition and reruns or cancels validation when it changes.
-     * Parameterless conditions have unchecked returns for class self-references; return a boolean. Context-taking conditions retain boolean checking.
+     * @reactive Tracks condition reads and restarts or cancels work when they change.
      */
     when?: NoInfer<DeferredCondition | ((context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => boolean)>;
     /**
-     * Converts a rejected Promise, thrown error, or failed Observable into a validation result.
+     * Maps a rejected Promise, thrown execution error, or failed Observable to validation
+     * errors. The original error and current base context are supplied. Cancelled or
+     * obsolete executions do not publish mapped results. Return null/undefined to omit errors.
      *
-     * @example
+     * **Default:** `undefined`; an execution failure contributes no validation error.
+     *
      * ```ts
-     * asyncValidator(
-     *   () => checkUsername().then(() => null),
-     *   {
-     *     onError: () => ({
-     *       kind: 'usernameCheckUnavailable',
-     *       message: 'The username could not be checked. Try again later.',
-     *     }),
-     *   },
-     * );
+     * field('', {
+     *   validators: asyncValidator(
+     *     async () => {
+     *       throw new Error('Unavailable');
+     *     },
+     *     {
+     *       onError: () => ({ kind: 'offline' }),
+     *     },
+     *   ),
+     * });
      * ```
      */
     onError?: (error: unknown, context: AsyncValidatorBaseContext<TValue, TApi, ValidatorOwner<TField>>) => ValidationResult;

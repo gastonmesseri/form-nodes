@@ -11,6 +11,17 @@ symbols from `@ngblocks/form-nodes`; do not import internal files or deep packag
 If you already have a concrete failure or unexpected state, use the symptom-oriented
 [Troubleshooting guide](../help/troubleshooting.md).
 
+## Using IntelliSense examples {#intellisense-examples}
+
+Editor hovers include focused examples for individual options and operations. Import the Form Nodes
+symbols used in each example from `@ngblocks/form-nodes`; Angular imports are shown explicitly.
+Examples include their own model or component setup, and value comments describe the expected result.
+
+Option descriptions explain defaults, inheritance, and accepted input forms. For broader workflows,
+follow the references below, especially [node value views](./node-value.md),
+[interaction state](./node-api.md#interaction-and-availability-api), and
+[asynchronous validation](./async-validator.md).
+
 ## 🧭 Choose an API by task {#choose-an-api-by-task}
 
 | I want to… | Start with | Details |

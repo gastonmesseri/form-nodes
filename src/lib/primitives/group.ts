@@ -12,7 +12,6 @@ type GroupDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDe
  * Creates an empty group with value `{}`. Add dynamic children with `add()`.
  * Pass `{}` explicitly when supplying validators or options.
  *
- * @example
  * ```ts
  * const node = group();
  * node(); // {}

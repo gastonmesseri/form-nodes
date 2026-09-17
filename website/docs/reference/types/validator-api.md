@@ -71,29 +71,29 @@ The declaration above also includes inherited contracts and overloads where appl
 | `root` | Complete structural root, including a standalone field. Common node members are available directly; narrow the node kind before using primitive-specific operations. |
 | `parent` | Immediate form, group, or array parent, or `null` for a standalone node. Common node members are available directly. A field can never be a parent. |
 | `path` | Property names and array indexes locating the node from its root. |
-| `value` | Current committed value of the node being validated. |
+| `value` | Current exposed value of the validated node, after configured equality. Signal reads participate in validation dependency tracking. |
 | `errors` | Own validation errors by default; pass `{ descendants: true }` to include descendants. |
 | `allErrors` | Errors owned by this node and every descendant. |
 | `valid` | Whether this node and its descendants have no active errors or unresolved validation. |
 | `invalid` | Whether this node or a descendant currently contributes an error. False while unknown. |
 | `pending` | Whether asynchronous validation is running on this node or a descendant. |
-| `debouncing` | Whether asynchronous validation is waiting for its debounce delay. |
+| `debouncing` | Whether a control-originated value is waiting to be committed on this node or a descendant. This is separate from the debounce option of an asynchronous validator. |
 | `validationStatus` | Current aggregate result: valid, invalid, or unknown while validation is unresolved. |
 | `getError` | Returns this node's first direct error with `kind`, or `undefined` when none exists. |
 | `set` | Replaces the node's committed value and triggers the corresponding state and validation updates. |
-| `update` | Replaces the value with the result of applying `updater` to its current committed value. |
+| `update` | Replaces the value with the result of applying `updater` to its current exposed value. |
 | `flush` | Commits any buffered control value immediately and runs validation that was waiting for it. |
 | `reset` | Clears interaction state; preserves the current value unless a replacement is provided. |
 | `markAsTouched` | Marks this node and, unless skipped, its interactive descendants as touched and commits their pending control values for every debounce strategy. |
-| `markAsUntouched` | Marks this node as untouched without changing its value. |
+| `markAsUntouched` | Clears this node's own touched marker without changing descendant markers or values. An interactive touched descendant can keep an aggregate `touched()` true. Use `reset()` to clear interaction state throughout the subtree. |
 | `markAsDirty` | Marks this node as dirty without changing its value. |
 | `markAsPristine` | Clears stored dirty state without changing the current value. |
-| `disable` | Adds an imperative disabled reason, excluding this node from validation and aggregate values. |
-| `enable` | Removes disabled reasons previously added through `disable()`. |
+| `disable` | Adds an imperative disabled reason and suppresses this node's own validation. Values remain readable, writable programmatically, and present in parent aggregates. |
+| `enable` | Clears local disabled state, including a static initial `disabled` option. Continuing reactive conditions and inherited reasons remain effective, so `enabled()` may stay false. |
 | `markAsReadonly` | Adds the imperative readonly state, making `readonly()` true. |
-| `markAsWritable` | Removes the readonly state previously added through `markAsReadonly()`. |
+| `markAsWritable` | Clears local readonly state, including a static initial `readonly` option. Reactive conditions and ancestor readonly state can still prevent the node from becoming writable. |
 | `hide` | Adds the imperative hidden state, making `visible()` false. |
-| `show` | Removes the hidden state previously added through `hide()`, making `visible()` true. |
+| `show` | Clears local hidden state, including a static initial `hidden` option. Reactive conditions and ancestor hidden state can still keep the node hidden. |
 
 ## Related reference
 

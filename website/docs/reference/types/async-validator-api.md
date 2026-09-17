@@ -4,7 +4,7 @@ title: AsyncValidatorApi
 
 # AsyncValidatorApi
 
-Mutable node API exposed to asynchronous validators by default.
+Default owner API shape used to specialize asynchronous validator contexts. The context exposes a readonly validation view; its node cannot be mutated through that view.
 
 ## Import
 

@@ -11,7 +11,6 @@ type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDef
  * Creates an empty form with value `{}`. Add dynamic children with `add()`.
  * Pass `{}` explicitly when supplying validators or options.
  *
- * @example
  * ```ts
  * const node = form();
  * node(); // {}
@@ -20,6 +19,15 @@ type FormDefinitions<TDefinitions extends ObjectNodeDefinitions> = ObjectNodeDef
  */
 export function form(): FormNode<{}>;
 /**
+ * Creates a root form from an initially fixed object of node definitions and optional configuration.
+ *
+ * Concise values, including arrays, are normalized to fields, while plain nested objects become
+ * structural groups. Only an explicit `array(...)` creates a dynamic array node. Use the options object for
+ * form-level validators, submission, state, debounce, and validator messages.
+ * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
+ * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
+ * created, with the complete declaration path included in the error.
+ *
  * ```ts
  * const profile = form({
  *   name: field(''),
@@ -33,15 +41,6 @@ export function form(): FormNode<{}>;
  *   }),
  * });
  * ```
- *
- * Creates a root form from an initially fixed object of node definitions and optional configuration.
- *
- * Concise values, including arrays, are normalized to fields, while plain nested objects become
- * structural groups. Only an explicit `array(...)` creates a dynamic array node. Use the options object for
- * form-level validators, submission, state, debounce, and validator messages.
- * Definitions use own enumerable string-keyed data properties. Inherited and non-enumerable
- * properties are ignored; accessors, symbol keys, and `__proto__` are rejected before the tree is
- * created, with the complete declaration path included in the error.
  *
  * @param definitions Initially declared child-node definitions.
  * @param args Validators or node configuration, optionally followed by configuration for positional validators. Callback contexts are typed; returns use any for self-reference support but must satisfy ValidationResult or ComposableValidationResult (see ValidatorSource).

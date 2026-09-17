@@ -1,11 +1,23 @@
 import { computed, type ValueEqualityFn } from '@angular/core';
 
 export type ComputedFunctionOptions<TArgs extends readonly unknown[], TResult> = {
-  /** Determines whether two argument lists address the same cached computation. */
+  /**
+   * Determines whether two argument lists address the same cached computation.
+   *
+   * **Default:** Compare argument count and each position with `Object.is`.
+   */
   readonly argsEqual?: (left: TArgs, right: TArgs) => boolean;
-  /** Suppresses downstream propagation when recomputation produces an equal result. */
+  /**
+   * Suppresses downstream propagation when recomputation produces an equal result.
+   *
+   * **Default:** Angular computed equality (`Object.is`).
+   */
   readonly equal?: ValueEqualityFn<TResult>;
-  /** Maximum cached argument combinations. Values below one disable caching. */
+  /**
+   * Maximum cached argument combinations. Values below one disable caching.
+   *
+   * **Default:** Unlimited entries; positive limits evict the least recently used entry.
+   */
   readonly max?: number;
 };
 

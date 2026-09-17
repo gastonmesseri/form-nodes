@@ -25,38 +25,51 @@ import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './v
  * its standalone validators normally use a type such as `number | null`. Omit `null` only for a
  * field created with `field.strict()`. Form and array nodes use their non-null aggregate models.
  *
- * @reactive Tracks signal reads by default. With reactive: false, tracks the owning value only;
- * ordinary validation lifecycle triggers still apply. This does not make circular reads safe.
- *
- * @example
  * ```ts
- * export const isAdult = validator<number | null>(({ value }) => {
+ * export const isAdult = validator<
+ *   number | null
+ * >(({ value }) => {
  *   const age = value();
  *   return age !== null && age < 18
- *     ? { kind: 'adult', minimumAge: 18, actual: age }
+ *     ? {
+ *         kind: 'adult',
+ *         minimumAge: 18,
+ *         actual: age,
+ *       }
  *     : null;
  * });
  *
  * const age = field<number>(null, [isAdult]);
  * ```
  *
- * @example
  * ```ts
- * export const positive = validator<number>(({ value }) => {
- *   return value() > 0 ? null : { kind: 'positive' };
- * });
+ * export const positive = validator<number>(
+ *   ({ value }) => {
+ *     return value() > 0
+ *       ? null
+ *       : { kind: 'positive' };
+ *   },
+ * );
  *
  * const quantity = field.strict(1, [positive]);
  * ```
  *
- * @example
  * ```ts
- * type Profile = { name: string | null; age: number | null };
+ * type Profile = {
+ *   name: string | null;
+ *   age: number | null;
+ * };
  *
- * export const completeProfile = validator<Profile>(({ value }) => {
- *   return value().name === null ? { kind: 'incompleteProfile' } : null;
- * });
+ * export const completeProfile =
+ *   validator<Profile>(({ value }) => {
+ *     return value().name === null
+ *       ? { kind: 'incompleteProfile' }
+ *       : null;
+ *   });
  * ```
+ *
+ * @reactive Tracks signal reads by default. With reactive: false, tracks the owning value only;
+ * ordinary validation lifecycle triggers still apply. This does not make circular reads safe.
  *
  * @template TValue Exact field, form, group, or array value observed by the validator.
  * @template TField Concrete owning node, inferred when the helper is declared inline.
@@ -65,7 +78,19 @@ import type { ComposableValidator, DeferredValidator, ValidatorOwner } from './v
  * @returns The original function by default, or a wrapper when reactive is false.
  */
 export function validator<TValue, TField extends AnyNode = AnyNode>(validate: NoInfer<DeferredValidator | ComposableValidator<TValue, ValidatorOwner<TField>>>, options?: { reactive?: boolean }): ComposableValidator<TValue, TField>;
-/** Infers the value from an explicitly typed callback when no consuming node provides a context. */
+/**
+ * Infers the value from an explicitly typed callback when no consuming node provides a context.
+ *
+ * ```ts
+ * const rule = validator(
+ *   ({ value }: ValidatorContext<string>) => {
+ *     return value() ? null : 'Required.';
+ *   },
+ * );
+ * const name = field.strict('', [rule]);
+ * name.invalid(); // true
+ * ```
+ */
 export function validator<TValue, TField extends AnyNode = AnyNode>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>, options?: { reactive?: boolean }): ComposableValidator<TValue, TField>;
 export function validator<TValue, TField extends AnyNode = AnyNode>(validate: ComposableValidator<TValue, ValidatorOwner<TField>>, options?: { reactive?: boolean }): ComposableValidator<TValue, TField> {
   if (options?.reactive !== false) return validate as unknown as ComposableValidator<TValue, TField>;

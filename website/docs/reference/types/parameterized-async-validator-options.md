@@ -39,7 +39,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `params` | Reactively derives the explicit dependency snapshot passed to the validator. Signals read by this function are tracked, while object and array results are compared shallowly. |
+| `params` | Derives the dependency snapshot passed to `validate`. Signals read here are tracked. Objects and arrays are compared shallowly, so an unchanged first-level snapshot does not restart validation even if a source signal emits. Scalars use value equality. |
 
 ## Related reference
 

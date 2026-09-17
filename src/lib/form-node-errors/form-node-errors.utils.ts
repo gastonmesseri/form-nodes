@@ -5,13 +5,121 @@ import type { ControlState, ControlStateError } from '../form-node-state/form-no
 
 /** Context supplied once to the projected #message template when visible messages exist. */
 export type FormNodeErrorsContext = {
-  /** First visible resolved message, available through let-message. */
+  /**
+   * First visible resolved message, available through let-message.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Component({
+   *   imports: [FormNodeErrors],
+   *   template: `
+   *     <form-node-errors
+   *       [node]="profile.name"
+   *       showWhen="always"
+   *     >
+   *       <ng-template #message
+   *         let-message
+   *       >
+   *         {{ message }}
+   *       </ng-template>
+   *     </form-node-errors>
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   profile = form({
+   *     name: field('', [required]),
+   *   });
+   * }
+   * ```
+   */
   readonly $implicit: string;
-  /** Named alias of the first visible resolved message. */
+  /**
+   * Named alias of the first visible resolved message.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Component({
+   *   imports: [FormNodeErrors],
+   *   template: `
+   *     <form-node-errors
+   *       [node]="profile.name"
+   *       showWhen="always"
+   *     >
+   *       <ng-template #message
+   *         let-message="message"
+   *       >
+   *         {{ message }}
+   *       </ng-template>
+   *     </form-node-errors>
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   profile = form({
+   *     name: field('', [required]),
+   *   });
+   * }
+   * ```
+   */
   readonly message: string;
-  /** Visible resolved messages, after filtering and maxMessages. */
+  /**
+   * Visible resolved messages, after filtering and maxMessages.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Component({
+   *   imports: [FormNodeErrors],
+   *   template: `
+   *     <form-node-errors
+   *       [node]="profile.name"
+   *       showWhen="always"
+   *     >
+   *       <ng-template #message
+   *         let-messages="messages"
+   *       >
+   *         {{ messages.length }}
+   *       </ng-template>
+   *     </form-node-errors>
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   profile = form({
+   *     name: field('', [required]),
+   *   });
+   * }
+   * ```
+   */
   readonly messages: readonly string[];
-  /** Error details corresponding to the visible messages, in the same order. */
+  /**
+   * Error details corresponding to the visible messages, in the same order.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Component({
+   *   imports: [FormNodeErrors],
+   *   template: `
+   *     <form-node-errors
+   *       [node]="profile.name"
+   *       showWhen="always"
+   *     >
+   *       <ng-template #message
+   *         let-errors="errors"
+   *       >
+   *         {{ errors.length }}
+   *       </ng-template>
+   *     </form-node-errors>
+   *   `,
+   * })
+   * export class ProfilePage {
+   *   profile = form({
+   *     name: field('', [required]),
+   *   });
+   * }
+   * ```
+   */
   readonly errors: readonly ControlStateError[];
 };
 

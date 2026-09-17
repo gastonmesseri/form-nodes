@@ -57,16 +57,104 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
     transform: value => value,
   });
 
-  /** Emits the committed control-originated value after debounce or an explicit flush. */
+  /**
+   * Control-originated value after it is committed, respecting debounce and flush.
+   * Programmatic node writes do not emit. Synchronous state is current in the handler;
+   * asynchronous validation may still be pending.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeValueChange;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
+   */
   formNodeValueChange = output<NodeValue<BoundNode<TNode, TValue>>>();
 
-  /** Emits the latest parsed control value immediately, including while debounce is pending. */
+  /**
+   * Latest parsed value received from the selected control adapter, before waiting for debounce.
+   * This does not guarantee a physical user interaction: custom controls can emit from code.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding
+   *         .formNodeControlValueChange;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
+   */
   formNodeControlValueChange = output<NodeValue<BoundNode<TNode, TValue>>>();
 
-  /** Native form attempt after flushing input; emitted before validation gating and onSubmit. */
+  /**
+   * Native submission attempt on a form() binding, after preparing values and interaction state,
+   * before the validation gate and declared action. Emits even without onSubmit or when blocked.
+   * Programmatic submit() does not emit. Async listeners are not awaited.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeSubmit;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
+   */
   formNodeSubmit = output<FormNodeSubmitEvent<BoundNode<TNode, TValue>>>();
 
-  /** Native form attempt rejected by submitWhen; async listeners are not awaited. */
+  /**
+   * Native attempt rejected by submitWhen, including pending validation with 'valid'.
+   * Emits after formNodeSubmit, even without a declared onSubmit action. Concurrent attempts,
+   * group bindings, and programmatic submit() do not emit this output.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   constructor() {
+   *     const changes =
+   *       this.binding.formNodeSubmitBlocked;
+   *     changes.subscribe(event => {
+   *       console.log(event);
+   *       // Output: each binding event.
+   *     });
+   *   }
+   * }
+   * ```
+   */
   formNodeSubmitBlocked = output<FormNodeSubmitEvent<BoundNode<TNode, TValue>>>();
 
   injector = inject(Injector);
@@ -105,10 +193,37 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
 
   private focuser = (options?: FocusOptions) => this.element.focus(options);
 
-  /** Current bound field, exposed as a signal for custom integrations. */
+  /**
+   * Reactive reference to the node currently bound to the host.
+   *
+   * ```ts
+   * import * as ng from '@angular/core';
+   *
+   * @ng.Directive({ selector: '[observeNode]' })
+   * export class ObserveNode {
+   *   binding = ng.inject(FORM_NODE);
+   *
+   *   inspect() {
+   *     return this.binding.node();
+   *   }
+   * }
+   * ```
+   */
   node = computed<BoundNode<TNode, TValue>>(() => this.field);
 
-  /** Errors visible to this binding, excluding errors owned by another binding. */
+  /**
+   * Errors visible to this binding, excluding errors owned by another binding.
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   classes: {
+   *     'has-errors': binding => {
+   *       return binding.errors().length > 0;
+   *     },
+   *   },
+   * });
+   * ```
+   */
   errors: Signal<readonly ValidationErrorWithTargetNode<BoundNode<TNode, TValue>>[]> = computed(() => {
     const errors = this.node().$api.errors() as readonly ValidationErrorWithTargetNode<BoundNode<TNode, TValue>>[];
     return errors.filter(error => !error.formNode || error.formNode === this);
@@ -269,7 +384,9 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
     }, { injector: this.injector });
   }
 
-  /** Field, form, or array node bound to the host control. */
+  /**
+   * Field, group, form, or array node currently bound to the host control.
+   */
   get field(): BoundNode<TNode, TValue> {
     let node: AnyNode | undefined = this.formNodeInput();
     if (node === undefined && this._formNodeValue() !== UNSET_VALUE) {
@@ -338,8 +455,38 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
  * Reset forces a synchronous CVA write even for unchanged values. Rebinding refreshes value
  * and disabled state during synchronization, including when the new node has an equal value.
  * CVA user callbacks update control state synchronously, with debounce governing commits.
+ *
+ * ```ts
+ * import * as ng from '@angular/core';
+ *
+ * @ng.Component({
+ *   imports: [FormNodeDirective],
+ *   template: `
+ *     <input [formNode]="profile.name" />
+ *   `,
+ * })
+ * export class ProfilePage {
+ *   profile = form({ name: field('Ada') });
+ * }
+ * ```
  */
 export const FormNodeDirective = _FormNode;
 
-/** Public instance view exposed by `[formNode]` template references and queries. */
+/**
+ * Public instance view exposed by `[formNode]` template references and queries.
+ *
+ * ```ts
+ * import * as ng from '@angular/core';
+ *
+ * @ng.Component({
+ *   imports: [FormNodeDirective],
+ *   template: `
+ *     <input [formNode]="profile.name" />
+ *   `,
+ * })
+ * export class ProfilePage {
+ *   profile = form({ name: field('Ada') });
+ * }
+ * ```
+ */
 export type FormNodeDirective<TNode extends AnyNode = AnyNode> = FormNodeBinding<TNode>;

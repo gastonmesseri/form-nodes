@@ -8,17 +8,30 @@ export type { FormNodeBinding } from '../types/form-node-binding.type';
 
 /** Injector-scoped validator messages and configuration for `[formNode]` bindings. */
 export type FormNodesConfig = {
-  /** A partial catalog or a factory executed in Angular DI. Omission inherits; null supplies an empty provider catalog. */
+  /**
+   * A partial catalog or a factory executed in Angular DI. Omission inherits; null supplies an empty provider catalog.
+   *
+   * **Default:** Omission inherits the nearest provider or global fallback.
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   validatorMessages: {
+   *     required: 'Required.',
+   *   },
+   * });
+   * ```
+   */
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages) | null | undefined;
 
   /**
-   * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
-   *
    * Reactively copies node state and constraints into matching custom-control inputs. This is
    * one-way node-to-component synchronization; it does not enable value binding, execute
    * validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs.
    *
-   * Selections:
+   * **Default:** Omission inherits the next configuration layer; the final fallback is `false`.
+   *
+   * **Accepted values:**
+   *
    * - `false` or `null`: no additional input writes, even if inherited configuration enables them.
    * - `'declared'`: initial `disabled`, `readonly`, and `hidden` node options select their inputs.
    *   Explicit false counts; undefined does not. Declaring disabled also selects disabledReasons.
@@ -32,85 +45,88 @@ export type FormNodesConfig = {
    *   The signal-controls preset is shorthand for `{ inputs: 'all', target: 'signal-controls' }`.
    * - `[]` or `{ inputs: [] }`: no additional writes. Empty lists never enable value connections.
    *
-   * Supported input names: disabled, disabledReasons, readonly, hidden, dirty, touched, invalid,
-   * pending, errors, name, required, min, max, minLength, maxLength, and pattern. Lists use public
-   * input names, including aliases. Missing inputs are ignored. Selecting disabled in a list does
-   * not implicitly select disabledReasons. Derived states and validator constraints require all,
-   * signal-controls, or an explicit list. Every enabled selection updates reactively, not by polling.
-   * Conditional constraints and validator removal update selected inputs to their current/neutral
-   * values. Selected writes may replace component defaults and explicit template bindings.
-   * A control exposing a public checked input receives acceptance-specific required state from
-   * requiredTrue; ordinary required permits false. Other controls receive logical required state.
-   * notNil contributes no required constraint.
+   * Provider and global defaults are captured on connection. Node options override providers;
+   * parent node options do not configure descendants. Lists and objects replace inherited selections.
+   * Rebinding applies the new selection; inputs no longer selected retain their last values.
    *
-   * Native DOM controls retain normal value and state synchronization. CVAs retain writeValue,
-   * change/touch callbacks, and setDisabledState independently of this option. Selecting a CVA's
-   * disabled input may write it in addition to calling setDisabledState. Model values and their
-   * touch/focus/reset hooks remain connected in every mode. Pair controls must first be enabled
-   * with bindInputOutputPairs; only target all can synchronize their optional state inputs.
+   * Selected writes may replace component defaults and explicit template bindings. CVA value and
+   * disabled-state integration remain independent. Use {@link useFormNodeState} for state observation.
    *
-   * Each option resolves independently: node option (including factory defaults), nearest explicit
-   * provider, global fallback, then false. Omission/undefined inherits; null/false disables. Objects
-   * and lists replace inherited selections without merging. A parent node option does not configure
-   * descendants; use providers or factory defaults for shared settings. Provider/global fallbacks
-   * are captured on connection; changing globals does not reconfigure existing bindings. Rebinding
-   * uses the replacement node's configuration. Inputs no longer selected retain their last values.
-   * Treat selection objects and lists as fixed configuration, not reactive sources.
-   *
-   * To read state without experimental writes, combine a value/checked model with useFormNodeState()
-   * and render its signals. The hook does not populate the component's input properties.
-   *
-   * @example Select constraints only on model controls.
    * ```ts
-   * field('', {
-   *   syncInputs: { inputs: ['required', 'minLength'], target: 'signal-controls' },
+   * provideFormNodesConfig({
+   *   syncInputs: false,
    * });
-   * provideFormNodesConfig({ syncInputs: 'signal-controls' });
    * ```
    *
-   * @experimental Optional component input writes depend on Angular internals.
-   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#custom-control-inputs | Input synchronization and adapter selection}
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: 'declared',
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: 'all',
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: 'signal-controls',
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: ['required', 'minLength'],
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: {
+   *     inputs: ['required'],
+   *     target: 'cva',
+   *   },
+   * });
+   * ```
+   *
+   * @experimental Custom-control input writes depend on Angular internals.
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config | Binding configuration}
    */
   syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' | undefined } | null | undefined;
 
   /**
-   * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
+   * Connects recognized value/valueChange or checked/checkedChange input/output pairs.
+   * CVAs and actual model signals keep priority. Enabling a pair connects values and interaction
+   * hooks; optional state inputs are selected independently by `syncInputs`.
    *
-   * Enables a recognized `value`/`valueChange` or `checked`/`checkedChange` input/output pair when
-   * the selected control has neither a CVA nor an actual value/checked model. Supports signal
-   * inputs, decorator inputs, and their public aliases. Recognition uses runtime inputs/outputs;
-   * an implements declaration is not required. CVAs and real models always take precedence and
-   * keep their standard connections regardless of this option.
+   * **Default:** Omission inherits the next configuration layer; the final fallback is `false`.
    *
-   * True enables the pair's complete connection: node-to-input value writes, output-to-node edits,
-   * touch output, optional focus/reset hooks, and optional writable node reference. Changes follow
-   * normal validation, dirty state, and pending/committed debounce rules; touch commits blur updates.
-   * False/null keeps the pair inactive: no value or state-input writes, no change/touch processing,
-   * and no calls to its focus/reset hooks. Inactive pairs remain recognizable hosts, not errors.
-   * Model/CVA/native connections and validation continue normally.
+   * **Accepted values:**
    *
-   * This option does not select optional state inputs. Use syncInputs separately; for example,
-   * bindInputOutputPairs true with syncInputs false connects only value and interaction. Neither all nor
-   * an empty syncInputs list enables a pair. Active pairs accept syncInputs selections targeting all;
-   * targets signal-controls and cva exclude them.
+   * - `true`: Connect the pair, including touch and optional focus/reset/node hooks.
+   * - `false` or `null`: Disable pair connections, overriding inherited settings.
+   * - `undefined`: Inherit factory, provider, or global configuration as applicable.
    *
-   * Node options (including factory defaults) override the nearest explicit provider, then the
-   * global fallback, then false. Undefined/omission inherits independently of syncInputs; null/false
-   * disables. Parent node options do not configure descendants. Provider/global defaults are captured
-   * on connection. Rebinding to an inactive node pauses the pair and releases its writable node
-   * reference; existing component input values remain unchanged. Returning to an active node writes
-   * its current control value again even if equal to the last value written before pausing. Cleanup
-   * releases subscriptions when the binding is destroyed. Use initialized value inputs, not required
-   * inputs, since an inactive pair supplies no value.
+   * Provider/global defaults are captured on connection; parent node options do not configure
+   * descendants. Rebinding releases old subscriptions and node references. Inactive pairs retain
+   * component input values, so use initialized inputs rather than required inputs.
    *
-   * @example Enable paired value binding independently of state inputs.
    * ```ts
-   * field('', { bindInputOutputPairs: true, syncInputs: false });
-   * configureGlobalFormNodes({ bindInputOutputPairs: true });
+   * provideFormNodesConfig({
+   *   bindInputOutputPairs: true,
+   * });
    * ```
    *
-   * @experimental Pair input writes depend on Angular internals.
-   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#bind-input-output-pairs | Paired control configuration}
+   * ```ts
+   * provideFormNodesConfig({
+   *   bindInputOutputPairs: false,
+   * });
+   * ```
+   *
+   * @experimental Custom-control input writes depend on Angular internals.
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config | Binding configuration}
    */
   bindInputOutputPairs?: boolean | null | undefined;
 
@@ -120,11 +136,31 @@ export type FormNodesConfig = {
    * Each predicate runs in a reactive context. Signals read from the binding or elsewhere cause
    * that class to be reevaluated without reevaluating unrelated class predicates. The classes
    * apply to `[formNode]` bindings.
+   *
+   * **Default:** Omission inherits the nearest provider or global fallback.
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   classes: {
+   *     'has-errors': binding => {
+   *       return binding.errors().length > 0;
+   *     },
+   *   },
+   * });
+   * ```
    */
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
 };
 
-/** Reactive Forms-compatible status classes for use with `provideFormNodesConfig()`. */
+/**
+ * Reactive Forms-compatible status classes for use with `provideFormNodesConfig()`.
+ *
+ * ```ts
+ * provideFormNodesConfig({
+ *   classes: ANGULAR_FORMS_STATUS_CLASSES,
+ * });
+ * ```
+ */
 export const ANGULAR_FORMS_STATUS_CLASSES: NonNullable<FormNodesConfig['classes']> = {
   'ng-touched': (binding) => {
     return binding.node().$api.touched();
@@ -163,19 +199,14 @@ export const FORM_NODE_BIND_INPUT_OUTPUT_PAIRS = new InjectionToken<boolean>('FO
  * An empty config registers no providers; use classes: {} to explicitly clear inherited classes.
  * Angular's `provideSignalFormsConfig()` independently configures `[formField]` bindings.
  *
- * @example Configure application-wide messages, Angular-style states, and one custom class.
  * ```ts
- * import type { ApplicationConfig } from '@angular/core';
+ * import * as ng from '@angular/core';
  *
- * import { ANGULAR_FORMS_STATUS_CLASSES, provideFormNodesConfig } from '@ngblocks/form-nodes';
- *
- * export const appConfig: ApplicationConfig = {
+ * export const config: ng.ApplicationConfig = {
  *   providers: [
  *     provideFormNodesConfig({
- *       validatorMessages: { required: 'Please complete this field.' },
- *       classes: {
- *         ...ANGULAR_FORMS_STATUS_CLASSES,
- *         'is-readonly': binding => binding.node().$api.readonly(),
+ *       validatorMessages: {
+ *         required: 'Required.',
  *       },
  *     }),
  *   ],
@@ -185,17 +216,30 @@ export const FORM_NODE_BIND_INPUT_OUTPUT_PAIRS = new InjectionToken<boolean>('FO
  * @param config Message and binding configuration installed in the current Angular injector scope.
  */
 export const provideFormNodesConfig = (config: {
-  /** Partial message catalog or a factory that may inject services. Omission inherits; null supplies an empty provider catalog. */
+  /**
+   * Partial message catalog or a factory that may inject services. Omission inherits; null supplies an empty provider catalog.
+   *
+   * **Default:** Omission inherits the nearest provider or global fallback.
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   validatorMessages: {
+   *     required: 'Required.',
+   *   },
+   * });
+   * ```
+   */
   validatorMessages?: ValidatorMessages | (() => ValidatorMessages) | null | undefined;
 
   /**
-   * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
-   *
    * Reactively copies node state and constraints into matching custom-control inputs. This is
    * one-way node-to-component synchronization; it does not enable value binding, execute
    * validators, or alter node state. Use `bindInputOutputPairs` separately for input/output value pairs.
    *
-   * Selections:
+   * **Default:** Omission inherits the next configuration layer; the final fallback is `false`.
+   *
+   * **Accepted values:**
+   *
    * - `false` or `null`: no additional input writes, even if inherited configuration enables them.
    * - `'declared'`: initial `disabled`, `readonly`, and `hidden` node options select their inputs.
    *   Explicit false counts; undefined does not. Declaring disabled also selects disabledReasons.
@@ -209,89 +253,106 @@ export const provideFormNodesConfig = (config: {
    *   The signal-controls preset is shorthand for `{ inputs: 'all', target: 'signal-controls' }`.
    * - `[]` or `{ inputs: [] }`: no additional writes. Empty lists never enable value connections.
    *
-   * Supported input names: disabled, disabledReasons, readonly, hidden, dirty, touched, invalid,
-   * pending, errors, name, required, min, max, minLength, maxLength, and pattern. Lists use public
-   * input names, including aliases. Missing inputs are ignored. Selecting disabled in a list does
-   * not implicitly select disabledReasons. Derived states and validator constraints require all,
-   * signal-controls, or an explicit list. Every enabled selection updates reactively, not by polling.
-   * Conditional constraints and validator removal update selected inputs to their current/neutral
-   * values. Selected writes may replace component defaults and explicit template bindings.
-   * A control exposing a public checked input receives acceptance-specific required state from
-   * requiredTrue; ordinary required permits false. Other controls receive logical required state.
-   * notNil contributes no required constraint.
+   * Provider and global defaults are captured on connection. Node options override providers;
+   * parent node options do not configure descendants. Lists and objects replace inherited selections.
+   * Rebinding applies the new selection; inputs no longer selected retain their last values.
    *
-   * Native DOM controls retain normal value and state synchronization. CVAs retain writeValue,
-   * change/touch callbacks, and setDisabledState independently of this option. Selecting a CVA's
-   * disabled input may write it in addition to calling setDisabledState. Model values and their
-   * touch/focus/reset hooks remain connected in every mode. Pair controls must first be enabled
-   * with bindInputOutputPairs; only target all can synchronize their optional state inputs.
+   * Selected writes may replace component defaults and explicit template bindings. CVA value and
+   * disabled-state integration remain independent. Use {@link useFormNodeState} for state observation.
    *
-   * Each option resolves independently: node option (including factory defaults), nearest explicit
-   * provider, global fallback, then false. Omission/undefined inherits; null/false disables. Objects
-   * and lists replace inherited selections without merging. A parent node option does not configure
-   * descendants; use providers or factory defaults for shared settings. Provider/global fallbacks
-   * are captured on connection; changing globals does not reconfigure existing bindings. Rebinding
-   * uses the replacement node's configuration. Inputs no longer selected retain their last values.
-   * Treat selection objects and lists as fixed configuration, not reactive sources.
-   *
-   * To read state without experimental writes, combine a value/checked model with useFormNodeState()
-   * and render its signals. The hook does not populate the component's input properties.
-   *
-   * @example Select constraints only on model controls.
    * ```ts
-   * field('', {
-   *   syncInputs: { inputs: ['required', 'minLength'], target: 'signal-controls' },
+   * provideFormNodesConfig({
+   *   syncInputs: false,
    * });
-   * provideFormNodesConfig({ syncInputs: 'signal-controls' });
    * ```
    *
-   * @experimental Optional component input writes depend on Angular internals.
-   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#custom-control-inputs | Input synchronization and adapter selection}
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: 'declared',
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: 'all',
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: 'signal-controls',
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: ['required', 'minLength'],
+   * });
+   * ```
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   syncInputs: {
+   *     inputs: ['required'],
+   *     target: 'cva',
+   *   },
+   * });
+   * ```
+   *
+   * @experimental Custom-control input writes depend on Angular internals.
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config | Binding configuration}
    */
   syncInputs?: false | 'declared' | 'all' | 'signal-controls' | readonly SyncInputName[] | { inputs: 'declared' | 'all' | readonly SyncInputName[]; target?: 'all' | 'signal-controls' | 'cva' | undefined } | null | undefined;
 
   /**
-   * **EXPERIMENTAL — uses Angular internals. Disabled by default.**
+   * Connects recognized value/valueChange or checked/checkedChange input/output pairs.
+   * CVAs and actual model signals keep priority. Enabling a pair connects values and interaction
+   * hooks; optional state inputs are selected independently by `syncInputs`.
    *
-   * Enables a recognized `value`/`valueChange` or `checked`/`checkedChange` input/output pair when
-   * the selected control has neither a CVA nor an actual value/checked model. Supports signal
-   * inputs, decorator inputs, and their public aliases. Recognition uses runtime inputs/outputs;
-   * an implements declaration is not required. CVAs and real models always take precedence and
-   * keep their standard connections regardless of this option.
+   * **Default:** Omission inherits the next configuration layer; the final fallback is `false`.
    *
-   * True enables the pair's complete connection: node-to-input value writes, output-to-node edits,
-   * touch output, optional focus/reset hooks, and optional writable node reference. Changes follow
-   * normal validation, dirty state, and pending/committed debounce rules; touch commits blur updates.
-   * False/null keeps the pair inactive: no value or state-input writes, no change/touch processing,
-   * and no calls to its focus/reset hooks. Inactive pairs remain recognizable hosts, not errors.
-   * Model/CVA/native connections and validation continue normally.
+   * **Accepted values:**
    *
-   * This option does not select optional state inputs. Use syncInputs separately; for example,
-   * bindInputOutputPairs true with syncInputs false connects only value and interaction. Neither all nor
-   * an empty syncInputs list enables a pair. Active pairs accept syncInputs selections targeting all;
-   * targets signal-controls and cva exclude them.
+   * - `true`: Connect the pair, including touch and optional focus/reset/node hooks.
+   * - `false` or `null`: Disable pair connections, overriding inherited settings.
+   * - `undefined`: Inherit factory, provider, or global configuration as applicable.
    *
-   * Node options (including factory defaults) override the nearest explicit provider, then the
-   * global fallback, then false. Undefined/omission inherits independently of syncInputs; null/false
-   * disables. Parent node options do not configure descendants. Provider/global defaults are captured
-   * on connection. Rebinding to an inactive node pauses the pair and releases its writable node
-   * reference; existing component input values remain unchanged. Returning to an active node writes
-   * its current control value again even if equal to the last value written before pausing. Cleanup
-   * releases subscriptions when the binding is destroyed. Use initialized value inputs, not required
-   * inputs, since an inactive pair supplies no value.
+   * Provider/global defaults are captured on connection; parent node options do not configure
+   * descendants. Rebinding releases old subscriptions and node references. Inactive pairs retain
+   * component input values, so use initialized inputs rather than required inputs.
    *
-   * @example Enable paired value binding independently of state inputs.
    * ```ts
-   * field('', { bindInputOutputPairs: true, syncInputs: false });
-   * configureGlobalFormNodes({ bindInputOutputPairs: true });
+   * provideFormNodesConfig({
+   *   bindInputOutputPairs: true,
+   * });
    * ```
    *
-   * @experimental Pair input writes depend on Angular internals.
-   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config#bind-input-output-pairs | Paired control configuration}
+   * ```ts
+   * provideFormNodesConfig({
+   *   bindInputOutputPairs: false,
+   * });
+   * ```
+   *
+   * @experimental Custom-control input writes depend on Angular internals.
+   * @see {@link https://form-nodes.js.org/reference/provide-form-nodes-config | Binding configuration}
    */
   bindInputOutputPairs?: boolean | null | undefined;
 
-  /** Reactive class predicates. Omission inherits the map; an explicit map replaces it, and null or {} clears it. */
+  /**
+   * Reactive class predicates. Omission inherits the map; an explicit map replaces it, and null or {} clears it.
+   *
+   * **Default:** Omission inherits the nearest provider or global fallback.
+   *
+   * ```ts
+   * provideFormNodesConfig({
+   *   classes: {
+   *     'has-errors': binding => {
+   *       return binding.errors().length > 0;
+   *     },
+   *   },
+   * });
+   * ```
+   */
   classes?: Record<string, (binding: FormNodeBinding) => boolean> | null | undefined;
 }): Provider[] => {
   const providers: Provider[] = [];
