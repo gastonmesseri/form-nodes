@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Injector, computed, isSignal, signal } from '@angular/core';
+import { Injector, computed, isSignal, signal, type WritableSignal } from '@angular/core';
 
 import { form } from './form';
 import { array } from './array';
@@ -2310,4 +2310,28 @@ it('rejects attached factory nodes without replacing their reset baseline', () =
   expect(profile.name()).toBe('Ada');
   expect(profile.name.parent()).toBe(profile);
   expect(names.length()).toBe(0);
+});
+
+it('supports writable signal utilities without replacing array nodes or bypassing validation', () => {
+  const profile = form({ users: array({ name: field('', required) }, { initialValue: 1 }) });
+  const writable: WritableSignal<{ name: string | null }[]> = profile.users;
+  const view = writable.asReadonly();
+  const original = profile.users.at(0);
+  expect(profile.invalid()).toBe(true);
+  writable.set([{ name: 'Ada' }]);
+  expect(profile.users.at(0)).toBe(original);
+  expect(profile.valid()).toBe(true);
+  expect(view()).toEqual([{ name: 'Ada' }]);
+  const api: WritableSignal<{ name: string | null }[]> = profile.users.$api;
+  api.update(value => [...value, { name: '' }]);
+  expect(view()).toEqual([{ name: 'Ada' }, { name: '' }]);
+  expect(profile.users.length()).toBe(2);
+  expect(profile.invalid()).toBe(true);
+  expect(profile.dirty()).toBe(false);
+  expect(profile.touched()).toBe(false);
+  expect(view).toBe(api.asReadonly());
+  expect(Reflect.has(view, 'set')).toBe(false);
+  expect(Reflect.has(view, 'update')).toBe(false);
+  profile.resetToInitial();
+  expect(view()).toEqual([{ name: '' }]);
 });

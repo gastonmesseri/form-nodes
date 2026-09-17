@@ -23,7 +23,7 @@ type FormNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
     TNodes
 ] extends [
     never
-] ? GenericFormNode : Signal<{
+] ? GenericFormNode : NodeSignal<{
     [K in keyof TNodes]: NodeValue<TNodes[K]>;
 }> & {
     (): {

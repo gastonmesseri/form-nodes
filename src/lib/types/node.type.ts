@@ -1,5 +1,6 @@
 import type { Signal } from '@angular/core';
 
+import type { NodeSignal } from './node-signal.type';
 import type { FormApi } from '../primitives/form.type';
 import type { GroupApi } from '../primitives/group.type';
 import type { FieldNode } from '../primitives/field.type';
@@ -140,6 +141,22 @@ export type NodeApi = {
    * ```
    */
   value: NodeValueSignal<any>;
+  /**
+   * Returns a stable, live readonly signal of the exposed value, with no node operations.
+   * Preserves configured equality and committed-value reads; pending control input remains pending.
+   * This does not mark the node readonly or prevent deep mutation of object values.
+   * The node and its `$api` return the same signal, and the method is safe to extract.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const value = profile.asReadonly();
+   * profile.name.set('Lia');
+   * value(); // { name: 'Lia' }
+   * ```
+   */
+  asReadonly(): Signal<any>;
   /**
    * Property or array index under which this node is stored, or `null` when it is a root node.
    *
@@ -751,7 +768,7 @@ export type AnyNode = Signal<any> & {
    * node.$api.valid(); // true
    * ```
    */
-  $api: Signal<any> & NodeApi;
+  $api: NodeSignal<any> & NodeApi;
 };
 export type PublicNode<TNode extends AnyNode> = AnyNode extends TNode
   ? TNode & HiddenFunctionMembers
@@ -789,10 +806,10 @@ export type RootNode<TNode extends AnyNode, TDepth extends readonly unknown[] = 
       : TNode
     : AnyNode;
 /** Generic form navigation without asserting unknown child names or hiding valid child collisions. */
-export type NavigationForm = Signal<any> & FormApi<any> & { $api: CallableNodeApi<FormApi<any>> };
+export type NavigationForm = NodeSignal<any> & FormApi<any> & { $api: CallableNodeApi<FormApi<any>> };
 
 /** Complete structural node APIs when an ancestor's exact declaration is unavailable. */
-export type NavigationRoot = FieldNode<any> | NavigationForm | (Signal<any> & GroupApi<any> & { $api: CallableNodeApi<GroupApi<any>> }) | ArrayNode<any>;
+export type NavigationRoot = FieldNode<any> | NavigationForm | (NodeSignal<any> & GroupApi<any> & { $api: CallableNodeApi<GroupApi<any>> }) | ArrayNode<any>;
 
 export type NearestForm<TNode extends AnyNode> = AnyNode extends TNode ? NavigationForm
   : TNode extends { $api: { form: Signal<infer TForm> } }
@@ -814,7 +831,7 @@ export type InternalNodeApi = NodeApi & {
   _registerControlBinding(binding: NodeControlBinding): () => void;
   _getControlBindingForFocus(): NodeControlBinding | undefined;
 };
-export type InternalNode = Signal<any> & { $api: Signal<any> & InternalNodeApi };
+export type InternalNode = Signal<any> & { $api: NodeSignal<any> & InternalNodeApi };
 export type Nodes = Record<string, AnyNode>;
 export type NodeDefinition = AnyNode | NodeDefinitions;
 export interface NodeDefinitions {

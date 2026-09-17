@@ -49,6 +49,10 @@ const myForm = form({
 });
 ```
 
+Nodes also support Angular `WritableSignal<T>` utilities. `asReadonly()` returns a stable live
+readonly value signal; use `.$api` when a child name shadows an operation.
+See [writable signal interoperability](../concepts/form-nodes.md#writable-signal-utilities).
+
 ## Validator input and results {#validator-results}
 
 See the [validator argument and result contract](../guides/validation.md#validator-results) for

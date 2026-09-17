@@ -633,7 +633,9 @@ export class ArrayNode<TItem extends AnyNode> {
   }
 
   createNode(): ArrayNodeType<TItem> {
+    const readonlyValue = computed(() => this.exposedValue());
     const publicApi: ArrayApi<TItem> = {
+      asReadonly: () => readonlyValue,
       nodeType: () => 'array',
       templateValue: () => this.templateValue(),
       items: this.items.asReadonly() as Signal<ArrayItems<TItem, AnyNode>>,

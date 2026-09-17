@@ -1,9 +1,11 @@
 import type { Signal } from '@angular/core';
 
+import type { NodeSignal } from './node-signal.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
 
 /**
  * A collision-safe node API that is also an Angular signal of the exposed node value.
+ * Concrete node APIs satisfy `WritableSignal<T>` and expose a stable `asReadonly()` value view.
  *
  * Calling it is equivalent to `node()` or `api.value()`: custom equality and debounce retain
  * their normal public-read semantics. Use `api.value.committed()` for raw committed data or
@@ -24,6 +26,6 @@ import type { HiddenFunctionMembers } from './hidden-function-members.type';
  * ```
  */
 export type CallableNodeApi<TApi extends { value: Signal<any> }> =
-  & Signal<ReturnType<TApi['value']>>
+  & NodeSignal<ReturnType<TApi['value']>>
   & TApi
   & HiddenFunctionMembers<keyof TApi>;

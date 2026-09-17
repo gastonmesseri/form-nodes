@@ -1,5 +1,6 @@
 import type { Signal } from '@angular/core';
 
+import type { NodeSignal } from '../types/node-signal.type';
 import type { AnyNode, DynamicNode } from '../types/node.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
 
@@ -9,7 +10,10 @@ export type ValidatorValueSignal<TValue> = Signal<TValue> & HiddenFunctionMember
   readonly control: Signal<TValue> & HiddenFunctionMembers;
 };
 
+type WritableSignalBrand = Exclude<keyof NodeSignal<unknown>, keyof Signal<unknown>>;
+
 type UnsafeValidatorMember =
+  | WritableSignalBrand
   | 'errors' | 'allErrors' | 'getError' | 'hasError' | 'valid' | 'invalid' | 'validationStatus'
   | 'pending' | 'debouncing' | 'required' | 'min' | 'max' | 'minLength' | 'maxLength' | 'pattern'
   | 'metadata' | 'validators' | 'hasValidator' | 'setValidators'
@@ -62,7 +66,7 @@ type ValidatorApiView<TApi> = (TApi extends () => infer TValue ? Signal<TValue> 
 
 // Unknown child dictionaries retain $api navigation instead of admitting every API name.
 type ValidatorNodeMembers<TNode, TApi> = (TNode extends () => infer TValue ? Signal<TValue> & PreserveHidden<TNode> : unknown) & {
-  readonly [K in keyof TNode as string extends K ? never : K extends '$api' ? K : TNode[K] extends { $api: unknown } ? K : K extends UnsafeValidatorMember | `_${string}` ? never : K]:
+  readonly [K in keyof TNode as string extends K ? never : K extends WritableSignalBrand ? never : K extends '$api' ? K : TNode[K] extends { $api: unknown } ? K : K extends UnsafeValidatorMember | `_${string}` ? never : K]:
   K extends '$api' ? ValidatorApiView<TApi>
     : TNode[K] extends { $api: unknown } ? NodeView<TNode[K]>
       : K extends keyof TApi ? ValidatorMember<TApi, K>

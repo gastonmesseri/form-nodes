@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createWatch } from '@angular/core/primitives/signals';
-import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal } from '@angular/core';
+import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal, type WritableSignal } from '@angular/core';
 
 import { form } from './form';
 import { array } from './array';
@@ -3957,4 +3957,65 @@ it('preserves a field declaration as array defaults after value edits and reset 
   expect(users.templateValue()).toBe('Ada');
   expect(users()).toEqual(['Row']);
   expect(name()).toBe('Reset');
+});
+
+describe('field writable signal interoperability', () => {
+  it('exposes a stable live readonly view without node operations', () => {
+    const name = field('Ada', { debounce: 'blur' });
+    const read = name.asReadonly;
+    const view = read();
+    expect(isSignal(view)).toBe(true);
+    expect(view).toBe(name.asReadonly());
+    expect(view).toBe(name.$api.asReadonly());
+    expect(view).not.toBe(name);
+    expect(Reflect.has(view, 'set')).toBe(false);
+    expect(Reflect.has(view, 'update')).toBe(false);
+    expect(Reflect.has(view, '$api')).toBe(false);
+    const derived = computed(() => view()?.toUpperCase());
+    expect(derived()).toBe('ADA');
+    name.value.control.set('Lia');
+    expect(view()).toBe('Ada');
+    name.flush();
+    expect(derived()).toBe('LIA');
+    expect(name.readonly()).toBe(false);
+  });
+
+  it('keeps validation, pending input cancellation, and interaction state on external writes', () => {
+    const calls = vi.fn(({ value }: { value: () => string | null }) => value() ? null : { kind: 'empty' });
+    const name = field('', { validators: calls, debounce: 'blur' });
+    const writable: WritableSignal<string | null> = name;
+    expect(name.invalid()).toBe(true);
+    calls.mockClear();
+    writable.set('Ada');
+    expect(name.valid()).toBe(true);
+    expect(calls).toHaveBeenCalledTimes(1);
+    expect(name.dirty()).toBe(false);
+    expect(name.touched()).toBe(false);
+    name.value.control.set('Pending');
+    expect(name.debouncing()).toBe(true);
+    const facade: WritableSignal<string | null> = name.$api;
+    facade.update(value => value + '!');
+    expect(writable()).toBe('Ada!');
+    expect(name.value.control()).toBe('Ada!');
+    expect(name.debouncing()).toBe(false);
+    expect(name.dirty()).toBe(true);
+    expect(name.touched()).toBe(false);
+    name.resetToInitial();
+    expect(writable.asReadonly()()).toBe('');
+    expect(name.invalid()).toBe(true);
+  });
+
+  it('preserves exposed equality and does not freeze values', () => {
+    const name = field.strict('Ada', { equal: (a, b) => a.length === b.length });
+    const view = name.asReadonly();
+    expect(view()).toBe('Ada');
+    name.set('Lia');
+    expect(view()).toBe('Ada');
+    expect(name.value.committed()).toBe('Lia');
+    name.update(value => value + '!');
+    expect(view()).toBe('Ada!');
+    const data = field.strict({ count: 0 });
+    expect(data.asReadonly()()).toBe(data());
+    expect(Object.isFrozen(data.asReadonly()())).toBe(false);
+  });
 });

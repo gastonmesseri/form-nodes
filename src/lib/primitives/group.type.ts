@@ -1,5 +1,6 @@
 import type { Signal } from '@angular/core';
 
+import type { NodeSignal } from '../types/node-signal.type';
 import type { GenericGroupNode } from '../types/generic-node.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
@@ -601,7 +602,7 @@ type GroupApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
  */
 export type GroupNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
   [TNodes] extends [never] ? GenericGroupNode
-    : Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
+    : NodeSignal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
     /**
      * Returns the group's exposed aggregate value after configured equality and participates in signal dependency tracking.

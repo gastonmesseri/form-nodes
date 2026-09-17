@@ -3167,8 +3167,9 @@ Fields, forms, groups, and arrays implement `Signal<T>` for their exposed commit
 are recognized by Angular `isSignal()`. Their callable surface uses the existing exposed computed
 signal (with the array proxy preserving symbol access), so dependency tracking, configured equality,
 commit timing, reset, and parent aggregation retain their existing semantics. No additional injection
-context is required. Effect-based consumers retain Angular's own injection requirements. This does
-not promise the complete `WritableSignal<T>` interface.
+context is required. Effect-based consumers retain Angular's own injection requirements. See
+[Writable signal interoperability](#writable-signal-interoperability) for writable utilities and
+readonly value views.
 
 Reference: Angular `v22.1.5`, commit `468b65b74566537456c192ac4281795c5a1e1a5e`,
 `packages/core/src/render3/reactivity/api.ts` and `packages/core/test/signals/is_signal_spec.ts`
@@ -4477,3 +4478,33 @@ for this change. Inspected `packages/forms/signals/src/field/context.ts` and
 `packages/forms/signals/test/node/field_context.spec.ts` (field identity, paths, and schema
 navigation). Angular uses schema-path navigation; this shortcut is a Form Nodes public API
 convenience over its existing structural navigation, with no corresponding Angular API change.
+
+## Writable signal interoperability
+
+Concrete fields, arrays, and forms/groups with no colliding child names satisfy Angular's
+`WritableSignal<T>` contract. Every node's `$api` provides collision-safe writable signal access.
+Broad node types retain their existing collision restrictions; nullable values remain nullable.
+The Angular writable brand is type-only, as it is in Angular's `signal()` implementation.
+Node APIs keep their original `set`/`update` signatures rather than adding overloads that broaden
+accepted writes. Readonly validator views omit the writable brand and still exclude write methods.
+
+`asReadonly()` returns a stable computed view of the exposed committed value, shared between the
+node and its facade. It is safe to extract, does not require dependency injection, and exposes no
+node or write operations. Reads track dependencies and preserve exposed equality and pending
+control debounce. The view does not clone/freeze data or change the node's readonly state.
+External utility writes retain existing validation, cancellation, notifications, array
+reconciliation, and parent propagation. They do not implicitly mark nodes dirty or touched.
+
+Reference inspected: Angular `22.2.x`, commit `af2c7e386d8c88fe6c27b148bb84ee0e26662e5b`:
+`packages/core/src/render3/reactivity/signal.ts`, `packages/core/test/signals/signal_spec.ts`,
+`packages/forms/signals/src/util/deep_signal.ts`, and
+`packages/forms/signals/test/node/deep_signal.spec.ts`.
+Unlike Signal Forms' internal `deepSignal().asReadonly()`, which returns the writable callable with
+only a readonly type, Form Nodes returns a separate callable without runtime write methods,
+matching the public Angular `signal().asReadonly()` contract. Form-specific writing semantics
+remain intentional, including equality behavior and aggregate reconciliation.
+
+The declaration shorthand performance fixture grows from 87,102 types / 603,773 instantiations
+before this feature to 90,121 types / 633,133 instantiations with writable branding and readonly
+views. Its type-count budget is rebased to 91,200 with comparable headroom; the existing
+instantiation ceiling remains in force.

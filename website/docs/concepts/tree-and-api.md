@@ -237,7 +237,8 @@ This hiding affects the public type only; node callability and the documented AP
 ## Callable APIs {#callable-apis}
 
 `node.$api` is also an Angular signal: calling it returns the same exposed value as `node()`.
-Child names never override the API facade.
+The facade also satisfies `WritableSignal<T>` and provides `asReadonly()` for a stable readonly
+value view. Child names never override the API facade.
 The API itself never receives direct child properties, so its `value`, `set`, and `submitted`
 members remain safe. Inspect children through `children` or array collection methods.
 

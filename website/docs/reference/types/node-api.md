@@ -26,6 +26,7 @@ type NodeApi = {
     parent: Signal<AnyNode | null>;
     path: Signal<readonly string[]>;
     value: NodeValueSignal<any>;
+    asReadonly(): Signal<any>;
     keyInParent: Signal<string | number | null>;
     set(value: any): void;
     update(updater: (value: any) => any): void;
@@ -91,6 +92,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `parent` | Immediate structural parent of this node, or `null` when it is a root or has been detached. |
 | `path` | Property and array-index segments from the complete root to this node. Root nodes use `[]`. Array indexes are represented as strings. |
 | `value` | Current committed value represented by this node. Reading it participates in signal tracking. |
+| `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `keyInParent` | Property or array index under which this node is stored, or `null` when it is a root node. |
 | `set` | Assigns a complete committed value immediately without marking the node dirty. |
 | `update` | Computes and assigns a complete committed value without marking the node dirty. |

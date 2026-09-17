@@ -857,10 +857,11 @@ type UntypedValidatorNode = FieldNode<any> | ValidatorForm | ValidatorGroup | Ar
 
 /** Preserves each primitive's members while specializing its committed-value access paths. */
 type ValidatorValueNode<TValue, TNode extends AnyNode = UntypedValidatorNode> = TNode extends UntypedValidatorNode
-  ? Omit<TNode, 'value' | '$api'> & HiddenFunctionMembers<keyof TNode> & {
+  ? Omit<TNode, 'value' | '$api' | 'asReadonly'> & HiddenFunctionMembers<keyof TNode> & {
     (): TValue;
     value: NodeValueSignal<TValue>;
-    $api: CallableNodeApi<Omit<TNode['$api'], 'value'> & { value: NodeValueSignal<TValue> }>;
+    asReadonly(): Signal<TValue>;
+    $api: CallableNodeApi<Omit<TNode['$api'], 'value' | 'asReadonly'> & { value: NodeValueSignal<TValue>; asReadonly(): Signal<TValue> }>;
   }
   : never;
 

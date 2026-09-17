@@ -19,7 +19,7 @@ Use for dynamic collections whose first generic is the item node type. Read item
 ## Declaration
 
 ```ts
-type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode = AnyNode> = Signal<ArrayValue<TItem>> & {
+type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode = AnyNode> = NodeSignal<ArrayValue<TItem>> & {
     (): ArrayValue<TItem>;
     $api: CallableNodeApi<ArrayApi<TItem, TParent>>;
 } & ArrayIndexes<TItem, TParent> & ArrayApi<TItem, TParent> & HiddenFunctionMembers<keyof ArrayApi<TItem, TParent>>;

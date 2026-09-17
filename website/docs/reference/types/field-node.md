@@ -19,7 +19,7 @@ Use for inputs or helpers that accept a field with a known value type. A bare `F
 ## Declaration
 
 ```ts
-type FieldNode<TValue = any, TParent extends AnyNode = AnyNode> = Signal<TValue> & {
+type FieldNode<TValue = any, TParent extends AnyNode = AnyNode> = NodeSignal<TValue> & {
     (): TValue;
     $api: CallableNodeApi<FieldApi<TValue, TParent>>;
 } & Omit<FieldApi<TValue, TParent>, 'patch'> & HiddenFunctionMembers;

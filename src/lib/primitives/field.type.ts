@@ -1,5 +1,6 @@
 import type { Injector, Signal } from '@angular/core';
 
+import type { NodeSignal } from '../types/node-signal.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
@@ -502,6 +503,22 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * ```
    */
   value: NodeValueSignal<TValue, TValue>;
+  /**
+   * Returns a stable, live readonly signal of the exposed value, with no node operations.
+   * Preserves configured equality and committed-value reads; pending control input remains pending.
+   * This does not mark the node readonly or prevent deep mutation of object values.
+   * The node and its `$api` return the same signal, and the method is safe to extract.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const name = profile.name.asReadonly();
+   * profile.name.set('Lia');
+   * name(); // 'Lia'
+   * ```
+   */
+  asReadonly(): Signal<TValue>;
   /**
    * Assigns a committed value immediately without marking the field dirty.
    *
@@ -1218,7 +1235,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
  * ```
  */
 export type FieldNode<TValue = any, TParent extends AnyNode = AnyNode> =
-  & Signal<TValue>
+  & NodeSignal<TValue>
   & {
     /**
      * Returns the field's exposed value after configured equality and participates in signal dependency tracking.

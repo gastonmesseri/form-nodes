@@ -3,6 +3,7 @@ import type { Signal } from '@angular/core';
 import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
 import type { FormNode, FormOptions } from './form.type';
+import type { NodeSignal } from '../types/node-signal.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
@@ -541,6 +542,22 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * ```
    */
   value: NodeValueSignal<ArrayValue<TItem>, ArraySet<TItem> | null | undefined>;
+  /**
+   * Returns a stable, live readonly signal of the exposed value, with no node operations.
+   * Preserves configured equality and committed-value reads; pending control input remains pending.
+   * This does not mark the node readonly or prevent deep mutation of object values.
+   * The node and its `$api` return the same signal, and the method is safe to extract.
+   *
+   * ```ts
+   * const profile = form({
+   *   users: array({ name: field('Ada') }),
+   * });
+   * const users = profile.users.asReadonly();
+   * profile.users.push();
+   * users(); // [{ name: 'Ada' }]
+   * ```
+   */
+  asReadonly(): Signal<ArrayValue<TItem>>;
   /**
    * Returns the live item node at `index`, or `undefined` when no item exists there.
    *
@@ -1604,7 +1621,7 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
  * ```
  */
 export type ArrayNode<TItem extends AnyNode = AnyNode, TParent extends AnyNode = AnyNode> =
-  & Signal<ArrayValue<TItem>>
+  & NodeSignal<ArrayValue<TItem>>
   & {
     /**
      * Returns the exposed array value, applying configured equality, and participates in signal dependency tracking.

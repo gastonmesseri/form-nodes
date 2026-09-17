@@ -52,7 +52,7 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | Type | Purpose |
 | --- | --- |
 | [ArrayApi](./array-api.md) | State and operations for an array node, including item access and reconciliation. |
-| [CallableNodeApi](./callable-node-api.md) | A collision-safe node API that is also an Angular signal of the exposed node value. |
+| [CallableNodeApi](./callable-node-api.md) | A collision-safe node API that is also an Angular signal of the exposed node value. Concrete node APIs satisfy `WritableSignal&lt;T&gt;` and expose a stable `asReadonly()` value view. |
 | [FieldApi](./field-api.md) | State, value views, navigation, and operations available on a field node. |
 | [FormApi](./form-api.md) | State and operations for a form, including typed children and submission. |
 | [GroupApi](./group-api.md) | State and operations for a structural group, including its typed children. |

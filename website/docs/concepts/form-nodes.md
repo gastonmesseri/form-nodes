@@ -5,6 +5,7 @@ title: Form nodes
 # Form nodes {#form-nodes}
 
 import CodeBlock from '@theme/CodeBlock';
+import WritableSignalInteropExample from '!!raw-loader!../../examples/writable-signal-interop.example.ts';
 import SignalInteropExample from '!!raw-loader!../../examples/signal-interop.example.ts';
 
 Use [`isFormNode(value)`](../reference/node-api.md#is-form-node) to check whether an unknown value
@@ -30,8 +31,40 @@ Creating and reading the node itself does not require an injection context.
 
 Consumers observe committed values and configured equality. Pending control input becomes visible
 when committed, for example by `flush()`. Use `node.value.control` when a utility should observe
-pending input instead. Nodes satisfy `Signal<T>`; their form operations do not implement Angular's
-complete `WritableSignal<T>` interface.
+pending input instead. Nodes also support writable utilities as described below.
+
+
+## Writable signal utilities {#writable-signal-utilities}
+
+Fields, arrays, and forms/groups without colliding child names can be passed directly to utilities
+accepting Angular's `WritableSignal<T>`. Reads, `set()`, and `update()` use the node's existing value
+and writing behavior: validation and parent propagation still run, programmatic writes cancel
+pending input, and they do not mark the form dirty or touched. No adapter or synchronized copy is
+needed. `.$api` supports the same contract without child-name collisions.
+
+<CodeBlock language="ts" title="writable-signal-interop.example.ts">{WritableSignalInteropExample}</CodeBlock>
+
+The utility's value type must match the node. `field(18)` accepts `null`, so it matches
+`WritableSignal<number | null>`; use `field.strict(18)` for `WritableSignal<number>`.
+For forms and groups with children named `set`, `update`, or `asReadonly`, pass `node.$api`.
+Broad `AnyNode`, `FormNode`, and `GroupNode` annotations also use `.$api` because their child names
+are unknown. Concrete inferred types retain direct access when there is no collision.
+Aggregate setters accept more than their read value type (for example, `array.set(null)` clears
+an array). A generic utility that infers its type from writes can therefore infer a wider type.
+When needed, pass the read type explicitly, such as `utility<ReturnType<typeof profile>>(profile)`,
+or annotate the argument as `WritableSignal<ReturnType<typeof profile>>`.
+
+### Readonly value views {#asreadonly}
+
+`node.asReadonly()` returns a stable, live `Signal<T>` of the exposed value. The node and its
+`.$api.asReadonly()` return the same signal. It has no `set()`, `update()`, child nodes, or form
+operations. Calling it tracks dependencies and respects configured equality and pending debounce.
+The method can be extracted without binding a receiver and works outside an injection context.
+
+This method does not set the form's readonly state: use `markAsReadonly()` for that. As with
+Angular signals, a readonly view does not freeze or clone object values. Existing node semantics,
+including array reconciliation and equality, continue to apply; writable compatibility does not
+turn aggregate values into an unrelated signal store.
 
 ## ⚡ Think of a field as a signal with form features {#think-of-a-field-as-a-signal-with-form-features}
 

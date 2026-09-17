@@ -27,6 +27,7 @@ type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
     path: Signal<readonly string[]>;
     keyInParent: Signal<NodeKeyInParent<TParent>>;
     value: NodeValueSignal<TValue, TValue>;
+    asReadonly(): Signal<TValue>;
     set(value: TValue): void;
     update(updater: (value: TValue) => TValue): void;
     debouncing: Signal<boolean>;
@@ -109,6 +110,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `path` | Property and array-index segments from the complete root to this field. Root fields use `[]`. |
 | `keyInParent` | Property or array index under which this field is stored, or `null` when it is a root field. |
 | `value` | Exposed field value. The `equal` option may retain an earlier equivalent value independently of the latest committed write used by controls and reset. |
+| `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `set` | Assigns a committed value immediately without marking the field dirty. |
 | `update` | Computes and sets a complete value from the current exposed value without marking the field dirty. |
 | `debouncing` | Whether a control-originated value is waiting to be committed by this field's numeric, blur-based, or asynchronous debounce. Programmatic writes do not activate this signal. |

@@ -30,6 +30,7 @@ type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
     path: Signal<readonly string[]>;
     keyInParent: Signal<NodeKeyInParent<TParent>>;
     value: NodeValueSignal<ArrayValue<TItem>, ArraySet<TItem> | null | undefined>;
+    asReadonly(): Signal<ArrayValue<TItem>>;
     at(index: number): ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>> | undefined;
     forEach(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => void): void;
     map<TResult>(callback: (item: ArrayItemWithParent<TItem, ArrayNode<TItem, TParent>>, index: number, array: ArrayNode<TItem, TParent>) => TResult): TResult[];
@@ -137,6 +138,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `path` | Property and array-index segments from the complete root to this array. Root arrays use `[]`. |
 | `keyInParent` | Property or array index under which this array is stored, or `null` when it is a root array. |
 | `value` | Exposed aggregate of item values. The `equal` option can retain an earlier equivalent array independently of current item values and structure. |
+| `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `at` | Returns the live item node at `index`, or `undefined` when no item exists there. |
 | `forEach` | Invokes `callback` once for each current item node, in index order. |
 | `map` | Transforms each current item node and returns the collected results without changing the array. |

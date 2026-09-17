@@ -567,7 +567,9 @@ export class FormGroupNode<TNodes extends Nodes> {
   }
 
   createNode(): FormNode<TNodes> {
+    const readonlyValue = computed(() => this.exposedValue());
     const publicApi = {
+      asReadonly: () => readonlyValue,
       nodeType: () => this.nodeType,
       children: this.children as FormChildren<TNodes, AnyNode>,
       forEachChild: (callback: (child: DynamicNode, key: string) => void, options?: { includeDynamic?: boolean }) => this.forEachChild(callback, options),

@@ -2,7 +2,9 @@ import { spawnSync } from 'node:child_process';
 
 // Full inline node contexts retain concrete aggregate children and array item APIs.
 // This source-based fixture also counts the internal FieldNode and ArrayNode implementations.
-const maximumTypes = 88_200;
+// Writable signal brands and readonly views bring this fixture to 90,121 types
+// and 633,133 instantiations; retain roughly the previous 1,100-type headroom.
+const maximumTypes = 91_200;
 const maximumInstantiations = 1_100_000;
 const result = spawnSync(
   process.execPath,

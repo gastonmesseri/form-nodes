@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { describe, expect, it, vi } from 'vitest';
-import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal } from '@angular/core';
+import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal, type WritableSignal } from '@angular/core';
 
 import { field } from './field';
 import { array } from './array';
@@ -6420,4 +6420,52 @@ it('preserves declared form defaults and schema when used as an array template',
   expect(page()).toEqual({ users: [] });
   expect(page.dirty()).toBe(false);
   expect(page.touched()).toBe(false);
+});
+
+describe('form writable signal interoperability', () => {
+  it('propagates utility writes and validation through nested forms and groups', () => {
+    const root = form({ profile: form({ name: field('', required) }), address: { city: field('') } });
+    const profile: WritableSignal<{ name: string | null }> = root.profile;
+    const whole: WritableSignal<ReturnType<typeof root>> = root;
+    const view = whole.asReadonly();
+    const derived = computed(() => view().profile.name);
+    expect(root.invalid()).toBe(true);
+    expect(derived()).toBe('');
+    profile.set({ name: 'Ada' });
+    expect(derived()).toBe('Ada');
+    expect(root.valid()).toBe(true);
+    expect(root.dirty()).toBe(false);
+    expect(root.touched()).toBe(false);
+    whole.update(value => ({ ...value, profile: { name: '' } }));
+    expect(root.profile.invalid()).toBe(true);
+    expect(root.invalid()).toBe(true);
+    const address: WritableSignal<{ city: string | null }> = root.address;
+    const city = address.asReadonly();
+    address.update(() => ({ city: 'Zurich' }));
+    expect(city()).toEqual({ city: 'Zurich' });
+    expect(view().address.city).toBe('Zurich');
+    expect(view).toBe(root.$api.asReadonly());
+    expect(city).toBe(root.address.$api.asReadonly());
+    expect(Reflect.has(view, 'set')).toBe(false);
+    expect(Reflect.has(city, 'update')).toBe(false);
+    expect(root.readonly()).toBe(false);
+  });
+
+  it('keeps colliding children intact and exposes writable operations through the facade', () => {
+    const profile = form({ set: field('a'), update: field('b'), asReadonly: field('c') });
+    const writable: WritableSignal<ReturnType<typeof profile>> = profile.$api;
+    const read = writable.asReadonly;
+    const view = read();
+    writable.set({ set: 'Ada', update: 'Lia', asReadonly: 'Mia' });
+    expect(profile.set()).toBe('Ada');
+    expect(profile.update()).toBe('Lia');
+    expect(profile.asReadonly()).toBe('Mia');
+    expect(view()).toEqual({ set: 'Ada', update: 'Lia', asReadonly: 'Mia' });
+    expect(Reflect.has(view, 'set')).toBe(false);
+    const branch = group({ asReadonly: field('Ada') });
+    const branchApi: WritableSignal<{ asReadonly: string | null }> = branch.$api;
+    branchApi.update(() => ({ asReadonly: 'Lia' }));
+    expect(branchApi.asReadonly()()).toEqual({ asReadonly: 'Lia' });
+    expect(branch.asReadonly()).toBe('Lia');
+  });
 });

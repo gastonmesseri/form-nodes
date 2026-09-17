@@ -4,7 +4,7 @@ title: CallableNodeApi
 
 # CallableNodeApi
 
-A collision-safe node API that is also an Angular signal of the exposed node value.
+A collision-safe node API that is also an Angular signal of the exposed node value. Concrete node APIs satisfy `WritableSignal&lt;T&gt;` and expose a stable `asReadonly()` value view.
 
 ## Import
 
@@ -21,7 +21,7 @@ Use to describe a collision-safe API that is also callable as a signal. Calling 
 ```ts
 type CallableNodeApi<TApi extends {
     value: Signal<any>;
-}> = Signal<ReturnType<TApi['value']>> & TApi & HiddenFunctionMembers<keyof TApi>;
+}> = NodeSignal<ReturnType<TApi['value']>> & TApi & HiddenFunctionMembers<keyof TApi>;
 ```
 
 ## Type parameters

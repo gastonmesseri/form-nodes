@@ -23,7 +23,7 @@ type GroupNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> 
     TNodes
 ] extends [
     never
-] ? GenericGroupNode : Signal<{
+] ? GenericGroupNode : NodeSignal<{
     [K in keyof TNodes]: NodeValue<TNodes[K]>;
 }> & {
     (): {

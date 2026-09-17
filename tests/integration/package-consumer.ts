@@ -1,4 +1,5 @@
-import { Component, viewChild } from '@angular/core';
+import { Component, viewChild, type Signal, type WritableSignal } from '@angular/core';
+
 import { FormNodesModule, FormNodeDirective, FormNodeErrors, useClosestFormState, array, createFormPrimitives, field, form, group, required, lengthBetween, isFormNode, provideFormNodesConfig, configureGlobalFormNodes, type FormNodeValue, type FieldNode, type GroupNode, type FormNode, type ArrayNode, type ArrayItemNode } from '@ngblocks/form-nodes';
 
 const configuredForms = createFormPrimitives({ nullable: false });
@@ -120,3 +121,19 @@ const lengthFailure = lengthLimited.getError('maxLength');
 if (lengthFailure?.maxLength !== 5 || lengthFailure.actual !== 6) {
   throw new Error('The package must export lengthBetween with typed length errors.');
 }
+
+
+// Public declarations must satisfy Angular's writable contract without consumer assertions.
+const writableProfile = form({ age: field.strict(18), users: array({ name: field('') }) });
+const writableAge: WritableSignal<number> = writableProfile.age;
+const writableForm: WritableSignal<ReturnType<typeof writableProfile>> = writableProfile;
+const writableUsers: WritableSignal<{ name: string | null }[]> = writableProfile.users;
+const readonlyAge: Signal<number> = writableAge.asReadonly();
+writableAge.update(value => value + 1);
+writableForm.set({ age: readonlyAge(), users: [] });
+writableUsers.update(value => [...value, { name: 'Ada' }]);
+const writableCollision = form({ set: field('draft'), asReadonly: field('child') });
+const writableApi: WritableSignal<ReturnType<typeof writableCollision>> = writableCollision.$api;
+writableApi.set({ set: 'published', asReadonly: 'preserved' });
+// @ts-expect-error Readonly views must not regain writable operations in the published declarations.
+const invalidWritable: WritableSignal<number> = readonlyAge;

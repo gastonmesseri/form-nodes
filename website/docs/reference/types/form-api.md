@@ -42,6 +42,7 @@ type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
     value: NodeValueSignal<{
         [K in keyof TNodes]: NodeValue<TNodes[K]>;
     }, FormSet<TNodes>>;
+    asReadonly(): Signal<FormValue<TNodes>>;
     set(value: FormSet<TNodes>): void;
     update(updater: (value: FormValue<TNodes>) => FormSet<TNodes>): void;
     patch(value: FormPatch<TNodes>): void;
@@ -126,6 +127,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `path` | Property and array-index segments from the complete root to this form. Root forms use `[]`. |
 | `keyInParent` | Property or array index under which this form is stored, or `null` when it is a root form. |
 | `value` | Exposed aggregate of public child values. The `equal` option may retain a previous snapshot. |
+| `asReadonly` | Returns a stable, live readonly signal of the exposed value, with no node operations. Preserves configured equality and committed-value reads; pending control input remains pending. This does not mark the node readonly or prevent deep mutation of object values. The node and its `$api` return the same signal, and the method is safe to extract. |
 | `set` | Assigns a complete form value immediately without marking the form or its descendants dirty. |
 | `update` | Computes and sets the complete form value from its current value without marking nodes dirty. |
 | `patch` | Assigns supplied child branches immediately; arrays reconcile complete values like set(). Omitted branches remain unchanged and unknown runtime keys are ignored. |

@@ -433,7 +433,9 @@ export class FieldNode<TValue> {
   }
 
   createNode(): PublicFieldNode<TValue> {
+    const readonlyValue = computed(() => this.exposedValue());
     const publicApi: FieldApi<TValue> = {
+      asReadonly: () => readonlyValue,
       nodeType: () => 'field' as const,
       form: this.form,
       root: this.root,

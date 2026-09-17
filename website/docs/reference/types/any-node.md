@@ -22,7 +22,7 @@ Use for a node of unknown kind or structure. Read state and call operations thro
 type AnyNode = Signal<any> & {
     (): any;
 } & {
-    $api: Signal<any> & NodeApi;
+    $api: NodeSignal<any> & NodeApi;
 };
 ```
 

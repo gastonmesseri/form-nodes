@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Nodes and their callable `$api` now support Angular `WritableSignal<T>` utilities while preserving form writes, validation, and propagation. Add `asReadonly()` for a stable live readonly value signal; use `$api` when child names shadow signal operations.
+
 ## [4.3.0] - 2026-09-17
 
 ### Added

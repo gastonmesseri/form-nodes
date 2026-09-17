@@ -22,6 +22,17 @@ Use direct members for actions and state on every node: `name.set()`, `items.pus
 `profile.patch()`, and `profile.valid()`. The [Tree navigation and API access](../concepts/tree-and-api.md)
 guide documents `.$api` only for name collisions and generic infrastructure.
 
+## Writable signal compatibility {#writable-signal}
+
+Nodes support utilities accepting `WritableSignal<T>` through their existing `set()` and `update()`
+methods. Use `.$api` when child names collide with `set`, `update`, or `asReadonly`, or when a broad
+node annotation leaves child names unknown. Nullable node values require nullable utility types.
+
+`asReadonly(): Signal<T>` returns the same live readonly value signal on every call, shared with
+`node.$api.asReadonly()`. It tracks the exposed committed value and configured equality, exposes no
+writing or form methods, and does not mark the node readonly or freeze its data.
+See [writable utilities and the executable example](../concepts/form-nodes.md#writable-signal-utilities).
+
 ## Choosing a node type {#node-types}
 
 See the [Node types reference](./node-types.md) for [`FieldNode`](./types/field-node.md), [`GroupNode`](./types/group-node.md), [`FormNode`](./types/form-node.md),

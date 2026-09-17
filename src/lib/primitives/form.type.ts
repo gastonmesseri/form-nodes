@@ -3,6 +3,7 @@ import type { Injector, Signal } from '@angular/core';
 import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
 import type { ArrayNode } from './array.type';
+import type { NodeSignal } from '../types/node-signal.type';
 import type { GenericFormNode } from '../types/generic-node.type';
 import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
@@ -924,6 +925,22 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    */
   value: NodeValueSignal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }, FormSet<TNodes>>;
   /**
+   * Returns a stable, live readonly signal of the exposed value, with no node operations.
+   * Preserves configured equality and committed-value reads; pending control input remains pending.
+   * This does not mark the node readonly or prevent deep mutation of object values.
+   * The node and its `$api` return the same signal, and the method is safe to extract.
+   *
+   * ```ts
+   * const profile = form({
+   *   name: field('Ada'),
+   * });
+   * const value = profile.asReadonly();
+   * profile.name.set('Lia');
+   * value(); // { name: 'Lia' }
+   * ```
+   */
+  asReadonly(): Signal<FormValue<TNodes>>;
+  /**
    * Assigns a complete form value immediately without marking the form or its descendants dirty.
    *
    * ```ts
@@ -1644,7 +1661,7 @@ type FormApiProperty<TNodes extends Nodes, TParent extends AnyNode> = {
  */
 export type FormNode<TNodes extends Nodes = never, TParent extends AnyNode = AnyNode> =
   [TNodes] extends [never] ? GenericFormNode
-    : Signal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
+    : NodeSignal<{ [K in keyof TNodes]: NodeValue<TNodes[K]> }>
   & {
     /**
      * Returns the form's exposed aggregate value after configured equality and participates in signal dependency tracking.
