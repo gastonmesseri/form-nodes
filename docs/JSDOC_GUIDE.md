@@ -1,22 +1,27 @@
 # JSDoc authoring guide
 
-Read this guide before adding or changing public JSDoc, hover examples, or the tools that format and publish them. It consolidates the project's JSDoc rules and the owner's reviewed preferences. Maintain those preferences here and keep [AGENTS.md](../AGENTS.md) pointing here.
+Read this guide before adding or changing public JSDoc, hover examples, or the tools that check and publish them. Keep [AGENTS.md](../AGENTS.md) pointing here and maintain agreed authoring preferences in this guide.
 
-Use English. Document the current supported API, with `@tsblocks/xlsx` as the package name. Read [CODE_STYLE.md](CODE_STYLE.md) for general source layout and [LIBRARY_USAGE.md](../LIBRARY_USAGE.md) for supported declarative inputs. Do not infer a new capability from a desired example: verify the public types and behavior first.
+Use English and the package name `@ngblocks/form-nodes`. Follow [AGENTS.md](../AGENTS.md) for project conventions, [behavior.md](behavior.md) for the documented behavior, and [website.md](website.md) for website authoring. Verify public types and implementation before claiming a capability. For behavioral decisions, follow the Angular source inspection requirements in AGENTS.md.
+
+This guide adapts the shared authoring rules to Form Nodes. Consumer examples, commands, package paths, output annotations, and generation details must match this repository. Clearly labeled examples retained from the source project are writing and formatting references, not Form Nodes API recipes.
+
+Treat the owner's concrete examples as part of the authoring specification: their wording, section order, Markdown labels, and layout communicate preferences that prose alone cannot replace. Preserve them when updating this guide. Add project-specific examples alongside them when useful; do not silently remove or summarize an example because it comes from another project or appears redundant.
 
 ## What each declaration must explain
 
-Write the documentation directly on the public declaration in its domain's `.type.ts` file. Cover every public configuration field, nested field, inline method option, instance property, method and overload, including returned component handles. Keep large contracts in focused type files and preserve public exports.
+Document the public declaration itself: configuration fields, nested options, properties, methods, and individual overloads. Keep contracts in their existing domain files, including `.type.ts` files where applicable. Preserve exports, overloads, generics, readonly contracts, and runtime behavior when editing documentation.
 
-Describe the behavior rather than repeating the member's name. Include the information relevant to the particular member:
+Describe behavior rather than repeating the member's name. Include the details relevant to that member:
 
-- What it changes or returns, including return values and side effects.
-- Defaults, omission, `undefined`, inheritance and precedence for configuration fields.
-- Units, coordinate bases, accepted selectors and sizing rules.
-- Ownership, live state versus snapshots, mutability and asynchronous readiness.
-- Safe recovery, diagnostics, strict-policy behavior and actual limitations.
+- What it changes or returns, including side effects and error behavior.
+- Defaults, omission, `undefined`, explicit disabling values, inheritance, and precedence.
+- Units, index bases, accepted input forms, and meaningful literal alternatives.
+- Ownership, live nodes versus snapshots, mutability, and asynchronous readiness.
+- Value views, validation, interaction state, cancellation, and propagation when applicable.
+- Injection-context requirements and cleanup for APIs that need Angular integration.
 
-Do not paste the entire API's behavior into every comment. Give each option or member its own focused example and reference section; grouped examples cannot replace individual documentation. Describe each overload's own input form and retain consistent shared documentation where the overloads expose the same contract.
+Do not paste the entire API contract into every comment. Give each public option or member its own focused example; a grouped example does not replace individual documentation. Explain each overload's own input form. Keep accurate internal implementation comments concise instead of adding unrelated consumer examples.
 
 ## Section order and spacing
 
@@ -27,236 +32,264 @@ Use this order, omitting sections that do not apply:
 3. **Accepted values:** for literal alternatives or mixed input forms.
 4. **Type details:** with useful links and a concise type preview.
 5. One or more complete fenced `ts` examples.
-6. Relevant callable `@param` tags, after the examples.
+6. Relevant callable tags, including `@param`, after the examples.
 
-Put one blank JSDoc line (` *`) between these sections and between separate examples. Keep related list items together. Use ordinary Markdown fences, never `@example` tags. Explain results in prose or checked output comments rather than adding redundant tags to properties.
+Separate sections and examples with one blank JSDoc line (` *`). Keep related list items together. Do not invent defaults for required arguments or inspected properties. Explain whether omission inherits a value, preserves existing configuration, derives a value, or disables a feature.
 
-The full-comment examples below use outer `text` fences to display the literal JSDoc, including its inner `ts` fence. Standalone hover illustrations also use `text` to preserve the 45-column layout instead of applying the wider website layout. Actual source JSDoc must use `ts` fences.
+Use `@reactive` for public parameterized functions that participate in dependency tracking, describing their tracking or memoization semantics. Do not add it to ordinary `Signal` properties. Explain return values in prose or checked output comments rather than adding redundant tags to properties.
 
-### Write examples as Markdown, not JSDoc tags
+### Markdown examples, not `@example`
 
-Never introduce an example with `@example`, whether followed by plain code or a fenced block. Write the example directly in the JSDoc description as an ordinary Markdown code block: open with three backticks followed by `ts`, then close with three backticks. Prefix every line with the normal JSDoc ` *`. Place examples after the explanatory sections and before any `@param` tags, separated by a blank JSDoc line.
+Write examples directly in the description using ordinary Markdown fences. Never introduce them with `@example`. Keep every example before `@param`: content after a parameter tag can become part of that parameter's description.
 
-Preferred:
+The outer `text` fences below illustrate literal JSDoc and preserve its narrow layout. Actual source examples use `ts` fences.
 
 ```text
 /**
- * Create a card displaying a percentage.
+ * Creates a field for a person's name.
  *
  * ```ts
- * kpiCard({ value: 0.25, format: '0%' });
+ * const name = field('Ada');
+ * name(); // 'Ada'
  * ```
  */
 ```
 
-Avoid, even when the code itself is fenced:
+For multiple blocks, leave one blank JSDoc line between the closing and opening fences. A short introductory sentence may distinguish their purposes.
+
+### Optional configuration fields
+
+Place the option inside the actual factory call. State its default and explain accepted forms before showing the example.
 
 ```text
 /**
- * Create a card displaying a percentage.
+ * Delays control-originated value commits.
+ * Programmatic writes commit immediately.
  *
- * @example
+ * **Default:** Inherit the nearest configured
+ * strategy; otherwise commit immediately.
+ *
+ * **Accepted values:**
+ *
+ * - Numbers: Delay in milliseconds.
+ * - `blur`: Commit when marked touched.
+ * - Functions: Supply a custom delay.
+ *
  * ```ts
- * kpiCard({ value: 0.25, format: '0%' });
+ * field('', { debounce: 300 });
  * ```
  */
 ```
 
-For multiple examples, use separate fenced `ts` blocks with a blank JSDoc line between them and a short explanatory sentence when useful. Do not add an `@example` tag to any variant. Generators and formatters must preserve this Markdown structure.
-
-### Complete optional-property example
-
-```text
-/**
- * Number format or style for the card value.
- * The label is unaffected.
- *
- * **Default:** Inherit the surrounding format.
- *
- * **Type details:** {@link KpiCardStyleInput}: `FormatReference | KpiCardStyle | undefined`.
- *
- * ```ts
- * kpiCard({ value: 0.25, format: '0%' });
- *
- * kpiCard({
- *   value: 42,
- *   format: { numberFormat: '#,##0.00' },
- * });
- * ```
- */
-format?: string | KpiCardStyleInput;
-```
-
-Defaults must be specific and truthful. Explain whether omission inherits a surrounding value, derives a value from content, disables a feature or leaves behavior to Excel. Include inherited, derived and reader-controlled defaults in optional configuration references. Do not invent a default for a required argument or a getter such as `target`.
+This illustrates the section layout; a full union reference also needs focused examples for its other supported input families. Do not copy defaults or accepted-value lists from a similarly named option without checking its contract.
 
 ## Contextual examples
 
-Show the option inside the actual public factory call where consumers configure it. For the `series` option of `chart({ ... })`, use `chart({ type: ..., series: ... })`, not a standalone typed configuration variable. Sharing the same underlying type does not make a disconnected object an equally useful example. Prefer this complete call:
+Every fenced block must have the setup needed to understand and compile it independently, apart from reconstructed public imports. For a method, show its receiver and invocation. For an inspected property, show where the instance comes from and what the property contains.
+
+Show configuration inside the factory where consumers use it. For example, document `trackBy` with `array({ ... }, { trackBy: ... })`, rather than a disconnected `const options: ArrayOptions<...>`. Typed objects are appropriate when the reusable options contract or preset is itself the subject.
+
+Prefer realistic form models, explicit `field()` declarations, and ordinary structural groups:
 
 ```text
-chart({
-  type: 'column',
-  series: [
-    { values: [10, 20] },
-  ],
+const profile = form({
+  name: field('Ada'),
+  address: { city: field('Zurich') },
+});
+profile.address.city(); // 'Zurich'
+```
+
+Use explicit `group()` when its own options, validators, or primitive contract are the subject. Keep field-value shorthands in their dedicated examples. Introduce object-template arrays before primitive templates; retain standalone nodes when they explain a signature or isolated behavior more clearly.
+
+Keep required setup and the option being taught; omit unrelated callbacks, settings, and operations. A debounce example does not need submission configuration. Each example must demonstrate its own member, not a similarly named operation on a different primitive.
+
+Use direct reads and actions: `profile.name()`, `profile.valid()`, and `profile.patch()`. Use `.$api` when explaining child-name collisions or generic infrastructure. Show `value.committed` and `value.control` only when their distinct value views are relevant.
+
+### Access child nodes through their model path
+
+When an example declares a form, access its children directly through that form. Prefer `profile.name.debouncing()` over introducing `const node = profile.name` followed by `node.debouncing()`. The model path keeps the relationship between the form and the field visible and avoids an unnecessary intermediate variable.
+
+```text
+const profile = form({
+  name: field('Ada'),
+});
+profile.name.debouncing(); // false
+```
+
+Keep a separate node binding only when the binding itself teaches something, such as retaining a dynamically added or detached node, comparing node identities, or demonstrating a generic helper. Do not introduce aliases merely to shorten an already readable model path.
+
+### Angular component context
+
+For `[formNode]` examples, normally keep the node declaration and HTML together in an Angular component with an inline template. Show the necessary injection context for hooks that require it. Prefer modern signal-based Angular APIs and do not mark ordinary component node declarations `readonly`.
+
+### Declare options directly
+
+Write the demonstrated property directly in its containing object. Do not hide it in an inline spread such as `...{ debounce: 300 }`.
+
+```text
+field('', {
+  debounce: 300,
 });
 ```
 
-Do not replace this factory-option example with `const chartOptions: ChartOptions = { series: ... }`, even if an equivalent typed declaration compiles. The reader should see where to put the option and how to call the API, without having to infer the surrounding usage. Apply this rule to nested options too: retain the minimal enclosing factory/object structure that makes their location clear.
+Use spreads when composition is the subject, such as reusing a named preset and overriding one setting. Preserve property order and precedence. Do not use spreads to bypass excess-property checks or imply unsupported inputs.
 
-Typed object declarations are appropriate when the documented subject is the reusable contract, preset or configuration object itself. For a method, show its receiver and invocation; for an inspected property, show how to obtain the instance and what the property contains.
+## Imports, bindings, and generics
 
-Keep required discriminants and minimal data. Omit unrelated settings, callbacks, helpers and follow-up operations. A URL target example does not need a tooltip or display text. A chartsheet-name example does not need an unused chart. Keep comprehensive report examples in the website guides.
+Omit ordinary unaliased imports from `@ngblocks/form-nodes` in source hover examples. [The JSDoc checker](../scripts/test-jsdoc.mjs) reconstructs those imports for compilation. This does not permit undefined local variables. Website examples must include their imports explicitly.
 
-Prefer supported plain value/configuration objects over optional helper calls. For example, use `format: { numberFormat: '#,##0.00' }` where supported instead of `format: format(...)`. Keep component factories such as `kpiCard()` and `chart()` as functions. Use a value helper when its returned instance is itself the documented subject, or when no supported plain declaration exists. Never describe a resolved instance type as a supported object input without an implemented normalization contract.
+Retain explicit imports for aliases and external dependencies. Use supported package-root imports rather than internal paths. Keep import lines within 45 characters and follow the project's single-line import convention.
 
-### Declare properties directly instead of spreading inline objects
-
-Write the demonstrated property directly in its containing configuration object. Do not wrap a static property or group of properties in an inline object spread: `...{ height: '32px' }` adds indirection without explaining any behavior. Apply this rule to generated examples too; generators must place the fields directly in their contextual wrapper.
-
-Preferred:
+Use named Angular imports and unqualified API names in examples: `import { Component } from '@angular/core';` with `@Component`, not `import * as ng from '@angular/core';` with `@ng.Component`. Apply the same convention to `Directive`, `signal`, `computed`, `input`, `model`, and other Angular APIs. Do not introduce namespace imports to fit the hover width. Keep imports focused; when a combined named import exceeds 45 characters, split its symbols across separate single-line named imports.
 
 ```text
-worksheet({
-  rowOptions: [
-    {
-      applyTo: '1:3',
-      height: '32px',
-    },
-  ],
-});
+import { Component } from '@angular/core';
+
+@Component({
+  imports: [FormNodeDirective],
+  template: `
+    <input [formNode]="profile.name" />
+    <button (click)="profile.name.focus()">
+      Focus name
+    </button>
+  `,
+})
+export class ProfilePage {
+  profile = form({ name: field('Ada') });
+}
 ```
 
-Avoid:
+Omit a binding when its name or subsequent use adds nothing. Keep useful names when demonstrating state, a return value, or a sequence of operations.
 
-```text
-worksheet({
-  rowOptions: [
-    {
-      applyTo: '1:3',
-      ...{ height: '32px' },
-    },
-  ],
-});
-```
+Omit explicit generics when inference already communicates the contract. Retain them when needed, such as `field<Date>(null)`, or when teaching type inference. Do not replace meaningful types with `any`, assertions, or type-error suppressions to make an example fit or compile.
 
-Use a spread only when composition itself helps explain the example, such as reusing a named preset or demonstrating an override. Keep its purpose clear and preserve property order and override semantics. Do not introduce spreads to bypass excess-property checks or hide an unsupported configuration; verify the public input contract instead.
-
-## Imports, bindings and generics
-
-Omit ordinary unaliased imports from `@tsblocks/xlsx` in hover examples. Shared documentation discovery restores the required public imports for strict compilation and complete website examples. This is not permission to leave local variables undefined or to stop testing examples.
-
-Retain explicit imports for aliases, subpaths and external dependencies: their source is meaningful. Wrap these imports when needed to fit the hover width. Use only the real package name and supported `/node`, `/browser` and `/themes/*` subpaths.
-
-Omit bindings unless the name or subsequent use helps explain the subject. Do not create unused setup. Prefer direct component calls over unused `const component = ...` declarations.
-
-Omit explicit generic arguments when the supported API can infer or otherwise accept the illustrated input and the generic adds no explanatory value. Keep them when required for correctness or when generic typing is the subject. Do not replace them with `any`, assertions or type-error suppressions, and do not mechanically remove them from source implementations or type tests.
-
-For example, a row-count demonstration should omit `recordWriter<{ amount: number }>`: the explicit row type adds no useful information about `rowCount`. Prefer this compact setup when the entire continuation line fits within 45 characters:
-
-```text
-const writer = worksheet()
-  .recordWriter('A1', [{ key: 'amount' }])!;
-writer.write({ amount: 42 });
-console.log(writer.rowCount); // => 1
-```
-
-For reusable configuration declarations, prefer explicit annotations to `satisfies` unless preserving specific inference is necessary; follow the exceptions in [CODE_STYLE.md](CODE_STYLE.md#explicit-type-annotations). Do not add a type annotation or generic merely to make an already clear example look more technical.
+For reusable configuration objects, an explicit type annotation can make the contract clear; use `satisfies` when preserving inference is part of the example. Do not add annotations simply to make an example look more technical.
 
 ## The 45-character layout
 
-Every code or comment line inside a JSDoc example must fit within **45 visible characters**, excluding the JSDoc `*` prefix. Count the entire line, including indentation and any inline output comment. The limit applies to examples, not to the source signature or a generated type-detail preview. Keep description prose concise and readable too.
+Every code or comment line inside a source JSDoc example must fit within **45 visible characters**, excluding only the JSDoc prefix. Include code indentation and output comments in the count. This is a hard maximum: a 46-character line must be rewritten or wrapped. The limit does not apply to source signatures or type-detail previews.
 
-The 45-character limit is a hard maximum, not an approximate target. A 46-character example line must be rewritten or wrapped before handoff. Remove only the JSDoc comment prefix when measuring; keep code indentation in the count. Check every line, including imports, nested properties, URLs, explanatory comments and expected outputs. Shorten incidental names or example data when helpful, without changing the behavior being demonstrated. Never truncate meaningful values or remove required setup just to fit.
+Use two-space indentation, single quotes, semicolons, and trailing commas. Indent structurally, not by aligning beneath a preceding argument. Shorten incidental names or wording without changing the behavior demonstrated or deleting required setup.
 
-Use two spaces, single quotes, semicolons and trailing commas. Indent structurally from the enclosing block, never by aligning beneath the first argument or property after a long function name.
+An object may stay on one line only when the complete line fits. Otherwise:
 
-An object can stay on one line only when the complete line fits. Otherwise:
+- End its opening line at `{`.
+- Put every property, spread, or callback on its own line.
+- Indent contents two spaces and put the closing brace on its own line.
+- Apply these rules recursively to nested objects.
 
-- End the opening line at `{`.
-- Put every property, spread or callback on its own line.
-- Indent the contents by two spaces and put the closing brace on its own line.
-- Apply the same rule recursively to nested objects.
-
-By default, arrays containing object literals put the opening bracket, every item and the closing bracket on separate lines, even with one item. An item may remain a compact object when its whole line fits. Scalar arrays may remain inline. Exception: the single-column `recordWriter` setup shown above may stay inline when the whole line fits within 45 characters, keeping a getter example focused. This narrow hover exception does not change website array formatting.
+Arrays containing object literals place the opening bracket, each item, and closing bracket on separate lines, even for one item. An item may remain a compact object if its complete line fits. Scalar arrays may remain inline.
 
 ```text
-kpiCard({
-  value: 42,
-  format: {
-    numberFormat: '#,##0.00',
-    alignment: { vertical: 'bottom' },
+array({
+  name: field(''),
+}, {
+  initialValue: [
+    { name: 'Ada' },
+  ],
+});
+```
+
+### Calls with consecutive object arguments
+
+Keep consecutive object-literal arguments attached to the call: open with `form({` or `array({`, separate definition and options with `}, {`, and close with `});`. Apply this to root and nested forms. Prefer `options.initialValue` for array data; use positional initial values when teaching that overload.
+
+```text
+array({
+  name: field(''),
+}, {
+  debounce: 300,
+});
+```
+
+Do not add a call-level indentation solely because its objects are multiline:
+
+```text
+array(
+  {
+    name: field(''),
+  },
+  {
+    debounce: 300,
+  },
+);
+```
+
+Break the opening call only when its name, type arguments, or preceding arguments require more space. Multiline object contents alone do not justify expanding the wrapper. Keep properties and closing braces on their own lines; the next argument's opening brace may follow the previous closing brace. Preserve argument order and callback semantics. Formatters must retain these boundaries.
+
+### Separate consecutive example variants
+
+Separate consecutive standalone calls demonstrating different variants with **one empty code line**, even inside the same fenced block. In JSDoc, write that line as ` *`, with no trailing spaces. A multiline call's own line breaks do not separate it from the next variant.
+
+```text
+/**
+ * ```ts
+ * array({
+ *   name: field(''),
+ * }, {
+ *   debounce: 300,
+ * });
+ *
+ * array({
+ *   name: field(''),
+ * }, {
+ *   debounce: 'blur',
+ * });
+ * ```
+ */
+```
+
+Keep an introductory comment directly above its variant, with the blank line before the comment. Output comments belong to the preceding call, so put the separator after them. Do not insert separators between every statement in a single sequence of setup, mutation, and observation. Preserve separators in generators and formatters.
+
+## Fluent chains, predicates, and messages
+
+Keep the binding and initial call together when they fit. Break chains before `.method()` with two spaces of continuation indentation. Do not expand a short argument list merely because a later chained call needs more room. Preserve optional chaining, parentheses around awaited expressions, non-null assertions, generics, strings, and comments.
+
+Use a block body with an explicit `return` when an arrow's implicit return spans lines. Direct object and array literals may remain implicit, including parenthesized literals and TypeScript assertions. Do not convert a method that needs dynamic `this` into an arrow. Omit parentheses around a single untyped parameter for a compact single-line predicate; retain required parentheses and follow AGENTS.md for other source formatting.
+
+Prefer short predicates on the same line as `.some()` or a comparable method when they fit. This applies inside a `return` expression too. Shorten incidental validation messages before separating a property name from its string value. Keep multiline object properties on separate lines and retain a readable ternary:
+
+```text
+array(field.strict(0), {
+  validators: ({ value }) => {
+    return value()
+      .some(amount => amount < 0)
+      ? {
+          kind: 'negativeAmount',
+          message: 'No negative amounts',
+        }
+      : null;
   },
 });
 ```
 
-Use explicit blocks and returns for multiline arrow-function bodies, except direct object or array literals. Preserve callback semantics and evaluation order; do not convert a method needing dynamic `this` into an arrow just to change its appearance. Follow the lifecycle callback and ordering rules in [CODE_STYLE.md](CODE_STYLE.md#configuration-callbacks-and-ordering).
+Here `field.strict(0)` makes the numeric input contract explicit. Ordinary `field(0)` also accepts `null`; retain null handling when the declared type requires it. Do not remove a meaningful check just to shorten the example or silently change the field's nullability to make a formatter happy. Simplifying predicates and wording is an authoring decision, not permission for a formatter to rewrite semantics or error identifiers.
 
-Separate repeated standalone calls with a blank line. Keep each variant's introductory comment directly above that variant, with the blank line before the comment. Output comments belong to the preceding call.
-
-## Fluent chains
-
-Keep the binding and initial call together when they fit. Break a fluent chain before `.method()` with two spaces of continuation indentation. Do not expand a short initial argument list merely because a chained call follows.
-
-Preferred:
-
-```text
-const sheet = workbook()
-  .addChartsheet('Chart');
-console.log(sheet.name); // => 'Chart'
-```
-
-Avoid a bare `const sheet =` followed by `workbook().addChartsheet(...)` on the next line. Likewise, prefer a complete `chartValue('column')!` followed by `.addSeries(...)` to placing `'column'` on its own line solely to accommodate the chain.
-
-Apply this to variable initializers, standalone chains and chains nested in objects. Break arguments only when the call itself needs more space. Preserve parentheses around awaited expressions, optional chaining, non-null assertions, generic arguments, strings and comments. Formatting must not alter the expression's meaning.
+Keep validator examples focused: demonstrate static constraints, reactive constraints, and static constraints with a custom message separately. Do not combine reactivity and message configuration unnecessarily. For validators without reactive constraints, normally show default use and custom-message use separately.
 
 ## Show observable results
 
-A bare `console.log(value?.target)` does not explain what the reader receives. Show a deterministic output or explain the genuinely variable result. Prefer a relevant property or a mapped list over dumping a large instance.
+Show deterministic results immediately after the expression being inspected; printing is not required. Follow this repository's convention from AGENTS.md: `node(); // 'Ada'`. Do not require migration to another project's `// => value` convention; the local checker accepts both forms.
 
 ```text
-/**
- * Hyperlink destination, independent of its
- * display text. The internal:/external:
- * prefix is normalized to lowercase.
- *
- * ```ts
- * const value = url('https://example.com');
- * console.log(value?.target);
- * // => 'https://example.com'
- *
- * const cell = url('INTERNAL:Summary!A1');
- * console.log(cell?.target);
- * // => 'internal:Summary!A1'
- * ```
- */
-readonly target: string;
+const name = field('Ada');
+name(); // 'Ada'
+
+name.set('Lia');
+name(); // 'Lia'
 ```
 
-In this `target` example, `url('https://example.com')` is all the setup needed. Do not add `{ text: 'Open report', tooltip: 'Report details' }`: those options explain different properties and distract from the destination being inspected. Include an option only if it is required or helps demonstrate the documented member's behavior. The second URL above illustrates prefix normalization, so its different input is relevant.
+Keep the output inline when the complete line fits within 45 characters. For a long result, put `// Expected output:` and the result comment below the expression as specified in AGENTS.md. Never duplicate the output inline and below. Do not add output comments to calls shown only for their side effects or as application logic.
 
-The output comment states the exact inspected value. Keep the `// =>` notation used by the example checker, rather than an unmarked value comment. There is no **Default:** block for `readonly target`: it exposes the destination supplied to the factory, not an optional configuration setting. For an optional setting with a real default, describe that default after the behavior and before the example, as shown in the complete optional-property example above.
+For `console.log(expression)`, the annotation describes the printed argument, not the `undefined` return value of `console.log`. Prefer inspecting a relevant scalar or mapped list over dumping a large instance. Show transitions or snapshot independence when they explain the member.
 
-Use `// => value` inline whenever the complete call and comment fit within 45 characters; do not leave it on a separate line merely because it was originally written there. Otherwise put it immediately below the call. Do not duplicate the same output both inline and below. The comment describes the printed argument, not the return value of `console.log` (which is `undefined`).
+The local checker executes supported literal output annotations on top-level expressions in examples without class declarations, including direct reads and single-value `console.log` calls. Supported cases include scalar, array, and object literals, `undefined`, `false`, zero, and empty text. It does not execute component examples, nested callback assertions, or explanatory prose. An `Expected output:` heading is explanatory text, so verify that case with an explicit assertion or an executable website example. Never assume a successful compilation verified every output comment.
 
-The current output checker supports deterministic scalar and array literals, including `undefined`, `false`, zero and empty text. Verify values against the implementation or execution; never invent them. The package check executes these examples and compares their actual output with the comment.
-
-For variable byte counts, consumer assets or callbacks that require external context, use `// Output: explanation`, with units and the dependency or timing. For example, a streaming sink can explain that each `chunk.length` is a byte count that varies per write. Do not use this exception to avoid verifying a reproducible result.
-
-When useful, demonstrate normalization, missing values, defaults or state changes. A snapshot example should show that the snapshot remains unchanged after editing the live object:
-
-```text
-const sheet = worksheet({ rows: [[1]] });
-const snapshot = sheet.getCell('A1')
-  ?.snapshot();
-sheet.write('A1', 2);
-console.log(snapshot?.value); // => 1
-
-console.log(sheet.getCell('A1')?.value);
-// => 2
-```
+For values depending on real external context or callback timing, use `// Output: explanation` and state the dependency. Do not use variable-output prose to avoid checking a reproducible result. Keep output assertions in the website's executable examples as required by AGENTS.md.
 
 ## Accepted values and type details
+
+The original examples below are intentionally retained to show the owner's preferred wording and Markdown structure. Names such as `chart`, `kpiCard`, `ComponentOptions`, and `workbook` belong to the source project. Use their documentation style when describing actual Form Nodes contracts; their types, units, defaults, and methods are not additions to this library.
 
 Keep supported literal unions visible in the public signature for autocomplete. Preserve exported aliases and link them. Document every string literal with its own meaning under **Accepted values:**, including units and distinctions. Explain mixed input forms too: numbers versus strings, arrays versus a single object, and selectors versus ranges.
 
@@ -386,7 +419,7 @@ Verify these details against the public types and implementation when updating t
 
 When a named input type hides useful information about the accepted shape, add a **Type details:** paragraph. Use this exact pattern: `**Type details:** {@link TypeName}: ` followed by an inline-code preview of the type and a final period. The link lets the reader navigate to the contract; the preview shows its structure without requiring navigation. A bare link or an unlinked type expansion does not provide both benefits.
 
-Use the actual public type name and its current structure. Preserve intersections, optional fields, readonly modifiers and literal alternatives. Reference large nested contracts by name instead of recursively expanding them. Do not add type details merely to repeat an already obvious scalar signature. Keep previews synchronized through `npm run docs:types` and `npm run docs:sync` when contracts change.
+Use the actual public type name and its current structure. Preserve intersections, optional fields, readonly modifiers and literal alternatives. Reference large nested contracts by name instead of recursively expanding them. Do not add type details merely to repeat an already obvious scalar signature. Keep previews synchronized with the actual public contract. In this repository, use the verification and generation commands listed under Review and verification.
 
 For example, the `options` field of `createComponent()` can show the linked contract and its shape together:
 
@@ -489,9 +522,349 @@ policy?: 'safe' | 'strict';
 
 Use **Accepted values:** for the meanings of literal alternatives; use **Type details:** and type links for accepted type contracts. Explain mixed input forms where relevant. A standalone `const options: SafetyOptions = ...` can illustrate the reusable type itself, but an option's contextual example should show the actual factory call as above.
 
-## Methods, coordinates and environments
+## Methods and execution environments
 
-Method examples need enough setup to call the actual method. Explain the return value, ownership, coordinate units, recovery and async constraints where relevant. Do not hide differences between overloads behind one generic example.
+Method examples need enough setup to invoke the actual receiver. Explain whether returned nodes are live or detached, whether returned data is exposed or committed, index bases, invalid-input handling, and asynchronous completion when relevant. Preserve meaningful differences between overloads.
+
+Keep model-only examples usable outside Angular injection context where the API supports it. Put injection-dependent hooks in their proper component or directive context. Do not call them from a plain script merely to make an example shorter. Compile Angular templates as well as their surrounding TypeScript.
+
+## Source and website synchronization
+
+Author JSDoc in source. Do not patch generated reference pages instead of their source or generator. Follow [website.md](website.md) and AGENTS.md for the consumer website.
+
+[The public-type reference generator](../website/scripts/sync-public-type-reference.mjs) generates declarations and member summaries under `website/docs/reference/types/`. It does not publish every complete hover example automatically. Keep detailed guides and reference pages current when consumers need additional explanation.
+
+Complete website examples belong in `website/examples/*.example.ts` with meaningful assertions, or `*.typecheck.ts` for Angular and inference examples that cannot run meaningfully in plain Node. Render canonical examples from those files rather than duplicating them in Markdown. Keep partial signatures and deliberately invalid examples inline where appropriate. Website examples follow their own import and layout conventions rather than the hover's 45-character limit.
+
+Keep stable anchors, inherited contracts, cross-page links, and sidebar entries synchronized. Preserve source and published declaration hovers, overloads, generics, and readonly contracts. A narrow hover supplements the complete guide rather than replacing it.
+
+## Review and verification
+
+Review each affected comment individually. Check that it demonstrates its own subject, supplies required setup, omits unrelated configuration, uses supported inputs, and explains the observable result. Verify defaults, units, accepted literals, links, nullability, and propagation claims against the actual contract.
+
+Check every example line, including nested arrays, imports, comments, predicates, and outputs. Review argument boundaries, blank lines between variants, and tag ordering. Do not weaken a contract or add suppressions to make an example pass.
+
+Use commands that exist in this repository:
+
+| Command | Purpose |
+| --- | --- |
+| `npm run test:jsdoc` | Check fence/tag layout and width, reconstruct public imports, compile TypeScript and Angular templates, and execute supported output annotations. |
+| `npm --workspace website run types:sync` | Regenerate public type declarations and member summaries. |
+| `npm run docs:typecheck` | Check generated reference freshness, website types, and executable documentation examples. |
+| `npm run docs:build` | Build the consumer documentation website. |
+| `npm run typecheck` | Run lint, library/type/template checks, and the JSDoc checker. |
+| `npm run test:package` | Build and verify the published consumer package and IntelliSense completions. |
+
+Follow the change-specific verification requirements in AGENTS.md, including focused tests and broader checks where required. Run type-reference generation before checking the website when source documentation affects generated summaries. Run `docs:typecheck` and `docs:build` sequentially: website type checking can read build artifacts while a concurrent build replaces them.
+
+The source audit in [scripts/test-jsdoc.mjs](../scripts/test-jsdoc.mjs) inventories JSDoc in library source, including internal comments, excluding test and fixture files. It writes its inventory and diagnostics to `.angular/jsdoc-snippets/`. Do not run concurrent JSDoc checks against that shared directory.
+
+The checker does not enforce every editorial rule: variant spacing, concise wording, semantic completeness, and all argument-layout preferences still need review. There is no dedicated `docs:format:examples` command in this repository. If a formatter or generator is added or changed, preserve these rules with appropriate regression checks; formatting must not simplify generics, change validation logic, or remove meaningful parentheses.
+
+Keep this guide current when a new preference is agreed. Do not edit `TODO.md` as a side effect of maintaining the guide or examples.
+
+## Retained authoring examples from the source project
+
+These examples preserve the owner's original positive and negative illustrations. They supplement the Form Nodes examples above; keep the distinctions between preferred and rejected layouts. APIs from the source project are illustrative only and are not compiled against Form Nodes.
+
+For Form Nodes examples, the local rules still apply: direct model paths, named Angular imports, verified nullability, and the output-comment convention in AGENTS.md. In particular, use the `field.strict(0)` example above when illustrating a numeric predicate without null handling. The retained `// =>` comments show the original project's notation, not a requirement to change existing Form Nodes output comments.
+
+### Write examples as Markdown, not JSDoc tags
+
+Preferred:
+
+```text
+/**
+ * Create a card displaying a percentage.
+ *
+ * ```ts
+ * kpiCard({ value: 0.25, format: '0%' });
+ * ```
+ */
+```
+
+Avoid, even when the code itself is fenced:
+
+```text
+/**
+ * Create a card displaying a percentage.
+ *
+ * @example
+ * ```ts
+ * kpiCard({ value: 0.25, format: '0%' });
+ * ```
+ */
+```
+
+### Complete optional-property example
+
+### Complete optional-property example
+
+```text
+/**
+ * Number format or style for the card value.
+ * The label is unaffected.
+ *
+ * **Default:** Inherit the surrounding format.
+ *
+ * **Type details:** {@link KpiCardStyleInput}: `FormatReference | KpiCardStyle | undefined`.
+ *
+ * ```ts
+ * kpiCard({ value: 0.25, format: '0%' });
+ *
+ * kpiCard({
+ *   value: 42,
+ *   format: { numberFormat: '#,##0.00' },
+ * });
+ * ```
+ */
+format?: string | KpiCardStyleInput;
+```
+
+### Contextual examples
+
+Show the option inside the actual public factory call where consumers configure it. For the `series` option of `chart({ ... })`, use `chart({ type: ..., series: ... })`, not a standalone typed configuration variable. Sharing the same underlying type does not make a disconnected object an equally useful example. Prefer this complete call:
+
+```text
+chart({
+  type: 'column',
+  series: [
+    { values: [10, 20] },
+  ],
+});
+```
+
+### Declare properties directly instead of spreading inline objects
+
+Preferred:
+
+```text
+worksheet({
+  rowOptions: [
+    {
+      applyTo: '1:3',
+      height: '32px',
+    },
+  ],
+});
+```
+
+Avoid:
+
+```text
+worksheet({
+  rowOptions: [
+    {
+      applyTo: '1:3',
+      ...{ height: '32px' },
+    },
+  ],
+});
+```
+
+### Imports, bindings and generics
+
+For example, a row-count demonstration should omit `recordWriter<{ amount: number }>`: the explicit row type adds no useful information about `rowCount`. Prefer this compact setup when the entire continuation line fits within 45 characters:
+
+```text
+const writer = worksheet()
+  .recordWriter('A1', [{ key: 'amount' }])!;
+writer.write({ amount: 42 });
+console.log(writer.rowCount); // => 1
+```
+
+### The 45-character layout
+
+By default, arrays containing object literals put the opening bracket, every item and the closing bracket on separate lines, even with one item. An item may remain a compact object when its whole line fits. Scalar arrays may remain inline. Exception: the single-column `recordWriter` setup shown above may stay inline when the whole line fits within 45 characters, keeping a getter example focused. This narrow hover exception does not change website array formatting.
+
+```text
+kpiCard({
+  value: 42,
+  format: {
+    numberFormat: '#,##0.00',
+    alignment: { vertical: 'bottom' },
+  },
+});
+```
+
+### Calls with consecutive object arguments
+
+Preferred (a validation-API formatting illustration, not an `@tsblocks/xlsx` API):
+
+```text
+/**
+ * ```ts
+ * array({
+ *   name: field(''),
+ * }, {
+ *   debounce: 300,
+ * });
+ *
+ * array({
+ *   name: field(''),
+ * }, {
+ *   debounce: 'blur',
+ * });
+ *
+ * array({
+ *   name: field(''),
+ * }, {
+ *   debounce: async abortSignal => {
+ *     await Promise.resolve();
+ *     if (abortSignal.aborted) return;
+ *   },
+ * });
+ * ```
+ */
+```
+
+Avoid this extra wrapping for any of those variants:
+
+```text
+/**
+ * ```ts
+ * array(
+ *   {
+ *     name: field(''),
+ *   },
+ *   {
+ *     debounce: 300,
+ *   },
+ * );
+ * ```
+ */
+```
+
+### Separate consecutive example variants
+
+For example, these three validator variants have an empty line between calls (a validation-API formatting illustration, not an `@tsblocks/xlsx` API):
+
+```text
+/**
+ * ```ts
+ * array({
+ *   name: field(''),
+ * }, {
+ *   validators: () => null,
+ * });
+ *
+ * array({
+ *   name: field(''),
+ * }, {
+ *   validators: () => ({ kind: 'blocked' }),
+ * });
+ *
+ * array({
+ *   name: field(''),
+ * }, {
+ *   validators: asyncValidator(async () => {
+ *     await Promise.resolve();
+ *     return null;
+ *   }),
+ * });
+ * ```
+ */
+```
+
+### Fluent chains
+
+Preferred:
+
+```text
+const sheet = workbook()
+  .addChartsheet('Chart');
+console.log(sheet.name); // => 'Chart'
+```
+
+### Compact predicates and validation messages
+
+Preferred (a formatting illustration from a validation API, not an `@tsblocks/xlsx` API; here `value()` returns numeric items):
+
+```text
+/**
+ * ```ts
+ * array(field(0), {
+ *   validators: ({ value }) => {
+ *     return value()
+ *       .some(amount => amount < 0)
+ *       ? {
+ *           kind: 'negativeAmount',
+ *           message: 'No negative amounts',
+ *         }
+ *       : null;
+ *   },
+ * });
+ * ```
+ */
+```
+
+Avoid unnecessarily wrapping the predicate and retaining verbose incidental text:
+
+```text
+/**
+ * ```ts
+ * array(field(0), {
+ *   validators: ({ value }) => {
+ *     return value().some(
+ *       (amount) =>
+ *         amount !== null && amount < 0,
+ *     )
+ *       ? {
+ *           kind: 'negativeAmount',
+ *           message:
+ *             'Amounts cannot be negative.',
+ *         }
+ *       : null;
+ *   },
+ * });
+ * ```
+ */
+```
+
+### Show observable results
+
+Original output-notation illustration: the source project uses `// => value` immediately after the call. This example preserves that notation; Form Nodes follows the local output-comment rule above. In either style, keep the comment inline when the complete line fits within 45 characters, otherwise place it immediately below.
+
+```text
+const myFunction = () => 'test';
+myFunction(); // => 'test'
+```
+
+A bare `console.log(value?.target)` does not explain what the reader receives. Show a deterministic output or explain the genuinely variable result. Prefer a relevant property or a mapped list over dumping a large instance.
+
+```text
+/**
+ * Hyperlink destination, independent of its
+ * display text. The internal:/external:
+ * prefix is normalized to lowercase.
+ *
+ * ```ts
+ * const value = url('https://example.com');
+ * console.log(value?.target);
+ * // => 'https://example.com'
+ *
+ * const cell = url('INTERNAL:Summary!A1');
+ * console.log(cell?.target);
+ * // => 'internal:Summary!A1'
+ * ```
+ */
+readonly target: string;
+```
+
+When useful, demonstrate normalization, missing values, defaults or state changes. A snapshot example should show that the snapshot remains unchanged after editing the live object:
+
+```text
+const sheet = worksheet({ rows: [[1]] });
+const snapshot = sheet.getCell('A1')
+  ?.snapshot();
+sheet.write('A1', 2);
+console.log(snapshot?.value); // => 1
+
+console.log(sheet.getCell('A1')?.value);
+// => 2
+```
+
+### Methods, coordinates and environments
 
 For position methods, demonstrate every supported form: A1, tuple, numeric object, column-letter object and the separate row/column overload. Column selectors need both letters and numeric indexes. Share setup and use distinct targets:
 
@@ -507,45 +880,3 @@ sheet.write({ row: 3, column: 'A' }, 42);
 
 sheet.write(4, 0, 42);
 ```
-
-Check the actual method's coordinate base and supported forms. Area-capable and content-sized components must retain their documented placement and sizing distinctions.
-
-Make the environment clear. End complete consumer-facing browser report examples with `await report.download('descriptive-name.xlsx')`, or `worksheet.download()` for one sheet. Use `generate()` for byte processing, worker internals or that method's own reference. Use `saveWorkbook()` for Node filesystem output. A focused option example does not need an unrelated export/download operation.
-
-## Source and website synchronization
-
-Follow [WEBSITE_DOCS_GUIDE.md](WEBSITE_DOCS_GUIDE.md) for the complete Docusaurus authoring, navigation, generation and validation workflow. The rules below summarize the JSDoc-to-website boundary.
-
-Author JSDoc in source. Do not patch generated pages instead of fixing their source or generator. Preserve source hovers and packed ESM/CommonJS descriptions, overloads, generics and readonly contracts.
-
-Generated website examples are complete modules with imports and a 100-character width. The documented option occupies its own line even if a compact object would fit. Calculate highlighted lines after formatting. Each documented option, property and method needs its own signature, description and example; optional configuration fields also need an explicit **Default:** block.
-
-Link factory and instance sections to accepted nested/shared contracts. Keep stable anchors, inherited fields, cross-page links and sidebar entries synchronized. Factory, basic-component and utility pages must include their recursively referenced options locally through the shared discovery mechanism (`option_types`); use `option_priority` and `option_visible` for relevant contracts. Shared references supplement rather than replace those local sections.
-
-Use the existing website conventions, including monochrome ▦ reference groups and conditional-format sections organized by discriminator with meaningful titles. Do not introduce pre-v1 migration sections. These integration rules do not turn a narrow hover into a complete website guide.
-
-## Review and verification
-
-Before handing off JSDoc changes, check that the example demonstrates its own subject, omits irrelevant setup, uses only supported inputs and explains its observable result. Verify defaults, units, accepted literals and links against the actual contract. Check all nested object/array lines, call-chain breaks and output-comment widths.
-
-Use the existing tooling; do not bypass strict checks or weaken a contract to make an example compile:
-
-| Command | Purpose |
-| --- | --- |
-| `npm run docs:format:examples` | Format authored examples, including 45-column hovers. |
-| `npm run docs:types` | Refresh visible type details and references when accepted types change. |
-| `npm run docs:sync` | Regenerate website references from the authored contracts. |
-| `npm run test:jsdoc` | Check layout, literal meanings, output annotations and strict compilation. |
-| `npm run test:docs:types` | Check type-reference freshness and examples. |
-| `npm run test:docs:options` | Check nested/local references, anchors, links and examples. |
-| `npm run test:docs:members` | Check instance-member references and examples. |
-| `npm run test:docs:reference` | Compile complete website reference examples. |
-| `npm run test:package` | Verify packed hovers and execute deterministic output examples, among other package checks. |
-
-Run type-detail generation before website synchronization when types change. Complete the broader checks required by [AGENTS.md](../AGENTS.md) for code changes, and report exact environmental failures. Do not run competing example checks in parallel when they share `artifacts/jsdoc-snippets`.
-
-The full source audit in `scripts/docs/lib/source-documentation.mjs` visits every attached JSDoc in `src/`, including internal engine and platform comments, and compiles every distinct example through `test:jsdoc`. Its per-file/comment inventory is written to `artifacts/jsdoc-snippets/source-audit.json`. Public reference and packed-hover discovery remain separate checks.
-
-The shared formatting code is in `scripts/docs/lib/example-formatting.mjs` and `example-chains.mjs`; import reconstruction is in `example-imports.mjs`; output discovery is in `console-examples.mjs`. If formatting or generation recreates a rejected layout, fix the responsible tool and preserve the existing semantic/formatting regression checks. Do not manually simplify generics, remove parentheses or change behavior as part of automatic formatting.
-
-Keep this guide current when a new JSDoc preference is agreed. Do not edit `TODO.md` as a side effect of maintaining the guide or examples.
