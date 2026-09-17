@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 4.3.0 — 2026-09-17 {#430--2026-09-17}
+
 ### Added
 
 - Add `array.templateValue()` to prepare a typed item value without inserting a row. Template arrays return independent copies of declared defaults; factory arrays execute their factory on each call and return the generated item's value.

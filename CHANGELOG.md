@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [4.3.0] - 2026-09-17
+
 ### Added
 
 - Add `array.templateValue()` to prepare a typed item value without inserting a row. Template arrays return independent copies of declared defaults; factory arrays execute their factory on each call and return the generated item's value.
@@ -406,7 +408,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v4.2.1...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v4.3.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -448,3 +450,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [4.2.0]: https://github.com/gastonmesseri/form-nodes/compare/v4.1.0...v4.2.0
 
 [4.2.1]: https://github.com/gastonmesseri/form-nodes/compare/v4.2.0...v4.2.1
+
+[4.3.0]: https://github.com/gastonmesseri/form-nodes/compare/v4.2.1...v4.3.0
