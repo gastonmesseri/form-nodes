@@ -28,6 +28,7 @@ import { captureSubmission, clearSubmissionErrors } from '../validation/submissi
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
 import { installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { assertValidObjectDefinition, normalizeObjectDefinition } from './form-group-node.utils';
+import { readDefinitionTemplateValue, registerNodeTemplateValue } from './utils/node-template-value';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
@@ -306,6 +307,7 @@ export class FormGroupNode<TNodes extends Nodes> {
       this.getChildKeys().forEach(key => (this.children[key] as unknown as InternalNode).$api._setParent(this.node, String(key)));
     });
     markAsNode(this.node);
+    registerNodeTemplateValue(this.node, readDefinitionTemplateValue(this.children));
     registerNodeInputConfig(this.node, this.options, () => this.metadata());
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);

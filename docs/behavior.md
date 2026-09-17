@@ -2434,6 +2434,25 @@ An array behaves like an aggregate form node:
 
 This API differs intentionally from Angular 22 Signal Forms. Angular derives array field trees from array-valued models and maintains tracked item identities. This library constructs its tree from node definitions, using either an explicit factory or a compiled template recipe to create independent dynamic nodes. Both approaches preserve node identity and interaction state when existing items are reordered.
 
+### Item template values
+
+`array.templateValue()` returns one item's typed plain value without inserting a row. For a
+node or object template, declaration data is captured independently of runtime edits, dynamic
+children, reset baselines, and the outer array's initial contents. Nested arrays contribute their
+own captured initial contents. Reads create no nodes and do not execute validation or configuration
+callbacks. Both direct and `$api` calls are safe outside dependency injection and do not track
+reactive dependencies. The method does not modify collection state or emit value-change callbacks.
+
+For factory arrays, every call executes the factory and initializes a detached item, including
+its normal configuration and validation effects. The returned data is its committed value after
+configuration. Factory failures propagate; reused definitions and already attached nodes are rejected.
+These reads do not attach an item or advance the array's value/state; explicit application side effects in the factory
+remain possible. Signal reads inside the operation are untracked.
+
+Results use the `resetToInitial()` clone policy: copy supported data containers and cycles, preserve
+opaque references and accessor descriptors. The declaration registry uses weak keys and stores data
+rather than source nodes; array template readers retain only captured data.
+
 ## Form submission
 
 `form()` accepts `onSubmit(value, form)`, `onSubmitBlocked(form)`, and `submitWhen` options and exposes `submit()` plus the reactive

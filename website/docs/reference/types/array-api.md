@@ -21,6 +21,7 @@ Use for item-management helpers that need array operations. The callable `$api` 
 ```ts
 type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
     nodeType(): 'array';
+    templateValue(): NodeValue<TItem>;
     items: Signal<ArrayItems<TItem, TParent>>;
     length: Signal<number>;
     form: Signal<NearestForm<TParent> | null>;
@@ -127,6 +128,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | Member | Meaning |
 | --- | --- |
 | `nodeType` | Returns the concrete primitive represented by this node. |
+| `templateValue` | Returns an independent value for one new item without adding it to this array. Template declarations use their captured defaults, independently of current rows and this array's `initialValue`. Reading a template does not construct nodes or run their validators or `configure()` callbacks. The call does not track signal dependencies. |
 | `items` | Readonly signal containing the array node's current item nodes. Reading it participates in reactive tracking, and its array reference changes when the structure changes. The contained nodes are the live nodes owned by this array, not clones. Use spread syntax or Array.from() when a mutable copy of the node list is needed. |
 | `length` | Current number of live item nodes. Equivalent to `items().length`. |
 | `form` | Nearest explicit `form()` containing this array, or `null` when no form workflow owns it. A nested explicit form is the workflow owner instead of the complete structural root. |

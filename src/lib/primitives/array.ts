@@ -4,6 +4,7 @@ import { createArrayNode } from './array-node';
 import { field, type FieldNode } from './field';
 import type { AnyNode } from '../types/node.type';
 import type { ValidatorSource } from '../validation/validation.type';
+import { createTemplateValueReader } from './utils/node-template-value';
 import { assertArrayObjectTemplate, looksLikeValidatorSource } from './array.utils';
 import { createNodeDefinitionFactory } from './utils/create-node-definition-factory';
 import type { ObjectNodeDefinitionInputs, ObjectNodeDefinitions } from './form.type';
@@ -165,5 +166,6 @@ export function array<TDefinition extends ArrayTemplate>(
   const factory = sourceIsFactory
     ? source as () => unknown
     : createNodeDefinitionFactory(source);
-  return createArrayNode<TItem>(factory, normalizedInitial, validatorSource, resolvedOptions);
+  const itemTemplateValue = sourceIsFactory ? undefined : createTemplateValueReader(source);
+  return createArrayNode<TItem>(factory, normalizedInitial, validatorSource, resolvedOptions, itemTemplateValue);
 }

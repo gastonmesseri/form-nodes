@@ -15,6 +15,7 @@ import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { registerNodeTemplateValue } from './utils/node-template-value';
 import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { createNodeErrorsSignal } from './utils/create-node-errors-signal';
@@ -46,8 +47,9 @@ export function createArrayNode<TItem extends AnyNode>(
   initial: number | ArraySet<TItem>,
   validatorSource: ValidatorSource<ArrayValue<TItem>, any>,
   options?: ArrayOptions<ArrayValue<TItem>, any>,
+  itemTemplateValue?: () => unknown,
 ): ArrayNodeType<TItem> {
-  return new ArrayNode<TItem>(itemFactory, initial, validatorSource, options).getNode();
+  return new ArrayNode<TItem>(itemFactory, initial, validatorSource, options, itemTemplateValue).getNode();
 }
 
 /** Owns a dynamic array's state and operations behind its callable public node. */
@@ -247,6 +249,7 @@ export class ArrayNode<TItem extends AnyNode> {
     initial: number | ArraySet<TItem>,
     public initialValidatorSource: ValidatorSource<ArrayValue<TItem>, any>,
     public options?: ArrayOptions<ArrayValue<TItem>, any>,
+    public itemTemplateValue?: () => unknown,
   ) {
     this.equal = resolveValueEquality(this.options?.equal);
     if (this.options !== undefined) {
@@ -296,6 +299,7 @@ export class ArrayNode<TItem extends AnyNode> {
       this.captureInitialValue();
     });
     markAsNode(this.node);
+    registerNodeTemplateValue(this.node, this.initialResetValue);
     registerNodeInputConfig(this.node, this.options, () => this.metadata());
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerNodeValidatorMessages(this.node, this.options?.validatorMessages, this.options?.injector);
@@ -495,6 +499,15 @@ export class ArrayNode<TItem extends AnyNode> {
       .reduce(firstControlBindingInDom, undefined);
   }
 
+  templateValue(): NodeValue<TItem> {
+    return untracked(() => {
+      if (this.itemTemplateValue) return this.itemTemplateValue() as NodeValue<TItem>;
+      const item = this.createItemNode();
+      if (item.$api.parent() !== null) throw new Error('array: factory must return an unattached node');
+      return cloneInitialValue((item as unknown as InternalNode).$api._value()) as NodeValue<TItem>;
+    });
+  }
+
   createInitialItems(initial: number | ArraySet<TItem>) {
     const values = typeof initial === 'number' ? null : [...initial];
     const count = typeof initial === 'number' ? initial : initial.length;
@@ -503,12 +516,16 @@ export class ArrayNode<TItem extends AnyNode> {
     });
   }
 
-  createItem(...args: [] | [value: NodeSet<TItem>]): TItem {
+  createItemNode(): TItem {
     const itemFactory = this.itemFactory;
     const definition = itemFactory();
     this.trackDefinition(definition, true);
     if (!isNode(definition)) assertArrayObjectTemplate(definition, 'factory');
-    const item = (isNode(definition) ? definition : group(definition as ObjectNodeDefinitions)) as TItem;
+    return (isNode(definition) ? definition : group(definition as ObjectNodeDefinitions)) as TItem;
+  }
+
+  createItem(...args: [] | [value: NodeSet<TItem>]): TItem {
+    const item = this.createItemNode();
     untracked(() => {
       const normalize = createItemValueNormalizer(item);
       this.itemValueNormalizers.set(item, normalize);
@@ -611,13 +628,14 @@ export class ArrayNode<TItem extends AnyNode> {
 
   createClone() {
     // Capture declarative inputs without retaining this instance or its parent tree.
-    const { itemFactory, cloneInitial, initialValidatorSource, cloneOptions } = this;
-    return () => new ArrayNode<TItem>(itemFactory, cloneInitial, initialValidatorSource, cloneOptions).getNode();
+    const { itemFactory, cloneInitial, initialValidatorSource, cloneOptions, itemTemplateValue } = this;
+    return () => new ArrayNode<TItem>(itemFactory, cloneInitial, initialValidatorSource, cloneOptions, itemTemplateValue).getNode();
   }
 
   createNode(): ArrayNodeType<TItem> {
     const publicApi: ArrayApi<TItem> = {
       nodeType: () => 'array',
+      templateValue: () => this.templateValue(),
       items: this.items.asReadonly() as Signal<ArrayItems<TItem, AnyNode>>,
       length: this.length,
       form: this.form,

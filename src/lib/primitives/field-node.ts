@@ -11,6 +11,7 @@ import { runSyncValidators } from '../validation/run-sync-validators';
 import { resolveValueEquality } from './utils/resolve-value-equality';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { REQUIRED_METADATA } from '../validation/validators/required';
+import { registerNodeTemplateValue } from './utils/node-template-value';
 import { createCallableNodeApi } from './utils/create-callable-node-api';
 import { createNodeValueSignal } from './utils/create-node-value-signal';
 import { createNodeErrorsSignal } from './utils/create-node-errors-signal';
@@ -271,6 +272,7 @@ export class FieldNode<TValue> {
 
     this.node = this.createNode();
     markAsNode(this.node);
+    registerNodeTemplateValue(this.node, this.initialResetValue);
     registerNodeInputConfig(this.node, this.options, () => this.metadata());
     registerNodeInjector(this.node, this.options?.injector, this.options?.inheritInjector !== false, this.options?.adoptBindingInjector !== false);
     registerNodeValidatorMessages(this.node, undefined, this.options?.injector);

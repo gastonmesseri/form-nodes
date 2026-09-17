@@ -102,3 +102,14 @@ people[0] = people[1];
 array(field(''), { onSubmitBlocked: () => undefined });
 // @ts-expect-error only forms configure submission validation gates
 array(field(''), { submitWhen: 'valid' });
+
+const draft = people.templateValue();
+type _TemplateValue = Expect<Equal<typeof draft, { id: string; name: string | null; age: number | null }>>;
+type _TemplateFacadeValue = Expect<Equal<ReturnType<typeof people.$api.templateValue>, typeof draft>>;
+type _FieldTemplateValue = Expect<Equal<ReturnType<typeof names.templateValue>, string | null>>;
+type _NestedTemplateValue = Expect<Equal<ReturnType<typeof matrix.templateValue>, (number | null)[]>>;
+people.push(draft);
+const generated = array(() => ({ id: field.strict(1) }));
+type _FactoryTemplateValue = Expect<Equal<ReturnType<typeof generated.templateValue>, { id: number }>>;
+// @ts-expect-error Template values preserve child value types.
+draft.age = 'invalid';

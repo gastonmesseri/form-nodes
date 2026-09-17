@@ -397,6 +397,34 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    */
   nodeType(): 'array';
   /**
+   * Returns an independent value for one new item without adding it to this array.
+   * Template declarations use their captured defaults, independently of current rows and this
+   * array's `initialValue`. Reading a template does not construct nodes or run their validators
+   * or `configure()` callbacks. The call does not track signal dependencies.
+   *
+   * For a factory declaration, each call executes the factory and initializes a detached item;
+   * its normal configuration and validation effects can run, and errors propagate.
+   * Reused definitions and nodes already attached to a parent are rejected.
+   * The returned value reflects that item's committed data. No item is attached to this array.
+   *
+   * Plain objects, arrays, Date, Map, and Set are copied, including cycles. Opaque objects such
+   * as class instances and files retain their references; accessor state is not snapshotted.
+   *
+   * ```ts
+   * const users = array({
+   *   username: field(''),
+   *   role: field('reader'),
+   * });
+   * const draft = users.templateValue();
+   * draft.username = 'Ada';
+   * users.length(); // 0
+   * users.push(draft);
+   * users.at(0)?.username(); // 'Ada'
+   * ```
+   */
+  templateValue(): NodeValue<TItem>;
+
+  /**
    * Readonly signal containing the array node's current item nodes.
    * Reading it participates in reactive tracking, and its array reference changes when the
    * structure changes. The contained nodes are the live nodes owned by this array, not clones.

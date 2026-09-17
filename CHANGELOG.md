@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Add `array.templateValue()` to prepare a typed item value without inserting a row. Template arrays return independent copies of declared defaults; factory arrays execute their factory on each call and return the generated item's value.
+
 ## [4.2.1] - 2026-09-15
 
 ### Changed

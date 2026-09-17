@@ -6407,3 +6407,17 @@ describe('form patch array declaration defaults', () => {
     expect(model.details.people[0]!.tags()).toEqual([]);
   });
 });
+
+it('preserves declared form defaults and schema when used as an array template', () => {
+  const profile = form({ name: field('Ada'), address: { city: field('Zurich') } });
+  profile.name.set('Edited');
+  profile.add('extra', field('dynamic'));
+  const page = form({ users: array(profile) });
+  const draft = page.users.templateValue();
+  expect(draft).toEqual({ name: 'Ada', address: { city: 'Zurich' } });
+  draft.address.city = 'London';
+  expect(page.users.templateValue()).toEqual({ name: 'Ada', address: { city: 'Zurich' } });
+  expect(page()).toEqual({ users: [] });
+  expect(page.dirty()).toBe(false);
+  expect(page.touched()).toBe(false);
+});

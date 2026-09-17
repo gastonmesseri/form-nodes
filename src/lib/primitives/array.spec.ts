@@ -2181,3 +2181,133 @@ describe('array replacement defaults for untyped data', () => {
     expect(people[0]!.settings()).toEqual({ theme: 'light', language: 'en' });
   });
 });
+
+describe('array templateValue', () => {
+  it('returns declaration defaults independently of rows, edits, and resets', () => {
+    const users = array({ username: field(''), role: field('reader') }, {
+      initialValue: [{ username: 'Ada', role: 'admin' }],
+    });
+    const draft = users.templateValue();
+    expect(draft).toEqual({ username: '', role: 'reader' });
+    draft.username = 'Lia';
+    expect(users.$api.templateValue()).toEqual({ username: '', role: 'reader' });
+    expect(users()).toEqual([{ username: 'Ada', role: 'admin' }]);
+    expect(users.dirty()).toBe(false);
+    expect(users.touched()).toBe(false);
+    users.push(draft);
+    users.at(0)!.username.set('Edited');
+    users.resetToInitial();
+    users.clear();
+    expect(users.templateValue()).toEqual({ username: '', role: 'reader' });
+    expect(users.length()).toBe(0);
+  });
+
+  it('does not construct or validate template nodes when reading defaults', () => {
+    const validate = vi.fn(() => null);
+    const configure = vi.fn();
+    const onValueChange = vi.fn();
+    const users = array({ username: field('Ada', { validators: validate, configure }) }, { onValueChange });
+    validate.mockClear();
+    configure.mockClear();
+    const read = users.templateValue;
+    expect(read()).toEqual({ username: 'Ada' });
+    expect(read()).toEqual({ username: 'Ada' });
+    expect(validate).not.toHaveBeenCalled();
+    expect(configure).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it('preserves nested array defaults through template cloning', () => {
+    const tags = array(field('tag'), { initialValue: 2 });
+    tags.set(['edited']);
+    const rows = array({ tags, enabled: field.strict(true) });
+    expect(rows.templateValue()).toEqual({ tags: ['tag', 'tag'], enabled: true });
+    const outer = array(rows, { initialValue: 1 });
+    expect(outer.templateValue()).toEqual([]);
+    expect(outer.at(0)!.templateValue()).toEqual({ tags: ['tag', 'tag'], enabled: true });
+  });
+
+  it('supports empty declarations, field templates, and shorthand values', () => {
+    expect(array().templateValue()).toBeNull();
+    expect(array(field(undefined)).templateValue()).toBeUndefined();
+    const callback = () => 'value';
+    expect(array({ name: 'Ada', address: { city: 'Zurich' }, tags: ['a'], callback, empty: null }).templateValue())
+      .toEqual({ name: 'Ada', address: { city: 'Zurich' }, tags: ['a'], callback, empty: null });
+    const forms = createFormPrimitives({ nullable: false });
+    expect(forms.array({ name: forms.field('Ada') }).templateValue()).toEqual({ name: 'Ada' });
+  });
+
+  it('copies supported containers and cycles while preserving opaque references', () => {
+    class Opaque { value = 1; }
+    const opaque = new Opaque();
+    const data: { date: Date; map: Map<string, { count: number }>; set: Set<string>; opaque: Opaque; self?: unknown } = {
+      date: new Date('2026-01-01'), map: new Map([['a', { count: 1 }]]), set: new Set(['a']), opaque,
+    };
+    data.self = data;
+    const values = array(field.strict(data));
+    const first = values.templateValue();
+    first.date.setUTCFullYear(2030);
+    first.map.get('a')!.count = 9;
+    first.set.add('b');
+    const second = values.templateValue();
+    expect(second.self).toBe(second);
+    expect(second.date.getUTCFullYear()).toBe(2026);
+    expect(second.map.get('a')!.count).toBe(1);
+    expect([...second.set]).toEqual(['a']);
+    expect(second.opaque).toBe(opaque);
+    expect(second).not.toBe(first);
+  });
+
+  it('executes factories per call without inserting items or notifying the array', () => {
+    let next = 0;
+    const configure = vi.fn();
+    const onValueChange = vi.fn();
+    const factory = vi.fn(() => form({ id: field.strict(++next) }, { configure }));
+    const rows = array(factory, { onValueChange });
+    expect(factory).not.toHaveBeenCalled();
+    expect(rows.templateValue()).toEqual({ id: 1 });
+    expect(rows.$api.templateValue()).toEqual({ id: 2 });
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(configure).toHaveBeenCalledTimes(2);
+    expect(rows()).toEqual([]);
+    expect(rows.dirty()).toBe(false);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(rows.push().id()).toBe(3);
+  });
+
+  it('samples factory signals without tracking them and returns configured values', () => {
+    const name = signal('Ada');
+    const factory = vi.fn(() => field(name(), { configure(api) { api.set('Configured'); } }));
+    const rows = array(factory);
+    const draft = computed(() => rows.templateValue());
+    expect(draft()).toBe('Configured');
+    name.set('Lia');
+    expect(draft()).toBe('Configured');
+    expect(factory).toHaveBeenCalledTimes(1);
+    expect(rows.templateValue()).toBe('Configured');
+    expect(factory).toHaveBeenCalledTimes(2);
+  });
+
+  it('propagates factory failures and enforces fresh factory definitions', () => {
+    const failure = new Error('Unavailable');
+    const rows = array(() => { throw failure; });
+    expect(() => rows.templateValue()).toThrow(failure);
+    expect(rows.length()).toBe(0);
+    const reused = field('Ada');
+    const names = array(() => reused);
+    expect(names.templateValue()).toBe('Ada');
+    expect(() => names.templateValue()).toThrow('factory must return a fresh node definition');
+    expect(names.length()).toBe(0);
+  });
+});
+
+it('rejects attached factory nodes without replacing their reset baseline', () => {
+  const profile = form({ name: field('Ada') });
+  profile.name.set('Lia');
+  const names = array(() => profile.name);
+  expect(() => names.templateValue()).toThrow('factory must return an unattached node');
+  profile.name.resetToInitial();
+  expect(profile.name()).toBe('Ada');
+  expect(profile.name.parent()).toBe(profile);
+  expect(names.length()).toBe(0);
+});

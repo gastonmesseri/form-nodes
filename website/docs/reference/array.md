@@ -3,6 +3,7 @@ title: array()
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import arrayTemplateValueSource from '!!raw-loader!../../examples/array-template-value.example.ts';
 import arrayPatchSource from '!!raw-loader!../../examples/array-patch.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
@@ -86,6 +87,7 @@ helper when you want result checking. Numeric error kinds are exposed as strings
 | I want to… | Start with | Details |
 | --- | --- | --- |
 | Validate a field using a sibling in the same row | `ctx.parent<TParent>()` | [Sibling validation](#sibling-validation) |
+| Prepare an item value without adding a row | `templateValue()` | [Template values](#templatevalue) |
 | Choose a template and initial items | `array(template, ...)` | [Signatures](#signatures) and [options](#options) |
 | Read values, nodes, or array position | `myArray()`, `items()`, `myArray[index]` | [Properties and methods](#properties-and-methods) |
 | Search or iterate live item nodes | `at()`, `forEach()`, `map()`, `find()` | [Collection methods](#item-access-and-collection-methods) |
@@ -542,6 +544,7 @@ and the shared node state API. Signal properties must be called to read their cu
 | [`keyInParent()`](#keyinparent) | Property name or array index in the parent, or `null` at the root. |
 | [`$api`](#api-1) | Callable, collision-safe API for generic infrastructure. |
 | **Item access and collection** | |
+| [`templateValue()`](#templatevalue) | Returns a typed, independent item value without adding a row. |
 | [`at(index)`](#at) | Returns the live item node at an index, or `undefined`. |
 | [`forEach(callback)`](#foreach) | Invokes a callback once for every current item node. |
 | [`map(callback)`](#map) | Maps item nodes into a new plain array. |
@@ -1346,6 +1349,32 @@ profile.usernames.submitting(); // true while saveProfile() is running
 Each entry includes its consumer-facing signature, its behavior and return value, and a complete
 example. The examples alternate between primitive `array(field())` items and form-object
 `array({ username: field() })` items so both node shapes are represented.
+
+### Prepare an item value {#templatevalue}
+
+`templateValue()` returns the plain value for one item, with its inferred child types. Use it to
+prepare a draft before calling `push(draft)` or `insert(index, draft)`. It also works on an empty array
+and is available through `$api.templateValue()` for generic code.
+
+<CodeBlock language="ts" title="array-template-value.example.ts">{arrayTemplateValueSource}</CodeBlock>
+
+For template declarations, the method reads captured declaration defaults. Existing rows, later
+edits to the source template node, dynamically added source children, and the outer array's
+`initialValue` do not change those defaults. Nested array values include their own declared initial
+contents. Calling the method does not construct nodes, run validators or `configure()`, add rows,
+mark the collection dirty/touched, or notify its value-change callback. It does not track signal reads.
+
+Each call copies plain objects, arrays, Date, Map, and Set, including cycles and shared references
+within a captured value. Files, class instances, and other opaque objects retain their references;
+accessor descriptors are preserved, but their external state is not captured. This is the same
+copy policy used by [`resetToInitial()`](#reset-to-initial).
+
+For **factory declarations**, each call executes the factory and initializes a fresh detached item.
+The result is a copy of that item's committed value after configuration. Factory code, configuration,
+and normal validation effects can run; signal reads are sampled without becoming dependencies of
+the caller. The method does not attach the item to the array. Factory errors propagate, and factories
+must return fresh definitions on every call, just as they must for `push()`. Returning a node that
+already belongs to another parent is rejected.
 
 ### ◆ Read and iterate item nodes {#read-and-iterate-item-nodes}
 

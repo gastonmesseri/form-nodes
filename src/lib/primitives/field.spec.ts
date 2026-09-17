@@ -3,6 +3,7 @@ import { createWatch } from '@angular/core/primitives/signals';
 import { computed, Injector, isSignal, signal, runInInjectionContext, type Signal } from '@angular/core';
 
 import { form } from './form';
+import { array } from './array';
 import { field } from './field';
 import { max } from '../validation/validators/max';
 import { min } from '../validation/validators/min';
@@ -25,8 +26,8 @@ import { minLength } from '../validation/validators/min-length';
 import { requiredIf } from '../validation/validators/required-if';
 import { dateBetween } from '../validation/validators/date-between';
 import { requiredTrue } from '../validation/validators/required-true';
-import { lengthBetween } from '../validation/validators/length-between';
 import type { ValidatorContext } from '../validation/validation.type';
+import { lengthBetween } from '../validation/validators/length-between';
 import type { ValidatorNodeView } from '../validation/validator-node-view.type';
 import { provideFormNodesConfig } from '../form-node/provide-form-nodes-config';
 import { configureGlobalFormNodes } from '../configuration/configure-global-form-nodes';
@@ -3946,4 +3947,14 @@ it('replaces an array-valued field through patch while preserving explicit undef
   expect(items()).toEqual([{ name: 'Ada', age: 18 }]);
   expect(items.pristine()).toBe(true);
   expect(items.untouched()).toBe(true);
+});
+
+it('preserves a field declaration as array defaults after value edits and reset baseline changes', () => {
+  const name = field('Ada', { configure(api) { api.set('Configured'); } });
+  name.set('Edited');
+  name.reset('Reset');
+  const users = array(name, { initialValue: ['Row'] });
+  expect(users.templateValue()).toBe('Ada');
+  expect(users()).toEqual(['Row']);
+  expect(name()).toBe('Reset');
 });
