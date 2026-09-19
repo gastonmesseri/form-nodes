@@ -4657,3 +4657,10 @@ Writable-signal equality was checked against Angular v22.1.7
 Aggregate model replacement, dynamic array children, and touched-state removal were checked in
 `packages/forms/signals/test/node/field_node.spec.ts` (instances and arrays). Aggregate URL writes
 reuse Form Nodes' existing set/reconciliation behavior; URL mapping is an integration contract.
+
+The [upstream test audit](research/query-param-test-audit.md) maps query synchronization scenarios
+from nuqs, VueUse, ngxtension, and use-query-params to local regression tests and records intentional
+contract differences. Parameter names inherit Angular Router serializer limitations: `__proto__`
+is not retained. In the tested Angular 21.0.7, `hasOwnProperty` followed by another parameter can
+throw during parsing; Angular v22.1.7 uses `Object.hasOwn` in `parseQueryParam` for that case.
+The helper does not replace Angular's URL parser. `constructor` and `toString` round trips are covered.

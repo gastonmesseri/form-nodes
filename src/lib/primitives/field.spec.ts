@@ -4340,3 +4340,69 @@ it('batches a field with a writable signal while preserving field draft and vali
   expect(name.touched()).toBe(true);
   injector.destroy();
 });
+
+it('discards timed query-bound input across Back and Forward without delaying another key', async () => {
+  vi.useFakeTimers();
+  const { router, injector } = setup('/search?q=first&page=1');
+  try {
+    const name = field.strict('', [required], { debounce: 200 });
+    const page = signal(1);
+    const sync = syncQueryParams({ q: name, page }, { injector });
+    const changes = vi.fn();
+    name.onValueChange(changes);
+    name.value.control.set('stale');
+    page.set(2); await settle();
+    expect(router.url).toBe('/search?q=first&page=2');
+    expect(name()).toBe('first');
+    expect(name.value.control()).toBe('stale');
+    expect(name.debouncing()).toBe(true);
+    router.external('/search?q=older&page=1', 'popstate');
+    router.external('/search?q=first&page=2', 'popstate');
+    await vi.advanceTimersByTimeAsync(300);
+    expect(name()).toBe('first');
+    expect(name.value.control()).toBe('first');
+    expect(name.debouncing()).toBe(false);
+    expect(name.dirty()).toBe(true);
+    expect(name.touched()).toBe(false);
+    expect(changes.mock.calls.map(([value]) => value)).toEqual(['older', 'first']);
+    expect(router.requested).toHaveLength(1);
+    name.value.control.set('fresh');
+    await vi.advanceTimersByTimeAsync(200);
+    expect(sync.params.q()).toBe('fresh');
+    expect(router.requested).toHaveLength(2);
+    expect(name.valid()).toBe(true);
+  } finally { injector.destroy(); vi.useRealTimers(); }
+});
+
+it('prevents a late custom debounce completion from reviving a query value after history restoration', async () => {
+  const { router, injector } = setup('/search?q=first');
+  const releases: Array<() => void> = [];
+  const aborts: AbortSignal[] = [];
+  try {
+    const name = field.strict('', [required], { debounce: (abort) => {
+      aborts.push(abort);
+      return new Promise<void>(resolve => releases.push(resolve));
+    } });
+    const sync = syncQueryParams({ q: name }, { injector });
+    const changed = vi.fn();
+    name.onValueChange(changed);
+    name.value.control.set('stale');
+    expect(aborts).toHaveLength(1);
+    expect(aborts[0]!.aborted).toBe(false);
+    router.external('/search?q=', 'popstate');
+    expect(aborts[0]!.aborted).toBe(true);
+    expect(name.invalid()).toBe(true);
+    releases[0]!(); await settle();
+    expect(name()).toBe('');
+    expect(name.value.control()).toBe('');
+    expect(name.debouncing()).toBe(false);
+    expect(changed.mock.calls.map(([value]) => value)).toEqual(['']);
+    expect(router.requested).toHaveLength(0);
+    name.value.control.set('fresh');
+    expect(aborts).toHaveLength(2);
+    releases[1]!(); await settle();
+    expect(name.valid()).toBe(true);
+    expect(sync.params.q()).toBe('fresh');
+    expect(router.requested).toHaveLength(1);
+  } finally { injector.destroy(); }
+});

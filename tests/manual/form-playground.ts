@@ -103,6 +103,7 @@ myComputed;
 const binding = syncQueryParams({
   something: { source: myForm },
 });
+// binding.paramMap
 
 
 myForm.company;

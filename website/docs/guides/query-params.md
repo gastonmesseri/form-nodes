@@ -68,6 +68,11 @@ If only one entry's owner is destroyed, the other entries remain active. The URL
 tracking the whole URL until the connection closes, including keys whose fields stopped syncing.
 Keeping keys under `params` also allows parameters named `pending` or `unsubscribe` without collisions.
 
+Parameter names still pass through Angular Router's URL serializer. Avoid `__proto__`, which the
+default serializer does not retain. In Angular 21.0.7, `hasOwnProperty` can also break parsing when
+another parameter follows it, including another occurrence of the same key. Angular 22.1.7 uses
+a safe ownership check for that case. Ordinary names such as `constructor` and `toString` work.
+
 ## Conversion
 
 The shorthand infers string, number, or boolean conversion from the fallback's runtime type.

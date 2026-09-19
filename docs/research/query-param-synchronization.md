@@ -21,6 +21,9 @@ Source and test inspection used these exact repository snapshots. Except for Ang
 
 Upstream tests were **read, not executed**. Absence of a policy in an inspected helper is not proof that every application using it has the corresponding bug.
 
+The subsequent [test audit](query-param-test-audit.md) maps relevant upstream scenarios to executable
+Form Nodes regressions and records differences from the implemented contract.
+
 ## Comparison
 
 | Reference | State and scheduling | History and defaults | Useful lesson |

@@ -6713,3 +6713,68 @@ it('restores a whole form through JSON with nested validation, array structure, 
   expect(router.requested).toHaveLength(2);
   injector.destroy();
 });
+
+it('discards staggered nested control timers on whole-form history restoration and accepts fresh edits', async () => {
+  vi.useFakeTimers();
+  const url = (a: string, b: string) => `/search?state=${encodeURIComponent(JSON.stringify({ nested: { a, b } }))}`;
+  const { router, injector } = setup(url('first', 'second'));
+  try {
+    const profile = form({ nested: form({ a: field.strict('', [required], { debounce: 100 }), b: field.strict('', [required], { debounce: 300 }) }) });
+    const sync = syncQueryParams({ state: { source: profile, codec: 'json' } }, { injector });
+    const changes = vi.fn();
+    profile.onValueChange(changes);
+    profile.nested.a.value.control.set('committed');
+    profile.nested.b.value.control.set('stale');
+    await vi.advanceTimersByTimeAsync(100);
+    expect(profile()).toEqual({ nested: { a: 'committed', b: 'second' } });
+    expect(router.requested).toHaveLength(1);
+    router.external(url('', ''), 'popstate');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.nested.invalid()).toBe(true);
+    expect(profile.debouncing()).toBe(false);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.touched()).toBe(false);
+    router.external(url('first', 'second'), 'popstate');
+    await vi.advanceTimersByTimeAsync(500);
+    expect(profile()).toEqual({ nested: { a: 'first', b: 'second' } });
+    expect(profile.nested.b.value.control()).toBe('second');
+    expect(router.requested).toHaveLength(1);
+    expect(changes).toHaveBeenCalledTimes(3);
+    profile.nested.b.value.control.set('fresh');
+    await vi.advanceTimersByTimeAsync(300);
+    expect(sync.params.state()).toBe('{"nested":{"a":"first","b":"fresh"}}');
+    expect(profile.valid()).toBe(true);
+    expect(router.requested).toHaveLength(2);
+  } finally { injector.destroy(); vi.useRealTimers(); }
+});
+
+it('cancels pending custom debounce in descendants when a whole-form URL is restored', async () => {
+  const releases: Array<() => void> = [];
+  const aborts: AbortSignal[] = [];
+  const { router, injector } = setup('/search?state=%7B%22nested%22:%7B%22name%22:%22first%22%7D%7D');
+  try {
+    const profile = form({ nested: form({ name: field.strict('', [required], { debounce: (abort) => {
+      aborts.push(abort);
+      return new Promise<void>(resolve => releases.push(resolve));
+    } }) }) });
+    const sync = syncQueryParams({ state: { source: profile, codec: 'json' } }, { injector });
+    profile.nested.name.value.control.set('stale');
+    expect(aborts).toHaveLength(1);
+    router.external('/search?state=%7B%22nested%22:%7B%22name%22:%22%22%7D%7D', 'popstate');
+    expect(aborts[0]!.aborted).toBe(true);
+    releases[0]!(); await settle();
+    expect(profile()).toEqual({ nested: { name: '' } });
+    expect(profile.nested.name.value.control()).toBe('');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.nested.invalid()).toBe(true);
+    expect(profile.debouncing()).toBe(false);
+    expect(profile.dirty()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(router.requested).toHaveLength(0);
+    profile.nested.name.value.control.set('fresh');
+    releases[1]!(); await settle();
+    expect(profile.valid()).toBe(true);
+    expect(sync.params.state()).toBe('{"nested":{"name":"fresh"}}');
+    expect(router.requested).toHaveLength(1);
+  } finally { injector.destroy(); }
+});
