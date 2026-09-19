@@ -4250,7 +4250,7 @@ it('synchronizes committed URL data independently of public equality and keeps v
 it('synchronizes an array-valued field through repeated query keys and restores its captured default', async () => {
   const { router, injector } = setup('/search?tag=angular&tag=forms');
   const tags = field.strict<readonly string[]>([], { validators: minLength(1), debounce: 'blur' });
-  const sync = syncQueryParams({ tag: { field: tags, codec: 'array' } }, { injector });
+  const sync = syncQueryParams({ tag: { source: tags, codec: 'array' } }, { injector });
   expect(tags()).toEqual(['angular', 'forms']);
   expect(tags.valid()).toBe(true);
   expect(tags.dirty()).toBe(false);
@@ -4288,7 +4288,7 @@ it('imports JSON into an object-valued field while preserving validation and can
     debounce: 'blur',
     validators: ({ value }) => value().count < 0 ? { kind: 'negative' } : null,
   });
-  const sync = syncQueryParams({ state: { field: state, codec: 'json' } }, { injector });
+  const sync = syncQueryParams({ state: { source: state, codec: 'json' } }, { injector });
   expect(state()).toEqual({ count: 2 });
   expect(state.valid()).toBe(true);
   expect(state.dirty()).toBe(false);
@@ -4310,5 +4310,33 @@ it('imports JSON into an object-valued field while preserving validation and can
   expect(state.valid()).toBe(true);
   expect(state.dirty()).toBe(false);
   expect(sync.params.state()).toBe('{"count":0}');
+  injector.destroy();
+});
+
+it('batches a field with a writable signal while preserving field draft and validation behavior', async () => {
+  const { router, injector } = setup('/search?q=Ada&page=2');
+  const name = field('', [required], { debounce: 'blur' });
+  const page = signal(1);
+  const sync = syncQueryParams({ q: name, page }, { injector });
+  expect(name.valid()).toBe(true);
+  expect(name.pristine()).toBe(true);
+  name.value.control.set('');
+  page.set(3);
+  await settle();
+  expect(sync.params.q()).toBe('Ada');
+  expect(sync.params.page()).toBe('3');
+  expect(name.value.control()).toBe('');
+  expect(name.valid()).toBe(true);
+  name.markAsTouched();
+  await settle();
+  expect(name.invalid()).toBe(true);
+  expect(sync.params.q()).toBe('');
+  expect(router.requested).toHaveLength(2);
+  router.external('/search?q=Grace&page=4', 'popstate');
+  expect(name()).toBe('Grace');
+  expect(page()).toBe(4);
+  expect(name.valid()).toBe(true);
+  expect(name.dirty()).toBe(true);
+  expect(name.touched()).toBe(true);
   injector.destroy();
 });

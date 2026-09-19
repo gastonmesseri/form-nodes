@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { syncQueryParams } from '@ngblocks/form-nodes/router';
-import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
+import { field, form, array, FormNodeDirective } from '@ngblocks/form-nodes';
 
 @Component({
   imports: [FormNodeDirective],
@@ -16,16 +16,19 @@ export class SearchPage {
     search: field.strict('', { debounce: 250 }),
     page: field.strict(1),
     archived: field.strict(false),
-    tags: field.strict<string[]>([]),
-    options: field.strict({ sort: 'name', includeArchived: false }),
+    tags: array(field.strict('')),
+    options: { sort: field.strict('name'), includeArchived: field.strict(false) },
   });
 
+  view = signal('list');
+
   querySync = syncQueryParams({
-    q: { field: this.filters.search, defaultValue: '', clearOnDefault: true },
-    page: { field: this.filters.page, codec: 'integer', defaultValue: 1, history: 'push' },
+    q: { source: this.filters.search, defaultValue: '', clearOnDefault: true },
+    page: { source: this.filters.page, codec: 'integer', defaultValue: 1, history: 'push' },
     archived: this.filters.archived,
-    tag: { field: this.filters.tags, codec: 'array' },
-    options: { field: this.filters.options, codec: 'json' },
+    view: this.view,
+    tag: { source: this.filters.tags, codec: 'array' },
+    options: { source: this.filters.options, codec: 'json' },
   }, {
     onError: error => console.error(error.phase, error.key, error.cause),
   });

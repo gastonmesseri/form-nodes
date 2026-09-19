@@ -1,6 +1,6 @@
 
 /**
- * Converts decoded, repeated query values to a field value and back.
+ * Converts decoded, repeated query values to a source value and back.
  *
  * ```ts
  * const codec: QueryParamCodec<number> = {
@@ -23,7 +23,7 @@ const scalar = (values: readonly string[]) => {
 };
 
 /**
- * Explicit codecs for scalar fields, repeated string arrays, and JSON values.
+ * Explicit codecs for scalar values, repeated string arrays, and JSON values.
  *
  * ```ts
  * queryParam.integer().parse(['2']); // 2

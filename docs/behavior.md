@@ -4554,7 +4554,8 @@ the existing instantiation ceiling remains in force.
 ## Query parameter synchronization
 
 `syncQueryParams()` is exported from the optional `@ngblocks/form-nodes/router` entry point.
-Its map accepts leaf fields directly or configured `{ field, codec?, defaultValue?, clearOnDefault?,
+Its map accepts fields, forms, groups, arrays, and writable Angular signals directly or configured
+`{ source, codec?, defaultValue?, clearOnDefault?,
 history?, injector? }` entries. Shared options supply the Router/owner injector, history default,
 and `onError`. The return value is a `QueryParamsSync<K>` connection with `unsubscribe()`. Core nodes continue to work
 without Router or an injection context; only the integration needs a Router-providing injector.
@@ -4579,11 +4580,11 @@ without Router or an injection context; only the integration needs a Router-prov
   and repeated-array names, including narrow literal fields their parser could exceed. JSON trusts
   the field's expected type. Unknown runtime names fail before
   any field mutation or key registration.
-- Array-valued leaf fields use `array`/`queryParam.array()` for repeated string parameters.
+- String-array sources use `array`/`queryParam.array()` for repeated string parameters.
   Mutable and readonly string arrays are supported. Order, duplicates, and empty items survive
   round trips; commas are ordinary text. An empty array removes the key, while an absent key imports
-  the fixed fallback. Numeric/object arrays can use JSON or custom codecs; aggregate `array()` nodes are
-  not direct bindings. Array types are never inferred from initial contents.
+  the fixed fallback. Numeric/object arrays can use JSON or custom codecs. Aggregate `array()` nodes are supported
+  through their own set operation, including structural reconciliation. Array types are never inferred from initial contents.
 - `json`/`queryParam.json<T>()` encodes the entire value in one JSON parameter using native
   JSON.stringify/JSON.parse. Empty arrays remain `[]`; repeated JSON parameters and invalid syntax
   use the fallback and report parsing errors. JSON types/generics do not validate the parsed shape.
@@ -4597,9 +4598,20 @@ without Router or an injection context; only the integration needs a Router-prov
   pending state, and parent aggregation. URL imports use `set()`, preserving dirty/touched state
   while canceling obsolete control work. They do not change the reset baseline.
 - Outbound observation follows `$api._value()` independently of exposed equality, skips its initial
-  sample, and batches committed edits in microtasks. The internal field bridge shares subscription
+  sample, and batches committed edits in microtasks. The internal node bridge shares subscription
   ownership with public `onValueChange`; its committed observation does not alter that public API.
   Pending control text and validation-only/state-only changes do not publish query updates.
+- Form/group imports use their existing set behavior, and array imports reconcile item nodes.
+  Child-name collisions are resolved through `$api`. Child and aggregate public equality cannot hide
+  committed edits from the helper. URL imports acknowledge the resulting committed snapshot to avoid
+  echoing rebuilt aggregate objects. Defaults remain complete source values, not patch objects.
+- Writable signals (including `linkedSignal`) use their own read/set contract and equality. Rejected
+  equal writes do not publish; accepted same-reference notifications remain observable. Signal
+  imports acknowledge reactive notifications without canonicalizing the URL. Codec and Router reads
+  are untracked. Signals share node batching, history, failure handling, SSR, and cleanup, but do not
+  acquire node validation, dirty/touched, reset, or control-debounce state. Readonly/computed signals
+  and ordinary functions fail before any source mutation. Signals have no node owner, so their
+  lifetime uses the shared and optional per-entry injectors.
 - One coordinator per Router merges key patches across helper calls, preserves unrelated parameters
   and fragments, and serializes navigation attempts. Replace is the default; any changed push entry
   makes a batch push. Duplicate active keys are rejected, and the complete map reserves its keys
@@ -4639,3 +4651,9 @@ checked against `packages/router/src/url_tree.ts` (`serializeQueryParams`, `pars
 `packages/router/test/url_serializer.spec.ts` (repeated query parameter serialization and parsing).
 Angular serializes array values as repeated keys and preserves their parsed order. Named codec
 selection remains a Form Nodes API contract rather than a Signal Forms feature.
+
+Writable-signal equality was checked against Angular v22.1.7
+`packages/core/primitives/signals/src/signal.ts` and `packages/core/test/signals/signal_spec.ts`.
+Aggregate model replacement, dynamic array children, and touched-state removal were checked in
+`packages/forms/signals/test/node/field_node.spec.ts` (instances and arrays). Aggregate URL writes
+reuse Form Nodes' existing set/reconciliation behavior; URL mapping is an integration contract.

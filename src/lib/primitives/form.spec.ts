@@ -6633,7 +6633,7 @@ it('synchronizes nested field query bindings with aggregate validation and prese
 it('batches named scalar and array codecs in nested forms and preserves validation and reset behavior', async () => {
   const { router, injector } = setup('/search?tag=angular&page=2');
   const filters = form({ nested: form({ tags: field.strict<string[]>([], [minLength(1)]), page: field(1) }) });
-  const sync = syncQueryParams({ tag: { field: filters.nested.tags, codec: 'array', clearOnDefault: true }, page: { field: filters.nested.page, codec: 'integer' } }, { injector });
+  const sync = syncQueryParams({ tag: { source: filters.nested.tags, codec: 'array', clearOnDefault: true }, page: { source: filters.nested.page, codec: 'integer' } }, { injector });
   expect(filters()).toEqual({ nested: { tags: ['angular'], page: 2 } });
   expect(filters.valid()).toBe(true);
   filters.patch({ nested: { tags: ['react', 'vue'], page: 3 } });
@@ -6659,7 +6659,7 @@ it('batches named scalar and array codecs in nested forms and preserves validati
 it('aggregates JSON array field validation and batches nested form writes through reset', async () => {
   const { router, injector } = setup('/search?ids=%5B1,2%5D&page=2');
   const filters = form({ nested: form({ ids: field.strict<number[]>([], [minLength(1)]), page: field(1) }) });
-  const sync = syncQueryParams({ ids: { field: filters.nested.ids, codec: 'json' }, page: filters.nested.page }, { injector });
+  const sync = syncQueryParams({ ids: { source: filters.nested.ids, codec: 'json' }, page: filters.nested.page }, { injector });
   expect(filters()).toEqual({ nested: { ids: [1, 2], page: 2 } });
   expect(filters.valid()).toBe(true);
   filters.patch({ nested: { ids: [3, 4], page: 3 } });
@@ -6678,5 +6678,38 @@ it('aggregates JSON array field validation and batches nested form writes throug
   expect(sync.params.ids()).toBe('[]');
   expect(sync.params.page()).toBe('1');
   expect(filters.untouched()).toBe(true);
+  injector.destroy();
+});
+
+it('restores a whole form through JSON with nested validation, array structure, drafts, and reset baselines', async () => {
+  const url = (name: string, tags: string[]) => `/search?state=${encodeURIComponent(JSON.stringify({ nested: { name }, tags }))}`;
+  const { router, injector } = setup(url('Ada', ['one', 'two']));
+  const profile = form({ nested: form({ name: field('', [required], { debounce: 'blur' }) }), tags: array(field.strict('')) });
+  const sync = syncQueryParams({ state: { source: profile, codec: 'json' } }, { injector });
+  expect(profile()).toEqual({ nested: { name: 'Ada' }, tags: ['one', 'two'] });
+  expect(profile.valid()).toBe(true);
+  expect(profile.pristine()).toBe(true);
+  profile.nested.name.value.control.set('draft');
+  profile.nested.name.markAsTouched();
+  await settle();
+  expect(router.requested).toHaveLength(1);
+  profile.nested.name.value.control.set('pending');
+  router.external(url('', ['three']), 'popstate');
+  expect(profile.nested.name.value.control()).toBe('');
+  expect(profile.nested.name.debouncing()).toBe(false);
+  expect(profile.nested.invalid()).toBe(true);
+  expect(profile.invalid()).toBe(true);
+  expect(profile.dirty()).toBe(true);
+  expect(profile.touched()).toBe(true);
+  expect(profile.tags()).toEqual(['three']);
+  await settle();
+  expect(router.requested).toHaveLength(1);
+  profile.resetToInitial();
+  await settle();
+  expect(profile()).toEqual({ nested: { name: '' }, tags: [] });
+  expect(profile.pristine()).toBe(true);
+  expect(profile.untouched()).toBe(true);
+  expect(sync.params.state()).toBe('{"nested":{"name":""},"tags":[]}');
+  expect(router.requested).toHaveLength(2);
   injector.destroy();
 });

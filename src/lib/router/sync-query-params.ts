@@ -1,50 +1,87 @@
 import { Router } from '@angular/router';
-import { isFormNode } from '@ngblocks/form-nodes';
 import { isPlatformBrowser } from '@angular/common';
-import { DestroyRef, ErrorHandler, Injector, PLATFORM_ID, inject, untracked } from '@angular/core';
+import { DestroyRef, ErrorHandler, Injector, PLATFORM_ID, inject, untracked, type Signal } from '@angular/core';
 
 import { resolveCodec } from './query-param-codec';
 import { createQueryParamState } from './query-param-state';
+import { createQueryParamSource } from './query-param-source';
 import { getCoordinator, sameValues, type QueryEntry } from './query-param-coordinator';
 import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQueryParamsOptions } from './sync-query-params.type';
 
-type FieldBridge = {
-  _value(): unknown;
-  _watchCommittedValue(callback: (value: unknown) => void, options: { injector: Injector; onDestroy: () => void }): () => void;
-};
-
 /**
- * Synchronizes a map of query keys with existing fields through Angular Router.
- * Accepts a field directly or an object with field and per-key options. Returns raw
+ * Synchronizes query keys with form nodes and writable signals through Angular Router.
+ * Accepts a source directly or an object with source and per-key options. Returns raw
  * URL signals, synchronization state, and an idempotent unsubscribe method.
  * An explicit injector or the current injection context owns the whole connection;
  * entry injectors and node owners may end individual entries.
- * URL values initialize fields without resetting interaction state or redefining initial values.
+ * URL values initialize nodes through set without resetting interaction state or initial values.
+ * Forms, groups, and arrays retain their normal set semantics and need explicit codecs.
+ * Signals use set and their own equality; readonly signals are not supported.
  * Committed edits are batched across helpers; default history mode is replace.
  *
  * ```ts
- * function connectFilters() {
- *   const filters = form({
+ * import { Component } from '@angular/core';
+ *
+ * @Component({
+ *   imports: [FormNodeDirective],
+ *   template: `
+ *     <input [formNode]="filters.search" />
+ *     <p>{{ querySync.params.q() }}</p>
+ *   `,
+ * })
+ * export class SearchPage {
+ *   filters = form({
  *     search: field(''),
  *     page: field(1),
  *   });
- *   return syncQueryParams({
+ *
+ *   querySync = syncQueryParams({
  *     q: {
- *       field: filters.search,
+ *       source: this.filters.search,
  *       clearOnDefault: true,
  *     },
- *     page: filters.page,
+ *     page: this.filters.page,
  *   });
  * }
  * ```
  *
- * Call connectFilters from an Angular injection context that provides Router.
+ * ```ts
+ * import { signal } from '@angular/core';
+ * import { Component } from '@angular/core';
  *
- * @param bindings Query keys mapped to fields or configured field bindings.
+ * @Component({
+ *   template: `
+ *     <p>{{ querySync.params.page() }}</p>
+ *   `,
+ * })
+ * export class StatePage {
+ *   filters = form({
+ *     search: field(''),
+ *   });
+ *
+ *   page = signal<number | null>(null);
+ *
+ *   querySync = syncQueryParams({
+ *     state: {
+ *       source: this.filters,
+ *       codec: 'json',
+ *     },
+ *     page: {
+ *       source: this.page,
+ *       codec: 'integer',
+ *     },
+ *   });
+ * }
+ * ```
+ *
+ * Configure Router in the application providers. Component field initializers run
+ * in an injection context, and component destruction cleans up the connection.
+ *
+ * @param bindings Query keys mapped to nodes, writable signals, or configured source bindings.
  * @param options Shared injector, history policy, and error handler.
  */
-export function syncQueryParams<T extends Record<string, unknown> = Record<never, never>>(
-  bindings: { [K in keyof T]: QueryParamBinding<T[K]>['field'] | QueryParamBinding<T[K]> },
+export function syncQueryParams<T extends Record<string, Signal<any>> = Record<never, never>>(
+  bindings: { [K in keyof T]: (T[K] & QueryParamBinding<ReturnType<T[K]>>['source']) | (QueryParamBinding<ReturnType<T[K]>> & { source: T[K] }) },
   options: SyncQueryParamsOptions = {},
 ): QueryParamsSync<Extract<keyof T, string>> {
   return untracked(() => {
@@ -54,14 +91,11 @@ export function syncQueryParams<T extends Record<string, unknown> = Record<never
       if (options.onError) options.onError(error);
       else injector.get(ErrorHandler).handleError(error);
     };
-    // Resolve all configuration before changing any field or reserving URL keys.
+    // Resolve all configuration before changing any source or reserving URL keys.
     const definitions = Object.entries(bindings).map(([key, input]) => {
-      const config = (typeof input === 'function' ? { field: input } : input) as QueryParamBinding<any>;
-      if (!config || !isFormNode(config.field) || config.field.$api.nodeType() !== 'field') {
-        throw new Error(`Query parameter "${key}" requires a field node.`);
-      }
-      const bridge = config.field.$api as unknown as FieldBridge;
-      const fallback = Object.hasOwn(config, 'defaultValue') ? config.defaultValue : bridge._value();
+      const config = (typeof input === 'function' ? { source: input } : input) as QueryParamBinding<any>;
+      const source = createQueryParamSource(config?.source, key);
+      const fallback = Object.hasOwn(config, 'defaultValue') ? config.defaultValue : source.read();
       const codec = resolveCodec(config.codec, fallback);
       const serialize = (value: unknown): readonly string[] => {
         const result = (value === null || value === undefined) ? null : codec.serialize(value);
@@ -73,7 +107,7 @@ export function syncQueryParams<T extends Record<string, unknown> = Record<never
       const defaultValues = serialize(fallback);
       const owner = config.injector ?? injector;
       if (owner.get(Router) !== router) throw new Error('All query parameter owners must use the same Router.');
-      return { key, config, bridge, fallback, codec, serialize, defaultValues, owner };
+      return { key, config, source, fallback, codec, serialize, defaultValues, owner };
     });
     const initialUrl = router.currentNavigation()?.finalUrl ?? router.parseUrl(router.url);
     const state = createQueryParamState(Object.keys(bindings) as Extract<keyof T, string>[], initialUrl.queryParamMap);
@@ -98,8 +132,7 @@ export function syncQueryParams<T extends Record<string, unknown> = Record<never
     try {
       ownerCleanup = injector.get(DestroyRef).onDestroy(stop);
       for (const definition of definitions) {
-        const { key, config, bridge, codec, fallback, serialize, defaultValues, owner } = definition;
-        let previous = bridge._value();
+        const { key, config, source, codec, fallback, serialize, defaultValues, owner } = definition;
         const cleanup: (() => void)[] = [];
         const entry: QueryEntry = {
           key,
@@ -109,7 +142,7 @@ export function syncQueryParams<T extends Record<string, unknown> = Record<never
           accept: state.accept,
           setPending: pending => state.setPending(key, pending),
           read() {
-            const values = serialize(bridge._value());
+            const values = serialize(source.read());
             return config.clearOnDefault && sameValues(values, defaultValues) ? [] : values;
           },
           restore(values) {
@@ -121,8 +154,7 @@ export function syncQueryParams<T extends Record<string, unknown> = Record<never
                 report({ key, phase: 'parse', cause });
               }
             }
-            previous = value;
-            config.field.$api.set(value);
+            source.write(value);
           },
           stop() {
             if (!entry.active) return;
@@ -136,12 +168,7 @@ export function syncQueryParams<T extends Record<string, unknown> = Record<never
         initialize.push(() => {
           entry.restore(initialUrl.queryParamMap.getAll(key));
           if (!entry.active) return;
-          previous = bridge._value();
-          cleanup.push(bridge._watchCommittedValue((value) => {
-            if (Object.is(value, previous)) return;
-            previous = value;
-            coordinator.enqueue(entry);
-          }, { injector: owner, onDestroy: entry.stop }));
+          cleanup.push(source.watch(() => coordinator.enqueue(entry), { injector: owner, onDestroy: entry.stop }));
         });
       }
       for (const start of initialize) {

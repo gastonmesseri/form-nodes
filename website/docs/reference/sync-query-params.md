@@ -2,15 +2,24 @@
 title: syncQueryParams
 ---
 
+import CodeBlock from '@theme/CodeBlock';
+import source from '!!raw-loader!../../examples/query-params.typecheck.ts';
+
 # syncQueryParams
 
 Import `syncQueryParams`, `queryParam`, and their types from `@ngblocks/form-nodes/router`.
-The helper synchronizes a typed map of query keys to existing leaf fields and returns `QueryParamsSync<K>`,
+The helper synchronizes a typed map of query keys to existing form nodes and writable Angular signals and returns `QueryParamsSync<K>`,
 where `K` is the union of the configured query keys. It requires a Router-providing injection context or explicit injector.
 
 ```ts
 syncQueryParams(bindings, options?)
 ```
+
+Declare the connection as a component property after its sources. With Router configured in
+the application providers, the component initializer supplies the injection context and its
+destruction automatically cleans up the connection.
+
+<CodeBlock language="ts" title="search-page.ts">{source}</CodeBlock>
 
 The connection exposes:
 
@@ -27,13 +36,13 @@ not update them until Router accepts the write. After cleanup they retain their 
 `pending()` is false. While any binding remains active, URL signals track all keys even if another
 entry's owner has been destroyed. `pending()` excludes form debounce, validation, and other helpers.
 
-Each binding is a field or a configuration object:
+Each binding is a node, writable signal, or configuration object:
 
 | Member | Meaning | Default |
 | --- | --- | --- |
-| `field` | Existing field, with its value type preserved. | Required in configured entries. |
+| `source` | Existing `field()`, `form()`, `group()`, `array()`, or writable Angular signal, with its value type preserved. | Required in configured entries. |
 | `codec` | `'string'`, `'number'`, `'integer'`, `'boolean'`, `'array'`, `'json'`, or a compatible `QueryParamCodec<T>` object. Names match the `queryParam` factories. | Infer from a string/number/boolean fallback. |
-| `defaultValue` | Fixed fallback for missing or malformed URL values. | Committed field value at registration. |
+| `defaultValue` | Fixed fallback for missing or malformed URL values. | Committed node value or current signal value at registration. |
 | `clearOnDefault` | Remove values matching the serialized default. | `false` |
 | `history` | `replace` or `push`; any changed push entry makes a batch push. | Shared option, otherwise `replace`. |
 | `injector` | Additional lifetime owner for this entry, resolving the same Router. | Shared helper owner. |
@@ -43,12 +52,14 @@ injection context owns the whole helper. `onError` receives `QueryParamSyncError
 to Angular `ErrorHandler`. Lifecycle cleanup and manual unsubscribe release observations, queued
 writes, and key registrations. Fields and their initial reset values remain intact.
 
-The map accepts leaf fields, including array-valued and object-valued fields with explicit codecs.
+The map accepts every node kind and writable signals, including `linkedSignal()`. Arrays and objects require explicit codecs.
 Use `'array'` for repeated string values; an empty array removes the key. Use `'json'` for objects or
 arrays encoded as one JSON string, including numeric arrays. JSON empty arrays remain `[]` in the URL.
-JSON validates syntax but trusts the expected field type; use a custom codec for schema validation.
-Arrays are not inferred. Scalar and repeated-array codec names are checked against the field type. Plain Angular
-signals, forms, groups, and array nodes are not supported bindings. Multiple helpers on one Router
+JSON validates syntax but trusts the expected source type; use a custom codec for schema validation.
+Arrays are not inferred. Scalar and repeated-array codec names are checked against the source type.
+Readonly/computed signals cannot receive URL values and are rejected. Aggregate imports use the node’s
+existing `set()` behavior. Nodes retain committed-value observation and node ownership; writable
+signals use their own equality and the helper/entry injector lifetime. Multiple helpers on one Router
 share batching; duplicate active keys are rejected.
 
 See [the complete guide](../guides/query-params.md) for initialization, navigation conflicts,

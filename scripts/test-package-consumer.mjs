@@ -124,12 +124,21 @@ try {
   symlinkSync(resolve(workspace, 'node_modules/@angular/router'), join(angularDirectory, 'router'), 'dir');
   writeFileSync(join(temporaryDirectory, 'package-consumer.ts'), source + `
     import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding } from '@ngblocks/form-nodes/router';
+    import { signal as querySignal } from '@angular/core';
     const queryField = field(1);
     const objectCodec = queryParam.integer();
     objectCodec.parse(['2']);
-    const queryBinding: QueryParamBinding<number | null> = { field: queryField, codec: 'integer', defaultValue: 1 };
+    const queryBinding: QueryParamBinding<number | null> = { source: queryField, codec: 'integer', defaultValue: 1 };
     function connectQueryParameters() {
-      const sync = syncQueryParams({ page: queryBinding, tag: { field: field.strict<string[]>([]), codec: 'array' }, active: { field: field(false), codec: 'boolean' }, state: { field: field.strict({ ids: [1, 2] }), codec: 'json' } });
+      const sync = syncQueryParams({ page: queryBinding, tag: { source: field.strict<string[]>([]), codec: 'array' }, active: { source: field(false), codec: 'boolean' }, state: { source: field.strict({ ids: [1, 2] }), codec: 'json' } });
+      const mixed = syncQueryParams({
+        page: { source: querySignal(1), codec: 'integer', defaultValue: 1 },
+        profile: { source: form({ name: field('') }), codec: 'json' },
+        tags: { source: array(field.strict('')), codec: 'array' },
+        group: { source: group({ active: field(false) }), codec: 'json' },
+      });
+      const rawProfile: string | null = mixed.params.profile();
+      void rawProfile;
       const typed: QueryParamsSync<'page'> = sync;
       const raw: string | null = sync.params.page();
       const repeated: string[] = sync.paramMap().getAll('tag');

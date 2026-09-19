@@ -12,7 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
-- Synchronize multiple fields with Angular Router query parameters using `syncQueryParams()` from `@ngblocks/form-nodes/router`. Mix direct fields and configured bindings with typed codecs (objects or built-in names), repeated array parameters, JSON values, defaults, shared batching, replace/push history, automatic cleanup, and a connection exposing raw query signals, pending/closed state, and manual cancellation while preserving form validation and pending-edit navigation semantics.
+- Synchronize fields, forms, groups, arrays, and writable Angular signals with Angular Router query parameters using `syncQueryParams()` from `@ngblocks/form-nodes/router`. Mix direct sources and configured `{ source, ...options }` bindings with typed codecs (objects or built-in names), repeated array parameters, JSON values, defaults, shared batching, replace/push history, automatic cleanup, and a connection exposing raw query signals, pending/closed state, and manual cancellation while preserving form validation and pending-edit navigation semantics.
 - Subscribe to existing fields, forms, groups, and arrays with `node.onValueChange(callback, { injector? })`. Independent listeners receive typed value changes, support early cancellation, and clean up automatically with their consumer or node owner while preserving equality, debounce, and DI-free use.
 
 ## [4.4.0] - 2026-09-17

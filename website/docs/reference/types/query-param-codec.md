@@ -4,7 +4,7 @@ title: QueryParamCodec
 
 # QueryParamCodec
 
-Converts decoded, repeated query values to a field value and back.
+Converts decoded, repeated query values to a source value and back.
 
 ## Import
 

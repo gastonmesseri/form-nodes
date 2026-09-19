@@ -1,4 +1,4 @@
-import { computed, signal, untracked, type Signal } from '@angular/core';
+import { computed, signal, untracked, type Injector, type Signal } from '@angular/core';
 
 import { group } from './group';
 import { isNotNil } from '../utils/is-nil';
@@ -10,6 +10,7 @@ import type { ObjectNodeDefinitions } from './form.type';
 import { assertArrayObjectTemplate } from './array.utils';
 import { computedFunction } from '../utils/computed-function';
 import { cloneInitialValue } from './utils/clone-initial-value';
+import { watchCommittedValue } from './utils/watch-committed-value';
 import { createValidatorQuery } from '../validation/validator-query';
 import { createNodeMetadata } from '../metadata/create-node-metadata';
 import { runSyncValidators } from '../validation/run-sync-validators';
@@ -713,6 +714,7 @@ export class ArrayNode<TItem extends AnyNode> {
     const internalApi = createCallableNodeApi({
       ...publicApi,
       _value: this.value,
+      _watchCommittedValue: (callback: (value: ArrayValue<TItem>) => void, options: { injector: Injector; onDestroy: () => void }) => watchCommittedValue(this.node, callback, options),
       _controlDebounce: this.controlDebounce,
       _controlValue: this.controlValueBuffer.controlValue,
       _setControlValue: (value: ArraySet<TItem> | null | undefined, onCommit?: () => void) => this.controlValueBuffer.set(this.normalizeArrayValue(value), onCommit),

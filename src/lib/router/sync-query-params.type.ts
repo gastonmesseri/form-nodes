@@ -1,34 +1,37 @@
 import type { ParamMap } from '@angular/router';
-import type { FieldApi } from '@ngblocks/form-nodes';
-import type { Injector, Signal } from '@angular/core';
+import type { NodeApi } from '@ngblocks/form-nodes';
+import type { Injector, Signal, WritableSignal } from '@angular/core';
 
 import type { QueryParamCodec } from './query-param-codec';
 
 /**
- * Options for one field in a query parameter map.
+ * Options for one form node or writable signal in a query parameter map.
  *
  * ```ts
  * const binding: QueryParamBinding<string> = {
- *   field: field.strict(''),
+ *   source: field.strict(''),
  *   clearOnDefault: true,
  * };
  * ```
  */
 export type QueryParamBinding<T> = {
   /**
-   * Existing field to synchronize. Signals and aggregate nodes are not accepted.
+   * Existing field, form, group, array, or writable Angular signal to synchronize.
+   * Nodes keep committed-value observation, validation, and node ownership. Signals
+   * respect their own equality and use the entry injector. Readonly signals are rejected.
+   * Objects and arrays need an explicit codec. Aggregate imports use the node set operation.
    *
    * ```ts
    * function connect() {
    *   return syncQueryParams({
-   *     q: { field: field('') },
+   *     q: { source: field('') },
    *   });
    * }
    * ```
    */
-  field: Signal<T> & { $api: Pick<FieldApi<T>, 'nodeType' | 'set'> };
+  source: Signal<T> & ({ $api: Pick<NodeApi, 'nodeType' | 'set'> } | (Pick<WritableSignal<NoInfer<T>>, 'set'> & { $api?: never }));
   /**
-   * A built-in codec name or a custom conversion contract compatible with the field.
+   * A built-in codec name or a custom conversion contract compatible with the source.
    *
    * **Default:** Infer string, number, or boolean from the fallback value.
    *
@@ -45,13 +48,13 @@ export type QueryParamBinding<T> = {
    * Names use the same conversions as queryParam factories. Arrays require an explicit
    * codec; array supports mutable and readonly string arrays. An empty array removes
    * the key with array, while json encodes it as []. Other array element types can use
-   * json or a custom codec. JSON parsing checks syntax only; the field type is trusted.
+   * json or a custom codec. JSON parsing checks syntax only; the source type is trusted.
    *
    * ```ts
    * function connect() {
    *   return syncQueryParams({
    *     page: {
-   *       field: field(1),
+   *       source: field(1),
    *       codec: 'integer',
    *     },
    *   });
@@ -65,7 +68,7 @@ export type QueryParamBinding<T> = {
    *   });
    *   return syncQueryParams({
    *     tag: {
-   *       field: filters.tags,
+   *       source: filters.tags,
    *       codec: 'array',
    *     },
    *   });
@@ -76,7 +79,7 @@ export type QueryParamBinding<T> = {
    * function connect() {
    *   return syncQueryParams({
    *     page: {
-   *       field: field(1),
+   *       source: field(1),
    *       codec: queryParam.integer(),
    *     },
    *   });
@@ -90,7 +93,7 @@ export type QueryParamBinding<T> = {
    *   });
    *   return syncQueryParams({
    *     state: {
-   *       field: filters.state,
+   *       source: filters.state,
    *       codec: 'json',
    *     },
    *   });
@@ -103,13 +106,14 @@ export type QueryParamBinding<T> = {
     | ([NonNullable<NoInfer<T>>] extends [boolean] ? boolean extends NoInfer<T> ? 'boolean' : never : never)
     | ([NonNullable<NoInfer<T>>] extends [readonly string[]] ? string[] extends NoInfer<T> ? 'array' : never : never);
   /**
-   * Value used for missing or malformed parameters. Default: committed value captured at registration.
+   * Value used for missing or malformed parameters. Default: source value captured at registration.
+   * Nodes capture their committed value; signals use their current value.
    *
    * ```ts
    * function connect() {
    *   return syncQueryParams({
    *     q: {
-   *       field: field(''),
+   *       source: field(''),
    *       defaultValue: '',
    *     },
    *   });
@@ -124,7 +128,7 @@ export type QueryParamBinding<T> = {
    * function connect() {
    *   return syncQueryParams({
    *     q: {
-   *       field: field(''),
+   *       source: field(''),
    *       clearOnDefault: true,
    *     },
    *   });
@@ -139,7 +143,7 @@ export type QueryParamBinding<T> = {
    * function connect() {
    *   return syncQueryParams({
    *     page: {
-   *       field: field(1),
+   *       source: field(1),
    *       history: 'push',
    *     },
    *   });
@@ -157,7 +161,7 @@ export type QueryParamBinding<T> = {
    *
    * function connect(injector: Injector) {
    *   return syncQueryParams({
-   *     q: { field: field(''), injector },
+   *     q: { source: field(''), injector },
    *   }, { injector });
    * }
    * ```

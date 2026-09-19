@@ -2,9 +2,9 @@ import '@angular/compiler';
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { Component, Injector, inject } from '@angular/core';
 import { provideLocationMocks } from '@angular/common/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { Component, Injector, inject, signal } from '@angular/core';
 import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
@@ -28,7 +28,7 @@ class FiltersPage {
   router = inject(Router);
   filters = form({ search: field.strict('', { debounce: 'blur' }), page: field.strict(1) });
   errors = vi.fn();
-  querySync = syncQueryParams({ q: { field: this.filters.search, clearOnDefault: true }, page: { field: this.filters.page, history: 'push' } }, { onError: this.errors });
+  querySync = syncQueryParams({ q: { source: this.filters.search, clearOnDefault: true }, page: { source: this.filters.page, history: 'push' } }, { onError: this.errors });
 }
 
 @Component({ selector: 'test-query-other', template: 'Other page' })
@@ -117,7 +117,7 @@ it('round trips named array codecs through real Router navigation and history', 
   const harness = await RouterTestingHarness.create();
   const page = await harness.navigateByUrl('/search?tag=angular&tag=forms', FiltersPage);
   const tags = field.strict<string[]>([]);
-  const sync = syncQueryParams({ tag: { field: tags, codec: 'array', history: 'push' } }, { injector: TestBed.inject(Injector) });
+  const sync = syncQueryParams({ tag: { source: tags, codec: 'array', history: 'push' } }, { injector: TestBed.inject(Injector) });
   expect(tags()).toEqual(['angular', 'forms']);
   page.router.setUpLocationChangeListener();
   tags.set(['a & b', '', 'a & b']);
@@ -139,7 +139,7 @@ it('round trips JSON through real Router encoding and restores an object on Back
   const harness = await RouterTestingHarness.create();
   const page = await harness.navigateByUrl(`/search?state=${encodeURIComponent(JSON.stringify(initial))}`, FiltersPage);
   const state = field.strict({ ids: [] as number[], text: '' });
-  const sync = syncQueryParams({ state: { field: state, codec: 'json', history: 'push' } }, { injector: TestBed.inject(Injector) });
+  const sync = syncQueryParams({ state: { source: state, codec: 'json', history: 'push' } }, { injector: TestBed.inject(Injector) });
   expect(state()).toEqual(initial);
   page.router.setUpLocationChangeListener();
   const next = { ids: [3], text: '"quotes" + ü' };
@@ -150,4 +150,48 @@ it('round trips JSON through real Router encoding and restores an object on Back
   TestBed.inject(Location).back();
   await vi.waitFor(() => expect(state()).toEqual(initial));
   sync.unsubscribe();
+});
+
+@Component({ selector: 'test-query-mixed', template: '<input [formNode]="filters.search" />', imports: [FormNodeDirective] })
+class MixedPage {
+  filters = form({ search: field.strict('', { debounce: 'blur' }) });
+  page = signal(1);
+  querySync = syncQueryParams({ state: { source: this.filters, codec: 'json' }, page: { source: this.page, history: 'push' } });
+}
+
+it('batches a whole form and a signal with real Router history and cancels both on route destruction', async () => {
+  TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'mixed', component: MixedPage }, { path: 'other', component: OtherPage }]), provideLocationMocks()] });
+  const harness = await RouterTestingHarness.create();
+  const raw = '{ "search": "Ada" }';
+  const initial = `/mixed?state=${encodeURIComponent(raw)}&page=2`;
+  const page = await harness.navigateByUrl(initial, MixedPage);
+  harness.detectChanges();
+  const router = TestBed.inject(Router);
+  const navigate = vi.spyOn(router, 'navigateByUrl');
+  const input = harness.routeNativeElement!.querySelector('input')!;
+  expect(input.value).toBe('Ada');
+  expect(page.page()).toBe(2);
+  expect(page.querySync.params.state()).toBe(raw);
+  page.filters.search.set('Grace');
+  page.page.set(3);
+  await vi.waitFor(() => expect(page.querySync.params.page()).toBe('3'));
+  expect(navigate).toHaveBeenCalledOnce();
+  expect(page.querySync.params.state()).toBe('{"search":"Grace"}');
+  input.value = 'draft';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  router.setUpLocationChangeListener();
+  TestBed.inject(Location).back();
+  await vi.waitFor(() => expect(page.page()).toBe(2));
+  harness.detectChanges();
+  expect(input.value).toBe('Ada');
+  expect(page.filters.search.debouncing()).toBe(false);
+  expect(page.filters.dirty()).toBe(true);
+  expect(page.querySync.params.state()).toBe(raw);
+  expect(navigate).toHaveBeenCalledOnce();
+  await harness.navigateByUrl('/other', OtherPage);
+  expect(page.querySync.closed()).toBe(true);
+  page.page.set(4);
+  page.filters.search.set('stopped');
+  await new Promise(resolve => setTimeout(resolve, 10));
+  expect(router.url).toBe('/other');
 });

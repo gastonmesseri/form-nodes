@@ -2,6 +2,7 @@ import { computed, Signal, signal } from '@angular/core';
 
 import type { AnyNode, FieldNode } from '../../src/public-api';
 import { array, asyncValidator, createFormPrimitives, email, field, form, FormValueContract, FormNodeDirective, group, min, minLength, oneOf, required, validator, requiredIf } from '../../src/public-api';
+import { syncQueryParams } from '@ngblocks/form-nodes/router';
 
 type Company = { companyId: number; companyName: string }
 const appleCompany: Company = { companyId: 23, companyName: 'Apple' };
@@ -98,6 +99,10 @@ myForm.someNesting.forEachChild(child => {
 const myComputed = computed(() => myForm());
 myForm.age;
 myComputed;
+
+const binding = syncQueryParams({
+  something: { source: myForm },
+});
 
 
 myForm.company;

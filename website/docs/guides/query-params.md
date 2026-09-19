@@ -8,10 +8,14 @@ import codecs from '!!raw-loader!../../examples/query-param-codecs.example.ts';
 
 # Synchronizing query parameters
 
-Use `syncQueryParams()` from `@ngblocks/form-nodes/router` to connect existing fields to Angular
-Router. Each map key is a query parameter name. Supply a field directly, or `{ field, ...options }`
+Use `syncQueryParams()` from `@ngblocks/form-nodes/router` to connect existing nodes and writable signals to Angular
+Router. Each map key is a query parameter name. Supply a source directly, or `{ source, ...options }`
 when that parameter needs configuration. This optional entry point requires `@angular/router`
 and a configured Router; the main forms package remains usable without Router or injection.
+
+Declare the sources before the connection in your component. Component property initializers
+provide the injection context, so no explicit injector is needed here. The connection is
+automatically cleaned up when the component is destroyed.
 
 <CodeBlock language="ts" title="search-page.ts">{source}</CodeBlock>
 
@@ -19,6 +23,23 @@ The helper reads the initial URL synchronously and does not rewrite it on regist
 win when they parse successfully. An absent or malformed value uses `defaultValue`, or the field's
 committed value captured at registration when no default is supplied. This fallback stays fixed;
 it does not become the most recently entered value. Parsing failures are also reported.
+
+## Nodes and writable signals
+
+A map can mix `field()`, `form()`, `group()`, `array()`, `signal()`, and `linkedSignal()` sources.
+For a whole form or group, use `{ source: filters, codec: 'json' }`. The entire value occupies one
+query key. For separate query keys, bind its children individually. Object/number array nodes
+also use JSON or a custom codec; string array nodes can use `'array'` for repeated keys.
+
+All sources share batching, history, defaults, navigation conflict handling, SSR, and cleanup.
+Nodes publish committed values even when public equality hides a change. Incoming data uses the
+node's existing `set()` operation, preserving validation and interaction rules; array nodes
+reconcile their children normally. Aggregate defaults must be complete values rather than patches.
+JSON checks syntax only, so use a custom codec when an aggregate needs shape validation.
+
+Writable signals respect their own equality function and have no form validation, interaction,
+reset, or control-debounce state. `linkedSignal()` dependency changes also synchronize.
+Readonly and computed signals cannot receive incoming URL values and are rejected.
 
 ## Reading the URL and connection state
 
@@ -77,9 +98,9 @@ The helper does not block publication of business-invalid values or put URL erro
 
 ## Arrays
 
-Bind an array-valued **field**, as with `filters.tags` in the component example, using
+Bind an array-valued field, writable signal, or `array()` node using
 `codec: 'array'` or `queryParam.array()`. Both mutable `string[]` and `readonly string[]` field
-values are supported. A Form Nodes `array()` node is an aggregate and cannot be bound directly.
+values are supported. For `array()` nodes, use a string field template such as `array(field.strict(''))`.
 
 - `?tag=angular&tag=forms` becomes `['angular', 'forms']`.
 - One occurrence, `?tag=angular`, becomes `['angular']`.
@@ -99,7 +120,7 @@ the first string or null. Read `filters.tags()` for the parsed array.
 
 ## JSON
 
-Use `codec: 'json'` for the component's `options` field, or pass `queryParam.json<T>()` explicitly.
+Use `codec: 'json'` for the component's `options` group, or pass `queryParam.json<T>()` explicitly.
 The complete value is serialized with `JSON.stringify` and parsed with `JSON.parse`. Angular Router
 handles URL escaping; do not encode or decode the JSON yourself. For example, `{ "sort": "name" }`
 uses one parameter whose decoded value is `{"sort":"name"}`. `querySync.params.options()` returns
@@ -117,7 +138,7 @@ are omitted, non-finite numbers become null, and `toJSON()` is respected. Dates 
 class instances are not reconstructed. `clearOnDefault` compares serialized text, including object
 property order, rather than performing a deep comparison.
 
-The field type and `queryParam.json<T>()` generic describe the expected result; **neither validates
+The source type and `queryParam.json<T>()` generic describe the expected result; **neither validates
 the parsed structure**. Without a type argument, the factory returns `QueryParamCodec<unknown>`.
 Use a custom codec with runtime schema validation when valid JSON alone is insufficient.
 
@@ -150,7 +171,8 @@ hydration does not redefine that baseline. Disabled fields still synchronize pro
 The second argument accepts `injector`, `history`, and `onError`. Omit `injector` inside an Angular
 injection context, or pass it explicitly when connecting later. Router resolution uses this shared
 injector. A per-entry injector adds that entry's lifetime owner and must resolve the same Router.
-The field's current injector ownership also ends its entry on destruction.
+A node's current injector ownership also ends its entry on destruction. Writable signals use only
+the shared and per-entry owners.
 
 Calling the returned connection’s `unsubscribe()` method releases all entries and their
 pending work; injector destruction does this automatically. Destroying an entry owner stops only
