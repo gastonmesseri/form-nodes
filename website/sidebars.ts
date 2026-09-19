@@ -41,6 +41,7 @@ const sidebars: SidebarsConfig = {
         'guides/choosing-a-primitive',
         'guides/form-modeling-patterns',
         'guides/configuring-nodes',
+        'guides/query-params',
         'guides/validation',
         'guides/errors-and-status',
         'guides/async-validation',
@@ -62,6 +63,7 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         'reference/api-overview',
+        'reference/sync-query-params',
         'reference/node-types',
         'reference/form',
         'reference/field',

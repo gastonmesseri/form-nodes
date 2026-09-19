@@ -10,7 +10,11 @@
     "exactOptionalPropertyTypes": true,
     "useDefineForClassFields": false,
     "experimentalDecorators": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@ngblocks/form-nodes": ["./src/public-api.ts"],
+      "@ngblocks/form-nodes/router": ["./src/lib/router/public-api.ts"]
+    }
   },
   "angularCompilerOptions": {
     "strictTemplates": true,

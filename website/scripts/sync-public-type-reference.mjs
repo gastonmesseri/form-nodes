@@ -8,22 +8,25 @@ const destination = path.join(root, 'website/docs/reference/types');
 const catalog = JSON.parse(fs.readFileSync(new URL('./public-type-reference.json', import.meta.url), 'utf8'));
 const config = ts.readConfigFile(path.join(root, 'tsconfig.lib.json'), ts.sys.readFile);
 const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
-const program = ts.createProgram([path.join(root, 'src/public-api.ts')], parsed.options);
+const entryPoints = [['src/public-api.ts', '@ngblocks/form-nodes'], ['src/lib/router/public-api.ts', '@ngblocks/form-nodes/router']];
+const program = ts.createProgram(entryPoints.map(([file]) => path.join(root, file)), parsed.options);
 const checker = program.getTypeChecker();
-const source = program.getSourceFile(path.join(root, 'src/public-api.ts'));
 const printer = ts.createPrinter({ removeComments: true });
 const check = process.argv.includes('--check');
 const slug = name => name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 const clean = value => value.replace(/\{@link ([^}]+)\}/g, '`$1`').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const code = value => value.replace(/\|/g, '\\|').replace(/\n/g, ' ');
 const table = value => clean(value).replace(/\|/g, '\\|').replace(/\n/g, ' ');
-const entries = checker.getExportsOfModule(checker.getSymbolAtLocation(source)).flatMap((exported) => {
-  const symbol = exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
-  const declaration = symbol.declarations?.find(node => ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node));
-  if (!declaration) return [];
-  const metadata = catalog.types[exported.name];
-  if (!metadata) throw new Error(`Missing public type documentation metadata: ${exported.name}`);
-  return [{ name: exported.name, declaration, symbol, ...metadata }];
+const entries = entryPoints.flatMap(([file, module]) => {
+  const source = program.getSourceFile(path.join(root, file));
+  return checker.getExportsOfModule(checker.getSymbolAtLocation(source)).flatMap((exported) => {
+    const symbol = exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
+    const declaration = symbol.declarations?.find(node => ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node));
+    if (!declaration) return [];
+    const metadata = catalog.types[exported.name];
+    if (!metadata) throw new Error(`Missing public type documentation metadata: ${exported.name}`);
+    return [{ name: exported.name, declaration, symbol, module, ...metadata }];
+  });
 }).sort((a, b) => a.name.localeCompare(b.name));
 const names = new Set(entries.map(entry => entry.name));
 for (const name of Object.keys(catalog.types)) {
@@ -37,7 +40,7 @@ for (const entry of entries) {
   const description = entry.description || docs.split('\n\n')[0].replace(/\n/g, ' ');
   if (!description) throw new Error(`Missing description for ${name}`);
   const signature = printer.printNode(ts.EmitHint.Unspecified, declaration, declaration.getSourceFile()).replace(/^export /, '');
-  let text = `---\ntitle: ${name}\n---\n\n# ${name}\n\n${clean(description)}\n\n## Import\n\n\`\`\`ts\nimport type { ${name} } from '@ngblocks/form-nodes';\n\`\`\`\n\n## When to use it\n\n${entry.usage}\n\n## Declaration\n\n\`\`\`ts\n${signature}\n\`\`\`\n`;
+  let text = `---\ntitle: ${name}\n---\n\n# ${name}\n\n${clean(description)}\n\n## Import\n\n\`\`\`ts\nimport type { ${name} } from '${entry.module}';\n\`\`\`\n\n## When to use it\n\n${entry.usage}\n\n## Declaration\n\n\`\`\`ts\n${signature}\n\`\`\`\n`;
   if (declaration.typeParameters?.length) {
     text += '\n## Type parameters\n\n| Parameter | Constraint | Default |\n| --- | --- | --- |\n';
     for (const param of declaration.typeParameters) {
@@ -69,7 +72,7 @@ for (const entry of entries) {
   for (const other of references) text += `- [${other.name}](./${slug(other.name)}.md)\n`;
   expected.set(`${slug(name)}.md`, text);
 }
-let index = '---\ntitle: Public types\n---\n\n# Public types\n\nEvery consumer-facing type alias and interface exported by `@ngblocks/form-nodes` has a dedicated\nreference below. Prefer inference for node declarations; use these types for component inputs,\nreusable helpers, validator contracts, and integration boundaries.\n\nImport types from the package root. Declarations show their exact generic defaults and constraints;\nhelper names appearing inside a declaration are not necessarily public imports. Follow the linked\npublic types and the associated API guide for practical usage. Types do not create runtime objects.\n`FormNodeDirective` also has a runtime Angular import documented on the binding reference.\n`FormNodesModule` is documented as an Angular module; `_FormNode` is an AOT implementation export,\nnot a consumer type to import.\n\nStart with [custom control contracts](../custom-control-contracts.md) or\n[validation error types](../validation-errors.md) when integrating components or error displays.\n';
+let index = '---\ntitle: Public types\n---\n\n# Public types\n\nEvery consumer-facing type alias and interface exported by `@ngblocks/form-nodes` or its `/router` entry point has a dedicated\nreference below. Prefer inference for node declarations; use these types for component inputs,\nreusable helpers, validator contracts, and integration boundaries.\n\nImport types from the entry point shown on each reference page. Declarations show their exact generic defaults and constraints;\nhelper names appearing inside a declaration are not necessarily public imports. Follow the linked\npublic types and the associated API guide for practical usage. Types do not create runtime objects.\n`FormNodeDirective` also has a runtime Angular import documented on the binding reference.\n`FormNodesModule` is documented as an Angular module; `_FormNode` is an AOT implementation export,\nnot a consumer type to import.\n\nStart with [custom control contracts](../custom-control-contracts.md) or\n[validation error types](../validation-errors.md) when integrating components or error displays.\n';
 const sidebar = [];
 for (const [key, family] of Object.entries(catalog.families)) {
   const group = entries.filter(entry => entry.family === key);

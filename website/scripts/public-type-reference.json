@@ -39,6 +39,11 @@
       "title": "Observable interoperability",
       "contextTitle": "Asynchronous validators",
       "context": "../async-validator.md"
+    },
+    "router": {
+      "title": "Query parameter synchronization",
+      "contextTitle": "Query parameter synchronization",
+      "context": "../sync-query-params.md"
     }
   },
   "types": {
@@ -57,7 +62,7 @@
     },
     "FieldOptions": {
       "family": "configuration",
-      "usage": "Use when sharing field configuration. Let `field()` infer value and owner types for ordinary declarations instead of annotating every options object. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
+      "usage": "Use when sharing field configuration. Let `field()` infer value and owner types for ordinary declarations instead of annotating every options object. The `configure` callback receives this instance\u2019s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
       "description": "Value, validation, interaction, and ownership configuration for field()."
     },
     "ValidatorOptions": {
@@ -92,7 +97,7 @@
     },
     "GroupOptions": {
       "family": "configuration",
-      "usage": "Use when a structural group needs its own validators or state options. Groups do not accept the form-specific submission workflow. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md)."
+      "usage": "Use when a structural group needs its own validators or state options. Groups do not accept the form-specific submission workflow. The `configure` callback receives this instance\u2019s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md)."
     },
     "GroupPatch": {
       "family": "nodes",
@@ -261,7 +266,7 @@
     },
     "ArrayOptions": {
       "family": "configuration",
-      "usage": "Use for array initialization and reconciliation options. Keep initial records and options such as `trackBy` together in the array declaration. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
+      "usage": "Use for array initialization and reconciliation options. Keep initial records and options such as `trackBy` together in the array declaration. The `configure` callback receives this instance\u2019s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
       "description": "Template, initial-data, validation, and ownership configuration for array()."
     },
     "ArrayItemWithParent": {
@@ -296,7 +301,7 @@
     },
     "FormOptions": {
       "family": "configuration",
-      "usage": "Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `onSubmitBlocked`. Let the form declaration infer its concrete value and node callback types when possible. The `configure` callback receives this instance’s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
+      "usage": "Use when sharing form configuration, including `submitWhen`, `onSubmit`, and `onSubmitBlocked`. Let the form declaration infer its concrete value and node callback types when possible. The `configure` callback receives this instance\u2019s typed, collision-safe API synchronously once. See [configuration lifecycle and sibling rules](../../guides/configuring-nodes.md).",
       "description": "Value, validation, interaction, ownership, and submission configuration for form()."
     },
     "FormValueContract": {
@@ -469,6 +474,26 @@
     "FormNodeErrorsContext": {
       "family": "controls",
       "usage": "Context for the projected `#message` template in [`FormNodeErrors`](../form-node-errors.md#custom-template), exposing the first visible message, all visible messages, and their error details."
+    },
+    "QueryParamsSync": {
+      "family": "router",
+      "usage": "Read raw URL query signals and synchronization state, or unsubscribe a connection early."
+    },
+    "QueryParamCodec": {
+      "family": "router",
+      "usage": "Define a conversion between decoded query values and a field value."
+    },
+    "QueryParamBinding": {
+      "family": "router",
+      "usage": "Reuse the configuration for one field and its query parameter."
+    },
+    "QueryParamSyncError": {
+      "family": "router",
+      "usage": "Handle parsing, serialization, or navigation failures separately from form validation."
+    },
+    "SyncQueryParamsOptions": {
+      "family": "router",
+      "usage": "Share ownership, history behavior, and error handling across a parameter map."
     }
   }
 }

@@ -150,6 +150,17 @@ const publicTypesSidebar: SidebarsConfig[string] = [
       "reference/types/observer-like",
       "reference/types/subscription-like"
     ]
+  },
+  {
+    "type": "category",
+    "label": "Query parameter synchronization",
+    "items": [
+      "reference/types/query-param-binding",
+      "reference/types/query-param-codec",
+      "reference/types/query-params-sync",
+      "reference/types/query-param-sync-error",
+      "reference/types/sync-query-params-options"
+    ]
   }
 ];
 

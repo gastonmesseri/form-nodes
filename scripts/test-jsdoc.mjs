@@ -14,16 +14,13 @@ function visitDirectory(directory) {
 }
 visitDirectory(resolve(root, 'src'));
 sourceFiles.sort();
-const publicSource = ts.createSourceFile(
-  'public-api.ts',
-  readFileSync(resolve(root, 'src/public-api.ts'), 'utf8'),
-  ts.ScriptTarget.Latest,
-  true,
-);
-const publicNames = new Set();
-for (const statement of publicSource.statements) {
-  if (ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
-    for (const element of statement.exportClause.elements) publicNames.add(element.name.text);
+const publicNames = new Map();
+for (const entryPoint of ['src/public-api.ts', 'src/lib/router/public-api.ts']) {
+  const publicSource = ts.createSourceFile(entryPoint, readFileSync(resolve(root, entryPoint), 'utf8'), ts.ScriptTarget.Latest, true);
+  for (const statement of publicSource.statements) {
+    if (ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+      for (const element of statement.exportClause.elements) publicNames.set(element.name.text, entryPoint.replace(/\.ts$/, ''));
+    }
   }
 }
 rmSync(output, { recursive: true, force: true });
@@ -95,14 +92,14 @@ for (const [code, origins] of examples) {
 
   const imports = [...identifiers].filter(name => publicNames.has(name) && !declared.has(name)).sort();
   const path = resolve(output, `example-${locations.size}.ts`);
-  const prefix = imports.length ? `import { ${imports.join(', ')} } from '../../src/public-api';\n` : 'export {};\n';
+  const prefix = imports.length ? imports.map(name => `import { ${name} } from '../../${publicNames.get(name)}';\n`).join('') : 'export {};\n';
   writeFileSync(path, prefix + code + '\n');
   locations.set(path, origins);
 }
 writeFileSync(resolve(output, 'source-audit.json'), JSON.stringify(inventory, null, 2) + '\n');
 const program = ts.createProgram([...locations.keys()], {
   baseUrl: root,
-  paths: { '@ngblocks/form-nodes': ['src/public-api.ts'] },
+  paths: { '@ngblocks/form-nodes': ['src/public-api.ts'], '@ngblocks/form-nodes/router': ['src/lib/router/public-api.ts'] },
   strict: true,
   noEmit: true,
   skipLibCheck: true,
@@ -146,7 +143,7 @@ if (!failures.length && locations.size) {
           module: 'preserve',
           moduleResolution: 'bundler',
           baseUrl: root,
-          paths: { '@ngblocks/form-nodes': ['src/public-api.ts'] },
+          paths: { '@ngblocks/form-nodes': ['src/public-api.ts'], '@ngblocks/form-nodes/router': ['src/lib/router/public-api.ts'] },
         },
         angularCompilerOptions: { strictTemplates: true, strictInjectionParameters: true },
         files: [...locations.keys()],

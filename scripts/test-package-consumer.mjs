@@ -118,6 +118,36 @@ try {
     if (added.range.nodeType() !== 'group' || added.range.minimum() !== 0) throw new Error('Dynamic group shorthand was not preserved in the package.');
   `);
   run(process.execPath, [join(temporaryDirectory, 'runtime.mjs')]);
+  // The primary entry point above executes without Angular Router installed in the consumer.
+  if (!packageManifest.exports['./router']) throw new Error('The router entry point is missing.');
+  if (!packageManifest.peerDependenciesMeta?.['@angular/router']?.optional) throw new Error('Angular Router must remain an optional peer.');
+  symlinkSync(resolve(workspace, 'node_modules/@angular/router'), join(angularDirectory, 'router'), 'dir');
+  writeFileSync(join(temporaryDirectory, 'package-consumer.ts'), source + `
+    import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding } from '@ngblocks/form-nodes/router';
+    const queryField = field(1);
+    const objectCodec = queryParam.integer();
+    objectCodec.parse(['2']);
+    const queryBinding: QueryParamBinding<number | null> = { field: queryField, codec: 'integer', defaultValue: 1 };
+    function connectQueryParameters() {
+      const sync = syncQueryParams({ page: queryBinding, tag: { field: field.strict<string[]>([]), codec: 'array' }, active: { field: field(false), codec: 'boolean' }, state: { field: field.strict({ ids: [1, 2] }), codec: 'json' } });
+      const typed: QueryParamsSync<'page'> = sync;
+      const raw: string | null = sync.params.page();
+      const repeated: string[] = sync.paramMap().getAll('tag');
+      const pending: boolean = sync.pending();
+      const closed: boolean = sync.closed();
+      sync.unsubscribe();
+      return { typed, raw, repeated, pending, closed };
+    }
+  `);
+  run(process.execPath, [ngc, '-p', join(temporaryDirectory, 'tsconfig.json')]);
+  writeFileSync(join(temporaryDirectory, 'router-runtime.mjs'), `
+    import '@angular/compiler';
+    import { queryParam } from '@ngblocks/form-nodes/router';
+    if (queryParam.integer().parse(['2']) !== 2) throw new Error('Published router codecs do not work.');
+    if (queryParam.array().parse(['a', 'b']).length !== 2) throw new Error('Published array codec does not work.');
+    if (queryParam.json().parse(['{"id":1}']).id !== 1) throw new Error('Published JSON codec does not work.');
+  `);
+  run(process.execPath, [join(temporaryDirectory, 'router-runtime.mjs')]);
 
   writeFileSync(join(temporaryDirectory, 'tree-shaking.mjs'), `
     import { required } from '@ngblocks/form-nodes';

@@ -1,0 +1,5 @@
+{
+  "lib": {
+    "entryFile": "../src/lib/router/public-api.ts"
+  }
+}

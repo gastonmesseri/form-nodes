@@ -3,8 +3,15 @@
   "compilerOptions": {
     "noEmit": true,
     "paths": {
-      "@ngblocks/form-nodes": ["../src/public-api.ts"]
+      "@ngblocks/form-nodes": [
+        "../src/public-api.ts"
+      ],
+      "@ngblocks/form-nodes/router": [
+        "../src/lib/router/public-api.ts"
+      ]
     }
   },
-  "include": ["examples/**/*.ts"]
+  "include": [
+    "examples/**/*.ts"
+  ]
 }

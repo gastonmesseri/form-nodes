@@ -4,11 +4,11 @@ title: Public types
 
 # Public types
 
-Every consumer-facing type alias and interface exported by `@ngblocks/form-nodes` has a dedicated
+Every consumer-facing type alias and interface exported by `@ngblocks/form-nodes` or its `/router` entry point has a dedicated
 reference below. Prefer inference for node declarations; use these types for component inputs,
 reusable helpers, validator contracts, and integration boundaries.
 
-Import types from the package root. Declarations show their exact generic defaults and constraints;
+Import types from the entry point shown on each reference page. Declarations show their exact generic defaults and constraints;
 helper names appearing inside a declaration are not necessarily public imports. Follow the linked
 public types and the associated API guide for practical usage. Types do not create runtime objects.
 `FormNodeDirective` also has a runtime Angular import documented on the binding reference.
@@ -158,3 +158,13 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [ObservableLike](./observable-like.md) | Framework-neutral subset of an Observable accepted from asynchronous validators. |
 | [ObserverLike](./observer-like.md) | Minimal observer contract accepted from an asynchronous validation source. |
 | [SubscriptionLike](./subscription-like.md) | Handle returned by an observable-like source so the current validation run can release it. |
+
+## Query parameter synchronization
+
+| Type | Purpose |
+| --- | --- |
+| [QueryParamBinding](./query-param-binding.md) | Options for one field in a query parameter map. |
+| [QueryParamCodec](./query-param-codec.md) | Converts decoded, repeated query values to a field value and back. |
+| [QueryParamsSync](./query-params-sync.md) | A live query connection with raw URL signals and explicit lifecycle control. |
+| [QueryParamSyncError](./query-param-sync-error.md) | A URL conversion or navigation failure, independent of form validation. |
+| [SyncQueryParamsOptions](./sync-query-params-options.md) | Shared options for a synchronized query parameter map. |

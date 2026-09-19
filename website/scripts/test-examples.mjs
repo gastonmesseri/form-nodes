@@ -37,6 +37,7 @@ try {
       platform: 'node',
       target: 'node22',
       alias: {
+        '@ngblocks/form-nodes/router': resolve(repositoryDirectory, 'src/lib/router/public-api.ts'),
         '@ngblocks/form-nodes': resolve(repositoryDirectory, 'src/public-api.ts'),
       },
       inject: [resolve(import.meta.dirname, 'example-runtime-setup.ts')],

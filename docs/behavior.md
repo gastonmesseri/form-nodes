@@ -4550,3 +4550,92 @@ writable branding and readonly views, compared with 87,102 types / 603,773 insta
 this feature. A named signal interface lets TypeScript cache recursive comparisons and avoids stack
 overflow in complex options completions on Node 22. The type-count budget remains 91,200;
 the existing instantiation ceiling remains in force.
+
+## Query parameter synchronization
+
+`syncQueryParams()` is exported from the optional `@ngblocks/form-nodes/router` entry point.
+Its map accepts leaf fields directly or configured `{ field, codec?, defaultValue?, clearOnDefault?,
+history?, injector? }` entries. Shared options supply the Router/owner injector, history default,
+and `onError`. The return value is a `QueryParamsSync<K>` connection with `unsubscribe()`. Core nodes continue to work
+without Router or an injection context; only the integration needs a Router-providing injector.
+
+- `params` exposes readonly `Signal<string | null>` properties for precisely the configured keys.
+  Values are URL-decoded, before codec parsing, with null for absence and the first value for repeated
+  parameters. `paramMap` is a readonly `Signal<ParamMap>` including unbound and repeated query keys.
+  Its arrays are defensive copies. The activation URL supplies the initial snapshot; accepted
+  navigation publishes the next snapshot before restoring fields. Rejected writes leave it unchanged.
+- `pending()` covers this helper's queued and in-flight writes from the observation microtask through
+  settlement or cancellation. It excludes control debounce, validation, external navigation, and
+  other helpers. `closed()` becomes true when all entries end, including manual `unsubscribe()`.
+  Partial ownership cleanup leaves URL observation active for all keys. Full cleanup freezes the last
+  snapshot, clears pending state, and remains idempotent. Empty maps start closed without observations.
+- The initial URL hydrates synchronously without an outbound navigation. Present values pass through
+  the codec; missing or malformed parameters use a fallback captured at registration. Scalar codecs
+  distinguish empty input from absence and reject repetition. Inference supports string, finite
+  decimal number, and boolean defaults. Null, undefined, arrays, and objects need an explicit codec.
+- `codec` accepts built-in names (`string`, `number`, `integer`, `boolean`, `array`, `json`)
+  as well as `QueryParamCodec<T>` objects. Names resolve to the existing factories and do not change
+  parsing, serialization, defaults, validation, or history. Type checking rejects incompatible scalar
+  and repeated-array names, including narrow literal fields their parser could exceed. JSON trusts
+  the field's expected type. Unknown runtime names fail before
+  any field mutation or key registration.
+- Array-valued leaf fields use `array`/`queryParam.array()` for repeated string parameters.
+  Mutable and readonly string arrays are supported. Order, duplicates, and empty items survive
+  round trips; commas are ordinary text. An empty array removes the key, while an absent key imports
+  the fixed fallback. Numeric/object arrays can use JSON or custom codecs; aggregate `array()` nodes are
+  not direct bindings. Array types are never inferred from initial contents.
+- `json`/`queryParam.json<T>()` encodes the entire value in one JSON parameter using native
+  JSON.stringify/JSON.parse. Empty arrays remain `[]`; repeated JSON parameters and invalid syntax
+  use the fallback and report parsing errors. JSON types/generics do not validate the parsed shape.
+  Circular references, BigInt, and top-level values with no JSON string representation report
+  serialization errors without losing the field value or changing the accepted URL. Standard JSON
+  coercions apply, including toJSON, omitted undefined object properties, and non-finite numbers
+  becoming null. Incoming JSON null is imported; outgoing null/undefined still removes the key
+  before the codec runs. Default comparison uses serialized JSON text, including property order.
+- Malformed values report a parse failure separately from form validity. A validly parsed value
+  still participates in ordinary synchronous/asynchronous validation, stale-result cancellation,
+  pending state, and parent aggregation. URL imports use `set()`, preserving dirty/touched state
+  while canceling obsolete control work. They do not change the reset baseline.
+- Outbound observation follows `$api._value()` independently of exposed equality, skips its initial
+  sample, and batches committed edits in microtasks. The internal field bridge shares subscription
+  ownership with public `onValueChange`; its committed observation does not alter that public API.
+  Pending control text and validation-only/state-only changes do not publish query updates.
+- One coordinator per Router merges key patches across helper calls, preserves unrelated parameters
+  and fragments, and serializes navigation attempts. Replace is the default; any changed push entry
+  makes a batch push. Duplicate active keys are rejected, and the complete map reserves its keys
+  before hydration callbacks run. Normalization and codecs do not rewrite
+  accepted URLs simply because their spelling differs from serialized values.
+- `clearOnDefault` defaults to false and compares serialized representations. Null/undefined values,
+  a codec returning null, or an empty serialized array remove a key. A subsequent absent URL restores
+  the fallback, which need not equal the removed null value.
+- External navigation suspends publication. Accepted history restoration or conflicting parameters
+  replace local values and invalidate obsolete queued writes. History restores control text even
+  when committed values already match. Own successful acknowledgments preserve newer edits;
+  unrelated query updates preserve drafts. Redirects import their final accepted parameters.
+  Rejected external attempts preserve edits and resume queued work.
+- Failed outbound navigation preserves field data, reports once per affected helper, and does not
+  automatically retry the rejected revision. Parsing, serialization, and navigation errors go to
+  `onError` or Angular ErrorHandler, independently of validation. Navigation errors have no single key.
+- The helper injector owns all entries. Per-entry injectors and each node's current injector can end
+  individual entries. Normal node binding/inheritance ownership changes remain effective. Cleanup
+  releases key reservations, watchers, lifecycle hooks, and queued work; stopping an in-flight entry
+  aborts its own navigation and preserves other active patches. Page-specific connections should be
+  owned by the page injector. Server execution hydrates values but never publishes URL writes.
+- `reset()` keeps values and does not itself publish a new URL. `resetToInitial()` retains its normal
+  baseline semantics and publishes actual resulting committed changes. Disabled fields still accept
+  URL writes and publish programmatic changes; availability rules themselves remain unchanged.
+
+Inspected Angular **v22.1.7**, commit `f3358f24b884e34d44cfb8ec3db53965153d61e1`:
+`packages/forms/signals/src/field/node.ts`, `packages/forms/signals/test/node/api/debounce.spec.ts`,
+`packages/forms/signals/test/node/field_node.spec.ts`, `packages/router/src/router.ts`,
+`packages/router/src/navigation_transition.ts`,
+and `packages/router/test/integration/navigation.spec.ts`. Angular separates pending control input
+from model writes, invalidates pending debounce on model replacement, and distinguishes accepted,
+rejected, redirected, and superseded navigations. The query map, batching/history rules, fallback
+policy, connection state, and equal-value history restoration are Form Nodes integration contracts.
+Router integration uses the `currentNavigation` signal, which remains available during NavigationEnd,
+in place of the deprecated `getCurrentNavigation()` method. Array encoding was additionally
+checked against `packages/router/src/url_tree.ts` (`serializeQueryParams`, `parseQueryParam`) and
+`packages/router/test/url_serializer.spec.ts` (repeated query parameter serialization and parsing).
+Angular serializes array values as repeated keys and preserves their parsed order. Named codec
+selection remains a Form Nodes API contract rather than a Signal Forms feature.

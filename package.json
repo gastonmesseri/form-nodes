@@ -19,6 +19,23 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "keywords": [
+    "angular",
+    "angular-forms",
+    "angular-signals",
+    "signal-forms",
+    "forms",
+    "form-validation",
+    "reactive-validation",
+    "async-validation",
+    "typed-forms",
+    "dynamic-forms",
+    "form-array",
+    "custom-controls",
+    "control-value-accessor",
+    "signals",
+    "typescript"
+  ],
   "files": [
     "fesm2022/",
     "types/",
@@ -54,7 +71,8 @@
   "peerDependencies": {
     "@angular/common": "^21.0.7 || ^22.1.5",
     "@angular/core": "^21.0.7 || ^22.1.5",
-    "@angular/forms": "^21.0.7 || ^22.1.5"
+    "@angular/forms": "^21.0.7 || ^22.1.5",
+    "@angular/router": "^21.0.7 || ^22.1.5"
   },
   "devDependencies": {
     "@angular/animations": "21.0.7",
@@ -93,21 +111,9 @@
   "engines": {
     "node": "^20.19.0 || ^22.12.0 || ^24.0.0 || >=26.0.0"
   },
-  "keywords": [
-    "angular",
-    "angular-forms",
-    "angular-signals",
-    "signal-forms",
-    "forms",
-    "form-validation",
-    "reactive-validation",
-    "async-validation",
-    "typed-forms",
-    "dynamic-forms",
-    "form-array",
-    "custom-controls",
-    "control-value-accessor",
-    "signals",
-    "typescript"
-  ]
+  "peerDependenciesMeta": {
+    "@angular/router": {
+      "optional": true
+    }
+  }
 }

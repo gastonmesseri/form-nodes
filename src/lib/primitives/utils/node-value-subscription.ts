@@ -26,7 +26,7 @@ export class ValueSubscription {
 
   watchCleanup: (() => void) | undefined;
 
-  constructor(public node: WeakRef<AnyNode>, public callback: ValueChangeCallback | undefined) {}
+  constructor(public node: WeakRef<AnyNode>, public callback: ValueChangeCallback | undefined, public registry = valueSubscriptions, public onUnsubscribe?: () => void) {}
 
   attach(injector: Injector | undefined) {
     return injector?.get(DestroyRef).onDestroy(cancelSubscription(this.reference));
@@ -45,22 +45,25 @@ export class ValueSubscription {
     this.callback = undefined;
     const node = this.node.deref();
     if (node) {
-      const subscriptions = valueSubscriptions.get(node)!;
+      const subscriptions = this.registry.get(node)!;
       subscriptions.delete(this);
-      if (subscriptions.size === 0) valueSubscriptions.delete(node);
+      if (subscriptions.size === 0) this.registry.delete(node);
     }
     this.nodeCleanup?.();
     this.consumerCleanup?.();
     this.watchCleanup?.();
     this.nodeCleanup = this.consumerCleanup = this.watchCleanup = undefined;
     this.nodeInjector = undefined;
+    const dispose = this.onUnsubscribe;
+    this.onUnsubscribe = undefined;
+    dispose?.();
   }
 }
 
-export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallback, options?: { injector?: Injector }): (() => void) => {
-  const subscription = new ValueSubscription(new WeakRef(node), callback);
-  let subscriptions = valueSubscriptions.get(node);
-  if (!subscriptions) valueSubscriptions.set(node, subscriptions = new Set());
+export const subscribeToNodeValue = (node: AnyNode, callback: ValueChangeCallback, options?: { injector?: Injector }, registry = valueSubscriptions, onUnsubscribe?: () => void): (() => void) => {
+  const subscription = new ValueSubscription(new WeakRef(node), callback, registry, onUnsubscribe);
+  let subscriptions = registry.get(node);
+  if (!subscriptions) registry.set(node, subscriptions = new Set());
   subscriptions.add(subscription);
   try {
     const consumer = options?.injector ?? getCurrentInjector();

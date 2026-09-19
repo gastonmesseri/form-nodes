@@ -9,6 +9,7 @@ const signalControlHydrationHtml = readFileSync(resolve('node_modules/.cache/for
 const signalControlFixture = `/@fs/${resolve('node_modules/.cache/form-nodes/aot-signal-control/form-node-signal-control.fixture.mjs')}`;
 
 export default defineConfig({
+  resolve: { alias: [{ find: /^@ngblocks\/form-nodes$/, replacement: new URL('./src/public-api.ts', import.meta.url).pathname }] },
   define: {
     __FORM_NODE_HYDRATION_HTML__: JSON.stringify(hydrationHtml),
     __FORM_NODE_SIGNAL_CONTROL_HYDRATION_HTML__: JSON.stringify(signalControlHydrationHtml),

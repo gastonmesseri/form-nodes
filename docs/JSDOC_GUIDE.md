@@ -169,9 +169,9 @@ Use spreads when composition is the subject, such as reusing a named preset and 
 
 ## Imports, bindings, and generics
 
-Omit ordinary unaliased imports from `@ngblocks/form-nodes` in source hover examples. [The JSDoc checker](../scripts/test-jsdoc.mjs) reconstructs those imports for compilation. This does not permit undefined local variables. Website examples must include their imports explicitly.
+Omit ordinary unaliased imports from `@ngblocks/form-nodes` and `@ngblocks/form-nodes/router` in source hover examples. [The JSDoc checker](../scripts/test-jsdoc.mjs) reconstructs those imports for compilation. This does not permit undefined local variables. Website examples must include their imports explicitly.
 
-Retain explicit imports for aliases and external dependencies. Use supported package-root imports rather than internal paths. Keep import lines within 45 characters and follow the project's single-line import convention.
+Retain explicit imports for aliases and external dependencies. Use supported package entry-point imports rather than internal paths. Keep import lines within 45 characters and follow the project's single-line import convention.
 
 Use named Angular imports and unqualified API names in examples: `import { Component } from '@angular/core';` with `@Component`, not `import * as ng from '@angular/core';` with `@ng.Component`. Apply the same convention to `Directive`, `signal`, `computed`, `input`, `model`, and other Angular APIs. Do not introduce namespace imports to fit the hover width. Keep imports focused; when a combined named import exceeds 45 characters, split its symbols across separate single-line named imports.
 
