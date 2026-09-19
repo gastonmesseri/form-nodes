@@ -121,8 +121,9 @@ describe.each([
       const sync = syncQueryParams({ page: { source: page, codec: 'integer' } }, { injector });
       page.set(empty); await settle();
       expect(page()).toBe(empty);
+      expect(sync.params.page()).toBeNull();
       expect(router.url).toBe('/search?keep=a&keep=b#results');
-      expect(sync.paramMap().getAll('keep')).toEqual(['a', 'b']);
+      expect(router.parseUrl(router.url).queryParamMap.getAll('keep')).toEqual(['a', 'b']);
       router.external('/search?page=3', 'popstate');
       router.external('/search?keep=a&keep=b#results', 'popstate');
       expect(page()).toBe(1);
@@ -165,7 +166,7 @@ describe('upstream query isolation and conversion scenarios', () => {
         q.set(value); await settle();
         expect(sync.params.q()).toBe(value);
         expect(router.parseUrl(router.url).queryParamMap.get('q')).toBe(value);
-        expect(sync.paramMap().getAll('keep')).toEqual(['one', 'two']);
+        expect(router.parseUrl(router.url).queryParamMap.getAll('keep')).toEqual(['one', 'two']);
         expect(router.parseUrl(router.url).fragment).toBe('results');
         const accepted = router.url;
         router.external('/search', 'popstate');
@@ -219,7 +220,8 @@ describe('upstream query isolation and conversion scenarios', () => {
       const repeated = syncQueryParams({ [key]: { source: values, codec: 'array' } }, { injector });
       expect(values()).toEqual(['two']);
       values.set(['three', '', 'four']); await settle();
-      expect(repeated.paramMap().getAll(key)).toEqual(['three', '', 'four']);
+      expect(router.parseUrl(router.url).queryParamMap.getAll(key)).toEqual(['three', '', 'four']);
+      expect(repeated.params[key]!()).toBe('three');
       expect(router.parseUrl(router.url).queryParamMap.get('keep')).toBe('yes');
     } finally { injector.destroy(); }
   });
@@ -237,7 +239,8 @@ describe('upstream query isolation and conversion scenarios', () => {
       expect(values()).toEqual(initial);
       router.external(`/search${to}`);
       expect(values()).toEqual(expected);
-      expect(sync.paramMap().getAll('a')).toEqual(expected);
+      expect(sync.params.a()).toBe(expected[0] ?? null);
+      expect(router.parseUrl(router.url).queryParamMap.getAll('a')).toEqual(expected);
       await settle();
       expect(router.requested).toHaveLength(0);
     } finally { injector.destroy(); }
@@ -252,7 +255,8 @@ describe('upstream query isolation and conversion scenarios', () => {
       expect(q()).toBe('fallback');
       expect(handleError).toHaveBeenCalledOnce();
       page.set(2); await settle();
-      expect(sync.paramMap().getAll('q')).toEqual(['one', 'two']);
+      expect(router.parseUrl(router.url).queryParamMap.getAll('q')).toEqual(['one', 'two']);
+      expect(sync.params.q()).toBe('one');
       expect(q()).toBe('fallback');
       expect(handleError).toHaveBeenCalledOnce();
       expect(router.url).toBe('/search?q=one&q=two&page=2#results');
@@ -320,7 +324,7 @@ describe('upstream query isolation and conversion scenarios', () => {
         expect(parsed.queryParamMap.getAll(key)).toEqual(values);
         expect(parsed.queryParamMap.getAll('keep')).toEqual(['one', 'two']);
         expect(parsed.fragment).toBe('results');
-        expect(sync.paramMap().getAll(key)).toEqual(values);
+        expect(sync.params[key]!()).toBe(values[0]);
         router.external('/search', 'popstate');
         router.external(router.requested[0]!.url, 'popstate');
         expect(source()).toEqual(values);

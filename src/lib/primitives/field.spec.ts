@@ -4270,7 +4270,7 @@ it('synchronizes an array-valued field through repeated query keys and restores 
   await settle();
   expect(router.url).toBe('/search');
   expect(sync.params.tag()).toBeNull();
-  expect(sync.paramMap().getAll('tag')).toEqual([]);
+  expect(router.parseUrl(router.url).queryParamMap.getAll('tag')).toEqual([]);
   expect(tags.invalid()).toBe(true);
   router.external('/search?tag=');
   expect(tags()).toEqual(['']);

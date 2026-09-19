@@ -141,11 +141,11 @@ try {
       void rawProfile;
       const typed: QueryParamsSync<'page'> = sync;
       const raw: string | null = sync.params.page();
-      const repeated: string[] = sync.paramMap().getAll('tag');
+      const rawTag: string | null = sync.params.tag();
       const pending: boolean = sync.pending();
       const closed: boolean = sync.closed();
       sync.unsubscribe();
-      return { typed, raw, repeated, pending, closed };
+      return { typed, raw, rawTag, pending, closed };
     }
   `);
   run(process.execPath, [ngc, '-p', join(temporaryDirectory, 'tsconfig.json')]);

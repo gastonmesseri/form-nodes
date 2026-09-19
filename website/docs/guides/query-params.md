@@ -49,10 +49,6 @@ readonly signal for each configured key: `querySync.params.page()` returns `stri
 passed through your codec. Empty text is `''`; a missing key is `null`; repeated keys expose their
 first value. A malformed number remains visible as raw text even when the field uses its fallback.
 
-`querySync.paramMap()` is a readonly signal containing an Angular `ParamMap` snapshot for **all**
-query keys. Use `.getAll('tag')` for repeated values or `.get('unboundKey')` for an unbound key.
-Returned arrays are copies. Keeping an old snapshot does not make it follow later navigation.
-
 These signals initialize from the activation URL and then follow accepted navigation, including
 Back/Forward and redirects. They do not optimistically mirror field edits. If a guard rejects a
 write, the signals retain the accepted URL while the field retains the user's edit.
@@ -65,7 +61,7 @@ write, the signals retain the accepted URL while the field retains the user's ed
   snapshot after cleanup, and `pending()` becomes false. An empty binding map starts closed.
 
 If only one entry's owner is destroyed, the other entries remain active. The URL signals keep
-tracking the whole URL until the connection closes, including keys whose fields stopped syncing.
+tracking configured keys until the connection closes, including keys whose fields stopped syncing.
 Keeping keys under `params` also allows parameters named `pending` or `unsubscribe` without collisions.
 
 Parameter names still pass through Angular Router's URL serializer. Avoid `__proto__`, which the
@@ -120,8 +116,8 @@ provide a custom `QueryParamCodec<number[]>`, as in this checked example:
 
 <CodeBlock language="ts" title="query-param-codecs.ts">{codecs}</CodeBlock>
 
-Use `querySync.paramMap().getAll('tag')` for all raw strings; `querySync.params.tag()` returns only
-the first string or null. Read `filters.tags()` for the parsed array.
+`querySync.params.tag()` returns the first raw string or null. Read `filters.tags()` for the
+complete parsed array. Use Angular Router directly to inspect query parameters outside the binding map.
 
 ## JSON
 

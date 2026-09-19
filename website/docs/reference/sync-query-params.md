@@ -26,14 +26,13 @@ The connection exposes:
 | Member | Contract |
 | --- | --- |
 | `params.key()` | Readonly `Signal<string \| null>` for each bound key, URL-decoded before codec parsing; the first value for repeated keys. |
-| `paramMap()` | Readonly `Signal<ParamMap>` for all accepted query keys, including unbound ones; use `getAll()` for repetitions. |
 | `pending()` | Readonly `Signal<boolean>` for this connection's queued and in-flight writes, starting when committed edits are observed. |
 | `closed()` | Readonly `Signal<boolean>` indicating that all entries have ended. Empty maps start closed. |
 | `unsubscribe()` | Idempotent early cleanup; also performed through injector ownership. |
 
 URL signals initialize from the activation URL, then change on accepted navigation. Field edits do
 not update them until Router accepts the write. After cleanup they retain their last snapshot;
-`pending()` is false. While any binding remains active, URL signals track all keys even if another
+`pending()` is false. While any binding remains active, URL signals track configured keys even if another
 entry's owner has been destroyed. `pending()` excludes form debounce, validation, and other helpers.
 
 Each binding is a node, writable signal, or configuration object:

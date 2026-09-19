@@ -35,7 +35,7 @@ export class SearchPage {
 
   readUrl() {
     const rawPage = this.querySync.params.page(); // string | null, before the integer codec
-    const tags = this.querySync.paramMap().getAll('tag'); // All repeated values, before codec parsing.
+    const tags = this.filters.tags(); // All parsed values from the array source.
     return { rawPage, tags };
   }
 

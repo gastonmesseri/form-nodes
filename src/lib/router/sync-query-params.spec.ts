@@ -511,29 +511,19 @@ it('releases all reserved entries if the shared owner is destroyed during hydrat
 it('exposes decoded raw signals independently of codecs, defaults, and repeated values', () => {
   const { router, injector, handleError } = setup('/search?q=Ada+Lovelace&page=invalid&tag=a&tag=b&empty=&keep=yes');
   const page = field(1);
-  const sync = syncQueryParams({ q: field(''), page, tag: { source: field.strict<string[]>([]), codec: queryParam.array() }, empty: field('fallback'), missing: field('fallback') }, { injector });
+  const tags = field.strict<string[]>([]);
+  const sync = syncQueryParams({ q: field(''), page, tag: { source: tags, codec: queryParam.array() }, empty: field('fallback'), missing: field('fallback') }, { injector });
   expect(sync.params.q()).toBe('Ada Lovelace');
   expect(sync.params.page()).toBe('invalid');
   expect(page()).toBe(1);
   expect(handleError).toHaveBeenCalledOnce();
   expect(sync.params.tag()).toBe('a');
+  expect(tags()).toEqual(['a', 'b']);
   expect(sync.params.empty()).toBe('');
   expect(sync.params.missing()).toBeNull();
-  expect(sync.paramMap().getAll('tag')).toEqual(['a', 'b']);
-  expect(sync.paramMap().get('keep')).toBe('yes');
-  expect(sync.paramMap().has('empty')).toBe(true);
-  expect(sync.paramMap().has('absent')).toBe(false);
-  expect(sync.paramMap().getAll('absent')).toEqual([]);
-  const snapshot = sync.paramMap();
-  snapshot.keys.splice(0);
-  snapshot.getAll('tag').push('mutated');
-  expect(snapshot.keys).toContain('tag');
-  expect(snapshot.getAll('tag')).toEqual(['a', 'b']);
   router.external('/search?page=2');
   expect(sync.params.page()).toBe('2');
   expect(sync.params.q()).toBeNull();
-  expect(sync.paramMap().get('keep')).toBeNull();
-  expect(snapshot.get('page')).toBe('invalid');
   injector.destroy();
 });
 
@@ -572,7 +562,7 @@ it('tracks accepted URL and queued writes separately for each connection', async
   await settle();
   expect(sync.params.q()).toBe('Lin');
   expect(sync.pending()).toBe(false);
-  expect(other.paramMap().get('q')).toBe('Lin');
+  expect(other.params.page()).toBe('1');
   injector.destroy();
   expect(sync.closed()).toBe(true);
   expect(other.closed()).toBe(true);
@@ -597,7 +587,7 @@ it('retains the accepted snapshot on rejection and publishes a redirect destinat
   router.accept(1, '/search?q=canonical&extra=1');
   await settle();
   expect(sync.params.q()).toBe('canonical');
-  expect(sync.paramMap().get('extra')).toBe('1');
+  expect(router.parseUrl(router.url).queryParamMap.get('extra')).toBe('1');
   expect(search()).toBe('canonical');
   expect(sync.pending()).toBe(false);
   injector.destroy();
@@ -619,14 +609,13 @@ it('keeps URL reads current through partial cleanup and freezes them when the la
   page.set(3);
   await settle();
   expect(sync.pending()).toBe(true);
-  const snapshot = sync.paramMap();
   sync.unsubscribe();
   sync.unsubscribe();
   expect(sync.closed()).toBe(true);
   expect(sync.pending()).toBe(false);
   router.external('/search?q=Lin&page=4');
   await settle();
-  expect(sync.paramMap()).toBe(snapshot);
+  expect(sync.params.q()).toBe('Grace');
   expect(sync.params.page()).toBe('2');
   expect(page()).toBe(3);
   injector.destroy();
@@ -639,7 +628,6 @@ it('handles reserved names and empty connections without adding live observation
   expect(empty.closed()).toBe(true);
   expect(empty.pending()).toBe(false);
   expect(router.events.observed).toBe(false);
-  expect(empty.paramMap().get('unsubscribe')).toBe('raw');
   empty.unsubscribe();
   const sync = syncQueryParams({ unsubscribe: field(''), pending: field(''), ['__proto__']: field('') }, { injector });
   expect(sync.params.unsubscribe()).toBe('raw');
@@ -648,7 +636,7 @@ it('handles reserved names and empty connections without adding live observation
   expect(sync.params.__proto__()).toBeNull();
   router.external('/search?pending=no');
   expect(sync.params.pending()).toBe('no');
-  expect(empty.paramMap().get('pending')).toBe('yes');
+  expect(empty.params).toEqual({});
   sync.unsubscribe();
   expect(router.events.observed).toBe(false);
   injector.destroy();
@@ -671,7 +659,7 @@ it('resolves every named codec and batches their encoded values with custom code
   expect(router.requested).toHaveLength(1);
   expect(router.url).toBe('/search?q=a%20%26%20b&amount=2.5&page=3&active=true&tag=one,two&tag=&tag=a%20%26%20b&tag=one,two&custom=4');
   expect(sync.params.tag()).toBe('one,two');
-  expect(sync.paramMap().getAll('tag')).toEqual(['one,two', '', 'a & b', 'one,two']);
+  expect(router.parseUrl(router.url).queryParamMap.getAll('tag')).toEqual(['one,two', '', 'a & b', 'one,two']);
   expect(sync.pending()).toBe(false);
   injector.destroy();
 });
@@ -714,7 +702,8 @@ it('synchronizes numeric arrays using a custom element codec', async () => {
   ids.set([3, 4]);
   await settle();
   expect(router.url).toBe('/search?id=3&id=4');
-  expect(sync.paramMap().getAll('id')).toEqual(['3', '4']);
+  expect(router.parseUrl(router.url).queryParamMap.getAll('id')).toEqual(['3', '4']);
+  expect(sync.params.id()).toBe('3');
   injector.destroy();
 });
 
@@ -752,7 +741,7 @@ it('distinguishes JSON empty arrays and null from absent parameters and clears s
   cleared.set({ id: 2 });
   await settle();
   expect(sync.params.ids()).toBe('[]');
-  expect(sync.paramMap().getAll('ids')).toEqual(['[]']);
+  expect(router.parseUrl(router.url).queryParamMap.getAll('ids')).toEqual(['[]']);
   cleared.set({ id: 1 });
   ids.set(null);
   await settle();
@@ -1004,7 +993,7 @@ it('synchronizes groups, array nodes, and signals in one batch without echoing i
   await settle();
   expect(router.requested).toHaveLength(1);
   expect(sync.params.state()).toBe('{"set":"Grace","active":true}');
-  expect(sync.paramMap().getAll('tag')).toEqual(['a', 'a', 'b']);
+  expect(router.parseUrl(router.url).queryParamMap.getAll('tag')).toEqual(['a', 'a', 'b']);
   router.external(`/search?state=${encodeURIComponent(raw)}&tag=c`, 'popstate');
   await settle();
   expect(state.set()).toBe('Ada');
@@ -1014,7 +1003,7 @@ it('synchronizes groups, array nodes, and signals in one batch without echoing i
   expect(sync.params.state()).toBe(raw);
   tags.clear();
   await settle();
-  expect(sync.paramMap().has('tag')).toBe(false);
+  expect(router.parseUrl(router.url).queryParamMap.has('tag')).toBe(false);
   injector.destroy();
 });
 

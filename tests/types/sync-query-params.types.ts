@@ -17,8 +17,7 @@ const typed: QueryParamsSync<'q' | 'page' | 'active'> = sync;
 const rawPage: Signal<string | null> = sync.params.page;
 const pending: Signal<boolean> = sync.pending;
 const closed: Signal<boolean> = sync.closed;
-const tags: string[] = sync.paramMap().getAll('tag');
-void [typed, rawPage, pending, closed, tags];
+void [typed, rawPage, pending, closed];
 sync.unsubscribe();
 // @ts-expect-error Only configured keys have named signals.
 sync.params.missing;

@@ -1,4 +1,3 @@
-import type { ParamMap } from '@angular/router';
 import type { NodeApi } from '@ngblocks/form-nodes';
 import type { Injector, Signal, WritableSignal } from '@angular/core';
 
@@ -236,8 +235,8 @@ export type QueryParamsSync<K extends string = string> = {
   /**
    * Readonly signals for the configured keys, before codec parsing.
    * Values are URL-decoded strings, or null when absent. Repeated keys return
-   * their first value; use paramMap for all values. Snapshots update on accepted
-   * navigation and freeze when the connection closes.
+   * their first value. Read an array-codec source for all parsed values.
+   * Snapshots update on accepted navigation and freeze when the connection closes.
    *
    * ```ts
    * function connect() {
@@ -250,22 +249,6 @@ export type QueryParamsSync<K extends string = string> = {
    * ```
    */
   readonly params: { readonly [P in K]: Signal<string | null> };
-  /**
-   * Snapshot of all URL query keys, including unbound and repeated parameters.
-   * Arrays returned by keys and getAll are copies; mutating them does not change
-   * synchronization. Initialized from the activation URL, then updated only on
-   * accepted navigation. The last snapshot remains readable after cleanup.
-   *
-   * ```ts
-   * function connect() {
-   *   const sync = syncQueryParams({
-   *     q: field(''),
-   *   });
-   *   return sync.paramMap().getAll('tag');
-   * }
-   * ```
-   */
-  readonly paramMap: Signal<ParamMap>;
   /**
    * Whether this connection has queued or in-flight URL writes.
    * Starts when a committed edit is observed in a microtask; excludes control
@@ -284,7 +267,7 @@ export type QueryParamsSync<K extends string = string> = {
   readonly pending: Signal<boolean>;
   /**
    * Whether all bindings have ended through unsubscribe or injector cleanup.
-   * An empty map is already closed and retains only its initial URL snapshot.
+   * An empty map is already closed and has no parameter signals.
    *
    * ```ts
    * function connect() {

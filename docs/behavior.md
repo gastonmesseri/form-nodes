@@ -4562,13 +4562,13 @@ without Router or an injection context; only the integration needs a Router-prov
 
 - `params` exposes readonly `Signal<string | null>` properties for precisely the configured keys.
   Values are URL-decoded, before codec parsing, with null for absence and the first value for repeated
-  parameters. `paramMap` is a readonly `Signal<ParamMap>` including unbound and repeated query keys.
-  Its arrays are defensive copies. The activation URL supplies the initial snapshot; accepted
+  parameters. Read the bound array source for all parsed values; use Angular Router directly for
+  unbound query keys. The activation URL supplies the initial snapshot; accepted
   navigation publishes the next snapshot before restoring fields. Rejected writes leave it unchanged.
 - `pending()` covers this helper's queued and in-flight writes from the observation microtask through
   settlement or cancellation. It excludes control debounce, validation, external navigation, and
   other helpers. `closed()` becomes true when all entries end, including manual `unsubscribe()`.
-  Partial ownership cleanup leaves URL observation active for all keys. Full cleanup freezes the last
+  Partial ownership cleanup leaves URL observation active for all configured keys. Full cleanup freezes the last
   snapshot, clears pending state, and remains idempotent. Empty maps start closed without observations.
 - The initial URL hydrates synchronously without an outbound navigation. Present values pass through
   the codec; missing or malformed parameters use a fallback captured at registration. Scalar codecs

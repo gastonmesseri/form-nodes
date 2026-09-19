@@ -6640,7 +6640,7 @@ it('batches named scalar and array codecs in nested forms and preserves validati
   await settle();
   expect(router.requested).toHaveLength(1);
   expect(router.url).toBe('/search?tag=react&tag=vue&page=3');
-  expect(sync.paramMap().getAll('tag')).toEqual(['react', 'vue']);
+  expect(router.parseUrl(router.url).queryParamMap.getAll('tag')).toEqual(['react', 'vue']);
   filters.markAsTouched();
   router.external('/search?page=4', 'popstate');
   expect(filters()).toEqual({ nested: { tags: [], page: 4 } });

@@ -123,7 +123,7 @@ it('round trips named array codecs through real Router navigation and history', 
   tags.set(['a & b', '', 'a & b']);
   await vi.waitFor(() => expect(page.router.url).toBe('/search?tag=a%20%26%20b&tag=&tag=a%20%26%20b'));
   await vi.waitFor(() => expect(sync.pending()).toBe(false));
-  expect(sync.paramMap().getAll('tag')).toEqual(['a & b', '', 'a & b']);
+  expect(page.router.parseUrl(page.router.url).queryParamMap.getAll('tag')).toEqual(['a & b', '', 'a & b']);
   tags.set([]);
   await vi.waitFor(() => expect(page.router.url).toBe('/search'));
   await vi.waitFor(() => expect(sync.pending()).toBe(false));
