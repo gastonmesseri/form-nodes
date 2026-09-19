@@ -732,6 +732,30 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
    */
   nodeType(): 'form';
   /**
+   * Subscribes to future exposed value changes and returns an idempotent cancellation function.
+   * Runs synchronously and untracked, respects equality and control debounce, and skips initial
+   * values. Multiple listeners coexist with the construction callback; subscriptions are not cloned.
+   * The explicit injector, otherwise the registration context, owns the listener. The node's
+   * current injector also ends the subscription on destruction and acts as the fallback owner.
+   * Binding and ancestor ownership follow the node when it is rebound or detached.
+   * Without an injector, observation still works and can be canceled manually.
+   *
+   * ```ts
+   * const node = form({ name: field('Ada') });
+   * const values: unknown[] = [];
+   * const stop = node.onValueChange(value => {
+   *   values.push(value);
+   * });
+   * node.patch({ name: 'Grace' });
+   * values.length; // 1
+   * stop();
+   * ```
+   *
+   * @param callback Receives the exposed value and original node after a committed change. Return values are ignored; thrown errors propagate after the other listeners are notified.
+   * @param options Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
+   */
+  onValueChange(callback: (value: FormValue<TNodes>, node: FormNode<TNodes, TParent>) => void, options?: { injector?: Injector }): () => void;
+  /**
    * Readonly runtime child map. Declared properties retain exact node types; arbitrary keys use DynamicNode.
    *
    * ```ts
@@ -1624,10 +1648,15 @@ export type FormApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = {
 };
 
 export type NodeWithParent<TNode extends AnyNode, TParent extends AnyNode> =
-  TNode extends FieldNode<infer TValue, AnyNode> ? FieldNode<TValue, TParent>
-    : TNode extends FormNode<infer TNodes, AnyNode> ? FormNode<TNodes, TParent>
-      : TNode extends GroupNode<infer TNodes, AnyNode> ? GroupNode<TNodes, TParent>
-        : TNode extends ArrayNode<infer TItem, AnyNode> ? ArrayNode<TItem, TParent> : TNode;
+  TNode extends { $api: { nodeType(): 'field' } }
+    ? TNode extends FieldNode<infer TValue, AnyNode> ? FieldNode<TValue, TParent> : TNode
+    : TNode extends { $api: { nodeType(): 'form' } }
+      ? TNode extends FormNode<infer TNodes, AnyNode> ? FormNode<TNodes, TParent> : TNode
+      : TNode extends { $api: { nodeType(): 'group' } }
+        ? TNode extends GroupNode<infer TNodes, AnyNode> ? GroupNode<TNodes, TParent> : TNode
+        : TNode extends { $api: { nodeType(): 'array' } }
+          ? TNode extends ArrayNode<infer TItem, AnyNode> ? ArrayNode<TItem, TParent> : TNode
+          : TNode;
 
 export type FormChildren<TNodes extends Nodes, TParent extends AnyNode> = {
   readonly [K in keyof TNodes]: NodeWithParent<TNodes[K], FormNode<TNodes, TParent>>;

@@ -14,6 +14,27 @@ import { minLength } from '../validation/validators/min-length';
 import { uniqueItems } from '../validation/validators/unique-items';
 
 describe('array', () => {
+  it('subscribes to structural and row changes without copying instance listeners into template clones', () => {
+    const template = field('Ada');
+    const templateChanged = vi.fn();
+    template.onValueChange(templateChanged);
+    const rows = array(template, 1);
+    const notify = vi.fn();
+    const stop = rows.onValueChange(notify);
+    rows[0]!.set('Grace');
+    expect(notify).toHaveBeenCalledExactlyOnceWith(['Grace'], rows);
+    rows.push('Lin');
+    expect(notify).toHaveBeenLastCalledWith(['Grace', 'Lin'], rows);
+    rows.removeAt(0);
+    expect(notify).toHaveBeenLastCalledWith(['Lin'], rows);
+    expect(templateChanged).not.toHaveBeenCalled();
+    stop();
+    rows.clear();
+    expect(notify).toHaveBeenCalledTimes(3);
+    template.set('Original');
+    expect(templateChanged).toHaveBeenCalledOnce();
+  });
+
   it.each(['shallow', 'deep'] as const)('compares exposed arrays with %s equality', (equal) => {
     const values = array(field.strict<number>(1), { initialValue: 2, equal });
     const initial = values();

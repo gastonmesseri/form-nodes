@@ -1715,3 +1715,20 @@ node. Aggregate operations notify after their children are updated. It runs with
 tracking or an injection-context requirement and does not wait for asynchronous validation.
 See [value change callbacks](../guides/configuring-nodes.md#value-changes) for the executable example,
 reset and array behavior, callback ordering, and error handling.
+
+
+### Subscribe after creation {#onvaluechange-method}
+
+```ts
+onValueChange(callback: (value: GroupValue<TNodes>, node: TNode) => void, options?: { injector?: Injector }): () => void;
+```
+
+Here `TNode` is the inferred type of this group instance. Call the instance method to register
+independent listeners after construction; use `$api.onValueChange()` if a child hides the method.
+It returns an idempotent cancellation function and emits no initial value. The explicit injector,
+otherwise the registration context, owns the listener; node ownership provides a fallback and
+also ends the subscription when destroyed. Observation remains available without DI.
+
+See [instance subscriptions](../guides/configuring-nodes.md#value-subscriptions) for typed examples,
+[automatic cleanup](../guides/configuring-nodes.md#subscription-ownership) for owner precedence and
+rebinding, and the callback section above for equality, debounce, and notification timing.

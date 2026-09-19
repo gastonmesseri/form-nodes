@@ -1,4 +1,5 @@
 import { expectTypeOf } from 'vitest';
+import { Injector } from '@angular/core';
 
 import { field, form, group, array, createFormPrimitives, type FieldNode } from '../../src/public-api';
 
@@ -33,3 +34,38 @@ primitives.form({ enabled: primitives.field(false) }, { onValueChange(value, nod
   expectTypeOf(value).toEqualTypeOf<{ enabled: boolean }>();
   expectTypeOf(node.enabled()).toEqualTypeOf<boolean>();
 } });
+
+const name = field('Ada');
+const stop = name.onValueChange((value, node) => {
+  expectTypeOf(value).toEqualTypeOf<string | null>();
+  expectTypeOf(node).toEqualTypeOf<typeof name>();
+  // @ts-expect-error A field subscriber retains the field value contract.
+  node.set(42);
+});
+expectTypeOf(stop).toEqualTypeOf<() => void>();
+const owner = Injector.create({ providers: [] });
+name.onValueChange(() => {}, { injector: owner });
+// @ts-expect-error Subscription ownership accepts an Angular injector.
+name.onValueChange(() => {}, { injector: 'invalid' });
+// @ts-expect-error Callback values must accept the inferred nullable field value.
+name.onValueChange((value: number) => value);
+field(null).onValueChange(value => expectTypeOf(value).toEqualTypeOf<unknown>());
+primitives.field('').onValueChange(value => expectTypeOf(value).toEqualTypeOf<string>());
+
+const profile = form({ name, onValueChange: field('child'), details: { age: field.strict(0) } });
+profile.$api.onValueChange((value, node) => {
+  expectTypeOf(value).toEqualTypeOf<{ name: string | null; onValueChange: string | null; details: { age: number } }>();
+  expectTypeOf(node).toEqualTypeOf<typeof profile>();
+});
+profile.name.onValueChange((_value, node) => expectTypeOf(node).toEqualTypeOf<typeof profile.name>());
+profile.details.onValueChange((value, node) => {
+  expectTypeOf(value).toEqualTypeOf<{ age: number }>();
+  expectTypeOf(node).toEqualTypeOf<typeof profile.details>();
+  expectTypeOf(node.nodeType()).toEqualTypeOf<'group'>();
+});
+const rows = array({ name: field('') });
+rows.onValueChange((value, node) => {
+  expectTypeOf(value).toEqualTypeOf<{ name: string | null }[]>();
+  expectTypeOf(node).toEqualTypeOf<typeof rows>();
+});
+owner.destroy();

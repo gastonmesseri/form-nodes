@@ -12,7 +12,7 @@ const configs = new WeakMap<AnyNode, NodeInjectorConfig>();
 const bindingInjectors = new WeakMap<AnyNode, Map<object, Injector>>();
 const listeners = new WeakMap<AnyNode, Set<(injector: Injector | undefined) => void>>();
 
-const getCurrentInjector = (): Injector | undefined => {
+export const getCurrentInjector = (): Injector | undefined => {
   try {
     assertInInjectionContext(getCurrentInjector);
     return inject(Injector);

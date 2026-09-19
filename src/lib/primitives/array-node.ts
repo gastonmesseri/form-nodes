@@ -28,11 +28,11 @@ import { registerNodeValidatorMessages } from '../validation/validator-messages'
 import { readStateSource, getInitialMutableState } from './utils/read-state-source';
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
-import { installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
 import { isAsyncValidator, needsDeferredValidationStart } from '../validation/utils/async-validator-marker';
+import { onNodeValueChange, installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { InternalNode, MarkAsTouchedOptions, AnyNode, NodeControlBinding, NodeSet, NodeValue } from '../types/node.type';
@@ -636,6 +636,7 @@ export class ArrayNode<TItem extends AnyNode> {
     const readonlyValue = computed(() => this.exposedValue());
     const publicApi: ArrayApi<TItem> = {
       asReadonly: () => readonlyValue,
+      onValueChange: (callback, options) => onNodeValueChange(this.node, callback, options),
       nodeType: () => 'array',
       templateValue: () => this.templateValue(),
       items: this.items.asReadonly() as Signal<ArrayItems<TItem, AnyNode>>,

@@ -5,6 +5,8 @@ title: Configuring nodes and sibling rules
 # Configuring nodes and sibling rules
 
 import CodeBlock from '@theme/CodeBlock';
+import subscriptionsSource from '!!raw-loader!../../examples/node-value-subscriptions.example.ts';
+import subscriptionOwnerSource from '!!raw-loader!../../examples/node-value-subscriptions.typecheck.ts';
 import valueChangeSource from '!!raw-loader!../../examples/on-value-change.example.ts';
 import indexedParentSource from '!!raw-loader!../../examples/indexed-validator-parent.typecheck.ts';
 import configureSource from '!!raw-loader!../../examples/configure-nodes.example.ts';
@@ -157,3 +159,48 @@ an unreachable node alive.
 The callback receives the node itself. Use `node.$api` when a child name hides an API member, as
 explained in [API access](../reference/node-api.md). To observe only control-originated input, use
 the [binding outputs](../reference/form-node-binding.md) instead.
+
+
+### Subscribe to an existing node {#value-subscriptions}
+
+Call `node.onValueChange(callback, { injector? })` after creating a field, form, group, or array.
+The callback receives the inferred value and original node. Each call creates an independent
+subscription and returns an idempotent cancellation function. The method also exists on `$api`
+when an object child is named `onValueChange`.
+
+<CodeBlock language="ts" title="node-value-subscriptions.ts">{subscriptionsSource}</CodeBlock>
+
+Instance subscriptions follow the same equality, debounce, batching, validation, and error rules
+as the construction callback above. They emit no initial value, coexist with the construction
+callback, and are not copied to array template clones. Registration during `configure` works;
+construction-time writes remain silent. For each notification, the construction callback runs
+first, then instance listeners in registration order. Canceling a listener before its turn skips
+it. New listeners do not receive an update already in progress, but can receive subsequent
+reentrant changes. Every listener in a delivery receives the same value snapshot, even if an
+earlier listener makes another write.
+
+### Automatic subscription cleanup {#subscription-ownership}
+
+Choose the consumer owner in this order: the explicit `options.injector`, the context where
+`onValueChange()` is called, or the node's current injector. The explicit option only owns this
+subscription and does not change the node's injector. The subscription also ends if the node's
+current owner is destroyed, even when the consumer has a longer lifetime.
+
+<CodeBlock language="ts" title="profile-page.ts">{subscriptionOwnerSource}</CodeBlock>
+
+A node keeps its explicit or captured injector ahead of direct binding and ancestor injectors.
+When it temporarily adopts a `[formNode]` binding injector or inherits an ancestor injector,
+subscriptions follow ownership changes: rebinding or detachment removes the old association.
+A detached node can still notify. Destruction of the former owner does not cancel a subscription
+that has already moved away, unless that injector was also chosen explicitly or captured as the
+consumer owner. A canceled subscription does not restart on later attachment.
+
+Without an injector, subscriptions still work synchronously. Use the returned cancellation function
+when the node outlives its consumer. Unreachable nodes and callbacks can be garbage-collected;
+keeping an injector or cancellation function alive does not retain the node tree. Canceling early
+also unregisters lifecycle hooks. Unsubscribing does not reset the node or change its validation rules.
+
+The callback provided in factory options keeps its existing node-lifetime behavior and is copied
+into template clones. Use instance subscriptions for consumers that need automatic injector cleanup.
+Callback return values do not register cleanup; asynchronous work started by a callback remains
+owned by the application.

@@ -26,13 +26,13 @@ import { createNodeDefinitionFactory } from './utils/create-node-definition-fact
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import { captureSubmission, clearSubmissionErrors } from '../validation/submission-errors';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
-import { installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { assertValidObjectDefinition, normalizeObjectDefinition } from './form-group-node.utils';
 import { readDefinitionTemplateValue, registerNodeTemplateValue } from './utils/node-template-value';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { firstControlBindingInDom, findFirstControlBindingInDom } from '../utils/node-control-binding';
 import { createControlValueBuffer, type ControlValueBuffer } from './utils/create-control-value-buffer';
 import { isAsyncValidator, needsDeferredValidationStart } from '../validation/utils/async-validator-marker';
+import { onNodeValueChange, installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { DynamicNode, InternalNode, MarkAsTouchedOptions, AnyNode, NodeControlBinding, Nodes } from '../types/node.type';
@@ -570,6 +570,7 @@ export class FormGroupNode<TNodes extends Nodes> {
     const readonlyValue = computed(() => this.exposedValue());
     const publicApi = {
       asReadonly: () => readonlyValue,
+      onValueChange: (callback: Parameters<FormApi<TNodes>['onValueChange']>[0], options?: Parameters<FormApi<TNodes>['onValueChange']>[1]) => onNodeValueChange(this.node, callback, options),
       nodeType: () => this.nodeType,
       children: this.children as FormChildren<TNodes, AnyNode>,
       forEachChild: (callback: (child: DynamicNode, key: string) => void, options?: { includeDynamic?: boolean }) => this.forEachChild(callback, options),

@@ -5578,7 +5578,8 @@ it('prevents reentrant blocked callbacks and permits a later valid submission', 
   const action = vi.fn();
   const reentrantResults: Promise<boolean>[] = [];
   const blocked = vi.fn((node: FormNode) => { reentrantResults.push(node.$api.submit()); });
-  const profile = form({ nested: form({ name: field('', [required]) }) }, {
+  const nested = form({ name: field('', [required]) });
+  const profile = form({ nested }, {
     onSubmit: action,
     onSubmitBlocked: blocked,
   });
@@ -5587,14 +5588,14 @@ it('prevents reentrant blocked callbacks and permits a later valid submission', 
   expect(blocked).toHaveBeenCalledOnce();
   expect(profile.submitted()).toBe(true);
   expect(profile.nested.submitted()).toBe(false);
-  expect(profile.nested.name.touched()).toBe(true);
+  expect(nested.name.touched()).toBe(true);
   expect(profile.submitting()).toBe(false);
-  profile.nested.name.set('Ada');
+  nested.name.set('Ada');
   expect(await profile.submit()).toBe(true);
   expect(action).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile);
   profile.reset();
   expect(profile.submitted()).toBe(false);
-  expect(profile.nested.name.touched()).toBe(false);
+  expect(nested.name.touched()).toBe(false);
 });
 
 it('infers and tracks requiredIf through a later declared computed self-reference', () => {
@@ -5981,6 +5982,138 @@ it('gates asynchronous form validation with the last value-triggered synchronous
   await new Promise(resolve => setTimeout(resolve, 0));
   expect(model.errors()).toMatchObject([{ kind: 'minimum' }]);
   expect(model.pending()).toBe(false);
+});
+
+describe('form instance onValueChange', () => {
+  it('reports complete nested updates in child-first order and supports name collisions', () => {
+    const profile = form({ details: form({ first: field('Ada'), last: field('Lovelace') }), onValueChange: field('child') });
+    const events: unknown[] = [];
+    profile.details.first.onValueChange(value => events.push(['first', value, profile()]));
+    profile.details.onValueChange(value => events.push(['details', value]));
+    const stop = profile.$api.onValueChange((value, node) => events.push(['root', value, node === profile]));
+    profile.patch({ details: { first: 'Grace', last: 'Hopper' } });
+    expect(events).toEqual([
+      ['first', 'Grace', { details: { first: 'Grace', last: 'Hopper' }, onValueChange: 'child' }],
+      ['details', { first: 'Grace', last: 'Hopper' }],
+      ['root', { details: { first: 'Grace', last: 'Hopper' }, onValueChange: 'child' }, true],
+    ]);
+    stop();
+    events.length = 0;
+    profile.resetToInitial();
+    expect(events).toHaveLength(2);
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+  });
+
+  it('does not deliver a pending ancestor change to a listener registered during child delivery', () => {
+    const profile = form({ name: field('') });
+    const original = vi.fn();
+    const later = vi.fn();
+    profile.onValueChange(original);
+    const stop = profile.name.onValueChange(() => { profile.onValueChange(later); });
+    profile.name.set('Ada');
+    expect(original).toHaveBeenCalledOnce();
+    expect(later).not.toHaveBeenCalled();
+    stop();
+    profile.name.set('Grace');
+    expect(later).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile);
+  });
+
+  it('follows inherited ownership when nodes are attached, detached, and reparented', () => {
+    const firstOwner = Injector.create({ providers: [] });
+    const secondOwner = Injector.create({ providers: [] });
+    const nested = form({ name: field('') });
+    const child = vi.fn();
+    const notify = vi.fn();
+    nested.name.onValueChange(child);
+    nested.onValueChange(notify);
+    const first = form({}, { injector: firstOwner });
+    const second = form({}, { injector: secondOwner });
+    first.add('nested', nested);
+    nested.name.set('first');
+    first.remove('nested');
+    firstOwner.destroy();
+    nested.name.set('detached');
+    expect(notify).toHaveBeenCalledTimes(2);
+    second.add('nested', nested);
+    nested.name.set('second');
+    secondOwner.destroy();
+    nested.name.set('after destruction');
+    expect(child).toHaveBeenCalledTimes(3);
+    expect(notify).toHaveBeenCalledTimes(3);
+  });
+
+  it.each(['node', 'consumer', 'explicit'] as const)('cleans up aggregate listeners with their %s owner', (owner) => {
+    const nodeOwner = Injector.create({ providers: [] });
+    const consumer = Injector.create({ providers: [] });
+    const explicit = Injector.create({ providers: [] });
+    const profile = runInInjectionContext(nodeOwner, () => form({ nested: form({ name: field('') }) }));
+    const notify = vi.fn();
+    const register = () => profile.onValueChange(notify, owner === 'explicit' ? { injector: explicit } : undefined);
+    const stop = owner === 'node' ? register() : runInInjectionContext(consumer, register);
+    profile.nested.name.set('Ada');
+    expect(notify).toHaveBeenCalledOnce();
+    if (owner === 'node') nodeOwner.destroy();
+    else if (owner === 'consumer') consumer.destroy();
+    else {
+      consumer.destroy();
+      profile.nested.name.set('Grace');
+      expect(notify).toHaveBeenCalledTimes(2);
+      explicit.destroy();
+    }
+    const calls = notify.mock.calls.length;
+    profile.patch({ nested: { name: 'Lin' } });
+    expect(notify).toHaveBeenCalledTimes(calls);
+    stop();
+    if (owner !== 'node') nodeOwner.destroy();
+    if (owner === 'node') consumer.destroy();
+    if (owner !== 'explicit') explicit.destroy();
+  });
+
+  it('respects aggregate equality, control debounce, reset, and validation propagation', () => {
+    const profile = form({ nested: form({ name: field('', [required]) }) }, { debounce: 'blur', equal: 'deep' });
+    const notify = vi.fn();
+    profile.onValueChange(notify);
+    profile.set({ nested: { name: '' } });
+    expect(notify).not.toHaveBeenCalled();
+    profile.nested.name.value.control.set('Ada');
+    expect(profile.invalid()).toBe(true);
+    expect(profile.dirty()).toBe(true);
+    expect(notify).not.toHaveBeenCalled();
+    profile.markAsTouched();
+    expect(profile.valid()).toBe(true);
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ nested: { name: 'Ada' } }, profile);
+    profile.reset();
+    expect(profile.pristine()).toBe(true);
+    expect(profile.untouched()).toBe(true);
+    expect(notify).toHaveBeenCalledOnce();
+    profile.resetToInitial();
+    expect(profile.invalid()).toBe(true);
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves nested async validation triggers, pending state, and stale-result cancellation', async () => {
+    const completions: Array<(result: null) => void> = [];
+    const validate = vi.fn(({ value }: Context<unknown>) => {
+      value();
+      return new Promise<null>(resolve => completions.push(resolve));
+    });
+    const profile = form({ nested: form({ name: field('') }, { validators: asyncValidator(validate) }) });
+    const notify = vi.fn();
+    profile.onValueChange(notify);
+    profile.nested.name.set('Ada');
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledOnce());
+    profile.patch({ nested: { name: 'Grace' } });
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    completions[0]!(null);
+    await Promise.resolve();
+    expect(profile.pending()).toBe(true);
+    completions[1]!(null);
+    await vi.waitFor(() => expect(profile.pending()).toBe(false));
+    expect(profile.valid()).toBe(true);
+    expect(profile.nested.errors()).toEqual([]);
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('form onValueChange', () => {

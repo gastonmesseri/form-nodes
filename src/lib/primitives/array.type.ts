@@ -1,4 +1,4 @@
-import type { Signal } from '@angular/core';
+import type { Injector, Signal } from '@angular/core';
 
 import type { FieldNode } from './field.type';
 import type { GroupNode } from './group.type';
@@ -8,7 +8,7 @@ import type { CallableNodeApi } from '../types/callable-node-api.type';
 import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, NearestForm, AnyNode, NodeKeyInParent, NodeSet, NodeValue, RootNode } from '../types/node.type';
+import type { DisabledReason, NearestForm, AnyNode, IsUnknownNode, NodeKeyInParent, NodeSet, NodeValue, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type ArrayOptions<TValue = any, TArray extends AnyNode = ArrayNode<AnyNode>> = Omit<FormOptions<TValue>, 'configure' | 'onValueChange' | 'onSubmit' | 'onSubmitBlocked' | 'submitWhen' | 'validators' | 'debounce' | 'hidden' | 'disabled' | 'readonly'> & {
@@ -372,7 +372,7 @@ export type ArraySet<TItem extends AnyNode> = readonly NodeSet<TItem>[];
 export type ArrayPatch<TItem extends AnyNode> = ArraySet<TItem>;
 
 export type ArrayRoot<TItem extends AnyNode, TParent extends AnyNode> = AnyNode extends TParent
-  ? AnyNode extends TItem ? AnyNode : ArrayNode<TItem, TParent>
+  ? IsUnknownNode<TItem> extends true ? AnyNode : ArrayNode<TItem, TParent>
   : RootNode<TParent>;
 
 export type ArrayItems<TItem extends AnyNode, TParent extends AnyNode> =
@@ -397,6 +397,30 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    * ```
    */
   nodeType(): 'array';
+  /**
+   * Subscribes to future exposed value changes and returns an idempotent cancellation function.
+   * Runs synchronously and untracked, respects equality and control debounce, and skips initial
+   * values. Multiple listeners coexist with the construction callback; subscriptions are not cloned.
+   * The explicit injector, otherwise the registration context, owns the listener. The node's
+   * current injector also ends the subscription on destruction and acts as the fallback owner.
+   * Binding and ancestor ownership follow the node when it is rebound or detached.
+   * Without an injector, observation still works and can be canceled manually.
+   *
+   * ```ts
+   * const node = array({ name: field('Ada') });
+   * const values: unknown[] = [];
+   * const stop = node.onValueChange(value => {
+   *   values.push(value);
+   * });
+   * node.push({ name: 'Grace' });
+   * values.length; // 1
+   * stop();
+   * ```
+   *
+   * @param callback Receives the exposed value and original node after a committed change. Return values are ignored; thrown errors propagate after the other listeners are notified.
+   * @param options Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
+   */
+  onValueChange(callback: (value: ArrayValue<TItem>, node: ArrayNode<TItem, TParent>) => void, options?: { injector?: Injector }): () => void;
   /**
    * Returns an independent value for one new item without adding it to this array.
    * Template declarations use their captured defaults, independently of current rows and this

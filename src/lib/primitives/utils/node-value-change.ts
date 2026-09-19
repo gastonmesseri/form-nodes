@@ -1,13 +1,12 @@
 import { untracked } from '@angular/core';
 
 import type { AnyNode } from '../../types/node.type';
-
-type ValueChangeCallback = (value: any, node: any) => void;
+import { subscribeToNodeValue, valueSubscriptions, type ValueChangeCallback, type ValueSubscription } from './node-value-subscription';
 
 const callbacks = new WeakMap<AnyNode, ValueChangeCallback>();
 const previousValues = new WeakMap<AnyNode, unknown>();
 const unavailableValue = Symbol('Unavailable public value');
-const pending = new Map<AnyNode, unknown>();
+const pending = new Map<AnyNode, { previous: unknown; subscriptions: ValueSubscription[] }>();
 let depth = 0;
 let suppressed = 0;
 let notifying = false;
@@ -38,7 +37,7 @@ const flush = (errors: unknown[]) => {
       const node = [...pending.keys()].reduce((deepest, candidate) => {
         return ancestors(candidate).length > ancestors(deepest).length ? candidate : deepest;
       });
-      const previous = pending.get(node);
+      const { previous, subscriptions } = pending.get(node)!;
       pending.delete(node);
       try {
         const value = node();
@@ -50,7 +49,20 @@ const flush = (errors: unknown[]) => {
           pending.clear();
           throw new Error('onValueChange callbacks did not settle after 100 notifications for one node.');
         }
-        callbacks.get(node)!(value, node);
+        const callback = callbacks.get(node);
+        try {
+          callback?.(value, node);
+        } catch (error) {
+          errors.push(error);
+        }
+        for (const subscription of subscriptions) {
+          try {
+            const listener = subscription.callback;
+            listener?.(value, node);
+          } catch (error) {
+            errors.push(error);
+          }
+        }
       } catch (error) {
         errors.push(error);
       }
@@ -69,14 +81,15 @@ const runValueChange = <T>(node: AnyNode, operation: () => T): T => {
   try {
     untracked(() => {
       for (const ancestor of ancestors(node)) {
-        if (!callbacks.has(ancestor) || pending.has(ancestor)) continue;
+        if ((!callbacks.has(ancestor) && !valueSubscriptions.has(ancestor)) || pending.has(ancestor)) continue;
+        const subscriptions = [...valueSubscriptions.get(ancestor) ?? []];
         try {
           const previous = ancestor();
           previousValues.set(ancestor, previous);
-          pending.set(ancestor, previous);
+          pending.set(ancestor, { previous, subscriptions });
         } catch {
           // A cached comparator failure must not prevent a subsequent write from recovering.
-          pending.set(ancestor, previousValues.has(ancestor) ? previousValues.get(ancestor) : unavailableValue);
+          pending.set(ancestor, { previous: previousValues.has(ancestor) ? previousValues.get(ancestor) : unavailableValue, subscriptions });
         }
       }
     });
@@ -90,6 +103,10 @@ const runValueChange = <T>(node: AnyNode, operation: () => T): T => {
   if (errors.length === 1) throw errors[0];
   if (errors.length > 1) throw new AggregateError(errors, 'Node value operation or onValueChange callbacks failed.');
   return result;
+};
+
+export const onNodeValueChange: typeof subscribeToNodeValue = (node, callback, options) => {
+  return untracked(() => subscribeToNodeValue(node, callback, options));
 };
 
 /**

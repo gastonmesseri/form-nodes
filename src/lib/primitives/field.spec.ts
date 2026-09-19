@@ -3564,6 +3564,202 @@ it('gates asynchronous field validation with the last value-triggered synchronou
   expect(model.pending()).toBe(false);
 });
 
+describe('field instance onValueChange', () => {
+  it('supports independent registrations alongside options and respects equality and interaction state', () => {
+    const configured = vi.fn();
+    const notify = vi.fn();
+    const node = field.strict('Ada', { onValueChange: configured, equal: (a, b) => a.toLowerCase() === b.toLowerCase() });
+    const stopFirst = node.onValueChange(notify);
+    const stopSecond = node.$api.onValueChange(notify);
+    expect(notify).not.toHaveBeenCalled();
+    node.set('ADA');
+    expect(notify).not.toHaveBeenCalled();
+    node.set('Grace');
+    expect(notify).toHaveBeenCalledTimes(2);
+    expect(notify).toHaveBeenLastCalledWith('Grace', node);
+    expect(configured).toHaveBeenCalledOnce();
+    expect(node.pristine()).toBe(true);
+    expect(node.untouched()).toBe(true);
+    stopFirst();
+    stopFirst();
+    node.set('Lin');
+    expect(notify).toHaveBeenCalledTimes(3);
+    stopSecond();
+    node.resetToInitial();
+    expect(notify).toHaveBeenCalledTimes(3);
+    expect(configured).toHaveBeenCalledTimes(3);
+  });
+
+  it.each([0, 'blur', 20] as const)('observes only committed changes under debounce %s', (debounce) => {
+    vi.useFakeTimers();
+    try {
+      const node = field.strict('', { debounce, validators: [required] });
+      const notify = vi.fn();
+      node.onValueChange(notify);
+      node.value.control.set('Ada');
+      expect(node.dirty()).toBe(true);
+      expect(node.touched()).toBe(false);
+      if (debounce !== 0) {
+        expect(node.invalid()).toBe(true);
+        expect(notify).not.toHaveBeenCalled();
+        if (debounce === 'blur') node.markAsTouched();
+        else vi.runAllTimers();
+      }
+      expect(node.valid()).toBe(true);
+      expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+      node.value.control.set('draft');
+      node.reset('');
+      const calls = notify.mock.calls.length;
+      vi.runAllTimers();
+      node.flush();
+      expect(notify).toHaveBeenCalledTimes(calls);
+      expect(node()).toBe('');
+      expect(node.value.control()).toBe('');
+      expect(node.invalid()).toBe(true);
+      expect(node.pristine()).toBe(true);
+      expect(node.untouched()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('skips configure-time writes and retains subscriptions registered by configure', () => {
+    const notify = vi.fn();
+    const node = field('', { configure(api) { api.onValueChange(notify); api.set('initial'); } });
+    expect(notify).not.toHaveBeenCalled();
+    node.set('next');
+    expect(notify).toHaveBeenCalledExactlyOnceWith('next', node);
+  });
+
+  it('uses stable delivery snapshots, skips canceled listeners, and queues reentrant writes', () => {
+    const node = field.strict(0);
+    const events: string[] = [];
+    const later = vi.fn();
+    let stopSecond = () => {};
+    node.onValueChange((value) => {
+      events.push(`first:${value}`);
+      if (value === 1) {
+        stopSecond();
+        node.onValueChange(later);
+        node.set(2);
+      }
+    });
+    stopSecond = node.onValueChange(value => events.push(`second:${value}`));
+    node.onValueChange(value => events.push(`third:${value}`));
+    node.set(1);
+    expect(events).toEqual(['first:1', 'third:1', 'first:2', 'third:2']);
+    expect(later).toHaveBeenCalledExactlyOnceWith(2, node);
+  });
+
+  it('delivers all listeners after failures without rolling back the value', () => {
+    const first = new Error('Configured listener');
+    const second = new Error('Registered listener');
+    const node = field('', { onValueChange() { throw first; } });
+    node.onValueChange(() => { throw second; });
+    const notify = vi.fn();
+    node.onValueChange(notify);
+    expect(() => node.set('Ada')).toThrow(new AggregateError([first, second], 'Node value operation or onValueChange callbacks failed.'));
+    expect(node()).toBe('Ada');
+    expect(notify).toHaveBeenCalledExactlyOnceWith('Ada', node);
+  });
+
+  it.each(['node', 'consumer', 'explicit'] as const)('automatically cancels on %s destruction', (owner) => {
+    const nodeInjector = Injector.create({ providers: [] });
+    const consumer = Injector.create({ providers: [] });
+    const explicit = Injector.create({ providers: [] });
+    const notify = vi.fn();
+    const node = runInInjectionContext(nodeInjector, () => field(''));
+    const stop = owner === 'explicit'
+      ? runInInjectionContext(consumer, () => node.onValueChange(notify, { injector: explicit }))
+      : owner === 'consumer'
+        ? runInInjectionContext(consumer, () => node.onValueChange(notify))
+        : node.onValueChange(notify);
+    node.set('first');
+    if (owner === 'explicit') {
+      consumer.destroy();
+      node.set('second');
+      expect(notify).toHaveBeenCalledTimes(2);
+      explicit.destroy();
+    } else if (owner === 'consumer') consumer.destroy();
+    else nodeInjector.destroy();
+    const calls = notify.mock.calls.length;
+    node.set('after destruction');
+    expect(notify).toHaveBeenCalledTimes(calls);
+    stop();
+    if (owner !== 'node') nodeInjector.destroy();
+    if (owner === 'node') consumer.destroy();
+    if (owner !== 'explicit') explicit.destroy();
+  });
+
+  it('cancels when the node owner ends before an explicit consumer owner', () => {
+    const nodeInjector = Injector.create({ providers: [] });
+    const consumer = Injector.create({ providers: [] });
+    const node = field('', { injector: nodeInjector });
+    const notify = vi.fn();
+    node.onValueChange(notify, { injector: consumer });
+    nodeInjector.destroy();
+    node.set('ignored');
+    expect(notify).not.toHaveBeenCalled();
+    consumer.destroy();
+  });
+
+  it('removes partial registrations if an injector rejects lifecycle registration', () => {
+    const destroyed = Injector.create({ providers: [] });
+    destroyed.destroy();
+    const node = field('');
+    const notify = vi.fn();
+    expect(() => node.onValueChange(notify, { injector: destroyed })).toThrow();
+    node.set('Ada');
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('does not track registration or delivery reads in a surrounding computation', () => {
+    const node = field.strict(0);
+    const unrelated = signal(0);
+    const trigger = signal(0);
+    const schedule = vi.fn();
+    const notify = vi.fn(() => unrelated());
+    let stop = () => {};
+    const writer = createWatch(() => {
+      stop();
+      stop = node.onValueChange(notify);
+      node.set(trigger());
+    }, schedule, true);
+    writer.run();
+    trigger.set(1);
+    writer.run();
+    expect(notify).toHaveBeenCalledOnce();
+    schedule.mockClear();
+    unrelated.set(2);
+    expect(schedule).not.toHaveBeenCalled();
+    writer.destroy();
+    stop();
+  });
+
+  it('reports changes without changing async validation triggers or waiting for completion', async () => {
+    const completions: Array<(result: null) => void> = [];
+    const validate = vi.fn(({ value }: Context<unknown>) => {
+      value();
+      return new Promise<null>(resolve => completions.push(resolve));
+    });
+    const node = field.strict('', { validators: asyncValidator(validate) });
+    const notify = vi.fn();
+    const stop = node.onValueChange(notify);
+    node.set('Ada');
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledOnce());
+    node.set('Grace');
+    await vi.waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    completions[0]!(null);
+    await Promise.resolve();
+    expect(node.pending()).toBe(true);
+    completions[1]!(null);
+    await vi.waitFor(() => expect(node.pending()).toBe(false));
+    expect(node.valid()).toBe(true);
+    expect(notify).toHaveBeenCalledTimes(2);
+    stop();
+  });
+});
+
 describe('field onValueChange', () => {
   it('notifies committed public changes synchronously and skips initialization and equal values', () => {
     const notify = vi.fn();

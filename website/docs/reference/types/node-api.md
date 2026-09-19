@@ -21,6 +21,9 @@ Use when a helper needs only shared state and operations. This is the API object
 ```ts
 type NodeApi = {
     nodeType(): NodeType;
+    onValueChange(callback: (value: any, node: AnyNode) => void, options?: {
+        injector?: Injector;
+    }): () => void;
     form: Signal<AnyNode | null>;
     root: Signal<AnyNode>;
     parent: Signal<AnyNode | null>;
@@ -87,6 +90,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | Member | Meaning |
 | --- | --- |
 | `nodeType` | Returns the concrete primitive represented by this node. |
+| `onValueChange` | Observes future exposed value changes synchronously, respecting equality and debounce. Returns an idempotent cancellation function. An explicit injector or the registration context owns the listener; node injector destruction also ends it. DI-free use is supported. |
 | `form` | Nearest explicit `form()` containing this node, or `null` when no form workflow owns it. |
 | `root` | Complete root node containing this node. A root node returns itself. |
 | `parent` | Immediate structural parent of this node, or `null` when it is a root or has been detached. |

@@ -1,4 +1,4 @@
-import type { Signal } from '@angular/core';
+import type { Injector, Signal } from '@angular/core';
 
 import type { NodeSignal } from './node-signal.type';
 import type { FormApi } from '../primitives/form.type';
@@ -83,6 +83,24 @@ export type NodeApi = {
    * ```
    */
   nodeType(): NodeType;
+  /**
+   * Observes future exposed value changes synchronously, respecting equality and debounce.
+   * Returns an idempotent cancellation function. An explicit injector or the registration
+   * context owns the listener; node injector destruction also ends it. DI-free use is supported.
+   *
+   * ```ts
+   * const node: AnyNode = field('Ada');
+   * const values: unknown[] = [];
+   * const stop = node.$api.onValueChange(v => {
+   *   values.push(v);
+   * });
+   * stop();
+   * ```
+   *
+   * @param callback Receives the exposed value and node; no initial value is emitted.
+   * @param options Optional injector that owns this subscription without changing node ownership.
+   */
+  onValueChange(callback: (value: any, node: AnyNode) => void, options?: { injector?: Injector }): () => void;
   /**
    * Nearest explicit `form()` containing this node, or `null` when no form workflow owns it.
    *
@@ -770,7 +788,12 @@ export type AnyNode = Signal<any> & {
    */
   $api: NodeSignal<any> & NodeApi;
 };
-export type PublicNode<TNode extends AnyNode> = AnyNode extends TNode
+/** Rejects concrete node kinds before comparing recursive public contracts. */
+export type IsUnknownNode<TNode extends AnyNode> = NodeType extends ReturnType<TNode['$api']['nodeType']>
+  ? AnyNode extends TNode ? true : false
+  : false;
+
+export type PublicNode<TNode extends AnyNode> = IsUnknownNode<TNode> extends true
   ? TNode & HiddenFunctionMembers
   : TNode;
 
@@ -801,7 +824,7 @@ export type RootNode<TNode extends AnyNode, TDepth extends readonly unknown[] = 
   TDepth extends readonly [unknown, ...infer TRest]
     ? TNode extends { $api: { parent: Signal<infer TParent | null> } }
       ? TParent extends AnyNode
-        ? AnyNode extends TParent ? TNode : RootNode<TParent, TRest>
+        ? IsUnknownNode<TParent> extends true ? TNode : RootNode<TParent, TRest>
         : TNode
       : TNode
     : AnyNode;
@@ -811,7 +834,7 @@ export type NavigationForm = NodeSignal<any> & FormApi<any> & { $api: CallableNo
 /** Complete structural node APIs when an ancestor's exact declaration is unavailable. */
 export type NavigationRoot = FieldNode<any> | NavigationForm | (NodeSignal<any> & GroupApi<any> & { $api: CallableNodeApi<GroupApi<any>> }) | ArrayNode<any>;
 
-export type NearestForm<TNode extends AnyNode> = AnyNode extends TNode ? NavigationForm
+export type NearestForm<TNode extends AnyNode> = IsUnknownNode<TNode> extends true ? NavigationForm
   : TNode extends { $api: { form: Signal<infer TForm> } }
     ? Exclude<TForm, null> extends AnyNode ? Exclude<TForm, null> : never
     : never;

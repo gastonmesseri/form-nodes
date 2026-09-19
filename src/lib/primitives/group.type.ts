@@ -1,4 +1,4 @@
-import type { Signal } from '@angular/core';
+import type { Injector, Signal } from '@angular/core';
 
 import type { NodeSignal } from '../types/node-signal.type';
 import type { GenericGroupNode } from '../types/generic-node.type';
@@ -311,8 +311,9 @@ export type GroupChildren<TNodes extends Nodes, TParent extends AnyNode> = {
 };
 
 export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
-  & Omit<FormApi<TNodes, TParent>, 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitted' | 'submitting' | 'validationStatus'>
+  & Omit<FormApi<TNodes, TParent>, 'onValueChange' | 'setValidators' | 'children' | 'forEachChild' | 'errors' | 'allErrors' | 'form' | 'root' | 'getError' | 'add' | 'remove' | 'nodeType' | 'submit' | 'submitted' | 'submitting' | 'validationStatus'>
   & {
+
     /**
      * Returns the concrete primitive represented by this node.
      *
@@ -324,6 +325,30 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      * ```
      */
     nodeType(): 'group';
+    /**
+     * Subscribes to future exposed value changes and returns an idempotent cancellation function.
+     * Runs synchronously and untracked, respects equality and control debounce, and skips initial
+     * values. Multiple listeners coexist with the construction callback; subscriptions are not cloned.
+     * The explicit injector, otherwise the registration context, owns the listener. The node's
+     * current injector also ends the subscription on destruction and acts as the fallback owner.
+     * Binding and ancestor ownership follow the node when it is rebound or detached.
+     * Without an injector, observation still works and can be canceled manually.
+     *
+     * ```ts
+     * const node = group({ name: field('Ada') });
+     * const values: unknown[] = [];
+     * const stop = node.onValueChange(value => {
+     *   values.push(value);
+     * });
+     * node.patch({ name: 'Grace' });
+     * values.length; // 1
+     * stop();
+     * ```
+     *
+     * @param callback Receives the exposed value and original node after a committed change. Return values are ignored; thrown errors propagate after the other listeners are notified.
+     * @param options Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
+     */
+    onValueChange(callback: (value: FormValue<TNodes>, node: GroupNode<TNodes, TParent>) => void, options?: { injector?: Injector }): () => void;
     /**
      * Replaces this group's validators while preserving its node type in inline callbacks.
      *

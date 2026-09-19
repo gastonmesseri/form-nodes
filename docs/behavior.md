@@ -4130,7 +4130,8 @@ operations still deliver their resulting changes. Non-settling callback cycles s
 notifications of a single node in one operation and clear pending state. Async validation is neither
 awaited nor restarted by notification itself; observers may see pending and/or invalid state.
 
-Angular reference: latest stable `v22.1.6`, commit `356adf749188d996a641181c56621a6285126f3c`.
+
+Angular reference for the construction callback: `v22.1.6`, commit `356adf749188d996a641181c56621a6285126f3c`.
 Inspected `packages/forms/signals/src/directive/control_cva.ts` and
 `packages/forms/signals/test/web/interop.spec.ts`: control input writes controlValue, debounce
 separates pending input from committed data, programmatic updates synchronize the CVA, and
@@ -4138,6 +4139,46 @@ control-originated commits avoid writing the same value back. The per-node callb
 operation batching are Form Nodes additions, not an Angular Signal Forms public API imitation.
 Cached comparator failures do not block later writes from recovering; failed public value reads
 do not emit a callback, and recovery compares against the last successfully observed value.
+
+### Instance value subscriptions
+
+Every node and its collision-safe `$api` expose `onValueChange(callback, { injector? })`, returning
+an idempotent cancellation function. Callback value and node arguments preserve the concrete
+primitive and parent types. Multiple registrations are independent, including registrations of
+the same function, and coexist with the unchanged factory callback. Instance subscriptions are
+not copied into template clones; a configure callback can register a fresh subscription per clone.
+
+The existing synchronous notification transaction captures listener snapshots before mutation.
+The factory callback runs first, then active instance listeners in registration order. Cancellation
+before delivery skips a listener, and listeners added during a transaction do not receive its
+already-pending change. Notifications queued after a node's delivery begins capture a fresh listener
+snapshot. All listeners for one notification receive the same exposed value snapshot; current node reads can reflect a write made
+by an earlier listener. Failures in any listener do not prevent the remaining listeners or ancestors
+from receiving the update, and are rethrown after delivery. Initialization remains suppressed.
+
+Consumer ownership uses an explicit injector, otherwise the registration context. Independently,
+node ownership follows the existing explicit/captured, direct binding, and ancestor precedence.
+With no consumer owner, node ownership is the fallback. Destroying either active owner cancels
+the subscription without resetting or destroying the node. Direct binding and inherited owner
+changes unregister the previous lifecycle hook; detachment alone does not end a subscription.
+An explicitly selected or registration-context consumer stays fixed even when the node moves.
+Early cancellation removes both lifecycle hooks and the ownership observer. Registrations that
+fail while attaching lifecycle hooks are removed before the error is rethrown.
+
+Subscriptions and ownership observations use weak node ownership. Injector destruction hooks and
+returned cancellation functions hold weak subscription references, so they cannot retain an
+unreachable node tree even if callbacks close over nodes. With no injector, notifications still
+work synchronously and are canceled manually or disappear with the unreachable node. Callback
+return values never register cleanup and asynchronous callback work remains unmanaged. Factory
+callbacks retain their existing node-lifetime behavior, independently of injector destruction.
+
+This addition was checked against Angular **v22.1.7**, commit
+`f3358f24b884e34d44cfb8ec3db53965153d61e1`, specifically
+`packages/forms/signals/src/field/node.ts`, `src/field/state.ts`,
+`packages/forms/signals/test/node/field_node.spec.ts`, and `test/node/api/debounce.spec.ts`.
+Control commits, reset, and interaction state keep their existing semantics. Instance value
+subscriptions and the dual owner lifecycle are Form Nodes additions; Angular Signal Forms does
+not define this API contract.
 
 
 ## Native file inputs

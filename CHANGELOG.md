@@ -10,6 +10,10 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+### Added
+
+- Subscribe to existing fields, forms, groups, and arrays with `node.onValueChange(callback, { injector? })`. Independent listeners receive typed value changes, support early cancellation, and clean up automatically with their consumer or node owner while preserving equality, debounce, and DI-free use.
+
 ## [4.4.0] - 2026-09-17
 
 ### Added

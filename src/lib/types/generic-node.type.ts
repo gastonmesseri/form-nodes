@@ -1,4 +1,4 @@
-import type { Signal } from '@angular/core';
+import type { Injector, Signal } from '@angular/core';
 
 import type { AnyNode } from './node.type';
 import type { FormApi } from '../primitives/form.type';
@@ -13,6 +13,8 @@ type UnknownChildrenApi = {
   forEachChild(callback: (child: AnyNode, key: string) => void, options?: { includeDynamic?: boolean }): void;
 };
 type GenericOwnerApi<TNode extends AnyNode> = {
+  /** Subscribes to future exposed value changes and returns an idempotent cancellation function. */
+  onValueChange(callback: (value: any, node: TNode) => void, options?: { injector?: Injector }): () => void;
   root: Signal<AnyNode>;
   errors: Signal<readonly ValidationErrorWithTargetNode<TNode>[]>;
   setValidators(validators: ValidatorSource<any, TNode>): void;

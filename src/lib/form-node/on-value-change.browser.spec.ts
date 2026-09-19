@@ -13,6 +13,45 @@ registerSignalInputForJit(FormNodeDirective, 'formNode', 'formNodeInput');
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterAll(() => TestBed.resetTestEnvironment());
 
+it('cleans up component-owned subscriptions without stopping a shared form or its construction callback', () => {
+  const configured = vi.fn();
+  const shared = form({ name: field('Ada', { onValueChange: configured }) });
+  const fieldChanged = vi.fn();
+  const formChanged = vi.fn();
+  @Component({ selector: 'test-value-subscription-consumer', template: '' })
+  class Consumer {
+    constructor() {
+      shared.name.onValueChange(fieldChanged);
+      shared.onValueChange(formChanged);
+    }
+  }
+  const fixture = TestBed.createComponent(Consumer);
+  fixture.detectChanges();
+  shared.name.set('Grace');
+  expect(fieldChanged).toHaveBeenCalledExactlyOnceWith('Grace', shared.name);
+  expect(formChanged).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, shared);
+  fixture.destroy();
+  shared.name.set('Lin');
+  expect(fieldChanged).toHaveBeenCalledOnce();
+  expect(formChanged).toHaveBeenCalledOnce();
+  expect(configured).toHaveBeenCalledTimes(2);
+});
+
+it('uses the captured component owner when a listener is registered later outside injection context', () => {
+  @Component({ selector: 'test-value-subscription-owner', template: '' })
+  class Host {
+    profile = form({ name: field('Ada') });
+  }
+  const fixture = TestBed.createComponent(Host);
+  const profile = fixture.componentInstance.profile;
+  const notify = vi.fn();
+  profile.onValueChange(notify);
+  profile.name.set('Grace');
+  fixture.destroy();
+  profile.name.set('Lin');
+  expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Grace' }, profile);
+});
+
 it('reports committed input after blur and complete programmatic resets without extra view notifications', () => {
   const changed = vi.fn();
   const parentChanged = vi.fn();

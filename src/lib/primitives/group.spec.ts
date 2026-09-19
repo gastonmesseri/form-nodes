@@ -9,6 +9,17 @@ import { required } from '../validation/validators/required';
 import { createFormPrimitives } from './create-form-primitives';
 
 describe('group', () => {
+  it('subscribes to complete group values through the collision-safe API', () => {
+    const node = group({ name: field('Ada'), onValueChange: field('child') });
+    const notify = vi.fn();
+    const stop = node.$api.onValueChange(notify);
+    node.patch({ name: 'Grace', onValueChange: 'updated child' });
+    expect(notify).toHaveBeenCalledExactlyOnceWith({ name: 'Grace', onValueChange: 'updated child' }, node);
+    stop();
+    node.name.set('Lin');
+    expect(notify).toHaveBeenCalledOnce();
+  });
+
   it('enumerates an initially empty record through add, updates, and removal', () => {
     const parent = form({ record: group({}) });
     const record = parent.record;

@@ -6,7 +6,7 @@ import type { NodeValueSignal } from '../types/node-value-signal.type';
 import type { SyncInputName } from '../configuration/node-input-config';
 import type { NodeErrorsSignal } from '../types/node-errors-signal.type';
 import type { HiddenFunctionMembers } from '../types/hidden-function-members.type';
-import type { DisabledReason, NavigationRoot, NearestForm, AnyNode, NodeKeyInParent, RootNode } from '../types/node.type';
+import type { DisabledReason, NavigationRoot, NearestForm, AnyNode, IsUnknownNode, NodeKeyInParent, RootNode } from '../types/node.type';
 import type { CustomValidationError, ValidationErrorMap, ValidationStatus, ValidatorSource, Validators, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type FieldOptions<TValue = any> = {
@@ -429,6 +429,46 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    */
   nodeType(): 'field';
   /**
+   * Subscribes to future exposed value changes and returns an idempotent cancellation function.
+   * Runs synchronously and untracked, respects equality and control debounce, and skips initial
+   * values. Multiple listeners coexist with the construction callback; subscriptions are not cloned.
+   * The explicit injector, otherwise the registration context, owns the listener. The node's
+   * current injector also ends the subscription on destruction and acts as the fallback owner.
+   * Binding and ancestor ownership follow the node when it is rebound or detached.
+   * Without an injector, observation still works and can be canceled manually.
+   *
+   * ```ts
+   * const node = field('Ada');
+   * const values: unknown[] = [];
+   * const stop = node.onValueChange(value => {
+   *   values.push(value);
+   * });
+   * node.set('Grace');
+   * values.length; // 1
+   * stop();
+   * ```
+   *
+   * ```ts
+   * import { Injector } from '@angular/core';
+   *
+   * const owner = Injector.create({
+   *   providers: [],
+   * });
+   * const node = field('Ada');
+   * const values: unknown[] = [];
+   * node.onValueChange(value => {
+   *   values.push(value);
+   * }, { injector: owner });
+   * owner.destroy();
+   * node.set('Grace');
+   * values.length; // 0
+   * ```
+   *
+   * @param callback Receives the exposed value and original node after a committed change. Return values are ignored; thrown errors propagate after the other listeners are notified.
+   * @param options Optional subscription owner. Omission uses the registration context, falling back to the node's injector; an explicit injector does not change node ownership.
+   */
+  onValueChange(callback: (value: TValue, node: FieldNode<TValue, TParent>) => void, options?: { injector?: Injector }): () => void;
+  /**
    * Nearest explicit `form()` containing this field, or `null` when no form workflow owns it.
    * A nested explicit form is the workflow owner instead of the complete structural root.
    *
@@ -451,7 +491,7 @@ export type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
    * profile.name.root() === profile; // true
    * ```
    */
-  root: Signal<AnyNode extends TParent ? NavigationRoot : RootNode<TParent>>;
+  root: Signal<IsUnknownNode<TParent> extends true ? NavigationRoot : RootNode<TParent>>;
   /**
    * Immediate structural parent of this field, or `null` when it is a root or has been detached.
    *

@@ -6,6 +6,29 @@ import { field } from '../primitives/field';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector, registerNodeBindingInjector, resolveNodeInjector } from './node-injector';
 
 describe('node injector resolution', () => {
+  it('transfers value subscriptions between direct binding leases and inherited ownership', () => {
+    const first = Injector.create({ providers: [] });
+    const second = Injector.create({ providers: [] });
+    const inherited = Injector.create({ providers: [] });
+    const node = field('');
+    const notify = vi.fn();
+    form({ node }, { injector: inherited });
+    node.onValueChange(notify);
+    const releaseFirst = registerNodeBindingInjector(node, first);
+    const releaseSecond = registerNodeBindingInjector(node, second);
+    node.set('first');
+    releaseFirst();
+    first.destroy();
+    node.set('second');
+    releaseSecond();
+    second.destroy();
+    node.set('inherited');
+    expect(notify).toHaveBeenCalledTimes(3);
+    inherited.destroy();
+    node.set('unsubscribed');
+    expect(notify).toHaveBeenCalledTimes(3);
+  });
+
   const bindingMarker = new InjectionToken<string>('binding marker');
 
   it('captures the current injection context while preferring an explicit injector', () => {

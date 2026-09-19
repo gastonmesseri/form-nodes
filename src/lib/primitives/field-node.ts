@@ -25,9 +25,9 @@ import { readStateSource, getInitialMutableState } from './utils/read-state-sour
 import { createValidatorContext } from '../validation/utils/create-validator-context';
 import type { FieldNode as PublicFieldNode, FieldApi, FieldOptions } from './field.type';
 import { ERROR_QUERY_CACHE_SIZE, VALIDATOR_QUERY_CACHE_SIZE } from '../utils/node-query-cache';
-import { installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { refreshNodeInjector, registerNodeInjector, watchNodeInjector } from '../utils/node-injector';
 import { isAsyncValidator, needsDeferredValidationStart } from '../validation/utils/async-validator-marker';
+import { onNodeValueChange, installValueChangeNotifications, withoutValueChanges } from './utils/node-value-change';
 import { createReactiveWatch, type ReactiveWatchRef, type ReactiveWatchTarget } from '../utils/create-reactive-watch';
 import { notifyExternalValidationReset, readExternalValidationErrors } from '../validation/external-validation-errors';
 import type { ControlDebounce, InternalNode, MarkAsTouchedOptions, AnyNode, NodeControlBinding } from '../types/node.type';
@@ -436,6 +436,7 @@ export class FieldNode<TValue> {
     const readonlyValue = computed(() => this.exposedValue());
     const publicApi: FieldApi<TValue> = {
       asReadonly: () => readonlyValue,
+      onValueChange: (callback, options) => onNodeValueChange(this.node, callback, options),
       nodeType: () => 'field' as const,
       form: this.form,
       root: this.root,
