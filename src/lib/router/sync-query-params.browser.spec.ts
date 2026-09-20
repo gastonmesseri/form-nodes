@@ -120,12 +120,12 @@ it('restores pending input on same-URL Back even when Router emits only Navigati
   expect(page.filters.search.debouncing()).toBe(false);
 });
 
-it('round trips named array codecs through real Router navigation and history', async () => {
+it('round trips named array serializers through real Router navigation and history', async () => {
   TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'search', component: FiltersPage }]), provideLocationMocks()] });
   const harness = await RouterTestingHarness.create();
   const page = await harness.navigateByUrl('/search?tag=angular&tag=forms', FiltersPage);
   const tags = field.strict<string[]>([]);
-  const sync = syncQueryParams({ tag: { source: tags, codec: 'array', history: 'push' } }, { injector: TestBed.inject(Injector) });
+  const sync = syncQueryParams({ tag: { source: tags, serializer: 'array', history: 'push' } }, { injector: TestBed.inject(Injector) });
   expect(tags()).toEqual(['angular', 'forms']);
   page.router.setUpLocationChangeListener();
   tags.set(['a & b', '', 'a & b']);
@@ -147,7 +147,7 @@ it('round trips JSON through real Router encoding and restores an object on Back
   const harness = await RouterTestingHarness.create();
   const page = await harness.navigateByUrl(`/search?state=${encodeURIComponent(JSON.stringify(initial))}`, FiltersPage);
   const state = field.strict({ ids: [] as number[], text: '' });
-  const sync = syncQueryParams({ state: { source: state, codec: 'json', history: 'push' } }, { injector: TestBed.inject(Injector) });
+  const sync = syncQueryParams({ state: { source: state, serializer: 'json', history: 'push' } }, { injector: TestBed.inject(Injector) });
   expect(state()).toEqual(initial);
   page.router.setUpLocationChangeListener();
   const next = { ids: [3], text: '"quotes" + ü' };
@@ -164,7 +164,7 @@ it('round trips JSON through real Router encoding and restores an object on Back
 class MixedPage {
   filters = form({ search: field.strict('', { debounce: 'blur' }) });
   page = signal(1);
-  querySync = syncQueryParams({ state: { source: this.filters, codec: 'json' }, page: { source: this.page, history: 'push' } });
+  querySync = syncQueryParams({ state: { source: this.filters, serializer: 'json' }, page: { source: this.page, history: 'push' } });
 }
 
 it('batches a whole form and a signal with real Router history and cancels both on route destruction', async () => {

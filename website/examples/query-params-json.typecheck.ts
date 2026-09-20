@@ -12,7 +12,7 @@ export class SavedSearchPage {
   });
 
   querySync = syncQueryParams({
-    filters: { source: this.filters, codec: 'json' },
+    filters: { source: this.filters, serializer: 'json' },
   });
 
   includeArchived() {

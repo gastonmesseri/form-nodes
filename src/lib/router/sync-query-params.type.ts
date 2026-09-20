@@ -1,7 +1,7 @@
 import type { NodeApi } from '@ngblocks/form-nodes';
 import type { Injector, Signal, WritableSignal } from '@angular/core';
 
-import type { QueryParamCodec } from './query-param-codec';
+import type { QueryParamSerializer } from './query-param-codec';
 
 /**
  * Options for one form node or writable signal in a query parameter map.
@@ -18,7 +18,7 @@ export type QueryParamBinding<T> = {
    * Existing field, form, group, array, or writable Angular signal to synchronize.
    * Nodes keep committed-value observation, validation, and node ownership. Signals
    * respect their own equality and use the entry injector. Readonly signals are rejected.
-   * Objects and arrays need an explicit codec. Aggregate imports use the node set operation.
+   * Objects and arrays need an explicit serializer. Aggregate imports use the node set operation.
    *
    * ```ts
    * function connect() {
@@ -30,9 +30,12 @@ export type QueryParamBinding<T> = {
    */
   source: Signal<T> & ({ $api: Pick<NodeApi, 'nodeType' | 'set'> } | (Pick<WritableSignal<NoInfer<T>>, 'set'> & { $api?: never }));
   /**
-   * A built-in codec name or a custom conversion contract compatible with the source.
+   * A built-in serializer name or a custom conversion contract compatible with the source.
    *
-   * **Default:** Infer string, number, or boolean from the fallback value.
+   * Takes precedence over the deprecated codec option when both are supplied.
+   *
+   * **Default:** Use codec when supplied; otherwise infer string, number, or boolean
+   * from the fallback value.
    *
    * **Accepted values:**
    *
@@ -42,19 +45,19 @@ export type QueryParamBinding<T> = {
    * - `boolean`: The literal true or false.
    * - `array`: A string array encoded as repeated query keys, preserving order.
    * - `json`: A complete JSON value encoded in one query parameter, without schema validation.
-   * - **Codec objects**: A QueryParamCodec with custom parse and serialize methods.
+   * - **Serializer objects**: A QueryParamSerializer with custom parse and serialize methods.
    *
    * Names use the same conversions as queryParam factories. Arrays require an explicit
-   * codec; array supports mutable and readonly string arrays. An empty array removes
+   * serializer; array supports mutable and readonly string arrays. An empty array removes
    * the key with array, while json encodes it as []. Other array element types can use
-   * json or a custom codec. JSON parsing checks syntax only; the source type is trusted.
+   * json or a custom serializer. JSON parsing checks syntax only; the source type is trusted.
    *
    * ```ts
    * function connect() {
    *   return syncQueryParams({
    *     page: {
    *       source: field(1),
-   *       codec: 'integer',
+   *       serializer: 'integer',
    *     },
    *   });
    * }
@@ -68,7 +71,7 @@ export type QueryParamBinding<T> = {
    *   return syncQueryParams({
    *     tag: {
    *       source: filters.tags,
-   *       codec: 'array',
+   *       serializer: 'array',
    *     },
    *   });
    * }
@@ -79,7 +82,7 @@ export type QueryParamBinding<T> = {
    *   return syncQueryParams({
    *     page: {
    *       source: field(1),
-   *       codec: queryParam.integer(),
+   *       serializer: queryParam.integer(),
    *     },
    *   });
    * }
@@ -93,17 +96,37 @@ export type QueryParamBinding<T> = {
    *   return syncQueryParams({
    *     state: {
    *       source: filters.state,
-   *       codec: 'json',
+   *       serializer: 'json',
    *     },
    *   });
    * }
    * ```
    */
-  codec?: QueryParamCodec<NoInfer<T>> | 'json'
+  serializer?: QueryParamSerializer<NoInfer<T>> | 'json'
     | ([NonNullable<NoInfer<T>>] extends [string] ? string extends NoInfer<T> ? 'string' : never : never)
     | ([NonNullable<NoInfer<T>>] extends [number] ? number extends NoInfer<T> ? 'number' | 'integer' : never : never)
     | ([NonNullable<NoInfer<T>>] extends [boolean] ? boolean extends NoInfer<T> ? 'boolean' : never : never)
     | ([NonNullable<NoInfer<T>>] extends [readonly string[]] ? string[] extends NoInfer<T> ? 'array' : never : never);
+  /**
+   * Compatibility alias for serializer, with the same names and custom objects.
+   * serializer takes precedence when both options are supplied.
+   *
+   * **Default:** No legacy override; infer from the fallback when serializer is absent.
+   *
+   * ```ts
+   * function connect() {
+   *   return syncQueryParams({
+   *     page: {
+   *       source: field(1),
+   *       serializer: 'integer',
+   *     },
+   *   });
+   * }
+   * ```
+   *
+   * @deprecated Use serializer instead.
+   */
+  codec?: QueryParamBinding<T>['serializer'];
   /**
    * Value used for missing or malformed parameters. Default: source value captured at registration.
    * Nodes capture their committed value; signals use their current value.
@@ -296,9 +319,9 @@ export type SyncQueryParamsOptions<TValues extends Record<string, unknown> = Rec
 /** A live query connection with raw URL signals and explicit lifecycle control. */
 export type QueryParamsSync<K extends string = string> = {
   /**
-   * Readonly signals for the configured keys, before codec parsing.
+   * Readonly signals for the configured keys, before serializer parsing.
    * Values are URL-decoded strings, or null when absent. Repeated keys return
-   * their first value. Read an array-codec source for all parsed values.
+   * their first value. Read an array-serializer source for all parsed values.
    * Snapshots update on accepted navigation and freeze when the connection closes.
    *
    * ```ts

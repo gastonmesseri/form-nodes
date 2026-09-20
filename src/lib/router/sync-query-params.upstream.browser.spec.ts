@@ -27,7 +27,7 @@ class HistoryPage {
 
   q = field.strict('');
 
-  query = syncQueryParams({ page: { source: this.page, codec: 'integer', history: 'push' }, q: this.q });
+  query = syncQueryParams({ page: { source: this.page, serializer: 'integer', history: 'push' }, q: this.q });
 }
 
 @Component({ selector: 'audit-other', template: 'Other' })
@@ -64,7 +64,7 @@ it('replays push entries in both history directions and replaces only the curren
 class QueryPanel {
   q = field<string>(null);
 
-  query = syncQueryParams({ q: { source: this.q, codec: 'string' } });
+  query = syncQueryParams({ q: { source: this.q, serializer: 'string' } });
 }
 
 @Component({
@@ -200,7 +200,7 @@ class ModelPage {
   query!: QueryParamsSync<'page'>;
 
   ngOnInit() {
-    this.query = syncQueryParams({ page: { source: this.page, codec: 'integer' } }, { injector: this.injector });
+    this.query = syncQueryParams({ page: { source: this.page, serializer: 'integer' } }, { injector: this.injector });
   }
 }
 

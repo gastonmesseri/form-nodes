@@ -4,7 +4,7 @@ title: Synchronizing query parameters
 
 import CodeBlock from '@theme/CodeBlock';
 import source from '!!raw-loader!../../examples/query-params.typecheck.ts';
-import codecs from '!!raw-loader!../../examples/query-param-codecs.example.ts';
+import serializers from '!!raw-loader!../../examples/query-param-codecs.example.ts';
 
 # Synchronizing query parameters
 
@@ -27,15 +27,15 @@ it does not become the most recently entered value. Parsing failures are also re
 ## Nodes and writable signals
 
 A map can mix `field()`, `form()`, `group()`, `array()`, `signal()`, and `linkedSignal()` sources.
-For a whole form or group, use `{ source: filters, codec: 'json' }`. The entire value occupies one
+For a whole form or group, use `{ source: filters, serializer: 'json' }`. The entire value occupies one
 query key. For separate query keys, bind its children individually. Object/number array nodes
-also use JSON or a custom codec; string array nodes can use `'array'` for repeated keys.
+also use JSON or a custom serializer; string array nodes can use `'array'` for repeated keys.
 
 All sources share batching, history, defaults, navigation conflict handling, SSR, and cleanup.
 Nodes publish committed values even when public equality hides a change. Incoming data uses the
 node's existing `set()` operation, preserving validation and interaction rules; array nodes
 reconcile their children normally. Aggregate defaults must be complete values rather than patches.
-JSON checks syntax only, so use a custom codec when an aggregate needs shape validation.
+JSON checks syntax only, so use a custom serializer when an aggregate needs shape validation.
 
 Writable signals respect their own equality function and have no form validation, interaction,
 reset, or control-debounce state. `linkedSignal()` dependency changes also synchronize.
@@ -59,7 +59,7 @@ asynchronous validation and rendering may still be pending. See the
 Keep the returned connection, as `querySync` in the component above. Its `params` object has a
 readonly signal for each configured key: `querySync.params.page()` returns `string | null`, while
 `filters.page()` returns the parsed field value. Query strings are already URL-decoded but have not
-passed through your codec. Empty text is `''`; a missing key is `null`; repeated keys expose their
+passed through your serializer. Empty text is `''`; a missing key is `null`; repeated keys expose their
 first value. A malformed number remains visible as raw text even when the field uses its fallback.
 
 These signals initialize from the activation URL and then follow accepted navigation, including
@@ -85,15 +85,15 @@ a safe ownership check for that case. Ordinary names such as `constructor` and `
 ## Conversion
 
 The shorthand infers string, number, or boolean conversion from the fallback's runtime type.
-For fields starting with null, undefined, arrays, or objects, supply a codec explicitly. Codecs
+For fields starting with null, undefined, arrays, or objects, supply a serializer explicitly. Serializers
 receive decoded strings and return decoded strings; Angular Router handles percent encoding.
-Choose a built-in by name, such as `codec: 'integer'`, or use its factory, such as
-`codec: queryParam.integer()`. Both forms use the same implementation. TypeScript checks scalar
-and repeated-array codec names against the field type, including nullable fields; a numeric field
-cannot use `'string'`. The JSON codec accepts the field's expected type without validating its shape.
-Use a custom codec when parsing must enforce a schema, literal choices, or mixed scalar types.
+Choose a built-in by name, such as `serializer: 'integer'`, or use its factory, such as
+`serializer: queryParam.integer()`. Both forms use the same implementation. TypeScript checks scalar
+and repeated-array serializer names against the field type, including nullable fields; a numeric field
+cannot use `'string'`. The JSON serializer accepts the field's expected type without validating its shape.
+Use a custom serializer when parsing must enforce a schema, literal choices, or mixed scalar types.
 
-| Name | Equivalent codec | Contract |
+| Name | Equivalent serializer | Contract |
 | --- | --- | --- |
 | `'string'` | `queryParam.string()` | One value; preserves the empty string. |
 | `'number'` | `queryParam.number()` | One finite decimal number; rejects blanks, hex, and non-finite values. |
@@ -102,10 +102,14 @@ Use a custom codec when parsing must enforce a schema, literal choices, or mixed
 | `'array'` | `queryParam.array()` | Repeated values in order; an empty array removes the parameter. |
 | `'json'` | `queryParam.json<T>()` | One JSON string containing the whole value; parsing checks syntax, not a schema. |
 
-Custom codecs implement `QueryParamCodec<T>` with `parse(values)` and `serialize(value)`. Throw
+`codec` and `QueryParamCodec<T>` remain supported as deprecated aliases for `serializer` and
+`QueryParamSerializer<T>`. If both options are supplied, `serializer` wins. Existing 4.5.0 code
+continues to work without runtime warnings.
+
+Custom serializers implement `QueryParamSerializer<T>` with `parse(values)` and `serialize(value)`. Throw
 for malformed input. Serialization returns a string array or null to remove the key. Null and
 undefined field values also remove the key; returning to an absent URL restores the configured
-fallback, which may differ from null. Scalar codecs reject repeated parameters.
+fallback, which may differ from null. Scalar serializers reject repeated parameters.
 
 Field validators still decide whether a successfully parsed value is valid for the application.
 The helper does not block publication of business-invalid values or put URL errors into form errors.
@@ -113,7 +117,7 @@ The helper does not block publication of business-invalid values or put URL erro
 ## Arrays
 
 Bind an array-valued field, writable signal, or `array()` node using
-`codec: 'array'` or `queryParam.array()`. Both mutable `string[]` and `readonly string[]` field
+`serializer: 'array'` or `queryParam.array()`. Both mutable `string[]` and `readonly string[]` field
 values are supported. For `array()` nodes, use a string field template such as `array(field.strict(''))`.
 
 - `?tag=angular&tag=forms` becomes `['angular', 'forms']`.
@@ -125,22 +129,22 @@ values are supported. For `array()` nodes, use a string field template such as `
 
 Arrays are not inferred, even when the initial value is nonempty. For arrays of numbers or objects,
 use `'json'` to store the whole array in one parameter. To encode numeric items as repeated keys,
-provide a custom `QueryParamCodec<number[]>`, as in this checked example:
+provide a custom `QueryParamSerializer<number[]>`, as in this checked example:
 
-<CodeBlock language="ts" title="query-param-codecs.ts">{codecs}</CodeBlock>
+<CodeBlock language="ts" title="query-param-serializers.ts">{serializers}</CodeBlock>
 
 `querySync.params.tag()` returns the first raw string or null. Read `filters.tags()` for the
 complete parsed array. Use Angular Router directly to inspect query parameters outside the binding map.
 
 ## JSON
 
-Use `codec: 'json'` for the component's `options` group, or pass `queryParam.json<T>()` explicitly.
+Use `serializer: 'json'` for the component's `options` group, or pass `queryParam.json<T>()` explicitly.
 The complete value is serialized with `JSON.stringify` and parsed with `JSON.parse`. Angular Router
 handles URL escaping; do not encode or decode the JSON yourself. For example, `{ "sort": "name" }`
 uses one parameter whose decoded value is `{"sort":"name"}`. `querySync.params.options()` returns
 that JSON text; `filters.options()` returns the parsed object.
 
-The JSON codec supports objects, arrays, and JSON primitives. Unlike `'array'`, it serializes an
+The JSON serializer supports objects, arrays, and JSON primitives. Unlike `'array'`, it serializes an
 empty array as `[]` without removing the key. An absent parameter uses the captured/configured
 fallback. Writing a null or undefined field value still removes the key, following the helper's
 shared rule; an incoming literal `null` is valid JSON and imports null.
@@ -153,8 +157,8 @@ class instances are not reconstructed. `clearOnDefault` compares serialized text
 property order, rather than performing a deep comparison.
 
 The source type and `queryParam.json<T>()` generic describe the expected result; **neither validates
-the parsed structure**. Without a type argument, the factory returns `QueryParamCodec<unknown>`.
-Use a custom codec with runtime schema validation when valid JSON alone is insufficient.
+the parsed structure**. Without a type argument, the factory returns `QueryParamSerializer<unknown>`.
+Use a custom serializer with runtime schema validation when valid JSON alone is insufficient.
 
 ## Value flow and history
 

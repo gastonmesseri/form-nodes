@@ -24,17 +24,17 @@ export class SearchPage {
 
   querySync = syncQueryParams({
     q: { source: this.filters.search, defaultValue: '', clearOnDefault: true },
-    page: { source: this.filters.page, codec: 'integer', defaultValue: 1, history: 'push' },
+    page: { source: this.filters.page, serializer: 'integer', defaultValue: 1, history: 'push' },
     archived: this.filters.archived,
     view: this.view,
-    tag: { source: this.filters.tags, codec: 'array' },
-    options: { source: this.filters.options, codec: 'json' },
+    tag: { source: this.filters.tags, serializer: 'array' },
+    options: { source: this.filters.options, serializer: 'json' },
   }, {
     onError: error => console.error(error.phase, error.key, error.cause),
   });
 
   readUrl() {
-    const rawPage = this.querySync.params.page(); // string | null, before the integer codec
+    const rawPage = this.querySync.params.page(); // string | null, before the integer serializer
     const tags = this.filters.tags(); // All parsed values from the array source.
     return { rawPage, tags };
   }

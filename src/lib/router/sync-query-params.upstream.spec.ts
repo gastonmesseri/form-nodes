@@ -18,7 +18,7 @@ describe.each([
     const { router, injector, handleError } = setup('/search?page=3');
     try {
       const page = create(fallback);
-      const sync = syncQueryParams({ page: { source: page, codec: 'integer' } }, { injector });
+      const sync = syncQueryParams({ page: { source: page, serializer: 'integer' } }, { injector });
       expect(page()).toBe(3);
       expect(sync.params.page()).toBe('3');
       await settle();
@@ -42,7 +42,7 @@ describe.each([
     const { router, injector } = setup('/search?page=1');
     try {
       const page = create(0);
-      const sync = syncQueryParams({ page: { source: page, codec: 'integer' } }, { injector });
+      const sync = syncQueryParams({ page: { source: page, serializer: 'integer' } }, { injector });
       const updates = vi.fn((previous: number | null | undefined) => (previous ?? 0) + 1);
       page.update(updates);
       page.update(updates);
@@ -67,8 +67,8 @@ describe.each([
     router.automatic = false;
     try {
       const a = create(0); const b = create(0); const c = create(0);
-      const first = syncQueryParams({ a: { source: a, codec: 'integer' }, b: { source: b, codec: 'integer' } }, { injector });
-      const second = syncQueryParams({ c: { source: c, codec: 'integer' } }, { injector });
+      const first = syncQueryParams({ a: { source: a, serializer: 'integer' }, b: { source: b, serializer: 'integer' } }, { injector });
+      const second = syncQueryParams({ c: { source: c, serializer: 'integer' } }, { injector });
       a.set(2); await settle();
       b.set(2); c.set(2); await settle();
       expect(router.requested).toHaveLength(1);
@@ -97,11 +97,11 @@ describe.each([
     const { router, injector } = setup('/search?page=2');
     try {
       const old = create(1);
-      const oldSync = syncQueryParams({ page: { source: old, codec: 'integer' } }, { injector });
+      const oldSync = syncQueryParams({ page: { source: old, serializer: 'integer' } }, { injector });
       old.set(3);
       oldSync.unsubscribe();
       const current = create(1);
-      const currentSync = syncQueryParams({ page: { source: current, codec: 'integer' } }, { injector });
+      const currentSync = syncQueryParams({ page: { source: current, serializer: 'integer' } }, { injector });
       expect(current()).toBe(2);
       await settle();
       expect(router.requested).toHaveLength(0);
@@ -118,7 +118,7 @@ describe.each([
     const { router, injector } = setup('/search?page=2&keep=a&keep=b#results');
     try {
       const page = create(1);
-      const sync = syncQueryParams({ page: { source: page, codec: 'integer' } }, { injector });
+      const sync = syncQueryParams({ page: { source: page, serializer: 'integer' } }, { injector });
       page.set(empty); await settle();
       expect(page()).toBe(empty);
       expect(sync.params.page()).toBeNull();
@@ -142,7 +142,7 @@ describe('upstream query isolation and conversion scenarios', () => {
     const { router, injector } = setup('/search?state=%7B%22count%22:1,%22label%22:%22initial%22%7D');
     try {
       const state = create();
-      const sync = syncQueryParams({ state: { source: state, codec: 'json' } }, { injector });
+      const sync = syncQueryParams({ state: { source: state, serializer: 'json' } }, { injector });
       state.update(previous => ({ ...previous, count: previous.count + 1 }));
       state.update(previous => ({ ...previous, label: 'updated' }));
       state.update(previous => ({ ...previous, count: previous.count + 1 }));
@@ -184,7 +184,7 @@ describe('upstream query isolation and conversion scenarios', () => {
       const initial = { id: 0 };
       const state = field.strict(initial);
       const parse = vi.fn(queryParam.json<{ id: number }>().parse);
-      const sync = syncQueryParams({ state: { source: state, codec: { ...queryParam.json<{ id: number }>(), parse } }, other: signal('') }, { injector });
+      const sync = syncQueryParams({ state: { source: state, serializer: { ...queryParam.json<{ id: number }>(), parse } }, other: signal('') }, { injector });
       const readValue = vi.fn(() => state());
       const readRaw = vi.fn(() => sync.params.state());
       const derivedValue = computed(readValue);
@@ -217,7 +217,7 @@ describe('upstream query isolation and conversion scenarios', () => {
       expect(scalar.params[key]!()).toBe('two');
       scalar.unsubscribe();
       const values = signal<string[]>([]);
-      const repeated = syncQueryParams({ [key]: { source: values, codec: 'array' } }, { injector });
+      const repeated = syncQueryParams({ [key]: { source: values, serializer: 'array' } }, { injector });
       expect(values()).toEqual(['two']);
       values.set(['three', '', 'four']); await settle();
       expect(router.parseUrl(router.url).queryParamMap.getAll(key)).toEqual(['three', '', 'four']);
@@ -235,7 +235,7 @@ describe('upstream query isolation and conversion scenarios', () => {
     const { router, injector } = setup(`/search${from}`);
     try {
       const values = field.strict<string[]>([]);
-      const sync = syncQueryParams({ a: { source: values, codec: 'array' } }, { injector });
+      const sync = syncQueryParams({ a: { source: values, serializer: 'array' } }, { injector });
       expect(values()).toEqual(initial);
       router.external(`/search${to}`);
       expect(values()).toEqual(expected);
@@ -318,7 +318,7 @@ describe('upstream query isolation and conversion scenarios', () => {
       const { router, injector } = setup('/search?keep=one&keep=two#results');
       try {
         const source = field.strict<string[]>([]);
-        const sync = syncQueryParams({ [key]: { source, codec: 'array' } }, { injector });
+        const sync = syncQueryParams({ [key]: { source, serializer: 'array' } }, { injector });
         source.set(values); await settle();
         const parsed = router.parseUrl(router.url);
         expect(parsed.queryParamMap.getAll(key)).toEqual(values);

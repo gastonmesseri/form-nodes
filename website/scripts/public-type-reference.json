@@ -481,7 +481,7 @@
     },
     "QueryParamCodec": {
       "family": "router",
-      "usage": "Define a conversion between decoded query values and a field value."
+      "usage": "Compatibility alias for QueryParamSerializer; migrate existing type annotations to the preferred name."
     },
     "QueryParamBinding": {
       "family": "router",
@@ -498,6 +498,10 @@
     "QueryParamUrlSyncEvent": {
       "family": "router",
       "usage": "Read the reason and typed committed value snapshot after URL hydration or restoration."
+    },
+    "QueryParamSerializer": {
+      "family": "router",
+      "usage": "Define parsing and serialization between decoded query parameters and source values."
     }
   }
 }

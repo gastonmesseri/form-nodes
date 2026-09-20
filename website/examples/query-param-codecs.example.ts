@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { queryParam, type QueryParamCodec } from '@ngblocks/form-nodes/router';
+import { queryParam, type QueryParamSerializer } from '@ngblocks/form-nodes/router';
 
 assert.equal(queryParam.string().parse(['']), '');
 assert.equal(queryParam.integer().parse(['2']), 2);
@@ -17,9 +17,9 @@ assert.deepEqual(json.parse(['{"ids":[1,2],"enabled":true}']), state);
 assert.deepEqual(queryParam.json<number[]>().serialize([]), ['[]']);
 assert.throws(() => json.parse(['{broken}']));
 
-// A custom codec can encode numeric arrays as repeated values instead of JSON.
+// A custom serializer can encode numeric arrays as repeated values instead of JSON.
 const number = queryParam.number();
-const numbers: QueryParamCodec<number[]> = {
+const numbers: QueryParamSerializer<number[]> = {
   parse: values => values.map(value => number.parse([value])),
   serialize: values => values.flatMap(value => number.serialize(value)!),
 };

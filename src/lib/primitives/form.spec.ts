@@ -6630,10 +6630,10 @@ it('synchronizes nested field query bindings with aggregate validation and prese
   injector.destroy();
 });
 
-it('batches named scalar and array codecs in nested forms and preserves validation and reset behavior', async () => {
+it('batches named scalar and array serializers in nested forms and preserves validation and reset behavior', async () => {
   const { router, injector } = setup('/search?tag=angular&page=2');
   const filters = form({ nested: form({ tags: field.strict<string[]>([], [minLength(1)]), page: field(1) }) });
-  const sync = syncQueryParams({ tag: { source: filters.nested.tags, codec: 'array', clearOnDefault: true }, page: { source: filters.nested.page, codec: 'integer' } }, { injector });
+  const sync = syncQueryParams({ tag: { source: filters.nested.tags, serializer: 'array', clearOnDefault: true }, page: { source: filters.nested.page, serializer: 'integer' } }, { injector });
   expect(filters()).toEqual({ nested: { tags: ['angular'], page: 2 } });
   expect(filters.valid()).toBe(true);
   filters.patch({ nested: { tags: ['react', 'vue'], page: 3 } });
@@ -6659,7 +6659,7 @@ it('batches named scalar and array codecs in nested forms and preserves validati
 it('aggregates JSON array field validation and batches nested form writes through reset', async () => {
   const { router, injector } = setup('/search?ids=%5B1,2%5D&page=2');
   const filters = form({ nested: form({ ids: field.strict<number[]>([], [minLength(1)]), page: field(1) }) });
-  const sync = syncQueryParams({ ids: { source: filters.nested.ids, codec: 'json' }, page: filters.nested.page }, { injector });
+  const sync = syncQueryParams({ ids: { source: filters.nested.ids, serializer: 'json' }, page: filters.nested.page }, { injector });
   expect(filters()).toEqual({ nested: { ids: [1, 2], page: 2 } });
   expect(filters.valid()).toBe(true);
   filters.patch({ nested: { ids: [3, 4], page: 3 } });
@@ -6681,11 +6681,12 @@ it('aggregates JSON array field validation and batches nested form writes throug
   injector.destroy();
 });
 
-it('restores a whole form through JSON with nested validation, array structure, drafts, and reset baselines', async () => {
+it.each(['serializer', 'codec'] as const)('restores a whole form through JSON with nested validation, array structure, drafts, and reset baselines through %s', async (option) => {
   const url = (name: string, tags: string[]) => `/search?state=${encodeURIComponent(JSON.stringify({ nested: { name }, tags }))}`;
   const { router, injector } = setup(url('Ada', ['one', 'two']));
   const profile = form({ nested: form({ name: field('', [required], { debounce: 'blur' }) }), tags: array(field.strict('')) });
-  const sync = syncQueryParams({ state: { source: profile, codec: 'json' } }, { injector });
+  const conversion = option === 'serializer' ? { serializer: 'json' as const } : { codec: 'json' as const };
+  const sync = syncQueryParams({ state: { source: profile, ...conversion } }, { injector });
   expect(profile()).toEqual({ nested: { name: 'Ada' }, tags: ['one', 'two'] });
   expect(profile.valid()).toBe(true);
   expect(profile.pristine()).toBe(true);
@@ -6720,7 +6721,7 @@ it('discards staggered nested control timers on whole-form history restoration a
   const { router, injector } = setup(url('first', 'second'));
   try {
     const profile = form({ nested: form({ a: field.strict('', [required], { debounce: 100 }), b: field.strict('', [required], { debounce: 300 }) }) });
-    const sync = syncQueryParams({ state: { source: profile, codec: 'json' } }, { injector });
+    const sync = syncQueryParams({ state: { source: profile, serializer: 'json' } }, { injector });
     const changes = vi.fn();
     profile.onValueChange(changes);
     profile.nested.a.value.control.set('committed');
@@ -6757,7 +6758,7 @@ it('cancels pending custom debounce in descendants when a whole-form URL is rest
       aborts.push(abort);
       return new Promise<void>(resolve => releases.push(resolve));
     } }) }) });
-    const sync = syncQueryParams({ state: { source: profile, codec: 'json' } }, { injector });
+    const sync = syncQueryParams({ state: { source: profile, serializer: 'json' } }, { injector });
     profile.nested.name.value.control.set('stale');
     expect(aborts).toHaveLength(1);
     router.external('/search?state=%7B%22nested%22:%7B%22name%22:%22%22%7D%7D', 'popstate');

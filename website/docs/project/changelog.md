@@ -10,6 +10,10 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+### Changed
+
+- Prefer `serializer` and `QueryParamSerializer<T>` when configuring `syncQueryParams()`. The `codec` option and `QueryParamCodec<T>` remain compatible deprecated aliases; `serializer` takes precedence when both options are supplied. Named serializers, custom `parse`/`serialize` objects, and `queryParam` factories retain their behavior.
+
 ## 📦 4.5.0 — 2026-09-20 {#450--2026-09-20}
 
 ### Added

@@ -41,7 +41,7 @@ The declaration above also includes inherited contracts and overloads where appl
 
 | Member | Meaning |
 | --- | --- |
-| `params` | Readonly signals for the configured keys, before codec parsing. Values are URL-decoded strings, or null when absent. Repeated keys return their first value. Read an array-codec source for all parsed values. Snapshots update on accepted navigation and freeze when the connection closes. |
+| `params` | Readonly signals for the configured keys, before serializer parsing. Values are URL-decoded strings, or null when absent. Repeated keys return their first value. Read an array-serializer source for all parsed values. Snapshots update on accepted navigation and freeze when the connection closes. |
 | `pending` | Whether this connection has queued or in-flight URL writes. Starts when a committed edit is observed in a microtask; excludes control debounce, validation, external navigation, and other connections' work. Becomes false after settlement or cleanup. |
 | `closed` | Whether all bindings have ended through unsubscribe or injector cleanup. An empty map is already closed and has no parameter signals. |
 | `unsubscribe` | Idempotently release this connection and its pending writes. Fields retain their values. URL signals retain their last snapshot. Injector destruction also performs this cleanup automatically. |

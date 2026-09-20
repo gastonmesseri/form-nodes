@@ -123,19 +123,20 @@ try {
   if (!packageManifest.peerDependenciesMeta?.['@angular/router']?.optional) throw new Error('Angular Router must remain an optional peer.');
   symlinkSync(resolve(workspace, 'node_modules/@angular/router'), join(angularDirectory, 'router'), 'dir');
   writeFileSync(join(temporaryDirectory, 'package-consumer.ts'), source + `
-    import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding, type QueryParamUrlSyncEvent } from '@ngblocks/form-nodes/router';
+    import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding, type QueryParamUrlSyncEvent, type QueryParamSerializer, type QueryParamCodec } from '@ngblocks/form-nodes/router';
     import { signal as querySignal } from '@angular/core';
     const queryField = field(1);
-    const objectCodec = queryParam.integer();
+    const objectCodec: QueryParamSerializer<number> = queryParam.integer();
+    const legacyCodec: QueryParamCodec<number> = objectCodec;
     objectCodec.parse(['2']);
-    const queryBinding: QueryParamBinding<number | null> = { source: queryField, codec: 'integer', defaultValue: 1 };
+    const queryBinding: QueryParamBinding<number | null> = { source: queryField, serializer: 'integer', defaultValue: 1 };
     function connectQueryParameters() {
-      const sync = syncQueryParams({ page: queryBinding, tag: { source: field.strict<string[]>([]), codec: 'array' }, active: { source: field(false), codec: 'boolean' }, state: { source: field.strict({ ids: [1, 2] }), codec: 'json' } });
+      const sync = syncQueryParams({ page: queryBinding, tag: { source: field.strict<string[]>([]), serializer: 'array' }, active: { source: field(false), serializer: 'boolean' }, state: { source: field.strict({ ids: [1, 2] }), serializer: 'json' } });
       const mixed = syncQueryParams({
-        page: { source: querySignal(1), codec: 'integer', defaultValue: 1 },
-        profile: { source: form({ name: field('') }), codec: 'json' },
-        tags: { source: array(field.strict('')), codec: 'array' },
-        group: { source: group({ active: field(false) }), codec: 'json' },
+        page: { source: querySignal(1), serializer: 'integer', defaultValue: 1 },
+        profile: { source: form({ name: field('') }), serializer: 'json' },
+        tags: { source: array(field.strict('')), serializer: 'array' },
+        group: { source: group({ active: field(false) }), serializer: 'json' },
       }, {
         onInitialUrlSync(event) {
           const initial: 'initial' = event.reason;
@@ -148,6 +149,7 @@ try {
           void [snapshot, name];
         },
       });
+      syncQueryParams({ legacyPage: { source: querySignal(1), codec: legacyCodec } });
       const rawProfile: string | null = mixed.params.profile();
       void rawProfile;
       const typed: QueryParamsSync<'page'> = sync;
@@ -163,9 +165,9 @@ try {
   writeFileSync(join(temporaryDirectory, 'router-runtime.mjs'), `
     import '@angular/compiler';
     import { queryParam } from '@ngblocks/form-nodes/router';
-    if (queryParam.integer().parse(['2']) !== 2) throw new Error('Published router codecs do not work.');
-    if (queryParam.array().parse(['a', 'b']).length !== 2) throw new Error('Published array codec does not work.');
-    if (queryParam.json().parse(['{"id":1}']).id !== 1) throw new Error('Published JSON codec does not work.');
+    if (queryParam.integer().parse(['2']) !== 2) throw new Error('Published router serializers do not work.');
+    if (queryParam.array().parse(['a', 'b']).length !== 2) throw new Error('Published array serializer does not work.');
+    if (queryParam.json().parse(['{"id":1}']).id !== 1) throw new Error('Published JSON serializer does not work.');
   `);
   run(process.execPath, [join(temporaryDirectory, 'router-runtime.mjs')]);
 

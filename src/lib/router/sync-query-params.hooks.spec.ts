@@ -21,7 +21,7 @@ describe('syncQueryParams URL hooks', () => {
     let initial!: QueryParamUrlSyncEvent;
     let general!: QueryParamUrlSyncEvent;
     let returned = false;
-    syncQueryParams({ q, page: { source: page, codec: 'integer' }, state: { source: state, codec: 'json' }, group: { source: settings, codec: 'json' }, tags: { source: tags, codec: 'array' } }, {
+    syncQueryParams({ q, page: { source: page, serializer: 'integer' }, state: { source: state, serializer: 'json' }, group: { source: settings, serializer: 'json' }, tags: { source: tags, serializer: 'array' } }, {
       injector,
       onInitialUrlSync(event) {
         expect(returned).toBe(false);

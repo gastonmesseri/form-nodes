@@ -3,19 +3,26 @@
  * Converts decoded, repeated query values to a source value and back.
  *
  * ```ts
- * const codec: QueryParamCodec<number> = {
+ * const param: QueryParamSerializer<number> = {
  *   parse: values => Number(values[0]),
  *   serialize: value => [String(value)],
  * };
- * codec.parse(['2']); // 2
+ * param.parse(['2']); // 2
  * ```
  */
-export type QueryParamCodec<T> = {
+export type QueryParamSerializer<T> = {
   /** Parses present values. Throw for malformed input; absence uses the binding default. */
   parse(values: readonly string[]): T;
   /** Returns decoded values; null removes the key. Angular Router handles URL escaping. */
   serialize(value: T): readonly string[] | null;
 };
+
+/**
+ * Deprecated compatibility alias for QueryParamSerializer.
+ *
+ * @deprecated Use {@link QueryParamSerializer} instead.
+ */
+export type QueryParamCodec<T> = QueryParamSerializer<T>;
 
 const scalar = (values: readonly string[]) => {
   if (values.length !== 1) throw new Error('Expected exactly one query parameter value.');
@@ -23,7 +30,7 @@ const scalar = (values: readonly string[]) => {
 };
 
 /**
- * Explicit codecs for scalar values, repeated string arrays, and JSON values.
+ * Explicit serializers for scalar values, repeated string arrays, and JSON values.
  *
  * ```ts
  * queryParam.integer().parse(['2']); // 2
@@ -37,7 +44,7 @@ export const queryParam = {
    * queryParam.string().parse(['']); // ''
    * ```
    */
-  string(): QueryParamCodec<string> {
+  string(): QueryParamSerializer<string> {
     return { parse: scalar, serialize: value => [value] };
   },
   /**
@@ -47,7 +54,7 @@ export const queryParam = {
    * queryParam.number().parse(['1.5']); // 1.5
    * ```
    */
-  number(): QueryParamCodec<number> {
+  number(): QueryParamSerializer<number> {
     return {
       parse(values) {
         const value = scalar(values);
@@ -69,7 +76,7 @@ export const queryParam = {
    * queryParam.integer().parse(['2']); // 2
    * ```
    */
-  integer(): QueryParamCodec<number> {
+  integer(): QueryParamSerializer<number> {
     const number = queryParam.number();
     const check = (value: number) => {
       if (!Number.isSafeInteger(value)) throw new Error('Expected a safe integer query parameter.');
@@ -85,7 +92,7 @@ export const queryParam = {
    * // false
    * ```
    */
-  boolean(): QueryParamCodec<boolean> {
+  boolean(): QueryParamSerializer<boolean> {
     return {
       parse(values) {
         const value = scalar(values);
@@ -103,25 +110,25 @@ export const queryParam = {
    * // ['a', 'b']
    * ```
    */
-  array(): QueryParamCodec<string[]> {
+  array(): QueryParamSerializer<string[]> {
     return { parse: values => [...values], serialize: value => value };
   },
   /**
    * Encodes a complete value as one JSON query parameter.
    * Parsing rejects malformed JSON and repeated keys. T describes the expected
-   * value; it does not validate a schema. Use a custom codec for shape validation.
+   * value; it does not validate a schema. Use a custom serializer for shape validation.
    * Serialization follows JSON.stringify, including toJSON and omitted object
    * properties. Circular references, BigInt, and values without a JSON string
    * representation throw. syncQueryParams removes null/undefined field values
-   * before serialization; this codec itself can encode JSON null.
+   * before serialization; this serializer itself can encode JSON null.
    *
    * ```ts
-   * const codec = queryParam.json<number[]>();
-   * codec.parse(['[1,2]']); // [1, 2]
-   * codec.serialize([1, 2]); // ['[1,2]']
+   * const json = queryParam.json<number[]>();
+   * json.parse(['[1,2]']); // [1, 2]
+   * json.serialize([1, 2]); // ['[1,2]']
    * ```
    */
-  json<T = unknown>(): QueryParamCodec<T> {
+  json<T = unknown>(): QueryParamSerializer<T> {
     return {
       parse: values => JSON.parse(scalar(values)) as T,
       serialize(value) {
@@ -133,15 +140,15 @@ export const queryParam = {
   },
 };
 
-export const inferCodec = (value: unknown): QueryParamCodec<any> => {
+export const inferCodec = (value: unknown): QueryParamSerializer<any> => {
   if (typeof value === 'string') return queryParam.string();
   if (typeof value === 'number') return queryParam.number();
   if (typeof value === 'boolean') return queryParam.boolean();
-  throw new Error('Provide a query parameter codec for null, undefined, arrays, and object values.');
+  throw new Error('Provide a query parameter serializer for null, undefined, arrays, and object values.');
 };
 
-export const resolveCodec = (codec: QueryParamCodec<any> | keyof typeof queryParam | undefined, fallback: unknown): QueryParamCodec<any> => {
-  if (typeof codec !== 'string') return codec ?? inferCodec(fallback);
-  if (!Object.hasOwn(queryParam, codec)) throw new Error(`Unknown query parameter codec "${codec}".`);
-  return queryParam[codec]();
+export const resolveCodec = (serializer: QueryParamSerializer<any> | keyof typeof queryParam | undefined, fallback: unknown): QueryParamSerializer<any> => {
+  if (typeof serializer !== 'string') return serializer ?? inferCodec(fallback);
+  if (!Object.hasOwn(queryParam, serializer)) throw new Error(`Unknown query parameter serializer "${serializer}".`);
+  return queryParam[serializer]();
 };

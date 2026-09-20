@@ -4250,7 +4250,7 @@ it('synchronizes committed URL data independently of public equality and keeps v
 it('synchronizes an array-valued field through repeated query keys and restores its captured default', async () => {
   const { router, injector } = setup('/search?tag=angular&tag=forms');
   const tags = field.strict<readonly string[]>([], { validators: minLength(1), debounce: 'blur' });
-  const sync = syncQueryParams({ tag: { source: tags, codec: 'array' } }, { injector });
+  const sync = syncQueryParams({ tag: { source: tags, serializer: 'array' } }, { injector });
   expect(tags()).toEqual(['angular', 'forms']);
   expect(tags.valid()).toBe(true);
   expect(tags.dirty()).toBe(false);
@@ -4282,13 +4282,14 @@ it('synchronizes an array-valued field through repeated query keys and restores 
   expect(sync.closed()).toBe(true);
 });
 
-it('imports JSON into an object-valued field while preserving validation and canceling pending control work', async () => {
+it.each(['serializer', 'codec'] as const)('imports JSON into an object-valued field while preserving validation and canceling pending control work through %s', async (option) => {
   const { router, injector } = setup('/search?state=%7B%22count%22:2%7D');
   const state = field.strict({ count: 0 }, {
     debounce: 'blur',
     validators: ({ value }) => value().count < 0 ? { kind: 'negative' } : null,
   });
-  const sync = syncQueryParams({ state: { source: state, codec: 'json' } }, { injector });
+  const conversion = option === 'serializer' ? { serializer: 'json' as const } : { codec: 'json' as const };
+  const sync = syncQueryParams({ state: { source: state, ...conversion } }, { injector });
   expect(state()).toEqual({ count: 2 });
   expect(state.valid()).toBe(true);
   expect(state.dirty()).toBe(false);

@@ -16,7 +16,7 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  * An explicit injector or the current injection context owns the whole connection;
  * entry injectors and node owners may end individual entries.
  * URL values initialize nodes through set without resetting interaction state or initial values.
- * Forms, groups, and arrays retain their normal set semantics and need explicit codecs.
+ * Forms, groups, and arrays retain their normal set semantics and need explicit serializers.
  * Signals use set and their own equality; readonly signals are not supported.
  * Committed edits are batched across helpers; default history mode is replace.
  *
@@ -65,11 +65,11 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  *   querySync = syncQueryParams({
  *     state: {
  *       source: this.filters,
- *       codec: 'json',
+ *       serializer: 'json',
  *     },
  *     page: {
  *       source: this.page,
- *       codec: 'integer',
+ *       serializer: 'integer',
  *     },
  *   });
  * }
@@ -97,18 +97,18 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
       const config = (typeof input === 'function' ? { source: input } : input) as QueryParamBinding<any>;
       const source = createQueryParamSource(config?.source, key);
       const fallback = Object.hasOwn(config, 'defaultValue') ? config.defaultValue : source.read();
-      const codec = resolveCodec(config.codec, fallback);
+      const serializer = resolveCodec(config.serializer ?? config.codec, fallback);
       const serialize = (value: unknown): readonly string[] => {
-        const result = (value === null || value === undefined) ? null : codec.serialize(value);
+        const result = (value === null || value === undefined) ? null : serializer.serialize(value);
         if (result !== null && (!Array.isArray(result) || result.some(item => typeof item !== 'string'))) {
-          throw new Error(`The codec for "${key}" must serialize to strings or null.`);
+          throw new Error(`The serializer for "${key}" must serialize to strings or null.`);
         }
         return result ?? [];
       };
       const defaultValues = serialize(fallback);
       const owner = config.injector ?? injector;
       if (owner.get(Router) !== router) throw new Error('All query parameter owners must use the same Router.');
-      return { key, config, source, fallback, codec, serialize, defaultValues, owner };
+      return { key, config, source, fallback, serializer, serialize, defaultValues, owner };
     });
     const initialNavigation = router.currentNavigation();
     const initialUrl = initialNavigation?.finalUrl ?? router.parseUrl(router.url);
@@ -141,7 +141,7 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
     try {
       ownerCleanup = injector.get(DestroyRef).onDestroy(stop);
       for (const definition of definitions) {
-        const { key, config, source, codec, fallback, serialize, defaultValues, owner } = definition;
+        const { key, config, source, serializer, fallback, serialize, defaultValues, owner } = definition;
         const cleanup: (() => void)[] = [];
         const entry: QueryEntry = {
           key,
@@ -163,7 +163,7 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
             let value = fallback;
             if (values.length) {
               try {
-                value = codec.parse(values);
+                value = serializer.parse(values);
               } catch (cause) {
                 report({ key, phase: 'parse', cause });
               }

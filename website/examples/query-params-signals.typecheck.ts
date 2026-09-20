@@ -14,7 +14,7 @@ export class ResultsPage {
 
   querySync = syncQueryParams({
     q: this.search,
-    page: { source: this.page, codec: 'integer', history: 'push' },
+    page: { source: this.page, serializer: 'integer', history: 'push' },
   });
 
   nextPage() {

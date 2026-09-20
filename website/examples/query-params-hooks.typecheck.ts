@@ -17,7 +17,7 @@ export class SearchPage {
 
   querySync = syncQueryParams({
     q: this.filters.search,
-    page: { source: this.filters.page, codec: 'integer', history: 'push' },
+    page: { source: this.filters.page, serializer: 'integer', history: 'push' },
   }, {
     onInitialUrlSync: ({ values }) => {
       this.initialSearch.set(values.q);

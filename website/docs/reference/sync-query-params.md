@@ -17,7 +17,7 @@ import lifecycleSource from '!!raw-loader!../../examples/query-params-lifecycle.
 parameters in both directions. Opening a URL restores the source values; editing those sources
 updates the URL. Use it for shareable searches, filters, pagination, and saved view settings.
 
-Import the helper, [`queryParam`](#built-in-codecs), and their types from
+Import the helper, [`queryParam`](#built-in-serializers), and their types from
 `@ngblocks/form-nodes/router`. The result is a [`QueryParamsSync<K>`](./types/query-params-sync.md)
 connection, where `K` is the union of the query names in your binding map.
 
@@ -48,12 +48,12 @@ The component's injector automatically disconnects the helper when the component
 | --- | --- | --- |
 | Synchronize search and pagination | Bind existing form children | [Basic example](#basic-example) and [signatures](#signatures) |
 | Synchronize state without a form | Writable signals | [Signals](#signals) |
-| Put several selections in the URL | `codec: 'array'` or `'json'` | [Arrays](#arrays) |
-| Store a complete form or group under one key | `codec: 'json'` | [Structured values](#structured-values) |
+| Put several selections in the URL | `serializer: 'array'` or `'json'` | [Arrays](#arrays) |
+| Store a complete form or group under one key | `serializer: 'json'` | [Structured values](#structured-values) |
 | Choose what missing or malformed values mean | `defaultValue` | [Defaults and initialization](#defaults-and-initialization) |
 | Omit default-valued parameters | `clearOnDefault: true` | [Default removal](#clear-on-default) |
 | Make Back revisit meaningful changes | `history: 'push'` | [History and batching](#history-and-batching) |
-| Validate a URL representation or support a literal union | `QueryParamCodec<T>` | [Custom codecs](#custom-codecs) |
+| Validate a URL representation or support a literal union | `QueryParamSerializer<T>` | [Custom serializers](#custom-serializers) |
 | Read accepted URL text and synchronization status | `params`, `pending()`, `closed()` | [Property reference](#property-reference) |
 | Connect later or disconnect early | `injector`, `unsubscribe()` | [Ownership](#ownership) and [method reference](#method-reference) |
 | React after URL values have been applied | `onInitialUrlSync`, `onUrlSync` | [URL synchronization hooks](#url-sync-hooks) |
@@ -90,9 +90,9 @@ query key on the same Router are rejected, including bindings in separate helper
 
 | Source | Useful for | Conversion and incoming writes |
 | --- | --- | --- |
-| [`field()`](./field.md) | Search text, page numbers, flags, or one atomic object/array | Scalar inference or an explicit codec. URL imports use the field's `set()`. |
-| [`form()`](./form.md), [`group()`](./group.md), or a structural group | A complete saved filter model under one query key | Use JSON or a custom codec. Imports use existing aggregate `set()` behavior. |
-| [`array()`](./array.md) | Collections whose items need individual nodes | Use `'array'` for string items, JSON for other values, or a custom codec. Imports reconcile children normally. |
+| [`field()`](./field.md) | Search text, page numbers, flags, or one atomic object/array | Scalar inference or an explicit serializer. URL imports use the field's `set()`. |
+| [`form()`](./form.md), [`group()`](./group.md), or a structural group | A complete saved filter model under one query key | Use JSON or a custom serializer. Imports use existing aggregate `set()` behavior. |
+| [`array()`](./array.md) | Collections whose items need individual nodes | Use `'array'` for string items, JSON for other values, or a custom serializer. Imports reconcile children normally. |
 | Angular `signal()`, `linkedSignal()`, or writable `model()` | State without form validation or interaction markers | Uses the signal's read/set contract and equality function. |
 
 Nodes publish committed values, even when their public equality comparator hides a change.
@@ -102,7 +102,7 @@ supported. There is no need to mirror a field into a separate signal to connect 
 
 ### Writable signals {#signals}
 
-An explicit codec allows a signal to start at `null` and receive its initial value from the URL.
+An explicit serializer allows a signal to start at `null` and receive its initial value from the URL.
 In this example, `?page=4` initializes `page()` to `4`. With no `page` parameter it remains `null`;
 a later history entry without `page` restores that same fallback.
 
@@ -128,11 +128,11 @@ The writes are batched. Angular Router handles the JSON's URL escaping.
 - Writing `[]` with `'array'` removes the key. A later absent key restores the configured fallback,
   which may be a nonempty array.
 - Writing `[]` with `'json'` stores the JSON text `'[]'` and keeps the key.
-- Arrays always need an explicit codec. Mutable and readonly string-array fields are supported;
+- Arrays always need an explicit serializer. Mutable and readonly string-array fields are supported;
   string array nodes can use the template `array(field.strict(''))`.
 
 Read the source for the complete parsed array. `querySync.params.tag()` exposes only the first raw
-value, or `null` when absent. See the [numeric repeated-value codec example](../guides/query-params.md#arrays)
+value, or `null` when absent. See the [numeric repeated-value serializer example](../guides/query-params.md#arrays)
 when each numeric item should have its own occurrence instead of using JSON.
 
 ### Whole forms, groups, and object values {#structured-values}
@@ -149,7 +149,7 @@ object-valued field. Whole-node bindings preserve their normal validation, child
 and interaction behavior. Aggregate `defaultValue` values must be complete values rather than patches.
 
 JSON parsing checks syntax only. The source type and `queryParam.json<T>()` generic do not validate
-the parsed shape. Use a [custom codec](#custom-codecs) when imported JSON must match a schema.
+the parsed shape. Use a [custom serializer](#custom-serializers) when imported JSON must match a schema.
 
 ## ⚙️ Binding options {#options}
 
@@ -159,7 +159,8 @@ Options belong to one query key; the helper-level options are described [separat
 | Option | Accepted value | Default |
 | --- | --- | --- |
 | [`source`](#source-option) | Existing node or writable Angular signal | Required in a configured entry |
-| [`codec`](#codec-option) | Built-in name or compatible `QueryParamCodec<T>` | Infer from the fallback's runtime type |
+| [`codec`](#legacy-codec) | Deprecated alias of `serializer` | Used only when `serializer` is absent |
+| [`serializer`](#serializer-option) | Built-in name or compatible `QueryParamSerializer<T>` | Use `codec`, otherwise infer from the fallback |
 | [`defaultValue`](#default-value) | A value compatible with the source | Capture the source value at registration |
 | [`clearOnDefault`](#clear-on-default) | `boolean` | `false` |
 | [`history`](#history-option) | `'replace'` or `'push'` | Shared `history`, otherwise `'replace'` |
@@ -178,22 +179,35 @@ Use the source's existing `set()`, `update()`, or aggregate `patch()` methods to
 Functional updates accumulate immediately in the source before the URL batch is published.
 The direct-entry shorthand is equivalent to a configured entry containing only `source`.
 
-### codec {#codec-option}
+<span id="codec-option" />
 
-**Signature:** `codec?: QueryParamCodec<T> | 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'json'`
+### serializer {#serializer-option}
 
-**Default:** Infer `'string'`, `'number'`, or `'boolean'` from the fallback value: explicit
+**Signature:** `serializer?: QueryParamSerializer<T> | 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'json'`
+
+**Default:** Use `codec` when supplied; otherwise infer `'string'`, `'number'`, or `'boolean'`
+from the fallback value: explicit
 `defaultValue` when supplied, otherwise the captured source value. Numeric inference uses
 `'number'`, so request `'integer'` explicitly for integral values.
 
 The signature above summarizes the choices. The actual type restricts names according to the
 source: a numeric field cannot use `'string'`, and `'array'` needs string-array values. Broad
-built-in parsers cannot safely produce a narrow literal union; use a custom codec for that case.
+built-in parsers cannot safely produce a narrow literal union; use a custom serializer for that case.
 JSON accepts the expected source type but does not check its structure at runtime.
 
-A null, undefined, array, or object fallback cannot select a codec automatically. Supply one
-explicitly. A codec object and the corresponding name use the same conversion; for example,
-`codec: 'integer'` and `codec: queryParam.integer()` are equivalent.
+A null, undefined, array, or object fallback cannot select a serializer automatically. Supply one
+explicitly. A serializer object and the corresponding name use the same conversion; for example,
+`serializer: 'integer'` and `serializer: queryParam.integer()` are equivalent.
+
+### codec (deprecated) {#legacy-codec}
+
+Use `serializer` for new code. `codec` remains supported with the same accepted names, custom
+objects, and type checking as in 4.5.0. When both are supplied, `serializer` takes precedence;
+the unused `codec` is not evaluated. Deprecation is shown in IntelliSense without runtime warnings.
+
+The exported `QueryParamCodec<T>` type is also deprecated; use
+[`QueryParamSerializer<T>`](./types/query-param-serializer.md). Its `parse` and `serialize` methods
+are unchanged. The `queryParam` factories keep their names and now return `QueryParamSerializer<T>`.
 
 ### defaultValue {#default-value}
 
@@ -315,17 +329,19 @@ A later source change can start another write. Successfully parsed values still 
 normal validators; an application-invalid value is not a parsing error and can still be published.
 The helper does not put URL failures into `errors()` or block writes until the form becomes valid.
 
-Configuration failures, such as a duplicate key, unsupported source, unknown codec, ambiguous
+Configuration failures, such as a duplicate key, unsupported source, unknown serializer, ambiguous
 inference, or incompatible injector, throw while creating the connection. They are not navigation
-errors delivered through `onError`. Codecs also serialize the fallback during setup; an invalid
+errors delivered through `onError`. Serializers also serialize the fallback during setup; an invalid
 fallback can therefore cause connection creation to throw.
 
 </div>
 
-## Codec reference {#built-in-codecs}
+<span id="built-in-codecs" />
 
-Import `queryParam` from `@ngblocks/form-nodes/router` when you need codec objects, composition,
-or direct conversion outside the helper. Codecs receive and return decoded values; Angular Router
+## Serializer reference {#built-in-serializers}
+
+Import `queryParam` from `@ngblocks/form-nodes/router` when you need serializer objects, composition,
+or direct conversion outside the helper. Serializers receive and return decoded values; Angular Router
 handles percent encoding. Do not pre-encode their output.
 
 | Name | Factory | Parsing and serialization contract |
@@ -337,22 +353,24 @@ handles percent encoding. Do not pre-encode their output.
 | `'array'` | `queryParam.array()` | Repeated strings in order, including duplicates and empty items; an empty array removes the key. |
 | `'json'` | `queryParam.json<T>()` | One JSON value, using native `JSON.parse` and `JSON.stringify`; no schema validation. |
 
-Scalar and JSON codecs reject repeated occurrences. JSON can contain objects, arrays, and
+Scalar and JSON serializers reject repeated occurrences. JSON can contain objects, arrays, and
 primitives. Standard conversions apply: undefined object properties are omitted, `toJSON()` is
 respected, dates become strings, and non-finite numbers become JSON null. Circular references,
 BigInt, and top-level values with no JSON representation fail serialization. Parsed class instances
-are not reconstructed. Without a type argument, `queryParam.json()` returns a codec for `unknown`.
+are not reconstructed. Without a type argument, `queryParam.json()` returns a serializer for `unknown`.
 
-The helper handles source `null` and `undefined` before invoking a codec's serializer: both remove
+The helper handles source `null` and `undefined` before invoking a serializer's serialize method: both remove
 the parameter. An incoming JSON literal `null` is nevertheless a valid parsed JSON value. Removing
 a key and later navigating to a missing key are different operations: the latter imports the fallback.
 
-### Custom codecs {#custom-codecs}
+<span id="custom-codecs" />
 
-[`QueryParamCodec<T>`](./types/query-param-codec.md) has two methods:
+### Custom serializers {#custom-serializers}
+
+[`QueryParamSerializer<T>`](./types/query-param-serializer.md) has two methods:
 
 ```ts
-type QueryParamCodec<T> = {
+type QueryParamSerializer<T> = {
   parse(values: readonly string[]): T;
   serialize(value: T): readonly string[] | null;
 };
@@ -361,9 +379,9 @@ type QueryParamCodec<T> = {
 `parse` receives all occurrences of a present key. Absence uses the fallback without calling it.
 Throw for unsupported text or an invalid shape. `serialize` returns decoded strings; `null` or an
 empty array removes the key. Its output must contain only strings. Keep both methods free of
-side effects; reads of unrelated signals in a codec do not make the binding track those signals.
+side effects; reads of unrelated signals in a serializer do not make the binding track those signals.
 
-This codec restricts sorting to two choices and preserves the source's literal union:
+This serializer restricts sorting to two choices and preserves the source's literal union:
 
 <CodeBlock language="ts" title="sorted-results-page.ts">{customCodecSource}</CodeBlock>
 
@@ -376,7 +394,7 @@ Use the same extension point to validate a JSON schema or encode repeated numeri
 Initialization is synchronous and bidirectional. The activation URL wins when a parameter is
 present and parses successfully. Registration itself does not navigate or canonicalize the URL.
 
-For a page source with fallback `1` and `codec: 'integer'`:
+For a page source with fallback `1` and `serializer: 'integer'`:
 
 | Incoming URL | Source value | `params.page()` | Error |
 | --- | --- | --- | --- |
@@ -388,7 +406,7 @@ For a page source with fallback `1` and `codec: 'integer'`:
 | `?page=01` | `1` | `'01'` | None; the URL is not rewritten |
 
 Without `defaultValue`, capture the source **before** hydration. A source starting at `null` with
-an explicit integer codec imports `3` from `?page=3`, but a later URL without `page` restores `null`.
+an explicit integer serializer imports `3` from `?page=3`, but a later URL without `page` restores `null`.
 With `defaultValue: 1`, that same source instead uses `1` for absence or malformed input.
 
 Deleting a parameter through a source write is different from receiving an absent parameter.
@@ -446,7 +464,7 @@ The connection exposes state under dedicated names so a query parameter named `p
 
 | Member | Type | Meaning |
 | --- | --- | --- |
-| [`params`](#params) | Readonly named `Signal<string \| null>` properties | Accepted URL text for configured keys, before codec parsing |
+| [`params`](#params) | Readonly named `Signal<string \| null>` properties | Accepted URL text for configured keys, before serializer parsing |
 | [`pending`](#pending) | `Signal<boolean>` | This connection has queued or in-flight writes |
 | [`closed`](#closed) | `Signal<boolean>` | Every entry has disconnected |
 | [`unsubscribe()`](#unsubscribe) | Method | Disconnect all entries early |
@@ -460,7 +478,7 @@ The connection exposes state under dedicated names so a query parameter named `p
 **Signature:** `readonly params: { readonly [P in K]: Signal<string | null> }`
 
 Each signal starts from the activation URL and follows accepted navigation, including history
-restoration and redirects. Values are URL-decoded but have not passed through the codec.
+restoration and redirects. Values are URL-decoded but have not passed through the serializer.
 An absent key is `null`, an empty value is `''`, and repeated keys expose their first value.
 Read the source for parsed numbers, arrays, or objects.
 
@@ -566,7 +584,7 @@ value changes. See [value flow](../guides/value-flow-and-debounce.md) and
 ## Server rendering {#server-rendering}
 
 On the server, the helper hydrates sources from the Router URL but does not schedule outbound URL
-writes. It still needs a configured Router and injector. Keep routing setup, codecs, and defaults
+writes. It still needs a configured Router and injector. Keep routing setup, serializers, and defaults
 consistent between server rendering and browser hydration.
 
 ## Common configuration mistakes {#common-mistakes}
@@ -574,11 +592,11 @@ consistent between server rendering and browser hydration.
 | Symptom | Check |
 | --- | --- |
 | An injection-context or missing Router error | Configure Router; create the helper in an injection context or pass the shared injector. |
-| A source beginning with null cannot infer conversion | Use a typed source and an explicit codec, or a compatible scalar `defaultValue` for inference. |
+| A source beginning with null cannot infer conversion | Use a typed source and an explicit serializer, or a compatible scalar `defaultValue` for inference. |
 | A readonly/computed signal cannot be bound | Bind a writable signal or the existing node that owns the value. |
 | A query key is already bound | Reuse the connection or unsubscribe its previous writer before registering it again. |
 | An entry injector is rejected | It must resolve the same Router as the helper's injector. |
-| JSON parses but has an unexpected shape | Add runtime validation in a custom codec; JSON generics are not a schema. |
+| JSON parses but has an unexpected shape | Add runtime validation in a custom serializer; JSON generics are not a schema. |
 | Input text has changed but the URL has not | Check control debounce, the next observation microtask, and pending or rejected navigation. |
 | `params.tag()` returns only one item | Read the source array for all parsed values. |
 
@@ -590,7 +608,7 @@ Angular 22.1.7 uses a safe ownership check for that case. `constructor` and `toS
 
 - [Synchronizing query parameters](../guides/query-params.md)
 - [QueryParamBinding](./types/query-param-binding.md)
-- [QueryParamCodec](./types/query-param-codec.md)
+- [QueryParamSerializer](./types/query-param-serializer.md)
 - [SyncQueryParamsOptions](./types/sync-query-params-options.md)
 - [QueryParamsSync](./types/query-params-sync.md)
 - [QueryParamSyncError](./types/query-param-sync-error.md)

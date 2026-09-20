@@ -12,8 +12,8 @@ export class FilterPage {
   });
 
   querySync = syncQueryParams({
-    tag: { source: this.filters.tags, codec: 'array' },
-    ids: { source: this.filters.selectedIds, codec: 'json' },
+    tag: { source: this.filters.tags, serializer: 'array' },
+    ids: { source: this.filters.selectedIds, serializer: 'json' },
   });
 
   selectFilters() {

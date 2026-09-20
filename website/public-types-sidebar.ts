@@ -157,6 +157,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
     "items": [
       "reference/types/query-param-binding",
       "reference/types/query-param-codec",
+      "reference/types/query-param-serializer",
       "reference/types/query-params-sync",
       "reference/types/query-param-sync-error",
       "reference/types/query-param-url-sync-event",

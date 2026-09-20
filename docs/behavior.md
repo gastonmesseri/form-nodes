@@ -4555,13 +4555,13 @@ the existing instantiation ceiling remains in force.
 
 `syncQueryParams()` is exported from the optional `@ngblocks/form-nodes/router` entry point.
 Its map accepts fields, forms, groups, arrays, and writable Angular signals directly or configured
-`{ source, codec?, defaultValue?, clearOnDefault?,
+`{ source, serializer?, defaultValue?, clearOnDefault?,
 history?, injector? }` entries. Shared options supply the Router/owner injector, history default,
 `onInitialUrlSync`, `onUrlSync`, and `onError`. The return value is a `QueryParamsSync<K>` connection with `unsubscribe()`. Core nodes continue to work
 without Router or an injection context; only the integration needs a Router-providing injector.
 
 - `params` exposes readonly `Signal<string | null>` properties for precisely the configured keys.
-  Values are URL-decoded, before codec parsing, with null for absence and the first value for repeated
+  Values are URL-decoded, before serializer parsing, with null for absence and the first value for repeated
   parameters. Read the bound array source for all parsed values; use Angular Router directly for
   unbound query keys. The activation URL supplies the initial snapshot; accepted
   navigation publishes the next snapshot before restoring fields. Rejected writes leave it unchanged.
@@ -4571,9 +4571,9 @@ without Router or an injection context; only the integration needs a Router-prov
   Partial ownership cleanup leaves URL observation active for all configured keys. Full cleanup freezes the last
   snapshot, clears pending state, and remains idempotent. Empty maps start closed without observations.
 - The initial URL hydrates synchronously without an outbound navigation. Present values pass through
-  the codec; missing or malformed parameters use a fallback captured at registration. Scalar codecs
+  the serializer; missing or malformed parameters use a fallback captured at registration. Scalar serializers
   distinguish empty input from absence and reject repetition. Inference supports string, finite
-  decimal number, and boolean defaults. Null, undefined, arrays, and objects need an explicit codec.
+  decimal number, and boolean defaults. Null, undefined, arrays, and objects need an explicit serializer.
 - `onInitialUrlSync` runs once after full initial hydration; `onUrlSync` runs immediately afterward
   and once per later accepted URL-to-source restoration. Their `{ reason, values }` event uses
   `initial` or `navigation` and a shallow readonly snapshot of committed source values indexed by
@@ -4591,8 +4591,15 @@ without Router or an injection context; only the integration needs a Router-prov
   The activation NavigationEnd acknowledges already hydrated parameters, preserving initial hook
   edits and avoiding a duplicate callback. A differing final URL is imported normally. Cleanup
   suppresses pending callbacks, and a newer reentrant import supersedes stale notifications.
-- `codec` accepts built-in names (`string`, `number`, `integer`, `boolean`, `array`, `json`)
-  as well as `QueryParamCodec<T>` objects. Names resolve to the existing factories and do not change
+- `serializer` is the preferred conversion option and factories return `QueryParamSerializer<T>`.
+  `codec` and `QueryParamCodec<T>` remain supported aliases marked deprecated in public declarations.
+  Resolve the explicit serializer first, otherwise the legacy codec, otherwise infer from the fallback.
+  When both options are provided, the legacy codec is not parsed, serialized, or validated at runtime.
+  Both properties retain source-compatible type restrictions. Deprecation emits no runtime warning.
+  This naming/precedence contract is specific to Form Nodes and changes no node state semantics;
+  Angular v22.1.7 was re-resolved and its node model-write/debounce tests re-inspected for this change.
+- `serializer` accepts built-in names (`string`, `number`, `integer`, `boolean`, `array`, `json`)
+  as well as `QueryParamSerializer<T>` objects. Names resolve to the existing factories and do not change
   parsing, serialization, defaults, validation, or history. Type checking rejects incompatible scalar
   and repeated-array names, including narrow literal fields their parser could exceed. JSON trusts
   the field's expected type. Unknown runtime names fail before
@@ -4600,7 +4607,7 @@ without Router or an injection context; only the integration needs a Router-prov
 - String-array sources use `array`/`queryParam.array()` for repeated string parameters.
   Mutable and readonly string arrays are supported. Order, duplicates, and empty items survive
   round trips; commas are ordinary text. An empty array removes the key, while an absent key imports
-  the fixed fallback. Numeric/object arrays can use JSON or custom codecs. Aggregate `array()` nodes are supported
+  the fixed fallback. Numeric/object arrays can use JSON or custom serializers. Aggregate `array()` nodes are supported
   through their own set operation, including structural reconciliation. Array types are never inferred from initial contents.
 - `json`/`queryParam.json<T>()` encodes the entire value in one JSON parameter using native
   JSON.stringify/JSON.parse. Empty arrays remain `[]`; repeated JSON parameters and invalid syntax
@@ -4609,7 +4616,7 @@ without Router or an injection context; only the integration needs a Router-prov
   serialization errors without losing the field value or changing the accepted URL. Standard JSON
   coercions apply, including toJSON, omitted undefined object properties, and non-finite numbers
   becoming null. Incoming JSON null is imported; outgoing null/undefined still removes the key
-  before the codec runs. Default comparison uses serialized JSON text, including property order.
+  before the serializer runs. Default comparison uses serialized JSON text, including property order.
 - Malformed values report a parse failure separately from form validity. A validly parsed value
   still participates in ordinary synchronous/asynchronous validation, stale-result cancellation,
   pending state, and parent aggregation. URL imports use `set()`, preserving dirty/touched state
@@ -4632,10 +4639,10 @@ without Router or an injection context; only the integration needs a Router-prov
 - One coordinator per Router merges key patches across helper calls, preserves unrelated parameters
   and fragments, and serializes navigation attempts. Replace is the default; any changed push entry
   makes a batch push. Duplicate active keys are rejected, and the complete map reserves its keys
-  before hydration callbacks run. Normalization and codecs do not rewrite
+  before hydration callbacks run. Normalization and serializers do not rewrite
   accepted URLs simply because their spelling differs from serialized values.
 - `clearOnDefault` defaults to false and compares serialized representations. Null/undefined values,
-  a codec returning null, or an empty serialized array remove a key. A subsequent absent URL restores
+  a serializer returning null, or an empty serialized array remove a key. A subsequent absent URL restores
   the fallback, which need not equal the removed null value.
 - External navigation suspends publication. Accepted history restoration or conflicting parameters
   replace local values and invalidate obsolete queued writes. History restores control text even
@@ -4667,7 +4674,7 @@ in place of the deprecated `getCurrentNavigation()` method. Array encoding was a
 checked against `packages/router/src/url_tree.ts` (`serializeQueryParams`, `parseQueryParam`) and
 `packages/router/test/url_serializer.spec.ts` (repeated query parameter serialization and parsing).
 Angular serializes array values as repeated keys and preserves their parsed order. Lifecycle hook timing is a Form Nodes integration contract; Angular has no matching query-sync API.
-Named codec
+Named serializer
 selection remains a Form Nodes API contract rather than a Signal Forms feature.
 
 Writable-signal equality was checked against Angular v22.1.7

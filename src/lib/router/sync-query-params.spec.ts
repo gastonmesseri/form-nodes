@@ -158,13 +158,13 @@ describe('syncQueryParams', () => {
     injector.destroy();
   });
 
-  it('uses explicit codecs, reports malformed input, and distinguishes empty, repeated, and absent parameters', async () => {
+  it('uses explicit serializers, reports malformed input, and distinguishes empty, repeated, and absent parameters', async () => {
     const { router, injector } = setup('/search?q=&page=invalid&tag=a&tag=b');
     const search = field('fallback');
     const page = field(1);
     const tags = field.strict<string[]>([]);
     const onError = vi.fn();
-    syncQueryParams({ q: search, page: { source: page, codec: queryParam.integer() }, tag: { source: tags, codec: queryParam.array() } }, { injector, onError });
+    syncQueryParams({ q: search, page: { source: page, serializer: queryParam.integer() }, tag: { source: tags, serializer: queryParam.array() } }, { injector, onError });
     expect(search()).toBe('');
     expect(page()).toBe(1);
     expect(tags()).toEqual(['a', 'b']);
@@ -238,8 +238,8 @@ describe('syncQueryParams', () => {
     const search = field('');
     const stop = syncQueryParams({ q: search }, { injector });
     expect(() => syncQueryParams({ q: field('') }, { injector })).toThrow('already has');
-    expect(() => syncQueryParams({ object: field({ id: 1 }) }, { injector })).toThrow('codec');
-    expect(() => syncQueryParams({ empty: field(null) }, { injector })).toThrow('codec');
+    expect(() => syncQueryParams({ object: field({ id: 1 }) }, { injector })).toThrow('serializer');
+    expect(() => syncQueryParams({ empty: field(null) }, { injector })).toThrow('serializer');
     stop.unsubscribe();
     const stopEmpty = syncQueryParams({}, { injector });
     stopEmpty.unsubscribe(); stopEmpty.unsubscribe();
@@ -389,10 +389,10 @@ it('cleans partial registration if an entry owner was already destroyed', () => 
   stop.unsubscribe(); injector.destroy();
 });
 
-it('does not echo noncanonical parsed values and handles nullable fallbacks through explicit codecs', async () => {
+it('does not echo noncanonical parsed values and handles nullable fallbacks through explicit serializers', async () => {
   const { router, injector } = setup('/search?page=01');
   const page = field<number>(null);
-  syncQueryParams({ page: { source: page, codec: queryParam.integer() } }, { injector });
+  syncQueryParams({ page: { source: page, serializer: queryParam.integer() } }, { injector });
   expect(page()).toBe(1);
   await settle();
   expect(router.navigateByUrl).not.toHaveBeenCalled();
@@ -408,12 +408,12 @@ it('does not echo noncanonical parsed values and handles nullable fallbacks thro
 it('supports custom null serialization and rejects invalid serializer output', async () => {
   const { router, injector } = setup();
   const search = field.strict('');
-  const codec = { parse: (values: readonly string[]) => values[0]!, serialize: (value: string) => value === '' ? null : [value] };
-  syncQueryParams({ q: { source: search, codec } }, { injector });
+  const serializer = { parse: (values: readonly string[]) => values[0]!, serialize: (value: string) => value === '' ? null : [value] };
+  syncQueryParams({ q: { source: search, serializer } }, { injector });
   search.set('Ada'); await settle();
   search.set(''); await settle();
   expect(router.url).toBe('/search?keep=yes#results');
-  expect(() => syncQueryParams({ bad: { source: field.strict(''), codec: { ...codec, serialize: () => [1] as never } } }, { injector })).toThrow('serialize to strings');
+  expect(() => syncQueryParams({ bad: { source: field.strict(''), serializer: { ...serializer, serialize: () => [1] as never } } }, { injector })).toThrow('serialize to strings');
   injector.destroy();
 });
 
@@ -508,11 +508,11 @@ it('releases all reserved entries if the shared owner is destroyed during hydrat
   stop.unsubscribe();
 });
 
-it('exposes decoded raw signals independently of codecs, defaults, and repeated values', () => {
+it('exposes decoded raw signals independently of serializers, defaults, and repeated values', () => {
   const { router, injector, handleError } = setup('/search?q=Ada+Lovelace&page=invalid&tag=a&tag=b&empty=&keep=yes');
   const page = field(1);
   const tags = field.strict<string[]>([]);
-  const sync = syncQueryParams({ q: field(''), page, tag: { source: tags, codec: queryParam.array() }, empty: field('fallback'), missing: field('fallback') }, { injector });
+  const sync = syncQueryParams({ q: field(''), page, tag: { source: tags, serializer: queryParam.array() }, empty: field('fallback'), missing: field('fallback') }, { injector });
   expect(sync.params.q()).toBe('Ada Lovelace');
   expect(sync.params.page()).toBe('invalid');
   expect(page()).toBe(1);
@@ -642,16 +642,16 @@ it('handles reserved names and empty connections without adding live observation
   injector.destroy();
 });
 
-it('resolves every named codec and batches their encoded values with custom codecs', async () => {
+it('resolves every named serializer and batches their encoded values with custom serializers', async () => {
   const { router, injector } = setup('/search?q=Ada+Lovelace&amount=1.5&page=2&active=false&tag=angular&tag=forms&custom=3');
   const filters = form({ q: field(''), amount: field(0), page: field<number>(null), active: field(true), tags: field.strict<string[]>([]), custom: field(1) });
   const sync = syncQueryParams({
-    q: { source: filters.q, codec: 'string' },
-    amount: { source: filters.amount, codec: 'number' },
-    page: { source: filters.page, codec: 'integer' },
-    active: { source: filters.active, codec: 'boolean' },
-    tag: { source: filters.tags, codec: 'array' },
-    custom: { source: filters.custom, codec: { parse: values => Number(values[0]), serialize: value => [String(value)] } },
+    q: { source: filters.q, serializer: 'string' },
+    amount: { source: filters.amount, serializer: 'number' },
+    page: { source: filters.page, serializer: 'integer' },
+    active: { source: filters.active, serializer: 'boolean' },
+    tag: { source: filters.tags, serializer: 'array' },
+    custom: { source: filters.custom, serializer: { parse: values => Number(values[0]), serialize: value => [String(value)] } },
   }, { injector });
   expect(filters()).toEqual({ q: 'Ada Lovelace', amount: 1.5, page: 2, active: false, tags: ['angular', 'forms'], custom: 3 });
   filters.patch({ q: 'a & b', amount: 2.5, page: 3, active: true, tags: ['one,two', '', 'a & b', 'one,two'], custom: 4 });
@@ -664,10 +664,10 @@ it('resolves every named codec and batches their encoded values with custom code
   injector.destroy();
 });
 
-it('uses named codecs for malformed input and reports failures without navigation or validation errors', async () => {
+it('uses named serializers for malformed input and reports failures without navigation or validation errors', async () => {
   const { router, injector, handleError } = setup('/search?q=a&q=b&amount=bad&page=1.5&active=yes');
   const filters = form({ q: field('fallback'), amount: field(1), page: field(2), active: field(false) });
-  syncQueryParams({ q: { source: filters.q, codec: 'string' }, amount: { source: filters.amount, codec: 'number' }, page: { source: filters.page, codec: 'integer' }, active: { source: filters.active, codec: 'boolean' } }, { injector });
+  syncQueryParams({ q: { source: filters.q, serializer: 'string' }, amount: { source: filters.amount, serializer: 'number' }, page: { source: filters.page, serializer: 'integer' }, active: { source: filters.active, serializer: 'boolean' } }, { injector });
   expect(filters()).toEqual({ q: 'fallback', amount: 1, page: 2, active: false });
   expect(handleError).toHaveBeenCalledTimes(4);
   expect(filters.valid()).toBe(true);
@@ -679,10 +679,10 @@ it('uses named codecs for malformed input and reports failures without navigatio
   injector.destroy();
 });
 
-it.each(['unknown', 'constructor', '__proto__'])('rejects unknown codec name %s before reserving keys or hydrating fields', (codec) => {
+it.each(['unknown', 'constructor', '__proto__'])('rejects unknown serializer name %s before reserving keys or hydrating fields', (serializer) => {
   const { injector } = setup('/search?q=url');
   const search = field('initial');
-  expect(() => syncQueryParams({ q: search, other: { source: field(''), codec: codec as never } }, { injector })).toThrow('Unknown query parameter codec');
+  expect(() => syncQueryParams({ q: search, other: { source: field(''), serializer: serializer as never } }, { injector })).toThrow('Unknown query parameter serializer');
   expect(search()).toBe('initial');
   const sync = syncQueryParams({ q: search }, { injector });
   expect(search()).toBe('url');
@@ -690,11 +690,11 @@ it.each(['unknown', 'constructor', '__proto__'])('rejects unknown codec name %s 
   injector.destroy();
 });
 
-it('synchronizes numeric arrays using a custom element codec', async () => {
+it('synchronizes numeric arrays using a custom element serializer', async () => {
   const { router, injector } = setup('/search?id=1&id=2');
   const ids = field.strict<number[]>([]);
   const integer = queryParam.integer();
-  const sync = syncQueryParams({ id: { source: ids, codec: {
+  const sync = syncQueryParams({ id: { source: ids, serializer: {
     parse: values => values.map(value => integer.parse([value])),
     serialize: values => values.flatMap(value => integer.serialize(value)!),
   } } }, { injector });
@@ -712,7 +712,7 @@ it('synchronizes JSON fields in one encoded parameter alongside repeated array b
   const { router, injector } = setup(`/search?state=${encodeURIComponent(JSON.stringify(initial))}&tag=a&tag=b&keep=yes#results`);
   const state = field.strict({ ids: [] as number[], label: '', nested: { enabled: false } });
   const tags = field.strict<string[]>([]);
-  const sync = syncQueryParams({ state: { source: state, codec: 'json' }, tag: { source: tags, codec: 'array' } }, { injector });
+  const sync = syncQueryParams({ state: { source: state, serializer: 'json' }, tag: { source: tags, serializer: 'array' } }, { injector });
   expect(state()).toEqual(initial);
   expect(tags()).toEqual(['a', 'b']);
   expect(sync.params.state()).toBe(JSON.stringify(initial));
@@ -735,7 +735,7 @@ it('distinguishes JSON empty arrays and null from absent parameters and clears s
   const { router, injector } = setup('/search?ids=%5B1,2%5D');
   const ids = field<number[]>(null);
   const cleared = field.strict({ id: 1 });
-  const sync = syncQueryParams({ ids: { source: ids, codec: 'json' }, state: { source: cleared, codec: queryParam.json<{ id: number }>(), clearOnDefault: true } }, { injector });
+  const sync = syncQueryParams({ ids: { source: ids, serializer: 'json' }, state: { source: cleared, serializer: queryParam.json<{ id: number }>(), clearOnDefault: true } }, { injector });
   expect(ids()).toEqual([1, 2]);
   ids.set([]);
   cleared.set({ id: 2 });
@@ -759,7 +759,7 @@ it('reports malformed and unserializable JSON without corrupting URL state or re
   const { router, injector, handleError } = setup('/search?state=%7Bbroken');
   const initial = { id: 1 };
   const state = field<unknown>(initial);
-  const sync = syncQueryParams({ state: { source: state, codec: 'json' } }, { injector });
+  const sync = syncQueryParams({ state: { source: state, serializer: 'json' } }, { injector });
   expect(state()).toBe(initial);
   expect(handleError).toHaveBeenCalledWith(expect.objectContaining({ phase: 'parse', key: 'state' }));
   router.external('/search?state=%7B%22id%22:2%7D&state=%7B%22id%22:3%7D');
@@ -790,7 +790,7 @@ it('hydrates and batches a mixed map of writable signals and fields in an inject
   const page = signal(1);
   const active = signal(true);
   const tags = signal<string[]>([]);
-  const sync = runInInjectionContext(injector, () => syncQueryParams({ q: filters.q, page: { source: page, codec: 'integer', history: 'push' }, active, tag: { source: tags, codec: 'array' } }));
+  const sync = runInInjectionContext(injector, () => syncQueryParams({ q: filters.q, page: { source: page, serializer: 'integer', history: 'push' }, active, tag: { source: tags, serializer: 'array' } }));
   expect(filters.q()).toBe('Ada');
   expect(page()).toBe(2);
   expect(active()).toBe(false);
@@ -841,7 +841,7 @@ it('respects signal equality and discards obsolete queued values without canonic
 it('publishes same-reference signal notifications while consuming URL imports without echoes', async () => {
   const { router, injector } = setup('/search?state=%7B%22count%22:1%7D');
   const state = signal({ count: 0 }, { equal: () => false });
-  const sync = syncQueryParams({ state: { source: state, codec: 'json' } }, { injector });
+  const sync = syncQueryParams({ state: { source: state, serializer: 'json' } }, { injector });
   const same = state();
   same.count = 2;
   state.set(same);
@@ -863,13 +863,13 @@ it('publishes same-reference signal notifications while consuming URL imports wi
   injector.destroy();
 });
 
-it('observes linked signal dependencies and excludes incidental codec reads from tracking', async () => {
+it('observes linked signal dependencies and excludes incidental serializer reads from tracking', async () => {
   const { router, injector } = setup('/search?page=3');
   const base = signal(1);
   const incidental = signal(0);
   const page = linkedSignal(() => base() * 2);
   const serialize = vi.fn((value: number) => { incidental(); return [String(value)]; });
-  syncQueryParams({ page: { source: page, codec: { parse: values => Number(values[0]), serialize } } }, { injector });
+  syncQueryParams({ page: { source: page, serializer: { parse: values => Number(values[0]), serialize } } }, { injector });
   expect(page()).toBe(3);
   base.set(4);
   await settle();
@@ -981,7 +981,7 @@ it('synchronizes groups, array nodes, and signals in one batch without echoing i
   const state = group({ set: field(''), active: field(false) });
   const tags = array(field.strict(''));
   const page = signal(1);
-  const sync = syncQueryParams({ state: { source: state, codec: 'json' }, tag: { source: tags, codec: 'array' }, page }, { injector });
+  const sync = syncQueryParams({ state: { source: state, serializer: 'json' }, tag: { source: tags, serializer: 'array' }, page }, { injector });
   expect(state()).toEqual({ set: 'Ada', active: true });
   expect(tags()).toEqual(['a', 'a']);
   expect(page()).toBe(2);
@@ -1015,7 +1015,7 @@ it('observes committed aggregate values behind child and parent equality and rel
   const page = signal(1);
   expect(state()).toEqual({ name: 'Ada' });
   expect(items()).toEqual([{ name: 'Ada' }]);
-  const sync = syncQueryParams({ state: { source: state, codec: 'json' }, items: { source: items, codec: 'json' }, page }, { injector });
+  const sync = syncQueryParams({ state: { source: state, serializer: 'json' }, items: { source: items, serializer: 'json' }, page }, { injector });
   state.name.set('Grace');
   items.at(0)!.name.set('Lin');
   await settle();

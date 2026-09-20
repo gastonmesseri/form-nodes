@@ -164,7 +164,8 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | Type | Purpose |
 | --- | --- |
 | [QueryParamBinding](./query-param-binding.md) | Options for one form node or writable signal in a query parameter map. |
-| [QueryParamCodec](./query-param-codec.md) | Converts decoded, repeated query values to a source value and back. |
+| [QueryParamCodec](./query-param-codec.md) | Deprecated compatibility alias for QueryParamSerializer. |
+| [QueryParamSerializer](./query-param-serializer.md) | Converts decoded, repeated query values to a source value and back. |
 | [QueryParamsSync](./query-params-sync.md) | A live query connection with raw URL signals and explicit lifecycle control. |
 | [QueryParamSyncError](./query-param-sync-error.md) | A URL conversion or navigation failure, independent of form validation. |
 | [QueryParamUrlSyncEvent](./query-param-url-sync-event.md) | Values captured after importing a complete query parameter synchronization. |
