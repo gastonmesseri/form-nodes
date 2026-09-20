@@ -4557,7 +4557,7 @@ the existing instantiation ceiling remains in force.
 Its map accepts fields, forms, groups, arrays, and writable Angular signals directly or configured
 `{ source, codec?, defaultValue?, clearOnDefault?,
 history?, injector? }` entries. Shared options supply the Router/owner injector, history default,
-and `onError`. The return value is a `QueryParamsSync<K>` connection with `unsubscribe()`. Core nodes continue to work
+`onInitialUrlSync`, `onUrlSync`, and `onError`. The return value is a `QueryParamsSync<K>` connection with `unsubscribe()`. Core nodes continue to work
 without Router or an injection context; only the integration needs a Router-providing injector.
 
 - `params` exposes readonly `Signal<string | null>` properties for precisely the configured keys.
@@ -4574,6 +4574,23 @@ without Router or an injection context; only the integration needs a Router-prov
   the codec; missing or malformed parameters use a fallback captured at registration. Scalar codecs
   distinguish empty input from absence and reject repetition. Inference supports string, finite
   decimal number, and boolean defaults. Null, undefined, arrays, and objects need an explicit codec.
+- `onInitialUrlSync` runs once after full initial hydration; `onUrlSync` runs immediately afterward
+  and once per later accepted URL-to-source restoration. Their `{ reason, values }` event uses
+  `initial` or `navigation` and a shallow readonly snapshot of committed source values indexed by
+  every configured query key (including inactive entries). Values honor signal equality; node reads
+  bypass exposed equality. All helper snapshots are captured before invoking any callbacks.
+  Object/array values are not deep cloned or frozen. Empty and disposed connections do not notify.
+- Hooks run synchronously and untracked after synchronous validation and draft cancellation, without
+  awaiting asynchronous validation, rendering, or returned promises. Initialization occurs before the
+  connection is returned: callbacks must use the payload or sources, not the receiving property.
+  Errors and rejected promises go to Angular ErrorHandler rather than the conversion `onError` hook.
+  A callback may edit sources through normal outbound batching; matching own acknowledgments do not
+  notify. Redirected values imported from the final URL do notify. Rejected attempts and unrelated
+  changes without source restoration do not notify. Equal-value history restoration does notify.
+- A connection created during Router activation waits for that navigation before publishing edits.
+  The activation NavigationEnd acknowledges already hydrated parameters, preserving initial hook
+  edits and avoiding a duplicate callback. A differing final URL is imported normally. Cleanup
+  suppresses pending callbacks, and a newer reentrant import supersedes stale notifications.
 - `codec` accepts built-in names (`string`, `number`, `integer`, `boolean`, `array`, `json`)
   as well as `QueryParamCodec<T>` objects. Names resolve to the existing factories and do not change
   parsing, serialization, defaults, validation, or history. Type checking rejects incompatible scalar
@@ -4649,7 +4666,8 @@ Router integration uses the `currentNavigation` signal, which remains available 
 in place of the deprecated `getCurrentNavigation()` method. Array encoding was additionally
 checked against `packages/router/src/url_tree.ts` (`serializeQueryParams`, `parseQueryParam`) and
 `packages/router/test/url_serializer.spec.ts` (repeated query parameter serialization and parsing).
-Angular serializes array values as repeated keys and preserves their parsed order. Named codec
+Angular serializes array values as repeated keys and preserves their parsed order. Lifecycle hook timing is a Form Nodes integration contract; Angular has no matching query-sync API.
+Named codec
 selection remains a Form Nodes API contract rather than a Signal Forms feature.
 
 Writable-signal equality was checked against Angular v22.1.7

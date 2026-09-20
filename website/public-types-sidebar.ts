@@ -159,6 +159,7 @@ const publicTypesSidebar: SidebarsConfig[string] = [
       "reference/types/query-param-codec",
       "reference/types/query-params-sync",
       "reference/types/query-param-sync-error",
+      "reference/types/query-param-url-sync-event",
       "reference/types/sync-query-params-options"
     ]
   }

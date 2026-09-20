@@ -63,7 +63,6 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         'reference/api-overview',
-        'reference/sync-query-params',
         'reference/node-types',
         'reference/form',
         'reference/field',
@@ -71,6 +70,7 @@ const sidebars: SidebarsConfig = {
         'reference/group',
         { type: 'doc', id: 'reference/form-node-state', label: 'useFormNodeState()' },
         'reference/use-closest-form-state',
+        { type: 'doc', id: 'reference/sync-query-params', label: 'syncQueryParams()' },
         'reference/form-node-errors',
         { type: 'doc', id: 'reference/form-node-binding', label: '[formNode]' },
         'reference/form-nodes-module',

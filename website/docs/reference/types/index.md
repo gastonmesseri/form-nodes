@@ -167,4 +167,5 @@ Start with [custom control contracts](../custom-control-contracts.md) or
 | [QueryParamCodec](./query-param-codec.md) | Converts decoded, repeated query values to a source value and back. |
 | [QueryParamsSync](./query-params-sync.md) | A live query connection with raw URL signals and explicit lifecycle control. |
 | [QueryParamSyncError](./query-param-sync-error.md) | A URL conversion or navigation failure, independent of form validation. |
+| [QueryParamUrlSyncEvent](./query-param-url-sync-event.md) | Values captured after importing a complete query parameter synchronization. |
 | [SyncQueryParamsOptions](./sync-query-params-options.md) | Shared options for a synchronized query parameter map. |

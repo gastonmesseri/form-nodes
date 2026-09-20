@@ -4406,3 +4406,28 @@ it('prevents a late custom debounce completion from reviving a query value after
     expect(router.requested).toHaveLength(1);
   } finally { injector.destroy(); }
 });
+
+it('reports URL synchronization after field validation and draft cancellation without waiting for async validation', async () => {
+  const { router, injector } = setup('/search?q=Ada');
+  const releases: Array<() => void> = [];
+  const validate = vi.fn(() => new Promise<null>(resolve => releases.push(() => resolve(null))));
+  const name = field.strict('', [required, asyncValidator(validate)], { debounce: 'blur' });
+  const observed: unknown[] = [];
+  syncQueryParams({ q: name }, { injector, onUrlSync: ({ reason, values }) => {
+    observed.push({ reason, values, control: name.value.control(), debouncing: name.debouncing(), dirty: name.dirty(), touched: name.touched(), invalid: name.invalid(), pending: name.pending() });
+  } });
+  expect(observed).toEqual([{ reason: 'initial', values: { q: 'Ada' }, control: 'Ada', debouncing: false, dirty: false, touched: false, invalid: false, pending: true }]);
+  expect(validate).not.toHaveBeenCalled();
+  await settle();
+  expect(validate).toHaveBeenCalledOnce();
+  name.value.control.set('draft');
+  router.external('/search?q=', 'popstate');
+  expect(observed[1]).toEqual({ reason: 'navigation', values: { q: '' }, control: '', debouncing: false, dirty: true, touched: false, invalid: true, pending: true });
+  releases[0]!();
+  await settle();
+  expect(name.invalid()).toBe(true);
+  expect(name.pending()).toBe(false);
+  expect(observed).toHaveLength(2);
+  expect(router.navigateByUrl).not.toHaveBeenCalled();
+  injector.destroy();
+});

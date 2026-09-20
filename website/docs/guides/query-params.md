@@ -41,6 +41,19 @@ Writable signals respect their own equality function and have no form validation
 reset, or control-debounce state. `linkedSignal()` dependency changes also synchronize.
 Readonly and computed signals cannot receive incoming URL values and are rejected.
 
+## Reacting to URL imports
+
+Pass `onInitialUrlSync` in the second argument for work after initial hydration, or `onUrlSync`
+for initial hydration and later URL-to-source imports. Both receive `{ reason, values }`, where
+`values` is a typed snapshot indexed by your query names and `reason` is `'initial'` or
+`'navigation'`. The initial-only callback runs first. Own source-to-URL write acknowledgments do
+not notify; Back/Forward and accepted external changes do.
+
+Initial callbacks run before the helper returns, so use the payload or your sources rather than
+the component property receiving the connection. All mapped sources have been applied, but
+asynchronous validation and rendering may still be pending. See the
+[component example and complete hook contract](../reference/sync-query-params.md#url-sync-hooks).
+
 ## Reading the URL and connection state
 
 Keep the returned connection, as `querySync` in the component above. Its `params` object has a
@@ -169,7 +182,8 @@ hydration does not redefine that baseline. Disabled fields still synchronize pro
 
 ## Ownership and failures
 
-The second argument accepts `injector`, `history`, and `onError`. Omit `injector` inside an Angular
+The second argument accepts `injector`, `history`, `onInitialUrlSync`, `onUrlSync`, and `onError`.
+Omit `injector` inside an Angular
 injection context, or pass it explicitly when connecting later. Router resolution uses this shared
 injector. A per-entry injector adds that entry's lifetime owner and must resolve the same Router.
 A node's current injector ownership also ends its entry on destruction. Writable signals use only

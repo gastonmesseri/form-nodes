@@ -28,7 +28,9 @@ class FiltersPage {
   router = inject(Router);
   filters = form({ search: field.strict('', { debounce: 'blur' }), page: field.strict(1) });
   errors = vi.fn();
-  querySync = syncQueryParams({ q: { source: this.filters.search, clearOnDefault: true }, page: { source: this.filters.page, history: 'push' } }, { onError: this.errors });
+  initialSync = vi.fn();
+  urlSync = vi.fn();
+  querySync = syncQueryParams({ q: { source: this.filters.search, clearOnDefault: true }, page: { source: this.filters.page, history: 'push' } }, { onError: this.errors, onInitialUrlSync: this.initialSync, onUrlSync: this.urlSync });
 }
 
 @Component({ selector: 'test-query-other', template: 'Other page' })
@@ -41,6 +43,8 @@ it('hydrates real routed controls, batches form writes, and restores browser his
   harness.detectChanges();
   const input = harness.routeNativeElement!.querySelector('input')!;
   expect(input.value).toBe('Ada');
+  expect(page.initialSync).toHaveBeenCalledOnce();
+  expect(page.urlSync).toHaveBeenCalledExactlyOnceWith({ reason: 'initial', values: { q: 'Ada', page: 2 } });
   expect(page.querySync.params.q()).toBe('Ada');
   expect(page.filters()).toEqual({ search: 'Ada', page: 2 });
   const navigate = vi.spyOn(page.router, 'navigateByUrl');
@@ -48,6 +52,7 @@ it('hydrates real routed controls, batches form writes, and restores browser his
   await vi.waitFor(() => expect(page.router.url).toBe('/search?q=Grace&page=3&keep=yes#results'));
   await vi.waitFor(() => expect(page.router.currentNavigation()).toBeNull());
   expect(navigate).toHaveBeenCalledOnce();
+  expect(page.urlSync).toHaveBeenCalledOnce();
   expect(page.querySync.params.page()).toBe('3');
   expect(page.querySync.pending()).toBe(false);
   page.router.setUpLocationChangeListener();
@@ -62,6 +67,9 @@ it('hydrates real routed controls, batches form writes, and restores browser his
   expect(page.filters.search.dirty()).toBe(true);
   expect(page.filters.search.touched()).toBe(false);
   expect(page.errors).not.toHaveBeenCalled();
+  expect(page.urlSync).toHaveBeenCalledTimes(2);
+  expect(page.urlSync).toHaveBeenLastCalledWith({ reason: 'navigation', values: { q: 'Ada', page: 2 } });
+  expect(page.initialSync).toHaveBeenCalledOnce();
 });
 
 it('preserves edits on rejected query navigation and cancels old bindings when leaving a route', async () => {
@@ -194,4 +202,26 @@ it('batches a whole form and a signal with real Router history and cancels both 
   page.filters.search.set('stopped');
   await new Promise(resolve => setTimeout(resolve, 10));
   expect(router.url).toBe('/other');
+});
+
+@Component({ selector: 'test-query-initial-edit', template: '' })
+class InitialEditPage {
+  search = signal('');
+  urlSync = vi.fn();
+  querySync = syncQueryParams({ q: this.search }, {
+    onInitialUrlSync: () => this.search.set('edited'),
+    onUrlSync: this.urlSync,
+  });
+}
+
+it('retains edits made by the initial hook during real component activation without a duplicate notification', async () => {
+  TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'search', component: InitialEditPage }])] });
+  const harness = await RouterTestingHarness.create();
+  const page = await harness.navigateByUrl('/search?q=Ada', InitialEditPage);
+  await vi.waitFor(() => expect(page.querySync.params.q()).toBe('edited'));
+  expect(page.search()).toBe('edited');
+  expect(page.urlSync).toHaveBeenCalledExactlyOnceWith({ reason: 'initial', values: { q: 'Ada' } });
+  await harness.navigateByUrl('/search?q=Grace', InitialEditPage);
+  expect(page.urlSync).toHaveBeenCalledTimes(2);
+  expect(page.urlSync).toHaveBeenLastCalledWith({ reason: 'navigation', values: { q: 'Grace' } });
 });

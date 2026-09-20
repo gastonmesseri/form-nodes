@@ -6778,3 +6778,22 @@ it('cancels pending custom debounce in descendants when a whole-form URL is rest
     expect(router.requested).toHaveLength(1);
   } finally { injector.destroy(); }
 });
+
+it('reports a complete nested form URL import once after validation and draft cancellation', async () => {
+  const { router, injector } = setup('/search?name=Ada&city=Zurich');
+  const profile = form({ nested: form({ name: field.strict('', [required], { debounce: 'blur' }), city: field.strict('', [required], { debounce: 'blur' }) }) });
+  const observed: unknown[] = [];
+  syncQueryParams({ name: profile.nested.name, city: profile.nested.city }, { injector, onUrlSync: ({ reason, values }) => {
+    observed.push({ reason, values, model: profile(), valid: profile.valid(), nestedValid: profile.nested.valid(), dirty: profile.dirty(), touched: profile.touched(), debouncing: profile.debouncing() });
+  } });
+  expect(observed).toEqual([{ reason: 'initial', values: { name: 'Ada', city: 'Zurich' }, model: { nested: { name: 'Ada', city: 'Zurich' } }, valid: true, nestedValid: true, dirty: false, touched: false, debouncing: false }]);
+  profile.nested.name.markAsTouched();
+  profile.nested.name.value.control.set('draft');
+  profile.nested.city.value.control.set('another draft');
+  router.external('/search?name=&city=London', 'popstate');
+  expect(observed[1]).toEqual({ reason: 'navigation', values: { name: '', city: 'London' }, model: { nested: { name: '', city: 'London' } }, valid: false, nestedValid: false, dirty: true, touched: true, debouncing: false });
+  await settle();
+  expect(observed).toHaveLength(2);
+  expect(router.navigateByUrl).not.toHaveBeenCalled();
+  injector.destroy();
+});

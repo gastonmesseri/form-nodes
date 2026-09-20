@@ -16,6 +16,8 @@ export type QueryEntry = {
   accept(params: ParamMap): void;
   setPending(pending: boolean): void;
   restore(values: readonly string[]): void;
+  acknowledgesInitial(values: readonly string[], navigationId: number): boolean;
+  prepareNotification(): (() => void) | undefined;
   stop(): void;
   report(error: QueryParamSyncError): void;
 };
@@ -46,6 +48,7 @@ export class QueryParamCoordinator {
 
   constructor(public router: Router, public browser: boolean) {
     this.accepted = router.parseUrl(router.url);
+    this.external = untracked(router.currentNavigation)?.id;
     this.subscription = router.events.subscribe(event => untracked(() => this.handle(event)));
   }
 
@@ -68,18 +71,21 @@ export class QueryParamCoordinator {
       const previous = this.accepted;
       this.accepted = next;
       this.external = undefined;
+      const notifications = new Set<QueryEntry['prepareNotification']>();
       for (const accept of new Set([...this.entries.values()].map(entry => entry.accept))) accept(next.queryParamMap);
       for (const entry of this.entries.values()) {
         const values = next.queryParamMap.getAll(entry.key);
         const sent = own ? this.flight!.patches.get(entry) : undefined;
-        if (sent && sameValues(sent, values)) continue;
+        if ((sent && sameValues(sent, values)) || entry.acknowledgesInitial(values, event.id)) continue;
         if (this.historyRestoration || changedPage || !sameValues(previous.queryParamMap.getAll(entry.key), values)) {
           this.pending.delete(entry);
           entry.restore(values);
+          notifications.add(entry.prepareNotification);
         }
       }
       this.historyRestoration = false;
       this.schedule();
+      this.notify(notifications);
     } else if (event instanceof NavigationCancel || event instanceof NavigationError || event instanceof NavigationSkipped) {
       if (event instanceof NavigationSkipped && event.code === NavigationSkippedCode.IgnoredSameUrlNavigation && untracked(this.router.currentNavigation)?.trigger === 'popstate') {
         this.historyRestoration = true;
@@ -88,13 +94,24 @@ export class QueryParamCoordinator {
       if (event.id !== this.external) return;
       if (event instanceof NavigationCancel && (event.code === NavigationCancellationCode.Redirect || event.code === NavigationCancellationCode.SupersededByNewNavigation)) return;
       this.external = undefined;
+      const notifications = new Set<QueryEntry['prepareNotification']>();
       if (event instanceof NavigationSkipped && this.historyRestoration) {
         this.pending.clear();
-        for (const entry of this.entries.values()) entry.restore(this.accepted.queryParamMap.getAll(entry.key));
+        for (const entry of this.entries.values()) {
+          entry.restore(this.accepted.queryParamMap.getAll(entry.key));
+          notifications.add(entry.prepareNotification);
+        }
       }
       this.historyRestoration = false;
       this.schedule();
+      this.notify(notifications);
     }
+  }
+
+  notify(preparations: Set<QueryEntry['prepareNotification']>) {
+    // Capture every connection before a callback can edit another connection's sources.
+    const notifications = [...preparations].map(prepare => prepare());
+    for (const notify of notifications) notify?.();
   }
 
   enqueue(entry: QueryEntry) {

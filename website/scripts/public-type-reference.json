@@ -493,7 +493,11 @@
     },
     "SyncQueryParamsOptions": {
       "family": "router",
-      "usage": "Share ownership, history behavior, and error handling across a parameter map."
+      "usage": "Share ownership, history behavior, URL synchronization hooks, and error handling across a parameter map."
+    },
+    "QueryParamUrlSyncEvent": {
+      "family": "router",
+      "usage": "Read the reason and typed committed value snapshot after URL hydration or restoration."
     }
   }
 }

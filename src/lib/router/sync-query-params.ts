@@ -5,6 +5,7 @@ import { DestroyRef, ErrorHandler, Injector, PLATFORM_ID, inject, untracked, typ
 import { resolveCodec } from './query-param-codec';
 import { createQueryParamState } from './query-param-state';
 import { createQueryParamSource } from './query-param-source';
+import { createQueryParamNotification } from './query-param-notification';
 import { getCoordinator, sameValues, type QueryEntry } from './query-param-coordinator';
 import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQueryParamsOptions } from './sync-query-params.type';
 
@@ -78,11 +79,11 @@ import type { QueryParamsSync, QueryParamBinding, QueryParamSyncError, SyncQuery
  * in an injection context, and component destruction cleans up the connection.
  *
  * @param bindings Query keys mapped to nodes, writable signals, or configured source bindings.
- * @param options Shared injector, history policy, and error handler.
+ * @param options Shared injector, history policy, URL synchronization hooks, and error handler.
  */
 export function syncQueryParams<T extends Record<string, Signal<any>> = Record<never, never>>(
   bindings: { [K in keyof T]: (T[K] & QueryParamBinding<ReturnType<T[K]>>['source']) | (QueryParamBinding<ReturnType<T[K]>> & { source: T[K] }) },
-  options: SyncQueryParamsOptions = {},
+  options: SyncQueryParamsOptions<NoInfer<{ [K in keyof T]: ReturnType<T[K]> }>> = {},
 ): QueryParamsSync<Extract<keyof T, string>> {
   return untracked(() => {
     const injector = options.injector ?? inject(Injector);
@@ -109,7 +110,8 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
       if (owner.get(Router) !== router) throw new Error('All query parameter owners must use the same Router.');
       return { key, config, source, fallback, codec, serialize, defaultValues, owner };
     });
-    const initialUrl = router.currentNavigation()?.finalUrl ?? router.parseUrl(router.url);
+    const initialNavigation = router.currentNavigation();
+    const initialUrl = initialNavigation?.finalUrl ?? router.parseUrl(router.url);
     const state = createQueryParamState(Object.keys(bindings) as Extract<keyof T, string>[], initialUrl.queryParamMap);
     if (!definitions.length) return state.result(() => {});
     const coordinator = getCoordinator(router, isPlatformBrowser(injector.get(PLATFORM_ID)));
@@ -120,6 +122,13 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
     const initialize: (() => void)[] = [];
     let ownerCleanup: (() => void) | undefined;
     let stopped = false;
+    const prepareNotification = createQueryParamNotification(
+      () => Object.fromEntries(definitions.map(({ key, source }) => [key, source.read()])) as { [K in keyof T]: ReturnType<T[K]> },
+      () => stopped,
+      options,
+      injector,
+    );
+    const prepareNavigationNotification = () => prepareNotification('navigation');
     const stop = () => {
       if (stopped) return;
       stopped = true;
@@ -140,10 +149,15 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
           history: config.history ?? options.history ?? 'replace',
           report,
           accept: state.accept,
+          prepareNotification: prepareNavigationNotification,
           setPending: pending => state.setPending(key, pending),
           read() {
             const values = serialize(source.read());
             return config.clearOnDefault && sameValues(values, defaultValues) ? [] : values;
+          },
+          acknowledgesInitial(values, navigationId) {
+            // Activation already hydrated this entry; preserve edits made by its initial hooks.
+            return navigationId === initialNavigation?.id && sameValues(values, initialUrl.queryParamMap.getAll(key));
           },
           restore(values) {
             let value = fallback;
@@ -175,6 +189,7 @@ export function syncQueryParams<T extends Record<string, Signal<any>> = Record<n
         if (stopped) break;
         start();
       }
+      if (!stopped) prepareNotification('initial')?.();
     } catch (error) {
       stop();
       throw error;

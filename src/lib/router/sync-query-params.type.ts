@@ -178,8 +178,19 @@ export type QueryParamSyncError = {
   cause: unknown;
 };
 
+/** Values captured after importing a complete query parameter synchronization. */
+export type QueryParamUrlSyncEvent<TValues extends Record<string, unknown> = Record<string, unknown>> = {
+  /** Initial hydration or a later accepted URL restoration. */
+  readonly reason: 'initial' | 'navigation';
+  /**
+   * Current committed source values, indexed by configured query names.
+   * The map is a shallow readonly snapshot; object and array values are not cloned.
+   */
+  readonly values: Readonly<TValues>;
+};
+
 /** Shared options for a synchronized query parameter map. */
-export type SyncQueryParamsOptions = {
+export type SyncQueryParamsOptions<TValues extends Record<string, unknown> = Record<string, unknown>> = {
   /**
    * Router and lifetime owner.
    *
@@ -210,6 +221,58 @@ export type SyncQueryParamsOptions = {
    * ```
    */
   history?: 'replace' | 'push';
+  /**
+   * Runs once after all initial URL values and fallbacks have been applied.
+   * Runs synchronously before onUrlSync and before the connection is returned.
+   * Read event.values or the sources; the receiving connection is not assigned yet.
+   * Empty or already disposed connections do not notify. Does not await validation.
+   *
+   * **Default:** No initial callback.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({ template: '' })
+   * export class SearchPage {
+   *   filters = form({ q: field('') });
+   *   query = syncQueryParams({
+   *     q: this.filters.q,
+   *   }, {
+   *     onInitialUrlSync: ({ values }) => {
+   *       console.log(values.q);
+   *     },
+   *   });
+   * }
+   * ```
+   */
+  onInitialUrlSync?(event: QueryParamUrlSyncEvent<TValues> & { readonly reason: 'initial' }): void;
+  /**
+   * Runs once per complete URL-to-source synchronization, including initialization.
+   * reason is initial for hydration and navigation for later accepted restorations.
+   * Own write acknowledgments, unrelated query changes, and rejected navigations
+   * do not notify. Redirects notify when their final URL imports source values.
+   * Callbacks run untracked, do not await validation or returned promises, and
+   * report thrown errors or rejected promises through Angular ErrorHandler.
+   *
+   * **Default:** No synchronization callback.
+   *
+   * ```ts
+   * import { Component } from '@angular/core';
+   *
+   * @Component({ template: '' })
+   * export class SearchPage {
+   *   filters = form({ q: field('') });
+   *   query = syncQueryParams({
+   *     q: this.filters.q,
+   *   }, {
+   *     onUrlSync: ({ reason, values }) => {
+   *       console.log(reason, values.q);
+   *     },
+   *   });
+   * }
+   * ```
+   */
+  onUrlSync?(event: QueryParamUrlSyncEvent<TValues>): void;
   /**
    * Receives conversion and navigation failures separately from validation.
    *

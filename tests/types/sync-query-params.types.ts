@@ -144,3 +144,36 @@ syncQueryParams({ state: { source: filters, codec: 'string' } }, { injector });
 syncQueryParams({ ids: { source: array(field.strict(0)), codec: 'array' } }, { injector });
 const inlineSignal: QueryParamBinding<number> = { source: signal(1), codec: 'integer' };
 syncQueryParams({ inlineSignal }, { injector });
+
+syncQueryParams({
+  query: filters.q,
+  page: { source: signal<number | null>(null), codec: 'integer' },
+  state: { source: filters, codec: 'json' },
+  tags: { source: array(field.strict('')), codec: 'array' },
+}, {
+  injector,
+  onInitialUrlSync(event) {
+    const reason: 'initial' = event.reason;
+    const query: string | null | undefined = event.values.query;
+    const page: number | null = event.values.page;
+    const state: ReturnType<typeof filters> = event.values.state;
+    const tags: string[] = event.values.tags;
+    void [reason, query, page, state, tags];
+    // @ts-expect-error Only configured query names are present.
+    event.values.q;
+    // @ts-expect-error Parsed numeric values retain nullability.
+    const nonNullable: number = event.values.page;
+    void nonNullable;
+    // @ts-expect-error Payload snapshots are readonly.
+    event.values.page = 3;
+    // @ts-expect-error Payload reasons are readonly.
+    event.reason = 'initial';
+  },
+  onUrlSync(event) {
+    const reason: 'initial' | 'navigation' = event.reason;
+    const page: number | null = event.values.page;
+    // @ts-expect-error General callbacks also include subsequent navigation.
+    const initial: 'initial' = event.reason;
+    void [reason, page, initial];
+  },
+});

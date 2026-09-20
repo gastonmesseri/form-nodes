@@ -123,7 +123,7 @@ try {
   if (!packageManifest.peerDependenciesMeta?.['@angular/router']?.optional) throw new Error('Angular Router must remain an optional peer.');
   symlinkSync(resolve(workspace, 'node_modules/@angular/router'), join(angularDirectory, 'router'), 'dir');
   writeFileSync(join(temporaryDirectory, 'package-consumer.ts'), source + `
-    import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding } from '@ngblocks/form-nodes/router';
+    import { syncQueryParams, queryParam, type QueryParamsSync, type QueryParamBinding, type QueryParamUrlSyncEvent } from '@ngblocks/form-nodes/router';
     import { signal as querySignal } from '@angular/core';
     const queryField = field(1);
     const objectCodec = queryParam.integer();
@@ -136,6 +136,17 @@ try {
         profile: { source: form({ name: field('') }), codec: 'json' },
         tags: { source: array(field.strict('')), codec: 'array' },
         group: { source: group({ active: field(false) }), codec: 'json' },
+      }, {
+        onInitialUrlSync(event) {
+          const initial: 'initial' = event.reason;
+          const page: number = event.values.page;
+          void [initial, page];
+        },
+        onUrlSync(event) {
+          const snapshot: QueryParamUrlSyncEvent<{ page: number }> = event;
+          const name: string | null = event.values.profile.name;
+          void [snapshot, name];
+        },
       });
       const rawProfile: string | null = mixed.params.profile();
       void rawProfile;
