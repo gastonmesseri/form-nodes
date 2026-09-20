@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 4.5.0 — 2026-09-20 {#450--2026-09-20}
+
 ### Added
 
 - Synchronize fields, forms, groups, arrays, and writable Angular signals with Angular Router query parameters using `syncQueryParams()` from `@ngblocks/form-nodes/router`. Mix direct sources and configured `{ source, ...options }` bindings with typed codecs (objects or built-in names), repeated array parameters, JSON values, defaults, shared batching, replace/push history, `onInitialUrlSync` and `onUrlSync` hooks with typed snapshots after URL imports, automatic cleanup, and a connection exposing only configured raw query signals through `params`, pending/closed state, and manual cancellation while preserving form validation and pending-edit navigation semantics.

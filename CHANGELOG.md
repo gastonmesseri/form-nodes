@@ -10,6 +10,8 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-09-20
+
 ### Added
 
 - Synchronize fields, forms, groups, arrays, and writable Angular signals with Angular Router query parameters using `syncQueryParams()` from `@ngblocks/form-nodes/router`. Mix direct sources and configured `{ source, ...options }` bindings with typed codecs (objects or built-in names), repeated array parameters, JSON values, defaults, shared batching, replace/push history, `onInitialUrlSync` and `onUrlSync` hooks with typed snapshots after URL imports, automatic cleanup, and a connection exposing only configured raw query signals through `params`, pending/closed state, and manual cancellation while preserving form validation and pending-edit navigation semantics.
@@ -419,7 +421,7 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
   collection, so node inference never depends on whether an array is empty or on its item values.
   Empty mutable array shorthands infer `unknown[]` rather than the unusably narrow `never[]`.
 
-[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v4.4.0...HEAD
+[Unreleased]: https://github.com/gastonmesseri/form-nodes/compare/v4.5.0...HEAD
 [1.0.0]: https://github.com/gastonmesseri/form-nodes/releases/tag/v1.0.0
 [1.0.1]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.0...v1.0.1
 [1.1.0]: https://github.com/gastonmesseri/form-nodes/compare/v1.0.1...v1.1.0
@@ -465,3 +467,5 @@ First public release of `@ngblocks/form-nodes`, establishing the stable public A
 [4.3.0]: https://github.com/gastonmesseri/form-nodes/compare/v4.2.1...v4.3.0
 
 [4.4.0]: https://github.com/gastonmesseri/form-nodes/compare/v4.3.0...v4.4.0
+
+[4.5.0]: https://github.com/gastonmesseri/form-nodes/compare/v4.4.0...v4.5.0
