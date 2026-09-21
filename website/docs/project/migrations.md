@@ -12,7 +12,7 @@ import optionalMinimumSource from '!!raw-loader!../../examples/min-length-option
 
 ### Inferred field nullability {#inferred-field-nullability}
 
-**Breaking, unreleased:** `field('')` now produces `FieldNode<string>` instead of
+**Breaking:** `field('')` now produces `FieldNode<string>` instead of
 `FieldNode<string | null>`. The same inference applies to form/group shorthands and array
 templates, including dynamically added children. Validators, callbacks, aggregate values,
 and extracted `FormNodeValue` types follow the resulting field types.
@@ -40,7 +40,7 @@ the original value, including explicit undefined.
 
 ### Query parameter serializers {#query-parameter-serializers}
 
-**Breaking, unreleased:** The deprecated query parameter aliases introduced before 5.0.0
+**Breaking:** The deprecated query parameter aliases introduced before 5.0.0
 have been removed from `@ngblocks/form-nodes/router`.
 
 | Previous API | Replacement |

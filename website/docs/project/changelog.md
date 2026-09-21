@@ -10,6 +10,8 @@ canonical release record.
 
 ## 📦 Unreleased {#unreleased}
 
+## 📦 5.0.0 — 2026-09-21 {#500--2026-09-21}
+
 ### Changed
 
 - **Breaking:** Remove the deprecated `codec` option and `QueryParamCodec<T>` export from `@ngblocks/form-nodes/router`. Replace them with `serializer` and `QueryParamSerializer<T>`. Built-in names, custom `parse`/`serialize` objects, and `queryParam` factories retain their behavior.
