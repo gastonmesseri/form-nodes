@@ -29,10 +29,10 @@ Bind a node, listen to control edits, or attach the directive to `<form>` for su
 | --- | --- | --- |
 | [`[formNode]`](#directive-input) | `[formNode]="form.username"` | Binds an existing field or aggregate node to a compatible control. |
 | [`[formNodeValue]`](#value-input) | `[formNodeValue]="suggestedName()"` | Supplies a raw value to an independent field or to the explicitly bound node. |
-| [`(formNodeChange)`](#value-outputs) | `(formNodeChange)="saveDraft($event)"` | Receives the committed value after debounce. |
-| [`(formNodeSubmit)`](#submission-outputs) | `(formNodeSubmit)="recordAttempt($event)"` | Reports a native submission attempt on a bound `form()`, before the validation gate. |
-| [`(formNodeSubmitBlocked)`](#submission-outputs) | `(formNodeSubmitBlocked)="showErrors($event)"` | Reports an attempt rejected by `submitWhen`. |
-| [`(formNodeControlValueChange)`](#value-outputs) | `(formNodeControlValueChange)="preview($event)"` | Receives the parsed control value immediately, before debounce. |
+| [`(formNodeChange)`](#value-outputs) | `(formNodeChange)="onValueChange($event)"` | Receives the committed value after debounce. |
+| [`(formNodeSubmit)`](#submission-outputs) | `(formNodeSubmit)="onFormSubmit($event)"` | Reports a native submission attempt on a bound `form()`, before the validation gate. |
+| [`(formNodeSubmitBlocked)`](#submission-outputs) | `(formNodeSubmitBlocked)="onFormSubmitBlocked($event)"` | Reports an attempt rejected by `submitWhen`. |
+| [`(formNodeControlValueChange)`](#value-outputs) | `(formNodeControlValueChange)="onControlValueChange($event)"` | Receives the parsed control value immediately, before debounce. |
 
 `formNodeChange` carries the field or aggregate **value** in `$event`.
 See [Value outputs](#value-outputs) for timing and the equivalent `formNodeValueChange` alias.
@@ -360,13 +360,13 @@ co-located with the host genuinely needs the concrete binding.
 @Directive({
   selector: '[focusInvalidNode]',
   host: {
-    '(click)': 'focusWhenInvalid()',
+    '(click)': 'onClick()',
   },
 })
 export class FocusInvalidNode {
   private binding = inject(FORM_NODE, { self: true });
 
-  focusWhenInvalid() {
+  onClick() {
     if (this.binding.node().$api.invalid()) this.binding.focus();
   }
 }
@@ -501,7 +501,7 @@ import { FormNodeDirective, field, form, type FormNodeValueControl } from '@ngbl
       type="date"
       [value]="value() ?? ''"
       [disabled]="disabled()"
-      (input)="select($any($event.target).value)"
+      (input)="onDateChange($any($event.target).value)"
       (blur)="touch.emit()"
     >
   `,
@@ -511,7 +511,7 @@ export class DatePicker implements FormNodeValueControl<string | null> {
   disabled = input(false);
   touch = output<void>();
 
-  select(value: string) {
+  onDateChange(value: string) {
     this.value.set(value || null);
   }
 }

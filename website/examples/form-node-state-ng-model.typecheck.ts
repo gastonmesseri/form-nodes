@@ -7,18 +7,18 @@ import { FormsModule, NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angu
 @Component({
   selector: 'app-date-picker',
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DatePicker), multi: true }],
-  template: `<button type="button" [disabled]="formNodeState.disabled()" (click)="select('2026-09-03')" (blur)="markAsTouched()">{{ value }}</button>`,
+  template: `<button type="button" [disabled]="formNodeState.disabled()" (click)="onSelectDate('2026-09-03')" (blur)="onBlur()">{{ value }}</button>`,
 })
 export class DatePicker implements ControlValueAccessor {
   formNodeState = useFormNodeState();
   value: string | null = null;
 
-  select(value: string | null) {
+  onSelectDate(value: string | null) {
     this.value = value;
     this.onChange(value);
   }
 
-  markAsTouched() {
+  onBlur() {
     this.formNodeState.markAsTouched();
     this.onTouched();
   }

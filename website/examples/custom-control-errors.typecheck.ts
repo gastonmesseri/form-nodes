@@ -17,7 +17,8 @@ import { email, field, form, required, FormNodeErrors, FormNodeDirective, useFor
       [required]="state.required()"
       [attr.aria-invalid]="state.invalid()"
       [attr.aria-describedby]="inputId() + '-errors'"
-      (input)="edit($event)" (blur)="state.markAsTouched()" 
+      (input)="onInput($event)"
+      (blur)="state.markAsTouched()"
     />
     <form-node-errors [id]="inputId() + '-errors'" [state]="state" [animate]="animateErrors()">
       <ng-template #message let-message>
@@ -38,7 +39,7 @@ export class EmailInput {
 
   state = useFormNodeState();
 
-  edit(event: Event) {
+  onInput(event: Event) {
     this.value.set((event.target as HTMLInputElement).value);
   }
 }

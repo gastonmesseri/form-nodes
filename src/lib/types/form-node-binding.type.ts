@@ -123,13 +123,13 @@ export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
    *   imports: [FormNodeDirective],
    *   template: `
    *     <input [formNode]="form.username"
-   *       (formNodeChange)="save($event)" />
+   *       (formNodeChange)="onChange($event)" />
    *   `,
    * })
    * export class ProfilePage {
    *   form = form({ username: field('') });
    *
-   *   save(value: string) {
+   *   onChange(value: string) {
    *     console.log(value);
    *   }
    * }

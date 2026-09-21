@@ -70,7 +70,7 @@ The backup instance also demonstrates opting out of the height animation through
 
 The important connections are:
 
-- `value = model()` handles the value binding; `edit()` forwards native input changes to it.
+- `value = model()` handles the value binding; `onInput()` forwards native input changes to it.
 - `state = useFormNodeState()` observes validators, interaction, availability, and the owning form.
 - Blur calls `state.markAsTouched()` so leaving an invalid input can reveal its message.
 - `<form-node-errors [state]="state">` renders those errors and applies touch-or-submit visibility.

@@ -3,7 +3,7 @@ import { field, form } from '@ngblocks/form-nodes';
 import { syncQueryParams } from '@ngblocks/form-nodes/router';
 
 @Component({
-  template: '<button (click)="includeArchived()">Include archived</button>',
+  template: '<button (click)="onIncludeArchived()">Include archived</button>',
 })
 export class SavedSearchPage {
   form = form({
@@ -15,7 +15,7 @@ export class SavedSearchPage {
     filters: { source: this.form, serializer: 'json' },
   });
 
-  includeArchived() {
+  onIncludeArchived() {
     this.form.patch({ includeArchived: true });
   }
 }

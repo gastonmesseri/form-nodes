@@ -21,12 +21,12 @@ import { Directive, inject } from '@angular/core';
 
 @Directive({
   selector: '[focusInvalidNode]',
-  host: { '(click)': 'focusWhenInvalid()' },
+  host: { '(click)': 'onClick()' },
 })
 export class FocusInvalidNode {
   private binding = inject(FORM_NODE, { self: true });
 
-  focusWhenInvalid() {
+  onClick() {
     if (this.binding.node().invalid()) this.binding.focus();
   }
 }

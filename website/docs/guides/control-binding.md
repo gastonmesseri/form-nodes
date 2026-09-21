@@ -175,7 +175,7 @@ export class Editor {
   name = field('');
   readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.name>>('nameBinding');
 
-  focusName() {
+  onFocusName() {
     this.nameBinding().focus();
   }
 }

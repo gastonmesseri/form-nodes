@@ -5,8 +5,8 @@ import { field, form, required, FormNodeDirective, type FormNodeSubmitEvent } fr
   imports: [FormNodeDirective],
   template: `
     <form [formNode]="form"
-      (formNodeSubmit)="recordAttempt($event)"
-      (formNodeSubmitBlocked)="showBlockedMessage($event)">
+      (formNodeSubmit)="onFormSubmit($event)"
+      (formNodeSubmitBlocked)="onFormSubmitBlocked($event)">
       <input [formNode]="form.name">
       <button type="submit">Save</button>
       <p>{{ message }}</p>
@@ -24,11 +24,11 @@ export class ProfileComponent {
   });
   message = '';
 
-  recordAttempt(event: FormNodeSubmitEvent<typeof this.form>) {
+  onFormSubmit(event: FormNodeSubmitEvent<typeof this.form>) {
     this.message = `Submitting ${event.value.name ?? ''}`;
   }
 
-  showBlockedMessage(event: FormNodeSubmitEvent<typeof this.form>) {
+  onFormSubmitBlocked(event: FormNodeSubmitEvent<typeof this.form>) {
     this.message = event.form.$api.pending() ? 'Please wait for validation.' : 'Please correct the errors.';
   }
 

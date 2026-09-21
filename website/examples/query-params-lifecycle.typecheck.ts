@@ -4,8 +4,8 @@ import { syncQueryParams, type QueryParamsSync } from '@ngblocks/form-nodes/rout
 
 @Component({
   template: `
-    <button (click)="connect()">Sync with URL</button>
-    <button (click)="disconnect()">Stop syncing</button>
+    <button (click)="onConnect()">Sync with URL</button>
+    <button (click)="onDisconnect()">Stop syncing</button>
     @if (querySync?.pending()) { <p>Updating URL…</p> }
     @if (problem()) { <p>{{ problem() }}</p> }
   `,
@@ -19,7 +19,7 @@ export class OptionalSyncPage {
 
   querySync?: QueryParamsSync<'q'>;
 
-  connect() {
+  onConnect() {
     this.querySync?.unsubscribe();
     this.problem.set(null);
     this.querySync = syncQueryParams({
@@ -31,7 +31,7 @@ export class OptionalSyncPage {
     });
   }
 
-  disconnect() {
+  onDisconnect() {
     this.querySync?.unsubscribe();
   }
 }

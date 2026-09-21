@@ -16,7 +16,7 @@ declare function loadProducts(filters: { query: string | null; category: string 
         <option value="music">Music</option>
       </select>
 
-      <button type="button" (click)="applyFilters()">Apply filters</button>
+      <button type="button" (click)="onApplyFilters()">Apply filters</button>
       <button type="reset">Reset</button>
     </form>
   `,
@@ -27,7 +27,7 @@ export class ProductFilters {
     category: field('all'),
   });
 
-  applyFilters() {
+  onApplyFilters() {
     loadProducts(this.filters());
   }
 }

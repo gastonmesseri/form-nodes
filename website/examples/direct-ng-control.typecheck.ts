@@ -24,8 +24,13 @@ function useCustomValueAccessor<T>(options: { writeValue(value: T | null): unkno
 @Component({
   selector: 'app-hook-input',
   template: `
-    <input #text [value]="value()" [disabled]="disabled()"
-      (input)="edit(text.value)" (blur)="ngControl.markAsTouched()">
+    <input
+      #text
+      [value]="value()"
+      [disabled]="disabled()"
+      (input)="onInput(text.value)"
+      (blur)="ngControl.markAsTouched()"
+    >
   `,
 })
 export class HookInput {
@@ -38,7 +43,7 @@ export class HookInput {
     setDisabledState: disabled => this.disabled.set(disabled),
   });
 
-  edit(value: string) {
+  onInput(value: string) {
     this.value.set(value);
     this.ngControl.emitChange(value);
   }

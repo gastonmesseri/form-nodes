@@ -11,8 +11,8 @@ import { FormControl, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule, type Co
     <button
       type="button"
       [disabled]="formNodeState.disabled()"
-      (click)="select('2026-09-03')"
-      (blur)="markAsTouched()"
+      (click)="onSelectDate('2026-09-03')"
+      (blur)="onBlur()"
     >
       {{ value }}
     </button>
@@ -22,12 +22,12 @@ export class DatePicker implements ControlValueAccessor {
   formNodeState = useFormNodeState();
   value: string | null = null;
 
-  select(value: string | null) {
+  onSelectDate(value: string | null) {
     this.value = value;
     this.onChange(value);
   }
 
-  markAsTouched() {
+  onBlur() {
     this.formNodeState.markAsTouched();
     this.onTouched();
   }

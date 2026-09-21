@@ -120,7 +120,7 @@ numeric or object array should occupy one query value. Both an array-valued fiel
 
 <CodeBlock language="ts" title="filter-page.ts">{arraysSource}</CodeBlock>
 
-After `selectFilters()`, `tag` has two occurrences and the decoded `ids` parameter is `'[10,20]'`.
+After `onSelectFilters()`, `tag` has two occurrences and the decoded `ids` parameter is `'[10,20]'`.
 The writes are batched. Angular Router handles the JSON's URL escaping.
 
 - `'array'` preserves order, duplicates, and empty items. `?tag=` means `['']`.
@@ -142,7 +142,7 @@ value under one key. This example stores the entire form as JSON:
 
 <CodeBlock language="ts" title="saved-search-page.ts">{jsonSource}</CodeBlock>
 
-After `includeArchived()`, the decoded `filters` parameter is
+After `onIncludeArchived()`, the decoded `filters` parameter is
 `'{"search":"","includeArchived":true}'`, assuming the URL initially had no filter value.
 The same configured binding works with an existing `group()`, a nested structural group, or an
 object-valued field. Whole-node bindings preserve their normal validation, child reconciliation,

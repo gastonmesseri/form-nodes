@@ -11,7 +11,7 @@ import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
         #input
         [value]="value()"
         [disabled]="disabled()"
-        (input)="changeValue(input.value)"
+        (input)="onValueChange(input.value)"
         (blur)="onTouched()"
       />
     </label>
@@ -47,7 +47,7 @@ export class TextInputControl implements ControlValueAccessor {
     this.disabled.set(disabled);
   }
 
-  changeValue(value: string) {
+  onValueChange(value: string) {
     this.value.set(value);
     this.onChange(value);
   }

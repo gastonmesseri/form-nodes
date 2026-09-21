@@ -10,7 +10,7 @@ import { NG_VALUE_ACCESSOR, NgControl, type ControlValueAccessor } from '@angula
       placeholder="YYYY-MM-DD"
       [value]="text()"
       [disabled]="disabled()"
-      (input)="changeDate(input.value)"
+      (input)="onDateChange(input.value)"
       (blur)="onTouched()"
     />
   `,
@@ -50,7 +50,7 @@ export class DateInput implements ControlValueAccessor {
     this.disabled.set(disabled);
   }
 
-  changeDate(text: string) {
+  onDateChange(text: string) {
     this.text.set(text);
     const date = new Date(`${text}T00:00:00.000Z`);
     const valid = !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === text;

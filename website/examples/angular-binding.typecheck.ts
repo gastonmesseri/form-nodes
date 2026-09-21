@@ -16,7 +16,7 @@ import { field, form, FormNodeDirective } from '@ngblocks/form-nodes';
     </label>
 
     <p>{{ form.name() }} · {{ form.age() }}</p>
-    <button type="button" (click)="focusName()">Focus name</button>
+    <button type="button" (click)="onFocusName()">Focus name</button>
   `,
 })
 export class ProfileEditor {
@@ -26,7 +26,7 @@ export class ProfileEditor {
   });
   readonly nameBinding = viewChild.required<FormNodeDirective<typeof this.form.name>>('nameBinding');
 
-  focusName() {
+  onFocusName() {
     this.nameBinding().focus();
   }
 }

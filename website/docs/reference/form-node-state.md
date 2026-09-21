@@ -689,10 +689,10 @@ not expose individual reasons and therefore use `[]` even when `disabled()` is t
 
 ## 👆 Report a blur interaction {#report-a-blur-interaction}
 
-Call `markAsTouched()` when the custom control loses focus:
+Call `formNodeState.markAsTouched()` from the `onBlur()` handler when the custom control loses focus:
 
 ```ts
-markAsTouched() {
+onBlur() {
   this.formNodeState.markAsTouched();
 }
 ```

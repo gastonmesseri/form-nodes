@@ -4,7 +4,7 @@ import { syncQueryParams } from '@ngblocks/form-nodes/router';
 @Component({
   template: `
     <p>Current page: {{ page() ?? 'Not selected' }}</p>
-    <button (click)="nextPage()">Next page</button>
+    <button (click)="onNextPage()">Next page</button>
   `,
 })
 export class ResultsPage {
@@ -17,7 +17,7 @@ export class ResultsPage {
     page: { source: this.page, serializer: 'integer', history: 'push' },
   });
 
-  nextPage() {
+  onNextPage() {
     this.page.update(value => (value ?? 0) + 1);
   }
 }

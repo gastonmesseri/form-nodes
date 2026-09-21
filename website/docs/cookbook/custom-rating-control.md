@@ -19,7 +19,7 @@ import { Component, input, model, output } from '@angular/core';
           [disabled]="disabled()"
           [attr.aria-checked]="value() === rating"
           role="radio"
-          (click)="choose(rating)"
+          (click)="onChooseRating(rating)"
           (blur)="touch.emit()"
         >
           {{ rating }}
@@ -34,7 +34,7 @@ export class RatingControl {
   readonly touch = output<void>();
   readonly ratings = [1, 2, 3, 4, 5];
 
-  choose(rating: number) {
+  onChooseRating(rating: number) {
     if (!this.disabled()) this.value.set(rating);
   }
 }

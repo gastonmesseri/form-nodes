@@ -3,7 +3,7 @@ import { array, field, form } from '@ngblocks/form-nodes';
 import { syncQueryParams } from '@ngblocks/form-nodes/router';
 
 @Component({
-  template: '<button (click)="selectFilters()">Select filters</button>',
+  template: '<button (click)="onSelectFilters()">Select filters</button>',
 })
 export class FilterPage {
   form = form({
@@ -16,7 +16,7 @@ export class FilterPage {
     ids: { source: this.form.selectedIds, serializer: 'json' },
   });
 
-  selectFilters() {
+  onSelectFilters() {
     this.form.tags.set(['angular', 'forms']);
     this.form.selectedIds.set([10, 20]);
   }

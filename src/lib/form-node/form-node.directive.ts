@@ -97,13 +97,13 @@ export class _FormNode<TNode extends AnyNode = never, TValue = unknown> implemen
    *   imports: [FormNodeDirective],
    *   template: `
    *     <input [formNode]="form.username"
-   *       (formNodeChange)="save($event)" />
+   *       (formNodeChange)="onChange($event)" />
    *   `,
    * })
    * export class ProfilePage {
    *   form = form({ username: field('') });
    *
-   *   save(value: string) {
+   *   onChange(value: string) {
    *     console.log(value);
    *   }
    * }

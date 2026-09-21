@@ -9,9 +9,9 @@ import { field, form, required, requiredTrue, FormNodeErrors, FormNodeDirective 
       <fieldset>
         <legend>Do you need an invoice?</legend>
         <button type="button" [attr.aria-pressed]="form.wantsInvoice() === true"
-          (click)="answer(true)">Yes</button>
+          (click)="onAnswer(true)">Yes</button>
         <button type="button" [attr.aria-pressed]="form.wantsInvoice() === false"
-          (click)="answer(false)">No</button>
+          (click)="onAnswer(false)">No</button>
         <form-node-errors [node]="form.wantsInvoice" />
       </fieldset>
       <label>
@@ -33,7 +33,7 @@ export class CheckoutComponent {
     },
   });
 
-  answer(value: boolean) {
+  onAnswer(value: boolean) {
     this.form.wantsInvoice.set(value);
     this.form.wantsInvoice.markAsTouched();
   }
