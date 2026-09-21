@@ -3,8 +3,8 @@ title: "[formNode] directive"
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import basicBindingSource from '!!raw-loader!../../examples/form-node-binding-basic.typecheck.ts';
 import templateActionsSource from '!!raw-loader!../../examples/form-node-template-actions.typecheck.ts';
-import valueQuickStartSource from '!!raw-loader!../../examples/form-node-value-quick-start.typecheck.ts';
 import bindingQuerySource from '!!raw-loader!../../examples/form-node-query.typecheck.ts';
 import submitSource from '!!raw-loader!../../examples/form-node-submit.typecheck.ts';
 import valueOutputsSource from '!!raw-loader!../../examples/form-node-value-outputs.typecheck.ts';
@@ -12,33 +12,41 @@ import nativeInputHandlerSource from '!!raw-loader!../../examples/native-input-h
 
 # [formNode] directive {#formnode-directive}
 
-`FormNodeDirective` is the standalone Angular directive imported by components to make `[formNode]`
-and `[formNodeValue]` available. The same symbol is also the public generic type returned by binding queries.
+`FormNodeDirective` connects a control to a form node. Import it in your component and pass the
+field to `[formNode]`; typing updates the field and its displayed value automatically.
+
+<CodeBlock language="ts" title="profile-page.component.ts">{basicBindingSource}</CodeBlock>
+
+Read the value with `form.username()` and update it from component code with
+`this.form.username.set('Grace')`. The control stays in sync without an event handler.
 
 ## Template API at a glance {#template-api}
 
-Import `FormNodeDirective` in your component. Bind a node, listen to control edits, or attach it to
-`<form>` for submission and reset. The same directive also supports raw values and a template
-reference for actions on one rendered control.
+Bind a node, listen to control edits, or attach the directive to `<form>` for submission and reset.
 
 | Template API | Example | What it does |
 | --- | --- | --- |
 | [`[formNode]`](#directive-input) | `[formNode]="form.username"` | Binds an existing field or aggregate node to a compatible control. |
-| [`[formNodeValue]`](#value-input) | `[formNodeValue]="username()"` | Supplies a raw value to an independent field, or to the explicitly bound node. |
-| [`[(formNodeValue)]`](#value-input) | `[(formNodeValue)]="username"` | Also writes committed control edits back to the signal or property. |
 | [`(formNodeChange)`](#value-outputs) | `(formNodeChange)="saveDraft($event)"` | Receives the committed value after debounce. |
-| [`(formNodeValueChange)`](#value-outputs) | `(formNodeValueChange)="saveDraft($event)"` | Another name for the same committed event; powers two-way value binding. |
 | [`(formNodeControlValueChange)`](#value-outputs) | `(formNodeControlValueChange)="preview($event)"` | Receives the parsed control value immediately, before debounce. |
 | [`(formNodeSubmit)`](#submission-outputs) | `(formNodeSubmit)="recordAttempt($event)"` | Reports a native submission attempt on a bound `form()`, before the validation gate. |
 | [`(formNodeSubmitBlocked)`](#submission-outputs) | `(formNodeSubmitBlocked)="showErrors($event)"` | Reports an attempt rejected by `submitWhen`. |
+
+`formNodeChange` carries the field or aggregate **value** in `$event`.
+See [Value outputs](#value-outputs) for timing and the equivalent `formNodeValueChange` alias.
+
+### Template references, methods, and state {#template-reference-api}
+
+Export the binding with `#control="formNode"` to act on one rendered control or inspect its node
+and visible errors.
+
+| Reference API | Example | What it does |
+| --- | --- | --- |
 | [`#control="formNode"`](#binding-instance) | `<input #control="formNode" [formNode]="form.username" />` | Exposes this concrete binding in the template. |
 | [`focus()`](#focus) | `(click)="control.focus()"` | Focuses that rendered control. |
 | [`flush()`](#flush) | `(click)="control.flush()"` | Commits its pending control edit. |
 | [`reset()`](#reset) | `(click)="control.reset()"` | Clears interaction and parsing state, retaining the committed value. |
 | [`node()`](#node), [`errors()`](#errors) | `control.node().touched()`, `control.errors()` | Reads the bound node and errors visible to this binding. |
-
-`formNodeChange` and `formNodeValueChange` carry the field or aggregate **value** in `$event`.
-Keep the node binding as `[formNode]`; use `[(formNodeValue)]` for two-way raw values.
 
 ### React to committed and pending control edits {#template-value-events}
 
@@ -60,14 +68,6 @@ Bind the root form on `<form>` and its fields on the controls. Both submission e
 
 A native `<button type="reset">` inside the bound form calls the node's `reset()`. It clears
 interaction state while retaining committed values. See [native form submission and reset](#native-form-submission).
-
-### Synchronize a raw value {#template-raw-value}
-
-Use `[(formNodeValue)]` when you want to bind a writable signal or assignable property without
-declaring a node yourself. With only `[formNodeValue]="search()"`, the control receives the value
-but its edits do not write back to `search`.
-
-<CodeBlock language="ts" title="search-page.component.ts">{valueQuickStartSource}</CodeBlock>
 
 ### Call binding methods from the template {#template-binding-actions}
 
@@ -98,19 +98,8 @@ and linker infrastructure.
 
 ## 🔌 Directive input {#directive-input}
 
-Import `FormNodeDirective` in the component and bind a Form Nodes node to the `formNode` input:
-
-```ts
-@Component({
-  imports: [FormNodeDirective],
-  template: `<input [formNode]="form.email" />`,
-})
-export class EmailEditor {
-  form = form({
-    email: field(''),
-  });
-}
-```
+Import `FormNodeDirective` in the component and bind a Form Nodes node to the `formNode` input,
+as in the [opening example](#formnode-directive).
 
 **Binding:** `[formNode]="node"`
 
@@ -125,49 +114,6 @@ recognized custom component that models their complete value.
 | CVA component | Compatible field or aggregate node | Uses `ControlValueAccessor` interoperability |
 | Native `<form>` | `form()` or `group()` | Handles submit and reset |
 | Pass-through wrapper | Any delegated node | Leaves synchronization to an inner binding |
-
-## Value input {#value-input}
-
-`[formNodeValue]="value"` supplies a raw value. `[(formNodeValue)]="value"` additionally writes
-committed control changes back to a writable signal or assignable property. Import the same
-`FormNodeDirective`; no `FormsModule` is required.
-
-| Inputs | Bound node |
-| --- | --- |
-| `[formNode]` | The supplied node; existing behavior is unchanged. |
-| `[formNodeValue]` | One independent field initialized from the supplied value. |
-| Both | The supplied node, updated from `formNodeValue`. |
-| `[formNode]="undefined"` with `[formNodeValue]` | The independent field. |
-
-A value input may itself be `null` or `undefined`. Objects, arrays, and functions remain atomic
-values. `[formNode]` still accepts only nodes, and an invalid node is an error. A native `<form>`
-continues to require an explicit form or group node.
-
-Source changes are programmatic `set()` operations: they cancel pending input, preserve dirty
-and touched state, run normal validation and `onValueChange` callbacks, and emit neither value
-output. Local edits update the bound node and emit the existing outputs. With one-way binding,
-they do not assign the application source or get overwritten merely because change detection
-runs again. Two-way echoes do not overwrite a newer pending draft.
-
-Changing `[formNode]` applies the current source value to the new node. With a value input,
-changing the node to `undefined` activates the internal field, creating it only on its first use.
-Later returns to standalone mode reuse that same field and apply the current source. Binding
-state, contributed errors, and injector leases move to the current node; deferred outputs from
-an old node are ignored. An internal field has the host injector and no structural parent.
-
-`#control="formNode"` exposes `control.node()` in either mode. For a standalone value of type
-`T`, this is `FieldNode<T>` and both value outputs carry `T`; with an explicit node they retain
-that node's types. A supplied value must be assignable to the explicit node's value type.
-For a typed view query, use `FormNodeDirective<FieldNode<T>>`.
-
-`control.reset()` follows ordinary node reset behavior: it clears interaction and pending input
-while retaining the committed value. `control.node().resetToInitial()` restores the value captured
-when that internal field was first created. Neither operation writes the application source.
-Standalone fields are not automatically registered with ancestor forms, so those forms do not
-submit or reset them.
-
-See the [complete standalone example](../guides/control-binding.md#standalone-values).
-Pass-through wrappers that delegate their own `formNode` input still require that explicit input.
 
 ## 🔔 Value outputs {#value-outputs}
 
@@ -190,7 +136,7 @@ CVA callback, or custom control output. `$event` is the value, not a DOM event.
 | --- | --- | --- |
 | `formNodeControlValueChange` | `NodeValue<TNode>` | Immediately after the control value and dirty state are updated. |
 | `formNodeChange` | `NodeValue<TNode>` | After the control-originated value is committed, respecting debounce. |
-| `formNodeValueChange` | `NodeValue<TNode>` | The same committed event; also powers `[(formNodeValue)]`. |
+| `formNodeValueChange` | `NodeValue<TNode>` | The same committed event as `formNodeChange`. |
 
 See the [control-edit example](#template-value-events) for both draft and committed events.
 
@@ -198,19 +144,6 @@ See the [control-edit example](#template-value-events) for both draft and commit
 subscriptions through a binding reference. Each registered listener receives the committed event
 once. Registering handlers under both names creates two subscriptions; use one name per handler.
 Unsubscribing one subscription leaves the others active. Neither name is deprecated.
-
-### Avoid two-way node binding {#avoid-two-way-node-binding}
-
-Use `[formNode]="form.username"` with `(formNodeChange)="onChange($event)"`.
-Do not use `[(formNode)]`: the input receives a node, while the output emits its value.
-Angular unwraps writable signals in two-way bindings, so a string field would supply a string
-where this input expects a node. With `strictTemplates`, that usage fails compilation. If checks
-are bypassed, the binding rejects non-node inputs with an error pointing to `[formNode]` and
-`[(formNodeValue)]`. This runtime check validates the received value; it does not detect template
-syntax or guarantee protection for every use of `any`.
-
-For two-way raw values, keep using `[(formNodeValue)]="username"`; it remains supported through
-`formNodeValueChange`. See [Value input](#value-input).
 
 ### Commit timing {#commit-timing}
 
@@ -244,8 +177,8 @@ Signal controls use their selected `value` or `checked` model output; enabled in
 use the corresponding output. Repeated custom callbacks are preserved even if their payloads are
 equal. The library cannot guarantee a physical user interaction: a custom control can emit from code.
 
-The output names do not create a `[(formNode)]` pair and do not participate in `value/valueChange`
-or `checked/checkedChange` discovery. Avoid declaring a component output with either of these same
+These binding outputs do not participate in `value/valueChange` or `checked/checkedChange`
+discovery. Avoid declaring a component output with either of these same
 names on the binding host, since Angular can subscribe to both outputs.
 
 Both outputs also expose `OutputRef<NodeValue<TNode>>` on `FormNodeBinding<TNode>` for programmatic
@@ -262,7 +195,7 @@ same binding. Its methods act on that rendered control, while `node()` returns t
 | Member | Description |
 | --- | --- |
 | [`formNodeChange`](#value-outputs) | Short name for the committed control-originated value output. |
-| [`formNodeValueChange`](#value-outputs) | The same output; retained for explicit naming and two-way value binding. |
+| [`formNodeValueChange`](#value-outputs) | An alias of the same committed-value output. |
 | [`formNodeControlValueChange`](#value-outputs) | Immediate control value output. |
 | [`formNodeSubmit`](#submission-outputs) | Native submission attempt before validation policy and action. |
 | [`formNodeSubmitBlocked`](#submission-outputs) | Attempt rejected by the validation policy. |
@@ -722,8 +655,7 @@ See [custom control contracts](./custom-control-contracts.md) to choose a compon
 
 `<input type="file" [formNode]="upload.file">` binds to a `field<File>(null)`;
 adding `multiple` binds to a `field<File[]>([])`. Empty user selections produce `null` and `[]`
-respectively. `[formNodeValue]` and `[(formNodeValue)]` support the same shapes with or without
-an explicit node. Read filenames reactively with `upload.file()?.name`.
+respectively. Read filenames reactively with `upload.file()?.name`.
 
 Selection participates in normal validation, interaction, debounce, and output semantics.
 Programmatic values and resets synchronize `input.files`; strings cannot select local paths.

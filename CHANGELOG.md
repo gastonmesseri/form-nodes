@@ -12,7 +12,11 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Added
 
-- Listen to committed control edits with `(formNodeChange)` as a shorter name for `(formNodeValueChange)`, including typed binding subscriptions. Both names share the same events, debounce, and cleanup; `[(formNodeValue)]` remains supported. Invalid node bindings now explain how to use `[formNode]` or two-way value binding.
+- Listen to committed control edits with `(formNodeChange)` as a shorter name for `(formNodeValueChange)`, including typed binding subscriptions. Both names share the same events, debounce, and cleanup. Invalid node bindings now explain how to use `[formNode]`.
+
+### Removed
+
+- **Breaking:** Remove the `formNodeValue` input and its implicit-field mode, including `[(formNodeValue)]` and combinations with `[formNode]`. Declare a `field()` or a child of `form()`, bind it with `[formNode]`, and use node setters for programmatic updates. Both `(formNodeChange)` and `(formNodeValueChange)` remain supported committed-value events.
 
 ## [5.0.0] - 2026-09-21
 

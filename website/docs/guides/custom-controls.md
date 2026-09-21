@@ -278,12 +278,9 @@ used with Angular 22 Signal Forms.
 
 ## Standalone use {#standalone-use}
 
-The same CVA or supported signal control can receive `[formNodeValue]` without a declared node,
-or `[(formNodeValue)]` to update an application signal. Form Nodes creates an independent field;
-`useFormNodeState()` and its error contributions continue to work. Supplying `[formNode]` as
-well reuses that node and its validators. See [Standalone values](./control-binding.md#standalone-values)
-for a complete example and the input's synchronization rules.
-
+Bind an independent `field()` with `[formNode]` when the control does not belong to a larger
+form. `useFormNodeState()` and its error contributions observe that field in the same way as a
+form child. See [Independent fields](./control-binding.md#standalone-values) for an example.
 
 ## Built-in error presentation {#built-in-error-presentation}
 

@@ -8,7 +8,7 @@ import fileValuesSource from '!!raw-loader!../../examples/file-values.example.ts
 import nativeFileSource from '!!raw-loader!../../examples/native-file-binding.typecheck.ts';
 import presenceBindingSource from '!!raw-loader!../../examples/presence-binding.typecheck.ts';
 import nativeRadioSource from '!!raw-loader!../../examples/native-radio-binding.typecheck.ts';
-import standaloneSource from '!!raw-loader!../../examples/standalone-control-value.typecheck.ts';
+import standaloneSource from '!!raw-loader!../../examples/independent-field-binding.typecheck.ts';
 
 # Control binding {#control-binding}
 
@@ -79,36 +79,22 @@ on the server.
 
 <CodeBlock language="ts" title="file-values.ts">{fileValuesSource}</CodeBlock>
 
-## Standalone values {#standalone-values}
+## Independent fields {#standalone-values}
 
-Use `[formNodeValue]` when you have a value or an application signal and do not need to declare
-an explicit field. The directive creates one independent field and keeps it for the lifetime of
-the binding. Use `[(formNodeValue)]` to write committed control edits back to your writable signal
-or component property.
+Declare a `field()` when a control does not belong to a larger form. Bind the field itself with
+`[formNode]` and read its value by calling it. Control edits update the field automatically;
+programmatic `set()` calls update the control without emitting control-change outputs.
 
-<CodeBlock language="ts" title="contact-editor.component.ts">{standaloneSource}</CodeBlock>
+<CodeBlock language="ts" title="search-page.component.ts">{standaloneSource}</CodeBlock>
 
-Editing the suggested name updates the internal field and `lastEdit`, while `suggestedName`
-keeps its original value. A later change to `suggestedName` updates the control. Ordinary change
-detection does not restore the original value over local edits. The search uses two-way binding,
-so each committed edit updates `search`.
+The same binding works with native controls, CVAs, and supported signal controls. The field owns
+its validators, debounce, and interaction state. `useFormNodeState()` observes that state and can
+contribute errors. `reset()` clears interaction state while retaining the current value;
+`resetToInitial()` restores the declared initial value.
 
-The contact input reuses `form.name`: incoming `loadedName` changes call its programmatic
-setter, preserving its validators, dirty state, and touched state. These source updates do not
-emit `formNodeValueChange`; user edits do, following the node's debounce configuration.
-
-The same inputs work with CVAs and supported signal controls. `useFormNodeState()` observes the
-internal field, including contributed errors, just as it observes an explicit node.
-
-An internal field is a separate root, even inside a bound `<form>`. It does not participate in
-that form's value, validation, submission, or reset. Objects and arrays stay atomic field values;
-they do not create child nodes. Separate standalone radio bindings also have separate roots:
-use a shared explicit field for a radio group.
-
-Read or operate on the internal field with `#suggestion="formNode"` and `suggestion.node()`.
-For validators, debounce, or participation in a larger form, pass an explicit `[formNode]`.
-See the [value input reference](../reference/form-node-binding.md#value-input) for rebinding,
-reset, and typing details.
+An independent field remains a separate root even when its control appears inside a bound
+`<form>`. Declare it as a child of `form()` when it should participate in that form's value,
+validation, submission, and reset. Use one shared field for all controls in a radio group.
 
 ## 🔌 Native controls {#native-controls}
 

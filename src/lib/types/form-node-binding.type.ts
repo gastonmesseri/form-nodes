@@ -115,7 +115,6 @@ export type FormNodeBinding<TNode extends AnyNode = AnyNode> = {
    * Short name for formNodeValueChange. Both names share the same committed-value output.
    * Emits control-originated values after debounce; programmatic writes do not emit.
    * Listen with (formNodeChange) alongside [formNode], not [(formNode)].
-   * Use [(formNodeValue)] for two-way value binding.
    *
    * ```ts
    * import { Component } from '@angular/core';
