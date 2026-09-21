@@ -41,8 +41,8 @@ type ControlState<TValue = unknown> = {
     readonly readonly: Signal<boolean>;
     readonly required: Signal<boolean>;
     readonly touched: Signal<boolean>;
-    hasError(kind: string): boolean;
-    getError(kind: string): ControlStateError | undefined;
+    hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
+    getError(kind: keyof ValidationErrorMap | (string & {})): ControlStateError | undefined;
     hasValidator(validator: unknown, options?: {
         resolve?: boolean;
     }): boolean | undefined;
@@ -83,8 +83,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | `readonly` | Whether the bound control is readonly. |
 | `required` | Whether the bound control requires a non-empty value. For Reactive Forms and ngModel, recognizes directly registered Angular Validators.required / Validators.requiredTrue and an active required directive on the same host. Reads rule presence even when the current value is valid or disabled. Also true while the bound control has an own normalized error with kind `required` or `requiredTrue`, on any supported source. Arbitrary composed validators are not executed to discover this state. |
 | `touched` | Whether the user has interacted with and left the bound control. |
-| `hasError` | Whether the current normalized error list contains an exact, case-sensitive kind. Returns false when absent or disconnected, regardless of an error payload's truthiness. Queries only errors() and does not traverse child paths or explicitly trigger validation. |
-| `getError` | Returns the first normalized error with an exact, case-sensitive kind, or undefined when absent or disconnected. Returns the same object as errors(), including kind and details. Queries only errors() and does not traverse child paths or explicitly trigger validation. |
+| `hasError` | Whether the current normalized error list contains an exact, case-sensitive kind. Suggests registered error kinds while accepting any custom string. Returns false when absent or disconnected, regardless of an error payload's truthiness. Queries only errors() and does not traverse child paths or explicitly trigger validation. |
+| `getError` | Returns the first normalized error with an exact, case-sensitive kind, or undefined when absent or disconnected. Returns the same object as errors(), including kind and details. Suggests registered error kinds while accepting any custom string. Queries only errors() and does not traverse child paths or explicitly trigger validation. |
 | `hasValidator` | Queries a known rule or a validator function reference on the active binding. The exported Form Nodes `required` and Angular `Validators.required` are equivalent semantic queries: both return required(), including conditional rules, requiredTrue obligations, and active own required errors. Other functions use direct registration identity: Form Nodes checks its configured validators; Reactive Forms and ngModel check synchronous and asynchronous validator references. Angular Signal Forms cannot answer arbitrary reference queries and returns undefined. |
 | `markAsTouched` | Marks the bound control touched. Does nothing when no supported binding is connected. |
 
@@ -96,3 +96,4 @@ The declaration above also includes inherited contracts and overloads where appl
 - [ControlStateDisabledReason](./control-state-disabled-reason.md)
 - [ControlStateError](./control-state-error.md)
 - [ControlStateSource](./control-state-source.md)
+- [ValidationErrorMap](./validation-error-map.md)

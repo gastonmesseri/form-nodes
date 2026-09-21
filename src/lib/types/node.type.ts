@@ -9,7 +9,7 @@ import type { CallableNodeApi } from './callable-node-api.type';
 import type { NodeValueSignal } from './node-value-signal.type';
 import type { NodeErrorsSignal } from './node-errors-signal.type';
 import type { HiddenFunctionMembers } from './hidden-function-members.type';
-import type { ValidationErrorWithTargetNode } from '../validation/validation.type';
+import type { ValidationErrorMap, ValidationErrorWithTargetNode } from '../validation/validation.type';
 
 export type MarkAsTouchedOptions = {
   /**
@@ -323,6 +323,7 @@ export type NodeApi = {
   allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
   /**
    * Returns the first error belonging directly to this node and matching `kind`.
+   * Suggests registered error kinds while accepting any custom string.
    *
    * ```ts
    * const profile = form({
@@ -337,9 +338,10 @@ export type NodeApi = {
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<AnyNode> & { readonly kind: TKind }) | undefined;
+  getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<AnyNode> & { readonly kind: TKind }) | undefined;
   /**
    * Whether this node's own errors include the kind; does not search descendants.
+   * Suggests registered error kinds while accepting any custom string.
    *
    * ```ts
    * const profile = form({
@@ -353,7 +355,7 @@ export type NodeApi = {
    *
    * @reactive Tracks current errors.
    */
-  hasError(kind: string): boolean;
+  hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
   /**
    * Whether this exact validator is directly registered, or resolved when resolve is true.
    *

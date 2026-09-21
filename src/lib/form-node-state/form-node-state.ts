@@ -4,6 +4,7 @@ import { APP_ID, DestroyRef, ElementRef, computed, effect, inject, untracked, ty
 import { required } from '../validation/validators/required';
 import { computedFunction } from '../utils/computed-function';
 import { injectNgModelControlStateAdapter } from './adapters/ng-model';
+import type { ValidationErrorMap } from '../validation/validation.type';
 import { injectFormControlStateAdapter } from './adapters/form-control';
 import { injectFormNodeControlStateAdapter } from './adapters/form-node';
 import { injectFormFieldControlStateAdapter } from './adapters/form-field';
@@ -504,6 +505,7 @@ export type ControlState<TValue = unknown> = {
   readonly touched: Signal<boolean>;
   /**
    * Whether the current normalized error list contains an exact, case-sensitive kind.
+   * Suggests registered error kinds while accepting any custom string.
    * Returns false when absent or disconnected, regardless of an error payload's truthiness.
    * Queries only errors() and does not traverse child paths or explicitly trigger validation.
    *
@@ -530,10 +532,11 @@ export type ControlState<TValue = unknown> = {
    * Unchanged results do not propagate to dependent computations.
    * @param kind Error kind as exposed by errors(); names are not translated between forms APIs.
    */
-  hasError(kind: string): boolean;
+  hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
   /**
    * Returns the first normalized error with an exact, case-sensitive kind, or undefined when
    * absent or disconnected. Returns the same object as errors(), including kind and details.
+   * Suggests registered error kinds while accepting any custom string.
    * Queries only errors() and does not traverse child paths or explicitly trigger validation.
    *
    * ```ts
@@ -556,7 +559,7 @@ export type ControlState<TValue = unknown> = {
    * Unchanged results do not propagate to dependent computations; error objects use reference equality.
    * @param kind Error kind as exposed by errors(); Angular uses minlength, Form Nodes uses minLength.
    */
-  getError(kind: string): ControlStateError | undefined;
+  getError(kind: keyof ValidationErrorMap | (string & {})): ControlStateError | undefined;
   /**
    * Queries a known rule or a validator function reference on the active binding.
    * The exported Form Nodes `required` and Angular `Validators.required` are equivalent semantic

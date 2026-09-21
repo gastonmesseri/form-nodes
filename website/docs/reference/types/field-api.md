@@ -53,8 +53,8 @@ type FieldApi<TValue, TParent extends AnyNode = AnyNode> = {
     valid: Signal<boolean>;
     invalid: Signal<boolean>;
     getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<FieldNode<TValue, TParent>> & ValidationErrorMap[TKind]) | undefined;
-    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<FieldNode<TValue, TParent>> & CustomValidationError<TKind>) | undefined;
-    hasError(kind: string): boolean;
+    getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<FieldNode<TValue, TParent>> & CustomValidationError<TKind>) | undefined;
+    hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
     hasValidator(validator: (context: any) => unknown, options?: {
         resolve?: boolean;
     }): boolean;
@@ -129,8 +129,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | `allErrors` | A signal containing the validation errors of **this field and its descendants**. Fields have no descendants, so this contains the same errors as `errors()`. |
 | `valid` | Whether this field has completed validation without errors. False while validity is unknown. |
 | `invalid` | Whether this field currently has at least one validation error. |
-| `getError` | Returns the first validation error of this field matching `kind`. |
-| `hasError` | Whether this node's own errors contain the given kind. Does not search descendants. |
+| `getError` | Returns the first validation error of this field matching `kind`. Suggests registered error kinds while accepting any custom string. |
+| `hasError` | Whether this node's own errors contain the given kind. Does not search descendants. Suggests registered error kinds while accepting any custom string. |
 | `hasValidator` | Whether the same validator function is directly registered on this node, including async validators. By default, does not run validators. Set resolve to true to inspect resolved leaf references. |
 | `min` | Strictest minimum value contributed by active numeric or date validators, or `null` when absent. |
 | `max` | Strictest maximum value contributed by active numeric or date validators, or `null` when absent. |

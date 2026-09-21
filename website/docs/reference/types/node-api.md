@@ -44,10 +44,10 @@ type NodeApi = {
     invalid: Signal<boolean>;
     errors: NodeErrorsSignal<AnyNode>;
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
-    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<AnyNode> & {
+    getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<AnyNode> & {
         readonly kind: TKind;
     }) | undefined;
-    hasError(kind: string): boolean;
+    hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
     hasValidator(validator: (context: any) => unknown, options?: {
         resolve?: boolean;
     }): boolean;
@@ -108,8 +108,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | `invalid` | Whether this node or any descendant currently contributes a validation error. |
 | `errors` | Validation errors belonging directly to this node by default. Pass `{ descendants: true }` to include descendants, exactly as `allErrors()`. |
 | `allErrors` | Validation errors from this node and its complete subtree in structural order. |
-| `getError` | Returns the first error belonging directly to this node and matching `kind`. |
-| `hasError` | Whether this node's own errors include the kind; does not search descendants. |
+| `getError` | Returns the first error belonging directly to this node and matching `kind`. Suggests registered error kinds while accepting any custom string. |
+| `hasError` | Whether this node's own errors include the kind; does not search descendants. Suggests registered error kinds while accepting any custom string. |
 | `hasValidator` | Whether this exact validator is directly registered, or resolved when resolve is true. |
 | `required` | Whether active validation metadata currently marks this node as required. |
 | `pending` | Whether asynchronous validation is active on this node or any descendant. |
@@ -147,4 +147,5 @@ The declaration above also includes inherited contracts and overloads where appl
 - [DisabledReason](./disabled-reason.md)
 - [NodeErrorsSignal](./node-errors-signal.md)
 - [NodeValueSignal](./node-value-signal.md)
+- [ValidationErrorMap](./validation-error-map.md)
 - [ValidationErrorWithTargetNode](./validation-error-with-target-node.md)

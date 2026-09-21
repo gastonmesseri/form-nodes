@@ -80,8 +80,8 @@ type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> = {
     valid: Signal<boolean>;
     invalid: Signal<boolean>;
     getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & ValidationErrorMap[TKind]) | undefined;
-    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
-    hasError(kind: string): boolean;
+    getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
+    hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
     hasValidator(validator: (context: any) => unknown, options?: {
         resolve?: boolean;
     }): boolean;
@@ -173,8 +173,8 @@ The declaration above also includes inherited contracts and overloads where appl
 | `allErrors` | A signal containing the validation errors of **this array node and its descendants**. |
 | `valid` | Whether this array and every current item subtree have completed validation without errors. |
 | `invalid` | Whether this array or any current item subtree contributes a validation error. |
-| `getError` | Returns the first validation error belonging directly to this array and matching `kind`. |
-| `hasError` | Whether this node's own errors contain the given kind. Does not search descendants. |
+| `getError` | Returns the first validation error belonging directly to this array and matching `kind`. Suggests registered error kinds while accepting any custom string. |
+| `hasError` | Whether this node's own errors contain the given kind. Does not search descendants. Suggests registered error kinds while accepting any custom string. |
 | `hasValidator` | Whether the same validator function is directly registered on this node, including async validators. By default, does not run validators. Set resolve to true to inspect resolved leaf references. |
 | `required` | Whether active validation metadata marks this array itself as required. |
 | `pending` | Whether asynchronous validation is active on this array or any current item subtree. |

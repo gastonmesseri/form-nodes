@@ -32,7 +32,7 @@ type ValidatorApi<TValue> = AsyncValidatorState & {
     readonly pending: Signal<boolean>;
     readonly debouncing: Signal<boolean>;
     readonly validationStatus: Signal<ValidationStatus>;
-    getError<TKind extends string>(kind: TKind): ValidationErrorForKind<TKind> | undefined;
+    getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): ValidationErrorForKind<TKind> | undefined;
     set(value: TValue): void;
     update(updater: (value: TValue) => TValue): void;
     flush(): void;
@@ -79,7 +79,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `pending` | Whether asynchronous validation is running on this node or a descendant. |
 | `debouncing` | Whether a control-originated value is waiting to be committed on this node or a descendant. This is separate from the debounce option of an asynchronous validator. |
 | `validationStatus` | Current aggregate result: valid, invalid, or unknown while validation is unresolved. |
-| `getError` | Returns this node's first direct error with `kind`, or `undefined` when none exists. |
+| `getError` | Returns this node's first direct error with `kind`, or `undefined` when none exists. Suggests registered error kinds while accepting any custom string. |
 | `set` | Replaces the node's committed value and triggers the corresponding state and validation updates. |
 | `update` | Replaces the value with the result of applying `updater` to its current exposed value. |
 | `flush` | Commits any buffered control value immediately and runs validation that was waiting for it. |
@@ -105,4 +105,5 @@ The declaration above also includes inherited contracts and overloads where appl
 - [NodeErrorsSignal](./node-errors-signal.md)
 - [ValidationError](./validation-error.md)
 - [ValidationErrorForKind](./validation-error-for-kind.md)
+- [ValidationErrorMap](./validation-error-map.md)
 - [ValidationStatus](./validation-status.md)

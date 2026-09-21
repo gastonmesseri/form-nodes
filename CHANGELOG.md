@@ -12,6 +12,7 @@ exception authorized by the maintainer while the library has no other consumers.
 
 ### Changed
 
+- Autocomplete built-in and registered custom error kinds in `hasError()` and `getError()` across nodes, their APIs, and the control-state facade while continuing to accept arbitrary strings and preserving structured error inference.
 - Prefer `serializer` and `QueryParamSerializer<T>` when configuring `syncQueryParams()`. The `codec` option and `QueryParamCodec<T>` remain compatible deprecated aliases; `serializer` takes precedence when both options are supplied. Named serializers, custom `parse`/`serialize` objects, and `queryParam` factories retain their behavior.
 
 ## [4.5.0] - 2026-09-20

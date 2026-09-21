@@ -1872,6 +1872,14 @@ usernames.valid(); // false
 
 #### – getError() {#geterror}
 
+`getError()` and `hasError()` suggest built-in error kinds such as `'required'`, `'minLength'`,
+and `'email'`, plus kinds registered through [`ValidationErrorMap`](./types/validation-error-map.md).
+Custom string literals and dynamic `string` values are still accepted. Suggestions list known
+kinds regardless of installed validators; they do not indicate that an error is currently present.
+The same suggestions are available through `$api`, and `getError()` keeps its kind-specific
+payload and target-node types.
+
+
 **Signature:** `getError(kind: string): ValidationError | undefined`
 
 Returns the first error owned directly by the array with the requested kind. Descendant errors are

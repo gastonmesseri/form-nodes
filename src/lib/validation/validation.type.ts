@@ -1011,6 +1011,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
   readonly validationStatus: Signal<ValidationStatus>;
   /**
    * Returns this node's first direct error with `kind`, or `undefined` when none exists.
+   * Suggests registered error kinds while accepting any custom string.
    *
    * ```ts
    * const node = field('', [required]);
@@ -1020,7 +1021,7 @@ export type ValidatorApi<TValue> = AsyncValidatorState & {
    *
    * @reactive Reads the current direct-error collection on every call.
    */
-  getError<TKind extends string>(kind: TKind): ValidationErrorForKind<TKind> | undefined;
+  getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): ValidationErrorForKind<TKind> | undefined;
   /**
    * Replaces the node's committed value and triggers the corresponding state and validation updates.
    *

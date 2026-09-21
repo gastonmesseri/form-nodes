@@ -46,6 +46,10 @@ for the declaration callback's intentional `any` return and checked authoring al
 | The error shape for a particular kind | [`ValidationErrorForKind<TKind>`](./types/validation-error-for-kind.md) |
 | Register custom kinds through module augmentation | [`ValidationErrorMap`](./types/validation-error-map.md) |
 
+`hasError(kind)` and `getError(kind)` autocomplete built-in kinds and keys added through
+`ValidationErrorMap` module augmentation. Both still accept unregistered names and dynamic
+strings. Suggestions are independent of the node's active errors or installed validators.
+
 Use `getError(kind)` when you need kind-specific fields. The base error collection guarantees
 category, optional message, and ownership; it does not make every validator-specific property
 available on every entry. Register application error kinds to give lookups their precise shape.

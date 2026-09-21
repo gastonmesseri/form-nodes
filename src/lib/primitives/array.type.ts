@@ -1118,6 +1118,7 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   invalid: Signal<boolean>;
   /**
    * Returns the first validation error belonging directly to this array and matching `kind`.
+   * Suggests registered error kinds while accepting any custom string.
    *
    * ```ts
    * const people = array({
@@ -1133,6 +1134,7 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
   getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & ValidationErrorMap[TKind]) | undefined;
   /**
    * Returns the first custom error belonging directly to this array and matching `kind`.
+   * Suggests registered error kinds while accepting any custom string.
    *
    * ```ts
    * const node = array({
@@ -1149,9 +1151,10 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    *
    * @reactive Maintains an independent reactive computation for each `kind`.
    */
-  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
+  getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<ArrayNode<TItem, TParent>> & CustomValidationError<TKind>) | undefined;
   /**
    * Whether this node's own errors contain the given kind. Does not search descendants.
+   * Suggests registered error kinds while accepting any custom string.
    *
    * ```ts
    * const node = array({
@@ -1167,7 +1170,7 @@ export type ArrayApi<TItem extends AnyNode, TParent extends AnyNode = AnyNode> =
    *
    * @reactive Memoizes by kind and tracks the node's current errors.
    */
-  hasError(kind: string): boolean;
+  hasError(kind: keyof ValidationErrorMap | (string & {})): boolean;
   /**
    * Whether the same validator function is directly registered on this node, including async validators.
    * By default, does not run validators. Set resolve to true to inspect resolved leaf references.

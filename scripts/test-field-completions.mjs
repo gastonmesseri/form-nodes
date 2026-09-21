@@ -9,7 +9,7 @@ const entry = packaged
   ? `../../dist/${JSON.parse(readFileSync(resolve('dist/package.json'), 'utf8')).typings}`
   : '../../src/public-api';
 const file = resolve('tests/types/field-completions.virtual.ts');
-let source = `import { field, form, array, createFormPrimitives, type FieldNode, type AnyNode } from '${entry}';
+let source = `import { field, form, array, createFormPrimitives, type FieldNode, type FormNode, type GroupNode, type AnyNode, type NodeApi, type ControlState, type AsyncValidatorApi } from '${entry}';
 type IborCode = 'DAILY' | 'MONTHLY' | null;
 const nullable = createFormPrimitives({ nullable: true });
 const strict = createFormPrimitives({ nullable: false });
@@ -52,6 +52,37 @@ for (const node of ['myFieldNodeTyped', 'typedField', 'inferredField', 'profile'
     source += ';\n';
   }
 }
+const errorPositions = [];
+source += `
+declare const genericForm: FormNode;
+declare const genericGroup: GroupNode;
+declare const nodeApi: NodeApi;
+declare const controlState: ControlState;
+declare const validatorApi: AsyncValidatorApi<string>;
+declare module '${entry}' {
+  interface ValidationErrorMap {
+    applicationError: { kind: 'applicationError'; detail: boolean };
+  }
+}
+`;
+for (const expression of [
+  'myFieldNodeTyped', 'typedField', 'inferredField', 'profile', 'profile.address', 'names',
+  'typedField.$api', 'profile.$api', 'profile.address.$api', 'names.$api', 'generic.$api',
+  'genericForm.$api', 'genericGroup.$api', 'nodeApi', 'controlState', 'validatorApi',
+]) {
+  for (const method of expression === 'validatorApi' ? ['getError'] : ['hasError', 'getError']) {
+    for (const quote of ["'", '"']) {
+      source += `${expression}.${method}(${quote}`;
+      errorPositions.push({ position: source.length, label: `${expression}.${method} with ${quote}` });
+      source += `${quote});\n`;
+    }
+  }
+}
+const expectedErrors = [
+  'required', 'requiredTrue', 'notNil', 'email', 'url', 'equalTo', 'uniqueItems', 'between',
+  'min', 'max', 'integer', 'minLength', 'maxLength', 'pattern', 'minDate', 'maxDate',
+  'dateBetween', 'oneOf', 'minWords', 'maxWords', 'applicationError',
+].sort();
 const options = { strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, moduleResolution: ts.ModuleResolutionKind.Bundler, skipLibCheck: true };
 const host = {
   getScriptFileNames: () => [file],
@@ -83,6 +114,14 @@ try {
     });
     assert.deepEqual(completion?.entries.map(entry => entry.name).sort(), expected, label);
   }
+  for (const { position, label } of errorPositions) {
+    const completion = service.getCompletionsAtPosition(file, position, {
+      triggerCharacter: source[position - 1],
+      triggerKind: ts.CompletionTriggerKind.TriggerCharacter,
+    });
+    // Generic arguments can additionally suggest their current empty string literal.
+    assert.deepEqual(completion?.entries.map(entry => entry.name).filter(Boolean).sort(), expectedErrors, label);
+  }
   for (const { position, expression } of apiPositions) {
     const names = service.getCompletionsAtPosition(file, position, { triggerCharacter: '.', triggerKind: ts.CompletionTriggerKind.TriggerCharacter })?.entries.map(entry => entry.name) ?? [];
     for (const required of ['value', 'set', 'reset', 'valid']) assert.ok(names.includes(required), `${expression}: ${required}`);
@@ -97,3 +136,5 @@ console.log(`Field literal completions passed for ${positions.length} cases agai
 console.log(`Node value member completions passed for ${memberPositions.length} cases against ${packaged ? 'published declarations' : 'source declarations'}.`);
 
 console.log(`Callable API completions passed for ${apiPositions.length} cases.`);
+
+console.log(`Error kind completions passed for ${errorPositions.length} cases against ${packaged ? 'published declarations' : 'source declarations'}.`);

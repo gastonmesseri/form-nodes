@@ -104,6 +104,7 @@ const binding = syncQueryParams({
   something: { source: myForm },
 });
 
+myForm.hasError('equalTo');
 
 myForm.company;
 myForm.someDate.value();

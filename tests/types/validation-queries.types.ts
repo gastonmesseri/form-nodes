@@ -39,3 +39,35 @@ for (const node of [profile, profile.name, profile.address, profile.rows]) {
 }
 profile.address.hasValidator(ownGroupValidator, { resolve: true });
 dynamic.hasValidator(required, { resolve: true });
+
+// Completion-friendly parameters still accept dynamic and unregistered names.
+declare const dynamicKind: string;
+for (const node of [profile, profile.name, profile.address, profile.rows]) {
+  node.hasError(dynamicKind);
+  node.$api.hasError('applicationSpecific');
+}
+profile.getError(dynamicKind);
+profile.name.getError(dynamicKind);
+profile.address.getError(dynamicKind);
+profile.rows.getError(dynamicKind);
+for (const custom of [profile.$api.getError('applicationSpecific'), profile.name.$api.getError('applicationSpecific'), profile.address.$api.getError('applicationSpecific'), profile.rows.$api.getError('applicationSpecific')]) {
+  type _CustomKind = Expect<Equal<NonNullable<typeof custom>['kind'], 'applicationSpecific'>>;
+}
+for (const minimum of [profile.getError('min'), profile.name.getError('min'), profile.address.getError('min'), profile.rows.getError('min')]) {
+  type _Minimum = Expect<Equal<NonNullable<typeof minimum>['min'], number>>;
+}
+// @ts-expect-error Error kinds must remain strings.
+profile.name.getError(1);
+
+// Registered application kinds retain their structured payload and target owner.
+declare module '../../src/public-api' {
+  interface ValidationErrorMap {
+    completionError: { readonly kind: 'completionError'; readonly code: number };
+  }
+}
+const registered = profile.name.getError('completionError');
+type _RegisteredKind = Expect<Equal<NonNullable<typeof registered>['kind'], 'completionError'>>;
+type _RegisteredCode = Expect<Equal<NonNullable<typeof registered>['code'], number>>;
+type _RegisteredTarget = Expect<Equal<NonNullable<typeof registered>['targetNode'], typeof profile.name>>;
+const arbitrary = profile.name.getError(dynamicKind);
+type _DynamicKind = Expect<Equal<NonNullable<typeof arbitrary>['kind'], string>>;

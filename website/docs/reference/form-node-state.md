@@ -549,6 +549,12 @@ Returns a generated or declared control name when the active binding exposes one
 
 ### ◆ hasError(kind) {#haserrorkind}
 
+Both error queries suggest Form Nodes' built-in kinds and application keys registered in
+`ValidationErrorMap`, while accepting any custom or dynamic string. The suggestions do not
+translate error names: Angular Reactive Forms' `'minlength'` remains distinct from Form Nodes'
+`'minLength'`. They do not indicate which validators are currently installed.
+
+
 **Signature:** `hasError(kind: string): boolean`
 
 Returns true when `errors()` contains an entry with that exact, case-sensitive `kind`.

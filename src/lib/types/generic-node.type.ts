@@ -21,7 +21,7 @@ type GenericOwnerApi<TNode extends AnyNode> = {
   /** @reactive Tracks and memoizes this node's own error for the requested kind. */
   getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<TNode> & ValidationErrorMap[TKind]) | undefined;
   /** @reactive Tracks and memoizes this node's own custom error for the requested kind. */
-  getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<TNode> & CustomValidationError<TKind>) | undefined;
+  getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<TNode> & CustomValidationError<TKind>) | undefined;
 };
 type GenericFormApi = Omit<FormApi<any>, UnknownChildrenMembers | keyof GenericOwnerApi<GenericFormNode>> & Pick<FormApi<{}>, 'add'> & UnknownChildrenApi & GenericOwnerApi<GenericFormNode>;
 type GenericGroupApi = Omit<GroupApi<any>, UnknownChildrenMembers | keyof GenericOwnerApi<GenericGroupNode>> & Pick<GroupApi<{}>, 'add'> & UnknownChildrenApi & GenericOwnerApi<GenericGroupNode>;

@@ -3230,6 +3230,23 @@ public TypeScript shape and the declared-child iteration distinction are Form No
 
 ## Error and validator presence queries
 
+`hasError()` and `getError()` suggest keys from the extensible `ValidationErrorMap`, including
+built-in kinds and application module augmentations. Their open string union preserves arbitrary
+literal and dynamic strings, and `getError()` retains its existing structured payload and exact
+owner inference. Suggestions apply to primitive nodes, `$api`, generic/dynamic nodes, validator
+owner APIs, and the common control-state facade. They describe available kind names, not which
+validators are installed or which errors are active. No runtime lookup, caching, validation, or
+propagation behavior changes. The facade continues to accept Angular-native spellings such as
+`minlength` without translating them to Form Nodes' `minLength`.
+
+Reference for this type-only enhancement: Angular **v22.1.7**, commit
+`f3358f24b884e34d44cfb8ec3db53965153d61e1`, re-resolved from release tags. Inspected
+`packages/forms/signals/src/field/node.ts` (`getError`) and
+`packages/forms/signals/test/node/field_node.spec.ts` (built-in error inference and custom-kind
+lookup). Angular retains typed built-in lookups and arbitrary custom strings; completion of the
+extensible Form Nodes registry is our public API enhancement.
+
+
 All primitive nodes, their public API aliases, and dynamically retrieved nodes expose
 `hasError(kind)` and `hasValidator(validator)`. `hasError` checks the current local `errors()` by
 kind, not descendant `allErrors()`. It includes async and external errors when they appear there,

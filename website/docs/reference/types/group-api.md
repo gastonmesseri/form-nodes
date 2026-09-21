@@ -42,7 +42,7 @@ type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> = Omit<Fo
     errors: NodeErrorsSignal<GroupNode<TNodes, TParent>>;
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
-    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+    getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
     validationStatus: Signal<ValidationStatus>;
     submitting: Signal<boolean>;
 };
@@ -72,7 +72,7 @@ The declaration above also includes inherited contracts and overloads where appl
 | `root` | Complete structural root containing this group. A root or detached group returns itself. Use this signal when traversal must cross nested form workflow boundaries. |
 | `errors` | Validation errors belonging directly to this group, excluding descendant-owned errors. |
 | `allErrors` | Validation errors from this group and its complete subtree in structural order. |
-| `getError` | Returns the first validation error belonging directly to this group and matching `kind`. |
+| `getError` | Returns the first validation error belonging directly to this group and matching `kind`. Suggests registered error kinds while accepting any custom string. |
 | `validationStatus` | Aggregated validation phase for this group subtree: `'valid'`, `'invalid'`, or `'unknown'`. |
 | `submitting` | Whether an ancestor form is currently running its submission action. Groups cannot initiate submission. |
 

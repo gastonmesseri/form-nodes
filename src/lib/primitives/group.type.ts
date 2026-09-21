@@ -539,6 +539,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
     allErrors: Signal<readonly ValidationErrorWithTargetNode<AnyNode>[]>;
     /**
      * Returns the first validation error belonging directly to this group and matching `kind`.
+     * Suggests registered error kinds while accepting any custom string.
      *
      * ```ts
      * const profile = group({
@@ -554,6 +555,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
     getError<TKind extends keyof ValidationErrorMap>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & ValidationErrorMap[TKind]) | undefined;
     /**
      * Returns the first custom error belonging directly to this group and matching `kind`.
+     * Suggests registered error kinds while accepting any custom string.
      *
      * ```ts
      * const node = group({
@@ -568,7 +570,7 @@ export type GroupApi<TNodes extends Nodes, TParent extends AnyNode = AnyNode> =
      *
      * @reactive Maintains an independent reactive computation for each `kind`.
      */
-    getError<TKind extends string>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
+    getError<TKind extends keyof ValidationErrorMap | (string & {})>(kind: TKind): (ValidationErrorWithTargetNode<GroupNode<TNodes, TParent>> & CustomValidationError<TKind>) | undefined;
     /**
      * Aggregated validation phase for this group subtree: `'valid'`, `'invalid'`, or `'unknown'`.
      *
